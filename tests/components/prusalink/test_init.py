@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from pyprusalink import InvalidAuth, PrusaLinkError
+from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -39,7 +39,10 @@ async def test_failed_update(
     assert mock_config_entry.state == ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.prusalink.PrusaLink.get_printer",
+        "homeassistant.components.prusalink.PrusaLink.get_version",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.prusalink.PrusaLink.get_status",
         side_effect=exception,
     ), patch(
         "homeassistant.components.prusalink.PrusaLink.get_job",

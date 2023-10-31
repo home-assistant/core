@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     Platform,
     UnitOfLength,
     UnitOfTemperature,
@@ -44,11 +45,15 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.state == "idle"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
     assert state.attributes[ATTR_OPTIONS] == [
-        "cancelling",
         "idle",
-        "paused",
-        "pausing",
+        "busy",
         "printing",
+        "paused",
+        "finished",
+        "stopped",
+        "error",
+        "attention",
+        "ready",
     ]
 
     state = hass.states.get("sensor.mock_title_heatbed_temperature")
@@ -91,9 +96,10 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.state == "100"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
-    state = hass.states.get("sensor.mock_title_material")
+    state = hass.states.get("sensor.mock_title_print_flow")
     assert state is not None
-    assert state.state == "PLA"
+    assert state.state == "100"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
@@ -114,12 +120,22 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.state == "unavailable"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
+    state = hass.states.get("sensor.mock_title_hotend_fan")
+    assert state is not None
+    assert state.state == "100"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
+
+    state = hass.states.get("sensor.mock_title_print_fan")
+    assert state is not None
+    assert state.state == "75"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
+
 
 async def test_sensors_active_job(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-    mock_printer_api,
+    mock_get_status_printing,
     mock_job_api_printing,
 ) -> None:
     """Test sensors while active job."""
@@ -135,19 +151,29 @@ async def test_sensors_active_job(
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
-    assert state.state == "37.0"
+    assert state.state == "50.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
 
     state = hass.states.get("sensor.mock_title_filename")
     assert state is not None
-    assert state.state == "TabletStand3.gcode"
+    assert state.state == "TabletStand3.bgcode"
 
     state = hass.states.get("sensor.mock_title_print_start")
     assert state is not None
-    assert state.state == "2022-08-27T01:46:53+00:00"
+    assert state.state == "2022-08-27T13:50:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_print_finish")
     assert state is not None
-    assert state.state == "2022-08-28T10:17:00+00:00"
+    assert state.state == "2022-08-27T14:20:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+
+    state = hass.states.get("sensor.mock_title_hotend_fan")
+    assert state is not None
+    assert state.state == "5000"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
+
+    state = hass.states.get("sensor.mock_title_print_fan")
+    assert state is not None
+    assert state.state == "2500"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE

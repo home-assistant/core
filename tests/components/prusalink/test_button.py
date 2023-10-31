@@ -1,7 +1,7 @@
 """Test Prusalink buttons."""
 from unittest.mock import patch
 
-from pyprusalink import Conflict
+from pyprusalink.types import Conflict
 import pytest
 
 from homeassistant.const import Platform
@@ -32,6 +32,7 @@ async def test_button_pause_cancel(
     mock_api,
     hass_client: ClientSessionGenerator,
     mock_job_api_printing,
+    mock_get_status_printing,
     object_id,
     method,
 ) -> None:
