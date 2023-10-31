@@ -53,6 +53,6 @@ class OAuth2FlowHandler(
                 description_placeholders={"message": error},
             )
         except Exception as ex:  # pylint: disable=broad-except
-            self.logger.error("Unknown error occurred: %s", ex.args)
+            self.logger.exception("Unknown error occurred: %s", ex)
             return self.async_abort(reason="unknown")
         return self.async_create_entry(title=self.flow_impl.name, data=data)
