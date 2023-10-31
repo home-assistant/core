@@ -2,7 +2,10 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
+from PyViCare.PyViCareUtils import (
+    PyViCareInvalidConfigurationError,
+    PyViCareInvalidCredentialsError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
@@ -47,6 +50,20 @@ async def test_user_create_entry(
     with patch(
         f"{MODULE}.config_flow.vicare_login",
         side_effect=PyViCareInvalidCredentialsError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # test PyViCareInvalidConfigurationError
+    with patch(
+        f"{MODULE}.config_flow.vicare_login",
+        side_effect=PyViCareInvalidConfigurationError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
