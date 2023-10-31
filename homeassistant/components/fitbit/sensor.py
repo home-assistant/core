@@ -726,7 +726,7 @@ class FitbitSensor(SensorEntity):
             )
         except FitbitAuthException:
             self._attr_available = False
-            self.config_entry.async_start_reauth(self.hass)
+            await self.config_entry.async_init_reauth(self.hass)
         except FitbitApiException:
             self._attr_available = False
         else:

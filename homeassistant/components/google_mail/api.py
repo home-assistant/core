@@ -48,7 +48,7 @@ class AsyncConfigEntryAuth:
                 or hasattr(ex, "status")
                 and ex.status == 400
             ):
-                self.oauth_session.config_entry.async_start_reauth(
+                await self.oauth_session.config_entry.async_init_reauth(
                     self.oauth_session.hass
                 )
             raise HomeAssistantError(ex) from ex

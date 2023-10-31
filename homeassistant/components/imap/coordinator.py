@@ -379,7 +379,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 _LOGGER.warning(
                     "Username or password incorrect, starting reauthentication"
                 )
-                self.config_entry.async_start_reauth(self.hass)
+                await self.config_entry.async_init_reauth(self.hass)
             self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed() from ex
 
@@ -420,7 +420,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     _LOGGER.warning(
                         "Username or password incorrect, starting reauthentication"
                     )
-                    self.config_entry.async_start_reauth(self.hass)
+                    await self.config_entry.async_init_reauth(self.hass)
                 self.async_set_update_error(ex)
                 await asyncio.sleep(BACKOFF_TIME)
             except InvalidFolder as ex:

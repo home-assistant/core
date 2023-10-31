@@ -68,7 +68,7 @@ async def async_send_text_commands(
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
-            entry.async_start_reauth(hass)
+            await entry.async_init_reauth(hass)
         raise err
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])

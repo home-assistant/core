@@ -96,7 +96,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         try:
             sheet = service.open_by_key(entry.unique_id)
         except RefreshError as ex:
-            entry.async_start_reauth(hass)
+            hass.async_create_background_task(
+                entry.async_init_reauth(hass), f"reauth flow {DOMAIN} {entry.entry_id}"
+            )
             raise ex
         except APIError as ex:
             raise HomeAssistantError("Failed to write data") from ex

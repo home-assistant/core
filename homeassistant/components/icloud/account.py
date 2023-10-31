@@ -230,7 +230,7 @@ class IcloudAccount:
 
     def _require_reauth(self):
         """Require the user to log in again."""
-        self.hass.add_job(self._config_entry.async_start_reauth, self.hass)
+        self.hass.add_job(self._config_entry.async_init_reauth, self.hass)
 
     def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""

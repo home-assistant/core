@@ -17,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.api.close()
 
         if coordinator.api_disabled:
-            entry.async_start_reauth(hass)
+            await entry.async_init_reauth(hass)
 
         raise
 
