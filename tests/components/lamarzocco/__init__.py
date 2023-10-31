@@ -1,7 +1,6 @@
 """Mock inputs for tests."""
 from homeassistant.components.lamarzocco.const import (
     CONF_MACHINE,
-    CONF_USE_BLUETOOTH,
     DEFAULT_CLIENT_ID,
     DEFAULT_CLIENT_SECRET,
     DEFAULT_PORT_LOCAL,
@@ -58,8 +57,6 @@ MACHINE_SELECTION = {
     CONF_MACHINE: "GS3 AV (GS01234)",
     CONF_HOST: "192.168.1.1",
 }
-
-OPTIONS_INPUT = {CONF_HOST: "192.168.1.42", CONF_USE_BLUETOOTH: False}
 
 LM_SERVICE_INFO = BluetoothServiceInfo(
     name="GS3_01234",

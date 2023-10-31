@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_USE_BLUETOOTH,
     DEFAULT_PORT_LOCAL,
     MACHINE_NAME,
     MODEL_GS3_AV,
@@ -89,31 +88,26 @@ class LaMarzoccoClient(LMCloud):
         mac_address: str = self._entry_data.get(CONF_MAC, "")
         name: str = self._entry_data.get(CONF_NAME, "")
 
-        if self._entry_data.get(CONF_USE_BLUETOOTH, True):
-            if mac_address and name:
-                # coming from discovery
-                _LOGGER.debug("Initializing with known Bluetooth device")
-                await self._init_bluetooth_with_known_device(
-                    username, mac_address, name
+        if mac_address and name:
+            # coming from discovery
+            _LOGGER.debug("Initializing with known Bluetooth device")
+            await self._init_bluetooth_with_known_device(username, mac_address, name)
+        else:
+            # check if there are any bluetooth adapters to use
+            count = bluetooth.async_scanner_count(self.hass, connectable=True)
+            if count > 0:
+                _LOGGER.debug("Found Bluetooth adapters, initializing with Bluetooth")
+                bt_scanner = bluetooth.async_get_scanner(self.hass)
+
+                await self._init_bluetooth(
+                    username=username,
+                    init_client=False,
+                    bluetooth_scanner=bt_scanner,
                 )
-            else:
-                # check if there are any bluetooth adapters to use
-                count = bluetooth.async_scanner_count(self.hass, connectable=True)
-                if count > 0:
-                    _LOGGER.debug(
-                        "Found Bluetooth adapters, initializing with Bluetooth"
-                    )
-                    bt_scanner = bluetooth.async_get_scanner(self.hass)
 
-                    await self._init_bluetooth(
-                        username=username,
-                        init_client=False,
-                        bluetooth_scanner=bt_scanner,
-                    )
-
-            if self._lm_bluetooth:
-                _LOGGER.debug("Connecting to machine with Bluetooth")
-                await self.get_hass_bt_client()
+        if self._lm_bluetooth:
+            _LOGGER.debug("Connecting to machine with Bluetooth")
+            await self.get_hass_bt_client()
 
         host: str = self._entry_data.get(CONF_HOST, "")
         if host:

@@ -1167,7 +1167,7 @@ limitlessled==1.1.3
 linode-api==4.1.9b1
 
 # homeassistant.components.lamarzocco
-lmcloud==0.4.4
+lmcloud==0.4.5
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
