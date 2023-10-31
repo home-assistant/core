@@ -560,6 +560,8 @@ async def test_forecast_subscription(
 
         freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
         msg = await client.receive_json()
 
         assert msg["id"] == subscription_id
