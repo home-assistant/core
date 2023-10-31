@@ -2,7 +2,7 @@
     "category": "",
     "ep_type": "signal",
     "id": 6,
-    "label": "D\u00e9tection",
+    "label": "Détection",
     "name": "trigger",
     "ui": {
         "access": "w",

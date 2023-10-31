@@ -2449,7 +2449,7 @@
                 {
                     "ep_type": "signal",
                     "id": 11,
-                    "label": "\u00c9tat de l'alarme",
+                    "label": "État de l'alarme",
                     "name": "state",
                     "param_type": "void",
                     "value_type": "string",
