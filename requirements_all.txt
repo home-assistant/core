@@ -1007,7 +1007,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231027.0
+home-assistant-frontend==20231030.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -2007,7 +2007,7 @@ pysaj==0.0.16
 pyschlage==2023.10.0
 
 # homeassistant.components.sensibo
-pysensibo==1.0.35
+pysensibo==1.0.36
 
 # homeassistant.components.zha
 pyserial-asyncio-fast==0.11
@@ -2126,7 +2126,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==3.0.0
+python-homewizard-energy==3.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
