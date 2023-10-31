@@ -1,6 +1,5 @@
 """The test for weather entity."""
 from datetime import datetime
-from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -9,23 +8,13 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     ATTR_FORECAST_APPARENT_TEMP,
-    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_DEW_POINT,
     ATTR_FORECAST_HUMIDITY,
-    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
-    ATTR_FORECAST_NATIVE_DEW_POINT,
-    ATTR_FORECAST_NATIVE_PRECIPITATION,
-    ATTR_FORECAST_NATIVE_PRESSURE,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_UV_INDEX,
-    ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_GUST_SPEED,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
@@ -55,7 +44,6 @@ from homeassistant.components.weather.const import (
     ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -68,7 +56,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -80,15 +67,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from . import create_entity
+from . import MockWeatherTest, create_entity, create_entity2
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-)
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 from tests.typing import WebSocketGenerator
 
@@ -928,18 +908,33 @@ async def test_get_forecast_no_forecast(
 )
 async def test_get_forecast_unsupported(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    config_flow_fixture: None,
     forecast_types: list[str],
     supported_features: int,
 ) -> None:
     """Test get forecast service."""
 
-    entity0 = await create_entity(
-        hass,
-        native_temperature=38,
-        native_temperature_unit=UnitOfTemperature.CELSIUS,
-        supported_features=supported_features,
-    )
+    class MockWeatherMockForecast(WeatherPlatform.MockWeather):
+        """Mock weather class with mocked legacy forecast."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the forecast_daily."""
+            return self.forecast_list
+
+        async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+            """Return the forecast_twice_daily."""
+            return self.forecast_list
+
+        async def async_forecast_hourly(self) -> list[Forecast] | None:
+            """Return the forecast_hourly."""
+            return self.forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": supported_features,
+    }
+    weather_entity = await create_entity2(hass, MockWeatherMockForecast, None, **kwargs)
 
     for forecast_type in forecast_types:
         with pytest.raises(HomeAssistantError):
@@ -947,7 +942,7 @@ async def test_get_forecast_unsupported(
                 DOMAIN,
                 SERVICE_GET_FORECAST,
                 {
-                    "entity_id": entity0.entity_id,
+                    "entity_id": weather_entity.entity_id,
                     "type": forecast_type,
                 },
                 blocking=True,
@@ -989,28 +984,6 @@ async def test_issue_forecast_property_deprecated(
     class MockWeatherMockLegacyForecastOnly(WeatherPlatform.MockWeather):
         """Mock weather class with mocked legacy forecast."""
 
-        def __init__(self, **values: Any) -> None:
-            """Initialize."""
-            super().__init__(**values)
-            self.forecast_list: list[Forecast] | None = [
-                {
-                    ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
-                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
-                    ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
-                    ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
-                    ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
-                    ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
-                    ATTR_FORECAST_UV_INDEX: self.uv_index,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
-                        "native_precipitation"
-                    ),
-                    ATTR_FORECAST_HUMIDITY: self.humidity,
-                }
-            ]
-
         @property
         def forecast(self) -> list[Forecast] | None:
             """Return the forecast."""
@@ -1023,47 +996,9 @@ async def test_issue_forecast_property_deprecated(
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    weather_entity = MockWeatherMockLegacyForecastOnly(
-        name="Testing",
-        entity_id="weather.testing",
-        condition=ATTR_CONDITION_SUNNY,
-        **kwargs,
+    weather_entity = await create_entity2(
+        hass, MockWeatherMockLegacyForecastOnly, manifest_extra, **kwargs
     )
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_weather_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test weather platform via config entry."""
-        async_add_entities([weather_entity])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-            partial_manifest=manifest_extra,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.weather",
-        MockPlatform(async_setup_entry=async_setup_entry_weather_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert weather_entity.state == ATTR_CONDITION_SUNNY
 
@@ -1087,37 +1022,37 @@ async def test_issue_forecast_property_deprecated(
 
 async def test_issue_forecast_attr_deprecated(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    issue_registry: ir.IssueRegistry,
+    config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the issue is raised on deprecated forecast attributes."""
+
+    class MockWeatherMockLegacyForecast(MockWeatherTest):
+        """Mock weather class with legacy forecast."""
+
+        @property
+        def forecast(self) -> list[Forecast] | None:
+            """Return the forecast."""
+            return self.forecast_list
 
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    platform: WeatherPlatform = getattr(hass.components, "test.weather")
-    caplog.clear()
-    platform.init(empty=True)
-    weather = platform.MockWeather(
-        name="Testing",
-        entity_id="weather.testing",
-        condition=ATTR_CONDITION_SUNNY,
-        **kwargs,
+
+    # Fake that the class belongs to a custom integration
+    MockWeatherMockLegacyForecast.__module__ = "custom_components.test.weather"
+
+    weather_entity = await create_entity2(
+        hass, MockWeatherMockLegacyForecast, None, **kwargs
     )
-    weather._attr_forecast = []
-    platform.ENTITIES.append(weather)
 
-    entity0 = platform.ENTITIES[0]
-    assert await async_setup_component(
-        hass, "weather", {"weather": {"platform": "test", "name": "testing"}}
+    assert weather_entity.state == ATTR_CONDITION_SUNNY
+
+    issue = issue_registry.async_get_issue(
+        "weather", "deprecated_weather_forecast_test"
     )
-    await hass.async_block_till_done()
-
-    assert entity0.state == ATTR_CONDITION_SUNNY
-
-    issues = ir.async_get(hass)
-    issue = issues.async_get_issue("weather", "deprecated_weather_forecast_test")
     assert issue
     assert issue.issue_domain == "test"
     assert issue.issue_id == "deprecated_weather_forecast_test"
@@ -1125,7 +1060,7 @@ async def test_issue_forecast_attr_deprecated(
     assert issue.translation_placeholders == {"platform": "test"}
 
     assert (
-        "test::MockWeather implements the `forecast` property or "
+        "test::MockWeatherMockLegacyForecast implements the `forecast` property or "
         "sets `self._attr_forecast` in a subclass of WeatherEntity, this is deprecated "
         "and will be unsupported from Home Assistant 2024.3. Please report it to the "
         "author of the 'test' custom integration"
@@ -1142,28 +1077,6 @@ async def test_issue_forecast_deprecated_no_logging(
     class MockWeatherMockForecast(WeatherPlatform.MockWeather):
         """Mock weather class with mocked new method and legacy forecast."""
 
-        def __init__(self, **values: Any) -> None:
-            """Initialize."""
-            super().__init__(**values)
-            self.forecast_list: list[Forecast] | None = [
-                {
-                    ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
-                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
-                    ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
-                    ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
-                    ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
-                    ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
-                    ATTR_FORECAST_UV_INDEX: self.uv_index,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
-                        "native_precipitation"
-                    ),
-                    ATTR_FORECAST_HUMIDITY: self.humidity,
-                }
-            ]
-
         @property
         def forecast(self) -> list[Forecast] | None:
             """Return the forecast."""
@@ -1177,46 +1090,8 @@ async def test_issue_forecast_deprecated_no_logging(
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    weather_entity = MockWeatherMockForecast(
-        name="Testing",
-        entity_id="weather.testing",
-        condition=ATTR_CONDITION_SUNNY,
-        **kwargs,
-    )
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_weather_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test weather platform via config entry."""
-        async_add_entities([weather_entity])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.weather",
-        MockPlatform(async_setup_entry=async_setup_entry_weather_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    weather_entity = await create_entity2(hass, MockWeatherMockForecast, None, **kwargs)
 
     assert weather_entity.state == ATTR_CONDITION_SUNNY
 
