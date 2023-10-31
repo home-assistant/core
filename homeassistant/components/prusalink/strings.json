@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -19,11 +20,15 @@
     "sensor": {
       "printer_state": {
         "state": {
-          "cancelling": "Cancelling",
           "idle": "[%key:common::state::idle%]",
+          "busy": "Busy",
+          "printing": "Printing",
           "paused": "[%key:common::state::paused%]",
-          "pausing": "Pausing",
-          "printing": "Printing"
+          "finished": "Finished",
+          "stopped": "Stopped",
+          "error": "Error",
+          "attention": "Attention",
+          "ready": "Ready"
         }
       },
       "heatbed_temperature": {
@@ -44,9 +49,6 @@
       "filename": {
         "name": "Filename"
       },
-      "material": {
-        "name": "Material"
-      },
       "print_start": {
         "name": "Print start"
       },
@@ -55,6 +57,15 @@
       },
       "print_speed": {
         "name": "Print speed"
+      },
+      "print_flow": {
+        "name": "Print flow"
+      },
+      "fan_hotend": {
+        "name": "Hotend Fan"
+      },
+      "fan_print": {
+        "name": "Print Fan"
       },
       "z_height": {
         "name": "Z-Height"

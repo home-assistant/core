@@ -8,10 +8,17 @@ import logging
 from time import monotonic
 from typing import Generic, TypeVar
 
-from pyprusalink import InvalidAuth, JobInfo, PrinterInfo, PrusaLink, PrusaLinkError
+from pyprusalink import JobInfo, PrinterInfo, PrinterStatus, PrusaLink
+from pyprusalink.types import InvalidAuth, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,11 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PrusaLink from a config entry."""
     api = PrusaLink(
         async_get_clientsession(hass),
-        entry.data["host"],
-        entry.data["api_key"],
+        entry.data[CONF_HOST],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
     )
 
     coordinators = {
+        "status": StatusCoordinator(hass, api),
         "printer": PrinterUpdateCoordinator(hass, api),
         "job": JobUpdateCoordinator(hass, api),
     }
@@ -57,7 +66,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-T = TypeVar("T", PrinterInfo, JobInfo)
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        config_entry.version = 2
+        data = dict(config_entry.data)
+        # "maker" is currently hardcoded in the firmware
+        # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
+        data[CONF_USERNAME] = "maker"
+        data[CONF_PASSWORD] = config_entry.data[CONF_API_KEY]
+        data.pop(CONF_API_KEY)
+        hass.config_entries.async_update_entry(config_entry, data=data)
+        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+
+    return True
+
+
+T = TypeVar("T", PrinterStatus, PrinterInfo, JobInfo)
 
 
 class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
@@ -105,21 +132,20 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
         return timedelta(seconds=30)
 
 
+class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
+    """Printer update coordinator."""
+
+    async def _fetch_data(self) -> PrinterStatus:
+        """Fetch the printer data."""
+        return await self.api.get_status()
+
+
 class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     """Printer update coordinator."""
 
     async def _fetch_data(self) -> PrinterInfo:
         """Fetch the printer data."""
-        return await self.api.get_printer()
-
-    def _get_update_interval(self, data: T) -> timedelta:
-        """Get new update interval."""
-        if data and any(
-            data["state"]["flags"][key] for key in ("pausing", "cancelling")
-        ):
-            return timedelta(seconds=5)
-
-        return super()._get_update_interval(data)
+        return await self.api.get_info()
 
 
 class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
@@ -142,5 +168,5 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             name=self.coordinator.config_entry.title,
             manufacturer="Prusa",
-            configuration_url=self.coordinator.api.host,
+            configuration_url=self.coordinator.api.client.host,
         )

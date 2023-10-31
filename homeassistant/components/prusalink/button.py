@@ -5,7 +5,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar, cast
 
-from pyprusalink import Conflict, JobInfo, PrinterInfo, PrusaLink
+from pyprusalink import JobInfo, PrinterInfo, PrinterStatus, PrusaLink
+from pyprusalink.types import Conflict, PrinterState
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -15,14 +16,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
 
-T = TypeVar("T", PrinterInfo, JobInfo)
+T = TypeVar("T", PrinterStatus, PrinterInfo, JobInfo)
 
 
 @dataclass
 class PrusaLinkButtonEntityDescriptionMixin(Generic[T]):
     """Mixin for required keys."""
 
-    press_fn: Callable[[PrusaLink], Coroutine[Any, Any, None]]
+    press_fn: Callable[[PrusaLink, PrinterStatus], Coroutine[Any, Any, None]]
 
 
 @dataclass
@@ -35,33 +36,39 @@ class PrusaLinkButtonEntityDescription(
 
 
 BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
-    "printer": (
-        PrusaLinkButtonEntityDescription[PrinterInfo](
+    "status": (
+        PrusaLinkButtonEntityDescription[PrinterStatus](
             key="printer.cancel_job",
             translation_key="cancel_job",
             icon="mdi:cancel",
-            press_fn=lambda api: cast(Coroutine, api.cancel_job()),
-            available_fn=lambda data: any(
-                data["state"]["flags"][flag]
-                for flag in ("printing", "pausing", "paused")
+            press_fn=lambda api, data: cast(
+                Coroutine, api.cancel_job(data["job"]["id"])
+            ),
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.PRINTING.value
             ),
         ),
-        PrusaLinkButtonEntityDescription[PrinterInfo](
+        PrusaLinkButtonEntityDescription[PrinterStatus](
             key="job.pause_job",
             translation_key="pause_job",
             icon="mdi:pause",
-            press_fn=lambda api: cast(Coroutine, api.pause_job()),
-            available_fn=lambda data: (
-                data["state"]["flags"]["printing"]
-                and not data["state"]["flags"]["paused"]
+            press_fn=lambda api, data: cast(
+                Coroutine, api.pause_job(data["job"]["id"])
+            ),
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.PRINTING.value
             ),
         ),
-        PrusaLinkButtonEntityDescription[PrinterInfo](
+        PrusaLinkButtonEntityDescription[PrinterStatus](
             key="job.resume_job",
             translation_key="resume_job",
             icon="mdi:play",
-            press_fn=lambda api: cast(Coroutine, api.resume_job()),
-            available_fn=lambda data: cast(bool, data["state"]["flags"]["paused"]),
+            press_fn=lambda api, data: cast(
+                Coroutine, api.resume_job(data["job"]["id"])
+            ),
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.PAUSED.value
+            ),
         ),
     ),
 }
@@ -114,7 +121,9 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         try:
-            await self.entity_description.press_fn(self.coordinator.api)
+            await self.entity_description.press_fn(
+                self.coordinator.api, self.coordinator.data
+            )
         except Conflict as err:
             raise HomeAssistantError(
                 "Action conflicts with current printer state"
