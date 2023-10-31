@@ -322,6 +322,8 @@ async def async_setup_entry(
 
     @callback
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
+        if not netatmo_device.room.climate_type:
+            raise ValueError("Climate type is not set")
         async_add_entities(
             NetatmoRoomSensor(netatmo_device, description)
             for description in SENSOR_TYPES
@@ -635,8 +637,7 @@ class NetatmoRoomSensor(NetatmoBase, SensorEntity):
         self._room_id = self._room.entity_id
         self._config_url = CONF_URL_ENERGY
 
-        if not self._room.climate_type:
-            raise ValueError("Climate type is not set")
+        assert self._room.climate_type
         self._model = self._room.climate_type
 
         self._attr_unique_id = (
