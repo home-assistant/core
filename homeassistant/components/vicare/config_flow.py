@@ -26,10 +26,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = {
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_CLIENT_ID): cv.string,
-}
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+    }
+)
 
 USER_SCHEMA = REAUTH_SCHEMA.extend(
     {
@@ -68,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(USER_SCHEMA),
+            data_schema=USER_SCHEMA,
             errors=errors,
         )
 
@@ -111,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(REAUTH_SCHEMA), self.entry.data
+                REAUTH_SCHEMA, self.entry.data
             ),
             errors=errors,
         )
