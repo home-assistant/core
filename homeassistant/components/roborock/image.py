@@ -111,9 +111,13 @@ async def create_coordinator_maps(
     entities = []
     maps: MultiMapsList = await coord.cloud_api.get_multi_maps_list()
     cur_map = coord.current_map
-    for roborock_map in maps.map_info:
+    # Sort the maps so that we start with the current map and we can skip the load_multi_map call.
+    maps_info = sorted(
+        maps.map_info, key=lambda data: data.mapFlag == cur_map, reverse=True
+    )
+    for roborock_map in maps_info:
         # Load the map - so we can access it with get_map_v1
-        if len(maps.map_info) != 1:
+        if len(maps.map_info) != 1 or roborock_map != cur_map:
             # Only change the map and sleep if we have multiple maps.
             await coord.api.send_command(
                 RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
