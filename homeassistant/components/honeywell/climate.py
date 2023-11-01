@@ -38,6 +38,7 @@ from .const import (
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
+    RETRY,
 )
 
 ATTR_FAN_ACTION = "fan_action"
@@ -155,6 +156,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
+        self._retry = 0
 
         self._attr_unique_id = device.deviceid
 
@@ -351,6 +353,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode == "heat":
                     await self._device.set_setpoint_heat(temperature)
 
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell set temperature failed: Invalid Response"
+            ) from err
+
         except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ValueError(
@@ -366,6 +373,11 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_setpoint_cool(temperature)
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
+
+            except UnexpectedResponse as err:
+                raise HomeAssistantError(
+                    "Honeywell set temperature failed: Invalid Response"
+                ) from err
 
             except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
@@ -483,21 +495,28 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
             self._attr_available = True
+            self._retry = 0
+
         except UnauthorizedError:
             try:
                 await self._data.client.login()
                 await self._device.refresh()
                 self._attr_available = True
+                self._retry = 0
 
             except (
                 SomeComfortError,
                 ClientConnectionError,
                 asyncio.TimeoutError,
             ):
-                self._attr_available = False
+                self._retry += 1
+                if self._retry > RETRY:
+                    self._attr_available = False
 
         except (ClientConnectionError, asyncio.TimeoutError):
-            self._attr_available = False
+            self._retry += 1
+            if self._retry > RETRY:
+                self._attr_available = False
 
         except UnexpectedResponse:
             pass

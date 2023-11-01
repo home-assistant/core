@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-DEFAULT_NAME = "Random Binary Sensor"
+DEFAULT_NAME = "Random binary sensor"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

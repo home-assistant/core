@@ -58,7 +58,9 @@ async def async_setup_entry(
     )
 
 
-class GoogleTaskTodoListEntity(CoordinatorEntity, TodoListEntity):
+class GoogleTaskTodoListEntity(
+    CoordinatorEntity[TaskUpdateCoordinator], TodoListEntity
+):
     """A To-do List representation of the Shopping List."""
 
     _attr_has_entity_name = True
@@ -89,7 +91,7 @@ class GoogleTaskTodoListEntity(CoordinatorEntity, TodoListEntity):
                 summary=item["title"],
                 uid=item["id"],
                 status=TODO_STATUS_MAP.get(
-                    item.get("status"), TodoItemStatus.NEEDS_ACTION
+                    item.get("status"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
                 ),
             )
             for item in self.coordinator.data
