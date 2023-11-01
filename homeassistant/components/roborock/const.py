@@ -9,20 +9,19 @@ CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
 PLATFORMS = [
-    Platform.VACUUM,
+    Platform.BUTTON,
+    Platform.BINARY_SENSOR,
+    Platform.IMAGE,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
-    Platform.NUMBER,
-    Platform.BINARY_SENSOR,
-    Platform.IMAGE,
 ]
 
 IMAGE_DRAWABLES: list[Drawable] = [
     Drawable.PATH,
     Drawable.CHARGER,
     Drawable.VACUUM_POSITION,
-]
 
 IMAGE_CACHE_INTERVAL = 90

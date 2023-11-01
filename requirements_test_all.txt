@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.2.0
+aioesphomeapi==18.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -233,7 +233,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.8
+aiohomekit==3.0.9
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -353,7 +353,7 @@ aiovlc==0.1.0
 aiovodafone==0.4.2
 
 # homeassistant.components.waqi
-aiowaqi==2.1.0
+aiowaqi==3.0.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -793,10 +793,10 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.28
+holidays==0.35
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231030.0
+home-assistant-frontend==20231030.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -1597,7 +1597,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.5.3
+python-kasa[speedups]==0.5.4
 
 # homeassistant.components.matter
 python-matter-server==4.0.0
@@ -1730,7 +1730,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.11
+reolink-aio==0.7.12
 
 # homeassistant.components.rflink
 rflink==0.0.65
