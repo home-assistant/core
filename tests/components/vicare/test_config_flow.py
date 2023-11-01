@@ -101,6 +101,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     MockConfigEntry(
         domain=DOMAIN,
         data=VALID_CONFIG,
+        entry_id=MOCK_MAC,
     ).add_to_hass(hass)
 
     with patch(
@@ -109,7 +110,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={"source": SOURCE_REAUTH, "entry_id": MOCK_MAC},
             data=VALID_CONFIG,
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
