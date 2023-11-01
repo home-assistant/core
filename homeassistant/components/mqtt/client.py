@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
+from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain, groupby
 import logging
@@ -12,7 +13,6 @@ import time
 from typing import TYPE_CHECKING, Any
 import uuid
 
-import attr
 import certifi
 
 from homeassistant.config_entries import ConfigEntry
@@ -218,15 +218,15 @@ def subscribe(
     return remove
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass(frozen=True)
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic: str = attr.ib()
-    matcher: Any = attr.ib()
-    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
-    qos: int = attr.ib(default=0)
-    encoding: str | None = attr.ib(default="utf-8")
+    topic: str
+    matcher: Any
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
+    qos: int = 0
+    encoding: str | None = "utf-8"
 
 
 class MqttClientSetup:

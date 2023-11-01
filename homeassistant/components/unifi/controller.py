@@ -47,6 +47,7 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -108,6 +109,9 @@ class UniFiController:
     def load_config_entry_options(self) -> None:
         """Store attributes to avoid property call overhead since they are called frequently."""
         options = self.config_entry.options
+
+        # Allow creating entities from clients.
+        self.option_supported_clients: list[str] = options.get(CONF_CLIENT_SOURCE, [])
 
         # Device tracker options
 
@@ -259,7 +263,7 @@ class UniFiController:
             if entry.domain == Platform.DEVICE_TRACKER:
                 macs.append(entry.unique_id.split("-", 1)[0])
 
-        for mac in self.option_block_clients + macs:
+        for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
                 self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
@@ -317,7 +321,7 @@ class UniFiController:
             self.poe_command_queue.clear()
             for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
-                commands = [(idx, mode) for idx, mode in device_commands.items()]
+                commands = list(device_commands.items())
                 await self.api.request(
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )

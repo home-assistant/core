@@ -28,6 +28,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "in_cleaning": {
+        "name": "Cleaning"
+      },
       "mop_attached": {
         "name": "Mop attached"
       },
@@ -64,7 +67,8 @@
           "water_empty": "Water empty",
           "waste_water_tank_full": "Waste water tank full",
           "dirty_tank_latch_open": "Dirty tank latch open",
-          "no_dustbin": "No dustbin"
+          "no_dustbin": "No dustbin",
+          "cleaning_tank_full_or_blocked": "Cleaning tank full or blocked"
         }
       },
       "main_brush_time_left": {

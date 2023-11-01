@@ -815,7 +815,7 @@ def _validate_timespan(
 
     This converts the input service arguments into a `start` and `end` date or date time. This
     exists because service calls use `start_date` and `start_date_time` whereas the
-    normal entity methods can take either a `datetim` or `date` as a single `start` argument.
+    normal entity methods can take either a `datetime` or `date` as a single `start` argument.
     It also handles the other service call variations like "in days" as well.
     """
 
@@ -851,7 +851,7 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
 async def async_list_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
 ) -> ServiceResponse:
-    """List events on a calendar during a time drange."""
+    """List events on a calendar during a time range."""
     start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
     if EVENT_DURATION in service_call.data:
         end = start + service_call.data[EVENT_DURATION]

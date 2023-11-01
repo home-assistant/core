@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
@@ -55,6 +56,8 @@ from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -128,14 +131,15 @@ def handle_subscribe_events(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe events command."""
-    # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from .permissions import SUBSCRIBE_ALLOWLIST
-
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
+        _LOGGER.error(
+            "Refusing to allow %s to subscribe to event %s",
+            connection.user.name,
+            event_type,
+        )
+        raise Unauthorized(user_id=connection.user.id)
 
     if event_type == EVENT_STATE_CHANGED:
         forward_events = callback(

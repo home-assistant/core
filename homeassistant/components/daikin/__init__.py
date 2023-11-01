@@ -168,9 +168,12 @@ async def async_migrate_unique_id(
                 ent_reg, duplicate.id, True
             )
             for entity in duplicate_entities:
-                ent_reg.async_remove(entity.entity_id)
+                if entity.config_entry_id == config_entry.entry_id:
+                    ent_reg.async_remove(entity.entity_id)
 
-            dev_reg.async_remove_device(duplicate.id)
+            dev_reg.async_update_device(
+                duplicate.id, remove_config_entry_id=config_entry.entry_id
+            )
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(

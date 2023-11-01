@@ -7,14 +7,14 @@
 
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
-astroid==2.15.7
-coverage==7.3.1
+astroid==3.0.1
+coverage==7.3.2
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.5.1
-pre-commit==3.4.0
+mypy==1.6.1
+pre-commit==3.5.0
 pydantic==1.10.12
-pylint==2.17.6
+pylint==3.0.2
 pylint-per-file-ignores==1.2.1
 pipdeptree==2.11.0
 pytest-asyncio==0.21.0
@@ -28,7 +28,7 @@ pytest-timeout==2.1.0
 pytest-unordered==0.5.2
 pytest-picked==0.4.6
 pytest-xdist==3.3.1
-pytest==7.3.1
+pytest==7.4.3
 requests-mock==1.11.0
 respx==0.20.2
 syrupy==4.5.0
