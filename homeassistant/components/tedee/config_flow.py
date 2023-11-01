@@ -50,12 +50,11 @@ async def validate_input(user_input: dict[str, Any]) -> bool:
     return True
 
 
-async def get_local_bridge_serial(host: str, local_access_token: str) -> str:
+async def get_local_bridge(host: str, local_access_token: str) -> TedeeBridge:
     """Get the serial number of the local bridge."""
     tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
     try:
-        bridge = await tedee_client.get_local_bridge()
-        return bridge.serial
+        return await tedee_client.get_local_bridge()
     except (TedeeClientException, Exception) as ex:
         raise CannotConnect from ex
 
@@ -90,6 +89,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict = {}
+        local_bridge: TedeeBridge | None = None
 
         if user_input is not None:
             if (
@@ -108,6 +108,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 try:
                     await validate_input(user_input)
+                    local_bridge = await get_local_bridge(
+                        user_input[CONF_HOST], user_input[CONF_LOCAL_ACCESS_TOKEN]
+                    )
                 except InvalidAuth:
                     errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
                 except CannotConnect:
@@ -118,6 +121,9 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._previous_step_data = user_input
                     return await self.async_step_configure_cloud()
 
+                assert local_bridge
+                await self.async_set_unique_id(local_bridge.serial)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
@@ -137,7 +143,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Extra step for cloud configuration."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 await validate_input(user_input)
@@ -155,7 +161,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 if len(bridges) == 1:
-                    await self.async_set_unique_id(str(bridges[0].bridge_id))
+                    await self.async_set_unique_id(bridges[0].serial)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=NAME,
@@ -180,23 +186,23 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Select a bridge from the cloud."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_BRIDGE_ID])
+            selected_bridge = [
+                bridge
+                for bridge in self._bridges
+                if str(bridge.bridge_id) == user_input[CONF_BRIDGE_ID]
+            ][0]
+            await self.async_set_unique_id(selected_bridge.serial)
             self._abort_if_unique_id_configured()
 
             # if user has configured local API, make sure the bridge is the same
             if self._previous_step_data.get(CONF_HOST) and self._previous_step_data.get(
                 CONF_LOCAL_ACCESS_TOKEN
             ):
-                bridge_serial = await get_local_bridge_serial(
+                local_bridge = await get_local_bridge(
                     self._previous_step_data[CONF_HOST],
                     self._previous_step_data[CONF_LOCAL_ACCESS_TOKEN],
                 )
-                selected_bridge = [
-                    bridge
-                    for bridge in self._bridges
-                    if bridge.bridge_id == user_input[CONF_BRIDGE_ID]
-                ][0]
-                if bridge_serial != selected_bridge.serial:
+                if local_bridge.serial != selected_bridge.serial:
                     errors[CONF_BRIDGE_ID] = "wrong_bridge_selected"
             if not errors:
                 return self.async_create_entry(
@@ -210,7 +216,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         options=[
                             SelectOptionDict(
                                 value=str(bridge.bridge_id),
-                                label=f"{bridge.name} ({bridge.bridge_id})",
+                                label=f"{bridge.name} ({bridge.serial})",
                             )
                             for bridge in self._bridges
                         ],
@@ -220,7 +226,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(
-            step_id="bridge_selection",
+            step_id="select_bridge",
             data_schema=bridge_selection_schema,
             errors=errors,
         )

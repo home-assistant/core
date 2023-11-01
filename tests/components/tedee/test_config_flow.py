@@ -2,9 +2,11 @@
 from unittest.mock import MagicMock
 
 from pytedee_async import TedeeAuthException, TedeeLocalAuthException
+from pytedee_async.bridge import TedeeBridge
 
 from homeassistant import config_entries
 from homeassistant.components.tedee.const import (
+    CONF_BRIDGE_ID,
     CONF_HOME_ASSISTANT_ACCESS_TOKEN,
     CONF_LOCAL_ACCESS_TOKEN,
     CONF_UNLOCK_PULLS_LATCH,
@@ -35,9 +37,11 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 
 async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     """Test config flow."""
+    # initial config
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -49,8 +53,6 @@ async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
         },
     )
 
-    assert len(mock_tedee.get_locks.mock_calls) == 1
-
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: "192.168.1.62",
@@ -58,9 +60,94 @@ async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
         CONF_USE_CLOUD: False,
     }
 
+    # config with local only
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
 
-async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
-    """Test config flow."""
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+            CONF_USE_CLOUD: False,
+        },
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+    # config with cloud and more locks
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+            CONF_USE_CLOUD: True,
+        },
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "configure_cloud"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "select_bridge"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_BRIDGE_ID: "1234"}
+    )
+
+    assert result4["type"] == FlowResultType.ABORT
+    assert result4["reason"] == "already_configured"
+
+    # config with cloud and one lock
+    mock_tedee.get_bridges.return_value = [
+        TedeeBridge(1234, "0000-0000", "Bridge-AB1C"),
+    ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+            CONF_USE_CLOUD: True,
+        },
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "configure_cloud"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result3["type"] == FlowResultType.ABORT
+    assert result3["reason"] == "already_configured"
+
+
+async def test_flow_one_bridge(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
+    """Test config flow with one bridge."""
+    mock_tedee.get_bridges.return_value = [
+        TedeeBridge(1234, "0000-0000", "Bridge-AB1C"),
+    ]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -90,6 +177,49 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
         CONF_LOCAL_ACCESS_TOKEN: "token",
         CONF_USE_CLOUD: True,
         CONF_ACCESS_TOKEN: "token",
+        CONF_BRIDGE_ID: 1234,
+    }
+
+
+async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
+    """Test config flow with one bridge."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+            CONF_USE_CLOUD: True,
+        },
+    )
+
+    assert len(mock_tedee.get_locks.mock_calls) == 1
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "configure_cloud"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], {CONF_ACCESS_TOKEN: "token"}
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "select_bridge"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_BRIDGE_ID: "1234"}
+    )
+
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["data"] == {
+        CONF_HOST: "192.168.1.62",
+        CONF_LOCAL_ACCESS_TOKEN: "token",
+        CONF_USE_CLOUD: True,
+        CONF_ACCESS_TOKEN: "token",
+        CONF_BRIDGE_ID: "1234",
     }
 
 
@@ -174,6 +304,19 @@ async def config_flow_errors(hass: HomeAssistant, mock_tedee: MagicMock) -> None
     assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
     assert len(mock_tedee.get_locks.mock_calls) == 4
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={CONF_ACCESS_TOKEN: "token"}
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "select_bridge"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_BRIDGE_ID: "5678"}
+    )
+    assert result4["type"] == FlowResultType.FORM
+    assert result4["errors"] == {CONF_BRIDGE_ID: "wrong_bridge_selected"}
 
 
 async def test_show_reauth(

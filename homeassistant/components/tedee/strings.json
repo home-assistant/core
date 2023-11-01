@@ -22,7 +22,7 @@
           "access_token": "Personal Access Key"
         }
       },
-      "bridge_selection": {
+      "select_bridge": {
         "title": "Select your bridge",
         "description": "Select the bridge you want to add to Home Assistant.",
         "data": {

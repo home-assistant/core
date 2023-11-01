@@ -33,11 +33,15 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize coordinator."""
+        bridge_id_str = entry.data.get(CONF_BRIDGE_ID)
+        bridge_id: int | None = None
+        if bridge_id_str:
+            bridge_id = int(bridge_id_str)
         self.tedee_client = TedeeClient(
             personal_token=entry.data.get(CONF_ACCESS_TOKEN),
             local_token=entry.data.get(CONF_LOCAL_ACCESS_TOKEN),
             local_ip=entry.data.get(CONF_HOST),
-            bridge_id=entry.data.get(CONF_BRIDGE_ID),
+            bridge_id=bridge_id,
         )
         self._initialized = False
         self._next_get_locks = time.time()
