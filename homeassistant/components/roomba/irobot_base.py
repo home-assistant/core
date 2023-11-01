@@ -71,6 +71,7 @@ class IRobotEntity(Entity):
         self.vacuum_state = roomba_reported_state(roomba)
         self._name = self.vacuum_state.get("name")
         self._version = self.vacuum_state.get("softwareVer")
+        self._hw_version = self.vacuum_state.get("hardwareRev")
         self._sku = self.vacuum_state.get("sku")
 
     @property
@@ -99,6 +100,7 @@ class IRobotEntity(Entity):
             model=self._sku,
             name=str(self._name),
             sw_version=self._version,
+            hw_version=self._hw_version,
         )
 
     @property
