@@ -116,6 +116,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
+        # test success
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
@@ -131,11 +132,6 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
             hass.config_entries.async_entries()[0].data[CONF_CLIENT_ID] == new_client_id
         )
         await hass.async_block_till_done()
-
-        # test success
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
 
 
 async def test_form_dhcp(
