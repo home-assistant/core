@@ -501,8 +501,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 asyncio.TimeoutError,
             ):
                 self._retry += 1
-                if self._retry > RETRY:
-                    self._attr_available = False
+                self._attr_available = self._retry <= RETRY
 
         try:
             await self._device.refresh()
@@ -514,8 +513,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except (ClientConnectionError, asyncio.TimeoutError):
             self._retry += 1
-            if self._retry > RETRY:
-                self._attr_available = False
+            self._attr_available = self._retry <= RETRY
 
         except UnexpectedResponse:
             pass
