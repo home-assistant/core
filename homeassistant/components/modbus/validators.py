@@ -152,8 +152,12 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         error = f"{name}: `{CONF_REGISTER_SIZE_BYTES}:{register_size_bytes}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
     if register_size_bytes == RegisterBytes.NOT_SET:
-        # set default value (2 bytes) after checking is not string
-        register_size_bytes = RegisterBytes.TWO
+        if data_type in (DataType.INT8, DataType.UINT8):
+            # set 1 byte for 8 bit data types
+            register_size_bytes = RegisterBytes.ONE
+        else:
+            # set modbus default value (2 bytes)
+            register_size_bytes = RegisterBytes.TWO
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
             size = struct.calcsize(structure)

@@ -1557,6 +1557,69 @@ async def test_count_is_correct_when_register_bytes_is_set(
     assert expected_count == test_sensor["count"]
 
 
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 201,
+                },
+            ],
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "expected_count"),
+    [
+        (
+            {
+                CONF_DATA_TYPE: DataType.UINT8,
+                CONF_REGISTER_SIZE_BYTES: RegisterBytes.NOT_SET,
+            },
+            1,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.UINT16,
+                CONF_REGISTER_SIZE_BYTES: RegisterBytes.NOT_SET,
+            },
+            1,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.UINT32,
+                CONF_REGISTER_SIZE_BYTES: RegisterBytes.NOT_SET,
+            },
+            2,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.UINT64,
+                CONF_REGISTER_SIZE_BYTES: RegisterBytes.NOT_SET,
+            },
+            4,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 2,
+                CONF_REGISTER_SIZE_BYTES: RegisterBytes.NOT_SET,
+                CONF_STRUCTURE: ">L",
+            },
+            2,
+        ),
+    ],
+)
+async def test_count_is_correct_when_register_bytes_is_not_set(
+    hass: HomeAssistant, mock_do_cycle, expected_count
+) -> None:
+    """Run test to check the sensor count is correctly when given register size is not set."""
+    test_sensor = hass.data["sensor"].config["modbus"][0]["sensors"][0]
+    assert expected_count == test_sensor["count"]
+
+
 @pytest.mark.parametrize("check_config_loaded", [False])
 @pytest.mark.parametrize(
     ("do_config", "error_message"),
