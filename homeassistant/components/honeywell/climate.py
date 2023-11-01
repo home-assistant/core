@@ -7,9 +7,9 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
-    AuthError, 
-    SomeComfortError, 
-    UnauthorizedError, 
+    AuthError,
+    SomeComfortError,
+    UnauthorizedError,
     UnexpectedResponse,
 )
 from aiosomecomfort.device import Device as SomeComfortDevice
@@ -488,32 +488,34 @@ class HoneywellUSThermostat(ClimateEntity):
     async def async_update(self) -> None:
         """Get the latest state from the service."""
 
-        async def _async_update(login=False) -> None:
-            """Get the latest state from the service."""
+        async def _login() -> None:
             try:
+                await self._data.client.login()
                 await self._device.refresh()
                 self._attr_available = True
                 self._retry = 0
 
-            except UnauthorizedError:
-                if not login:
-                    try:
-                        await self._data.client.login()
-                    except (
-                        AuthError,
-                        ClientConnectionError,
-                        asyncio.TimeoutError,
-                    ):
-                        self._retry += 1
-                        self._attr_available = self._retry <= RETRY
-                    else:
-                        await _async_update(login=True)
-
-            except (ClientConnectionError, asyncio.TimeoutError):
+            except (
+                AuthError,
+                ClientConnectionError,
+                asyncio.TimeoutError,
+            ):
                 self._retry += 1
-                self._attr_available = self._retry <= RETRY
+                if self._retry > RETRY:
+                    self._attr_available = False
 
-            except UnexpectedResponse:
-                pass
+        try:
+            await self._device.refresh()
+            self._attr_available = True
+            self._retry = 0
 
-        await _async_update()
+        except UnauthorizedError:
+            await _login()
+
+        except (ClientConnectionError, asyncio.TimeoutError):
+            self._retry += 1
+            if self._retry > RETRY:
+                self._attr_available = False
+
+        except UnexpectedResponse:
+            pass
