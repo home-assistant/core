@@ -33,7 +33,7 @@ async def test_device_info() -> None:
 
 
 async def test_missing_device_id() -> None:
-    """Test we device_info is None, if device_id is missing."""
+    """Test device_info is None, if device_id is missing."""
     device = HausbusDevice(
         "bridge_id", None, "sw_version", "hw_version", EFirmwareId.ESP32
     )
