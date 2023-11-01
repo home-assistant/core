@@ -4,7 +4,7 @@ from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient
 from roborock.command_cache import CacheableAttribute
-from roborock.containers import Status, RoborockBase
+from roborock.containers import Status
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -37,7 +37,9 @@ class RoborockEntity(Entity):
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
         if attribute not in self._api.cache:
-            raise HomeAssistantError(f"Attempted to get {attribute.name} from the cache - but it does not exist.")
+            raise HomeAssistantError(
+                f"Attempted to get {attribute.name} from the cache - but it does not exist."
+            )
         return self._api.cache[attribute]
 
     async def send(
@@ -82,11 +84,7 @@ class RoborockCoordinatedEntity(
     def _device_status(self) -> Status:
         """Return the status of the device."""
         data = self.coordinator.data
-        if data:
-            status = data.status
-            if status:
-                return status
-        return Status(None)
+        return data.status
 
     async def send(
         self,
