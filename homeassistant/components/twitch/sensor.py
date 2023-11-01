@@ -52,6 +52,11 @@ STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
 
 
+def chunk_list(lst: list, chunk_size: int) -> list[list]:
+    """Split a list into chunks of chunk_size."""
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -94,13 +99,20 @@ async def async_setup_entry(
     """Initialize entries."""
     client = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            TwitchSensor(channel, client)
-            async for channel in client.get_users(logins=entry.options[CONF_CHANNELS])
-        ],
-        True,
-    )
+    channels = entry.options[CONF_CHANNELS]
+
+    entities: list[TwitchSensor] = []
+
+    # Split channels into chunks of 100 to avoid hitting the rate limit
+    for chunk in chunk_list(channels, 100):
+        entities.extend(
+            [
+                TwitchSensor(channel, client)
+                async for channel in client.get_users(logins=chunk)
+            ]
+        )
+
+    async_add_entities(entities, True)
 
 
 class TwitchSensor(SensorEntity):

@@ -162,6 +162,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     any_available_states: set[tuple[int, str]] | None = None
     # [optional] the value's value must match this value
     value: Any | None = None
+    # [optional] the value's metadata_stateful must match this value
+    stateful: bool | None = None
 
 
 @dataclass
@@ -853,26 +855,6 @@ DISCOVERY_SCHEMAS = [
         allow_multi=True,
         entity_registry_enabled_default=False,
     ),
-    # number for Basic CC
-    ZWaveDiscoverySchema(
-        platform=Platform.NUMBER,
-        hint="Basic",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.BASIC},
-            type={ValueType.NUMBER},
-            property={CURRENT_VALUE_PROPERTY},
-        ),
-        required_values=[
-            ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
-                type={ValueType.NUMBER},
-                property={TARGET_VALUE_PROPERTY},
-            )
-        ],
-        entity_registry_enabled_default=False,
-    ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
         platform=Platform.NUMBER,
@@ -997,6 +979,24 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # light for Basic CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={
+                    CommandClass.BASIC,
+                },
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
     # sirens
     ZWaveDiscoverySchema(
         platform=Platform.SIREN,
@@ -1045,6 +1045,15 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.NOTIFICATION},
             type={ValueType.NUMBER},
             any_available_states={(0, "idle")},
+        ),
+    ),
+    # event
+    # stateful = False
+    ZWaveDiscoverySchema(
+        platform=Platform.EVENT,
+        hint="stateless",
+        primary_value=ZWaveValueDiscoverySchema(
+            stateful=False,
         ),
     ),
 ]
@@ -1295,6 +1304,9 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check value
     if schema.value is not None and value.value not in schema.value:
+        return False
+    # check metadata_stateful
+    if schema.stateful is not None and value.metadata.stateful != schema.stateful:
         return False
     return True
 

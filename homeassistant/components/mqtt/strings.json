@@ -19,6 +19,10 @@
     "deprecated_climate_aux_property": {
       "title": "MQTT entities with auxiliary heat support found",
       "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deprecated config options from your configuration and restart Home Assistant to fix this issue."
+    },
+    "invalid_platform_config": {
+      "title": "Invalid config found for mqtt {domain} item",
+      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -177,7 +181,7 @@
         },
         "qos": {
           "name": "QoS",
-          "description": "Quality of Service to use. O. At most once. 1: At least once. 2: Exactly once."
+          "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once."
         },
         "retain": {
           "name": "Retain",

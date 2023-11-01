@@ -383,6 +383,7 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
         identifiers={(DOMAIN, coordinator.data.serial)},
+        serial_number=coordinator.data.serial,
         manufacturer="Brother",
         model=coordinator.data.model,
         name=coordinator.data.model,
