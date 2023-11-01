@@ -65,18 +65,21 @@ from .const import (
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
-from .models import Voice
+from .models import PreferredAudioFormat, SampleFormat, Voice
 
 __all__ = [
     "async_default_engine",
     "async_get_media_source_audio",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_FORMAT",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PreferredAudioFormat",
+    "SampleFormat",
     "Provider",
     "TtsAudioType",
     "Voice",
@@ -86,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
+ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
@@ -197,6 +201,54 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
             languages.add(language_tag)
 
     return languages
+
+
+async def async_convert_audio(
+    hass: HomeAssistant,
+    extension: str,
+    audio_bytes: bytes,
+    preferred_format: PreferredAudioFormat,
+) -> bytes:
+    """Convert audio to a preferred format using ffmpeg."""
+    ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
+
+    # input
+    command = [
+        "-f",
+        extension,
+        "-i",
+        "pipe:",  # input from stdin
+    ]
+
+    # output
+    command.extend(["-f", preferred_format.extension])
+
+    if preferred_format.sample_rate is not None:
+        command.extend(["-ar", str(preferred_format.sample_rate)])
+
+    if preferred_format.sample_format is not None:
+        command.extend(["-sample_fmt", str(preferred_format.sample_format)])
+
+    if preferred_format.num_channels is not None:
+        command.extend(["-ac", str(preferred_format.num_channels)])
+
+    if preferred_format.extension == "mp3":
+        # max quality
+        command.extend(["-q:a", "0"])
+
+    command.append("pipe:")  # output to stdoit
+
+    _LOGGER.error(command)
+    ffmpeg_proc = await asyncio.create_subprocess_exec(
+        ffmpeg_manager.binary,
+        *command,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    stdout, _stderr = await ffmpeg_proc.communicate(input=audio_bytes)
+
+    return stdout
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -484,9 +536,9 @@ class SpeechManager:
 
         supported_options = engine_instance.supported_options or []
 
-        # ATTR_AUDIO_OUTPUT is always "supported" since it's used to convert
+        # ATTR_PREFERRED_FORMAT is always "supported" since it's used to convert
         # audio after the TTS has run (if necessary)
-        supported_options.append(ATTR_AUDIO_OUTPUT)
+        supported_options.append(ATTR_PREFERRED_FORMAT)
 
         invalid_opts = [
             opt_name for opt_name in merged_options if opt_name not in supported_options
@@ -532,10 +584,6 @@ class SpeechManager:
                 language,
                 options,
             )
-
-            # Always use mp3. Audio will be automatically converted if requested.
-            filename_base = os.path.splitext(filename)[0]
-            filename = f"{filename_base}.mp3"
 
         return f"/api/tts_proxy/{filename}"
 
@@ -599,10 +647,18 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        if options is not None and ATTR_AUDIO_OUTPUT in options:
-            extension = options[ATTR_AUDIO_OUTPUT]
-        else:
-            extension = None
+        preferred_format: PreferredAudioFormat | None = None
+        extension: str | None = None
+
+        if options is not None:
+            preferred_format = options.get(ATTR_PREFERRED_FORMAT)
+            if preferred_format is not None:
+                extension = preferred_format.extension
+            else:
+                extension = options.get(ATTR_AUDIO_OUTPUT)
+                if (extension is not None) and hasattr(extension, "value"):
+                    # Unpack enum
+                    extension = extension.value
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -622,6 +678,15 @@ class SpeechManager:
                 raise HomeAssistantError(
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
+
+            if (preferred_format is not None) and preferred_format.needs_conversion(
+                extension
+            ):
+                # Always convert if we have a preferred format.
+                data = await async_convert_audio(
+                    self.hass, extension, data, preferred_format
+                )
+                extension = preferred_format.extension
 
             # Create file infos
             filename = f"{cache_key}.{extension}".lower()
@@ -668,28 +733,6 @@ class SpeechManager:
             "pending": audio_task,
         }
         return filename
-
-    async def _convert_to_mp3(
-        self,
-        from_path: str,
-        to_path: str,
-    ) -> None:
-        """Convert audio file to mp3 using ffmpeg."""
-        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
-        command = [
-            "-i",
-            from_path,
-            # max quality
-            "-q:a",
-            "0",
-            to_path,
-        ]
-        ffmpeg_proc = await asyncio.create_subprocess_exec(
-            ffmpeg_manager.binary,
-            *command,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-        await ffmpeg_proc.communicate()
 
     async def _async_save_tts_audio(
         self, cache_key: str, filename: str, data: bytes
@@ -783,21 +826,6 @@ class SpeechManager:
         if pending := cached.get("pending"):
             await pending
             cached = self.mem_cache[cache_key]
-
-        # Convert to mp3 if necessary
-        if stored_filename := self.file_cache.get(cache_key):
-            stored_base, stored_ext = os.path.splitext(stored_filename)
-            if stored_ext != ".mp3":
-                stored_filepath = os.path.join(self.cache_dir, stored_filename)
-                mp3_filepath = os.path.join(self.cache_dir, f"{stored_base}.mp3")
-
-                _LOGGER.debug("Converting %s to %s", stored_filepath, mp3_filepath)
-                await self._convert_to_mp3(stored_filepath, mp3_filepath)
-
-                # Update cache
-                self.file_cache[cache_key] = mp3_filepath
-                await self._async_file_to_mem(cache_key)
-                cached = self.mem_cache[cache_key]
 
         content, _ = mimetypes.guess_type(filename)
         return content, cached["voice"]
