@@ -240,7 +240,7 @@ class TractiveClient:
                     self._config_entry.data[CONF_EMAIL],
                 )
                 return
-            except KeyError as error:
+            except (KeyError, TypeError) as error:
                 _LOGGER.error("Error while listening for events: %s", error)
                 continue
             except aiotractive.exceptions.TractiveError:
