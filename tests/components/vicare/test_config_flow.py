@@ -101,7 +101,8 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=VALID_CONFIG,
-    ).add_to_hass(hass)
+    )
+    config_entry.add_to_hass(hass)
 
     with patch(
         f"{MODULE}.config_flow.vicare_login",
