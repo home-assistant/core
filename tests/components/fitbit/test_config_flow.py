@@ -89,6 +89,57 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
+    ("status_code", "error_reason"),
+    [
+        (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
+    ],
+)
+async def test_token_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    profile: None,
+    setup_credentials: None,
+    status_code: HTTPStatus,
+    error_reason: str,
+) -> None:
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
+    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URL}"
+        f"&state={state}"
+        "&scope=activity+heartrate+nutrition+profile+settings+sleep+weight&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        status=status_code,
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == error_reason
+
+
+@pytest.mark.parametrize(
     ("http_status", "json", "error_reason"),
     [
         (HTTPStatus.INTERNAL_SERVER_ERROR, None, "cannot_connect"),
@@ -460,7 +511,7 @@ async def test_reauth_flow(
             "refresh_token": "updated-refresh-token",
             "access_token": "updated-access-token",
             "type": "Bearer",
-            "expires_in": 60,
+            "expires_in": "60",
         },
     )
 
