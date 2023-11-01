@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from .sensor import DemoSensor
 
 # Logging
 _LOGGER = logging.getLogger(__name__)
@@ -73,8 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # TO_DO 2. Validate the API connection (and authentication)
     # TO_DO 3. Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    # """Register the hub."""
 
-    # Register the hub
     hub = E3DCModbusHub(
         hass,
         name,
@@ -83,8 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         modbus_address,
         scan_interval,
     )
-
-    hass.data[DOMAIN][name] = {"hub": hub}
+    # hass.data[DOMAIN][name] = {"hub": hub}
+    # Register the hub under the entry's entry_id
+    hass.data[DOMAIN][entry.entry_id] = {"hub": hub}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -125,18 +127,30 @@ class E3DCModbusHub:
         scan_interval,
     ) -> None:
         """Initialize the Modbus hub."""
+
         self._hass = hass
         self._client = ModbusTcpClient(
             host=host, port=port, timeout=max(3, (scan_interval - 1))
         )
         self._lock = threading.Lock()
-        # self._name = name
-        self._name = "E3/DC"
+        self._name = name
         self._address = modbus_address
         self._scan_interval = timedelta(seconds=scan_interval)
         # self.max_export_control_site_limit = max_export_control_site_limit
         self._unsub_interval_method = None
-        # self._sensors = []
-        # self.data = {}
+        self._sensors = []
+        self.data = {}
         # Modbus register offset
         self.modbus_register_offset = None
+        self._sensors.append(DemoSensor(self))
+        # self._sensors.append()
+
+    @property
+    def name(self):
+        """Return the name of this hub."""
+        return self._name
+
+    def close(self):
+        """Disconnect client."""
+        with self._lock:
+            self._client.close()
