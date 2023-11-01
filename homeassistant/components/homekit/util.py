@@ -68,6 +68,7 @@ from .const import (
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
+    CONF_VIDEO_PROFILE_NAMES,
     CONF_VIDEO_PACKET_SIZE,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
@@ -79,6 +80,7 @@ from .const import (
     DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
     DOMAIN,
@@ -153,6 +155,9 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
             VALID_VIDEO_CODECS
         ),
+        vol.Optional(
+            CONF_VIDEO_PROFILE_NAMES, default=DEFAULT_VIDEO_PROFILE_NAMES
+        ): cv.ensure_list,
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
