@@ -50,6 +50,16 @@ async def validate_input(user_input: dict[str, Any]) -> bool:
     return True
 
 
+async def get_local_bridge_serial(host: str, local_access_token: str) -> str:
+    """Get the serial number of the local bridge."""
+    tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
+    try:
+        bridge = await tedee_client.get_local_bridge()
+        return bridge.serial
+    except (TedeeClientException, Exception) as ex:
+        raise CannotConnect from ex
+
+
 async def get_bridges(pak: str) -> list[TedeeBridge]:
     """Get bridges from the cloud."""
     tedee_client = TedeeClient(pak)
@@ -72,6 +82,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reload: bool = False
         self._previous_step_data: dict = {}
         self._config: dict = {}
+        self._local_bridge_name: str = ""
         self._bridges: list[TedeeBridge] = []
 
     async def async_step_user(
@@ -171,9 +182,26 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_BRIDGE_ID])
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=NAME, data=self._previous_step_data | user_input
-            )
+
+            # if user has configured local API, make sure the bridge is the same
+            if self._previous_step_data.get(CONF_HOST) and self._previous_step_data.get(
+                CONF_LOCAL_ACCESS_TOKEN
+            ):
+                bridge_serial = await get_local_bridge_serial(
+                    self._previous_step_data[CONF_HOST],
+                    self._previous_step_data[CONF_LOCAL_ACCESS_TOKEN],
+                )
+                selected_bridge = [
+                    bridge
+                    for bridge in self._bridges
+                    if bridge.bridge_id == user_input[CONF_BRIDGE_ID]
+                ][0]
+                if bridge_serial != selected_bridge.serial:
+                    errors[CONF_BRIDGE_ID] = "wrong_bridge_selected"
+            if not errors:
+                return self.async_create_entry(
+                    title=NAME, data=self._previous_step_data | user_input
+                )
 
         bridge_selection_schema = vol.Schema(
             {
@@ -192,7 +220,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(
-            step_id="select_bridge",
+            step_id="bridge_selection",
             data_schema=bridge_selection_schema,
             errors=errors,
         )

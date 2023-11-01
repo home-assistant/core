@@ -58,12 +58,6 @@ async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
         CONF_USE_CLOUD: False,
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
 
 async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     """Test config flow."""

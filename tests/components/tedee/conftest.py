@@ -5,6 +5,7 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytedee_async.bridge import TedeeBridge
 from pytedee_async.lock import TedeeLock
 import pytest
 
@@ -52,6 +53,8 @@ def mock_tedee(request) -> Generator[MagicMock, None, None]:
 
         tedee.get_locks.return_value = None
         tedee.sync.return_value = None
+        tedee.get_bridges.return_value = [TedeeBridge(1234, "0000-0000", "Bridge-AB1C")]
+        tedee.get_local_bridge.return_value = TedeeBridge(0, "0000-0000", "Bridge-AB1C")
 
         locks_json = json.loads(load_fixture("locks.json", DOMAIN))
 
