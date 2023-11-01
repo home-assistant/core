@@ -5,7 +5,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MockWeatherTest, create_entity2
+from . import MockWeatherTest, create_entity
 
 from tests.typing import WebSocketGenerator
 
@@ -56,7 +56,7 @@ async def test_subscribe_forecast(
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
         "supported_features": WeatherEntityFeature.FORECAST_DAILY,
     }
-    weather_entity = await create_entity2(hass, MockWeatherMockForecast, None, **kwargs)
+    weather_entity = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
 
     client = await hass_ws_client(hass)
 
@@ -142,7 +142,7 @@ async def test_subscribe_forecast_unsupported(
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    weather_entity = await create_entity2(hass, MockWeatherMock, None, **kwargs)
+    weather_entity = await create_entity(hass, MockWeatherMock, None, **kwargs)
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(

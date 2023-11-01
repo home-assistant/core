@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import MockWeatherTest, create_entity2
+from . import MockWeatherTest, create_entity
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
@@ -37,7 +37,7 @@ async def test_exclude_attributes(
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
     }
-    weather_entity = await create_entity2(hass, MockWeatherMockForecast, None, **kwargs)
+    weather_entity = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
     hass.config.units = METRIC_SYSTEM
     await hass.async_block_till_done()
 
