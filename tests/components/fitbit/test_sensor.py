@@ -9,7 +9,7 @@ import pytest
 from requests_mock.mocker import Mocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fitbit.const import DOMAIN
+from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,6 +23,7 @@ from homeassistant.util.unit_system import (
 from .conftest import (
     DEVICES_API_URL,
     PROFILE_USER_ID,
+    SERVER_ACCESS_TOKEN,
     TIMESERIES_API_URL_FORMAT,
     timeseries_response,
 )
@@ -53,6 +54,18 @@ DEVICE_RESPONSE_ARIA_AIR = {
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
     return [Platform.SENSOR]
+
+
+@pytest.fixture(autouse=True)
+def mock_token_refresh(requests_mock: Mocker) -> None:
+    """Test that platform configuration is imported successfully."""
+
+    requests_mock.register_uri(
+        "POST",
+        OAUTH2_TOKEN,
+        status_code=HTTPStatus.OK,
+        json=SERVER_ACCESS_TOKEN,
+    )
 
 
 @pytest.mark.parametrize(
@@ -538,15 +551,8 @@ async def test_settings_scope_config_entry(
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
 ) -> None:
-    """Test heartrate sensors are enabled."""
+    """Test device sensors are enabled."""
 
-    for api_resource in ("activities/heart",):
-        register_timeseries(
-            api_resource,
-            timeseries_response(
-                api_resource.replace("/", "-"), {"restingHeartRate": "0"}
-            ),
-        )
     assert await integration_setup()
 
     states = hass.states.async_all()
@@ -615,6 +621,51 @@ async def test_sensor_update_failed_requires_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["heartrate"])],
+)
+async def test_sensor_update_success(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    requests_mock: Mocker,
+) -> None:
+    """Test API failure for a battery level sensor for devices."""
+
+    requests_mock.register_uri(
+        "GET",
+        TIMESERIES_API_URL_FORMAT.format(resource="activities/heart"),
+        [
+            {
+                "status_code": HTTPStatus.OK,
+                "json": timeseries_response(
+                    "activities-heart", {"restingHeartRate": "60"}
+                ),
+            },
+            {
+                "status_code": HTTPStatus.OK,
+                "json": timeseries_response(
+                    "activities-heart", {"restingHeartRate": "70"}
+                ),
+            },
+        ],
+    )
+
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.resting_heart_rate")
+    assert state
+    assert state.state == "60"
+
+    await async_update_entity(hass, "sensor.resting_heart_rate")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.resting_heart_rate")
+    assert state
+    assert state.state == "70"
 
 
 @pytest.mark.parametrize(

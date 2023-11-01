@@ -43,7 +43,7 @@ class CountryFixFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the country step of a fix flow."""
         if user_input is not None:
-            all_countries = list_supported_countries()
+            all_countries = list_supported_countries(include_aliases=False)
             if not all_countries[user_input[CONF_COUNTRY]]:
                 options = dict(self.entry.options)
                 new_options = {**options, **user_input, CONF_PROVINCE: None}
@@ -61,7 +61,9 @@ class CountryFixFlow(RepairsFlow):
                 {
                     vol.Required(CONF_COUNTRY): SelectSelector(
                         SelectSelectorConfig(
-                            options=sorted(list_supported_countries()),
+                            options=sorted(
+                                list_supported_countries(include_aliases=False)
+                            ),
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     )
@@ -83,7 +85,9 @@ class CountryFixFlow(RepairsFlow):
             return self.async_create_entry(data={})
 
         assert self.country
-        country_provinces = list_supported_countries()[self.country]
+        country_provinces = list_supported_countries(include_aliases=False)[
+            self.country
+        ]
         return self.async_show_form(
             step_id="province",
             data_schema=vol.Schema(

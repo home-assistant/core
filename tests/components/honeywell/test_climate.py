@@ -28,7 +28,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.honeywell.climate import SCAN_INTERVAL
+from homeassistant.components.honeywell.climate import RETRY, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -1083,6 +1083,17 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
+    # Due to server instability, only mark entity unavailable after RETRY update attempts
+    for _ in range(RETRY):
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.state == "off"
+
     async_fire_time_changed(
         hass,
         utcnow() + SCAN_INTERVAL,
@@ -1126,7 +1137,6 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
-    # "reload integration" test
     device.refresh.side_effect = aiosomecomfort.SomeComfortError
     client.login.side_effect = aiosomecomfort.AuthError
     async_fire_time_changed(
@@ -1139,6 +1149,18 @@ async def test_async_update_errors(
     assert state.state == "off"
 
     device.refresh.side_effect = ClientConnectionError
+
+    # Due to server instability, only mark entity unavailable after RETRY update attempts
+    for _ in range(RETRY):
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.state == "off"
+
     async_fire_time_changed(
         hass,
         utcnow() + SCAN_INTERVAL,

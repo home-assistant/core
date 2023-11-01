@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
@@ -152,6 +153,11 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
     _attr_supported_features = HumidifierEntityFeature.MODES
 
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
+        """Initialise the dehumidifier."""
+        super().__init__(accessory, devinfo)
+        self._attr_unique_id = f"{accessory.unique_id}_{self._iid}_{self.device_class}"
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -259,11 +265,6 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-{self._iid}-{self.device_class}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_{self._iid}_{self.device_class}"
 
 
 async def async_setup_entry(
