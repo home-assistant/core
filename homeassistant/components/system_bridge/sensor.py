@@ -28,9 +28,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util.dt import utcnow
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .entity import SystemBridgeEntity
 
 ATTR_AVAILABLE: Final = "available"
 ATTR_FILESYSTEM: Final = "filesystem"
