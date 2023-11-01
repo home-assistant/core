@@ -45,6 +45,7 @@ class QBittorrentMixin:
 
     value_fn: Callable[[dict[str, Any]], StateType]
     attrs_fn: Callable[[dict[str, Any]], Mapping[str, Any]] | None
+    enabled_fn: Callable[[ConfigEntry], bool] | None
 
 
 @dataclass
@@ -96,12 +97,18 @@ def list_torrents(data: dict[str, Any], filter_state=None) -> Mapping[str, Any]:
     return attrs
 
 
-BASE_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
+def _create_torrent_sensors(config_entry) -> bool:
+    """Return whether a sensor should be enabled based on the configuration."""
+    return config_entry.options.get(CONF_CREATE_TORRENT_SENSORS)
+
+
+SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_STATUS,
         name="Status",
         value_fn=_get_qbittorrent_state,
         attrs_fn=None,
+        enabled_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -112,6 +119,7 @@ BASE_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: format_speed(data["server_state"]["dl_info_speed"]),
         attrs_fn=None,
+        enabled_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
@@ -122,11 +130,8 @@ BASE_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: format_speed(data["server_state"]["up_info_speed"]),
         attrs_fn=None,
+        enabled_fn=None,
     ),
-)
-
-
-TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS,
         name="Torrents",
@@ -134,6 +139,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: count_torrents(data, None),
         attrs_fn=lambda data: list_torrents(data, None),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_DOWNLOADING,
@@ -146,6 +152,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["downloading"]
         ),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_UPLOADING,
@@ -158,6 +165,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["uploading"]
         ),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_STALLED,
@@ -170,6 +178,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["stalled"]
         ),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_STOPPED,
@@ -182,6 +191,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["stopped"]
         ),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_COMPLETED,
@@ -194,6 +204,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["completed"]
         ),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_QUEUED,
@@ -204,6 +215,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
             data, QBITTORRENT_TORRENT_STATES["queued"]
         ),
         attrs_fn=lambda data: list_torrents(data, QBITTORRENT_TORRENT_STATES["queued"]),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_CHECKING,
@@ -216,6 +228,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["checking"]
         ),
+        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_ERROR,
@@ -224,6 +237,7 @@ TORRENT_SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: count_torrents(data, QBITTORRENT_TORRENT_STATES["error"]),
         attrs_fn=lambda data: list_torrents(data, QBITTORRENT_TORRENT_STATES["error"]),
+        enabled_fn=_create_torrent_sensors,
     ),
 )
 
@@ -237,14 +251,8 @@ async def async_setup_entry(
     coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
         QBittorrentSensor(description, coordinator, config_entry)
-        for description in BASE_SENSOR_TYPES
+        for description in SENSOR_TYPES
     ]
-
-    if config_entry.options.get(CONF_CREATE_TORRENT_SENSORS):
-        entities += [
-            QBittorrentSensor(description, coordinator, config_entry)
-            for description in TORRENT_SENSOR_TYPES
-        ]
 
     async_add_entites(entities)
 
@@ -263,6 +271,11 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
         """Initialize the qBittorrent sensor."""
         super().__init__(coordinator)
         self.entity_description = description
+        if description.enabled_fn:
+            self.entity_description.entity_registry_enabled_default = (
+                description.enabled_fn(config_entry)
+            )
+
         self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_name = f"{config_entry.title} {description.name}"
         self._attr_available = False
