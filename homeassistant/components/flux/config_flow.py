@@ -212,13 +212,7 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
             user_input = self.convert_mired_stuff_to_kelvin(user_input)
             user_input = self.remove_undefined(user_input)
 
-            # modify the existing entry...
-            self.hass.config_entries.async_update_entry(
-                self._config_entry, title=user_input[CONF_NAME], options=user_input
-            )
-
-            # instead of adding options to it..
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         settings = self._config_entry.options
 
