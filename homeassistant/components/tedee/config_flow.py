@@ -108,11 +108,22 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 try:
                     await validate_input(user_input)
+                except InvalidAuth:
+                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
+                except CannotConnect:
+                    errors[CONF_HOST] = "invalid_host"
+
+            if (
+                user_input.get(CONF_HOST) is not None
+                and user_input.get(CONF_LOCAL_ACCESS_TOKEN) is not None
+                and not user_input.get(CONF_USE_CLOUD, False)
+            ):
+                try:
                     local_bridge = await get_local_bridge(
                         user_input[CONF_HOST], user_input[CONF_LOCAL_ACCESS_TOKEN]
                     )
-                except InvalidAuth:
-                    errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
+                    await self.async_set_unique_id(local_bridge.serial)
+                    self._abort_if_unique_id_configured()
                 except CannotConnect:
                     errors[CONF_HOST] = "invalid_host"
 
@@ -121,9 +132,6 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._previous_step_data = user_input
                     return await self.async_step_configure_cloud()
 
-                assert local_bridge
-                await self.async_set_unique_id(local_bridge.serial)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(

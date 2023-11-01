@@ -88,8 +88,6 @@ async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "192.168.1.62",
-            CONF_LOCAL_ACCESS_TOKEN: "token",
             CONF_USE_CLOUD: True,
         },
     )
@@ -125,8 +123,6 @@ async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "192.168.1.62",
-            CONF_LOCAL_ACCESS_TOKEN: "token",
             CONF_USE_CLOUD: True,
         },
     )
