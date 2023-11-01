@@ -76,7 +76,7 @@ async def test_options(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
         data=MOCK_CONFIG_DATA,
-        options={"scan_interval": 120},
+        options={"limit": 10, "order": "oldest_first"},
     )
     entry.add_to_hass(hass)
 
@@ -93,11 +93,12 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"scan_interval": 10}
+        result["flow_id"], user_input={"limit": 20}
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["scan_interval"] == 10
+    assert result["data"]["limit"] == 20
+    assert result["data"]["order"] == "oldest_first"
 
 
 async def test_error_on_wrong_credentials(

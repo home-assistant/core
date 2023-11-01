@@ -311,16 +311,14 @@ build.json @home-assistant/supervisor
 /tests/components/ecobee/ @marthoc @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
-/homeassistant/components/econet/ @vangorra @w1ll1am23
-/tests/components/econet/ @vangorra @w1ll1am23
+/homeassistant/components/econet/ @w1ll1am23
+/tests/components/econet/ @w1ll1am23
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
-/homeassistant/components/eight_sleep/ @mezz64 @raman325
-/tests/components/eight_sleep/ @mezz64 @raman325
 /homeassistant/components/electrasmart/ @jafar-atili
 /tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/electric_kiwi/ @mikey0000
@@ -423,8 +421,8 @@ build.json @home-assistant/supervisor
 /tests/components/fritzbox/ @mib1185 @flabbamann
 /homeassistant/components/fritzbox_callmonitor/ @cdce8p
 /tests/components/fritzbox_callmonitor/ @cdce8p
-/homeassistant/components/fronius/ @nielstron @farmio
-/tests/components/fronius/ @nielstron @farmio
+/homeassistant/components/fronius/ @farmio
+/tests/components/fronius/ @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
@@ -479,6 +477,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_mail/ @tkdrob
 /homeassistant/components/google_sheets/ @tkdrob
 /tests/components/google_sheets/ @tkdrob
+/homeassistant/components/google_tasks/ @allenporter
+/tests/components/google_tasks/ @allenporter
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/govee_ble/ @bdraco @PierreAronnax
@@ -586,6 +586,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_upload/ @home-assistant/core
 /homeassistant/components/imap/ @jbouwh
 /tests/components/imap/ @jbouwh
+/homeassistant/components/improv_ble/ @emontnemery
+/tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
@@ -708,6 +710,8 @@ build.json @home-assistant/supervisor
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
+/homeassistant/components/local_todo/ @allenporter
+/tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
 /homeassistant/components/logbook/ @home-assistant/core
@@ -1035,6 +1039,8 @@ build.json @home-assistant/supervisor
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core
 /tests/components/recorder/ @home-assistant/core
+/homeassistant/components/recovery_mode/ @home-assistant/core
+/tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
@@ -1085,8 +1091,6 @@ build.json @home-assistant/supervisor
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
 /homeassistant/components/sabnzbd/ @shaiu
 /tests/components/sabnzbd/ @shaiu
-/homeassistant/components/safe_mode/ @home-assistant/core
-/tests/components/safe_mode/ @home-assistant/core
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
@@ -1303,6 +1307,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
+/homeassistant/components/todo/ @home-assistant/core
+/tests/components/todo/ @home-assistant/core
 /homeassistant/components/todoist/ @boralyl
 /tests/components/todoist/ @boralyl
 /homeassistant/components/tolo/ @MatthiasLohr
@@ -1495,8 +1501,8 @@ build.json @home-assistant/supervisor
 /tests/components/zerproc/ @emlove
 /homeassistant/components/zeversolar/ @kvanzuijlen
 /tests/components/zeversolar/ @kvanzuijlen
-/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly
-/tests/components/zha/ @dmulcahey @adminiuga @puddly
+/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core

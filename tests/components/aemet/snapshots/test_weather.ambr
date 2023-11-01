@@ -14,7 +14,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-11T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation_probability': 0,
         'temperature': 3.0,
         'templow': -7.0,
         'wind_bearing': 0.0,
@@ -23,7 +23,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-12T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation_probability': 0,
         'temperature': -1.0,
         'templow': -13.0,
         'wind_bearing': None,
@@ -31,7 +31,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2021-01-13T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation_probability': 0,
         'temperature': 6.0,
         'templow': -11.0,
         'wind_bearing': None,
@@ -39,7 +39,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-14T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation_probability': 0,
         'temperature': 6.0,
         'templow': -7.0,
         'wind_bearing': None,
@@ -47,7 +47,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-15T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation_probability': 0,
         'temperature': 5.0,
         'templow': -4.0,
         'wind_bearing': None,
@@ -151,6 +151,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-09T21:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 100,
         'temperature': 1.0,
         'wind_bearing': 90.0,
@@ -160,6 +161,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-09T22:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 100,
         'temperature': 1.0,
         'wind_bearing': 45.0,
@@ -169,6 +171,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-09T23:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 100,
         'temperature': 1.0,
         'wind_bearing': 90.0,
@@ -178,7 +181,8 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-10T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 10,
         'temperature': 1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 12.0,
@@ -187,6 +191,7 @@
       dict({
         'condition': 'fog',
         'datetime': '2021-01-10T01:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 10,
         'temperature': 0.0,
         'wind_bearing': 45.0,
@@ -196,6 +201,7 @@
       dict({
         'condition': 'fog',
         'datetime': '2021-01-10T02:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 10,
         'temperature': 0.0,
         'wind_bearing': 0.0,
@@ -205,6 +211,7 @@
       dict({
         'condition': 'fog',
         'datetime': '2021-01-10T03:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 10,
         'temperature': 0.0,
         'wind_bearing': 0.0,
@@ -214,6 +221,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T04:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 10,
         'temperature': -1.0,
         'wind_bearing': 45.0,
@@ -223,6 +231,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T05:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 10,
         'temperature': -1.0,
         'wind_bearing': 0.0,
@@ -232,7 +241,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T06:00:00+00:00',
-        'precipitation_probability': 10,
+        'precipitation': 0.0,
+        'precipitation_probability': 15,
         'temperature': -1.0,
         'wind_bearing': 0.0,
         'wind_gust_speed': 13.0,
@@ -241,6 +251,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T07:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 15,
         'temperature': -2.0,
         'wind_bearing': 45.0,
@@ -250,6 +261,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T08:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 15,
         'temperature': -1.0,
         'wind_bearing': 45.0,
@@ -259,6 +271,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T09:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 15,
         'temperature': -1.0,
         'wind_bearing': 45.0,
@@ -268,6 +281,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-10T10:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 15,
         'temperature': 0.0,
         'wind_bearing': 45.0,
@@ -277,6 +291,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-10T11:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 15,
         'temperature': 2.0,
         'wind_bearing': 45.0,
@@ -286,7 +301,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T12:00:00+00:00',
-        'precipitation_probability': 15,
+        'precipitation': 0.0,
+        'precipitation_probability': 5,
         'temperature': 3.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 32.0,
@@ -295,6 +311,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T13:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 5,
         'temperature': 3.0,
         'wind_bearing': 45.0,
@@ -304,6 +321,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T14:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 5,
         'temperature': 3.0,
         'wind_bearing': 45.0,
@@ -313,6 +331,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T15:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 5,
         'temperature': 4.0,
         'wind_bearing': 45.0,
@@ -322,6 +341,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T16:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 5,
         'temperature': 3.0,
         'wind_bearing': 45.0,
@@ -331,6 +351,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T17:00:00+00:00',
+        'precipitation': 0.0,
         'precipitation_probability': 5,
         'temperature': 2.0,
         'wind_bearing': 45.0,
@@ -340,7 +361,8 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-10T18:00:00+00:00',
-        'precipitation_probability': 5,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': 1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 24.0,
@@ -349,7 +371,8 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-10T19:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': 1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 25.0,
@@ -358,7 +381,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T20:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': 1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 25.0,
@@ -367,7 +391,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T21:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': 1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 24.0,
@@ -376,7 +401,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T22:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': 0.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 27.0,
@@ -385,7 +411,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-10T23:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': 0.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 30.0,
@@ -394,7 +421,8 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2021-01-11T00:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': -1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 30.0,
@@ -403,7 +431,8 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2021-01-11T01:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': -1.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 27.0,
@@ -412,7 +441,8 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2021-01-11T02:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': -2.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 22.0,
@@ -421,7 +451,8 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2021-01-11T03:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': -2.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 17.0,
@@ -430,7 +461,8 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2021-01-11T04:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': -3.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 15.0,
@@ -439,7 +471,8 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2021-01-11T05:00:00+00:00',
-        'precipitation_probability': None,
+        'precipitation': 0.0,
+        'precipitation_probability': 0,
         'temperature': -4.0,
         'wind_bearing': 45.0,
         'wind_gust_speed': 15.0,
@@ -471,7 +504,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-11T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 3.0,
       'templow': -7.0,
       'wind_bearing': 0.0,
@@ -480,7 +513,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-12T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': -1.0,
       'templow': -13.0,
       'wind_bearing': None,
@@ -488,7 +521,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2021-01-13T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 6.0,
       'templow': -11.0,
       'wind_bearing': None,
@@ -496,7 +529,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-14T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 6.0,
       'templow': -7.0,
       'wind_bearing': None,
@@ -504,7 +537,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-15T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 5.0,
       'templow': -4.0,
       'wind_bearing': None,
@@ -525,7 +558,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-11T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 3.0,
       'templow': -7.0,
       'wind_bearing': 0.0,
@@ -534,7 +567,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-12T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': -1.0,
       'templow': -13.0,
       'wind_bearing': None,
@@ -542,7 +575,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2021-01-13T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 6.0,
       'templow': -11.0,
       'wind_bearing': None,
@@ -550,7 +583,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-14T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 6.0,
       'templow': -7.0,
       'wind_bearing': None,
@@ -558,7 +591,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-15T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation_probability': 0,
       'temperature': 5.0,
       'templow': -4.0,
       'wind_bearing': None,
@@ -660,6 +693,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-09T21:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 100,
       'temperature': 1.0,
       'wind_bearing': 90.0,
@@ -669,6 +703,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-09T22:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 100,
       'temperature': 1.0,
       'wind_bearing': 45.0,
@@ -678,6 +713,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-09T23:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 100,
       'temperature': 1.0,
       'wind_bearing': 90.0,
@@ -687,7 +723,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 10,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 12.0,
@@ -696,6 +733,7 @@
     dict({
       'condition': 'fog',
       'datetime': '2021-01-10T01:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': 0.0,
       'wind_bearing': 45.0,
@@ -705,6 +743,7 @@
     dict({
       'condition': 'fog',
       'datetime': '2021-01-10T02:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': 0.0,
       'wind_bearing': 0.0,
@@ -714,6 +753,7 @@
     dict({
       'condition': 'fog',
       'datetime': '2021-01-10T03:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': 0.0,
       'wind_bearing': 0.0,
@@ -723,6 +763,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T04:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': -1.0,
       'wind_bearing': 45.0,
@@ -732,6 +773,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T05:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': -1.0,
       'wind_bearing': 0.0,
@@ -741,7 +783,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T06:00:00+00:00',
-      'precipitation_probability': 10,
+      'precipitation': 0.0,
+      'precipitation_probability': 15,
       'temperature': -1.0,
       'wind_bearing': 0.0,
       'wind_gust_speed': 13.0,
@@ -750,6 +793,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T07:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': -2.0,
       'wind_bearing': 45.0,
@@ -759,6 +803,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T08:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': -1.0,
       'wind_bearing': 45.0,
@@ -768,6 +813,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T09:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': -1.0,
       'wind_bearing': 45.0,
@@ -777,6 +823,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T10:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': 0.0,
       'wind_bearing': 45.0,
@@ -786,6 +833,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T11:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': 2.0,
       'wind_bearing': 45.0,
@@ -795,7 +843,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T12:00:00+00:00',
-      'precipitation_probability': 15,
+      'precipitation': 0.0,
+      'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 32.0,
@@ -804,6 +853,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T13:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
@@ -813,6 +863,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T14:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
@@ -822,6 +873,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T15:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 4.0,
       'wind_bearing': 45.0,
@@ -831,6 +883,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T16:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
@@ -840,6 +893,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T17:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 2.0,
       'wind_bearing': 45.0,
@@ -849,7 +903,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T18:00:00+00:00',
-      'precipitation_probability': 5,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 24.0,
@@ -858,7 +913,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T19:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 25.0,
@@ -867,7 +923,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T20:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 25.0,
@@ -876,7 +933,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T21:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 24.0,
@@ -885,7 +943,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T22:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 0.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 27.0,
@@ -894,7 +953,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T23:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 0.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 30.0,
@@ -903,7 +963,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-11T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 30.0,
@@ -912,7 +973,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-11T01:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 27.0,
@@ -921,7 +983,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T02:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -2.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 22.0,
@@ -930,7 +993,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T03:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -2.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 17.0,
@@ -939,7 +1003,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T04:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -3.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 15.0,
@@ -948,7 +1013,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T05:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -4.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 15.0,
@@ -1060,6 +1126,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-09T21:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 100,
       'temperature': 1.0,
       'wind_bearing': 90.0,
@@ -1069,6 +1136,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-09T22:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 100,
       'temperature': 1.0,
       'wind_bearing': 45.0,
@@ -1078,6 +1146,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-09T23:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 100,
       'temperature': 1.0,
       'wind_bearing': 90.0,
@@ -1087,7 +1156,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 10,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 12.0,
@@ -1096,6 +1166,7 @@
     dict({
       'condition': 'fog',
       'datetime': '2021-01-10T01:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': 0.0,
       'wind_bearing': 45.0,
@@ -1105,6 +1176,7 @@
     dict({
       'condition': 'fog',
       'datetime': '2021-01-10T02:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': 0.0,
       'wind_bearing': 0.0,
@@ -1114,6 +1186,7 @@
     dict({
       'condition': 'fog',
       'datetime': '2021-01-10T03:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': 0.0,
       'wind_bearing': 0.0,
@@ -1123,6 +1196,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T04:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': -1.0,
       'wind_bearing': 45.0,
@@ -1132,6 +1206,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T05:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 10,
       'temperature': -1.0,
       'wind_bearing': 0.0,
@@ -1141,7 +1216,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T06:00:00+00:00',
-      'precipitation_probability': 10,
+      'precipitation': 0.0,
+      'precipitation_probability': 15,
       'temperature': -1.0,
       'wind_bearing': 0.0,
       'wind_gust_speed': 13.0,
@@ -1150,6 +1226,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T07:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': -2.0,
       'wind_bearing': 45.0,
@@ -1159,6 +1236,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T08:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': -1.0,
       'wind_bearing': 45.0,
@@ -1168,6 +1246,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T09:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': -1.0,
       'wind_bearing': 45.0,
@@ -1177,6 +1256,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T10:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': 0.0,
       'wind_bearing': 45.0,
@@ -1186,6 +1266,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T11:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 15,
       'temperature': 2.0,
       'wind_bearing': 45.0,
@@ -1195,7 +1276,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T12:00:00+00:00',
-      'precipitation_probability': 15,
+      'precipitation': 0.0,
+      'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 32.0,
@@ -1204,6 +1286,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T13:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
@@ -1213,6 +1296,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T14:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
@@ -1222,6 +1306,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T15:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 4.0,
       'wind_bearing': 45.0,
@@ -1231,6 +1316,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T16:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 3.0,
       'wind_bearing': 45.0,
@@ -1240,6 +1326,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T17:00:00+00:00',
+      'precipitation': 0.0,
       'precipitation_probability': 5,
       'temperature': 2.0,
       'wind_bearing': 45.0,
@@ -1249,7 +1336,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T18:00:00+00:00',
-      'precipitation_probability': 5,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 24.0,
@@ -1258,7 +1346,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-10T19:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 25.0,
@@ -1267,7 +1356,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T20:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 25.0,
@@ -1276,7 +1366,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T21:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 24.0,
@@ -1285,7 +1376,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T22:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 0.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 27.0,
@@ -1294,7 +1386,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-10T23:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': 0.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 30.0,
@@ -1303,7 +1396,8 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2021-01-11T00:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 30.0,
@@ -1312,7 +1406,8 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2021-01-11T01:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -1.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 27.0,
@@ -1321,7 +1416,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T02:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -2.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 22.0,
@@ -1330,7 +1426,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T03:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -2.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 17.0,
@@ -1339,7 +1436,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T04:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -3.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 15.0,
@@ -1348,7 +1446,8 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2021-01-11T05:00:00+00:00',
-      'precipitation_probability': None,
+      'precipitation': 0.0,
+      'precipitation_probability': 0,
       'temperature': -4.0,
       'wind_bearing': 45.0,
       'wind_gust_speed': 15.0,

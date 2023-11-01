@@ -29,6 +29,11 @@
         "name": "In bed"
       }
     },
+    "calendar": {
+      "workout": {
+        "name": "Workouts"
+      }
+    },
     "sensor": {
       "fat_mass": {
         "name": "Fat mass"
@@ -170,6 +175,78 @@
       },
       "activity_total_calories_burnt_today": {
         "name": "Total calories burnt today"
+      },
+      "workout_type": {
+        "name": "Last workout type",
+        "state": {
+          "walk": "Walking",
+          "run": "Running",
+          "hiking": "Hiking",
+          "skating": "Skating",
+          "bmx": "BMX",
+          "bicycling": "Bicycling",
+          "swimming": "Swimming",
+          "surfing": "Surfing",
+          "kitesurfing": "Kitesurfing",
+          "windsurfing": "Windsurfing",
+          "bodyboard": "Bodyboard",
+          "tennis": "Tennis",
+          "table_tennis": "Table tennis",
+          "squash": "Squash",
+          "badminton": "Badminton",
+          "lift_weights": "Lift weights",
+          "calisthenics": "Calisthenics",
+          "elliptical": "Elliptical",
+          "pilates": "Pilates",
+          "basket_ball": "Basket ball",
+          "soccer": "Soccer",
+          "football": "Football",
+          "rugby": "Rugby",
+          "volley_ball": "Volley ball",
+          "waterpolo": "Waterpolo",
+          "horse_riding": "Horse riding",
+          "golf": "Golf",
+          "yoga": "Yoga",
+          "dancing": "Dancing",
+          "boxing": "Boxing",
+          "fencing": "Fencing",
+          "wrestling": "Wrestling",
+          "martial_arts": "Martial arts",
+          "skiing": "Skiing",
+          "snowboarding": "Snowboarding",
+          "other": "Other",
+          "no_activity": "No activity",
+          "rowing": "Rowing",
+          "zumba": "Zumba",
+          "baseball": "Baseball",
+          "handball": "Handball",
+          "hockey": "Hockey",
+          "ice_hockey": "Ice hockey",
+          "climbing": "Climbing",
+          "ice_skating": "Ice skating",
+          "multi_sport": "Multi sport",
+          "indoor_walk": "Indoor walking",
+          "indoor_running": "Indoor running",
+          "indoor_cycling": "Indoor cycling"
+        }
+      },
+      "workout_active_calories_burnt": {
+        "name": "Calories burnt last workout"
+      },
+      "workout_distance": {
+        "name": "Distance travelled last workout"
+      },
+      "workout_floors_climbed": {
+        "name": "Floors climbed last workout"
+      },
+      "workout_intensity": {
+        "name": "Last workout intensity"
+      },
+      "workout_pause_duration": {
+        "name": "Pause during last workout"
+      },
+      "workout_duration": {
+        "name": "Last workout duration"
       }
     }
   }
