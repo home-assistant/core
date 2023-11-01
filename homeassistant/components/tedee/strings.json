@@ -22,6 +22,13 @@
           "access_token": "Personal Access Key"
         }
       },
+      "select_bridge": {
+        "title": "Select your bridge",
+        "description": "Select the bridge you want to add to Home Assistant.",
+        "data": {
+          "bridge_id": "Bridge"
+        }
+      },
       "reauth_confirm": {
         "title": "Update of Access Keys required",
         "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
@@ -33,12 +40,13 @@
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "wrong_bridge_selected": "Selected bridge does not match configured local bridge"
     }
   },
   "options": {
