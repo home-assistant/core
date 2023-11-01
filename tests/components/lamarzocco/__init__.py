@@ -4,7 +4,6 @@ from homeassistant.components.lamarzocco.const import (
     DEFAULT_CLIENT_ID,
     DEFAULT_CLIENT_SECRET,
     DEFAULT_PORT_LOCAL,
-    SERIAL_NUMBER,
 )
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -34,8 +33,7 @@ USER_INPUT = {
 
 MACHINE_DATA = {
     CONF_HOST: "192.168.1.1",
-    CONF_MACHINE: "GS3 AV (GS01234)",
-    SERIAL_NUMBER: "GS01234",
+    CONF_MACHINE: "GS01234",
 }
 
 DISCOVERED_INFO = {
@@ -54,7 +52,7 @@ WRONG_LOGIN_INFO = {
 }
 
 MACHINE_SELECTION = {
-    CONF_MACHINE: "GS3 AV (GS01234)",
+    CONF_MACHINE: "GS01234",
     CONF_HOST: "192.168.1.1",
 }
 

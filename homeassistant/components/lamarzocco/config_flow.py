@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -33,7 +34,6 @@ from .const import (
     DEFAULT_CLIENT_SECRET,
     DEFAULT_PORT_LOCAL,
     DOMAIN,
-    SERIAL_NUMBER,
 )
 from .lm_client import LaMarzoccoClient
 
@@ -56,7 +56,9 @@ STEP_REAUTH_DATA_SCHEMA = LOGIN_DATA_SCHEMA.extend(
 )
 
 
-async def get_machines(hass: core.HomeAssistant, data: dict[str, Any]) -> list[str]:
+async def get_machines(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> list[tuple[str, str]]:
     """Validate the user input allows us to connect."""
 
     try:
@@ -66,16 +68,14 @@ async def get_machines(hass: core.HomeAssistant, data: dict[str, Any]) -> list[s
         if not machines:
             raise CannotConnect
 
+        return machines
+
     except AuthFail:
         _LOGGER.error("Server rejected login credentials")
         raise InvalidAuth
     except RequestNotSuccessful:
         _LOGGER.error("Failed to connect to server")
         raise CannotConnect
-
-    available_machines = [f"{machine[1]} ({machine[0]})" for machine in machines]
-
-    return available_machines
 
 
 class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -88,7 +88,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered: dict[str, str] = {}
         self.reauth_entry: ConfigEntry | None
         self._config: dict[str, Any] = {}
-        self._machines: list[str] = []
+        self._machines: list[tuple[str, str]] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -125,12 +125,9 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Let user select machine to connect to."""
         errors = {}
         if user_input is not None:
-            machine_name, serial_number = user_input[CONF_MACHINE].split("(")
-            machine_name = machine_name.strip(" ")
-            serial_number = serial_number.strip(")")
+            serial_number = user_input[CONF_MACHINE]
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
-            self._config[SERIAL_NUMBER] = serial_number
 
             # if host is set, check if we can connect to it
             if user_input.get(CONF_HOST):
@@ -143,19 +140,25 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "cannot_connect"
             if not errors:
                 return self.async_create_entry(
-                    title=machine_name, data=self._config | user_input
+                    title=serial_number, data=self._config | user_input
                 )
 
+        machine_options = [
+            SelectOptionDict(
+                value=serial_number,
+                label=f"{model_name} ({serial_number})",
+            )
+            for serial_number, model_name in self._machines
+        ]
         machine_selection_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_MACHINE,
-                    default=self._machines[0],
+                    default=machine_options[0],
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=self._machines,
+                        options=machine_options,
                         mode=SelectSelectorMode.DROPDOWN,
-                        translation_key=CONF_MACHINE,
                     )
                 ),
                 vol.Optional(CONF_HOST): cv.string,

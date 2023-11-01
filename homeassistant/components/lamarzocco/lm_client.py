@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    CONF_MACHINE,
     DEFAULT_PORT_LOCAL,
     MACHINE_NAME,
     MODEL_GS3_AV,
@@ -80,7 +81,7 @@ class LaMarzoccoClient(LMCloud):
         _LOGGER.debug("Initializing Cloud API")
         await self._init_cloud_api(
             credentials=self.get_credentials_from_entry_data(self._entry_data),
-            machine_serial=self._entry_data.get(SERIAL_NUMBER),
+            machine_serial=self._entry_data.get(CONF_MACHINE),
         )
         _LOGGER.debug("Model name: %s", self.model_name)
 
