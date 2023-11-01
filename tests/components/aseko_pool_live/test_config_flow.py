@@ -119,32 +119,21 @@ async def test_get_account_info_exceptions(
     assert result2["errors"] == {"base": reason}
 
 
-async def test_async_step_reauth_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH, "entry_id": "test-id"}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
-
-
 async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
     """Test successful reauthentication."""
 
-    MockConfigEntry(
+    mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        entry_id="0",
-        unique_id="0",
+        unique_id="UID",
         data={CONF_EMAIL: "aseko@example.com"},
-    ).add_to_hass(hass)
+    )
+    mock_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "entry_id": "0",
-            "unique_id": "0",
+            "entry_id": mock_entry.entry_id,
         },
     )
 
@@ -178,8 +167,20 @@ async def test_async_step_reauth_exception(
     hass: HomeAssistant, error_web: Exception, reason: str
 ) -> None:
     """Test we get the form."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="UID",
+        data={CONF_EMAIL: "aseko@example.com"},
+    )
+    mock_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH, "entry_id": "test-id"}
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_entry.entry_id,
+        },
     )
 
     with patch(
