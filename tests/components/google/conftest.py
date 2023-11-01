@@ -58,6 +58,35 @@ TEST_API_CALENDAR = {
     "defaultReminders": [],
 }
 
+TEST_EVENT = {
+    "summary": "Test All Day Event",
+    "start": {},
+    "end": {},
+    "location": "Test Cases",
+    "description": "test event",
+    "kind": "calendar#event",
+    "created": "2016-06-23T16:37:57.000Z",
+    "transparency": "transparent",
+    "updated": "2016-06-24T01:57:21.045Z",
+    "reminders": {"useDefault": True},
+    "organizer": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "sequence": 0,
+    "creator": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "id": "_c8rinwq863h45qnucyoi43ny8",
+    "etag": '"2933466882090000"',
+    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
+    "iCalUID": "cydrevtfuybguinhomj@google.com",
+    "status": "confirmed",
+}
+
 CLIENT_ID = "client-id"
 CLIENT_SECRET = "client-secret"
 
@@ -232,7 +261,7 @@ def mock_events_list(
 @pytest.fixture
 def mock_events_list_items(
     mock_events_list: Callable[[dict[str, Any]], None]
-) -> Callable[list[[dict[str, Any]]], None]:
+) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 
     def _put_items(items: list[dict[str, Any]]) -> None:

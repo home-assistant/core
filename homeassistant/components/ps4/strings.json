@@ -7,7 +7,7 @@
       "mode": {
         "data": {
           "mode": "Config Mode",
-          "ip_address": "IP address (Leave empty if using Auto Discovery)."
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
           "ip_address": "Leave blank if selecting auto-discovery."

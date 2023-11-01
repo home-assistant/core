@@ -111,6 +111,10 @@ class TextEntityDescription(EntityDescription):
 class TextEntity(Entity):
     """Representation of a Text entity."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+    )
+
     entity_description: TextEntityDescription
     _attr_mode: TextMode
     _attr_native_value: str | None

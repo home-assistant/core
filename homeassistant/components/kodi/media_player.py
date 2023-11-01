@@ -282,7 +282,7 @@ class KodiEntity(MediaPlayerEntity):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
-        self._unique_id = uid
+        self._attr_unique_id = uid
         self._device_id = None
         self._players = None
         self._properties = {}
@@ -368,11 +368,6 @@ class KodiEntity(MediaPlayerEntity):
         self.async_write_ha_state()
         if close:
             await self._connection.close()
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the device."""
-        return self._unique_id
 
     @property
     def state(self) -> MediaPlayerState:

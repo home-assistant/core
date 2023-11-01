@@ -31,15 +31,9 @@ class RiscoCloudEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
     def _get_data_from_coordinator(self) -> None:
         raise NotImplementedError
 
-    def _refresh_from_coordinator(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         self._get_data_from_coordinator()
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._refresh_from_coordinator)
-        )
 
     @property
     def _risco(self):

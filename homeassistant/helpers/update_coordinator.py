@@ -16,7 +16,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -81,7 +88,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
         self.always_update = always_update
-        self._next_refresh: float | None = None
 
         # It's None before the first successful update.
         # Components should call async_config_entry_first_refresh
@@ -105,7 +111,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         job_name += f" {name}"
         if entry := self.config_entry:
             job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
-        self._job = HassJob(self._handle_refresh_interval, job_name)
+        self._job = HassJob(
+            self._handle_refresh_interval,
+            job_name,
+            job_type=HassJobType.Coroutinefunction,
+        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -184,7 +194,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Unschedule any pending refresh since there is no longer any listeners."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
-        self._next_refresh = None
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
@@ -220,13 +229,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # We use event.async_call_at because DataUpdateCoordinator does
         # not need an exact update interval.
         now = self.hass.loop.time()
-        if self._next_refresh is None or self._next_refresh <= now:
-            self._next_refresh = int(now) + self._microsecond
-        self._next_refresh += self.update_interval.total_seconds()
+
+        next_refresh = int(now) + self._microsecond
+        next_refresh += self.update_interval.total_seconds()
         self._unsub_refresh = event.async_call_at(
             self.hass,
             self._job,
-            self._next_refresh,
+            next_refresh,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -265,7 +274,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
-        self._next_refresh = None
         await self._async_refresh(log_failures=True)
 
     async def _async_refresh(  # noqa: C901
@@ -405,7 +413,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Manually update data, notify listeners and reset refresh interval."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
-        self._next_refresh = None
 
         self.data = data
         self.last_update_success = True
