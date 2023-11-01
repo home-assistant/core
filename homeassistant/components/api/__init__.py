@@ -1,7 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
 from asyncio import shield, timeout
-from asyncio import shield, timeout
 from collections.abc import Collection
 from functools import lru_cache
 from http import HTTPStatus
