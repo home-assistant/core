@@ -453,6 +453,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.house",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.5,
             },
             blocking=True,
@@ -471,6 +472,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.salon",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.5,
             },
             blocking=True,
