@@ -23,5 +23,6 @@ IMAGE_DRAWABLES: list[Drawable] = [
     Drawable.PATH,
     Drawable.CHARGER,
     Drawable.VACUUM_POSITION,
+]
 
 IMAGE_CACHE_INTERVAL = 90
