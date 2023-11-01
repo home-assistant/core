@@ -605,13 +605,6 @@
           "good": "Good",
           "severe": "Severe"
         }
-      },
-      "work_state": {
-        "state": {
-          "auto": "Auto",
-          "manual": "Manual",
-          "idle": "Idle"
-        }
       }
     },
     "switch": {
