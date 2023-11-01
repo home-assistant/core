@@ -120,3 +120,5 @@ STARTUP_EXCEPTIONS = (
 # also happens to be the same value used by
 # the update coordinator.
 DEBOUNCE_COOLDOWN = 10  # seconds
+
+SUBSCRIBE_COOLDOWN = 0.25  # seconds

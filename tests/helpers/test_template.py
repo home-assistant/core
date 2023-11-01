@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import random
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
@@ -43,6 +44,7 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import UnitSystem
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -469,6 +471,171 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
     )
     assert (
         template.Template("{{ value is is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], True),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+        ((1, 2), False),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
+    ],
+)
+def test_is_list(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test is list."""
+    assert (
+        template.Template("{{ value is list }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        ({1, 2}, True),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+        ((1, 2), False),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
+    ],
+)
+def test_is_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test is set."""
+    assert (
+        template.Template("{{ value is set }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+        ((1, 2), True),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
+    ],
+)
+def test_is_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test is tuple."""
+    assert (
+        template.Template("{{ value is tuple }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], {1, 2}),
+        ({1, 2}, {1, 2}),
+        ({"a": 1, "b": 2}, {"a", "b"}),
+        (ReadOnlyDict({"a": 1, "b": 2}), {"a", "b"}),
+        (MappingProxyType({"a": 1, "b": 2}), {"a", "b"}),
+        ("abc", {"a", "b", "c"}),
+        (b"abc", {97, 98, 99}),
+        ((1, 2), {1, 2}),
+    ],
+)
+def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test convert to set function."""
+    assert (
+        template.Template("{{ set(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], (1, 2)),
+        ({1, 2}, (1, 2)),
+        ({"a": 1, "b": 2}, ("a", "b")),
+        (ReadOnlyDict({"a": 1, "b": 2}), ("a", "b")),
+        (MappingProxyType({"a": 1, "b": 2}), ("a", "b")),
+        ("abc", ("a", "b", "c")),
+        (b"abc", (97, 98, 99)),
+        ((1, 2), (1, 2)),
+    ],
+)
+def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
+    """Test convert to tuple function."""
+    assert (
+        template.Template("{{ tuple(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+
+
+def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
+    """Test converting a datetime to an iterable raises an error."""
+    dt_ = datetime(2020, 1, 1, 0, 0, 0)
+    with pytest.raises(TemplateError):
+        template.Template("{{ tuple(value) }}", hass).async_render({"value": dt_})
+    with pytest.raises(TemplateError):
+        template.Template("{{ set(value) }}", hass).async_render({"value": dt_})
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        (b"abc", False),
+        ((1, 2), False),
+        (datetime(2024, 1, 1, 0, 0, 0), True),
+    ],
+)
+def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
+    """Test is datetime."""
+    assert (
+        template.Template("{{ value is datetime }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", True),
+        (b"abc", True),
+        ((1, 2), False),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
+    ],
+)
+def test_is_string_like(hass: HomeAssistant, value, expected) -> None:
+    """Test is string_like."""
+    assert (
+        template.Template("{{ value is string_like }}", hass).async_render(
             {"value": value}
         )
         == expected

@@ -72,7 +72,8 @@ class AbstractOAuth2Implementation(ABC):
         Pass external data in with:
 
         await hass.config_entries.flow.async_configure(
-            flow_id=flow_id, user_input={'code': 'abcd', 'state': { … }
+            flow_id=flow_id, user_input={'code': 'abcd', 'state': … }
+
         )
 
         """

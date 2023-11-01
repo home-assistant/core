@@ -155,11 +155,19 @@
     {
       "hostname": "k[lps]*",
       "macaddress": "788CB5*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "3460F9*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "1C61B4*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.5.3"]
+  "requirements": ["python-kasa[speedups]==0.5.4"]
 }

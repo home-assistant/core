@@ -946,6 +946,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "cribl": {
+      "name": "Cribl",
+      "integration_type": "virtual",
+      "supported_by": "splunk"
+    },
     "crownstone": {
       "name": "Crownstone",
       "integration_type": "hub",
@@ -1281,6 +1286,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "eastron": {
+      "name": "Eastron",
+      "integration_type": "virtual",
+      "supported_by": "homewizard"
+    },
     "easyenergy": {
       "name": "easyEnergy",
       "integration_type": "hub",
@@ -1364,12 +1374,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "eight_sleep": {
-      "name": "Eight Sleep",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "electrasmart": {
       "name": "Electra Smart",
@@ -1733,7 +1737,7 @@
     "fitbit": {
       "name": "Fitbit",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "fivem": {
@@ -2151,6 +2155,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
+        },
+        "google_tasks": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Tasks"
         },
         "google_translate": {
           "integration_type": "hub",
@@ -2604,11 +2614,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
-    "imap_email_content": {
-      "name": "IMAP Email Content",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
+    "improv_ble": {
+      "name": "Improv via BLE",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "incomfort": {
       "name": "Intergas InComfort/Intouch Lan2RF gateway",
@@ -3097,6 +3107,11 @@
       "iot_class": "local_polling"
     },
     "local_ip": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "local_todo": {
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4342,6 +4357,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "portlandgeneral": {
+      "name": "Portland General Electric (PGE)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "hub",
@@ -4579,12 +4599,6 @@
       "name": "RainMachine",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "random": {
-      "name": "Random",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "local_polling"
     },
     "rapt_ble": {
@@ -5040,12 +5054,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "shiftr": {
-      "name": "shiftr.io",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "shodan": {
       "name": "Shodan",
       "integration_type": "hub",
@@ -5493,7 +5501,7 @@
       "iot_class": "local_polling"
     },
     "supla": {
-      "name": "Supla",
+      "name": "SUPLA",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -5616,6 +5624,12 @@
     },
     "tailscale": {
       "name": "Tailscale",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "tami4": {
+      "name": "Tami4 Edge / Edge+",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6019,7 +6033,7 @@
       "iot_class": "cloud_polling"
     },
     "twitter": {
-      "name": "Twitter",
+      "name": "X",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -6397,7 +6411,7 @@
       "name": "Withings",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "wiz": {
       "name": "WiZ",
@@ -6754,6 +6768,12 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "random": {
+      "name": "Random",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "schedule": {
       "integration_type": "helper",
       "config_flow": false
@@ -6816,6 +6836,7 @@
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",

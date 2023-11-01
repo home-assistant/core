@@ -1,17 +1,20 @@
 """Withings coordinator."""
-from collections.abc import Callable
-from datetime import timedelta
-from typing import Any
+from abc import abstractmethod
+from datetime import date, datetime, timedelta
+from typing import TypeVar
 
-from withings_api.common import (
-    AuthFailedException,
-    GetSleepSummaryField,
-    MeasureGroupAttribs,
-    MeasureType,
-    MeasureTypes,
-    NotifyAppli,
-    UnauthorizedException,
-    query_measure_groups,
+from aiowithings import (
+    Activity,
+    Goals,
+    MeasurementType,
+    NotificationCategory,
+    SleepSummary,
+    SleepSummaryDataFields,
+    WithingsAuthenticationFailedError,
+    WithingsClient,
+    WithingsUnauthorizedError,
+    Workout,
+    aggregate_measurements,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,200 +23,241 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .api import ConfigEntryWithingsApi
-from .const import LOGGER, Measurement
+from .const import LOGGER
 
-WITHINGS_MEASURE_TYPE_MAP: dict[
-    NotifyAppli | GetSleepSummaryField | MeasureType, Measurement
-] = {
-    MeasureType.WEIGHT: Measurement.WEIGHT_KG,
-    MeasureType.FAT_MASS_WEIGHT: Measurement.FAT_MASS_KG,
-    MeasureType.FAT_FREE_MASS: Measurement.FAT_FREE_MASS_KG,
-    MeasureType.MUSCLE_MASS: Measurement.MUSCLE_MASS_KG,
-    MeasureType.BONE_MASS: Measurement.BONE_MASS_KG,
-    MeasureType.HEIGHT: Measurement.HEIGHT_M,
-    MeasureType.TEMPERATURE: Measurement.TEMP_C,
-    MeasureType.BODY_TEMPERATURE: Measurement.BODY_TEMP_C,
-    MeasureType.SKIN_TEMPERATURE: Measurement.SKIN_TEMP_C,
-    MeasureType.FAT_RATIO: Measurement.FAT_RATIO_PCT,
-    MeasureType.DIASTOLIC_BLOOD_PRESSURE: Measurement.DIASTOLIC_MMHG,
-    MeasureType.SYSTOLIC_BLOOD_PRESSURE: Measurement.SYSTOLIC_MMGH,
-    MeasureType.HEART_RATE: Measurement.HEART_PULSE_BPM,
-    MeasureType.SP02: Measurement.SPO2_PCT,
-    MeasureType.HYDRATION: Measurement.HYDRATION,
-    MeasureType.PULSE_WAVE_VELOCITY: Measurement.PWV,
-    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: (
-        Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY
-    ),
-    GetSleepSummaryField.DEEP_SLEEP_DURATION: Measurement.SLEEP_DEEP_DURATION_SECONDS,
-    GetSleepSummaryField.DURATION_TO_SLEEP: Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
-    GetSleepSummaryField.DURATION_TO_WAKEUP: (
-        Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS
-    ),
-    GetSleepSummaryField.HR_AVERAGE: Measurement.SLEEP_HEART_RATE_AVERAGE,
-    GetSleepSummaryField.HR_MAX: Measurement.SLEEP_HEART_RATE_MAX,
-    GetSleepSummaryField.HR_MIN: Measurement.SLEEP_HEART_RATE_MIN,
-    GetSleepSummaryField.LIGHT_SLEEP_DURATION: Measurement.SLEEP_LIGHT_DURATION_SECONDS,
-    GetSleepSummaryField.REM_SLEEP_DURATION: Measurement.SLEEP_REM_DURATION_SECONDS,
-    GetSleepSummaryField.RR_AVERAGE: Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE,
-    GetSleepSummaryField.RR_MAX: Measurement.SLEEP_RESPIRATORY_RATE_MAX,
-    GetSleepSummaryField.RR_MIN: Measurement.SLEEP_RESPIRATORY_RATE_MIN,
-    GetSleepSummaryField.SLEEP_SCORE: Measurement.SLEEP_SCORE,
-    GetSleepSummaryField.SNORING: Measurement.SLEEP_SNORING,
-    GetSleepSummaryField.SNORING_EPISODE_COUNT: Measurement.SLEEP_SNORING_EPISODE_COUNT,
-    GetSleepSummaryField.WAKEUP_COUNT: Measurement.SLEEP_WAKEUP_COUNT,
-    GetSleepSummaryField.WAKEUP_DURATION: Measurement.SLEEP_WAKEUP_DURATION_SECONDS,
-    NotifyAppli.BED_IN: Measurement.IN_BED,
-}
+_T = TypeVar("_T")
 
 UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
+class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     """Base coordinator."""
 
-    in_bed: bool | None = None
     config_entry: ConfigEntry
+    _default_update_interval: timedelta | None = UPDATE_INTERVAL
+    _last_valid_update: datetime | None = None
+    webhooks_connected: bool = False
 
-    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, LOGGER, name="Withings", update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass, LOGGER, name="Withings", update_interval=self._default_update_interval
+        )
         self._client = client
+        self.notification_categories: set[NotificationCategory] = set()
 
     def webhook_subscription_listener(self, connected: bool) -> None:
         """Call when webhook status changed."""
+        self.webhooks_connected = connected
         if connected:
             self.update_interval = None
         else:
-            self.update_interval = UPDATE_INTERVAL
+            self.update_interval = self._default_update_interval
 
-    async def _async_update_data(self) -> dict[Measurement, Any]:
+    async def async_webhook_data_updated(
+        self, notification_category: NotificationCategory
+    ) -> None:
+        """Update data when webhook is called."""
+        LOGGER.debug("Withings webhook triggered for %s", notification_category)
+        await self.async_request_refresh()
+
+    async def _async_update_data(self) -> _T:
         try:
-            measurements = await self._get_measurements()
-            sleep_summary = await self._get_sleep_summary()
-        except (UnauthorizedException, AuthFailedException) as exc:
+            return await self._internal_update_data()
+        except (WithingsUnauthorizedError, WithingsAuthenticationFailedError) as exc:
             raise ConfigEntryAuthFailed from exc
-        return {
-            **measurements,
-            **sleep_summary,
+
+    @abstractmethod
+    async def _internal_update_data(self) -> _T:
+        """Update coordinator data."""
+
+
+class WithingsMeasurementDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[dict[MeasurementType, float]]
+):
+    """Withings measurement coordinator."""
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.WEIGHT,
+            NotificationCategory.PRESSURE,
         }
+        self._previous_data: dict[MeasurementType, float] = {}
 
-    async def _get_measurements(self) -> dict[Measurement, Any]:
-        LOGGER.debug("Updating withings measures")
-        now = dt_util.utcnow()
-        startdate = now - timedelta(days=7)
-
-        response = await self._client.async_measure_get_meas(
-            None, None, startdate, now, None, startdate
-        )
-
-        # Sort from oldest to newest.
-        groups = sorted(
-            query_measure_groups(
-                response, MeasureTypes.ANY, MeasureGroupAttribs.UNAMBIGUOUS
-            ),
-            key=lambda group: group.created.datetime,
-            reverse=False,
-        )
-
-        return {
-            WITHINGS_MEASURE_TYPE_MAP[measure.type]: round(
-                float(measure.value * pow(10, measure.unit)), 2
+    async def _internal_update_data(self) -> dict[MeasurementType, float]:
+        """Retrieve measurement data."""
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            measurements = await self._client.get_measurement_in_period(startdate, now)
+        else:
+            measurements = await self._client.get_measurement_since(
+                self._last_valid_update
             )
-            for group in groups
-            for measure in group.measures
-            if measure.type in WITHINGS_MEASURE_TYPE_MAP
+
+        if measurements:
+            self._last_valid_update = measurements[0].taken_at
+            aggregated_measurements = aggregate_measurements(measurements)
+            self._previous_data.update(aggregated_measurements)
+        return self._previous_data
+
+
+class WithingsSleepDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[SleepSummary | None]
+):
+    """Withings sleep coordinator."""
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.SLEEP,
         }
 
-    async def _get_sleep_summary(self) -> dict[Measurement, Any]:
+    async def _internal_update_data(self) -> SleepSummary | None:
+        """Retrieve sleep data."""
         now = dt_util.now()
         yesterday = now - timedelta(days=1)
         yesterday_noon = dt_util.start_of_local_day(yesterday) + timedelta(hours=12)
         yesterday_noon_utc = dt_util.as_utc(yesterday_noon)
 
-        response = await self._client.async_sleep_get_summary(
-            lastupdate=yesterday_noon_utc,
-            data_fields=[
-                GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
-                GetSleepSummaryField.DEEP_SLEEP_DURATION,
-                GetSleepSummaryField.DURATION_TO_SLEEP,
-                GetSleepSummaryField.DURATION_TO_WAKEUP,
-                GetSleepSummaryField.HR_AVERAGE,
-                GetSleepSummaryField.HR_MAX,
-                GetSleepSummaryField.HR_MIN,
-                GetSleepSummaryField.LIGHT_SLEEP_DURATION,
-                GetSleepSummaryField.REM_SLEEP_DURATION,
-                GetSleepSummaryField.RR_AVERAGE,
-                GetSleepSummaryField.RR_MAX,
-                GetSleepSummaryField.RR_MIN,
-                GetSleepSummaryField.SLEEP_SCORE,
-                GetSleepSummaryField.SNORING,
-                GetSleepSummaryField.SNORING_EPISODE_COUNT,
-                GetSleepSummaryField.WAKEUP_COUNT,
-                GetSleepSummaryField.WAKEUP_DURATION,
+        response = await self._client.get_sleep_summary_since(
+            sleep_summary_since=yesterday_noon_utc,
+            sleep_summary_data_fields=[
+                SleepSummaryDataFields.BREATHING_DISTURBANCES_INTENSITY,
+                SleepSummaryDataFields.DEEP_SLEEP_DURATION,
+                SleepSummaryDataFields.SLEEP_LATENCY,
+                SleepSummaryDataFields.WAKE_UP_LATENCY,
+                SleepSummaryDataFields.AVERAGE_HEART_RATE,
+                SleepSummaryDataFields.MIN_HEART_RATE,
+                SleepSummaryDataFields.MAX_HEART_RATE,
+                SleepSummaryDataFields.LIGHT_SLEEP_DURATION,
+                SleepSummaryDataFields.REM_SLEEP_DURATION,
+                SleepSummaryDataFields.AVERAGE_RESPIRATION_RATE,
+                SleepSummaryDataFields.MIN_RESPIRATION_RATE,
+                SleepSummaryDataFields.MAX_RESPIRATION_RATE,
+                SleepSummaryDataFields.SLEEP_SCORE,
+                SleepSummaryDataFields.SNORING,
+                SleepSummaryDataFields.SNORING_COUNT,
+                SleepSummaryDataFields.WAKE_UP_COUNT,
+                SleepSummaryDataFields.TOTAL_TIME_AWAKE,
             ],
         )
+        if not response:
+            return None
+        return response[0]
 
-        # Set the default to empty lists.
-        raw_values: dict[GetSleepSummaryField, list[int]] = {
-            field: [] for field in GetSleepSummaryField
-        }
 
-        # Collect the raw data.
-        for serie in response.series:
-            data = serie.data
+class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):
+    """Withings bed presence coordinator."""
 
-            for field in GetSleepSummaryField:
-                raw_values[field].append(dict(data)[field.value])
+    in_bed: bool | None = None
+    _default_update_interval = None
 
-        values: dict[GetSleepSummaryField, float] = {}
-
-        def average(data: list[int]) -> float:
-            return sum(data) / len(data)
-
-        def set_value(field: GetSleepSummaryField, func: Callable) -> None:
-            non_nones = [
-                value for value in raw_values.get(field, []) if value is not None
-            ]
-            values[field] = func(non_nones) if non_nones else None
-
-        set_value(GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY, average)
-        set_value(GetSleepSummaryField.DEEP_SLEEP_DURATION, sum)
-        set_value(GetSleepSummaryField.DURATION_TO_SLEEP, average)
-        set_value(GetSleepSummaryField.DURATION_TO_WAKEUP, average)
-        set_value(GetSleepSummaryField.HR_AVERAGE, average)
-        set_value(GetSleepSummaryField.HR_MAX, average)
-        set_value(GetSleepSummaryField.HR_MIN, average)
-        set_value(GetSleepSummaryField.LIGHT_SLEEP_DURATION, sum)
-        set_value(GetSleepSummaryField.REM_SLEEP_DURATION, sum)
-        set_value(GetSleepSummaryField.RR_AVERAGE, average)
-        set_value(GetSleepSummaryField.RR_MAX, average)
-        set_value(GetSleepSummaryField.RR_MIN, average)
-        set_value(GetSleepSummaryField.SLEEP_SCORE, max)
-        set_value(GetSleepSummaryField.SNORING, average)
-        set_value(GetSleepSummaryField.SNORING_EPISODE_COUNT, sum)
-        set_value(GetSleepSummaryField.WAKEUP_COUNT, sum)
-        set_value(GetSleepSummaryField.WAKEUP_DURATION, average)
-
-        return {
-            WITHINGS_MEASURE_TYPE_MAP[field]: round(value, 4)
-            if value is not None
-            else None
-            for field, value in values.items()
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.IN_BED,
+            NotificationCategory.OUT_BED,
         }
 
     async def async_webhook_data_updated(
-        self, notification_category: NotifyAppli
+        self, notification_category: NotificationCategory
     ) -> None:
-        """Update data when webhook is called."""
-        LOGGER.debug("Withings webhook triggered")
-        if notification_category in {
-            NotifyAppli.WEIGHT,
-            NotifyAppli.CIRCULATORY,
-            NotifyAppli.SLEEP,
-        }:
-            await self.async_request_refresh()
+        """Only set new in bed value instead of refresh."""
+        self.in_bed = notification_category == NotificationCategory.IN_BED
+        self.async_update_listeners()
 
-        elif notification_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
-            self.in_bed = notification_category == NotifyAppli.BED_IN
-            self.async_update_listeners()
+    async def _internal_update_data(self) -> None:
+        """Update coordinator data."""
+
+
+class WithingsGoalsDataUpdateCoordinator(WithingsDataUpdateCoordinator[Goals]):
+    """Withings goals coordinator."""
+
+    _default_update_interval = timedelta(hours=1)
+
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        # Webhooks aren't available for this datapoint, so we keep polling
+
+    async def _internal_update_data(self) -> Goals:
+        """Retrieve goals data."""
+        return await self._client.get_goals()
+
+
+class WithingsActivityDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[Activity | None]
+):
+    """Withings activity coordinator."""
+
+    _previous_data: Activity | None = None
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.ACTIVITY,
+        }
+
+    async def _internal_update_data(self) -> Activity | None:
+        """Retrieve latest activity."""
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            activities = await self._client.get_activities_in_period(
+                startdate.date(), now.date()
+            )
+        else:
+            activities = await self._client.get_activities_since(
+                self._last_valid_update
+            )
+
+        today = date.today()
+        for activity in activities:
+            if activity.date == today:
+                self._previous_data = activity
+                self._last_valid_update = activity.modified
+                return activity
+        if self._previous_data and self._previous_data.date == today:
+            return self._previous_data
+        return None
+
+
+class WithingsWorkoutDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[Workout | None]
+):
+    """Withings workout coordinator."""
+
+    _previous_data: Workout | None = None
+
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
+        """Initialize the Withings data coordinator."""
+        super().__init__(hass, client)
+        self.notification_categories = {
+            NotificationCategory.ACTIVITY,
+        }
+
+    async def _internal_update_data(self) -> Workout | None:
+        """Retrieve latest workout."""
+        if self._last_valid_update is None:
+            now = dt_util.utcnow()
+            startdate = now - timedelta(days=14)
+            workouts = await self._client.get_workouts_in_period(
+                startdate.date(), now.date()
+            )
+        else:
+            workouts = await self._client.get_workouts_since(self._last_valid_update)
+        if not workouts:
+            return self._previous_data
+        latest_workout = max(workouts, key=lambda workout: workout.end_date)
+        if (
+            self._previous_data is None
+            or self._previous_data.end_date >= latest_workout.end_date
+        ):
+            self._previous_data = latest_workout
+            self._last_valid_update = latest_workout.end_date
+        return self._previous_data

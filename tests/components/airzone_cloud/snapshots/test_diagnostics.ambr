@@ -173,6 +173,10 @@
             'aidoo1',
           ]),
           'available': True,
+          'groups': list([
+            'group1',
+            'grp2',
+          ]),
           'humidity': 27,
           'id': 'installation1',
           'mode': 2,
@@ -185,6 +189,7 @@
           ]),
           'name': 'House',
           'num-devices': 3,
+          'num-groups': 2,
           'power': True,
           'systems': list([
             'system1',

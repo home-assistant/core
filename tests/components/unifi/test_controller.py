@@ -167,6 +167,11 @@ def mock_default_unifi_requests(
         json={"data": wlans_response or [], "meta": {"rc": "ok"}},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
+    aioclient_mock.get(
+        f"https://{host}:1234/v2/api/site/{site_id}/trafficrules",
+        json=[{}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
 
 
 async def setup_unifi_integration(

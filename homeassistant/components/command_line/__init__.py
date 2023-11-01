@@ -80,6 +80,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -119,6 +120,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
         vol.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -169,8 +171,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Command Line."""
-        reload_config = await async_integration_yaml_config(hass, "command_line")
-        reset_platforms = async_get_platforms(hass, "command_line")
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()

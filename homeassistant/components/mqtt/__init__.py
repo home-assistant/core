@@ -29,9 +29,14 @@ from homeassistant.helpers import config_validation as cv, event as ev, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.issue_registry import (
+    async_delete_issue,
+    async_get as async_get_issue_registry,
+)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
@@ -42,6 +47,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
+from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA  # noqa: F401
 from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
@@ -209,6 +215,40 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+@callback
+def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
+    """Unregister open config issues."""
+    issue_registry = async_get_issue_registry(hass)
+    open_issues = [
+        issue_id
+        for (domain, issue_id), issue_entry in issue_registry.issues.items()
+        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
+    ]
+    for issue in open_issues:
+        async_delete_issue(hass, DOMAIN, issue)
+
+
+async def async_check_config_schema(
+    hass: HomeAssistant, config_yaml: ConfigType
+) -> None:
+    """Validate manually configured MQTT items."""
+    mqtt_data = get_mqtt_data(hass)
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
+    for mqtt_config_item in mqtt_config:
+        for domain, config_items in mqtt_config_item.items():
+            schema = mqtt_data.reload_schema[domain]
+            for config in config_items:
+                try:
+                    schema(config)
+                except vol.Invalid as ex:
+                    integration = await async_get_integration(hass, DOMAIN)
+                    # pylint: disable-next=protected-access
+                    message, _ = conf_util._format_config_error(
+                        ex, domain, config, integration.documentation
+                    )
+                    raise HomeAssistantError(message) from ex
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf: dict[str, Any]
@@ -373,6 +413,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "Error reloading manually configured MQTT items, "
                     "check your configuration.yaml"
                 )
+            # Check the schema before continuing reload
+            await async_check_config_schema(hass, config_yaml)
+
+            # Remove repair issues
+            _async_remove_mqtt_issues(hass, mqtt_data)
+
             mqtt_data.config = config_yaml.get(DOMAIN, {})
 
             # Reload the modern yaml platforms
@@ -381,22 +427,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entity.async_remove()
                 for mqtt_platform in mqtt_platforms
                 for entity in mqtt_platform.entities.values()
-                # pylint: disable-next=protected-access
-                if not entity._discovery_data  # type: ignore[attr-defined]
-                if mqtt_platform.config_entry
+                if getattr(entity, "_discovery_data", None) is None
+                and mqtt_platform.config_entry
                 and mqtt_platform.domain in RELOADABLE_PLATFORMS
             ]
             await asyncio.gather(*tasks)
 
-            await asyncio.gather(
-                *(
-                    [
-                        mqtt_data.reload_handlers[component]()
-                        for component in RELOADABLE_PLATFORMS
-                        if component in mqtt_data.reload_handlers
-                    ]
-                )
-            )
+            for _, component in mqtt_data.reload_handlers.items():
+                component()
 
             # Fire event
             hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
@@ -593,5 +631,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # when the entry is set up again
     if subscriptions := mqtt_client.subscriptions:
         mqtt_data.subscriptions_to_restore = subscriptions
+
+    # Remove repair issues
+    _async_remove_mqtt_issues(hass, mqtt_data)
 
     return True
