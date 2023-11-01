@@ -65,7 +65,7 @@ CONF_VERIFY = "verify"
 CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
-CONF_REGISTER_SIZE = "register_size"
+CONF_REGISTER_SIZE_BYTES = "register_size_bytes"
 
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
@@ -95,6 +95,16 @@ class DataType(str, Enum):
     FLOAT16 = "float16"
     FLOAT32 = "float32"
     FLOAT64 = "float64"
+
+
+class RegisterBytes(int, Enum):
+    """Register size used by sensor."""
+
+    NOT_SET = 0
+    ONE = 1
+    TWO = 2
+    FOUR = 4
+    EIGHT = 8
 
 
 # call types

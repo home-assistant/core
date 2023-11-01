@@ -84,7 +84,7 @@ from .const import (  # noqa: F401
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_REGISTER_SIZE,
+    CONF_REGISTER_SIZE_BYTES,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_SCALE,
@@ -120,6 +120,7 @@ from .const import (  # noqa: F401
     TCP,
     UDP,
     DataType,
+    RegisterBytes,
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
@@ -186,6 +187,15 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CONF_SWAP_BYTE,
                 CONF_SWAP_WORD,
                 CONF_SWAP_WORD_BYTE,
+            ]
+        ),
+        vol.Optional(CONF_REGISTER_SIZE_BYTES, default=RegisterBytes.NOT_SET): vol.In(
+            [
+                RegisterBytes.NOT_SET,
+                RegisterBytes.ONE,
+                RegisterBytes.TWO,
+                RegisterBytes.FOUR,
+                RegisterBytes.EIGHT,
             ]
         ),
     }
@@ -316,7 +326,6 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_MAX_VALUE): number_validator,
             vol.Optional(CONF_NAN_VALUE): nan_validator,
             vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
-            vol.Optional(CONF_REGISTER_SIZE, default=2): cv.positive_int,
         }
     ),
 )

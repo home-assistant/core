@@ -27,7 +27,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_REGISTER_SIZE,
+    CONF_REGISTER_SIZE_BYTES,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -41,6 +41,7 @@ from .const import (
     PLATFORMS,
     SERIAL,
     DataType,
+    RegisterBytes,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ ENTRY = namedtuple(
     "ENTRY",
     [
         "struct_id",
-        "register_count",
+        "byte_count",
         "validate_parm",
     ],
 )
@@ -61,6 +62,7 @@ PARM_IS_LEGAL = namedtuple(
         "slave_count",
         "swap_byte",
         "swap_word",
+        "allow_register_size_set",
     ],
 )
 # PARM_IS_LEGAL defines if the keywords:
@@ -74,17 +76,35 @@ PARM_IS_LEGAL = namedtuple(
 # As expressed in DEFAULT_STRUCT_FORMAT
 
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, True, False)),
-    DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
+    DataType.INT8: ENTRY(
+        "b", 1, PARM_IS_LEGAL(False, False, False, False, False, True)
+    ),
+    DataType.UINT8: ENTRY(
+        "c", 1, PARM_IS_LEGAL(False, False, False, False, False, True)
+    ),
+    DataType.INT16: ENTRY("h", 2, PARM_IS_LEGAL(False, False, True, True, False, True)),
+    DataType.UINT16: ENTRY(
+        "H", 2, PARM_IS_LEGAL(False, False, True, True, False, True)
+    ),
+    DataType.FLOAT16: ENTRY(
+        "e", 2, PARM_IS_LEGAL(False, False, True, True, False, True)
+    ),
+    DataType.INT32: ENTRY("i", 4, PARM_IS_LEGAL(False, False, True, True, True, True)),
+    DataType.UINT32: ENTRY("I", 4, PARM_IS_LEGAL(False, False, True, True, True, True)),
+    DataType.FLOAT32: ENTRY(
+        "f", 4, PARM_IS_LEGAL(False, False, True, True, True, True)
+    ),
+    DataType.INT64: ENTRY("q", 8, PARM_IS_LEGAL(False, False, True, True, True, True)),
+    DataType.UINT64: ENTRY("Q", 8, PARM_IS_LEGAL(False, False, True, True, True, True)),
+    DataType.FLOAT64: ENTRY(
+        "d", 8, PARM_IS_LEGAL(False, False, True, True, True, True)
+    ),
+    DataType.STRING: ENTRY(
+        "s", -1, PARM_IS_LEGAL(True, False, False, False, False, False)
+    ),
+    DataType.CUSTOM: ENTRY(
+        "?", 0, PARM_IS_LEGAL(True, True, False, False, False, True)
+    ),
 }
 
 
@@ -99,7 +119,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     structure = config.get(CONF_STRUCTURE, None)
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, 0))
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
-    register_size = config.get(CONF_REGISTER_SIZE, 2)
+    register_size_bytes = config.get(CONF_REGISTER_SIZE_BYTES, RegisterBytes.NOT_SET)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     for entry in (
         (count, validator.count, CONF_COUNT),
@@ -125,6 +145,15 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         if not swap_type_validator:
             error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
             raise vol.Invalid(error)
+    if (
+        register_size_bytes != RegisterBytes.NOT_SET
+        and not validator.allow_register_size_set
+    ):
+        error = f"{name}: `{CONF_REGISTER_SIZE_BYTES}:{register_size_bytes}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if register_size_bytes == RegisterBytes.NOT_SET:
+        # set default value (2 bytes) after checking is not string
+        register_size_bytes = RegisterBytes.TWO
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
             size = struct.calcsize(structure)
@@ -132,14 +161,20 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(
                 f"{name}: error in structure format --> {str(err)}"
             ) from err
-        bytecount = count * register_size
+        bytecount = count * register_size_bytes
         if bytecount != size:
             raise vol.Invalid(
                 f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )
     else:
         if data_type != DataType.STRING:
-            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+            config[CONF_COUNT] = int(
+                DEFAULT_STRUCT_FORMAT[data_type].byte_count / register_size_bytes
+            )
+            if DEFAULT_STRUCT_FORMAT[data_type].byte_count % register_size_bytes != 0:
+                raise vol.Invalid(
+                    "Combination of data type and register size does generate an posivite integer count."
+                )
         if slave_count:
             structure = (
                 f">{slave_count + 1}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
