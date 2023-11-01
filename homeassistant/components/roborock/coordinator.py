@@ -53,10 +53,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
-        if self.roborock_device_info.network_info.mac:
-            self.device_info["connections"] = {
-                (dr.CONNECTION_NETWORK_MAC, self.roborock_device_info.network_info.mac)
-            }
+        if mac := self.roborock_device_info.network_info.mac:
+            self.device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
