@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.2.0
+aioesphomeapi==18.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.8
+aiohomekit==3.0.9
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -378,7 +378,7 @@ aiovlc==0.1.0
 aiovodafone==0.4.2
 
 # homeassistant.components.waqi
-aiowaqi==2.1.0
+aiowaqi==3.0.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -857,7 +857,7 @@ gassist-text==0.0.10
 gcal-sync==5.0.0
 
 # homeassistant.components.geniushub
-geniushub-client==0.7.0
+geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -1004,10 +1004,10 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.28
+holidays==0.35
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231027.0
+home-assistant-frontend==20231030.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -2007,7 +2007,7 @@ pysaj==0.0.16
 pyschlage==2023.10.0
 
 # homeassistant.components.sensibo
-pysensibo==1.0.35
+pysensibo==1.0.36
 
 # homeassistant.components.zha
 pyserial-asyncio-fast==0.11
@@ -2126,7 +2126,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==3.0.0
+python-homewizard-energy==3.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2141,7 +2141,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.5.3
+python-kasa[speedups]==0.5.4
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2220,7 +2220,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.7
+pytrafikverket==0.3.8
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2319,7 +2319,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.11
+reolink-aio==0.7.12
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
