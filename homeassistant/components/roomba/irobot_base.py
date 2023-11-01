@@ -115,7 +115,7 @@ class IRobotEntity(Entity):
     @property
     def battery_stats(self):
         """Return the battery stats."""
-        return self.vacuum_state.get("bbchg3")
+        return self.vacuum_state.get("bbchg3", {})
 
     @property
     def _robot_state(self):
