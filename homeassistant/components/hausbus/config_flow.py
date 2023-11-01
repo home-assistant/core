@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
+import voluptuous as vol  # type: ignore[import]
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
@@ -15,14 +15,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema({})
-
-
-class HausBusHub:
-    """Haus-Bus config flow class."""
-
-    def __init__(self, host_type: str) -> None:
-        """Initialize."""
-        self.host_type = host_type
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
