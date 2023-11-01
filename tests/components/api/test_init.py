@@ -1,5 +1,4 @@
 """The tests for the Home Assistant API component."""
-import asyncio
 from http import HTTPStatus
 import json
 from unittest.mock import patch
@@ -359,7 +358,7 @@ async def test_api_call_service_timeout(
     """Test if the API does not fail on long running services."""
     test_value = []
 
-    fut = asyncio.Future()
+    fut = hass.loop.create_future()
 
     async def listener(service_call):
         """Wait and return after mock_api_client.post finishes."""
