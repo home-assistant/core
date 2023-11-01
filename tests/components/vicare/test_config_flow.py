@@ -75,39 +75,47 @@ async def test_user_create_entry(
     mock_setup_entry.assert_called_once()
 
 
-async def test_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test reauth flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
+    new_password = "ABCD"
+    new_client_id = "EFGH"
+    MockConfigEntry(
+        domain=DOMAIN,
         data=VALID_CONFIG,
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    ).add_to_hass(hass)
 
-    # test success
     with patch(
         f"{MODULE}.config_flow.vicare_login",
         return_value=None,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data=VALID_CONFIG,
+        )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
-    new_password = "ABCD"
-    new_client_id = "EFGH"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+        assert len(hass.config_entries.async_entries()) == 1
+        assert (
+            hass.config_entries.async_entries()[0].data[CONF_PASSWORD] == new_password
+        )
+        assert (
+            hass.config_entries.async_entries()[0].data[CONF_CLIENT_ID] == new_client_id
+        )
+        await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries()) == 1
-    assert hass.config_entries.async_entries()[0].data[CONF_PASSWORD] == new_password
-    assert hass.config_entries.async_entries()[0].data[CONF_CLIENT_ID] == new_client_id
-    await hass.async_block_till_done()
+        # test success
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
 
 
 async def test_form_dhcp(
