@@ -1,6 +1,7 @@
 """Test the Google Nest Device Access config flow."""
 from __future__ import annotations
 
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
@@ -27,7 +28,9 @@ from .common import (
     SUBSCRIBER_ID,
     TEST_CONFIG_APP_CREDS,
     TEST_CONFIGFLOW_APP_CREDS,
+    FakeSubscriber,
     NestTestConfig,
+    PlatformSetup,
 )
 
 from tests.common import MockConfigEntry
@@ -92,8 +95,6 @@ class OAuthFixture:
         assert resp.status == 200
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-        await self.async_mock_refresh(result)
-
     async def async_reauth(self, config_entry: ConfigEntry) -> dict:
         """Initiate a reuath flow."""
         config_entry.async_start_reauth(self.hass)
@@ -137,7 +138,7 @@ class OAuthFixture:
             "&access_type=offline&prompt=consent"
         )
 
-    async def async_mock_refresh(self, result, user_input: dict = None) -> None:
+    def async_mock_refresh(self) -> None:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         self.aioclient_mock.post(
             OAUTH2_TOKEN,
@@ -202,6 +203,7 @@ async def test_app_credentials(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     entry = await oauth.async_finish_setup(result)
 
@@ -235,6 +237,7 @@ async def test_config_flow_restart(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     # At this point, we should have a valid auth implementation configured.
     # Simulate aborting the flow and starting over to ensure we get prompted
@@ -254,6 +257,7 @@ async def test_config_flow_restart(
 
     result = await oauth.async_configure(result, {"project_id": "new-project-id"})
     await oauth.async_oauth_web_flow(result, "new-project-id")
+    oauth.async_mock_refresh()
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
 
@@ -305,6 +309,7 @@ async def test_config_flow_wrong_project_id(
     result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
     await oauth.async_oauth_web_flow(result)
     await hass.async_block_till_done()
+    oauth.async_mock_refresh()
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
 
@@ -341,6 +346,7 @@ async def test_config_flow_pubsub_configuration_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     mock_subscriber.create_subscription.side_effect = ConfigurationException
     result = await oauth.async_configure(result, {"code": "1234"})
@@ -360,6 +366,7 @@ async def test_config_flow_pubsub_subscriber_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     mock_subscriber.create_subscription.side_effect = SubscriberException()
     result = await oauth.async_configure(result, {"code": "1234"})
@@ -384,6 +391,7 @@ async def test_multiple_config_entries(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result, project_id="project-id-2")
+    oauth.async_mock_refresh()
     entry = await oauth.async_finish_setup(result)
     assert entry.title == "Mock Title"
     assert "token" in entry.data
@@ -442,6 +450,7 @@ async def test_reauth_multiple_config_entries(
     result = await oauth.async_reauth(config_entry)
 
     await oauth.async_oauth_web_flow(result)
+    oauth.async_mock_refresh()
 
     await oauth.async_finish_setup(result)
 
@@ -479,6 +488,7 @@ async def test_pubsub_subscription_strip_whitespace(
     await oauth.async_app_creds_flow(
         result, cloud_project_id=" " + CLOUD_PROJECT_ID + " "
     )
+    oauth.async_mock_refresh()
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
 
     assert entry.title == "Import from configuration.yaml"
@@ -508,6 +518,7 @@ async def test_pubsub_subscription_auth_failure(
     mock_subscriber.create_subscription.side_effect = AuthException()
 
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
     result = await oauth.async_configure(result, {"code": "1234"})
 
     assert result["type"] == "abort"
@@ -527,6 +538,7 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
     result = await oauth.async_reauth(config_entry)
     await oauth.async_oauth_web_flow(result)
+    oauth.async_mock_refresh()
 
     # Entering an updated access token refreshes the config entry.
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
@@ -568,6 +580,7 @@ async def test_config_entry_title_from_home(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     assert entry.title == "Example Home"
@@ -613,6 +626,7 @@ async def test_config_entry_title_multiple_homes(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     assert entry.title == "Example Home #1, Example Home #2"
@@ -628,6 +642,7 @@ async def test_title_failure_fallback(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     mock_subscriber.async_get_device_manager.side_effect = AuthException()
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
@@ -659,6 +674,7 @@ async def test_structure_missing_trait(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     # Fallback to default name
@@ -705,6 +721,7 @@ async def test_dhcp_discovery_with_creds(
 
     result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
     await oauth.async_oauth_web_flow(result)
+    oauth.async_mock_refresh()
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     await hass.async_block_till_done()
 
@@ -726,3 +743,36 @@ async def test_dhcp_discovery_with_creds(
             "type": "Bearer",
         },
     }
+
+
+@pytest.mark.parametrize(
+    ("status_code", "error_reason"),
+    [
+        (HTTPStatus.UNAUTHORIZED, "oauth_unauthorized"),
+        (HTTPStatus.NOT_FOUND, "oauth_failed"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "oauth_failed"),
+    ],
+)
+async def test_token_error(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    subscriber: FakeSubscriber,
+    setup_platform: PlatformSetup,
+    status_code: HTTPStatus,
+    error_reason: str,
+) -> None:
+    """Check full flow."""
+    await setup_platform()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.aioclient_mock.post(
+        OAUTH2_TOKEN,
+        status=status_code,
+    )
+
+    result = await oauth.async_configure(result, user_input=None)
+    assert result.get("type") == "abort"
+    assert result.get("reason") == error_reason
