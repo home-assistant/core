@@ -53,9 +53,11 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .messages import construct_event_message, construct_result_message
+from .messages import construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -92,6 +94,7 @@ def pong_message(iden: int) -> dict[str, Any]:
     return {"id": iden, "type": "pong"}
 
 
+@callback
 def _forward_events_check_permissions(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     user: User,
@@ -109,6 +112,7 @@ def _forward_events_check_permissions(
     send_message(messages.cached_event_message(msg_id, event))
 
 
+@callback
 def _forward_events_unconditional(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     msg_id: int,
@@ -132,20 +136,23 @@ def handle_subscribe_events(
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
+        _LOGGER.error(
+            "Refusing to allow %s to subscribe to event %s",
+            connection.user.name,
+            event_type,
+        )
+        raise Unauthorized(user_id=connection.user.id)
 
     if event_type == EVENT_STATE_CHANGED:
-        forward_events = callback(
-            partial(
-                _forward_events_check_permissions,
-                connection.send_message,
-                connection.user,
-                msg["id"],
-            )
+        forward_events = partial(
+            _forward_events_check_permissions,
+            connection.send_message,
+            connection.user,
+            msg["id"],
         )
     else:
-        forward_events = callback(
-            partial(_forward_events_unconditional, connection.send_message, msg["id"])
+        forward_events = partial(
+            _forward_events_unconditional, connection.send_message, msg["id"]
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
@@ -294,10 +301,12 @@ def _send_handle_get_states_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
-    joined_states = ",".join(serialized_states)
-    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
+    connection.send_message(
+        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+    )
 
 
+@callback
 def _forward_entity_changes(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
@@ -337,14 +346,12 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
-        callback(
-            partial(
-                _forward_entity_changes,
-                connection.send_message,
-                entity_ids,
-                connection.user,
-                msg["id"],
-            )
+        partial(
+            _forward_entity_changes,
+            connection.send_message,
+            entity_ids,
+            connection.user,
+            msg["id"],
         ),
         run_immediately=True,
     )
@@ -384,9 +391,8 @@ def _send_handle_entities_init_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle entities init response."""
-    joined_states = ",".join(serialized_states)
     connection.send_message(
-        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
+        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
     )
 
 
