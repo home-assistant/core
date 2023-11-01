@@ -428,7 +428,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),    
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
