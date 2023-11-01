@@ -352,7 +352,7 @@ class EvoController(EvoClimateEntity):
         """Set a Controller to any of its native EVO_* operating modes."""
         until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_status(mode, until=until)
+            self._evo_tcs.set_mode(mode, until=until)
         )
 
     @property
