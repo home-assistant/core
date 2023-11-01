@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-import homeassistant
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
@@ -237,10 +236,6 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
         )
         target_temperature = target_temperature or self.target_temperature
-        if not target_temperature:
-            raise homeassistant.exceptions.InvalidStateError(
-                "Target temperature not set"
-            )
 
         fan_mode = self._control_backfill(
             fan_mode,
