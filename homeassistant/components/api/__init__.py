@@ -373,6 +373,7 @@ class APIDomainServicesView(HomeAssistantView):
 
         try:
             async with timeout(SERVICE_WAIT_TIMEOUT):
+                # shield the service call from cancellation on connection drop
                 await shield(
                     hass.services.async_call(
                         domain, service, data, blocking=True, context=context
