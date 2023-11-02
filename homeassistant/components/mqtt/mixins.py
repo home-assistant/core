@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
-import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -56,7 +55,6 @@ from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -65,6 +63,7 @@ from homeassistant.helpers.typing import (
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
+from homeassistant.util.yaml import dump as yaml_dump
 
 from . import debug_info, subscription
 from .client import async_publish
@@ -417,8 +416,7 @@ async def async_setup_entity_entry_helper(
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))
-                # Remove unwanted additional info such as line numbers from config before dumping to YAML
-                yaml_config_str = yaml.dump(json_loads(json_bytes(yaml_config)))
+                yaml_config_str = yaml_dump(yaml_config)
                 learn_more_url = (
                     f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
                 )
