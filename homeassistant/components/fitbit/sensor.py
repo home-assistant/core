@@ -791,7 +791,7 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
 
 
 class FitbitBatteryLevelSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of a Fitbit battery sensor."""
+    """Implementation of a Fitbit battery level sensor."""
 
     entity_description: FitbitSensorEntityDescription
     _attr_attribution = ATTRIBUTION
