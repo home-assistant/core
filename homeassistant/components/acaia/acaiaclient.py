@@ -1,7 +1,9 @@
 """Acaia Scale Client for Home Assistant."""
+from collections.abc import Awaitable, Callable
 import logging
 import time
 
+from bleak import BleakGATTCharacteristic
 from pyacaia_async import AcaiaScale
 from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
 
@@ -27,6 +29,7 @@ class AcaiaClient(AcaiaScale):
     @property
     def mac(self) -> str:
         """Return the mac address of the scale in upper case."""
+        assert self._mac
         return self._mac.upper()
 
     @property
@@ -40,7 +43,7 @@ class AcaiaClient(AcaiaScale):
         return self._timer_running
 
     @timer_running.setter
-    def timer_running(self, value) -> None:
+    def timer_running(self, value: bool) -> None:
         """Set timer running state."""
         self._timer_running = value
 
@@ -50,18 +53,25 @@ class AcaiaClient(AcaiaScale):
         return self._connected
 
     @connected.setter
-    def connected(self, value) -> None:
+    def connected(self, value: bool) -> None:
         """Set connected state."""
         self._connected = value
 
-    async def connect(self, callback=None) -> None:
+    async def connect(
+        self,
+        callback: Callable[[BleakGATTCharacteristic, bytearray], Awaitable[None] | None]
+        | None = None,
+    ) -> None:
         """Connect to the scale."""
         try:
             if not self._connected:
                 # Get a new client and connect to the scale.
+                assert self._mac
                 ble_device = bluetooth.async_ble_device_from_address(
                     self.hass, self._mac, connectable=True
                 )
+                if ble_device is None:
+                    raise AcaiaDeviceNotFound(f"Device with MAC {self._mac} not found")
                 self.new_client_from_ble_device(ble_device)
 
                 await super().connect(callback=callback)
@@ -88,18 +98,18 @@ class AcaiaClient(AcaiaScale):
         except Exception as ex:
             raise HomeAssistantError("Error taring device") from ex
 
-    async def startStopTimer(self) -> None:
+    async def start_stop_timer(self) -> None:
         """Start/Stop the timer."""
         await self.connect()
         try:
-            await super().startStopTimer()
+            await super().start_stop_timer()
         except Exception as ex:
             raise HomeAssistantError("Error starting/stopping timer") from ex
 
-    async def resetTimer(self) -> None:
+    async def reset_timer(self) -> None:
         """Reset the timer."""
         await self.connect()
         try:
-            await super().resetTimer()
+            await super().reset_timer()
         except Exception as ex:
             raise HomeAssistantError("Error resetting timer") from ex

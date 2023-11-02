@@ -1,9 +1,10 @@
 """Config flow for Acaia integration."""
 from typing import Any
 
-import voluptuous as vol  # type: ignore[import]
+import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
@@ -49,7 +50,9 @@ class AcaiaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_bluetooth(self, discovery_info) -> FlowResult:
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> FlowResult:
         """Handle a discovered Bluetooth device."""
         self._discovered[CONF_MAC] = discovery_info.address
         self._discovered[CONF_NAME] = discovery_info.name

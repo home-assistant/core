@@ -3,7 +3,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyacaia_async.decode import Message, Settings, decode  # type: ignore [import]
+from bleak import BleakGATTCharacteristic
+from pyacaia_async.decode import Message, Settings, decode
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant, callback
@@ -73,7 +74,9 @@ class AcaiaApiCoordinator(DataUpdateCoordinator):
         return self._data
 
     @callback
-    def _on_data_received(self, characteristic, data):
+    def _on_data_received(
+        self, characteristic: BleakGATTCharacteristic, data: bytearray
+    ) -> None:
         """Receive data from scale."""
         msg = decode(data)[0]
 

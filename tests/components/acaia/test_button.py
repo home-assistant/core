@@ -69,8 +69,8 @@ async def test_button_press(hass: HomeAssistant) -> None:
     assert state.state == now.isoformat()
 
     with patch(
-        "homeassistant.components.acaia.AcaiaClient.resetTimer"
-    ) as mock_resetTimer, patch("homeassistant.core.dt_util.utcnow", return_value=now):
+        "homeassistant.components.acaia.AcaiaClient.reset_timer"
+    ) as mock_reset_timer, patch("homeassistant.core.dt_util.utcnow", return_value=now):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -79,15 +79,15 @@ async def test_button_press(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    mock_resetTimer.assert_called_once()
+    mock_reset_timer.assert_called_once()
 
     state = hass.states.get("button.lunar_1234_reset_timer")
     assert state
     assert state.state == now.isoformat()
 
     with patch(
-        "homeassistant.components.acaia.AcaiaClient.startStopTimer"
-    ) as mock_startStopTimer, patch(
+        "homeassistant.components.acaia.AcaiaClient.start_stop_timer"
+    ) as mock_start_stop_timer, patch(
         "homeassistant.core.dt_util.utcnow", return_value=now
     ):
         await hass.services.async_call(
@@ -98,7 +98,7 @@ async def test_button_press(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    mock_startStopTimer.assert_called_once()
+    mock_start_stop_timer.assert_called_once()
 
     state = hass.states.get("button.lunar_1234_start_stop_timer")
     assert state
@@ -132,7 +132,7 @@ async def test_button_connection_error(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError, match="Error resetting timer"), patch.object(
         AcaiaScale,
-        "resetTimer",
+        "reset_timer",
         side_effect=AcaiaError,
     ), patch("homeassistant.components.acaia.AcaiaClient.connect"), patch(
         "homeassistant.core.dt_util.utcnow", return_value=now
@@ -153,7 +153,7 @@ async def test_button_connection_error(hass: HomeAssistant) -> None:
         HomeAssistantError, match="Error starting/stopping timer"
     ), patch.object(
         AcaiaScale,
-        "startStopTimer",
+        "start_stop_timer",
         side_effect=AcaiaError,
     ), patch(
         "homeassistant.components.acaia.AcaiaClient.connect"

@@ -9,25 +9,26 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .acaiaclient import AcaiaClient
 from .const import DOMAIN
+from .coordinator import AcaiaApiCoordinator
 
 
 @dataclass
-class AcaiaEntityDescriptionMixin:
-    """Mixin for all LM entities."""
-
-
-@dataclass
-class AcaiaEntityDescription(EntityDescription, AcaiaEntityDescriptionMixin):
+class AcaiaEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
 
 @dataclass
-class AcaiaEntity(CoordinatorEntity):
+class AcaiaEntity(CoordinatorEntity[AcaiaApiCoordinator]):
     """Common elements for all entities."""
 
     entity_description: AcaiaEntityDescription
+    _attr_has_entity_name = True
 
-    def __init__(self, coordinator, entity_description) -> None:
+    def __init__(
+        self,
+        coordinator: AcaiaApiCoordinator,
+        entity_description: AcaiaEntityDescription,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
@@ -35,7 +36,6 @@ class AcaiaEntity(CoordinatorEntity):
         self._attr_unique_id = (
             f"{format_mac(self._scale.mac)}_{self.entity_description.key}"
         )
-        self._attr_has_entity_name = True
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._scale.mac)},

@@ -3,7 +3,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .acaiaclient import AcaiaClient
 from .const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
@@ -12,12 +11,6 @@ from .coordinator import AcaiaApiCoordinator
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.BUTTON]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Acaia component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -31,9 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass, mac=mac, name=name, is_new_style_scale=is_new_style_scale
     )
 
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator = AcaiaApiCoordinator(
-        hass, acaia_client
-    )
+    hass.data.setdefault(DOMAIN, {})[
+        config_entry.entry_id
+    ] = coordinator = AcaiaApiCoordinator(hass, acaia_client)
 
     await coordinator.async_config_entry_first_refresh()
 
