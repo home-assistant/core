@@ -209,6 +209,18 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+def is_callback_check_partial(target: Callable[..., Any]) -> bool:
+    """Check if function is safe to be called in the event loop.
+
+    This version of is_callback will also check if the target is a partial
+    and walk the chain of partials to find the original function.
+    """
+    check_target = target
+    while isinstance(check_target, functools.partial):
+        check_target = check_target.func
+    return is_callback(check_target)
+
+
 class _Hass(threading.local):
     """Container which makes a HomeAssistant instance available to the event loop."""
 
@@ -270,11 +282,12 @@ class HassJob(Generic[_P, _R_co]):
         name: str | None = None,
         *,
         cancel_on_shutdown: bool | None = None,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = _get_hassjob_callable_job_type(target)
+        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
 
     @property
@@ -1141,13 +1154,20 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if event_filter is not None and not is_callback(event_filter):
+        job_type: HassJobType | None = None
+        if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately and not is_callback(listener):
-            raise HomeAssistantError(f"Event listener {listener} is not a callback")
+        if run_immediately:
+            if not is_callback_check_partial(listener):
+                raise HomeAssistantError(f"Event listener {listener} is not a callback")
+            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
-            (HassJob(listener, f"listen {event_type}"), event_filter, run_immediately),
+            (
+                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                event_filter,
+                run_immediately,
+            ),
         )
 
     @callback
@@ -1222,7 +1242,11 @@ class EventBus:
         )
 
         filterable_job = (
-            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
+            HassJob(
+                _onetime_listener,
+                f"onetime listen {event_type} {listener}",
+                job_type=HassJobType.Callback,
+            ),
             None,
             False,
         )
@@ -2129,11 +2153,14 @@ class Config:
         # Dictionary of Media folders that integrations may use
         self.media_dirs: dict[str, str] = {}
 
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -2208,13 +2235,14 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
-            "safe_mode": self.safe_mode,
+            "recovery_mode": self.recovery_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

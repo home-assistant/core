@@ -271,7 +271,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     mock_auth = AsyncMock(
         startup=Mock(return_value=True), check_key_required=Mock(return_value=False)
     )
-    mock_blink = AsyncMock()
+    mock_blink = AsyncMock(cameras=Mock(), sync=Mock())
 
     with patch("homeassistant.components.blink.Auth", return_value=mock_auth), patch(
         "homeassistant.components.blink.Blink", return_value=mock_blink

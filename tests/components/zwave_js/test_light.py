@@ -129,7 +129,7 @@ async def test_light(
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
-    assert ATTR_RGB_COLOR in state.attributes
+    assert state.attributes[ATTR_RGB_COLOR] is not None
 
     # Test turning on with same brightness
     await hass.services.async_call(
@@ -254,7 +254,7 @@ async def test_light(
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_RGB_COLOR] == (255, 76, 255)
-    assert ATTR_COLOR_TEMP not in state.attributes
+    assert state.attributes[ATTR_COLOR_TEMP] is None
 
     client.async_send_command.reset_mock()
 
@@ -432,8 +432,8 @@ async def test_light(
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_UNKNOWN
-    assert ATTR_COLOR_MODE not in state.attributes
-    assert ATTR_BRIGHTNESS not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
+    assert state.attributes[ATTR_BRIGHTNESS] is None
 
 
 async def test_v4_dimmer_light(
