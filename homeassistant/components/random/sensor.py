@@ -65,7 +65,6 @@ async def async_setup_entry(
 class RandomSensor(SensorEntity):
     """Representation of a Random number sensor."""
 
-    _attr_icon = "mdi:hanger"
     _state: int | None = None
 
     def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
