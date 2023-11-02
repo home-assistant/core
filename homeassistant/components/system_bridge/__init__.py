@@ -36,8 +36,6 @@ from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -49,6 +47,7 @@ PLATFORMS = [
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 CONF_BRIDGE = "bridge"
@@ -329,43 +328,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
-    """Defines a base System Bridge entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: SystemBridgeDataUpdateCoordinator,
-        api_port: int,
-        key: str,
-    ) -> None:
-        """Initialize the System Bridge entity."""
-        super().__init__(coordinator)
-
-        self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}"
-        self._configuration_url = (
-            f"http://{self._hostname}:{api_port}/app/settings.html"
-        )
-        self._mac_address = coordinator.data.system.mac_address
-        self._uuid = coordinator.data.system.uuid
-        self._version = coordinator.data.system.version
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this System Bridge instance."""
-        return DeviceInfo(
-            configuration_url=self._configuration_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
-            identifiers={(DOMAIN, self._uuid)},
-            name=self._hostname,
-            sw_version=self._version,
-        )
