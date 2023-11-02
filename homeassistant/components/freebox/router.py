@@ -72,10 +72,10 @@ class FreeboxRouter:
         self._sw_v: str = freebox_config["firmware_version"]
         self._attrs: dict[str, Any] = {}
 
+        self.supports_hosts = True
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
         self.supports_raid = True
-        self.supports_hosts = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
@@ -103,9 +103,9 @@ class FreeboxRouter:
                 fbx_devices.append(await self._api.lan.get_hosts_list())
                 hosts_list_initialized = True
             except HttpRequestError as err:
-                m = re.search('Request failed \(APIResponse: (.+?)\)', str(err))
-                if m:
-                    json_str = m.group(1)
+                matcher = re.search('Request failed \(APIResponse: (.+?)\)', str(err))
+                if matcher:
+                    json_str = matcher.group(1)
                     try:                        
                         json_resp = json.loads(json_str)
                     except ValueError as ve:
