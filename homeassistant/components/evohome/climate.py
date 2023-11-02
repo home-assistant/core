@@ -49,6 +49,7 @@ from .const import (
 
 if TYPE_CHECKING:
     from . import EvoBroker
+    from evohomeasync2 import ControlSystem, Zone
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,7 +146,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: Zone) -> None:
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
@@ -310,7 +311,7 @@ class EvoController(EvoClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: ControlSystem) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 

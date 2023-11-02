@@ -1,5 +1,5 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import logging
 from typing import TYPE_CHECKING
@@ -24,7 +24,7 @@ from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
 
 if TYPE_CHECKING:
-    from evohomeasync2.hotwater import HotWater
+    from evohomeasync2 import HotWater
 
     from . import EvoBroker
 
@@ -70,7 +70,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: HotWater) -> None:
         """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
@@ -91,7 +91,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> bool:
         """Return True if away mode is on."""
         is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
         is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
@@ -126,11 +126,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.reset_mode())
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn on."""
         await self._evo_broker.call_client_api(self._evo_device.set_on())
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn off."""
         await self._evo_broker.call_client_api(self._evo_device.set_off())
 
