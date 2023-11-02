@@ -4,11 +4,12 @@ Such systems include evohome, Round Thermostat, and others.
 """
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import evohomeasync
 import evohomeasync2
@@ -38,6 +39,10 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
+
+if TYPE_CHECKING:
+    from evohomeasync2 import ControlSystem, HotWater, Zone
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +143,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err) -> None:
+def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
     """Return False if the exception can't be ignored."""
     try:
         raise err
@@ -280,7 +285,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def setup_service_functions(hass: HomeAssistant, broker):
+def setup_service_functions(hass: HomeAssistant, broker: EvoBroker):
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
@@ -446,7 +451,9 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, update_state=True) -> Any:
+    async def call_client_api(
+        self, api_function: Coroutine, update_state: bool = True
+    ) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
@@ -571,7 +578,9 @@ class EvoDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(
+        self, evo_broker: EvoBroker, evo_device: ControlSystem | HotWater | Zone
+    ) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
@@ -623,7 +632,7 @@ class EvoChild(EvoDevice):
     This includes (up to 12) Heating Zones and (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: HotWater | Zone) -> None:
         """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
         self._schedule: dict[str, Any] = {}
