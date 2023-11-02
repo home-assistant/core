@@ -44,6 +44,7 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entity_entry_helper,
+    validate_sensor_entity_category,
     write_state_on_attr_change,
 )
 from .models import (
@@ -70,7 +71,6 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 
-
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
@@ -88,6 +88,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
+    validate_sensor_entity_category,
     _PLATFORM_SCHEMA_BASE,
 )
 
@@ -95,6 +96,7 @@ DISCOVERY_SCHEMA = vol.All(
     # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
     # Removed in HA Core 2023.6.0
     cv.removed(CONF_LAST_RESET_TOPIC),
+    validate_sensor_entity_category,
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
