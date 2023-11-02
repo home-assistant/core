@@ -50,6 +50,33 @@
           "unkownn": "Unknown alarm",
           "none": "None"
         }
+      },
+      "depression": {
+        "name": "Depression"
+      },
+      "working_hours": {
+        "name": "Working time"
+      },
+      "working_state": {
+        "name": "Working state"
+      },
+      "working_level": {
+        "name": "Working level"
+      },
+      "ignitions": {
+        "name": "Ignitions"
+      },
+      "live_pulse": {
+        "name": "Live pulse"
+      },
+      "pulse_offset": {
+        "name": "Pulse offset"
+      },
+      "extractor": {
+        "name": "Extractor"
+      },
+      "convecto_air_flow": {
+        "name": "Convecto air flow"
       }
     },
     "number": {
