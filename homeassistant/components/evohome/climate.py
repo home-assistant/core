@@ -1,7 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 from __future__ import annotations
 
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -30,7 +30,6 @@ from . import (
     CONF_LOCATION_IDX,
     SVC_RESET_ZONE_OVERRIDE,
     SVC_SET_SYSTEM_MODE,
-    EvoBroker,
     EvoChild,
     EvoDevice,
 )
@@ -50,6 +49,8 @@ from .const import (
 
 if TYPE_CHECKING:
     from evohomeasync2 import ControlSystem, Zone
+
+    from . import EvoBroker
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -179,7 +180,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
-            duration = data[ATTR_DURATION_UNTIL]
+            duration: td = data[ATTR_DURATION_UNTIL]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
