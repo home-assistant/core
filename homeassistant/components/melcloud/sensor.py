@@ -78,6 +78,15 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         value_fn=lambda x: x.device.tank_temperature,
         enabled=lambda x: True,
     ),
+    MelcloudSensorEntityDescription(
+        key="condensing_temperature",
+        translation_key="condensing_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.device.get_device_prop("CondensingTemperature"),
+        enabled=lambda x: True,
+    ),
 )
 ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
