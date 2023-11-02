@@ -44,6 +44,21 @@ async def _recovery_after_failure_works(
     }
 
 
+async def _recovery_after_reauth_failure_works(
+    hass: HomeAssistant, mock_fibaro_client: Mock, result: FlowResult
+) -> None:
+    mock_fibaro_client.connect.side_effect = None
+    mock_fibaro_client.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "other_fake_password"},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
 async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
@@ -249,6 +264,8 @@ async def test_reauth_connect_failure(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    await _recovery_after_reauth_failure_works(hass, mock_fibaro_client, result)
+
 
 async def test_reauth_auth_failure(
     hass: HomeAssistant,
@@ -279,6 +296,8 @@ async def test_reauth_auth_failure(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    await _recovery_after_reauth_failure_works(hass, mock_fibaro_client, result)
 
 
 @pytest.mark.parametrize("url_path", ["/api/", "/api", "/", ""])
