@@ -3,6 +3,7 @@ ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
 ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
+ATTR_BLOCKING = "blocking"
 
 CONF_CACHE = "cache"
 CONF_CACHE_DIR = "cache_dir"

@@ -3,7 +3,6 @@ import asyncio
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
-import wave
 
 import pytest
 
@@ -1213,14 +1212,11 @@ async def test_load_cache_retrieve_without_mem_cache(
     """Set up component and load cache and get without mem cache."""
     tts_data = b""
     cache_file = mock_tts_cache_dir / (
-        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.wav"
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with wave.open(str(cache_file), "wb") as voice_file:
-        voice_file.setframerate(16000)
-        voice_file.setsampwidth(2)
-        voice_file.setnchannels(1)
-        voice_file.writeframes(tts_data)
+    with open(cache_file, "wb") as voice_file:
+        voice_file.write(tts_data)
 
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -1230,9 +1226,7 @@ async def test_load_cache_retrieve_without_mem_cache(
 
     req = await client.get(url)
     assert req.status == HTTPStatus.OK
-
-    # File will actually get converted, so it will contain empty ID3 tags
-    assert (await req.read()).startswith(b"ID3")
+    assert await req.read() == tts_data
 
 
 @pytest.mark.parametrize(
@@ -1460,7 +1454,12 @@ async def test_legacy_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "test", "en_US", None, None
+        hass,
+        "test message",
+        "test",
+        "en_US",
+        options={tts.ATTR_BLOCKING: False},
+        cache=None,
     )
 
     task = hass.async_create_task(
@@ -1514,16 +1513,6 @@ async def test_fetching_in_async(
     class EntityWithAsyncFetching(MockTTSEntity):
         """Entity that supports audio output option."""
 
-        @property
-        def supported_options(self) -> list[str]:
-            """Return list of supported options like voice, emotions."""
-            return [tts.ATTR_AUDIO_OUTPUT]
-
-        @property
-        def default_options(self) -> dict[str, str]:
-            """Return a dict including the default options."""
-            return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
-
         async def async_get_tts_audio(
             self, message: str, language: str, options: dict[str, Any]
         ) -> tts.TtsAudioType:
@@ -1533,7 +1522,12 @@ async def test_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "tts.test", "en_US", None, None
+        hass,
+        "test message",
+        "tts.test",
+        "en_US",
+        options={tts.ATTR_BLOCKING: False},
+        cache=None,
     )
 
     task = hass.async_create_task(

@@ -49,6 +49,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
+    ATTR_BLOCKING,
     ATTR_CACHE,
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
@@ -72,6 +73,7 @@ __all__ = [
     "async_default_engine",
     "async_get_media_source_audio",
     "async_support_options",
+    "ATTR_BLOCKING",
     "ATTR_AUDIO_OUTPUT",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_RATE",
@@ -552,10 +554,15 @@ class SpeechManager:
 
         supported_options = engine_instance.supported_options or []
 
-        # ATTR_PREFERRED_* options are always "supported" since they're used to
-        # convert audio after the TTS has run (if necessary)
+        # These options control behavior surrounding the TTS, so it's not
+        # important if the TTS supports them or not.
         supported_options.extend(
             (
+                # ATTR_BLOCKING is used to control whether or not a TTS request
+                # waits for audio generation
+                ATTR_BLOCKING,
+                # ATTR_PREFERRED_* options are always "supported" since they're
+                # used to convert audio after the TTS has run (if necessary)
                 ATTR_PREFERRED_FORMAT,
                 ATTR_PREFERRED_SAMPLE_RATE,
                 ATTR_PREFERRED_SAMPLE_CHANNELS,
@@ -599,12 +606,7 @@ class SpeechManager:
         # Load speech from engine into memory
         else:
             filename = await self._async_get_tts_audio(
-                engine_instance,
-                cache_key,
-                message,
-                use_cache,
-                language,
-                options,
+                engine_instance, cache_key, message, use_cache, language, options
             )
 
         return f"/api/tts_proxy/{filename}"
@@ -670,10 +672,10 @@ class SpeechManager:
         This method is a coroutine.
         """
         options = options or {}
-        extension = options.get(ATTR_PREFERRED_FORMAT, options.get(ATTR_AUDIO_OUTPUT))
-        if (extension is not None) and hasattr(extension, "value"):
-            # Unpack enum
-            extension = extension.value
+        blocking = options.get(ATTR_BLOCKING, "true") != "false"
+
+        # Default to MP3 unless a different format is preferred
+        final_extension = options.get(ATTR_PREFERRED_FORMAT, "mp3")
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -694,29 +696,27 @@ class SpeechManager:
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
 
-            if to_extension := options.get(ATTR_PREFERRED_FORMAT):
-                # Only convert if we have a preferred format different than the
-                # expected format from the TTS system, or if a specific sample
-                # rate/format/channel count is requested.
-                needs_conversion = (
-                    (to_extension != extension)
-                    or (ATTR_PREFERRED_SAMPLE_RATE in options)
-                    or (ATTR_PREFERRED_SAMPLE_CHANNELS in options)
+            # Only convert if we have a preferred format different than the
+            # expected format from the TTS system, or if a specific sample
+            # rate/format/channel count is requested.
+            needs_conversion = (
+                (final_extension != extension)
+                or (ATTR_PREFERRED_SAMPLE_RATE in options)
+                or (ATTR_PREFERRED_SAMPLE_CHANNELS in options)
+            )
+
+            if needs_conversion:
+                data = await async_convert_audio(
+                    self.hass,
+                    extension,
+                    data,
+                    to_extension=final_extension,
+                    to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
+                    to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
                 )
 
-                if needs_conversion:
-                    data = await async_convert_audio(
-                        self.hass,
-                        extension,
-                        data,
-                        to_extension=to_extension,
-                        to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
-                        to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
-                    )
-                    extension = to_extension
-
             # Create file infos
-            filename = f"{cache_key}.{extension}".lower()
+            filename = f"{cache_key}.{final_extension}".lower()
 
             # Validate filename
             if not _RE_VOICE_FILE.match(filename) and not _RE_LEGACY_VOICE_FILE.match(
@@ -727,7 +727,7 @@ class SpeechManager:
                 )
 
             # Save to memory
-            if extension == "mp3":
+            if final_extension == "mp3":
                 data = self.write_tags(
                     filename, data, engine_instance.name, message, language, options
                 )
@@ -743,7 +743,7 @@ class SpeechManager:
 
         audio_task = self.hass.async_create_task(get_tts_data())
 
-        if extension is None:
+        if blocking:
             return await audio_task
 
         def handle_error(_future: asyncio.Future) -> None:
@@ -753,7 +753,7 @@ class SpeechManager:
 
         audio_task.add_done_callback(handle_error)
 
-        filename = f"{cache_key}.{extension}".lower()
+        filename = f"{cache_key}.{final_extension}".lower()
         self.mem_cache[cache_key] = {
             "filename": filename,
             "voice": b"",
