@@ -1,7 +1,6 @@
 """Matter lock."""
 from __future__ import annotations
 
-from enum import IntFlag
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -107,7 +106,7 @@ class MatterLock(MatterEntity, LockEntity):
         )
         code_bytes = code.encode() if code else None
         if self.supports_unbolt:
-            # if the lock reports it has seperate unbolt support,
+            # if the lock reports it has separate unbolt support,
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
