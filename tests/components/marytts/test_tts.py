@@ -1,5 +1,7 @@
 """The tests for the MaryTTS speech platform."""
+import io
 from unittest.mock import patch
+import wave
 
 import pytest
 
@@ -22,6 +24,17 @@ async def get_media_source_url(hass, media_content_id):
 
     resolved = await media_source.async_resolve_media(hass, media_content_id, None)
     return resolved.url
+
+
+def get_empty_wav() -> bytes:
+    """Get bytes for empty WAV file."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(22050)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+
+        return wav_io.getvalue()
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +64,7 @@ async def test_service_say(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",
-        return_value=b"audio",
+        return_value=get_empty_wav(),
     ) as mock_speak:
         await hass.services.async_call(
             tts.DOMAIN,
@@ -69,7 +82,7 @@ async def test_service_say(hass: HomeAssistant) -> None:
     mock_speak.assert_called_with("HomeAssistant", {})
 
     assert len(calls) == 1
-    assert url.endswith(".wav")
+    assert url.endswith(".mp3")
 
 
 async def test_service_say_with_effect(hass: HomeAssistant) -> None:
@@ -84,7 +97,7 @@ async def test_service_say_with_effect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",
-        return_value=b"audio",
+        return_value=get_empty_wav(),
     ) as mock_speak:
         await hass.services.async_call(
             tts.DOMAIN,
@@ -102,7 +115,7 @@ async def test_service_say_with_effect(hass: HomeAssistant) -> None:
     mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
 
     assert len(calls) == 1
-    assert url.endswith(".wav")
+    assert url.endswith(".mp3")
 
 
 async def test_service_say_http_error(hass: HomeAssistant) -> None:
