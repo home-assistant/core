@@ -417,7 +417,7 @@ async def async_setup_entity_entry_helper(
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))
-                # Remove additional info from dict before dumping to YAML
+                # Remove unwanted additional info such as line numbers from config before dumping to YAML
                 yaml_config_str = yaml.dump(json_loads(json_bytes(yaml_config)))
                 learn_more_url = (
                     f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
