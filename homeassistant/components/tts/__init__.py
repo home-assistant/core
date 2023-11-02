@@ -13,6 +13,7 @@ import logging
 import mimetypes
 import os
 import re
+import tempfile
 from typing import Any, TypedDict, final
 
 from aiohttp import web
@@ -65,7 +66,7 @@ from .const import (
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
-from .models import PreferredAudioFormat, SampleFormat, Voice
+from .models import Voice
 
 __all__ = [
     "async_default_engine",
@@ -73,12 +74,13 @@ __all__ = [
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "ATTR_PREFERRED_FORMAT",
+    "ATTR_PREFERRED_SAMPLE_RATE",
+    "ATTR_PREFERRED_SAMPLE_CHANNELS",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
-    "PreferredAudioFormat",
     "SampleFormat",
     "Provider",
     "TtsAudioType",
@@ -90,6 +92,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_PREFERRED_FORMAT = "preferred_format"
+ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
+ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
@@ -205,50 +209,62 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
 
 async def async_convert_audio(
     hass: HomeAssistant,
-    extension: str,
+    from_extension: str,
     audio_bytes: bytes,
-    preferred_format: PreferredAudioFormat,
+    to_extension: str,
+    to_sample_rate: int | None = None,
+    to_sample_channels: int | None = None,
 ) -> bytes:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
-    # input
-    command = [
-        "-f",
-        extension,
-        "-i",
-        "pipe:",  # input from stdin
-    ]
+    # We have to use a temporary file here because some formats like WAV store
+    # the length of the file in the header, and therefore cannot be written in a
+    # streaming fashion.
+    with tempfile.NamedTemporaryFile(
+        mode="wb+", suffix=f".{to_extension}"
+    ) as output_file:
+        # input
+        command = [
+            "-y",  # overwrite temp file
+            "-f",
+            from_extension,
+            "-i",
+            "pipe:",  # input from stdin
+        ]
 
-    # output
-    command.extend(["-f", preferred_format.extension])
+        # output
+        command.extend(["-f", to_extension])
 
-    if preferred_format.sample_rate is not None:
-        command.extend(["-ar", str(preferred_format.sample_rate)])
+        if to_sample_rate is not None:
+            command.extend(["-ar", str(to_sample_rate)])
 
-    if preferred_format.sample_format is not None:
-        command.extend(["-sample_fmt", str(preferred_format.sample_format)])
+        if to_sample_channels is not None:
+            command.extend(["-ac", str(to_sample_channels)])
 
-    if preferred_format.num_channels is not None:
-        command.extend(["-ac", str(preferred_format.num_channels)])
+        if to_extension == "mp3":
+            # Max quality for MP3
+            command.extend(["-q:a", "0"])
 
-    if preferred_format.extension == "mp3":
-        # max quality
-        command.extend(["-q:a", "0"])
+        command.append(output_file.name)
 
-    command.append("pipe:")  # output to stdoit
+        ffmpeg_proc = await asyncio.create_subprocess_exec(
+            ffmpeg_manager.binary,
+            *command,
+            stdin=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _stdout, stderr = await ffmpeg_proc.communicate(input=audio_bytes)
+        if ffmpeg_proc.returncode != 0:
+            _LOGGER.error(stderr.decode())
+            raise RuntimeError(
+                f"Unexpected error while running ffmpeg with arguments: {command}. See log for details."
+            )
 
-    _LOGGER.error(command)
-    ffmpeg_proc = await asyncio.create_subprocess_exec(
-        ffmpeg_manager.binary,
-        *command,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
-    )
-    stdout, _stderr = await ffmpeg_proc.communicate(input=audio_bytes)
+        output_file.seek(0)
+        output_audio_bytes = await hass.async_add_executor_job(output_file.read)
 
-    return stdout
+        return output_audio_bytes
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -536,9 +552,15 @@ class SpeechManager:
 
         supported_options = engine_instance.supported_options or []
 
-        # ATTR_PREFERRED_FORMAT is always "supported" since it's used to convert
-        # audio after the TTS has run (if necessary)
-        supported_options.append(ATTR_PREFERRED_FORMAT)
+        # ATTR_PREFERRED_* options are always "supported" since they're used to
+        # convert audio after the TTS has run (if necessary)
+        supported_options.extend(
+            (
+                ATTR_PREFERRED_FORMAT,
+                ATTR_PREFERRED_SAMPLE_RATE,
+                ATTR_PREFERRED_SAMPLE_CHANNELS,
+            )
+        )
 
         invalid_opts = [
             opt_name for opt_name in merged_options if opt_name not in supported_options
@@ -647,18 +669,11 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        preferred_format: PreferredAudioFormat | None = None
-        extension: str | None = None
-
-        if options is not None:
-            preferred_format = options.get(ATTR_PREFERRED_FORMAT)
-            if preferred_format is not None:
-                extension = preferred_format.extension
-            else:
-                extension = options.get(ATTR_AUDIO_OUTPUT)
-                if (extension is not None) and hasattr(extension, "value"):
-                    # Unpack enum
-                    extension = extension.value
+        options = options or {}
+        extension = options.get(ATTR_PREFERRED_FORMAT, options.get(ATTR_AUDIO_OUTPUT))
+        if (extension is not None) and hasattr(extension, "value"):
+            # Unpack enum
+            extension = extension.value
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -679,14 +694,26 @@ class SpeechManager:
                     f"No TTS from {engine_instance.name} for '{message}'"
                 )
 
-            if (preferred_format is not None) and preferred_format.needs_conversion(
-                extension
-            ):
-                # Always convert if we have a preferred format.
-                data = await async_convert_audio(
-                    self.hass, extension, data, preferred_format
+            if to_extension := options.get(ATTR_PREFERRED_FORMAT):
+                # Only convert if we have a preferred format different than the
+                # expected format from the TTS system, or if a specific sample
+                # rate/format/channel count is requested.
+                needs_conversion = (
+                    (to_extension != extension)
+                    or (ATTR_PREFERRED_SAMPLE_RATE in options)
+                    or (ATTR_PREFERRED_SAMPLE_CHANNELS in options)
                 )
-                extension = preferred_format.extension
+
+                if needs_conversion:
+                    data = await async_convert_audio(
+                        self.hass,
+                        extension,
+                        data,
+                        to_extension=to_extension,
+                        to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
+                        to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
+                    )
+                    extension = to_extension
 
             # Create file infos
             filename = f"{cache_key}.{extension}".lower()
