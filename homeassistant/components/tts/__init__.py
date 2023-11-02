@@ -552,7 +552,7 @@ class SpeechManager:
         merged_options = dict(engine_instance.default_options or {})
         merged_options.update(options or {})
 
-        supported_options = engine_instance.supported_options or []
+        supported_options = list(engine_instance.supported_options or [])
 
         # These options control behavior surrounding the TTS, so it's not
         # important if the TTS supports them or not.
