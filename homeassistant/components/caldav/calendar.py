@@ -29,9 +29,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import CalDavUpdateCoordinator
-
 from .const import DOMAIN
+from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,6 +173,7 @@ async def async_setup_entry(
         ),
         True,
     )
+
 
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
