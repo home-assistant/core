@@ -4,6 +4,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import MotionMountCoordinator
 
 
 class MotionMountEntity(CoordinatorEntity, Entity):
@@ -11,7 +12,7 @@ class MotionMountEntity(CoordinatorEntity, Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: MotionMountCoordinator) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
 
@@ -24,5 +25,5 @@ class MotionMountEntity(CoordinatorEntity, Entity):
             identifiers={(DOMAIN, unique_id)},
             name=self.coordinator.mm.name,
             manufacturer="Vogel's",
-            model="TVM 7675",  # TODO: This is not compatible with MainSteam motorized
+            model="TVM 7675",
         )

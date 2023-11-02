@@ -54,7 +54,7 @@ class MotionMountPresets(SelectEntity):
             identifiers={(DOMAIN, unique_id)},
             name=self._mm.name,
             manufacturer="Vogel's",
-            model="TVM 7675",  # TODO: This is not compatible with MainSteam motorized
+            model="TVM 7675",
         )
 
     def _update_options(self, presets: dict[int, str]) -> None:
