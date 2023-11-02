@@ -18,7 +18,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SETTINGS_URL = "https://todoist.com/app/settings/integrations"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -31,7 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for todoist."""
+    """Handle a config flow for caldav."""
 
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None
@@ -70,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if err.reason == "Unauthorized":
                 return "invalid_auth"
             # AuthorizationError can be raised if the url is incorrect or
-            # on some other server response.
+            # on some other unexpected server response.
             return "cannot_connect"
         except requests.ConnectionError as err:
             _LOGGER.warning("Connection Error connecting to CalDAV server: %s", err)

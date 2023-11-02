@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 from caldav.objects import Event
 from freezegun import freeze_time
@@ -335,18 +335,6 @@ def mock_calendar_names() -> list[str]:
 def mock_calendars(calendar_names: list[str]) -> list[Mock]:
     """Fixture to provide calendars returned by CalDAV client."""
     return [_mock_calendar(name) for name in calendar_names]
-
-
-@pytest.fixture(name="dav_client", autouse=True)
-def mock_dav_client(calendars: list[Mock]) -> Mock:
-    """Fixture to mock the DAVClient."""
-    with patch(
-        "homeassistant.components.caldav.calendar.caldav.DAVClient"
-    ) as mock_client:
-        mock_client.return_value.principal.return_value.calendars.return_value = (
-            calendars
-        )
-        yield mock_client
 
 
 @pytest.fixture

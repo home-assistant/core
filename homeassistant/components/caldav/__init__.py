@@ -33,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AuthorizationError as err:
         if err.reason == "Unauthorized":
             raise ConfigEntryAuthFailed("Credentials error from CalDAV server") from err
+        # AuthorizationError can be raised if the url is incorrect or
+        # on some other unexpected server response.
         _LOGGER.warning("Unexpected CalDAV server response: %s", err)
         return False
     except requests.ConnectionError as err:

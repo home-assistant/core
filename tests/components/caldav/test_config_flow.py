@@ -1,7 +1,7 @@
 """Test the CalDAV config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from caldav.lib.error import AuthorizationError, DAVError
 import pytest
@@ -36,18 +36,15 @@ async def test_form(
     assert result.get("type") == FlowResultType.FORM
     assert not result.get("errors")
 
-    with patch("caldav.DAVClient"):
-        # mock_client.principal = Mock()
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_URL: "http://example.com",
-                CONF_USERNAME: "user-1",
-                CONF_PASSWORD: "password-1",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "http://example.com",
+            CONF_USERNAME: "user-1",
+            CONF_PASSWORD: "password-1",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "user-1"
@@ -71,27 +68,27 @@ async def test_form(
     ],
 )
 async def test_caldav_client_error(
-    hass: HomeAssistant, side_effect: Exception, expected_error: str
+    hass: HomeAssistant,
+    side_effect: Exception,
+    expected_error: str,
+    dav_client: Mock,
 ) -> None:
     """Test CalDav client errors during configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.caldav.config_flow.caldav.DAVClient"
-    ) as mock_client:
-        mock_client.return_value.principal.side_effect = side_effect
+    dav_client.return_value.principal.side_effect = side_effect
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_URL: "http://example.com",
-                CONF_USERNAME: "user-1",
-                CONF_PASSWORD: "password-1",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "http://example.com",
+            CONF_USERNAME: "user-1",
+            CONF_PASSWORD: "password-1",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("errors") == {"base": expected_error}
@@ -116,14 +113,13 @@ async def test_reauth_success(
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("caldav.DAVClient"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PASSWORD: "password-2",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password-2",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
@@ -141,6 +137,7 @@ async def test_reauth_failure(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
+    dav_client: Mock,
 ) -> None:
     """Test a failure during reauthentication configuration flow."""
 
@@ -156,29 +153,28 @@ async def test_reauth_failure(
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("caldav.DAVClient") as mock_client:
-        mock_client.return_value.principal.side_effect = DAVError
+    dav_client.return_value.principal.side_effect = DAVError
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PASSWORD: "password-2",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password-2",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
 
     # Complete the form and it succeeds this time
-    with patch("caldav.DAVClient") as mock_client:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PASSWORD: "password-3",
-            },
-        )
-        await hass.async_block_till_done()
+    dav_client.return_value.principal.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password-3",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
