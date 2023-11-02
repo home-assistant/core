@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import MotionMountCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create API instance
     coordinator = MotionMountCoordinator(hass)
     mm = motionmount.MotionMount(
-        entry.data[CONF_HOST], entry.data[CONF_PORT], coordinator.motionmount_callback
+        entry.data[CONF_HOST], entry.data[CONF_PORT], coordinator._motionmount_callback
     )
     coordinator.mm = mm
 
