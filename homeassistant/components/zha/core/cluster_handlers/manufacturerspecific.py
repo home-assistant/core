@@ -390,7 +390,7 @@ class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.hvac.Thermostat.cluster_id, "danfoss.thermostat"
+    clusters.hvac.Thermostat.cluster_id, "danfoss.ally_thermostat"
 )
 class DanfossThermostatClusterHandler(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
@@ -436,7 +436,7 @@ class DanfossThermostatClusterHandler(ThermostatClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.hvac.UserInterface.cluster_id, "danfoss.thermostat"
+    clusters.hvac.UserInterface.cluster_id, "danfoss.ally_thermostat"
 )
 class DanfossUserInterfaceClusterHandler(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
@@ -450,7 +450,7 @@ class DanfossUserInterfaceClusterHandler(UserInterface):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.homeautomation.Diagnostic.cluster_id, "danfoss.thermostat"
+    clusters.homeautomation.Diagnostic.cluster_id, "danfoss.ally_thermostat"
 )
 class DanfossDiagnosticClusterHandler(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""

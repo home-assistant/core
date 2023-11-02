@@ -341,7 +341,7 @@ class AqaraLinkageAlarmState(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.thermostat"},
+    quirk_ids={"danfoss.ally_thermostat"},
 )
 class DanfossMountingModeActive(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in mounting mode."""
@@ -354,7 +354,7 @@ class DanfossMountingModeActive(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.thermostat"},
+    quirk_ids={"danfoss.ally_thermostat"},
 )
 class DanfossHeatRequired(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether heat is required."""
@@ -366,7 +366,7 @@ class DanfossHeatRequired(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.thermostat"},
+    quirk_ids={"danfoss.ally_thermostat"},
 )
 class DanfossPreheatStatus(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in pre-heating mode."""
