@@ -66,10 +66,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_URL],
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
+            ssl_verify_cert=user_input[CONF_VERIFY_SSL],
         )
         try:
             await self.hass.async_add_executor_job(client.principal)
-            return None
         except AuthorizationError as err:
             _LOGGER.warning("Authorization Error connecting to CalDAV server: %s", err)
             if err.reason == "Unauthorized":
@@ -86,6 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return "unknown"
+        return None
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""

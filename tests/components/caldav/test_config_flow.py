@@ -9,7 +9,7 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -44,6 +44,7 @@ async def test_form(
             CONF_URL: TEST_URL,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
+            CONF_VERIFY_SSL: False,
         },
     )
     await hass.async_block_till_done()
@@ -54,7 +55,7 @@ async def test_form(
         CONF_URL: TEST_URL,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
-        "verify_ssl": True,
+        CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -131,6 +132,7 @@ async def test_reauth_success(
         CONF_URL: "https://example.com/url-1",
         CONF_USERNAME: "username-1",
         CONF_PASSWORD: "password-2",
+        CONF_VERIFY_SSL: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -186,6 +188,7 @@ async def test_reauth_failure(
         CONF_URL: "https://example.com/url-1",
         CONF_USERNAME: "username-1",
         CONF_PASSWORD: "password-3",
+        CONF_VERIFY_SSL: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -233,7 +236,7 @@ async def test_multiple_config_entries(
     assert result2.get("title") == user_input[CONF_USERNAME]
     assert result2.get("data") == {
         **user_input,
-        "verify_ssl": True,
+        CONF_VERIFY_SSL: True,
     }
     assert len(mock_setup_entry.mock_calls) == 2
     entries = hass.config_entries.async_entries(DOMAIN)

@@ -7,7 +7,13 @@ from caldav.lib.error import AuthorizationError, DAVError
 import requests
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -27,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_URL],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
+        ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
     )
     try:
         await hass.async_add_executor_job(client.principal)
