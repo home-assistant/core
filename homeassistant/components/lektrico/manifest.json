@@ -5,11 +5,9 @@
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/lektrico",
-  "homekit": {},
   "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["lektricowifi==0.0.25"],
-  "ssdp": [],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
