@@ -210,7 +210,7 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
 
 
 def validate_sensor_entity_category(config: ConfigType) -> ConfigType:
-    """Check the sensor's entity category is `diagnostic` or `None`."""
+    """Check the sensor's entity category is not set to `config` which is invalid for sensors."""
     if (
         CONF_ENTITY_CATEGORY in config
         and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
