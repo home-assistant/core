@@ -21,7 +21,6 @@ from homeassistant.helpers.entity import (
     DeviceInfo,
     Entity,
     EntityCategory,
-    EntityPlatformState,
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_component import (
@@ -559,30 +558,32 @@ async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
     entity1 = MockEntity(name="test_1")
+    entity2 = MockEntity(name="test_1")
 
     async def _delayed_update(*args, **kwargs):
         update_called.set()
         await update_done.wait()
 
     entity1.async_update = _delayed_update
+    entity2.async_update = _delayed_update
 
     # Add, remove, and make sure no updates
-    # cause the entity to reappear after removal
-    for _ in range(2):
+    # cause the entity to reappear after removal and
+    # that we can add another entity with the same entity_id
+    for entity in [entity1, entity2]:
         update_called = asyncio.Event()
         update_done = asyncio.Event()
-        await component.async_add_entities([entity1])
-        assert len(hass.states.async_entity_ids()) == 1
-        entity1.async_write_ha_state()
-        assert hass.states.get(entity1.entity_id) is not None
-        task = asyncio.create_task(entity1.async_update_ha_state(True))
+        await component.async_add_entities([entity])
+        assert hass.states.async_entity_ids() == ["test_domain.test_1"]
+        entity.async_write_ha_state()
+        assert hass.states.get(entity.entity_id) is not None
+        task = asyncio.create_task(entity.async_update_ha_state(True))
         await update_called.wait()
-        await entity1.async_remove()
-        assert len(hass.states.async_entity_ids()) == 0
+        await entity.async_remove()
+        assert hass.states.async_entity_ids() == []
         update_done.set()
         await task
-        assert len(hass.states.async_entity_ids()) == 0
-        entity1._platform_state = EntityPlatformState.NOT_ADDED
+        assert hass.states.async_entity_ids() == []
 
 
 async def test_not_adding_duplicate_entities_with_unique_id(
