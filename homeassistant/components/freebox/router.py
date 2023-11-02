@@ -103,10 +103,10 @@ class FreeboxRouter:
                 fbx_devices.append(await self._api.lan.get_hosts_list())
                 hosts_list_initialized = True
             except HttpRequestError as err:
-                matcher = re.search('Request failed \(APIResponse: (.+?)\)', str(err))
+                matcher = re.search(r"Request failed \(APIResponse: (.+?)\)", str(err))
                 if matcher:
                     json_str = matcher.group(1)
-                    try:                        
+                    try:           
                         json_resp = json.loads(json_str)
                     except ValueError as ve:
                         _LOGGER.error(
@@ -115,13 +115,13 @@ class FreeboxRouter:
                             ve,
                         )
 
-                    if json_resp.get('error_code') == 'nodev':
+                    if json_resp.get("error_code") == "nodev":
                         # No need to retry, Host list not available
                         self.supports_hosts = False
                         hosts_list_initialized = True
                         _LOGGER.info(
                             "Host list is not available using bridge mode (%s)",
-                            json_resp['msg'],
+                            json_resp.get("msg"),
                         )
 
                 if not hosts_list_initialized:
