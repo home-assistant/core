@@ -25,12 +25,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LektricoDeviceDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import LektricoEntity
 
 
 @dataclass
@@ -43,41 +43,38 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
 SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="state",
-        name="State",
+        translation_key="state",
         value=lambda data: str(data.charger_state),
     ),
     LektricoSensorEntityDescription(
         key="charging_time",
-        name="Charging time",
+        translation_key="charging_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value=lambda data: int(data.charging_time),
     ),
     LektricoSensorEntityDescription(
         key="power",
-        name="Power",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda data: float(data.instant_power) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="energy",
-        name="Energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda data: float(data.session_energy) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="temperature",
-        name="Temperature",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda data: float(data.temperature),
     ),
     LektricoSensorEntityDescription(
         key="lifetime_energy",
-        name="Lifetime energy",
+        translation_key="lifetime_energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -85,14 +82,14 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     LektricoSensorEntityDescription(
         key="installation_current",
-        name="Installation current",
+        translation_key="installation_current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: int(data.install_current),
     ),
     LektricoSensorEntityDescription(
         key="limit_reason",
-        name="Limit reason",
+        translation_key="limit_reason",
         value=lambda data: str(data.current_limit_reason),
     ),
 )
@@ -100,9 +97,9 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
 SENSORS_FOR_LB_DEVICES: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="breaker_current",
-        name="Breaker current",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="breaker_current",
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: int(data.breaker_curent),
     ),
@@ -111,16 +108,14 @@ SENSORS_FOR_LB_DEVICES: tuple[LektricoSensorEntityDescription, ...] = (
 SENSORS_FOR_1_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="voltage",
-        name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: float(data.voltage_l1),
     ),
     LektricoSensorEntityDescription(
         key="current",
-        name="Current",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: float(data.current_l1),
     ),
@@ -129,46 +124,46 @@ SENSORS_FOR_1_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
 SENSORS_FOR_3_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="voltage_l1",
-        name="Voltage L1",
+        translation_key="voltage_l1",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: float(data.voltage_l1),
     ),
     LektricoSensorEntityDescription(
         key="voltage_l2",
-        name="Voltage L2",
+        translation_key="voltage_l2",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: float(data.voltage_l2),
     ),
     LektricoSensorEntityDescription(
         key="voltage_l3",
-        name="Voltage L3",
+        translation_key="voltage_l3",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: float(data.voltage_l3),
     ),
     LektricoSensorEntityDescription(
         key="current_l1",
-        name="Current L1",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_l1",
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: float(data.current_l1),
     ),
     LektricoSensorEntityDescription(
         key="current_l2",
-        name="Current L2",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_l2",
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: float(data.current_l2),
     ),
     LektricoSensorEntityDescription(
         key="current_l3",
-        name="Current L3",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_l3",
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: float(data.current_l3),
     ),
@@ -178,17 +173,16 @@ SENSORS_FOR_3_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
 SENSORS_FOR_LB_1_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="power",
-        name="Power",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda data: float(data.power_l1) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="pf",
-        name="PF",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="pf",
         device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda data: float(data.power_factor_l1) * 100,
     ),
@@ -198,49 +192,49 @@ SENSORS_FOR_LB_1_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
 SENSORS_FOR_LB_3_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="power_l1",
-        name="Power L1",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="power_l1",
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda data: float(data.power_l1) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="power_l2",
-        name="Power L2",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="power_l2",
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda data: float(data.power_l2) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="power_l3",
-        name="Power L3",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="power_l3",
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda data: float(data.power_l3) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="pf_l1",
-        name="PF L1",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="pf_l1",
         device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda data: float(data.power_factor_l1) * 100,
     ),
     LektricoSensorEntityDescription(
         key="pf_l2",
-        name="PF L2",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="pf_l2",
         device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda data: float(data.power_factor_l2) * 100,
     ),
     LektricoSensorEntityDescription(
         key="pf_l3",
-        name="PF L3",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="pf_l3",
         device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda data: float(data.power_factor_l3) * 100,
     ),
@@ -269,7 +263,7 @@ async def async_setup_entry(
             SENSORS_FOR_LB_DEVICES + SENSORS_FOR_3_PHASE + SENSORS_FOR_LB_3_PHASE
         )
     else:
-        return
+        raise PlatformNotReady()
 
     async_add_entities(
         LektricoSensor(
@@ -281,11 +275,8 @@ async def async_setup_entry(
     )
 
 
-class LektricoSensor(CoordinatorEntity, SensorEntity):
+class LektricoSensor(LektricoEntity, SensorEntity):
     """The entity class for Lektrico charging stations sensors."""
-
-    entity_description: LektricoSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -294,17 +285,9 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        super().__init__(coordinator)
-        self.entity_description = description
-
+        super().__init__(coordinator, friendly_name)
+        self.entity_description: LektricoSensorEntityDescription = description
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(coordinator.serial_number))},
-            model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
-            name=friendly_name,
-            manufacturer="Lektrico",
-            sw_version=coordinator.data.fw_version,
-        )
 
     @property
     def native_value(self) -> float | str | int | None:
