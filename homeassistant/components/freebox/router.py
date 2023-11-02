@@ -75,6 +75,7 @@ class FreeboxRouter:
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
         self.supports_raid = True
+        self.supports_hosts = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
@@ -93,23 +94,38 @@ class FreeboxRouter:
         """Update Freebox devices."""
         new_device = False
 
-        # Access to host list not available in bridge mode, API return error_code 'nodev'
-        try:
-            fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
-        except HttpRequestError as err:
-            m = re.search('Request failed \(APIResponse: (.+?)\)', str(err))
-            if m:
-                try:
-                    json_str = m.group(1)
-                    json_resp = json.loads(json_str)
-                    if "error_code" in json_resp and json_resp['error_code'] == "nodev":
-                        _LOGGER.info("Host list is not available using bridge mode (%s)", json_resp['msg'])
-                        fbx_devices: list[dict[str, Any]] = []
-                except ValueError as ve:
-                    _LOGGER.error("Failed to parse JSON %s, error %s", json_str, ve)
+        fbx_devices: list[dict[str, Any]] = []
 
-            if fbx_devices is None:
-                raise err
+        # Access to Host list not available in bridge mode, API return error_code 'nodev'
+        if self.supports_hosts:
+            hosts_list_initialized = False
+            try:
+                fbx_devices.append(await self._api.lan.get_hosts_list())
+                hosts_list_initialized = True
+            except HttpRequestError as err:
+                m = re.search('Request failed \(APIResponse: (.+?)\)', str(err))
+                if m:
+                    json_str = m.group(1)
+                    try:                        
+                        json_resp = json.loads(json_str)
+                    except ValueError as ve:
+                        _LOGGER.error(
+                            "Failed to parse JSON '%s', error '%s'",
+                            json_str,
+                            ve,
+                        )
+
+                    if 'error_code' in json_resp and json_resp['error_code'] == 'nodev':
+                        # No need to retry, Host list not available
+                        self.supports_hosts = False
+                        hosts_list_initialized = True
+                        _LOGGER.info(
+                            "Host list is not available using bridge mode (%s)",
+                            json_resp['msg'],
+                        )
+
+                if not hosts_list_initialized:
+                    raise err
 
         # Adds the Freebox itself
         fbx_devices.append(
