@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Final
 
@@ -54,7 +54,7 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
-            ATTR_LATEST_VERSION_FIRMWARE: asdict(self.latest_version_firmware)
+            ATTR_LATEST_VERSION_FIRMWARE: self.latest_version_firmware.to_dict()
             if self.latest_version_firmware
             else None
         }
@@ -339,13 +339,14 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             and (latest_version := state.attributes.get(ATTR_LATEST_VERSION))
             is not None
             and (extra_data := await self.async_get_last_extra_data())
-        ):
-            self._attr_latest_version = latest_version
-            self._latest_version_firmware = (
-                ZWaveNodeFirmwareUpdateExtraStoredData.from_dict(
+            and (
+                latest_version_firmware := ZWaveNodeFirmwareUpdateExtraStoredData.from_dict(
                     extra_data.as_dict()
                 ).latest_version_firmware
             )
+        ):
+            self._attr_latest_version = latest_version
+            self._latest_version_firmware = latest_version_firmware
         # If we have no state or latest version to restore, we can set the latest
         # version to installed so that the entity starts as off. If we have partial
         # restore data due to an upgrade to an HA version where this feature is released
