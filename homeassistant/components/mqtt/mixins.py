@@ -55,6 +55,7 @@ from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -404,8 +405,9 @@ async def async_setup_entity_entry_helper(
                 error = str(ex)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
-                issue_id = hex(hash(frozenset(yaml_config.items())))
-                yaml_config_str = yaml.dump(dict(yaml_config))
+                issue_id = hex(hash(frozenset(yaml_config)))
+                # Remove additional info from dict before dumping to YAML
+                yaml_config_str = yaml.dump(json_loads(json_bytes(yaml_config)))
                 learn_more_url = (
                     f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
                 )
@@ -427,7 +429,7 @@ async def async_setup_entity_entry_helper(
                     translation_key="invalid_platform_config",
                 )
                 _LOGGER.error(
-                    "%s for manual configured MQTT %s item, in %s, line %s Got %s",
+                    "%s for manually configured MQTT %s item, in %s, line %s Got %s",
                     error,
                     domain,
                     config_file,

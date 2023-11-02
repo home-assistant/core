@@ -2134,7 +2134,7 @@ async def test_setup_manual_mqtt_with_platform_key(
     """Test set up a manual MQTT item with a platform key."""
     assert await mqtt_mock_entry()
     assert (
-        "extra keys not allowed @ data['platform'] for manual configured MQTT light item"
+        "extra keys not allowed @ data['platform'] for manually configured MQTT light item"
         in caplog.text
     )
 
