@@ -6,6 +6,9 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 import os
+import json
+import re
+
 from pathlib import Path
 from typing import Any
 
@@ -89,7 +92,24 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
+
+        # Access to VM list not available in bridge mode, API return error_code 'nodev'
+        try:
+            fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
+        except HttpRequestError as err:
+            m = re.search('Request failed \(APIResponse: (.+?)\)', str(err))
+            if m:
+                try:
+                    json_str = m.group(1)
+                    json_resp = json.loads(json_str)
+                    if "error_code" in json_resp and json_resp['error_code'] == "nodev":
+                        _LOGGER.info("VMs management is not available using bridge mode (%s)", json_resp['msg'])
+                        fbx_devices: list[dict[str, Any]] = []
+                except ValueError as ve:
+                    _LOGGER.error("Failed to parse JSON %s, error %s", json_str, ve)
+
+            if fbx_devices is None:
+                raise err
 
         # Adds the Freebox itself
         fbx_devices.append(
