@@ -28,6 +28,16 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_no_import": {
       "title": "Fitbit YAML configuration is being removed",
