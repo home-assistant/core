@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import aiohttp
 from aiohttp.web import Request
@@ -433,13 +433,8 @@ class ReolinkHost:
         else:
             self._lost_subscription = False
 
-    async def _renew(self, sub_type: SubType) -> None:
+    async def _renew(self, sub_type: Literal[SubType.push, SubType.long_poll]) -> None:
         """Execute the renew of the subscription."""
-        if sub_type == SubType.all:
-            await self._renew(SubType.push)
-            await self._renew(SubType.long_poll)
-            return
-
         if not self._api.subscribed(sub_type):
             _LOGGER.debug(
                 "Host %s: requested to renew a non-existing Reolink %s subscription, "
