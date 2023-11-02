@@ -106,7 +106,7 @@ class FreeboxRouter:
                 matcher = re.search(r"Request failed \(APIResponse: (.+?)\)", str(err))
                 if matcher:
                     json_str = matcher.group(1)
-                    try:           
+                    try:
                         json_resp = json.loads(json_str)
                     except ValueError as ve:
                         _LOGGER.error(
