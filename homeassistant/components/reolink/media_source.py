@@ -114,7 +114,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
 
-    async def _generate_root(self):
+    async def _generate_root(self) -> BrowseMediaSource:
         """Return all available reolink cameras as root browsing structure."""
         children = []
 
@@ -163,7 +163,7 @@ class ReolinkVODMediaSource(MediaSource):
             children=children,
         )
 
-    async def _generate_resolution_select(self, config_entry_id: str, channel: int):
+    async def _generate_resolution_select(self, config_entry_id: str, channel: int) -> BrowseMediaSource:
         """Allow the user to select the high or low playback resolution, (low loads faster)."""
         host = self.data[config_entry_id].host
 
@@ -210,7 +210,7 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def _generate_camera_days(
         self, config_entry_id: str, channel: int, stream: str
-    ):
+    ) -> BrowseMediaSource:
         """Return all days on which recordings are available for a reolink camera."""
         host = self.data[config_entry_id].host
 
@@ -244,8 +244,8 @@ class ReolinkVODMediaSource(MediaSource):
                         can_expand=True,
                     )
                 )
-        res_name = "High res." if stream == "main" else "Low res."
 
+        res_name = "High res." if stream == "main" else "Low res."
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"DAYS/{config_entry_id}/{channel}/{stream}",
@@ -265,7 +265,7 @@ class ReolinkVODMediaSource(MediaSource):
         year: int,
         month: int,
         day: int,
-    ):
+    ) -> BrowseMediaSource:
         """Return all recording files on a specific day of a Reolink camera."""
         host = self.data[config_entry_id].host
 
