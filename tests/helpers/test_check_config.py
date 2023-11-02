@@ -251,8 +251,8 @@ async def test_platform_not_found_safe_mode(hass: HomeAssistant) -> None:
         _assert_warnings_errors(res, [], [])
 
 
-async def test_component_platform_import_error(hass: HomeAssistant) -> None:
-    """Test errors if component or platform not found."""
+async def test_component_config_platform_import_error(hass: HomeAssistant) -> None:
+    """Test errors if config platform fails to import."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
     with patch(
@@ -269,6 +269,26 @@ async def test_component_platform_import_error(hass: HomeAssistant) -> None:
             None,
         )
         _assert_warnings_errors(res, [error], [])
+
+
+async def test_component_platform_import_error(hass: HomeAssistant) -> None:
+    """Test errors if component or platform not found."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
+    with patch(
+        "homeassistant.loader.Integration.get_platform",
+        side_effect=[None, ImportError("blablabla")],
+    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant", "light"}
+        error = CheckConfigError(
+            "Platform error light.beer - Integration 'beer' not found.",
+            None,
+            None,
+        )
+        _assert_warnings_errors(res, [], [error])
 
 
 async def test_package_invalid(hass: HomeAssistant) -> None:
