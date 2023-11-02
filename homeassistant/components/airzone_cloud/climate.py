@@ -386,4 +386,6 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
         await self._async_update_params(params)
 
         if slave_raise:
-            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )
