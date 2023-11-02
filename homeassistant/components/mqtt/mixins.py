@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -206,6 +207,16 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
         "Device must have at least one identifying value in "
         "'identifiers' and/or 'connections'"
     )
+
+
+def validate_sensor_entity_category(config: ConfigType) -> ConfigType:
+    """Check the sensor's entity category is `diagnostic` or `None`."""
+    if (
+        CONF_ENTITY_CATEGORY in config
+        and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
+    ):
+        raise vol.Invalid("Entity category `config` is invalid")
+    return config
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(

@@ -2151,6 +2151,42 @@ async def test_setup_manual_mqtt_with_invalid_config(
     assert "required key not provided" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "sensor": {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                "binary_sensor": {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        },
+    ],
+)
+@patch(
+    "homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR, Platform.SENSOR]
+)
+async def test_setup_manual_mqtt_with_invalid_entity_category(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test set up a manual sensor item with an invalid entity category."""
+    assert await mqtt_mock_entry()
+    assert "Entity category `config` is invalid" in caplog.text
+
+
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 @pytest.mark.parametrize(
     ("mqtt_config_entry_data", "protocol"),
