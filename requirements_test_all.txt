@@ -173,7 +173,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.1
+aioairzone-cloud==0.3.2
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -1275,7 +1275,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.13.1
+pyenphase==1.14.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
