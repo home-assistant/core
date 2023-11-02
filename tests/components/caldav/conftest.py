@@ -10,7 +10,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-UNIQUE_ID = "unique-id-1"
+TEST_URL = "https://example.com/url-1"
+TEST_USERNAME = "username-1"
+TEST_PASSWORD = "password-1"
 
 
 @pytest.fixture(name="platforms")
@@ -43,11 +45,10 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_URL: "https://example.com/url-1",
-            CONF_USERNAME: "username-1",
-            CONF_PASSWORD: "password-1",
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
-        unique_id=UNIQUE_ID,
     )
 
 

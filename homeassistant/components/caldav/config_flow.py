@@ -41,6 +41,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_URL: user_input[CONF_URL],
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                }
+            )
             if error := await self._test_connection(user_input):
                 errors["base"] = error
             else:

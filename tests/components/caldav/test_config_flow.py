@@ -13,6 +13,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
+
 from tests.common import MockConfigEntry
 
 
@@ -39,19 +41,19 @@ async def test_form(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "http://example.com",
-            CONF_USERNAME: "user-1",
-            CONF_PASSWORD: "password-1",
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
     await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "user-1"
+    assert result2.get("title") == TEST_USERNAME
     assert result2.get("data") == {
-        CONF_URL: "http://example.com",
-        CONF_USERNAME: "user-1",
-        CONF_PASSWORD: "password-1",
+        CONF_URL: TEST_URL,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
         "verify_ssl": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -83,9 +85,9 @@ async def test_caldav_client_error(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "http://example.com",
-            CONF_USERNAME: "user-1",
-            CONF_PASSWORD: "password-1",
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
     await hass.async_block_till_done()
@@ -186,3 +188,94 @@ async def test_reauth_failure(
         CONF_PASSWORD: "password-3",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("user_input"),
+    [
+        {
+            CONF_URL: f"{TEST_URL}/different-path",
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+        {
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: f"{TEST_USERNAME}-different-user",
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    ],
+)
+async def test_multiple_config_entries(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    user_input: dict[str, str],
+) -> None:
+    """Test multiple configuration entries with unique settings."""
+
+    config_entry.add_to_hass(hass)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert not result.get("errors")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == user_input[CONF_USERNAME]
+    assert result2.get("data") == {
+        **user_input,
+        "verify_ssl": True,
+    }
+    assert len(mock_setup_entry.mock_calls) == 2
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+
+
+@pytest.mark.parametrize(
+    ("user_input"),
+    [
+        {
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+        {
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: f"{TEST_PASSWORD}-different",
+        },
+    ],
+)
+async def test_duplicate_config_entries(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    user_input: dict[str, str],
+) -> None:
+    """Test multiple configuration entries with the same settings."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert not result.get("errors")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
