@@ -4,6 +4,7 @@ import motionmount  # type: ignore[import]
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -43,6 +44,18 @@ class MotionMountPresets(SelectEntity):
 
         self._update_options(presets)
         self._attr_current_option = self._attr_options[0]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        unique_id = format_mac(self._mm.mac.hex())
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=self._mm.name,
+            manufacturer="Vogel's",
+            model="TVM 7675",  # TODO: This is not compatible with MainSteam motorized
+        )
 
     def _update_options(self, presets: dict[int, str]) -> None:
         """Convert preset to select options."""
