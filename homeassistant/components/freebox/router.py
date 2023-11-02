@@ -103,7 +103,7 @@ class FreeboxRouter:
                     json_str = m.group(1)
                     json_resp = json.loads(json_str)
                     if "error_code" in json_resp and json_resp['error_code'] == "nodev":
-                        _LOGGER.info("VMs management is not available using bridge mode (%s)", json_resp['msg'])
+                        _LOGGER.info("Host list is not available using bridge mode (%s)", json_resp['msg'])
                         fbx_devices: list[dict[str, Any]] = []
                 except ValueError as ve:
                     _LOGGER.error("Failed to parse JSON %s, error %s", json_str, ve)
