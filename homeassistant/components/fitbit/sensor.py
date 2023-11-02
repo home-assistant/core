@@ -734,7 +734,7 @@ class FitbitSensor(SensorEntity):
             self._attr_native_value = self.entity_description.value_fn(result)
 
 
-class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
+class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEntity):
     """Implementation of a Fitbit battery sensor."""
 
     entity_description: FitbitSensorEntityDescription
@@ -790,7 +790,9 @@ class FitbitBatterySensor(CoordinatorEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class FitbitBatteryLevelSensor(CoordinatorEntity, SensorEntity):
+class FitbitBatteryLevelSensor(
+    CoordinatorEntity[FitbitDeviceCoordinator], SensorEntity
+):
     """Implementation of a Fitbit battery level sensor."""
 
     entity_description: FitbitSensorEntityDescription
