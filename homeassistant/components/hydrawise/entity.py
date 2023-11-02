@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,3 +37,14 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
             name=data["name"],
             manufacturer=MANUFACTURER,
         )
+        self._update_attrs()
+
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
+        return  # pragma: no cover
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Get the latest data and updates the state."""
+        self._update_attrs()
+        super()._handle_coordinator_update()
