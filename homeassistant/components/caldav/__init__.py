@@ -38,10 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Unexpected CalDAV server response: %s", err)
         return False
     except requests.ConnectionError as err:
-        _LOGGER.warning("Connection Error connecting to CalDAV server: %s", err)
         raise ConfigEntryNotReady("Connection error from CalDAV server") from err
     except DAVError as err:
-        _LOGGER.warning("CalDAV client error: %s", err)
         raise ConfigEntryNotReady("CalDAV client error") from err
 
     hass.data[DOMAIN][entry.entry_id] = client
