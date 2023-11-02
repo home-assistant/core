@@ -20,5 +20,66 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "state": {
+        "name": "State"
+      },
+      "charging_time": {
+        "name": "Charging time"
+      },
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "installation_current": {
+        "name": "Installation current"
+      },
+      "limit_reason": {
+        "name": "Limit reason"
+      },
+      "breaker_current": {
+        "name": "Breaker current"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "pf": {
+        "name": "PF"
+      },
+      "power_l1": {
+        "name": "Power L1"
+      },
+      "power_l2": {
+        "name": "Power L2"
+      },
+      "power_l3": {
+        "name": "Power L3"
+      },
+      "pf_l1": {
+        "name": "PF L1"
+      },
+      "pf_l2": {
+        "name": "PF L2"
+      },
+      "pf_l3": {
+        "name": "PF L3"
+      }
+    }
   }
 }
