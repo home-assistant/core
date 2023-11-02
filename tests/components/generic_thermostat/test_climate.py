@@ -97,7 +97,7 @@ async def test_valid_conf(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def setup_comp_1(hass: HomeAssistant) -> None:
+async def setup_comp_1(hass):
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(hass, "homeassistant", {})
@@ -200,13 +200,13 @@ async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
     assert entry.unique_id == unique_id
 
 
-def _setup_sensor(hass: HomeAssistant, temp):
+def _setup_sensor(hass, temp):
     """Set up the test sensor."""
     hass.states.async_set(ENT_SENSOR, temp)
 
 
 @pytest.fixture
-async def setup_comp_2(hass: HomeAssistant) -> None:
+async def setup_comp_2(hass):
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(
@@ -575,7 +575,7 @@ async def test_hvac_mode_heat(hass: HomeAssistant, setup_comp_2) -> None:
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-def _setup_switch(hass: HomeAssistant, is_on):
+def _setup_switch(hass, is_on):
     """Set up the test switch."""
     hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
     calls = []
@@ -592,7 +592,7 @@ def _setup_switch(hass: HomeAssistant, is_on):
 
 
 @pytest.fixture
-async def setup_comp_3(hass: HomeAssistant):
+async def setup_comp_3(hass):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -749,7 +749,7 @@ async def test_no_state_change_when_operation_mode_off_2(
 
 
 @pytest.fixture
-async def setup_comp_4(hass: HomeAssistant):
+async def setup_comp_4(hass):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -863,7 +863,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough(
 
 
 @pytest.fixture
-async def setup_comp_5(hass: HomeAssistant):
+async def setup_comp_5(hass):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -977,7 +977,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(
 
 
 @pytest.fixture
-async def setup_comp_6(hass: HomeAssistant):
+async def setup_comp_6(hass):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -1090,7 +1090,7 @@ async def test_mode_change_heater_trigger_on_not_long_enough(
 
 
 @pytest.fixture
-async def setup_comp_7(hass: HomeAssistant):
+async def setup_comp_7(hass):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -1167,7 +1167,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(
 
 
 @pytest.fixture
-async def setup_comp_8(hass: HomeAssistant):
+async def setup_comp_8(hass):
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
@@ -1242,7 +1242,7 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
 
 
 @pytest.fixture
-async def setup_comp_9(hass: HomeAssistant):
+async def setup_comp_9(hass):
     """Initialize components."""
     assert await async_setup_component(
         hass,
@@ -1545,7 +1545,7 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
 
 
-async def _setup_climate(hass: HomeAssistant) -> None:
+async def _setup_climate(hass):
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1564,9 +1564,7 @@ async def _setup_climate(hass: HomeAssistant) -> None:
     )
 
 
-def _mock_restore_cache(
-    hass: HomeAssistant, temperature=20, hvac_mode=HVACMode.OFF
-) -> None:
+def _mock_restore_cache(hass, temperature=20, hvac_mode=HVACMode.OFF):
     mock_restore_cache(
         hass,
         (
