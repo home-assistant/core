@@ -369,6 +369,7 @@ async def test_api_call_service_timeout(
 
     with patch("homeassistant.components.api.SERVICE_WAIT_TIMEOUT", 0):
         await mock_api_client.post("/api/services/test_domain/test_service")
+        assert len(test_value) == 0
         fut.set_result(1)
         await hass.async_block_till_done()
 
