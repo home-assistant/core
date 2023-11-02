@@ -388,6 +388,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Can be removed in 2023
     hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
 
+    # Shopping list panel was replaced by todo panel in 2023.11
+    hass.http.register_redirect("/shopping-list", "/todo")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(hass, "profile")
@@ -593,7 +596,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
 
         if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
@@ -602,12 +605,20 @@ class IndexView(web_urldispatcher.AbstractResource):
             self.get_template
         )
 
+        extra_modules: frozenset[str]
+        extra_js_es5: frozenset[str]
+        if hass.config.safe_mode:
+            extra_modules = frozenset()
+            extra_js_es5 = frozenset()
+        else:
+            extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
+            extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
         return web.Response(
             text=_async_render_index_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_modules=hass.data[DATA_EXTRA_MODULE_URL].urls,
-                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5].urls,
+                extra_modules=extra_modules,
+                extra_js_es5=extra_js_es5,
             ),
             content_type="text/html",
         )
@@ -658,18 +669,13 @@ def websocket_get_themes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         connection.send_message(
             websocket_api.result_message(
                 msg["id"],
                 {
-                    "themes": {
-                        "safe_mode": {
-                            "primary-color": "#db4437",
-                            "accent-color": "#ffca28",
-                        }
-                    },
-                    "default_theme": "safe_mode",
+                    "themes": {},
+                    "default_theme": "default",
                 },
             )
         )

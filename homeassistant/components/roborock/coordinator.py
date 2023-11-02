@@ -10,7 +10,9 @@ from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
 
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -51,6 +53,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             model=self.roborock_device_info.product.model,
             sw_version=self.roborock_device_info.device.fv,
         )
+
+        if mac := self.roborock_device_info.network_info.mac:
+            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
