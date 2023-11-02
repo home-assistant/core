@@ -1,6 +1,6 @@
 """Test check_config helper."""
 import logging
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -54,13 +54,13 @@ def _assert_warnings_errors(
     error_str = ""
     warning_str = ""
 
-    for idx, error in enumerate(res.errors):
-        assert error == errors[idx]
+    for idx, error in enumerate(errors):
+        assert error == res.errors[idx]
         error_str += error.message
     assert res.error_str == error_str
 
-    for idx, warning in enumerate(res.warnings):
-        assert warning == warnings[idx]
+    for idx, warning in enumerate(warnings):
+        assert warning == res.warnings[idx]
         warning_str += warning.message
     assert res.warning_str == warning_str
 
@@ -298,13 +298,12 @@ async def test_missing_included_file(hass: HomeAssistant) -> None:
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        error = CheckConfigError(
-            ANY,
-            None,
-            None,
-        )
-        _assert_warnings_errors(res, [error], [])
+        assert len(res.errors) == 1
+        assert len(res.warnings) == 0
+
         assert res.errors[0].message.startswith("Error loading")
+        assert res.errors[0].domain is None
+        assert res.errors[0].config is None
 
 
 async def test_automation_config_platform(hass: HomeAssistant) -> None:
@@ -366,8 +365,6 @@ bla:
             {"value": 1},
         )
         _assert_warnings_errors(res, [error], [])
-        assert len(res.errors) == 1
-        assert len(res.warnings) == 0
 
 
 async def test_removed_yaml_support(hass: HomeAssistant) -> None:
