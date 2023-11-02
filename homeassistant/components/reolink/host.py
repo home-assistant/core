@@ -81,7 +81,7 @@ class ReolinkHost:
         return self._unique_id
 
     @property
-    def api(self):
+    def api(self) -> Host:
         """Return the API object."""
         return self._api
 
@@ -313,7 +313,7 @@ class ReolinkHost:
         """Call the API of the camera device to update the internal states."""
         await self._api.get_states()
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
         try:
             await self._api.unsubscribe()
@@ -335,7 +335,7 @@ class ReolinkHost:
                 err,
             )
 
-    async def _async_start_long_polling(self, initial=False):
+    async def _async_start_long_polling(self, initial=False) -> None:
         """Start ONVIF long polling task."""
         if self._long_poll_task is None:
             try:
@@ -364,7 +364,7 @@ class ReolinkHost:
                 self._lost_subscription = False
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
-    async def _async_stop_long_polling(self):
+    async def _async_stop_long_polling(self) -> None:
         """Stop ONVIF long polling task."""
         if self._long_poll_task is not None:
             self._long_poll_task.cancel()
@@ -372,7 +372,7 @@ class ReolinkHost:
 
         await self._api.unsubscribe(sub_type=SubType.long_poll)
 
-    async def stop(self, event=None):
+    async def stop(self, event=None) -> None:
         """Disconnect the API."""
         if self._cancel_poll is not None:
             self._cancel_poll()
@@ -517,8 +517,10 @@ class ReolinkHost:
 
         _LOGGER.debug("Registered webhook: %s", event_id)
 
-    def unregister_webhook(self):
+    def unregister_webhook(self) -> None:
         """Unregister the webhook for motion events."""
+        if self.webhook_id is None:
+            return
         _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
         webhook.async_unregister(self._hass, self.webhook_id)
         self.webhook_id = None
