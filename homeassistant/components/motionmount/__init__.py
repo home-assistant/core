@@ -1,7 +1,7 @@
 """The Vogel's MotionMount integration."""
 from __future__ import annotations
 
-import motionmount
+import motionmount  # type: ignore[import]
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -10,7 +10,12 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import MotionMountCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -21,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create API instance
     coordinator = MotionMountCoordinator(hass)
     mm = motionmount.MotionMount(
-        entry.data[CONF_HOST], entry.data[CONF_PORT], coordinator._motionmount_callback
+        entry.data[CONF_HOST], entry.data[CONF_PORT], coordinator.motionmount_callback
     )
     coordinator.mm = mm
 

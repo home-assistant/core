@@ -23,7 +23,8 @@ class MotionMountCoordinator(DataUpdateCoordinator):
     def mm(self, new_value):
         self._mm = new_value
 
-    def _motionmount_callback(self):
+    def motionmount_callback(self):
+        """Update data from updated MotionMount."""
         self.async_set_updated_data(
             {
                 "extension": self._mm.extension,

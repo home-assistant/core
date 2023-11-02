@@ -33,6 +33,5 @@ class MotionMountMovingSensor(MotionMountEntity, BinarySensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        # TODO: Should I check whether the value is actually updated to just the same?
         self._attr_is_on = self.coordinator.data["is_moving"]
         self.async_write_ha_state()
