@@ -23,12 +23,7 @@ HVACMODE: Final = {
 }
 HVACMODE_REVERSE: Final = {value: key for key, value in HVACMODE.items()}
 
-PRESETMODES: Final = {
-    "sun": 0,
-    "half_sun": 1,
-    "moon": 2,
-    "half_moon": 3,
-}
+PRESETMODES: Final = {"sun": 0, "half_sun": 1, "moon": 2, "half_moon": 3, "off": 255}
 PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 
 

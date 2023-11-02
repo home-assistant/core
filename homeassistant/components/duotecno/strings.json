@@ -25,7 +25,8 @@
               "sun": "Sun",
               "half_sun": "Half sun",
               "moon": "Moon",
-              "half_moon": "Half moon"
+              "half_moon": "Half moon",
+              "off": "Off"
             }
           }
         }
