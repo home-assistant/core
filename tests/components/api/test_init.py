@@ -352,6 +352,31 @@ async def test_api_call_service_with_data(
     assert state["attributes"] == {"data": 1}
 
 
+async def test_api_call_service_timeout(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if the API does not fail on long running services."""
+    test_value = []
+
+    fut = hass.loop.create_future()
+
+    async def listener(service_call):
+        """Wait and return after mock_api_client.post finishes."""
+        value = await fut
+        test_value.append(value)
+
+    hass.services.async_register("test_domain", "test_service", listener)
+
+    with patch("homeassistant.components.api.SERVICE_WAIT_TIMEOUT", 0):
+        await mock_api_client.post("/api/services/test_domain/test_service")
+        assert len(test_value) == 0
+        fut.set_result(1)
+        await hass.async_block_till_done()
+
+    assert len(test_value) == 1
+    assert test_value[0] == 1
+
+
 async def test_api_template(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test the template API."""
     hass.states.async_set("sensor.temperature", 10)
