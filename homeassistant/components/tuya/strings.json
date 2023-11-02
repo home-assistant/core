@@ -197,6 +197,9 @@
       "material": {
         "name": "Material"
       },
+      "mist": {
+        "name": "Mist"
+      },
       "mode": {
         "name": "Mode"
       },

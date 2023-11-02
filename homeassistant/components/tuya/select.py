@@ -247,6 +247,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Mist",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:weather-fog",
+            translation_key="mist",
         ),
     ),
     # Curtain
