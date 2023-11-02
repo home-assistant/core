@@ -158,7 +158,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Blink entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
+        if len(hass.data[DOMAIN]) > 0:
             return unload_ok
 
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
