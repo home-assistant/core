@@ -458,8 +458,8 @@ async def test_no_discovery_info_switch(
                 {
                     CONF_NAME: f"{TEST_ENTITY_NAME} 2",
                     CONF_ADDRESS: 1234,
-                    CONF_COMMAND_OFF: 0x01,
-                    CONF_COMMAND_ON: 0x00,
+                    CONF_COMMAND_OFF: True,
+                    CONF_COMMAND_ON: False,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                     CONF_VERIFY: {},
                 },
