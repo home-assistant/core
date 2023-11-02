@@ -93,7 +93,7 @@ class FreeboxRouter:
         """Update Freebox devices."""
         new_device = False
 
-        # Access to VM list not available in bridge mode, API return error_code 'nodev'
+        # Access to host list not available in bridge mode, API return error_code 'nodev'
         try:
             fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
         except HttpRequestError as err:
