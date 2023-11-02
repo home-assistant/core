@@ -6,6 +6,9 @@ CONF_STOP_POINT = "stop_point"
 CONF_STOP_POINTS = "stop_points"
 CONF_STOP_POINT_ADD_ANOTHER = "add_another"
 
+ATTR_NEXT_ARRIVALS = "all"
+ATTR_NEXT_THREE_ARRIVALS = "next_3"
+
 RAW_ARRIVAL_LINE_NAME = "lineName"
 RAW_ARRIVAL_DESTINATION_NAME = "destinationName"
 RAW_ARRIVAL_TIME_TO_STATION = "timeToStation"

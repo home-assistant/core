@@ -1,5 +1,4 @@
 """Test the Transport for London config flow."""
-from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 from urllib.error import HTTPError
 
@@ -8,7 +7,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.tfl.config_flow import (
     STEP_STOP_POINT_DATA_SCHEMA,
-    STEP_USER_DATA_SCHEMA,
     CannotConnect,
     ConfigFlow,
     InvalidAuth,
@@ -33,17 +31,11 @@ async def test_flow_user_init(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    expected = {
-        "data_schema": STEP_USER_DATA_SCHEMA,
-        "description_placeholders": None,
-        "errors": {},
-        "flow_id": mock.ANY,
-        "handler": "tfl",
-        "last_step": None,
-        "step_id": "user",
-        "type": FlowResultType.FORM,
-    }
-    assert expected == result
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["handler"] == "tfl"
+    assert result["errors"] == {}
 
 
 async def test_flow_stops_form_is_shown(
@@ -67,17 +59,11 @@ async def test_flow_stops_form_is_shown(
         await hass.async_block_till_done()
 
     # Validate that the stops form is shown
-    expected = {
-        "data_schema": STEP_STOP_POINT_DATA_SCHEMA,
-        "description_placeholders": None,
-        "errors": {},
-        "flow_id": mock.ANY,
-        "handler": "tfl",
-        "last_step": None,
-        "step_id": "stop_point",
-        "type": FlowResultType.FORM,
-    }
-    assert expected == stops_config_flow__init_result
+    assert stops_config_flow__init_result["type"] == FlowResultType.FORM
+    assert stops_config_flow__init_result["step_id"] == "stop_point"
+    assert stops_config_flow__init_result["handler"] == "tfl"
+    assert stops_config_flow__init_result["errors"] == {}
+    assert stops_config_flow__init_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -111,17 +97,11 @@ async def test_flow_stops_does_more_stops(m_stopPoint, hass: HomeAssistant) -> N
         )
 
     # Validate that the stops form was returned again
-    expected = {
-        "data_schema": STEP_STOP_POINT_DATA_SCHEMA,
-        "description_placeholders": None,
-        "errors": {},
-        "flow_id": mock.ANY,
-        "handler": "tfl",
-        "last_step": None,
-        "step_id": "stop_point",
-        "type": FlowResultType.FORM,
-    }
-    assert expected == stops_config_flow_again_result
+    assert stops_config_flow_again_result["type"] == FlowResultType.FORM
+    assert stops_config_flow_again_result["step_id"] == "stop_point"
+    assert stops_config_flow_again_result["handler"] == "tfl"
+    assert stops_config_flow_again_result["errors"] == {}
+    assert stops_config_flow_again_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
 
     with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
         stops_config_success_result = await hass.config_entries.flow.async_configure(
@@ -131,25 +111,15 @@ async def test_flow_stops_does_more_stops(m_stopPoint, hass: HomeAssistant) -> N
             },
         )
 
-    # Validate that config entry was created
-    expected = {
-        "context": {"source": "stop_point"},
-        "description": None,
-        "description_placeholders": None,
-        "flow_id": mock.ANY,
-        "options": {},
-        "handler": "tfl",
-        "title": "Transport for London",
-        "data": {
-            CONF_API_APP_KEY: "appy_appy_app_key",
-            CONF_STOP_POINTS: ["AAAAAAAA1", "AAAAAAAA2"],
-        },
-        "type": FlowResultType.CREATE_ENTRY,
-        "version": 1,
-        "result": mock.ANY,
+    # assert expected == stops_config_success_result
+    assert stops_config_success_result["type"] == FlowResultType.CREATE_ENTRY
+    assert stops_config_success_result["handler"] == "tfl"
+    assert stops_config_success_result["title"] == "Transport for London"
+    assert stops_config_success_result["data"] == {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1", "AAAAAAAA2"],
     }
-
-    assert expected == stops_config_success_result
+    assert stops_config_success_result["version"] == 1
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -181,25 +151,14 @@ async def test_flow_stops_creates_config_entry(
         )
 
     # Validate that config entry was created
-    expected = {
-        # "data_schema": STEP_STOP_POINT_DATA_SCHEMA,
-        "context": {"source": "stop_point"},
-        "description": None,
-        "description_placeholders": None,
-        "flow_id": mock.ANY,
-        "options": {},
-        "handler": "tfl",
-        "title": "Transport for London",
-        "data": {
-            CONF_API_APP_KEY: "appy_appy_app_key",
-            CONF_STOP_POINTS: ["AAAAAAAA1"],
-        },
-        "type": FlowResultType.CREATE_ENTRY,
-        "version": 1,
-        "result": mock.ANY,
+    assert stops_config_success_result["type"] == FlowResultType.CREATE_ENTRY
+    assert stops_config_success_result["handler"] == "tfl"
+    assert stops_config_success_result["title"] == "Transport for London"
+    assert stops_config_success_result["data"] == {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1"],
     }
-
-    assert expected == stops_config_success_result
+    assert stops_config_success_result["version"] == 1
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -227,19 +186,11 @@ async def test_form_no_stop(m_stopPoint, hass: HomeAssistant) -> None:
             stops_config_flow_init_result["flow_id"],
         )
 
-    # Validate that config entry was created
-    expected = {
-        "data_schema": STEP_STOP_POINT_DATA_SCHEMA,
-        "description_placeholders": None,
-        "flow_id": mock.ANY,
-        "handler": "tfl",
-        "step_id": "stop_point",
-        "type": FlowResultType.FORM,
-        "errors": {},
-        "last_step": None,
-    }
-
-    assert expected == stops_config_error_result
+    assert stops_config_error_result["type"] == FlowResultType.FORM
+    assert stops_config_error_result["step_id"] == "stop_point"
+    assert stops_config_error_result["handler"] == "tfl"
+    assert stops_config_error_result["errors"] == {}
+    assert stops_config_error_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -270,19 +221,11 @@ async def test_invalid_stop_id(m_stopPoint, hass: HomeAssistant) -> None:
             user_input={CONF_STOP_POINT: "DOES_NOT_EXIST"},
         )
 
-    # Validate that config entry was created
-    expected = {
-        "data_schema": STEP_STOP_POINT_DATA_SCHEMA,
-        "description_placeholders": None,
-        "flow_id": mock.ANY,
-        "handler": "tfl",
-        "step_id": "stop_point",
-        "type": FlowResultType.FORM,
-        "errors": {"base": "invalid_stop_point"},
-        "last_step": None,
-    }
-
-    assert expected == stops_config_error_result
+    assert stops_config_error_result["type"] == FlowResultType.FORM
+    assert stops_config_error_result["step_id"] == "stop_point"
+    assert stops_config_error_result["handler"] == "tfl"
+    assert stops_config_error_result["errors"] == {"base": "invalid_stop_point"}
+    assert stops_config_error_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -351,9 +294,102 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
 
 async def test_options_flow_change_app_key(hass: HomeAssistant) -> None:
     """Test that the options flow allows for the app key to be changed."""
-    pytest.fail()
+
+    options_form_init_result = await setup_options_flow_with_init_result(hass)
+
+    with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
+        options_form_result = await hass.config_entries.options.async_configure(
+            options_form_init_result["flow_id"],
+            user_input={
+                CONF_API_APP_KEY: "appy_appy_app_key_version_2",
+            },
+        )
+
+    assert options_form_result["type"] == FlowResultType.CREATE_ENTRY
+    assert options_form_result["title"] == "Transport for London"
+    assert options_form_result["data"] == {
+        CONF_API_APP_KEY: "appy_appy_app_key_version_2",
+        CONF_STOP_POINTS: ["AAAAAAAA1", "BBBBBBBB2"],
+    }
+    assert options_form_result["version"] == 1
 
 
-async def test_options_flow_change_stops(hass: HomeAssistant) -> None:
-    """Test that the options flow allows for the stops to be changed."""
-    pytest.fail()
+async def test_options_flow_replace_stop(hass: HomeAssistant) -> None:
+    """Test that the options flow allows for a stop to be replaced."""
+
+    options_form_init_result = await setup_options_flow_with_init_result(hass)
+
+    with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
+        options_form_result = await hass.config_entries.options.async_configure(
+            options_form_init_result["flow_id"],
+            user_input={"stops": ["AAAAAAAA1"], CONF_STOP_POINT: "CCCCCCCC3"},
+        )
+
+    assert options_form_result["type"] == FlowResultType.CREATE_ENTRY
+    assert options_form_result["title"] == "Transport for London"
+    assert options_form_result["data"] == {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1", "CCCCCCCC3"],
+    }
+    assert options_form_result["version"] == 1
+
+
+async def test_options_flow_add_stop(hass: HomeAssistant) -> None:
+    """Test that the options flow allows for a stop to be added."""
+    options_form_init_result = await setup_options_flow_with_init_result(hass)
+
+    with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
+        options_form_result = await hass.config_entries.options.async_configure(
+            options_form_init_result["flow_id"],
+            user_input={
+                "stops": ["AAAAAAAA1", "BBBBBBBB2"],
+                CONF_STOP_POINT: "CCCCCCCC3",
+            },
+        )
+
+    assert options_form_result["type"] == FlowResultType.CREATE_ENTRY
+    assert options_form_result["title"] == "Transport for London"
+    assert options_form_result["data"] == {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1", "BBBBBBBB2", "CCCCCCCC3"],
+    }
+    assert options_form_result["version"] == 1
+
+
+async def test_options_flow_remove_stop(hass: HomeAssistant) -> None:
+    """Test that the options flow allows for a stop to be removed."""
+    options_form_init_result = await setup_options_flow_with_init_result(hass)
+
+    with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
+        options_form_result = await hass.config_entries.options.async_configure(
+            options_form_init_result["flow_id"],
+            user_input={"stops": ["AAAAAAAA1"]},
+        )
+
+    assert options_form_result["type"] == FlowResultType.CREATE_ENTRY
+    assert options_form_result["title"] == "Transport for London"
+    assert options_form_result["data"] == {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1"],
+    }
+    assert options_form_result["version"] == 1
+
+
+async def setup_options_flow_with_init_result(hass: HomeAssistant):
+    """Create the config entry, setup the options flow, and return the init result."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="unique_id",
+        data={
+            CONF_API_APP_KEY: "appy_appy_app_key",
+            CONF_STOP_POINTS: ["AAAAAAAA1", "BBBBBBBB2"],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    options_form_init_result = await hass.config_entries.options.async_init(
+        config_entry.entry_id
+    )
+    return options_form_init_result

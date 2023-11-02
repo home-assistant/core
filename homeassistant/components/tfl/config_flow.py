@@ -51,7 +51,7 @@ async def validate_app_key(hass: HomeAssistant, app_key: str) -> None:
     except HTTPError as exception:
         # TfL's API returns a 429 if you pass an invalid app_key, but we also check
         # for other reasonable error codes in case their behaviour changes
-        error_code = exception.getcode()
+        error_code = exception.code
         if error_code in (429, 401, 403):
             raise InvalidAuth from exception
 
@@ -77,7 +77,7 @@ async def validate_stop_point(
     except HTTPError as exception:
         # TfL's API returns a 429 if you pass an invalid app_key, but we also check
         # for other reasonable error codes in case their behaviour changes
-        error_code = exception.getcode()
+        error_code = exception.code
         if error_code in (429, 401, 403):
             raise InvalidAuth from exception
 

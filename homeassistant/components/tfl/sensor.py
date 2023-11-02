@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from operator import itemgetter
+from urllib.error import HTTPError, URLError
 
 from tflwrapper import stopPoint
 
@@ -17,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .config_helper import config_from_entry
 from .const import (
+    ATTR_NEXT_ARRIVALS,
+    ATTR_NEXT_THREE_ARRIVALS,
     CONF_STOP_POINTS,
     DOMAIN,
     RAW_ARRIVAL_DESTINATION_NAME,
@@ -36,7 +39,7 @@ async def async_setup_entry(
 
     conf = config_from_entry(entry)
 
-    stop_point_ids = conf[CONF_STOP_POINTS]
+    stop_point_ids: list[str] = conf[CONF_STOP_POINTS]
 
     stop_point_infos = await hass.async_add_executor_job(
         stop_point_api.getByIDs, stop_point_ids, False
@@ -90,31 +93,50 @@ class StopPointSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update Stop Point state."""
+        try:
 
-        def raw_arrival_to_arrival_mapper(raw_arrival):
-            return {
-                "line_name": raw_arrival[RAW_ARRIVAL_LINE_NAME],
-                "destination_name": raw_arrival[RAW_ARRIVAL_DESTINATION_NAME],
-                "time_to_station": raw_arrival[RAW_ARRIVAL_TIME_TO_STATION],
-            }
+            def raw_arrival_to_arrival_mapper(raw_arrival):
+                return {
+                    "line_name": raw_arrival[RAW_ARRIVAL_LINE_NAME],
+                    "destination_name": raw_arrival[RAW_ARRIVAL_DESTINATION_NAME],
+                    "time_to_station": raw_arrival[RAW_ARRIVAL_TIME_TO_STATION],
+                }
 
-        raw_arrivals = await self.hass.async_add_executor_job(
-            self._stop_point_api.getStationArrivals, self._stop_point_id
-        )
-        raw_arrivals_sorted = sorted(
-            raw_arrivals, key=itemgetter(RAW_ARRIVAL_TIME_TO_STATION)
-        )
+            raw_arrivals = await self.hass.async_add_executor_job(
+                self._stop_point_api.getStationArrivals, self._stop_point_id
+            )
 
-        arrivals = list(map(raw_arrival_to_arrival_mapper, raw_arrivals_sorted))
-        _LOGGER.debug("Got arrivals=%s", arrivals)
+            raw_arrivals_sorted = sorted(
+                raw_arrivals, key=itemgetter(RAW_ARRIVAL_TIME_TO_STATION)
+            )
 
-        arrival_next = arrivals[0]
-        arrivals_next_3 = arrivals[:3]
+            arrivals = list(map(raw_arrival_to_arrival_mapper, raw_arrivals_sorted))
+            _LOGGER.debug("Got arrivals=%s", arrivals)
 
-        # Due to 255 character limit, the value of the sensor is the next arrival and
-        # the next 3 and full list are provided as attributes
-        self._attr_native_value = arrival_next
-        attributes = {}
-        attributes["next_3"] = arrivals_next_3
-        attributes["all"] = arrivals
-        self._attr_extra_state_attributes = attributes
+            arrival_next = arrivals[0]
+            arrivals_next_3 = arrivals[:3]
+
+            # Due to 255 character limit, the value of the sensor is the next arrival and
+            # the next 3 and full list are provided as attributes
+            self._attr_native_value = arrival_next
+            attributes = {}
+            attributes[ATTR_NEXT_THREE_ARRIVALS] = arrivals_next_3
+            attributes[ATTR_NEXT_ARRIVALS] = arrivals
+            self._attr_extra_state_attributes = attributes
+            self._attr_available = True
+
+        except HTTPError as exception:
+            self._attr_available = False
+            error_code = exception.code
+            _LOGGER.exception(
+                "Error retrieving data from TfL for sensor=%s with HTTP error_code=%s",
+                self.name,
+                error_code,
+            )
+        except URLError as exception:
+            self._attr_available = False
+            _LOGGER.exception(
+                "Error retrieving data from TfL for sensor=%s with URLError reason=%s",
+                self.name,
+                exception.reason,
+            )
