@@ -26,7 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
     )
 
-    airzone = AirzoneCloudApi(aiohttp_client.async_get_clientsession(hass), options)
+    session = aiohttp_client.async_get_clientsession(hass)
+    session.connector._limit = 4
+    airzone = AirzoneCloudApi(session, options)
     await airzone.login()
     inst_list = await airzone.list_installations()
     for inst in inst_list:

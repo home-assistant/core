@@ -89,8 +89,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_ID in user_input:
                 return await self.async_step_inst_pick(user_input)
 
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            session.connector._limit = 4
             self.airzone = AirzoneCloudApi(
-                aiohttp_client.async_get_clientsession(self.hass),
+                session,
                 ConnectionOptions(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
