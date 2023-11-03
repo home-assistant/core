@@ -2134,7 +2134,7 @@ async def test_setup_manual_mqtt_with_platform_key(
     """Test set up a manual MQTT item with a platform key."""
     assert await mqtt_mock_entry()
     assert (
-        "extra keys not allowed @ data['platform'] for manual configured MQTT light item"
+        "extra keys not allowed @ data['platform'] for manually configured MQTT light item"
         in caplog.text
     )
 
@@ -2149,6 +2149,42 @@ async def test_setup_manual_mqtt_with_invalid_config(
     """Test set up a manual MQTT item with an invalid config."""
     assert await mqtt_mock_entry()
     assert "required key not provided" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "sensor": {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                "binary_sensor": {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        },
+    ],
+)
+@patch(
+    "homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR, Platform.SENSOR]
+)
+async def test_setup_manual_mqtt_with_invalid_entity_category(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test set up a manual sensor item with an invalid entity category."""
+    assert await mqtt_mock_entry()
+    assert "Entity category `config` is invalid" in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
@@ -3974,3 +4010,39 @@ async def test_reload_with_invalid_config(
 
     # Test nothing changed as loading the config failed
     assert hass.states.get("sensor.test") is not None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": [
+                {
+                    "sensor": {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                    }
+                },
+            ]
+        }
+    ],
+)
+async def test_reload_with_empty_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reloading yaml config fails."""
+    await mqtt_mock_entry()
+    assert hass.states.get("sensor.test") is not None
+
+    # Reload with an empty config and assert again
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test") is None
