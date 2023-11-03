@@ -45,7 +45,6 @@ class QBittorrentMixin:
 
     value_fn: Callable[[dict[str, Any]], StateType]
     attrs_fn: Callable[[dict[str, Any]], Mapping[str, Any]] | None
-    enabled_fn: Callable[[ConfigEntry], bool] | None
 
 
 @dataclass
@@ -108,7 +107,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         name="Status",
         value_fn=_get_qbittorrent_state,
         attrs_fn=None,
-        enabled_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -119,7 +117,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: format_speed(data["server_state"]["dl_info_speed"]),
         attrs_fn=None,
-        enabled_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
@@ -130,7 +127,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: format_speed(data["server_state"]["up_info_speed"]),
         attrs_fn=None,
-        enabled_fn=None,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS,
@@ -139,7 +135,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: count_torrents(data, None),
         attrs_fn=lambda data: list_torrents(data, None),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_DOWNLOADING,
@@ -152,7 +147,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["downloading"]
         ),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_UPLOADING,
@@ -165,7 +159,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["uploading"]
         ),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_STALLED,
@@ -178,7 +171,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["stalled"]
         ),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_STOPPED,
@@ -191,7 +183,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["stopped"]
         ),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_COMPLETED,
@@ -204,7 +195,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["completed"]
         ),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_QUEUED,
@@ -215,7 +205,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
             data, QBITTORRENT_TORRENT_STATES["queued"]
         ),
         attrs_fn=lambda data: list_torrents(data, QBITTORRENT_TORRENT_STATES["queued"]),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_CHECKING,
@@ -228,7 +217,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         attrs_fn=lambda data: list_torrents(
             data, QBITTORRENT_TORRENT_STATES["checking"]
         ),
-        enabled_fn=_create_torrent_sensors,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_TORRENTS_ERROR,
@@ -237,7 +225,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: count_torrents(data, QBITTORRENT_TORRENT_STATES["error"]),
         attrs_fn=lambda data: list_torrents(data, QBITTORRENT_TORRENT_STATES["error"]),
-        enabled_fn=_create_torrent_sensors,
     ),
 )
 
@@ -271,11 +258,6 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
         """Initialize the qBittorrent sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        if description.enabled_fn:
-            self.entity_description.entity_registry_enabled_default = (
-                description.enabled_fn(config_entry)
-            )
-
         self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_name = f"{config_entry.title} {description.name}"
         self._attr_available = False
