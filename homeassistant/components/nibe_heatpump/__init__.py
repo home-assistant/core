@@ -150,7 +150,7 @@ class ContextCoordinator(
     def context_callbacks(self) -> dict[_ContextTypeT, list[CALLBACK_TYPE]]:
         """Return a dict of all callbacks registered for a given context."""
         callbacks: dict[_ContextTypeT, list[CALLBACK_TYPE]] = defaultdict(list)
-        for update_callback, context in list(self._listeners.values()):
+        for update_callback, context in list(self._listeners):
             assert isinstance(context, set)
             for address in context:
                 callbacks[address].append(update_callback)
