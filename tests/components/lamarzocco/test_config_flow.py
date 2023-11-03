@@ -150,7 +150,7 @@ async def test_form_cannot_connect(
 ) -> None:
     """Test cannot connect error."""
 
-    mock_lamarzocco.get_all_machines.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco.get_all_machines.return_value = []
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -162,8 +162,18 @@ async def test_form_cannot_connect(
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "no_machines"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
+
+    mock_lamarzocco.get_all_machines.side_effect = RequestNotSuccessful("")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
 
 
 async def test_bluetooth_discovery(
@@ -265,6 +275,18 @@ async def test_reauth_errors(
         data=mock_config_entry.data,
     )
 
+    mock_lamarzocco.get_all_machines.return_value = []
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        WRONG_LOGIN_INFO,
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_machines"}
+
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
+
     mock_lamarzocco.get_all_machines.side_effect = AuthFail("")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -275,7 +297,7 @@ async def test_reauth_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
-    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
 
     mock_lamarzocco.get_all_machines.side_effect = RequestNotSuccessful("")
 
@@ -287,4 +309,4 @@ async def test_reauth_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 3

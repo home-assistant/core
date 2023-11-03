@@ -66,7 +66,7 @@ async def get_machines(
         machines = await lm.get_all_machines(data)
 
         if not machines:
-            raise CannotConnect
+            raise NoMachines
 
         return machines
 
@@ -110,6 +110,8 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except NoMachines:
+                errors["base"] = "no_machines"
 
             if not errors:
                 self._config = data
@@ -212,6 +214,8 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except NoMachines:
+                errors["base"] = "no_machines"
             if not errors:
                 self.hass.config_entries.async_update_entry(
                     self.reauth_entry, data=user_input
@@ -224,6 +228,10 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
+
+
+class NoMachines(exceptions.HomeAssistantError):
+    """Error to indicate we couldn't find machines."""
 
 
 class CannotConnect(exceptions.HomeAssistantError):

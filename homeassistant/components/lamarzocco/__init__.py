@@ -40,11 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    services = hass.services.async_services().get(DOMAIN)
-    if services is not None:
-        for service in list(services.keys()):
-            hass.services.async_remove(DOMAIN, service)
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
