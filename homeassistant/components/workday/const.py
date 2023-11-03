@@ -12,6 +12,8 @@ ALLOWED_DAYS = WEEKDAYS + ["holiday"]
 DOMAIN = "workday"
 PLATFORMS = [Platform.BINARY_SENSOR]
 
+ATTR_HOLIDAY_NAME = "holiday_name"
+
 CONF_COUNTRY = "country"
 CONF_PROVINCE = "province"
 CONF_WORKDAYS = "workdays"

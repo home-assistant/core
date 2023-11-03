@@ -19,6 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
+    ATTR_HOLIDAY_NAME,
     CONF_ADD_HOLIDAYS,
     CONF_COUNTRY,
     CONF_EXCLUDES,
@@ -186,6 +187,9 @@ class IsWorkdaySensor(BinarySensorEntity):
         adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
+
+        holiday = self._obj_holidays.get(adjusted_date)
+        self._attr_extra_state_attributes[ATTR_HOLIDAY_NAME] = holiday
 
         if self.is_include(day_of_week, adjusted_date):
             self._attr_is_on = True

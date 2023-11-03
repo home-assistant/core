@@ -142,6 +142,9 @@
           },
           "days_offset": {
             "name": "[%key:component::workday::config::step::options::data::days_offset%]"
+          },
+          "holiday_name": {
+            "name": "Holiday"
           }
         }
       }
