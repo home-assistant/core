@@ -121,6 +121,7 @@ _R_co = TypeVar("_R_co", covariant=True)
 _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
+_EMPTY_SET: set[Any] = set()
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 CALLBACK_TYPE = Callable[[], None]
 
@@ -1032,8 +1033,8 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[_FilterableJobType]] = {}
-        self._match_all_listeners: list[_FilterableJobType] = []
+        self._listeners: dict[str, set[_FilterableJobType]] = {}
+        self._match_all_listeners: set[_FilterableJobType] = set()
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
 
@@ -1080,7 +1081,7 @@ class EventBus:
                 event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
             )
 
-        listeners = self._listeners.get(event_type, [])
+        listeners = self._listeners.get(event_type, _EMPTY_SET)
         match_all_listeners = self._match_all_listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
@@ -1093,7 +1094,7 @@ class EventBus:
 
         # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
-            listeners = match_all_listeners + listeners
+            listeners = match_all_listeners | listeners
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
@@ -1174,7 +1175,9 @@ class EventBus:
     def _async_listen_filterable_job(
         self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
-        self._listeners.setdefault(event_type, []).append(filterable_job)
+        if event_type not in self._listeners:
+            self._listeners[event_type] = set()
+        self._listeners[event_type].add(filterable_job)
 
         def remove_listener() -> None:
             """Remove the listener."""
