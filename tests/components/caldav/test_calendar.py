@@ -3,14 +3,14 @@ from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 from caldav.objects import Event
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -300,6 +300,12 @@ TEST_ENTITY = "calendar.example"
 CALENDAR_NAME = "Example"
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set up config entry platforms."""
+    return [Platform.CALENDAR]
+
+
 @pytest.fixture(name="tz")
 def mock_tz() -> str | None:
     """Fixture to specify the Home Assistant timezone to use during the test."""
@@ -329,18 +335,6 @@ def mock_calendar_names() -> list[str]:
 def mock_calendars(calendar_names: list[str]) -> list[Mock]:
     """Fixture to provide calendars returned by CalDAV client."""
     return [_mock_calendar(name) for name in calendar_names]
-
-
-@pytest.fixture(name="dav_client", autouse=True)
-def mock_dav_client(calendars: list[Mock]) -> Mock:
-    """Fixture to mock the DAVClient."""
-    with patch(
-        "homeassistant.components.caldav.calendar.caldav.DAVClient"
-    ) as mock_client:
-        mock_client.return_value.principal.return_value.calendars.return_value = (
-            calendars
-        )
-        yield mock_client
 
 
 @pytest.fixture
@@ -1067,10 +1061,7 @@ async def test_get_events_custom_calendars(
         ]
     ],
 )
-async def test_calendar_components(
-    hass: HomeAssistant,
-    dav_client: Mock,
-) -> None:
+async def test_calendar_components(hass: HomeAssistant) -> None:
     """Test that only calendars that support events are created."""
 
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
@@ -1094,3 +1085,27 @@ async def test_calendar_components(
     assert state
     assert state.name == "Calendar 4"
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@freeze_time(_local_datetime(17, 30))
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test a calendar entity from a config entry."""
+    assert await setup_integration()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.name == CALENDAR_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": CALENDAR_NAME,
+        "message": "This is an all day event",
+        "all_day": True,
+        "start_time": "2017-11-27 00:00:00",
+        "end_time": "2017-11-28 00:00:00",
+        "location": "Hamburg",
+        "description": "What a beautiful day",
+    }
