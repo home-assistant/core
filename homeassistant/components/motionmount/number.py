@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import MotionMountCoordinator
 from .entity import MotionMountEntity
 
 
@@ -31,7 +32,7 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
     _attr_native_min_value = 0
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, coordinator, unique_id):
+    def __init__(self, coordinator: MotionMountCoordinator, unique_id: str) -> None:
         """Initialize Extension number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{unique_id}-extension"
@@ -54,16 +55,16 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
     _attr_native_min_value = -100
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, coordinator, unique_id):
+    def __init__(self, coordinator: MotionMountCoordinator, unique_id: str) -> None:
         """Initialize Turn number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{unique_id}-turn"
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self.coordinator.data["turn"]
+        self._attr_native_value = self.coordinator.data["turn"] * -1
         self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
-        await self.coordinator.mm.set_turn(value)
+        await self.coordinator.mm.set_turn(value * -1)
