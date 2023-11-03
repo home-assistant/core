@@ -989,7 +989,7 @@ class Entity(ABC):
         """Start adding an entity to a platform."""
         if self._platform_state == EntityPlatformState.ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                f"Entity '{self.entity_id}' cannot be added a second time to an entity"
                 " platform"
             )
 
@@ -1036,7 +1036,7 @@ class Entity(ABC):
         # EntityComponent and can be removed in HA Core 2024.1
         if self.platform and self._platform_state != EntityPlatformState.ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} async_remove called twice"
+                f"Entity '{self.entity_id}' async_remove called twice"
             )
 
         self._platform_state = EntityPlatformState.REMOVED
@@ -1099,7 +1099,7 @@ class Entity(ABC):
             # This is an assert as it should never happen, but helps in tests
             assert (
                 not self.registry_entry.disabled_by
-            ), f"Entity {self.entity_id} is being added while it's disabled"
+            ), f"Entity '{self.entity_id}' is being added while it's disabled"
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
