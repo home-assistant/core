@@ -1866,7 +1866,7 @@ steamodd==4.21
 stookalert==0.1.4
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.4.1
+stookwijzer==1.4.2
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
