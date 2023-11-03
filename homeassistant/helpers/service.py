@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -51,6 +52,7 @@ from . import (
     config_validation as cv,
     device_registry,
     entity_registry,
+    label_registry,
     template,
     translation,
 )
@@ -200,6 +202,7 @@ class ServiceTargetSelector:
         entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
         device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
         area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
+        label_ids: str | list | None = service_call_data.get(ATTR_LABEL_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -208,11 +211,16 @@ class ServiceTargetSelector:
             set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
         )
         self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+        self.label_ids = (
+            set(cv.ensure_list(label_ids)) if _has_match(label_ids) else set()
+        )
 
     @property
     def has_any_selector(self) -> bool:
         """Determine if any selectors are present."""
-        return bool(self.entity_ids or self.device_ids or self.area_ids)
+        return bool(
+            self.entity_ids or self.device_ids or self.area_ids or self.label_ids
+        )
 
 
 @dataclasses.dataclass(slots=True)
@@ -222,16 +230,19 @@ class SelectedEntities:
     # Entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area ID.
+    # Entities that were referenced via device/area/label ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced items that could not be found.
     missing_devices: set[str] = dataclasses.field(default_factory=set)
     missing_areas: set[str] = dataclasses.field(default_factory=set)
+    missing_labels: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced devices
     referenced_devices: set[str] = dataclasses.field(default_factory=set)
+    referenced_devices_by_labels: set[str] = dataclasses.field(default_factory=set)
+    referenced_devices_by_areas: set[str] = dataclasses.field(default_factory=set)
 
     def log_missing(self, missing_entities: set[str]) -> None:
         """Log about missing items."""
@@ -240,6 +251,7 @@ class SelectedEntities:
             ("areas", self.missing_areas),
             ("devices", self.missing_devices),
             ("entities", missing_entities),
+            ("labels", self.missing_labels),
         ):
             if items:
                 parts.append(f"{label} {', '.join(sorted(items))}")
@@ -470,12 +482,13 @@ def async_extract_referenced_entity_ids(
 
     selected.referenced.update(entity_ids)
 
-    if not selector.device_ids and not selector.area_ids:
+    if not selector.device_ids and not selector.area_ids and not selector.label_ids:
         return selected
 
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
+    label_reg = label_registry.async_get(hass)
 
     for device_id in selector.device_ids:
         if device_id not in dev_reg.devices:
@@ -485,13 +498,29 @@ def async_extract_referenced_entity_ids(
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
+    for label_id in selector.label_ids:
+        if label_id not in label_reg.labels:
+            selected.missing_labels.add(label_id)
+
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
+            selected.referenced_devices_by_areas.add(device_entry.id)
 
-    if not selector.area_ids and not selected.referenced_devices:
+    # Find devices for targeted labels
+    selected.referenced_devices.update(selector.device_ids)
+    for device_entry in dev_reg.devices.values():
+        if device_entry.labels.intersection(selector.label_ids):
+            selected.referenced_devices.add(device_entry.id)
+            selected.referenced_devices_by_labels.add(device_entry.id)
+
+    if (
+        not selector.area_ids
+        and not selector.label_ids
+        and not selected.referenced_devices
+    ):
         return selected
 
     for ent_entry in ent_reg.entities.values():
@@ -507,10 +536,14 @@ def async_extract_referenced_entity_ids(
             # has no explicitly set area
             or (
                 not ent_entry.area_id
-                and ent_entry.device_id in selected.referenced_devices
+                and ent_entry.device_id in selected.referenced_devices_by_areas
             )
             # The entity's device matches a targeted device
             or ent_entry.device_id in selector.device_ids
+            # The entity's label matches a targeted label
+            or ent_entry.labels.intersection(selector.label_ids)
+            # The entity's device matches a device referenced by an label
+            or ent_entry.device_id in selected.referenced_devices_by_labels
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 

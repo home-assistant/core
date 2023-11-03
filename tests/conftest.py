@@ -56,6 +56,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -1612,6 +1613,12 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
+    """Return the label registry from the current hass instance."""
+    return lr.async_get(hass)
 
 
 @pytest.fixture

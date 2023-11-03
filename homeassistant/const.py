@@ -509,6 +509,10 @@ ATTR_AREA_ID: Final = "area_id"
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
 
+# Label identifier. Also used as service calls target parameter in which case
+# it contains one string or a list of strings, each being an label id.
+ATTR_LABEL_ID: Final = "label_id"
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
 

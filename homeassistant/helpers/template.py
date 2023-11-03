@@ -78,7 +78,13 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
-from . import area_registry, device_registry, entity_registry, location as loc_helper
+from . import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    label_registry,
+    location as loc_helper,
+)
 from .singleton import singleton
 from .typing import TemplateVarsType
 
@@ -1451,6 +1457,81 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     return [entry.id for entry in entries]
 
 
+def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
+    """Return all labels, or those from a device ID or entity ID."""
+    label_reg = label_registry.async_get(hass)
+    if lookup_value is None:
+        return [label.label_id for label in label_reg.async_list_labels()]
+
+    ent_reg = entity_registry.async_get(hass)
+
+    # Import here, not at top-level to avoid circular import
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(str(lookup_value)):
+            return list(entity.labels)
+
+    # Check if this could be a device ID
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(str(lookup_value)):
+        return list(device.labels)
+
+    return []
+
+
+def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
+    """Get the label ID from an label name."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label_by_name(str(lookup_value)):
+        return label.label_id
+    return None
+
+
+def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the label name from an label id."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label(lookup_value):
+        return label.name
+    return None
+
+
+def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return device IDs for a given label ID or name."""
+    _label_id: str | None
+    # if label_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if label_name(hass, label_id_or_name) is not None:
+        _label_id = label_id_or_name
+    else:
+        _label_id = label_id(hass, label_id_or_name)
+    if _label_id is None:
+        return []
+    dev_reg = device_registry.async_get(hass)
+    entries = device_registry.async_entries_for_label(dev_reg, _label_id)
+    return [entry.id for entry in entries]
+
+
+def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return entities for a given label ID or name."""
+    _label_id: str | None
+    # if label_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if label_name(hass, label_id_or_name) is not None:
+        _label_id = label_id_or_name
+    else:
+        _label_id = label_id(hass, label_id_or_name)
+    if _label_id is None:
+        return []
+    ent_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_label(ent_reg, _label_id)
+    return [entry.entity_id for entry in entries]
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -2603,6 +2684,21 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
 
+        self.globals["labels"] = hassfunction(labels)
+        self.filters["labels"] = self.globals["labels"]
+
+        self.globals["label_id"] = hassfunction(label_id)
+        self.filters["label_id"] = self.globals["label_id"]
+
+        self.globals["label_name"] = hassfunction(label_name)
+        self.filters["label_name"] = self.globals["label_name"]
+
+        self.globals["label_devices"] = hassfunction(label_devices)
+        self.filters["label_devices"] = self.globals["label_devices"]
+
+        self.globals["label_entities"] = hassfunction(label_entities)
+        self.filters["label_entities"] = self.globals["label_entities"]
+
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
 
@@ -2636,6 +2732,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_name",
                 "relative_time",
                 "today_at",
+                "label_id",
+                "label_name",
             ]
             hass_filters = [
                 "closest",
@@ -2644,6 +2742,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_id",
                 "area_name",
                 "has_value",
+                "label_id",
+                "label_name",
             ]
             hass_tests = [
                 "has_value",

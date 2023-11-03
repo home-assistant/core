@@ -233,6 +233,88 @@ def area_mock(hass):
     )
 
 
+@pytest.fixture
+def label_mock(hass: HomeAssistant) -> None:
+    """Mock including label info."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+    hass.states.async_set("light.Kitchen", STATE_OFF)
+
+    device_has_label1 = dr.DeviceEntry(labels={"label1"})
+    device_has_label2 = dr.DeviceEntry(labels={"label2"})
+    device_has_labels = dr.DeviceEntry(labels={"label1", "label2"})
+    device_no_labels = dr.DeviceEntry(id="device-no-labels")
+
+    mock_device_registry(
+        hass,
+        {
+            device_has_label1.id: device_has_label1,
+            device_has_label2.id: device_has_label2,
+            device_has_labels.id: device_has_labels,
+            device_no_labels.id: device_no_labels,
+        },
+    )
+
+    entity_with_my_label = er.RegistryEntry(
+        entity_id="light.with_my_label",
+        unique_id="with_my_label",
+        platform="test",
+        labels={"my-label"},
+    )
+    hidden_entity_with_my_label = er.RegistryEntry(
+        entity_id="light.hidden_with_my_label",
+        unique_id="hidden_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+    config_entity_with_my_label = er.RegistryEntry(
+        entity_id="light.config_with_my_label",
+        unique_id="config_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        entity_category=EntityCategory.CONFIG,
+    )
+    entity_with_label1_from_device = er.RegistryEntry(
+        entity_id="light.with_label1_from_device",
+        unique_id="with_label1_from_device",
+        platform="test",
+        device_id=device_has_label1.id,
+    )
+    entity_with_label1_and_label2_from_device = er.RegistryEntry(
+        entity_id="light.with_label1_and_label2_from_device",
+        unique_id="with_label1_and_label2_from_device",
+        platform="test",
+        labels={"label1"},
+        device_id=device_has_label2.id,
+    )
+    entity_with_labels_from_device = er.RegistryEntry(
+        entity_id="light.with_labels_from_device",
+        unique_id="with_labels_from_device",
+        platform="test",
+        device_id=device_has_labels.id,
+    )
+    entity_with_no_labels = er.RegistryEntry(
+        entity_id="light.no_labels",
+        unique_id="no_labels",
+        platform="test",
+        device_id=device_no_labels.id,
+    )
+
+    mock_registry(
+        hass,
+        {
+            config_entity_with_my_label.entity_id: config_entity_with_my_label,
+            entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
+            entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
+            entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
+            entity_with_my_label.entity_id: entity_with_my_label,
+            entity_with_no_labels.entity_id: entity_with_no_labels,
+            hidden_entity_with_my_label.entity_id: hidden_entity_with_my_label,
+        },
+    )
+
+
 async def test_call_from_config(hass: HomeAssistant) -> None:
     """Test the sync wrapper of service.async_call_from_config."""
     calls = async_mock_service(hass, "test_domain", "test_service")
@@ -554,6 +636,39 @@ async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -
     assert (
         await service.async_extract_entity_ids(
             hass, ServiceCall("light", "turn_on", {"device_id": "non-existing-id"})
+        )
+        == set()
+    )
+
+
+async def test_extract_entity_ids_from_labels(
+    hass: HomeAssistant, label_mock: None
+) -> None:
+    """Test extract_entity_ids method with labels."""
+    call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
+
+    assert {
+        "light.with_my_label",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": "label1"})
+
+    assert {
+        "light.with_label1_from_device",
+        "light.with_labels_from_device",
+        "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["label2"]})
+
+    assert {
+        "light.with_labels_from_device",
+        "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ServiceCall("light", "turn_on", {"label_id": ENTITY_MATCH_NONE})
         )
         == set()
     )
@@ -1500,6 +1615,45 @@ async def test_extract_from_service_area_id(hass: HomeAssistant, area_mock) -> N
     ]
 
 
+async def test_extract_from_service_label_id(
+    hass: HomeAssistant, label_mock: None
+) -> None:
+    """Test the extraction using label ID as reference."""
+    entities = [
+        MockEntity(name="with_my_label", entity_id="light.with_my_label"),
+        MockEntity(name="no_labels", entity_id="light.no_labels"),
+        MockEntity(
+            name="with_labels_from_device", entity_id="light.with_labels_from_device"
+        ),
+    ]
+
+    call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.with_my_label"
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["my-label", "label1"]})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 2
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.with_labels_from_device",
+        "light.with_my_label",
+    ]
+
+    call = ServiceCall(
+        "light",
+        "turn_on",
+        {"label_id": ["my-label", "label1"], "device_id": "device-no-labels"},
+    )
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 3
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.no_labels",
+        "light.with_labels_from_device",
+        "light.with_my_label",
+    ]
+
+
 async def test_entity_service_call_warn_referenced(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1511,12 +1665,14 @@ async def test_entity_service_call_warn_referenced(
             "area_id": "non-existent-area",
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
+            "label_id": "non-existent-label",
         },
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
         "Referenced areas non-existent-area, devices non-existent-device, "
-        "entities non.existent are missing or not currently available"
+        "entities non.existent, labels non-existent-label "
+        "are missing or not currently available"
     ) in caplog.text
 
 
@@ -1531,13 +1687,15 @@ async def test_async_extract_entities_warn_referenced(
             "area_id": "non-existent-area",
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
+            "label_id": "non-existent-label",
         },
     )
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
         "Referenced areas non-existent-area, devices non-existent-device, "
-        "entities non.existent are missing or not currently available"
+        "entities non.existent, labels non-existent-label "
+        "are missing or not currently available"
     ) in caplog.text
 
 

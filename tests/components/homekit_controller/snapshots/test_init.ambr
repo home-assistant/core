@@ -20,6 +20,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Sleekpoint Innovations',
         'model': 'AP2',
         'name': 'Airversa AP2 1808',
@@ -44,6 +46,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -80,6 +84,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -118,6 +124,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -158,6 +166,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -198,6 +208,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -246,6 +258,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -301,6 +315,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -347,6 +363,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -384,6 +402,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -421,6 +441,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -468,6 +490,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Anker',
         'model': 'T8010',
         'name': 'eufy HomeBase2-0AAA',
@@ -492,6 +516,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -534,6 +560,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Anker',
         'model': 'T8113',
         'name': 'eufyCam2-0000',
@@ -558,6 +586,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -595,6 +625,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -631,6 +663,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -670,6 +704,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -710,6 +746,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -753,6 +791,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Anker',
         'model': 'T8113',
         'name': 'eufyCam2-000A',
@@ -777,6 +817,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -814,6 +856,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -850,6 +894,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -889,6 +935,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -929,6 +977,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -972,6 +1022,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Anker',
         'model': 'T8113',
         'name': 'eufyCam2-000A',
@@ -996,6 +1048,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1033,6 +1087,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1069,6 +1125,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1108,6 +1166,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1148,6 +1208,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1195,6 +1257,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Aqara',
         'model': 'HE1-G01',
         'name': 'Aqara-Hub-E1-00A0',
@@ -1219,6 +1283,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1260,6 +1326,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1301,6 +1369,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1342,6 +1412,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1385,6 +1457,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Aqara',
         'model': 'AS006',
         'name': 'Contact Sensor',
@@ -1409,6 +1483,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1446,6 +1522,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1484,6 +1562,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1534,6 +1614,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Aqara',
         'model': 'ZHWA11LM',
         'name': 'Aqara Hub-1563',
@@ -1558,6 +1640,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1599,6 +1683,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1644,6 +1730,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1701,6 +1789,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1742,6 +1832,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1789,6 +1881,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Aqara',
         'model': 'AR004',
         'name': 'Programmable Switch',
@@ -1813,6 +1907,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1851,6 +1947,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1901,6 +1999,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Netgear, Inc',
         'model': 'ABC1000',
         'name': 'ArloBabyA0',
@@ -1925,6 +2025,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1962,6 +2064,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -1998,6 +2102,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2044,6 +2150,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2098,6 +2206,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2138,6 +2248,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2180,6 +2292,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2221,6 +2335,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2260,6 +2376,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2297,6 +2415,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2344,6 +2464,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ConnectSense',
         'model': 'CS-IWO',
         'name': 'InWall Outlet-0394DE',
@@ -2368,6 +2490,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2406,6 +2530,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2447,6 +2573,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2488,6 +2616,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2529,6 +2659,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2570,6 +2702,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2611,6 +2745,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2650,6 +2786,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2687,6 +2825,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2734,6 +2874,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
         'name': 'Basement',
@@ -2758,6 +2900,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2795,6 +2939,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2833,6 +2979,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2878,6 +3026,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee3',
         'name': 'HomeW',
@@ -2902,6 +3052,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2939,6 +3091,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -2976,6 +3130,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3012,6 +3168,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3059,6 +3217,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3119,6 +3279,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3165,6 +3327,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3208,6 +3372,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3249,6 +3415,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3294,6 +3462,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
         'name': 'Kitchen',
@@ -3318,6 +3488,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3355,6 +3527,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3393,6 +3567,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3438,6 +3614,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
         'name': 'Porch',
@@ -3462,6 +3640,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3499,6 +3679,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3537,6 +3719,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3586,6 +3770,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee3',
         'name': 'HomeW',
@@ -3610,6 +3796,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3647,6 +3835,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3684,6 +3874,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3720,6 +3912,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3767,6 +3961,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3827,6 +4023,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3873,6 +4071,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3916,6 +4116,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -3957,6 +4159,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4006,6 +4210,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
         'name': 'Basement',
@@ -4030,6 +4236,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4067,6 +4275,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4109,6 +4319,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee3',
         'name': 'HomeW',
@@ -4133,6 +4345,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4180,6 +4394,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4239,6 +4455,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4282,6 +4500,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4323,6 +4543,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4368,6 +4590,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
         'name': 'Kitchen',
@@ -4392,6 +4616,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4429,6 +4655,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4467,6 +4695,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4512,6 +4742,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
         'name': 'Porch',
@@ -4536,6 +4768,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4573,6 +4807,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4611,6 +4847,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4660,6 +4898,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ECB501',
         'name': 'My ecobee',
@@ -4684,6 +4924,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4721,6 +4963,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4758,6 +5002,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4794,6 +5040,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4845,6 +5093,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4910,6 +5160,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4956,6 +5208,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -4999,6 +5253,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5040,6 +5296,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5089,6 +5347,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee Switch+',
         'name': 'Master Fan',
@@ -5113,6 +5373,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5150,6 +5412,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5187,6 +5451,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5225,6 +5491,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5266,6 +5534,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5305,6 +5575,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5351,6 +5623,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Elgato',
         'model': 'Eve Degree 00AAA0000',
         'name': 'Eve Degree AA11',
@@ -5375,6 +5649,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5416,6 +5692,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5462,6 +5740,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5505,6 +5785,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5546,6 +5828,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5588,6 +5872,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5629,6 +5915,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5678,6 +5966,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Elgato',
         'model': 'Eve Energy 20EAO8601',
         'name': 'Eve Energy 50FF',
@@ -5702,6 +5992,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5740,6 +6032,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5781,6 +6075,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5822,6 +6118,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5863,6 +6161,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5902,6 +6202,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5939,6 +6241,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -5986,6 +6290,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'José A. Jiménez Campos',
         'model': 'RavenSystem HAA',
         'name': 'HAA-C718B3',
@@ -6010,6 +6316,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6046,6 +6354,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6083,6 +6393,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6122,6 +6434,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6169,6 +6483,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'José A. Jiménez Campos',
         'model': 'RavenSystem HAA',
         'name': 'HAA-C718B3',
@@ -6193,6 +6509,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6229,6 +6547,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6637,6 +6957,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
         'name': 'Ceiling Fan',
@@ -6661,6 +6983,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6699,6 +7023,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6746,6 +7072,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
         'name': 'Home Assistant Bridge',
@@ -6770,6 +7098,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6812,6 +7142,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
         'name': 'Living Room Fan',
@@ -6836,6 +7168,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -6874,6 +7208,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -7878,6 +8214,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
         'name': 'Ceiling Fan',
@@ -7902,6 +8240,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -7940,6 +8280,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -7987,6 +8329,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
         'name': 'Home Assistant Bridge',
@@ -8011,6 +8355,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -8053,6 +8399,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
         'name': 'Living Room Fan',
@@ -8077,6 +8425,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -8115,6 +8465,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -8168,6 +8520,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
         'name': 'Home Assistant Bridge',
@@ -8192,6 +8546,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -8234,6 +8590,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
         'name': 'Living Room Fan',
@@ -8258,6 +8616,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -8296,6 +8656,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9425,6 +9787,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Garzola Marco',
         'model': 'Daikin-fwec3a-esp32-homekit-bridge',
         'name': 'Air Conditioner',
@@ -9449,6 +9813,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9501,6 +9867,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9559,6 +9927,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9608,6 +9978,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
@@ -9632,6 +10004,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9676,6 +10050,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9733,6 +10109,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
@@ -9757,6 +10135,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9801,6 +10181,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9858,6 +10240,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
@@ -9882,6 +10266,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9926,6 +10312,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -9983,6 +10371,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
@@ -10007,6 +10397,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10051,6 +10443,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10108,6 +10502,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LTW013',
         'name': 'Hue ambiance spot',
@@ -10132,6 +10528,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10176,6 +10574,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10243,6 +10643,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LTW013',
         'name': 'Hue ambiance spot',
@@ -10267,6 +10669,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10311,6 +10715,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10378,6 +10784,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'RWL021',
         'name': 'Hue dimmer switch',
@@ -10402,6 +10810,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10442,6 +10852,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10487,6 +10899,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10532,6 +10946,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10577,6 +10993,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10620,6 +11038,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10666,6 +11086,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -10690,6 +11112,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10730,6 +11154,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10778,6 +11204,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -10802,6 +11230,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10842,6 +11272,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10890,6 +11322,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -10914,6 +11348,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -10954,6 +11390,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11002,6 +11440,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -11026,6 +11466,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11066,6 +11508,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11114,6 +11558,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -11138,6 +11584,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11178,6 +11626,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11226,6 +11676,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -11250,6 +11702,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11290,6 +11744,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11338,6 +11794,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
         'name': 'Hue white lamp',
@@ -11362,6 +11820,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11402,6 +11862,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11450,6 +11912,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Philips Lighting',
         'model': 'BSB002',
         'name': 'Philips hue - 482544',
@@ -11474,6 +11938,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11520,6 +11986,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Koogeek',
         'model': 'LS1',
         'name': 'Koogeek-LS1-20833F',
@@ -11544,6 +12012,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11589,6 +12059,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11651,6 +12123,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Koogeek',
         'model': 'P1EU',
         'name': 'Koogeek-P1-A00AA0',
@@ -11675,6 +12149,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11713,6 +12189,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11752,6 +12230,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11799,6 +12279,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Koogeek',
         'model': 'KH02CN',
         'name': 'Koogeek-SW2-187A91',
@@ -11823,6 +12305,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11861,6 +12345,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11900,6 +12386,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11936,6 +12424,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -11982,6 +12472,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Lennox',
         'model': 'E30 2B',
         'name': 'Lennox',
@@ -12006,6 +12498,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12051,6 +12545,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12107,6 +12603,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12150,6 +12648,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12191,6 +12691,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12240,6 +12742,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'LG Electronics',
         'model': 'OLED55B9PUA',
         'name': 'LG webOS TV AF80',
@@ -12264,6 +12768,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12310,6 +12816,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12358,6 +12866,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12405,6 +12915,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
         'model': 'PD-FSQN-XX',
         'name': 'Caséta® Wireless Fan Speed Control',
@@ -12429,6 +12941,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12467,6 +12981,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12514,6 +13030,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
         'model': 'L-BDG2-WH',
         'name': 'Smart Bridge 2',
@@ -12538,6 +13056,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12584,6 +13104,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Meross',
         'model': 'MSS425F',
         'name': 'MSS425F-15cc',
@@ -12608,6 +13130,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12644,6 +13168,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12680,6 +13206,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12716,6 +13244,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12752,6 +13282,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12788,6 +13320,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12834,6 +13368,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Meross',
         'model': 'MSS565',
         'name': 'MSS565-28da',
@@ -12858,6 +13394,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12898,6 +13436,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -12950,6 +13490,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Empowered Homes Inc.',
         'model': 'v1',
         'name': 'Mysa-85dda9',
@@ -12974,6 +13516,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13019,6 +13563,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13072,6 +13618,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13119,6 +13667,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13162,6 +13712,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13203,6 +13755,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13252,6 +13806,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Nanoleaf',
         'model': 'NL55',
         'name': 'Nanoleaf Strip 3B32',
@@ -13276,6 +13832,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13312,6 +13870,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13357,6 +13917,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13428,6 +13990,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13483,6 +14047,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13539,6 +14105,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Netatmo',
         'model': 'Netatmo Doorbell',
         'name': 'Netatmo-Doorbell-g738658',
@@ -13563,6 +14131,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13600,6 +14170,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13636,6 +14208,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13679,6 +14253,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13722,6 +14298,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13759,6 +14337,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13806,6 +14386,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Netatmo',
         'model': 'Smart CO Alarm',
         'name': 'Smart CO Alarm',
@@ -13830,6 +14412,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13867,6 +14451,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13904,6 +14490,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -13950,6 +14538,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Netatmo',
         'model': 'Healthy Home Coach',
         'name': 'Healthy Home Coach',
@@ -13974,6 +14564,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14012,6 +14604,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14052,6 +14646,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14093,6 +14689,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14134,6 +14732,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14175,6 +14775,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14224,6 +14826,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Green Electronics LLC',
         'model': 'SPK5 Pro',
         'name': 'RainMachine-00ce4a',
@@ -14248,6 +14852,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14284,6 +14890,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14324,6 +14932,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14364,6 +14974,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14404,6 +15016,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14444,6 +15058,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14484,6 +15100,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14524,6 +15142,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14564,6 +15184,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14614,6 +15236,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
         'name': 'Master Bath South',
@@ -14638,6 +15262,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14674,6 +15300,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14714,6 +15342,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14760,6 +15390,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE SmartBridge',
         'name': 'RYSE SmartBridge',
@@ -14784,6 +15416,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14826,6 +15460,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
         'name': 'RYSE SmartShade',
@@ -14850,6 +15486,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14886,6 +15524,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14926,6 +15566,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -14976,6 +15618,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
         'name': 'BR Left',
@@ -15000,6 +15644,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15036,6 +15682,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15076,6 +15724,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15122,6 +15772,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
         'name': 'LR Left',
@@ -15146,6 +15798,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15182,6 +15836,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15222,6 +15878,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15268,6 +15926,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
         'name': 'LR Right',
@@ -15292,6 +15952,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15328,6 +15990,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15368,6 +16032,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15414,6 +16080,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE SmartBridge',
         'name': 'RYSE SmartBridge',
@@ -15438,6 +16106,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15480,6 +16150,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
         'name': 'RZSS',
@@ -15504,6 +16176,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15540,6 +16214,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15580,6 +16256,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15630,6 +16308,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Schlage ',
         'model': 'BE479CAM619',
         'name': 'SENSE  ',
@@ -15654,6 +16334,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15690,6 +16372,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15737,6 +16421,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'Hunter Fan',
         'model': 'SIMPLEconnect',
         'name': 'SIMPLEconnect Fan-06F674',
@@ -15761,6 +16447,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15799,6 +16487,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15845,6 +16535,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15897,6 +16589,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'VELUX',
         'model': 'VELUX Gateway',
         'name': 'VELUX Gateway',
@@ -15921,6 +16615,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -15963,6 +16659,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'VELUX',
         'model': 'VELUX Sensor',
         'name': 'VELUX Sensor',
@@ -15987,6 +16685,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16025,6 +16725,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16066,6 +16768,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16107,6 +16811,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16152,6 +16858,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'VELUX',
         'model': 'VELUX Window',
         'name': 'VELUX Window',
@@ -16176,6 +16884,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16212,6 +16922,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16261,6 +16973,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'VOCOlinc',
         'model': 'Flowerbud',
         'name': 'VOCOlinc-Flowerbud-0d324b',
@@ -16285,6 +16999,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16328,6 +17044,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16384,6 +17102,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16451,6 +17171,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16494,6 +17216,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16543,6 +17267,8 @@
           ]),
         ]),
         'is_new': False,
+        'labels': list([
+        ]),
         'manufacturer': 'VOCOlinc',
         'model': 'VP3',
         'name': 'VOCOlinc-VP3-123456',
@@ -16567,6 +17293,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16605,6 +17333,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),
@@ -16644,6 +17374,8 @@
             'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
+            'labels': list([
+            ]),
             'name': None,
             'options': dict({
             }),

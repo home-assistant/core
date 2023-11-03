@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    label_registry as lr,
 )
 
 
@@ -58,6 +59,10 @@ class DeviceRegistryEntrySnapshot(dict):
 
 class EntityRegistryEntrySnapshot(dict):
     """Tiny wrapper to represent an entity registry entry in snapshots."""
+
+
+class LabelRegistryEntrySnapshot(dict):
+    """Tiny wrapper to represent an label registry entry in snapshots."""
 
 
 class FlowResultSnapshot(dict):
@@ -103,6 +108,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         elif isinstance(data, er.RegistryEntry):
             serializable_data = cls._serializable_entity_registry_entry(data)
         elif isinstance(data, ir.IssueEntry):
+            serializable_data = cls._serializable_issue_registry_entry(data)
+        elif isinstance(data, lr.LabelEntry):
             serializable_data = cls._serializable_issue_registry_entry(data)
         elif isinstance(data, dict) and "flow_id" in data and "handler" in data:
             serializable_data = cls._serializable_flow_result(data)
@@ -186,6 +193,13 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     ) -> SerializableData:
         """Prepare a Home Assistant issue registry entry for serialization."""
         return IssueRegistryItemSnapshot(data.to_json() | {"created": ANY})
+
+    @classmethod
+    def _serializable_label_registry_entry(
+        cls, data: lr.LabelEntry
+    ) -> SerializableData:
+        """Prepare a Home Assistant label registry entry for serialization."""
+        return LabelRegistryEntrySnapshot(dataclasses.asdict(data))
 
     @classmethod
     def _serializable_state(cls, data: State) -> SerializableData:
