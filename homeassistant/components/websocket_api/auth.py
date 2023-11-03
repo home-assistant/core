@@ -103,7 +103,7 @@ class AuthPhase:
     ) -> ActiveConnection:
         """Create an active connection."""
         self._logger.debug("Auth OK")
-        await process_success_login(self._request)
+        process_success_login(self._request)
         self._send_message(auth_ok_message())
         return ActiveConnection(
             self._logger, self._hass, self._send_message, user, refresh_token
