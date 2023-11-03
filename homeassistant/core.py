@@ -1175,12 +1175,9 @@ class EventBus:
         self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
-
-        def remove_listener() -> None:
-            """Remove the listener."""
-            self._async_remove_listener(event_type, filterable_job)
-
-        return remove_listener
+        return functools.partial(
+            self._async_remove_listener, event_type, filterable_job
+        )
 
     def listen_once(
         self,
