@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Final
 
 from homeassistant.components.sensor import (
@@ -14,11 +14,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utcnow
 
 from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
@@ -30,7 +28,9 @@ NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 class VodafoneStationBaseEntityDescription:
     """Vodafone Station entity base description."""
 
-    value: Callable[[Any, Any], Any] = lambda val, key: val[key]
+    value: Callable[
+        [Any, Any], Any
+    ] = lambda coordinator, key: coordinator.data.sensors[key]
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
@@ -41,18 +41,16 @@ class VodafoneStationEntityDescription(
     """Vodafone Station entity description."""
 
 
-def _calculate_uptime(value: dict, key: str) -> datetime:
+def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:
     """Calculate device uptime."""
-    d = int(value[key].split(":")[0])
-    h = int(value[key].split(":")[1])
-    m = int(value[key].split(":")[2])
 
-    return utcnow() - timedelta(days=d, hours=h, minutes=m)
+    return coordinator.api.convert_uptime(coordinator.data.sensors[key])
 
 
-def _line_connection(value: dict, key: str) -> str | None:
+def _line_connection(coordinator: VodafoneStationRouter, key: str) -> str | None:
     """Identify line type."""
 
+    value = coordinator.data.sensors
     internet_ip = value[key]
     dsl_ip = value.get("dsl_ipaddr")
     fiber_ip = value.get("fiber_ipaddr")
@@ -142,7 +140,7 @@ SENSOR_TYPES: Final = (
         icon="mdi:chip",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda value, key: float(value[key][:-1]),
+        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
     ),
     VodafoneStationEntityDescription(
         key="sys_memory_usage",
@@ -150,7 +148,7 @@ SENSOR_TYPES: Final = (
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda value, key: float(value[key][:-1]),
+        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
     ),
     VodafoneStationEntityDescription(
         key="sys_reboot_cause",
@@ -193,25 +191,13 @@ class VodafoneStationSensorEntity(
     ) -> None:
         """Initialize a Vodafone Station sensor."""
         super().__init__(coordinator)
-
-        sensors_data = coordinator.data.sensors
-        serial_num = sensors_data["sys_serial_number"]
         self.entity_description = description
-
-        self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.api.base_url,
-            identifiers={(DOMAIN, serial_num)},
-            name=f"Vodafone Station ({serial_num})",
-            manufacturer="Vodafone",
-            model=sensors_data.get("sys_model_name"),
-            hw_version=sensors_data["sys_hardware_version"],
-            sw_version=sensors_data["sys_firmware_version"],
-        )
-        self._attr_unique_id = f"{serial_num}_{description.key}"
+        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
         return self.entity_description.value(
-            self.coordinator.data.sensors, self.entity_description.key
+            self.coordinator, self.entity_description.key
         )

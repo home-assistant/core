@@ -28,7 +28,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
     valid_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -36,11 +35,10 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -228,17 +226,6 @@ DISCOVERY_SCHEMA_BASIC = vol.All(
 )
 
 
-async def async_setup_entity_basic(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None,
-) -> None:
-    """Set up a MQTT Light."""
-    async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
-
-
 class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
@@ -263,16 +250,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     _optimistic_rgbw_color: bool
     _optimistic_rgbww_color: bool
     _optimistic_xy_color: bool
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize MQTT light."""
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

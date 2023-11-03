@@ -483,6 +483,12 @@ def fibaro_fgr222_shutter_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_fibaro_fgr222_state.json"))
 
 
+@pytest.fixture(name="fibaro_fgr223_shutter_state", scope="session")
+def fibaro_fgr223_shutter_state_fixture():
+    """Load the Fibaro FGR223 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_fibaro_fgr223_state.json"))
+
+
 @pytest.fixture(name="merten_507801_state", scope="session")
 def merten_507801_state_fixture():
     """Load the Merten 507801 Shutter node state fixture data."""
@@ -656,12 +662,28 @@ def logic_group_zdb5100_state_fixture():
     return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
 
 
+@pytest.fixture(name="central_scene_node_state", scope="session")
+def central_scene_node_state_fixture():
+    """Load node with Central Scene CC node state fixture data."""
+    return json.loads(load_fixture("zwave_js/central_scene_node_state.json"))
+
+
 # model fixtures
+
+
+@pytest.fixture(name="listen_block")
+def mock_listen_block_fixture():
+    """Mock a listen block."""
+    return asyncio.Event()
 
 
 @pytest.fixture(name="client")
 def mock_client_fixture(
-    controller_state, controller_node_state, version_state, log_config_state
+    controller_state,
+    controller_node_state,
+    version_state,
+    log_config_state,
+    listen_block,
 ):
     """Mock a client."""
     with patch(
@@ -675,9 +697,7 @@ def mock_client_fixture(
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
-            listen_block = asyncio.Event()
             await listen_block.wait()
-            pytest.fail("Listen wasn't canceled!")
 
         async def disconnect():
             client.connected = False
@@ -1054,6 +1074,14 @@ def fibaro_fgr222_shutter_cover_fixture(client, fibaro_fgr222_shutter_state):
     return node
 
 
+@pytest.fixture(name="fibaro_fgr223_shutter")
+def fibaro_fgr223_shutter_cover_fixture(client, fibaro_fgr223_shutter_state):
+    """Mock a Fibaro FGR223 Shutter node."""
+    node = Node(client, copy.deepcopy(fibaro_fgr223_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="merten_507801")
 def merten_507801_cover_fixture(client, merten_507801_state):
     """Mock a Merten 507801 Shutter node."""
@@ -1274,5 +1302,13 @@ def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
 def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
     """Mock a ZDB5100 light node."""
     node = Node(client, copy.deepcopy(logic_group_zdb5100_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="central_scene_node")
+def central_scene_node_fixture(client, central_scene_node_state):
+    """Mock a node with the Central Scene CC."""
+    node = Node(client, copy.deepcopy(central_scene_node_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

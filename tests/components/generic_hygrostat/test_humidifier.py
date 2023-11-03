@@ -31,6 +31,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -167,6 +168,33 @@ async def test_humidifier_switch(
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
     assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
+
+
+async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
+    """Test setting a unique ID."""
+    unique_id = "some_unique_id"
+    _setup_sensor(hass, 18)
+    await _setup_switch(hass, True)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "unique_id": unique_id,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get(ENTITY)
+    assert entry
+    assert entry.unique_id == unique_id
 
 
 def _setup_sensor(hass, humidity):

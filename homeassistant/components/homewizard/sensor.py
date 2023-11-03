@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -39,7 +40,7 @@ class HomeWizardEntityDescriptionMixin:
     """Mixin values for HomeWizard entities."""
 
     has_fn: Callable[[Data], bool]
-    value_fn: Callable[[Data], float | int | str | None]
+    value_fn: Callable[[Data], StateType]
 
 
 @dataclass
@@ -108,98 +109,98 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_kwh",
-        translation_key="total_power_import_kwh",
+        translation_key="total_energy_import_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_import_kwh is not None,
-        value_fn=lambda data: data.total_power_import_kwh or None,
+        has_fn=lambda data: data.total_energy_import_kwh is not None,
+        value_fn=lambda data: data.total_energy_import_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t1_kwh",
-        translation_key="total_power_import_t1_kwh",
+        translation_key="total_energy_import_t1_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_import_t1_kwh is not None,
-        value_fn=lambda data: data.total_power_import_t1_kwh or None,
+        has_fn=lambda data: data.total_energy_import_t1_kwh is not None,
+        value_fn=lambda data: data.total_energy_import_t1_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t2_kwh",
-        translation_key="total_power_import_t2_kwh",
+        translation_key="total_energy_import_t2_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_import_t2_kwh is not None,
-        value_fn=lambda data: data.total_power_import_t2_kwh or None,
+        has_fn=lambda data: data.total_energy_import_t2_kwh is not None,
+        value_fn=lambda data: data.total_energy_import_t2_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t3_kwh",
-        translation_key="total_power_import_t3_kwh",
+        translation_key="total_energy_import_t3_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_import_t3_kwh is not None,
-        value_fn=lambda data: data.total_power_import_t3_kwh or None,
+        has_fn=lambda data: data.total_energy_import_t3_kwh is not None,
+        value_fn=lambda data: data.total_energy_import_t3_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t4_kwh",
-        translation_key="total_power_import_t4_kwh",
+        translation_key="total_energy_import_t4_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_import_t4_kwh is not None,
-        value_fn=lambda data: data.total_power_import_t4_kwh or None,
+        has_fn=lambda data: data.total_energy_import_t4_kwh is not None,
+        value_fn=lambda data: data.total_energy_import_t4_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_kwh",
-        translation_key="total_power_export_kwh",
+        translation_key="total_energy_export_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_export_kwh is not None,
-        enabled_fn=lambda data: data.total_power_export_kwh != 0,
-        value_fn=lambda data: data.total_power_export_kwh or None,
+        has_fn=lambda data: data.total_energy_export_kwh is not None,
+        enabled_fn=lambda data: data.total_energy_export_kwh != 0,
+        value_fn=lambda data: data.total_energy_export_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t1_kwh",
-        translation_key="total_power_export_t1_kwh",
+        translation_key="total_energy_export_t1_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_export_t1_kwh is not None,
-        enabled_fn=lambda data: data.total_power_export_t1_kwh != 0,
-        value_fn=lambda data: data.total_power_export_t1_kwh or None,
+        has_fn=lambda data: data.total_energy_export_t1_kwh is not None,
+        enabled_fn=lambda data: data.total_energy_export_t1_kwh != 0,
+        value_fn=lambda data: data.total_energy_export_t1_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t2_kwh",
-        translation_key="total_power_export_t2_kwh",
+        translation_key="total_energy_export_t2_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_export_t2_kwh is not None,
-        enabled_fn=lambda data: data.total_power_export_t2_kwh != 0,
-        value_fn=lambda data: data.total_power_export_t2_kwh or None,
+        has_fn=lambda data: data.total_energy_export_t2_kwh is not None,
+        enabled_fn=lambda data: data.total_energy_export_t2_kwh != 0,
+        value_fn=lambda data: data.total_energy_export_t2_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t3_kwh",
-        translation_key="total_power_export_t3_kwh",
+        translation_key="total_energy_export_t3_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_export_t3_kwh is not None,
-        enabled_fn=lambda data: data.total_power_export_t3_kwh != 0,
-        value_fn=lambda data: data.total_power_export_t3_kwh or None,
+        has_fn=lambda data: data.total_energy_export_t3_kwh is not None,
+        enabled_fn=lambda data: data.total_energy_export_t3_kwh != 0,
+        value_fn=lambda data: data.total_energy_export_t3_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t4_kwh",
-        translation_key="total_power_export_t4_kwh",
+        translation_key="total_energy_export_t4_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: data.total_power_export_t4_kwh is not None,
-        enabled_fn=lambda data: data.total_power_export_t4_kwh != 0,
-        value_fn=lambda data: data.total_power_export_t4_kwh or None,
+        has_fn=lambda data: data.total_energy_export_t4_kwh is not None,
+        enabled_fn=lambda data: data.total_energy_export_t4_kwh != 0,
+        value_fn=lambda data: data.total_energy_export_t4_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_w",
@@ -433,7 +434,7 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        HomeWizardSensorEntity(coordinator, entry, description)
+        HomeWizardSensorEntity(coordinator, description)
         for description in SENSORS
         if description.has_fn(coordinator.data.data)
     )
@@ -447,18 +448,17 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
         description: HomeWizardSensorEntityDescription,
     ) -> None:
         """Initialize Sensor Domain."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
         if not description.enabled_fn(self.coordinator.data.data):
             self._attr_entity_registry_enabled_default = False
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.data)
 

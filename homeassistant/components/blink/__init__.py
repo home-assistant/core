@@ -1,7 +1,9 @@
 """Support for Blink Home Camera System."""
+import asyncio
 from copy import deepcopy
 import logging
 
+from aiohttp import ClientError
 from blinkpy.auth import Auth
 from blinkpy.blinkpy import Blink
 import voluptuous as vol
@@ -16,8 +18,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -28,6 +31,7 @@ from .const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
+from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,23 +44,7 @@ SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
 )
 
 
-def _blink_startup_wrapper(hass: HomeAssistant, entry: ConfigEntry) -> Blink:
-    """Startup wrapper for blink."""
-    blink = Blink()
-    auth_data = deepcopy(dict(entry.data))
-    blink.auth = Auth(auth_data, no_prompt=True)
-    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
-    if blink.start():
-        blink.setup_post_verify()
-    elif blink.auth.check_key_required():
-        _LOGGER.debug("Attempting a reauth flow")
-        _reauth_flow_wrapper(hass, auth_data)
-
-    return blink
-
-
-def _reauth_flow_wrapper(hass, data):
+async def _reauth_flow_wrapper(hass, data):
     """Reauth flow wrapper."""
     hass.add_job(
         hass.config_entries.flow.async_init(
@@ -79,10 +67,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = {**entry.data}
     if entry.version == 1:
         data.pop("login_response", None)
-        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        await _reauth_flow_wrapper(hass, data)
         return False
     if entry.version == 2:
-        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        await _reauth_flow_wrapper(hass, data)
         return False
     return True
 
@@ -92,19 +80,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     _async_import_options_from_data_if_missing(hass, entry)
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-        _blink_startup_wrapper, hass, entry
-    )
+    session = async_get_clientsession(hass)
+    blink = Blink(session=session)
+    auth_data = deepcopy(dict(entry.data))
+    blink.auth = Auth(auth_data, no_prompt=True, session=session)
+    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    coordinator = BlinkUpdateCoordinator(hass, blink)
 
-    if not hass.data[DOMAIN][entry.entry_id].available:
+    try:
+        await blink.start()
+    except (ClientError, asyncio.TimeoutError) as ex:
+        raise ConfigEntryNotReady("Can not connect to host") from ex
+
+    if blink.auth.check_key_required():
+        _LOGGER.debug("Attempting a reauth flow")
+        raise ConfigEntryAuthFailed("Need 2FA for Blink")
+
+    if not blink.available:
         raise ConfigEntryNotReady
+
+    await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    def blink_refresh(event_time=None):
+    async def blink_refresh(event_time=None):
         """Call blink to refresh info."""
-        hass.data[DOMAIN][entry.entry_id].refresh(force_cache=True)
+        await coordinator.api.refresh(force_cache=True)
 
     async def async_save_video(call):
         """Call save video service handler."""
@@ -114,11 +117,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Call save recent clips service handler."""
         await async_handle_save_recent_clips_service(hass, entry, call)
 
-    def send_pin(call):
+    async def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
-            hass.data[DOMAIN][entry.entry_id],
+        await coordinator.api.auth.send_auth_key(
+            hass.data[DOMAIN][entry.entry_id].api,
             pin,
         )
 
@@ -153,64 +156,53 @@ def _async_import_options_from_data_if_missing(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Blink entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            return True
 
-    if not unload_ok:
-        return False
+        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
+        hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
-
-    if len(hass.data[DOMAIN]) != 0:
-        return True
-
-    hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
-    hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
-
-    return True
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    blink: Blink = hass.data[DOMAIN][entry.entry_id]
+    blink: Blink = hass.data[DOMAIN][entry.entry_id].api
     blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]
 
 
-async def async_handle_save_video_service(hass, entry, call):
+async def async_handle_save_video_service(
+    hass: HomeAssistant, entry: ConfigEntry, call
+) -> None:
     """Handle save video service calls."""
     camera_name = call.data[CONF_NAME]
     video_path = call.data[CONF_FILENAME]
     if not hass.config.is_allowed_path(video_path):
         _LOGGER.error("Can't write %s, no access to path!", video_path)
         return
-
-    def _write_video(name, file_path):
-        """Call video write."""
-        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        if name in all_cameras:
-            all_cameras[name].video_to_file(file_path)
-
-    try:
-        await hass.async_add_executor_job(_write_video, camera_name, video_path)
-    except OSError as err:
-        _LOGGER.error("Can't write image to file: %s", err)
+    all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
+    if camera_name in all_cameras:
+        try:
+            await all_cameras[camera_name].video_to_file(video_path)
+        except OSError as err:
+            _LOGGER.error("Can't write image to file: %s", err)
 
 
-async def async_handle_save_recent_clips_service(hass, entry, call):
+async def async_handle_save_recent_clips_service(
+    hass: HomeAssistant, entry: ConfigEntry, call
+) -> None:
     """Save multiple recent clips to output directory."""
     camera_name = call.data[CONF_NAME]
     clips_dir = call.data[CONF_FILE_PATH]
     if not hass.config.is_allowed_path(clips_dir):
         _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
         return
-
-    def _save_recent_clips(name, output_dir):
-        """Call save recent clips."""
-        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        if name in all_cameras:
-            all_cameras[name].save_recent_clips(output_dir=output_dir)
-
-    try:
-        await hass.async_add_executor_job(_save_recent_clips, camera_name, clips_dir)
-    except OSError as err:
-        _LOGGER.error("Can't write recent clips to directory: %s", err)
+    all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
+    if camera_name in all_cameras:
+        try:
+            await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
+        except OSError as err:
+            _LOGGER.error("Can't write recent clips to directory: %s", err)
