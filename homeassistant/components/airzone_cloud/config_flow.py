@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -89,8 +88,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_ID in user_input:
                 return await self.async_step_inst_pick(user_input)
 
+            # Sharing the aiohttp session causes connections hangs with parallel requests
             self.airzone = AirzoneCloudApi(
-                aiohttp_client.async_get_clientsession(self.hass),
+                None,
                 ConnectionOptions(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
