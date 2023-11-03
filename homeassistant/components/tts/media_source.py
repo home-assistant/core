@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import ATTR_BLOCKING, DATA_TTS_MANAGER, DOMAIN
+from .const import DATA_TTS_MANAGER, DOMAIN
 from .helper import get_engine_instance
 
 if TYPE_CHECKING:
@@ -62,9 +62,6 @@ def generate_media_source_id(
         params["language"] = language
     if options is not None:
         params.update(options)
-
-    if ATTR_BLOCKING in params:
-        params[ATTR_BLOCKING] = "true" if params[ATTR_BLOCKING] else "false"
 
     return ms_generate_media_source_id(
         DOMAIN,

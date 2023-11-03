@@ -13,6 +13,7 @@ import logging
 import mimetypes
 import os
 import re
+import subprocess
 import tempfile
 from typing import Any, TypedDict, final
 
@@ -49,7 +50,6 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
-    ATTR_BLOCKING,
     ATTR_CACHE,
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
@@ -73,7 +73,6 @@ __all__ = [
     "async_default_engine",
     "async_get_media_source_audio",
     "async_support_options",
-    "ATTR_BLOCKING",
     "ATTR_AUDIO_OUTPUT",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_RATE",
@@ -219,6 +218,27 @@ async def async_convert_audio(
 ) -> bytes:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
+    return await hass.async_add_executor_job(
+        lambda: _convert_audio(
+            ffmpeg_manager.binary,
+            from_extension,
+            audio_bytes,
+            to_extension,
+            to_sample_rate=to_sample_rate,
+            to_sample_channels=to_sample_channels,
+        )
+    )
+
+
+def _convert_audio(
+    ffmpeg_binary: str,
+    from_extension: str,
+    audio_bytes: bytes,
+    to_extension: str,
+    to_sample_rate: int | None = None,
+    to_sample_channels: int | None = None,
+) -> bytes:
+    """Convert audio to a preferred format using ffmpeg."""
 
     # We have to use a temporary file here because some formats like WAV store
     # the length of the file in the header, and therefore cannot be written in a
@@ -228,6 +248,7 @@ async def async_convert_audio(
     ) as output_file:
         # input
         command = [
+            ffmpeg_binary,
             "-y",  # overwrite temp file
             "-f",
             from_extension,
@@ -250,23 +271,18 @@ async def async_convert_audio(
 
         command.append(output_file.name)
 
-        ffmpeg_proc = await asyncio.create_subprocess_exec(
-            ffmpeg_manager.binary,
-            *command,
-            stdin=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        _stdout, stderr = await ffmpeg_proc.communicate(input=audio_bytes)
-        if ffmpeg_proc.returncode != 0:
-            _LOGGER.error(stderr.decode())
-            raise RuntimeError(
-                f"Unexpected error while running ffmpeg with arguments: {command}. See log for details."
-            )
+        with subprocess.Popen(
+            command, stdin=subprocess.PIPE, stderr=subprocess.PIPE
+        ) as proc:
+            _stdout, stderr = proc.communicate(input=audio_bytes)
+            if proc.returncode != 0:
+                _LOGGER.error(stderr.decode())
+                raise RuntimeError(
+                    f"Unexpected error while running ffmpeg with arguments: {command}. See log for details."
+                )
 
         output_file.seek(0)
-        output_audio_bytes = await hass.async_add_executor_job(output_file.read)
-
-        return output_audio_bytes
+        return output_file.read()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -554,15 +570,10 @@ class SpeechManager:
 
         supported_options = list(engine_instance.supported_options or [])
 
-        # These options control behavior surrounding the TTS, so it's not
-        # important if the TTS supports them or not.
+        # ATTR_PREFERRED_* options are always "supported" since they're used to
+        # convert audio after the TTS has run (if necessary).
         supported_options.extend(
             (
-                # ATTR_BLOCKING is used to control whether or not a TTS request
-                # waits for audio generation
-                ATTR_BLOCKING,
-                # ATTR_PREFERRED_* options are always "supported" since they're
-                # used to convert audio after the TTS has run (if necessary)
                 ATTR_PREFERRED_FORMAT,
                 ATTR_PREFERRED_SAMPLE_RATE,
                 ATTR_PREFERRED_SAMPLE_CHANNELS,
@@ -672,7 +683,6 @@ class SpeechManager:
         This method is a coroutine.
         """
         options = options or {}
-        blocking = options.get(ATTR_BLOCKING, "true") != "false"
 
         # Default to MP3 unless a different format is preferred
         final_extension = options.get(ATTR_PREFERRED_FORMAT, "mp3")
@@ -742,9 +752,6 @@ class SpeechManager:
             return filename
 
         audio_task = self.hass.async_create_task(get_tts_data())
-
-        if blocking:
-            return await audio_task
 
         def handle_error(_future: asyncio.Future) -> None:
             """Handle error."""

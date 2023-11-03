@@ -1458,7 +1458,6 @@ async def test_legacy_fetching_in_async(
         "test message",
         "test",
         "en_US",
-        options={tts.ATTR_BLOCKING: False},
         cache=None,
     )
 
@@ -1526,7 +1525,6 @@ async def test_fetching_in_async(
         "test message",
         "tts.test",
         "en_US",
-        options={tts.ATTR_BLOCKING: False},
         cache=None,
     )
 
