@@ -150,7 +150,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         if condition is None:
             return None
 
-        if condition in ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
             condition = ATTR_CONDITION_CLEAR_NIGHT
 
         return format_condition(condition)
