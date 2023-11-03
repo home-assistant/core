@@ -57,6 +57,8 @@ from .messages import construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def async_register_commands(
@@ -134,7 +136,12 @@ def handle_subscribe_events(
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
+        _LOGGER.error(
+            "Refusing to allow %s to subscribe to event %s",
+            connection.user.name,
+            event_type,
+        )
+        raise Unauthorized(user_id=connection.user.id)
 
     if event_type == EVENT_STATE_CHANGED:
         forward_events = partial(

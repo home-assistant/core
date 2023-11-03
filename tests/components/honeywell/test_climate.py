@@ -358,7 +358,24 @@ async def test_service_calls_off_mode(
     device.set_setpoint_heat.assert_called_with(77)
     assert "Invalid temperature" in caplog.text
 
+    device.set_setpoint_heat.reset_mock()
+    device.set_setpoint_heat.side_effect = aiosomecomfort.UnexpectedResponse
     caplog.clear()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TARGET_TEMP_LOW: 25.0,
+                ATTR_TARGET_TEMP_HIGH: 35.0,
+            },
+            blocking=True,
+        )
+    device.set_setpoint_cool.assert_called_with(95)
+    device.set_setpoint_heat.assert_called_with(77)
+
     reset_mock(device)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -701,6 +718,17 @@ async def test_service_calls_heat_mode(
     device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 59)
     device.set_hold_heat.reset_mock()
     assert "Invalid temperature" in caplog.text
+
+    device.set_hold_heat.side_effect = aiosomecomfort.UnexpectedResponse
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+            blocking=True,
+        )
+    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 59)
+    device.set_hold_heat.reset_mock()
 
     caplog.clear()
     await hass.services.async_call(
