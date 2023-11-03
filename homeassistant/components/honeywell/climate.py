@@ -353,6 +353,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode == "heat":
                     await self._device.set_setpoint_heat(temperature)
 
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell set temperature failed: Invalid Response"
+            ) from err
+
         except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ValueError(
@@ -368,6 +373,11 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_setpoint_cool(temperature)
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
+
+            except UnexpectedResponse as err:
+                raise HomeAssistantError(
+                    "Honeywell set temperature failed: Invalid Response"
+                ) from err
 
             except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
