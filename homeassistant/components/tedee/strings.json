@@ -3,37 +3,20 @@
     "step": {
       "user": {
         "title": "Setup your tedee locks",
-        "description": "If you need help finding those settings check the [documentation](https://github.com/patrickhilker/tedee_hass_integration#Setup).",
         "data": {
-          "host": "Bridge IP Address (optional)",
-          "local_access_token": "Local Access Token (optional)",
-          "home_assistant_access_token": "Home Assistant Long Lived Access Token (optional)",
-          "use_cloud": "Additonally use Cloud API?"
+          "host": "Bridge IP Address",
+          "local_access_token": "Local Access Token",
+          "home_assistant_access_token": "Home Assistant Long Lived Access Token (required)"
         },
         "data_description": {
           "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\".",
           "home_assistant_access_token": "Used to allow bridge to push data to Home Assistant. You can find it in the Home Assistant UI under \"Profile\" -> \"Long-Lived Access Tokens\"."
         }
       },
-      "configure_cloud": {
-        "title": "Configure Cloud API",
-        "description": "Enable fallback to cloud, in case local connection fails. [How to create Personal Access Token](https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key)  \n\nScopes:  \n- Operate - Lock  \n- Devices - Read",
-        "data": {
-          "access_token": "Personal Access Key"
-        }
-      },
-      "select_bridge": {
-        "title": "Select your bridge",
-        "description": "Select the bridge you want to add to Home Assistant.",
-        "data": {
-          "bridge_id": "Bridge"
-        }
-      },
       "reauth_confirm": {
         "title": "Update of Access Keys required",
         "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
         "data": {
-          "access_token": "Personal Access Key (optional)",
           "local_access_token": "Local Access Token (optional)"
         }
       }
@@ -45,22 +28,7 @@
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "bridge_not_found": "No bridge found in cloud which matches the configured local bridge. Maybe you're using the wrong account?"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Update Configuration",
-        "data": {
-          "access_token": "Personal Access Key",
-          "unlock_pulls_latch": "Unlock also pulls latch",
-          "host": "Bridge IP Address",
-          "local_access_token": "Local Access Token",
-          "home_assistant_access_token": "Home Assistant Long Lived Access Token"
-        }
-      }
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
