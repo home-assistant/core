@@ -5,6 +5,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from random import randint
 from time import monotonic
@@ -103,7 +104,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             / 10**6
         )
 
-        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._listeners: set[tuple[CALLBACK_TYPE, object | None]] = set()
         job_name = "DataUpdateCoordinator"
         type_name = type(self).__name__
         if type_name != job_name:
@@ -155,31 +156,34 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
     @callback
+    def _remove_listener(
+        self, listener_key: tuple[CALLBACK_TYPE, object | None]
+    ) -> None:
+        """Remove update listener."""
+        self._listeners.remove(listener_key)
+        if not self._listeners:
+            self._unschedule_refresh()
+
+    @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
 
-        @callback
-        def remove_listener() -> None:
-            """Remove update listener."""
-            self._listeners.pop(remove_listener)
-            if not self._listeners:
-                self._unschedule_refresh()
-
-        self._listeners[remove_listener] = (update_callback, context)
+        listener_key = (update_callback, context)
+        self._listeners.add(listener_key)
 
         # This is the first listener, set up interval.
         if schedule_refresh:
             self._schedule_refresh()
 
-        return remove_listener
+        return partial(self._remove_listener, listener_key)
 
     @callback
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
-        for update_callback, _ in list(self._listeners.values()):
+        for update_callback, _ in list(self._listeners):
             update_callback()
 
     async def async_shutdown(self) -> None:
@@ -197,9 +201,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
-        yield from (
-            context for _, context in self._listeners.values() if context is not None
-        )
+        yield from (context for _, context in self._listeners if context is not None)
 
     def _async_unsub_refresh(self) -> None:
         """Cancel any scheduled call."""
