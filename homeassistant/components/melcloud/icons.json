@@ -3,6 +3,9 @@
     "sensor": {
       "energy_consumed": {
         "default": "mdi:factory"
+      },
+      "fan_frequency": {
+        "default": "mdi:fan"
       }
     }
   },
