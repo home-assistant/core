@@ -664,3 +664,72 @@ async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
     # and again to make sure the cache works
     resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
     assert resp.status == 404
+
+
+async def test_get_icons(hass: HomeAssistant, ws_client) -> None:
+    """Test get_icons command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {},
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "category": "entity_component",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {}}
+
+
+async def test_get_icons_for_integrations(hass: HomeAssistant, ws_client) -> None:
+    """Test get_icons for integrations command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integration: {
+            "integration": integration,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "integration": ["frontend", "http"],
+                "category": "entity",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
+
+
+async def test_get_icons_for_single_integration(hass: HomeAssistant, ws_client) -> None:
+    """Test get_icons for integration command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_icons",
+        side_effect=lambda hass, category, integrations: {
+            "integration": integrations,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_icons",
+                "integration": "http",
+                "category": "entity",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {"integration": ["http"]}}
