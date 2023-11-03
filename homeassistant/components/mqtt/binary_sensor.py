@@ -42,6 +42,7 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entity_entry_helper,
+    validate_sensor_entity_category,
     write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage
@@ -55,7 +56,7 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
 
-PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
@@ -67,7 +68,12 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = vol.All(
+    validate_sensor_entity_category,
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(validate_sensor_entity_category, _PLATFORM_SCHEMA_BASE)
 
 
 async def async_setup_entry(

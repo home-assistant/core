@@ -134,6 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
+EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
@@ -1774,7 +1775,8 @@ class Service:
     def __init__(
         self,
         func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | ServiceResponse | EntityServiceResponse | None,
         ],
         schema: vol.Schema | None,
         domain: str,
@@ -1884,7 +1886,8 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | ServiceResponse | EntityServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
