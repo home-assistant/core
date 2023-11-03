@@ -12,7 +12,7 @@
       "fields": {
         "status": {
           "name": "Status",
-          "description": "Only return to-do items with the specified status."
+          "description": "Only return to-do items with the specified statuses. Returns not completed actions by default."
         }
       }
     },
