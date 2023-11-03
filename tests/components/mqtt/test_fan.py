@@ -1788,7 +1788,7 @@ async def test_attributes(
             },
             False,
             None,
-            "not a valid value",
+            "speed_range_max must be > speed_range_min",
         ),
         (
             "test14",
@@ -1805,7 +1805,7 @@ async def test_attributes(
             },
             False,
             None,
-            "not a valid value",
+            "speed_range_min must be > 0",
         ),
         (
             "test15",
