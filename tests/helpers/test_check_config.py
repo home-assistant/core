@@ -274,7 +274,7 @@ async def test_component_config_platform_import_error(hass: HomeAssistant) -> No
 async def test_component_platform_import_error(hass: HomeAssistant) -> None:
     """Test errors if component or platform not found."""
     # Make sure they don't exist
-    files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
     with patch(
         "homeassistant.loader.Integration.get_platform",
         side_effect=[None, ImportError("blablabla")],
@@ -284,7 +284,7 @@ async def test_component_platform_import_error(hass: HomeAssistant) -> None:
 
         assert res.keys() == {"homeassistant", "light"}
         error = CheckConfigError(
-            "Platform error light.beer - Integration 'beer' not found.",
+            "Platform error light.demo - blablabla",
             None,
             None,
         )
