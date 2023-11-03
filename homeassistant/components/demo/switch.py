@@ -25,7 +25,7 @@ async def async_setup_entry(
                 "switch2",
                 "AC",
                 False,
-                "mdi:air-conditioner",
+                "air_conditioner",
                 False,
                 device_class=SwitchDeviceClass.OUTLET,
             ),
@@ -45,14 +45,14 @@ class DemoSwitch(SwitchEntity):
         unique_id: str,
         device_name: str,
         state: bool,
-        icon: str | None,
+        translation_key: str | None,
         assumed: bool,
         device_class: SwitchDeviceClass | None = None,
     ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed
         self._attr_device_class = device_class
-        self._attr_icon = icon
+        self._attr_translation_key = translation_key
         self._attr_is_on = state
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(

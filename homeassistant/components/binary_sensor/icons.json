@@ -1,0 +1,207 @@
+{
+  "entity_component": {
+    "_": {
+      "icon": "mdi:radiobox-blank",
+      "state": {
+        "off": "mdi:radiobox-blank",
+        "on": "mdi:checkbox-marked-circle"
+      }
+    },
+    "battery": {
+      "icon": "mdi:battery",
+      "state": {
+        "off": "mdi:battery",
+        "on": "mdi:battery-outline"
+      }
+    },
+    "battery_charging": {
+      "icon": "mdi:battery",
+      "state": {
+        "off": "mdi:battery",
+        "on": "mdi:battery-charging"
+      }
+    },
+    "carbon_monoxide": {
+      "icon": "mdi:smoke-detector",
+      "state": {
+        "off": "mdi:smoke-detector",
+        "on": "mdi:smoke-detector-alert"
+      }
+    },
+    "cold": {
+      "icon": "mdi:thermometer",
+      "state": {
+        "off": "mdi:thermometer",
+        "on": "mdi:snowflake"
+      }
+    },
+    "connectivity": {
+      "icon": "mdi:close-network-outline",
+      "state": {
+        "off": "mdi:close-network-outline",
+        "on": "mdi:check-network-outline"
+      }
+    },
+    "door": {
+      "icon": "mdi:door-closed",
+      "state": {
+        "off": "mdi:door-closed",
+        "on": "mdi:door-open"
+      }
+    },
+    "garage_door": {
+      "icon": "mdi:garage",
+      "state": {
+        "off": "mdi:garage",
+        "on": "mdi:garage-open"
+      }
+    },
+    "gas": {
+      "icon": "mdi:check-circle",
+      "state": {
+        "off": "mdi:check-circle",
+        "on": "mdi:alert-circle"
+      }
+    },
+    "heat": {
+      "icon": "mdi:thermometer",
+      "state": {
+        "off": "mdi:thermometer",
+        "on": "mdi:fire"
+      }
+    },
+    "light": {
+      "icon": "mdi:brightness-5",
+      "state": {
+        "off": "mdi:brightness-5",
+        "on": "mdi:brightness-7"
+      }
+    },
+    "lock": {
+      "icon": "mdi:lock",
+      "state": {
+        "off": "mdi:lock",
+        "on": "mdi:lock-open"
+      }
+    },
+    "moisture": {
+      "icon": "mdi:water-off",
+      "state": {
+        "off": "mdi:water-off",
+        "on": "mdi:water"
+      }
+    },
+    "motion": {
+      "icon": "mdi:motion-sensor-off",
+      "state": {
+        "off": "mdi:motion-sensor-off",
+        "on": "mdi:motion-sensor"
+      }
+    },
+    "moving": {
+      "icon": "mdi:arrow-right",
+      "state": {
+        "off": "mdi:arrow-right",
+        "on": "mdi:octagon"
+      }
+    },
+    "occupancy": {
+      "icon": "mdi:home-outline",
+      "state": {
+        "off": "mdi:home-outline",
+        "on": "mdi:home"
+      }
+    },
+    "opening": {
+      "icon": "mdi:square",
+      "state": {
+        "off": "mdi:square",
+        "on": "mdi:square-outline"
+      }
+    },
+    "plug": {
+      "icon": "mdi:power-plug-off",
+      "state": {
+        "off": "mdi:power-plug-off",
+        "on": "mdi:power-plug"
+      }
+    },
+    "power": {
+      "icon": "mdi:power-plug-off",
+      "state": {
+        "off": "mdi:power-plug-off",
+        "on": "mdi:power-plug"
+      }
+    },
+    "presence": {
+      "icon": "mdi:home-outline",
+      "state": {
+        "off": "mdi:home-outline",
+        "on": "mdi:home"
+      }
+    },
+    "problem": {
+      "icon": "mdi:check-circle",
+      "state": {
+        "off": "mdi:check-circle",
+        "on": "mdi:alert-circle"
+      }
+    },
+    "running": {
+      "icon": "mdi:stop",
+      "state": {
+        "off": "mdi:stop",
+        "on": "mdi:play"
+      }
+    },
+    "safety": {
+      "icon": "mdi:check-circle",
+      "state": {
+        "off": "mdi:check-circle",
+        "on": "mdi:alert-circle"
+      }
+    },
+    "smoke": {
+      "icon": "mdi:smoke-detector-variant",
+      "state": {
+        "off": "mdi:smoke-detector-variant",
+        "on": "mdi:smoke-detector-variant-alert"
+      }
+    },
+    "sound": {
+      "icon": "mdi:music-note-off",
+      "state": {
+        "off": "mdi:music-note-off",
+        "on": "mdi:music-note"
+      }
+    },
+    "tamper": {
+      "icon": "mdi:check-circle",
+      "state": {
+        "off": "mdi:check-circle",
+        "on": "mdi:alert-circle"
+      }
+    },
+    "update": {
+      "icon": "mdi:package",
+      "state": {
+        "off": "mdi:package",
+        "on": "mdi:package-up"
+      }
+    },
+    "vibration": {
+      "icon": "mdi:crop-portrait",
+      "state": {
+        "off": "mdi:crop-portrait",
+        "on": "mdi:vibrate"
+      }
+    },
+    "window": {
+      "icon": "mdi:window-closed",
+      "state": {
+        "off": "mdi:window-closed",
+        "on": "mdi:window-open"
+      }
+    }
+  }
+}
