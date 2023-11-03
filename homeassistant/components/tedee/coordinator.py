@@ -51,20 +51,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
-        if (
-            time.time() - self._last_data_update
-        ) >= STALE_DATA_INTERVAL and not self._stale_data:
-            _LOGGER.warning(
-                "Data hasn't been updated for more than %s minutes. \
-                            Check your connection to the Tedee Bridge/the internet or reload the integration",
-                str(int(STALE_DATA_INTERVAL / 60)),
-            )
-            self._stale_data = True
-        elif (
-            time.time() - self._last_data_update
-        ) < STALE_DATA_INTERVAL and self._stale_data:
-            _LOGGER.warning("Tedee receiving updated data again")
-            self._stale_data = False
 
         try:
             _LOGGER.debug("Update coordinator: Getting locks from API")
@@ -106,6 +92,21 @@ class TedeeApiCoordinator(DataUpdateCoordinator):
 
         if not self._initialized:
             self._initialized = True
+
+        if (
+            time.time() - self._last_data_update
+        ) >= STALE_DATA_INTERVAL and not self._stale_data:
+            _LOGGER.warning(
+                "Data hasn't been updated for more than %s minutes. \
+                            Check your connection to the Tedee Bridge/the internet or reload the integration",
+                str(int(STALE_DATA_INTERVAL / 60)),
+            )
+            self._stale_data = True
+        elif (
+            time.time() - self._last_data_update
+        ) < STALE_DATA_INTERVAL and self._stale_data:
+            _LOGGER.warning("Tedee receiving updated data again")
+            self._stale_data = False
 
         return self.tedee_client.locks_dict
 

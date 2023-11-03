@@ -62,6 +62,8 @@ def mock_tedee(request) -> Generator[MagicMock, None, None]:
         ]
         tedee.get_local_bridge.return_value = TedeeBridge(0, "0000-0000", "Bridge-AB1C")
 
+        tedee.parse_webhook_message.return_value = None
+
         locks_json = json.loads(load_fixture("locks.json", DOMAIN))
 
         lock_list = [TedeeLock(**lock) for lock in locks_json]
