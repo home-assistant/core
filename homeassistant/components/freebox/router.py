@@ -7,8 +7,8 @@ from datetime import datetime
 import json
 import logging
 import os
-import re
 from pathlib import Path
+import re
 from typing import Any
 
 from freebox_api import Freepybox
