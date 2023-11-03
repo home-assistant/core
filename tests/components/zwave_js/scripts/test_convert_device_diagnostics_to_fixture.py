@@ -36,6 +36,10 @@ def test_fixture_functions() -> None:
     old_diagnostics_format_data["data"]["state"]["values"] = list(
         old_diagnostics_format_data["data"]["state"]["values"].values()
     )
+    old_diagnostics_format_data["data"]["state"]["endpoints"] = list(
+        old_diagnostics_format_data["data"]["state"]["endpoints"].values()
+    )
+
     assert (
         extract_fixture_data(old_diagnostics_format_data)
         == old_diagnostics_format_data["data"]["state"]
