@@ -58,7 +58,6 @@ def test_load_file() -> None:
 
 def test_main(capfd: pytest.CaptureFixture[str]) -> None:
     """Test main function."""
-    Path(__file__).parents[1] / "fixtures" / "zooz_zse44_state.json"
     fixture_str = load_fixture("zwave_js/zooz_zse44_state.json")
     fixture_dict = json.loads(fixture_str)
 
