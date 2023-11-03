@@ -1,0 +1,10 @@
+{
+  "entity": {
+    "something": {
+      "state": {
+        "away": "mdi:home-outline",
+        "home": "mdi:home"
+      }
+    }
+  }
+}
