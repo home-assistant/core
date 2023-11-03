@@ -55,6 +55,7 @@ def mock_desk_api():
         mock_desk.move_up = AsyncMock(side_effect=mock_move_up)
         mock_desk.move_down = AsyncMock(side_effect=mock_move_down)
         mock_desk.stop = AsyncMock()
+        mock_desk.height = 1
         mock_desk.height_percent = 60
         mock_desk.is_moving = False
         mock_desk.address = "AA:BB:CC:DD:EE:FF"
