@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime
+import json
 import logging
 import os
-import json
 import re
-
 from pathlib import Path
 from typing import Any
 
