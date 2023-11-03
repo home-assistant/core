@@ -929,6 +929,8 @@ build.json @home-assistant/supervisor
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
+/homeassistant/components/ovos/ @atd
+/tests/components/ovos/ @atd
 /homeassistant/components/p1_monitor/ @klaasnicolaas
 /tests/components/p1_monitor/ @klaasnicolaas
 /homeassistant/components/panel_custom/ @home-assistant/frontend
