@@ -10,7 +10,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Concatenate, ParamSpec, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypedDict, TypeVar
 
 import attr
 
@@ -283,13 +283,13 @@ def async_track_state_change_event(
 @callback
 def _async_dispatch_entity_id_event(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    callbacks: dict[str, set[HassJob[[EventType[EventStateChangedData]], Any]]],
     event: EventType[EventStateChangedData],
 ) -> None:
     """Dispatch to listeners."""
-    if not (callbacks_list := callbacks.get(event.data["entity_id"])):
+    if not (callback_set := callbacks.get(event.data["entity_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callback_set.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -303,7 +303,7 @@ def _async_dispatch_entity_id_event(
 @callback
 def _async_state_change_filter(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    callbacks: dict[str, set[HassJob[[EventType[EventStateChangedData]], Any]]],
     event: EventType[EventStateChangedData],
 ) -> bool:
     """Filter state changes by entity_id."""
@@ -340,7 +340,7 @@ def _remove_listener(
     listeners_key: str,
     keys: Iterable[str],
     job: HassJob[[EventType[_TypedDictT]], Any],
-    callbacks: dict[str, list[HassJob[[EventType[_TypedDictT]], Any]]],
+    callbacks: dict[str, set[HassJob[[EventType[_TypedDictT]], Any]]],
 ) -> None:
     """Remove listener."""
     for key in keys:
@@ -362,7 +362,7 @@ def _async_track_event(
     dispatcher_callable: Callable[
         [
             HomeAssistant,
-            dict[str, list[HassJob[[EventType[_TypedDictT]], Any]]],
+            dict[str, set[HassJob[[EventType[_TypedDictT]], Any]]],
             EventType[_TypedDictT],
         ],
         None,
@@ -370,7 +370,7 @@ def _async_track_event(
     filter_callable: Callable[
         [
             HomeAssistant,
-            dict[str, list[HassJob[[EventType[_TypedDictT]], Any]]],
+            dict[str, set[HassJob[[EventType[_TypedDictT]], Any]]],
             EventType[_TypedDictT],
         ],
         bool,
@@ -387,10 +387,13 @@ def _async_track_event(
     hass_data = hass.data
 
     callbacks: dict[
-        str, list[HassJob[[EventType[_TypedDictT]], Any]]
+        str, set[HassJob[[EventType[_TypedDictT]], Any]]
     ] | None = hass_data.get(callbacks_key)
     if not callbacks:
         callbacks = hass_data[callbacks_key] = {}
+
+    if TYPE_CHECKING:
+        assert callbacks is not None
 
     if listeners_key not in hass_data:
         hass_data[listeners_key] = hass.bus.async_listen(
@@ -402,11 +405,10 @@ def _async_track_event(
     job = HassJob(action, f"track {event_type} event {keys}")
 
     for key in keys:
-        callback_list = callbacks.get(key)
-        if callback_list:
-            callback_list.append(job)
+        if callback_set := callbacks.get(key):
+            callback_set.add(job)
         else:
-            callbacks[key] = [job]
+            callbacks[key] = {job}
 
     return ft.partial(_remove_listener, hass, listeners_key, keys, job, callbacks)
 
@@ -415,18 +417,18 @@ def _async_track_event(
 def _async_dispatch_old_entity_id_or_entity_id_event(
     hass: HomeAssistant,
     callbacks: dict[
-        str, list[HassJob[[EventType[EventEntityRegistryUpdatedData]], Any]]
+        str, set[HassJob[[EventType[EventEntityRegistryUpdatedData]], Any]]
     ],
     event: EventType[EventEntityRegistryUpdatedData],
 ) -> None:
     """Dispatch to listeners."""
     if not (
-        callbacks_list := callbacks.get(  # type: ignore[call-overload]  # mypy bug?
+        callback_set := callbacks.get(  # type: ignore[call-overload]  # mypy bug?
             event.data.get("old_entity_id", event.data["entity_id"])
         )
     ):
         return
-    for job in callbacks_list[:]:
+    for job in callback_set.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -441,7 +443,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
 def _async_entity_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[
-        str, list[HassJob[[EventType[EventEntityRegistryUpdatedData]], Any]]
+        str, set[HassJob[[EventType[EventEntityRegistryUpdatedData]], Any]]
     ],
     event: EventType[EventEntityRegistryUpdatedData],
 ) -> bool:
@@ -478,7 +480,7 @@ def async_track_entity_registry_updated_event(
 def _async_device_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[
-        str, list[HassJob[[EventType[EventDeviceRegistryUpdatedData]], Any]]
+        str, set[HassJob[[EventType[EventDeviceRegistryUpdatedData]], Any]]
     ],
     event: EventType[EventDeviceRegistryUpdatedData],
 ) -> bool:
@@ -490,14 +492,14 @@ def _async_device_registry_updated_filter(
 def _async_dispatch_device_id_event(
     hass: HomeAssistant,
     callbacks: dict[
-        str, list[HassJob[[EventType[EventDeviceRegistryUpdatedData]], Any]]
+        str, set[HassJob[[EventType[EventDeviceRegistryUpdatedData]], Any]]
     ],
     event: EventType[EventDeviceRegistryUpdatedData],
 ) -> None:
     """Dispatch to listeners."""
-    if not (callbacks_list := callbacks.get(event.data["device_id"])):
+    if not (callback_set := callbacks.get(event.data["device_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callback_set.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -533,12 +535,12 @@ def async_track_device_registry_updated_event(
 @callback
 def _async_dispatch_domain_event(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    callbacks: dict[str, set[HassJob[[EventType[EventStateChangedData]], Any]]],
     event: EventType[EventStateChangedData],
 ) -> None:
     """Dispatch domain event listeners."""
     domain = split_entity_id(event.data["entity_id"])[0]
-    for job in callbacks.get(domain, []) + callbacks.get(MATCH_ALL, []):
+    for job in callbacks.get(domain, set()) | callbacks.get(MATCH_ALL, set()):
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -550,7 +552,7 @@ def _async_dispatch_domain_event(
 @callback
 def _async_domain_added_filter(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    callbacks: dict[str, set[HassJob[[EventType[EventStateChangedData]], Any]]],
     event: EventType[EventStateChangedData],
 ) -> bool:
     """Filter state changes by entity_id."""
@@ -594,7 +596,7 @@ def _async_track_state_added_domain(
 @callback
 def _async_domain_removed_filter(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[EventType[EventStateChangedData]], Any]]],
+    callbacks: dict[str, set[HassJob[[EventType[EventStateChangedData]], Any]]],
     event: EventType[EventStateChangedData],
 ) -> bool:
     """Filter state changes by entity_id."""
