@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterable, Callable
+import io
 import logging
 import socket
 from typing import cast
+import wave
 
 from aioesphomeapi import (
     VoiceAssistantAudioSettings,
@@ -228,7 +230,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             audio_settings = VoiceAssistantAudioSettings()
 
         tts_audio_output = (
-            "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
+            "wav" if self.device_info.voice_assistant_version >= 2 else "mp3"
         )
 
         _LOGGER.debug("Starting pipeline")
@@ -302,10 +304,31 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
             )
 
-            _extension, audio_bytes = await tts.async_get_media_source_audio(
+            extension, data = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
             )
+
+            if extension != "wav":
+                raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+
+            with io.BytesIO(data) as wav_io:
+                with wave.open(wav_io, "rb") as wav_file:
+                    sample_rate = wav_file.getframerate()
+                    sample_width = wav_file.getsampwidth()
+                    sample_channels = wav_file.getnchannels()
+
+                    if (
+                        (sample_rate != 16000)
+                        or (sample_width != 2)
+                        or (sample_channels != 1)
+                    ):
+                        raise ValueError(
+                            "Expected rate/width/channels as 16000/2/1,"
+                            " got {sample_rate}/{sample_width}/{sample_channels}}"
+                        )
+
+                audio_bytes = wav_file.readframes(wav_file.getnframes())
 
             _LOGGER.debug("Sending %d bytes of audio", len(audio_bytes))
 
