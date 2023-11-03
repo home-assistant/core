@@ -46,7 +46,7 @@
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "wrong_bridge_selected": "Selected bridge does not match configured local bridge"
+      "bridge_not_found": "No bridge found in cloud which matches the configured local bridge. Maybe you're using the wrong account?"
     }
   },
   "options": {

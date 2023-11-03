@@ -180,6 +180,32 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if len(bridges) > 1:
                     self._bridges = bridges
                     self._previous_step_data |= user_input
+
+                    # if user has configured local API, make sure the bridge is the same
+                    if self._previous_step_data.get(
+                        CONF_HOST
+                    ) and self._previous_step_data.get(CONF_LOCAL_ACCESS_TOKEN):
+                        local_bridge = await get_local_bridge(
+                            self._previous_step_data[CONF_HOST],
+                            self._previous_step_data[CONF_LOCAL_ACCESS_TOKEN],
+                        )
+                        cloud_bridge = [
+                            bridge
+                            for bridge in self._bridges
+                            if bridge.bridge_id == local_bridge.bridge_id
+                        ][0]
+                        if not cloud_bridge:
+                            errors["base"] = "bridge_not_found"
+                        if not errors:
+                            await self.async_set_unique_id(cloud_bridge.serial)
+                            self._abort_if_unique_id_configured()
+                            return self.async_create_entry(
+                                title=NAME,
+                                data=user_input
+                                | self._previous_step_data
+                                | {CONF_BRIDGE_ID: cloud_bridge.bridge_id},
+                            )
+
                     return await self.async_step_select_bridge()
 
         return self.async_show_form(
@@ -202,16 +228,6 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(selected_bridge.serial)
             self._abort_if_unique_id_configured()
 
-            # if user has configured local API, make sure the bridge is the same
-            if self._previous_step_data.get(CONF_HOST) and self._previous_step_data.get(
-                CONF_LOCAL_ACCESS_TOKEN
-            ):
-                local_bridge = await get_local_bridge(
-                    self._previous_step_data[CONF_HOST],
-                    self._previous_step_data[CONF_LOCAL_ACCESS_TOKEN],
-                )
-                if local_bridge.serial != selected_bridge.serial:
-                    errors[CONF_BRIDGE_ID] = "wrong_bridge_selected"
             if not errors:
                 return self.async_create_entry(
                     title=NAME, data=self._previous_step_data | user_input
