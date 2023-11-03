@@ -4,11 +4,10 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-import re
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientSession
-from sems_portal_api import get_plantDetails, get_powerflow
+from sems_portal_api import get_collated_plant_details
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -59,17 +58,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def extract_number(s):
-    """Remove units from string and turn to number."""
-
-    # Match one or more digits at the beginning of the string
-    match = re.match(r"(\d+)", s)
-    if match:
-        return int(match.group(1))
-
-    return None
-
-
 class SemsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching AccuWeather data API."""
 
@@ -102,16 +90,9 @@ class SemsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         data: dict[str, Any] = {}
-        plant_information: Any = {}
         try:
             async with timeout(10):
-                plant_information = await get_powerflow(
-                    session=self.session,
-                    power_station_id=self.powerstationId,
-                    token=self.token,
-                )
-
-                plantDetails = await get_plantDetails(
+                data = await get_collated_plant_details(
                     session=self.session,
                     power_station_id=self.powerstationId,
                     token=self.token,
@@ -122,43 +103,5 @@ class SemsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             Exception,
         ) as error:
             raise UpdateFailed(error) from error
-
-        data = {
-            "powerPlant": {
-                "info": {
-                    "name": plantDetails["info"]["stationname"],
-                    "model": "GoodWe",
-                    "powerstation_id": plantDetails["info"]["powerstation_id"],
-                    "stationname": plantDetails["info"]["stationname"],
-                    "battery_capacity": plantDetails["info"]["battery_capacity"],
-                    "capacity": plantDetails["info"]["capacity"],
-                    "monthGeneration": plantDetails["kpi"]["month_generation"],
-                    "generationToday": plantDetails["kpi"]["power"],
-                    "allTimeGeneration": plantDetails["kpi"]["total_power"],
-                    "todayIncome": plantDetails["kpi"]["day_income"],
-                    "totalIncome": plantDetails["kpi"]["total_income"],
-                    "generationLive": extract_number(
-                        plant_information["powerflow"]["pv"]
-                    ),
-                    "pvStatus": plant_information["powerflow"]["pvStatus"],
-                    "battery": extract_number(
-                        plant_information["powerflow"]["bettery"]
-                    ),
-                    "batteryStatus": plant_information["powerflow"]["betteryStatus"],
-                    "batteryStatusStr": plant_information["powerflow"][
-                        "betteryStatusStr"
-                    ],
-                    "houseLoad": extract_number(plant_information["powerflow"]["load"]),
-                    "houseLoadStatus": plant_information["powerflow"]["loadStatus"],
-                    "gridLoad": extract_number(plant_information["powerflow"]["grid"]),
-                    "gridLoadStatus": plant_information["powerflow"]["gridStatus"],
-                    "soc": plant_information["powerflow"]["soc"],
-                    "socText": extract_number(
-                        plant_information["powerflow"]["socText"]
-                    ),
-                },
-                "inverters": [],
-            }
-        }
 
         return data

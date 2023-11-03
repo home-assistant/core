@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -14,9 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CURRENCY_DOLLAR,
     PERCENTAGE,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -25,8 +21,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, SemsDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SemsSensor(SensorEntity):
@@ -94,100 +88,10 @@ async def async_setup_entry(
 
 SENSOR_TYPES_INVERTERS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        name="Vpv1",
-        key="Vpv1",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-    ),
-    SensorEntityDescription(
-        name="Vpv2",
-        key="Vpv2",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-    ),
-    SensorEntityDescription(
-        name="Ipv1",
-        key="Ipv1",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-    ),
-    SensorEntityDescription(
-        name="Ipv2",
-        key="Ipv2",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-    ),
-    SensorEntityDescription(
-        name="Ua",
-        key="Vac1",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-    ),
-    SensorEntityDescription(
-        name="Ub",
-        key="Vac2",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-    ),
-    SensorEntityDescription(
-        name="Uc",
-        key="Vac3",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-    ),
-    SensorEntityDescription(
-        name="Iac1",
-        key="Iac1",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-    ),
-    SensorEntityDescription(
-        name="Iac2",
-        key="Iac2",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-    ),
-    SensorEntityDescription(
-        name="Iac3",
-        key="Iac3",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-    ),
-    SensorEntityDescription(
-        name="Fac1",
-        key="Fac1",
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        device_class=SensorDeviceClass.FREQUENCY,
-    ),
-    SensorEntityDescription(
-        name="Fac2",
-        key="Fac2",
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        device_class=SensorDeviceClass.FREQUENCY,
-    ),
-    SensorEntityDescription(
-        name="Fac3",
-        key="Fac3",
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        device_class=SensorDeviceClass.FREQUENCY,
-    ),
-    SensorEntityDescription(
-        name="Power",
-        key="Pac",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-    ),
-    SensorEntityDescription(
-        name="Temperature",
-        key="Tempperature",
+        name="Inner Temp",
+        key="innerTemp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        name="Total Generation",
-        key="Total Generation",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
     ),
 )
 
