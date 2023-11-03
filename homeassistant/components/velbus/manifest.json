@@ -13,6 +13,7 @@
     "velbus-packet",
     "velbus-protocol"
   ],
+  "quality_scale": "silver",
   "requirements": ["velbus-aio==2023.10.2"],
   "usb": [
     {
