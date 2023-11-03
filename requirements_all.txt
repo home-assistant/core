@@ -192,7 +192,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.1
+aioairzone-cloud==0.3.2
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -256,6 +256,9 @@ aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.0.9
+
+# homeassistant.components.http
+aiohttp-zlib-ng==0.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1693,7 +1696,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.13.1
+pyenphase==1.14.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
