@@ -1,0 +1,85 @@
+{
+  "config": {
+    "step": {
+      "geography_by_coords": {
+        "title": "Configure a Geography",
+        "description": "Use the AirVisual cloud API to monitor a latitude/longitude.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "geography_by_name": {
+        "title": "[%key:component::airvisual::config::step::geography_by_coords::title%]",
+        "description": "Use the AirVisual cloud API to monitor a city/state/country.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "city": "City",
+          "country": "Country",
+          "state": "State"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate AirVisual",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "user": {
+        "title": "Configure AirVisual",
+        "description": "Pick what type of AirVisual data you want to monitor."
+      }
+    },
+    "error": {
+      "general_error": "[%key:common::config_flow::error::unknown%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "location_not_found": "Location not found",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "[%key:component::airvisual::config::step::user::title%]",
+        "data": {
+          "show_on_map": "Show monitored geography on the map"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pollutant_label": {
+        "state": {
+          "co": "Carbon Monoxide",
+          "n2": "Nitrogen Dioxide",
+          "o3": "Ozone",
+          "p1": "PM10",
+          "p2": "PM2.5",
+          "s2": "Sulfur Dioxide"
+        }
+      },
+      "pollutant_level": {
+        "state": {
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy",
+          "unhealthy_sensitive": "Unhealthy for sensitive groups",
+          "very_unhealthy": "Very unhealthy",
+          "hazardous": "Hazardous"
+        }
+      }
+    }
+  },
+  "issues": {
+    "airvisual_pro_migration": {
+      "title": "{ip_address} is now part of the AirVisual Pro integration",
+      "description": "AirVisual Pro units are now their own Home Assistant integration (as opposed to be included with the original AirVisual integration that uses the AirVisual cloud API). The Pro device located at `{ip_address}` has automatically been migrated.\n\nAs part of that migration, the Pro's device ID has changed from `{old_device_id}` to `{new_device_id}`. Please update these automations to use the new device ID: {device_automations_string}."
+    }
+  }
+}

@@ -3975,6 +3975,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "openAQ": {
+      "name": "AirVisual Cloud",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "open_meteo": {
       "name": "Open-Meteo",
       "integration_type": "service",
