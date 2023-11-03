@@ -48,9 +48,9 @@ def mock_homewizardenergy(
         else:
             client.state.side_effect = NotFoundError
 
-        if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists():
+        if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists():
             client.system.return_value = System.from_dict(
-                json.loads(load_fixture(f"{device_fixture}/state.json", DOMAIN))
+                json.loads(load_fixture(f"{device_fixture}/system.json", DOMAIN))
             )
         else:
             client.system.side_effect = NotFoundError
