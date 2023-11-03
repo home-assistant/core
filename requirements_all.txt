@@ -1524,7 +1524,7 @@ py-improv-ble-client==1.0.3
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==1.0.0
+py-nextbusnext==1.0.2
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -2322,7 +2322,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.12
+reolink-aio==0.7.14
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
