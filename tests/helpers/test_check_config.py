@@ -45,24 +45,24 @@ def log_ha_config(conf):
 
 def _assert_warnings_errors(
     res: HomeAssistantConfig,
-    errors: list[CheckConfigError],
-    warnings: list[CheckConfigError],
+    expected_warnings: list[CheckConfigError],
+    expected_errors: list[CheckConfigError],
 ) -> None:
-    assert len(res.errors) == len(errors)
-    assert len(res.warnings) == len(warnings)
+    assert len(res.warnings) == len(expected_warnings)
+    assert len(res.errors) == len(expected_errors)
 
-    error_str = ""
-    warning_str = ""
+    expected_warning_str = ""
+    expected_error_str = ""
 
-    for idx, error in enumerate(errors):
-        assert error == res.errors[idx]
-        error_str += error.message
-    assert res.error_str == error_str
+    for idx, expected_warning in enumerate(expected_warnings):
+        assert res.warnings[idx] == expected_warning
+        expected_warning_str += expected_warning.message
+    assert res.warning_str == expected_warning_str
 
-    for idx, warning in enumerate(warnings):
-        assert warning == res.warnings[idx]
-        warning_str += warning.message
-    assert res.warning_str == warning_str
+    for idx, expected_error in enumerate(expected_errors):
+        assert res.errors[idx] == expected_error
+        expected_error_str += expected_error.message
+    assert res.error_str == expected_error_str
 
 
 async def test_bad_core_config(hass: HomeAssistant) -> None:
@@ -77,7 +77,7 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
             "homeassistant",
             {"unit_system": "bad"},
         )
-        _assert_warnings_errors(res, [error], [])
+        _assert_warnings_errors(res, [], [error])
 
 
 async def test_config_platform_valid(hass: HomeAssistant) -> None:
@@ -104,7 +104,7 @@ async def test_component_platform_not_found(hass: HomeAssistant) -> None:
         warning = CheckConfigError(
             "Integration error: beer - Integration 'beer' not found.", None, None
         )
-        _assert_warnings_errors(res, [], [warning])
+        _assert_warnings_errors(res, [warning], [])
 
 
 async def test_component_requirement_not_found(hass: HomeAssistant) -> None:
@@ -127,7 +127,7 @@ async def test_component_requirement_not_found(hass: HomeAssistant) -> None:
             None,
             None,
         )
-        _assert_warnings_errors(res, [], [warning])
+        _assert_warnings_errors(res, [warning], [])
 
 
 async def test_component_not_found_recovery_mode(hass: HomeAssistant) -> None:
@@ -173,7 +173,7 @@ async def test_component_import_error(hass: HomeAssistant) -> None:
             None,
             None,
         )
-        _assert_warnings_errors(res, [], [warning])
+        _assert_warnings_errors(res, [warning], [])
 
 
 @pytest.mark.parametrize(
@@ -218,7 +218,7 @@ async def test_component_platform_not_found_2(hass: HomeAssistant) -> None:
         warning = CheckConfigError(
             "Platform error light.beer - Integration 'beer' not found.", None, None
         )
-        _assert_warnings_errors(res, [], [warning])
+        _assert_warnings_errors(res, [warning], [])
 
 
 async def test_platform_not_found_recovery_mode(hass: HomeAssistant) -> None:
@@ -268,7 +268,7 @@ async def test_component_config_platform_import_error(hass: HomeAssistant) -> No
             None,
             None,
         )
-        _assert_warnings_errors(res, [error], [])
+        _assert_warnings_errors(res, [], [error])
 
 
 async def test_component_platform_import_error(hass: HomeAssistant) -> None:
@@ -283,12 +283,12 @@ async def test_component_platform_import_error(hass: HomeAssistant) -> None:
         log_ha_config(res)
 
         assert res.keys() == {"homeassistant", "light"}
-        error = CheckConfigError(
+        warning = CheckConfigError(
             "Platform error light.demo - blablabla",
             None,
             None,
         )
-        _assert_warnings_errors(res, [], [error])
+        _assert_warnings_errors(res, [warning], [])
 
 
 async def test_package_invalid(hass: HomeAssistant) -> None:
@@ -308,7 +308,7 @@ async def test_package_invalid(hass: HomeAssistant) -> None:
             "homeassistant.packages.p1.group",
             {"group": ["a"]},
         )
-        _assert_warnings_errors(res, [], [warning])
+        _assert_warnings_errors(res, [warning], [])
 
 
 async def test_missing_included_file(hass: HomeAssistant) -> None:
@@ -384,7 +384,7 @@ bla:
             "bla",
             {"value": 1},
         )
-        _assert_warnings_errors(res, [error], [])
+        _assert_warnings_errors(res, [], [error])
 
 
 async def test_removed_yaml_support(hass: HomeAssistant) -> None:
