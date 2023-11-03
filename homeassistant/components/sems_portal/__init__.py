@@ -8,6 +8,7 @@ import re
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientSession
+from sems_portal_api import get_plantDetails, get_powerflow
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -17,8 +18,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_EMAIL, CONF_POWERSTATIONID, CONF_TOKEN, DOMAIN, MANUFACTURER
-from .sems_plantDetails import get_plantDetails
-from .sems_powerflow import get_powerflow
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

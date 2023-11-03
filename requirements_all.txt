@@ -2390,6 +2390,9 @@ scsgate==0.1.0
 # homeassistant.components.backup
 securetar==2023.3.0
 
+# homeassistant.components.sems_portal
+sems_portal_api==0.0.3
+
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 

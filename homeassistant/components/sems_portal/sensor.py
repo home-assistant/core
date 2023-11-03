@@ -32,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 class SemsSensor(SensorEntity):
     """Used to represent a SemsSensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: SensorEntityDescription
 
     def __init__(
@@ -70,29 +72,8 @@ async def async_setup_entry(
     """Get the setup sensor."""
 
     coordinator: SemsDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
     interters = coordinator.data["powerPlant"]["inverters"]
-
-    # interters = [{
-    #     "name": 'Test Inverter',
-    #     "model": 'Test Inverter',
-    #     "Vpv1": random.randint(1, 10),
-    #     "Vpv2": random.randint(1, 10),
-    #     "Ipv1": random.randint(1, 10),
-    #     "Ipv2": random.randint(1, 10),
-    #     "Vac1": random.randint(1, 10),
-    #     "Vac2": random.randint(1, 10),
-    #     "Vac3": random.randint(1, 10),
-    #     "Iac1": random.randint(1, 10),
-    #     "Iac2": random.randint(1, 10),
-    #     "Iac3": random.randint(1, 10),
-    #     "Fac1": random.randint(1, 10),
-    #     "Fac2": random.randint(1, 10),
-    #     "Fac3": random.randint(1, 10),
-    #     "Pac": random.randint(1, 10),
-    #     "Tempperature": random.randint(1, 10),
-    #     "Total Generation": random.randint(1, 10)
-    # }]
-
     powerPlantInformation = coordinator.data["powerPlant"]["info"]
 
     inverterEntities = [

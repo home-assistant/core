@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientSession
+from sems_portal_api import login_to_sems
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_EMAIL, CONF_PASSWORD, CONF_POWERSTATIONID, CONF_TOKEN, DOMAIN
-from .sems_login import login_to_sems
 
 _LOGGER = logging.getLogger(__name__)
 

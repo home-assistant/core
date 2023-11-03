@@ -1774,6 +1774,9 @@ screenlogicpy==0.9.4
 # homeassistant.components.backup
 securetar==2023.3.0
 
+# homeassistant.components.sems_portal
+sems_portal_api==0.0.3
+
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense-energy==0.12.2
