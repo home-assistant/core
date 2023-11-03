@@ -1539,7 +1539,7 @@ async def test_reuse_entity_object_after_abort(hass: HomeAssistant) -> None:
         await platform.async_add_entities([ent])
     with pytest.raises(
         HomeAssistantError,
-        match="Entity invalid cannot be added a second time to an entity platform",
+        match="Entity 'invalid' cannot be added a second time to an entity platform",
     ):
         await platform.async_add_entities([ent])
 
