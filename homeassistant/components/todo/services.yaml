@@ -1,3 +1,17 @@
+list_items:
+  target:
+    entity:
+      domain: todo
+  fields:
+    status:
+      example: "needs_action"
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed
+          multiple: true
 add_item:
   target:
     entity:
