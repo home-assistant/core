@@ -99,7 +99,7 @@ class FreeboxRouter:
         if self.supports_hosts:
             hosts_list_initialized = False
             try:
-                fbx_devices.append(await self._api.lan.get_hosts_list())
+                fbx_devices = await self._api.lan.get_hosts_list()
                 hosts_list_initialized = True
             except HttpRequestError as err:
                 matcher = re.search(r"Request failed \(APIResponse: (.+?)\)", str(err))
