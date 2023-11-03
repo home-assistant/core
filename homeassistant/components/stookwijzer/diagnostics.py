@@ -24,8 +24,9 @@ async def async_get_config_entry_diagnostics(
     return {
         "state": client.state,
         "last_updated": last_updated,
-        "lqi": client.lqi,
-        "windspeed": client.windspeed,
-        "weather": client.weather,
-        "concentrations": client.concentrations,
+        "alert": client.alert,
+        "air quality index": client.lki,
+        "windspeed bft": client.windspeed_bft,
+        "windspeed m/s": client.windspeed_ms,
+        "forecast": client.forecast,
     }

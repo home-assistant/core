@@ -1,7 +1,8 @@
 """Constants for the Stookwijzer integration."""
-from enum import StrEnum
 import logging
 from typing import Final
+
+from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "stookwijzer"
 LOGGER = logging.getLogger(__package__)
@@ -10,6 +11,6 @@ LOGGER = logging.getLogger(__package__)
 class StookwijzerState(StrEnum):
     """Stookwijzer states for sensor entity."""
 
-    BLUE = "blauw"
-    ORANGE = "oranje"
-    RED = "rood"
+    CODEYELLOW = "codeYellow"
+    CODEORANGE = "codeOrange"
+    CODERED = "codeRed"

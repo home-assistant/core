@@ -1,14 +1,17 @@
-"""Support for Stookwijzer Sensor."""
+"""This integration provides support for Stookwijzer Sensor."""
 from __future__ import annotations
 
 from datetime import timedelta
+
+from typing import Any
 
 from stookwijzer import Stookwijzer
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, StookwijzerState
@@ -29,10 +32,9 @@ async def async_setup_entry(
 class StookwijzerSensor(SensorEntity):
     """Defines a Stookwijzer binary sensor."""
 
-    _attr_attribution = "Data provided by stookwijzer.nu"
+    _attr_attribution = "Data provided by atlasleefomgeving.nl"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_translation_key = "stookwijzer"
 
     def __init__(self, client: Stookwijzer, entry: ConfigEntry) -> None:
@@ -43,9 +45,9 @@ class StookwijzerSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Stookwijzer",
-            manufacturer="stookwijzer.nu",
+            manufacturer="Atlas Leefomgeving",
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://www.stookwijzer.nu",
+            configuration_url="https://www.atlasleefomgeving.nl/stookwijzer",
         )
 
     def update(self) -> None:
@@ -63,3 +65,14 @@ class StookwijzerSensor(SensorEntity):
         if self._client.state is None:
             return None
         return StookwijzerState(self._client.state).value
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        return {
+            "alert": self._client.alert,
+            "windspeed bft": self._client.windspeed_bft,
+            "windspeed m/s": self._client.windspeed_ms,
+            "air quality index": self._client.lki,
+            "forecast": self._client.forecast,
+        }
