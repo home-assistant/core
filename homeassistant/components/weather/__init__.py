@@ -136,8 +136,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ROUNDING_PRECISION = 2
 
 LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
-"""Deprecated: please use SERVICE_LIST_EVENTS."""
-SERVICE_FORECAST: Final = "forecast"
+"""Deprecated: please use SERVICE_GET_FORECASTS."""
+SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
@@ -224,9 +224,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
-        async_forecast_service,
+        async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,
             WeatherEntityFeature.FORECAST_HOURLY,
@@ -1107,12 +1107,12 @@ async def async_get_forecast_service(
     _LOGGER.warning(
         "Detected use of service 'weather.get_forecast'. "
         "This is deprecated and will stop working in Home Assistant 2024.6. "
-        "Use weather.forecast instead which supports multiple entities",
+        "Use 'weather.get_forecasts' instead which supports multiple entities",
     )
-    return await async_forecast_service(weather, service_call)
+    return await async_get_forecasts_service(weather, service_call)
 
 
-async def async_forecast_service(
+async def async_get_forecasts_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast."""

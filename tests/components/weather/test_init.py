@@ -34,7 +34,7 @@ from homeassistant.components.weather import (
     DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -963,7 +963,7 @@ async def test_forecast_twice_daily_missing_is_daytime(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )
@@ -1030,9 +1030,9 @@ async def test_get_forecast(
     ("service", "expected"),
     [
         (
-            SERVICE_FORECAST,
+            SERVICE_GET_FORECASTS,
             {
-                "weather.test": {
+                "weather.testing": {
                     "forecast": [],
                 }
             },
@@ -1084,7 +1084,7 @@ async def test_get_forecast_no_forecast(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )

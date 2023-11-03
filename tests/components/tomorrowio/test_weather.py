@@ -47,7 +47,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
@@ -281,7 +281,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )
@@ -360,7 +360,7 @@ async def test_v4_bad_forecast(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         {
             "entity_id": entity_id,
             "type": "hourly",

@@ -10,7 +10,7 @@ from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -81,7 +81,7 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )

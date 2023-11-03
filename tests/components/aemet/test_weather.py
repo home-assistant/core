@@ -30,7 +30,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -126,7 +126,7 @@ async def test_aemet_weather_legacy(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )

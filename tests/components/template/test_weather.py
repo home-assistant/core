@@ -19,7 +19,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
     Forecast,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -96,7 +96,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )
@@ -223,7 +223,7 @@ async def test_forecasts(
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (SERVICE_FORECAST, {"weather.forecast": {"forecast": []}}),
+        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
         (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
@@ -308,7 +308,7 @@ async def test_forecast_invalid(
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (SERVICE_FORECAST, {"weather.forecast": {"forecast": []}}),
+        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
         (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
@@ -378,7 +378,7 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (SERVICE_FORECAST, {"weather.forecast": {"forecast": []}}),
+        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
         (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
@@ -448,7 +448,7 @@ async def test_forecast_invalid_datetime_missing(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )
@@ -683,7 +683,7 @@ async def test_trigger_action(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )

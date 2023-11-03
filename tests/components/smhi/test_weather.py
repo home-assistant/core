@@ -21,7 +21,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -447,7 +447,7 @@ async def test_forecast_services_lack_of_data(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )

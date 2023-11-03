@@ -33,7 +33,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
-    SERVICE_FORECAST,
+    SERVICE_GET_FORECASTS,
     WeatherEntityFeature,
 )
 from homeassistant.const import (
@@ -211,7 +211,7 @@ async def test_unsupported_condition_icon_data(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_FORECAST,
+        SERVICE_GET_FORECASTS,
         LEGACY_SERVICE_GET_FORECAST,
     ],
 )
