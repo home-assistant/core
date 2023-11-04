@@ -24,8 +24,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Perform the setup for Tami4Edge."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    api: Tami4EdgeAPI = data[API]
+    api: Tami4EdgeAPI = hass.data[DOMAIN][entry.entry_id][API]
 
     entity = Tami4EdgeBoilButton(api)
 
