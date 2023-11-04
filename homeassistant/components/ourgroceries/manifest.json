@@ -1,0 +1,13 @@
+{
+  "domain": "ourgroceries",
+  "name": "OurGroceries",
+  "codeowners": ["@OnFreund"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/ourgroceries",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["ourgroceries==1.5.4"],
+  "ssdp": [],
+  "zeroconf": []
+}
