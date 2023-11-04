@@ -33,7 +33,7 @@ pytestmark = [
             "HWE-WTR",
             [
                 "switch.device",
-                "switch.device_switch_locks",
+                "switch.device_switch_lock",
                 "switch.device_cloud_connection",
             ],
         ),
