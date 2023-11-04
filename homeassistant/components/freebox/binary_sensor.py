@@ -88,7 +88,7 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         self._attr_is_on = self._edit_state(
             await self.get_home_endpoint_value(self._command_id)
         )
-        await FreeboxHomeEntity.async_update_signal(self)
+        await super().async_update_signal()
 
     def _edit_state(self, state: bool | None) -> bool | None:
         """Edit state depending on sensor name."""
