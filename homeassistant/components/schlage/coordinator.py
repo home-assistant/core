@@ -5,10 +5,11 @@ import asyncio
 from dataclasses import dataclass
 
 from pyschlage import Lock, Schlage
-from pyschlage.exceptions import Error as SchlageError
+from pyschlage.exceptions import Error as SchlageError, NotAuthorizedError
 from pyschlage.log import LockLog
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -43,6 +44,8 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         """Fetch the latest data from the Schlage API."""
         try:
             locks = await self.hass.async_add_executor_job(self.api.locks)
+        except NotAuthorizedError as ex:
+            raise ConfigEntryAuthFailed from ex
         except SchlageError as ex:
             raise UpdateFailed("Failed to refresh Schlage data") from ex
         lock_data = await asyncio.gather(
@@ -64,6 +67,8 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
             logs = previous_lock_data.logs
         try:
             logs = lock.logs()
+        except NotAuthorizedError as ex:
+            raise ConfigEntryAuthFailed from ex
         except SchlageError as ex:
             LOGGER.debug('Failed to read logs for lock "%s": %s', lock.name, ex)
 
