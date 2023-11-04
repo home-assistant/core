@@ -10,6 +10,7 @@ from typing import Literal
 
 from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
+from reolink_aio.software_version import NewSoftwareVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -45,7 +46,9 @@ class ReolinkData:
 
     host: ReolinkHost
     device_coordinator: DataUpdateCoordinator[None]
-    firmware_coordinator: DataUpdateCoordinator[str | Literal[False]]
+    firmware_coordinator: DataUpdateCoordinator[
+        str | Literal[False] | NewSoftwareVersion
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -86,7 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
-    async def async_check_firmware_update() -> str | Literal[False]:
+    async def async_check_firmware_update() -> str | Literal[
+        False
+    ] | NewSoftwareVersion:
         """Check for firmware updates."""
         if not host.api.supported(None, "update"):
             return False
@@ -153,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update the configuration of the host entity."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 

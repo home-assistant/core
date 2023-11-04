@@ -3,60 +3,31 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-import voluptuous as vol
-
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
-    SwitchEntity,
-)
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_COMMAND_STATE,
-    CONF_FRIENDLY_NAME,
     CONF_ICON,
-    CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, LOGGER
 from .utils import call_shell_with_timeout, check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=30)
-
-SWITCH_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_COMMAND_OFF, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_ON, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_STATE): cv.string,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
-)
 
 
 async def async_setup_platform(
@@ -67,34 +38,12 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
-    if discovery_info:
-        entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
-    else:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_switch",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": SWITCH_DOMAIN},
-        )
-        entities = config.get(CONF_SWITCHES, {})
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
 
     switches = []
 
     for object_id, device_config in entities.items():
-        if name := device_config.get(
-            CONF_FRIENDLY_NAME
-        ):  # Backward compatibility. Can be removed after deprecation
-            device_config[CONF_NAME] = name
-
-        if icon := device_config.get(
-            CONF_ICON_TEMPLATE
-        ):  # Backward compatibility. Can be removed after deprecation
-            device_config[CONF_ICON] = icon
-
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, object_id), hass),
@@ -118,10 +67,6 @@ async def async_setup_platform(
                 device_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
         )
-
-    if not switches:
-        LOGGER.error("No switches added")
-        return
 
     async_add_entities(switches)
 
