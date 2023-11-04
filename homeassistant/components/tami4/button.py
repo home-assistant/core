@@ -3,9 +3,10 @@ import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import API, DOMAIN
@@ -13,7 +14,7 @@ from .entity import Tami4EdgeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_DESCRIPTION = ButtonEntityDescription(
+ENTITY_DESCRIPTION = EntityDescription(
     key="boil_water",
     translation_key="boil_water",
     icon="mdi:kettle-steam",
