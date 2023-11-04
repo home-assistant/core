@@ -119,6 +119,10 @@ async def async_check_ha_config_file(  # noqa: C901
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
         except loader.IntegrationNotFound as ex:
+            # We get this error if an integration is not found. In recovery mode and
+            # safe mode, this currently happens for all custom integrations. Don't
+            # show errors for a missing integration in recovery mode or safe mode to
+            # not confuse the user.
             if not hass.config.recovery_mode and not hass.config.safe_mode:
                 result.add_warning(f"Integration error: {domain} - {ex}")
         except RequirementsNotFound as ex:
@@ -253,6 +257,10 @@ async def async_check_ha_config_file(  # noqa: C901
                 )
                 platform = p_integration.get_platform(domain)
             except loader.IntegrationNotFound as ex:
+                # We get this error if an integration is not found. In recovery mode and
+                # safe mode, this currently happens for all custom integrations. Don't
+                # show errors for a missing integration in recovery mode or safe mode to
+                # not confuse the user.
                 if not hass.config.recovery_mode and not hass.config.safe_mode:
                     result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
                 continue
