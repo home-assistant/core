@@ -48,6 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not self.reauth_entry:
                     await self.async_set_unique_id(user_id)
                     return self.async_create_entry(title=username, data=user_input)
+                if self.reauth_entry.unique_id != user_id:
+                    return self.async_abort(reason="wrong_account")
+
                 self.hass.config_entries.async_update_entry(
                     self.reauth_entry, data=user_input
                 )
