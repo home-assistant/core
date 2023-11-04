@@ -120,11 +120,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        if coordinator:
-            await coordinator.api.auth.send_auth_key(
-                hass.data[DOMAIN][entry.entry_id].api,
-                pin,
-            )
+        await coordinator.api.auth.send_auth_key(
+            hass.data[DOMAIN][entry.entry_id].api,
+            pin,
+        )
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)
     hass.services.async_register(
