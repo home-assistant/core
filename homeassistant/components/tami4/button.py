@@ -26,9 +26,7 @@ async def async_setup_entry(
     """Perform the setup for Tami4Edge."""
     api: Tami4EdgeAPI = hass.data[DOMAIN][entry.entry_id][API]
 
-    entity = Tami4EdgeBoilButton(api)
-
-    async_add_entities([entity])
+    async_add_entities([Tami4EdgeBoilButton(api)])
 
 
 class Tami4EdgeBoilButton(Tami4EdgeBaseEntity, ButtonEntity):
