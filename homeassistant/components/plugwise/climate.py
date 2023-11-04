@@ -154,7 +154,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         return hvac_modes
 
     @property
-    def hvac_action(self) -> HVACAction:  # pw-beta add to Core
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
