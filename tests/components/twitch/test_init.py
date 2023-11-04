@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     TwitchAPIExceptionMock,
@@ -36,6 +37,36 @@ async def test_setup_success(
     await hass.async_block_till_done()
 
     assert not hass.services.async_services().get(DOMAIN)
+
+
+async def test_disabled_entity(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test disable entity."""
+    await setup_integration(hass, config_entry)
+
+    entity_registry = er.async_get(hass)
+    entity_id = "sensor.channel123"
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.disabled_by is None
+
+    assert entity.config_entry_id is not None
+
+    entity_registry.async_update_entity(
+        entity_id=entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    # Update coordinator to ensure entities are removed
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.disabled_by == er.RegistryEntryDisabler.USER
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
