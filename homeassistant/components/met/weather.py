@@ -31,13 +31,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import MetDataUpdateCoordinator
-from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
+from .const import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
+)
 
 DEFAULT_NAME = "Met.no"
 
@@ -141,6 +149,10 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         condition = self.coordinator.data.current_weather_data.get("condition")
         if condition is None:
             return None
+
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
+            condition = ATTR_CONDITION_CLEAR_NIGHT
+
         return format_condition(condition)
 
     @property
