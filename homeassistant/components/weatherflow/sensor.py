@@ -366,25 +366,21 @@ class WeatherFlowSensorEntity(SensorEntity):
             )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.native_value is not None
-
-    @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self.entity_description.state_class == SensorStateClass.TOTAL:
             return self.device.last_report
         return None
 
-    @property
-    def native_value(self) -> datetime | StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.get_native_value(self.device)
+    def _update_state(self) -> None:
+        """Update entity state."""
+        value = self.entity_description.get_native_value(self.device)
+        self._attr_available = value is not None
+        self._attr_native_value = value
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
+        self._update_state()
         for event in self.entity_description.event_subscriptions:
-            self.async_on_remove(
-                self.device.on(event, lambda _: self.async_write_ha_state())
-            )
+            self.async_on_remove(self.device.on(event, lambda _: self._update_state()))
