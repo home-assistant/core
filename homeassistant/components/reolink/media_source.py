@@ -124,7 +124,15 @@ class ReolinkVODMediaSource(MediaSource):
             channels = []
             entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
             for entity in entities:
-                if entity.disabled or not entity.entity_id.startswith("camera."):
+                if (
+                    entity.disabled
+                    or entity.device_id is None
+                    or not entity.entity_id.startswith("camera.")
+                ):
+                    continue
+
+                device = device_reg.async_get(entity.device_id)
+                if device is None:
                     continue
 
                 ch = entity.unique_id.split("_")[1]
@@ -132,7 +140,6 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
                 channels.append(ch)
 
-                device = device_reg.async_get(entity.device_id)
                 device_name = (
                     device.name_by_user
                     if device.name_by_user is not None
