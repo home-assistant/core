@@ -74,7 +74,7 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._camera = self.coordinator.api.cameras[camera]
+        self._camera = coordinator.api.cameras[camera]
         serial = self._camera.serial
         self._attr_unique_id = f"{serial}-{description.key}"
         self._sensor_key = (
