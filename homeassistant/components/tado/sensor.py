@@ -52,118 +52,6 @@ class TadoSensorEntityDescription(
     data_category: str | None = None
 
 
-HOME_SENSORS = [
-    TadoSensorEntityDescription(
-        key="outdoor temperature",
-        name="Outdoor temperature",
-        state_fn=lambda data: data["outsideTemperature"]["celsius"],
-        attributes_fn=lambda data: {
-            "time": data["outsideTemperature"]["timestamp"],
-        },
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        data_category=SENSOR_DATA_CATEGORY_WEATHER,
-    ),
-    TadoSensorEntityDescription(
-        key="solar percentage",
-        name="Solar percentage",
-        state_fn=lambda data: data["solarIntensity"]["percentage"],
-        attributes_fn=lambda data: {
-            "time": data["solarIntensity"]["timestamp"],
-        },
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        data_category=SENSOR_DATA_CATEGORY_WEATHER,
-    ),
-    TadoSensorEntityDescription(
-        key="weather condition",
-        name="Weather condition",
-        state_fn=lambda data: format_condition(data["weatherState"]["value"]),
-        attributes_fn=lambda data: {"time": data["weatherState"]["timestamp"]},
-        data_category=SENSOR_DATA_CATEGORY_WEATHER,
-    ),
-    TadoSensorEntityDescription(
-        key="tado mode",
-        name="Tado mode",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_tado_mode(data),
-        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
-    ),
-    TadoSensorEntityDescription(
-        key="geofencing mode",
-        name="Geofencing mode",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_geofencing_mode(data),
-        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
-    ),
-    TadoSensorEntityDescription(
-        key="automatic geofencing",
-        name="Automatic geofencing",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_automatic_geofencing(data),
-        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
-    ),
-]
-
-TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
-    key="temperature",
-    name="Temperature",
-    state_fn=lambda data: data.current_temp,
-    attributes_fn=lambda data: {
-        "time": data.current_temp_timestamp,
-        "setting": 0,  # setting is used in climate device
-    },
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    device_class=SensorDeviceClass.TEMPERATURE,
-    state_class=SensorStateClass.MEASUREMENT,
-)
-HUMIDITY_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
-    key="humidity",
-    name="Humidity",
-    state_fn=lambda data: data.current_humidity,
-    attributes_fn=lambda data: {"time": data.current_humidity_timestamp},
-    native_unit_of_measurement=PERCENTAGE,
-    device_class=SensorDeviceClass.HUMIDITY,
-    state_class=SensorStateClass.MEASUREMENT,
-)
-TADO_MODE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
-    key="tado mode",
-    name="Tado mode",
-    state_fn=lambda data: data.tado_mode,
-)
-HEATING_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
-    key="heating",
-    name="Heating",
-    state_fn=lambda data: data.heating_power_percentage,
-    attributes_fn=lambda data: {"time": data.heating_power_timestamp},
-    native_unit_of_measurement=PERCENTAGE,
-    state_class=SensorStateClass.MEASUREMENT,
-)
-AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
-    key="ac",
-    name="AC",
-    state_fn=lambda data: data.ac_power,
-    attributes_fn=lambda data: {"time": data.ac_power_timestamp},
-)
-
-ZONE_SENSORS = {
-    TYPE_HEATING: [
-        TEMPERATURE_ENTITY_DESCRIPTION,
-        HUMIDITY_ENTITY_DESCRIPTION,
-        TADO_MODE_ENTITY_DESCRIPTION,
-        HEATING_ENTITY_DESCRIPTION,
-    ],
-    TYPE_AIR_CONDITIONING: [
-        TEMPERATURE_ENTITY_DESCRIPTION,
-        HUMIDITY_ENTITY_DESCRIPTION,
-        TADO_MODE_ENTITY_DESCRIPTION,
-        AC_ENTITY_DESCRIPTION,
-    ],
-    TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
-}
-
-
 def format_condition(condition: str) -> str:
     """Return condition from dict CONDITIONS_MAP."""
     for key, value in CONDITIONS_MAP.items():
@@ -205,6 +93,114 @@ def get_geofencing_mode(data) -> str:
     return f"{tado_mode.capitalize()} ({geofencing_switch_mode.capitalize()})"
 
 
+HOME_SENSORS = [
+    TadoSensorEntityDescription(
+        key="outdoor temperature",
+        translation_key="outdoor_temperature",
+        state_fn=lambda data: data["outsideTemperature"]["celsius"],
+        attributes_fn=lambda data: {
+            "time": data["outsideTemperature"]["timestamp"],
+        },
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_category=SENSOR_DATA_CATEGORY_WEATHER,
+    ),
+    TadoSensorEntityDescription(
+        key="solar percentage",
+        translation_key="solar_percentage",
+        state_fn=lambda data: data["solarIntensity"]["percentage"],
+        attributes_fn=lambda data: {
+            "time": data["solarIntensity"]["timestamp"],
+        },
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_category=SENSOR_DATA_CATEGORY_WEATHER,
+    ),
+    TadoSensorEntityDescription(
+        key="weather condition",
+        translation_key="weather_condition",
+        state_fn=lambda data: format_condition(data["weatherState"]["value"]),
+        attributes_fn=lambda data: {"time": data["weatherState"]["timestamp"]},
+        data_category=SENSOR_DATA_CATEGORY_WEATHER,
+    ),
+    TadoSensorEntityDescription(
+        key="tado mode",
+        translation_key="tado_mode",
+        state_fn=get_tado_mode,
+        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
+    ),
+    TadoSensorEntityDescription(
+        key="geofencing mode",
+        translation_key="geofencing_mode",
+        state_fn=get_geofencing_mode,
+        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
+    ),
+    TadoSensorEntityDescription(
+        key="automatic geofencing",
+        translation_key="automatic_geofencing",
+        state_fn=get_automatic_geofencing,
+        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
+    ),
+]
+
+TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="temperature",
+    state_fn=lambda data: data.current_temp,
+    attributes_fn=lambda data: {
+        "time": data.current_temp_timestamp,
+        "setting": 0,  # setting is used in climate device
+    },
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+HUMIDITY_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="humidity",
+    state_fn=lambda data: data.current_humidity,
+    attributes_fn=lambda data: {"time": data.current_humidity_timestamp},
+    native_unit_of_measurement=PERCENTAGE,
+    device_class=SensorDeviceClass.HUMIDITY,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+TADO_MODE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="tado mode",
+    translation_key="tado_mode",
+    state_fn=lambda data: data.tado_mode,
+)
+HEATING_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="heating",
+    translation_key="heating",
+    state_fn=lambda data: data.heating_power_percentage,
+    attributes_fn=lambda data: {"time": data.heating_power_timestamp},
+    native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="ac",
+    translation_key="ac",
+    name="AC",
+    state_fn=lambda data: data.ac_power,
+    attributes_fn=lambda data: {"time": data.ac_power_timestamp},
+)
+
+ZONE_SENSORS = {
+    TYPE_HEATING: [
+        TEMPERATURE_ENTITY_DESCRIPTION,
+        HUMIDITY_ENTITY_DESCRIPTION,
+        TADO_MODE_ENTITY_DESCRIPTION,
+        HEATING_ENTITY_DESCRIPTION,
+    ],
+    TYPE_AIR_CONDITIONING: [
+        TEMPERATURE_ENTITY_DESCRIPTION,
+        HUMIDITY_ENTITY_DESCRIPTION,
+        TADO_MODE_ENTITY_DESCRIPTION,
+        AC_ENTITY_DESCRIPTION,
+    ],
+    TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -243,8 +239,6 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     """Representation of a Tado Sensor."""
 
     entity_description: TadoSensorEntityDescription
-
-    _attr_has_entity_name = True
 
     def __init__(self, tado, entity_description: TadoSensorEntityDescription) -> None:
         """Initialize of the Tado Sensor."""
@@ -297,8 +291,6 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     """Representation of a tado Sensor."""
 
     entity_description: TadoSensorEntityDescription
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

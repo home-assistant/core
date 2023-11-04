@@ -91,7 +91,7 @@ def format_python_namespace(
         return f": {annotation}" if annotation else ""
 
     code = "\n\n".join(
-        f"{key}{_get_annotation(key)}" f" = {to_string(value)}"
+        f"{key}{_get_annotation(key)} = {to_string(value)}"
         for key, value in sorted(content.items())
     )
     if annotations:

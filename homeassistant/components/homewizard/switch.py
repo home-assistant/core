@@ -45,6 +45,7 @@ class HomeWizardSwitchEntityDescription(
 SWITCHES = [
     HomeWizardSwitchEntityDescription(
         key="power_on",
+        name=None,
         device_class=SwitchDeviceClass.OUTLET,
         create_fn=lambda coordinator: coordinator.supports_state(),
         available_fn=lambda data: data.state is not None and not data.state.switch_lock,
@@ -53,7 +54,7 @@ SWITCHES = [
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
-        name="Switch lock",
+        translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:lock",
         icon_off="mdi:lock-open",
@@ -64,7 +65,7 @@ SWITCHES = [
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",
-        name="Cloud connection",
+        translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:cloud",
         icon_off="mdi:cloud-off-outline",
@@ -85,11 +86,7 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        HomeWizardSwitchEntity(
-            coordinator=coordinator,
-            description=description,
-            entry=entry,
-        )
+        HomeWizardSwitchEntity(coordinator, description)
         for description in SWITCHES
         if description.create_fn(coordinator)
     )
@@ -104,12 +101,11 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         description: HomeWizardSwitchEntityDescription,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def icon(self) -> str | None:

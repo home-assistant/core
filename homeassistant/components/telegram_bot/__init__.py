@@ -120,6 +120,7 @@ EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
+PARSER_MD2 = "markdownv2"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
@@ -474,7 +475,11 @@ class TelegramNotificationService:
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
-        self._parsers = {PARSER_HTML: ParseMode.HTML, PARSER_MD: ParseMode.MARKDOWN}
+        self._parsers = {
+            PARSER_HTML: ParseMode.HTML,
+            PARSER_MD: ParseMode.MARKDOWN,
+            PARSER_MD2: ParseMode.MARKDOWN_V2,
+        }
         self._parse_mode = self._parsers.get(parser)
         self.bot = bot
         self.hass = hass
@@ -529,17 +534,24 @@ class TelegramNotificationService:
                 (text_b2, data_callback_b2), ...]
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
+              - also supports urls instead of callback commands
             """
             buttons = []
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
                     if ":/" in key:
-                        # commands like: 'Label:/cmd' become ('Label', '/cmd')
-                        label = key.split(":/")[0]
-                        command = key[len(label) + 1 :]
-                        buttons.append(
-                            InlineKeyboardButton(label, callback_data=command)
-                        )
+                        # check if command or URL
+                        if key.startswith("https://"):
+                            label = key.split(",")[0]
+                            url = key[len(label) + 1 :]
+                            buttons.append(InlineKeyboardButton(label, url=url))
+                        else:
+                            # commands like: 'Label:/cmd' become ('Label', '/cmd')
+                            label = key.split(":/")[0]
+                            command = key[len(label) + 1 :]
+                            buttons.append(
+                                InlineKeyboardButton(label, callback_data=command)
+                            )
                     else:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
@@ -547,9 +559,12 @@ class TelegramNotificationService:
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     text_btn, data_btn = entry
-                    buttons.append(
-                        InlineKeyboardButton(text_btn, callback_data=data_btn)
-                    )
+                    if data_btn.startswith("https://"):
+                        buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+                    else:
+                        buttons.append(
+                            InlineKeyboardButton(text_btn, callback_data=data_btn)
+                        )
             else:
                 raise TypeError(str(row_keyboard))
             return buttons

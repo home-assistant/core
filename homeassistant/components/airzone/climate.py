@@ -19,7 +19,6 @@ from aioairzone.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_ON,
     AZD_SPEED,
     AZD_SPEEDS,
@@ -114,6 +113,7 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     """Define an Airzone sensor."""
 
+    _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
 
@@ -127,7 +127,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Initialize Airzone climate entity."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]}"
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
@@ -193,6 +192,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        slave_raise = False
+
         params = {}
         if hvac_mode == HVACMode.OFF:
             params[API_ON] = 0
@@ -202,11 +203,14 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
                 if self.get_airzone_value(AZD_MASTER):
                     params[API_MODE] = mode
                 else:
-                    raise HomeAssistantError(
-                        f"Mode can't be changed on slave zone {self.name}"
-                    )
+                    slave_raise = True
             params[API_ON] = 1
         await self._async_update_hvac_params(params)
+
+        if slave_raise:
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -214,8 +218,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         if ATTR_TEMPERATURE in kwargs:
             params[API_SET_POINT] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            params[API_COOL_SET_POINT] = kwargs[ATTR_TARGET_TEMP_LOW]
-            params[API_HEAT_SET_POINT] = kwargs[ATTR_TARGET_TEMP_HIGH]
+            params[API_COOL_SET_POINT] = kwargs[ATTR_TARGET_TEMP_HIGH]
+            params[API_HEAT_SET_POINT] = kwargs[ATTR_TARGET_TEMP_LOW]
         await self._async_update_hvac_params(params)
 
     @callback
@@ -245,8 +249,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
         if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             self._attr_target_temperature_high = self.get_airzone_value(
-                AZD_HEAT_TEMP_SET
+                AZD_COOL_TEMP_SET
             )
             self._attr_target_temperature_low = self.get_airzone_value(
-                AZD_COOL_TEMP_SET
+                AZD_HEAT_TEMP_SET
             )

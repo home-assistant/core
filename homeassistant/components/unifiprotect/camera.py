@@ -115,7 +115,7 @@ async def async_setup_entry(
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
-            return
+            return  # type: ignore[unreachable]
 
         entities = _async_camera_entities(data, ufp_device=device)
         async_add_entities(entities)
@@ -151,25 +151,26 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
         super().__init__(data, camera)
+        device = self.device
 
         if self._secure:
-            self._attr_unique_id = f"{self.device.mac}_{self.channel.id}"
-            self._attr_name = f"{self.device.display_name} {self.channel.name}"
+            self._attr_unique_id = f"{device.mac}_{channel.id}"
+            self._attr_name = f"{device.display_name} {channel.name}"
         else:
-            self._attr_unique_id = f"{self.device.mac}_{self.channel.id}_insecure"
-            self._attr_name = f"{self.device.display_name} {self.channel.name} Insecure"
+            self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
+            self._attr_name = f"{device.display_name} {channel.name} Insecure"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 
     @callback
     def _async_set_stream_source(self) -> None:
         disable_stream = self._disable_stream
-        if not self.channel.is_rtsp_enabled:
+        channel = self.channel
+
+        if not channel.is_rtsp_enabled:
             disable_stream = False
 
-        rtsp_url = self.channel.rtsp_url
-        if self._secure:
-            rtsp_url = self.channel.rtsps_url
+        rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
 
         # _async_set_stream_source called by __init__
         self._stream_source = (  # pylint: disable=attribute-defined-outside-init
@@ -183,27 +184,30 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self.channel = self.device.channels[self.channel.id]
-        motion_enabled = self.device.recording_settings.enable_motion_detection
+        updated_device = self.device
+        channel = updated_device.channels[self.channel.id]
+        self.channel = channel
+        motion_enabled = updated_device.recording_settings.enable_motion_detection
         self._attr_motion_detection_enabled = (
             motion_enabled if motion_enabled is not None else True
         )
         self._attr_is_recording = (
-            self.device.state == StateType.CONNECTED and self.device.is_recording
+            updated_device.state == StateType.CONNECTED and updated_device.is_recording
         )
         is_connected = (
-            self.data.last_update_success and self.device.state == StateType.CONNECTED
+            self.data.last_update_success
+            and updated_device.state == StateType.CONNECTED
         )
         # some cameras have detachable lens that could cause the camera to be offline
-        self._attr_available = is_connected and self.device.is_video_ready
+        self._attr_available = is_connected and updated_device.is_video_ready
 
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {
-            ATTR_WIDTH: self.channel.width,
-            ATTR_HEIGHT: self.channel.height,
-            ATTR_FPS: self.channel.fps,
-            ATTR_BITRATE: self.channel.bitrate,
-            ATTR_CHANNEL_ID: self.channel.id,
+            ATTR_WIDTH: channel.width,
+            ATTR_HEIGHT: channel.height,
+            ATTR_FPS: channel.fps,
+            ATTR_BITRATE: channel.bitrate,
+            ATTR_CHANNEL_ID: channel.id,
         }
 
     async def async_camera_image(

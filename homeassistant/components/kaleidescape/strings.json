@@ -19,7 +19,59 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unsupported": "Unsupported device"
+      "unsupported": "[%key:component::kaleidescape::config::abort::unsupported%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "media_location": {
+        "name": "Media location"
+      },
+      "play_status": {
+        "name": "Play status"
+      },
+      "play_speed": {
+        "name": "Play speed"
+      },
+      "video_mode": {
+        "name": "Video mode"
+      },
+      "video_color_eotf": {
+        "name": "Video color EOTF"
+      },
+      "video_color_space": {
+        "name": "Video color space"
+      },
+      "video_color_depth": {
+        "name": "Video color depth"
+      },
+      "video_color_sampling": {
+        "name": "Video color sampling"
+      },
+      "screen_mask_ratio": {
+        "name": "Screen mask ratio"
+      },
+      "screen_mask_top_trim_rel": {
+        "name": "Screen mask top trim relative"
+      },
+      "screen_mask_bottom_trim_rel": {
+        "name": "Screen mask bottom trim relative"
+      },
+      "screen_mask_conservative_ratio": {
+        "name": "Screen mask conservative ratio"
+      },
+      "screen_mask_top_mask_abs": {
+        "name": "Screen mask top mask absolute"
+      },
+      "screen_mask_bottom_mask_abs": {
+        "name": "Screen mask bottom mask absolute"
+      },
+      "cinemascape_mask": {
+        "name": "Cinemascape mask"
+      },
+      "cinemascape_mode": {
+        "name": "Cinemascape mode"
+      }
     }
   }
 }

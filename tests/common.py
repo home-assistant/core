@@ -5,7 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -48,7 +48,9 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     State,
+    SupportsResponse,
     callback,
 )
 from homeassistant.helpers import (
@@ -57,6 +59,7 @@ from homeassistant.helpers import (
     entity,
     entity_platform,
     entity_registry as er,
+    event,
     intent,
     issue_registry as ir,
     recorder as recorder_helper,
@@ -64,8 +67,11 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -177,7 +183,7 @@ def get_test_home_assistant():
 
 async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
-    hass = HomeAssistant()
+    hass = HomeAssistant(get_test_config_dir())
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -229,7 +235,6 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
     hass.config.location_name = "test home"
-    hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
@@ -248,9 +253,13 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             )
         },
     )
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+    )
 
     # Load the registries
     entity.async_setup(hass)
+    loader.async_setup(hass)
     if load_registries:
         with patch(
             "homeassistant.helpers.storage.Store.async_load", return_value=None
@@ -282,7 +291,12 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
 
 def async_mock_service(
-    hass: HomeAssistant, domain: str, service: str, schema: vol.Schema | None = None
+    hass: HomeAssistant,
+    domain: str,
+    service: str,
+    schema: vol.Schema | None = None,
+    response: ServiceResponse = None,
+    supports_response: SupportsResponse | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -291,8 +305,18 @@ def async_mock_service(
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        return response
 
-    hass.services.async_register(domain, service, mock_service_log, schema=schema)
+    if supports_response is None and response is not None:
+        supports_response = SupportsResponse.OPTIONAL
+
+    hass.services.async_register(
+        domain,
+        service,
+        mock_service_log,
+        schema=schema,
+        supports_response=supports_response,
+    )
 
     return calls
 
@@ -364,7 +388,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(timezone.utc)
+        utc_datetime = datetime.now(UTC)
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -377,27 +401,28 @@ def async_fire_time_changed(
 ) -> None:
     """Fire a time changed event.
 
-    This function will add up to 0.5 seconds to the time to ensure that
-    it accounts for the accidental synchronization avoidance code in repeating
-    listeners.
+    If called within the first 500  ms of a second, time will be bumped to exactly
+    500 ms to match the async_track_utc_time_change event listeners and
+    DataUpdateCoordinator which spreads all updates between 0.05..0.50.
+    Background in PR https://github.com/home-assistant/core/pull/82233
 
     As asyncio is cooperative, we can't guarantee that the event loop will
     run an event at the exact time we want. If you need to fire time changed
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(timezone.utc)
+        utc_datetime = datetime.now(UTC)
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
-    if utc_datetime.microsecond < 500000:
-        # Allow up to 500000 microseconds to be added to the time
-        # to handle update_coordinator's and
-        # async_track_time_interval's
-        # staggering to avoid thundering herd.
-        utc_datetime = utc_datetime.replace(microsecond=500000)
+    # Increase the mocked time by 0.5 s to account for up to 0.5 s delay
+    # added to events scheduled by update_coordinator and async_track_time_interval
+    utc_datetime += timedelta(microseconds=event.RANDOM_MICROSECOND_MAX)
 
     _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+_MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
 
 
 @callback
@@ -412,7 +437,7 @@ def _async_fire_time_changed(
             continue
 
         mock_seconds_into_future = timestamp - time.time()
-        future_seconds = task.when() - hass.loop.time()
+        future_seconds = task.when() - (hass.loop.time() + _MONOTONIC_RESOLUTION)
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
@@ -508,7 +533,9 @@ def mock_registry(
     registry = er.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
+    registry.deleted_entities = {}
     registry.entities = er.EntityRegistryItems()
+    registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
 
@@ -554,6 +581,7 @@ def mock_device_registry(
     """
     registry = dr.DeviceRegistry(hass)
     registry.devices = dr.DeviceRegistryItems()
+    registry._device_data = registry.devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
@@ -655,7 +683,6 @@ def ensure_auth_manager_loaded(auth_mgr):
 class MockModule:
     """Representation of a fake module."""
 
-    # pylint: disable=invalid-name
     def __init__(
         self,
         domain=None,
@@ -730,7 +757,6 @@ class MockPlatform:
     __name__ = "homeassistant.components.light.bla"
     __file__ = "homeassistant/components/blah/light"
 
-    # pylint: disable=invalid-name
     def __init__(
         self,
         setup_platform=None,
@@ -868,7 +894,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         unique_id=None,
         disabled_by=None,
         reason=None,
-    ):
+    ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
             "entry_id": entry_id or uuid_util.random_uuid_hex(),
@@ -890,17 +916,15 @@ class MockConfigEntry(config_entries.ConfigEntry):
         if reason is not None:
             self.reason = reason
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, []).append(
-            self.entry_id
-        )
+        hass.config_entries._domain_index.setdefault(self.domain, []).append(self)
 
-    def add_to_manager(self, manager):
+    def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, []).append(self.entry_id)
+        manager._domain_index.setdefault(self.domain, []).append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -937,16 +961,6 @@ def patch_yaml_files(files_dict, endswith=True):
         raise FileNotFoundError(f"File not found: {fname}")
 
     return patch.object(yaml_loader, "open", mock_open_f, create=True)
-
-
-def mock_coro(return_value=None, exception=None):
-    """Return a coro that returns a value or raise an exception."""
-    fut = asyncio.Future()
-    if exception is not None:
-        fut.set_exception(exception)
-    else:
-        fut.set_result(return_value)
-    return fut
 
 
 @contextmanager
@@ -1115,7 +1129,7 @@ class MockEntity(entity.Entity):
         return self._handle("device_class")
 
     @property
-    def device_info(self) -> entity.DeviceInfo | None:
+    def device_info(self) -> dr.DeviceInfo | None:
         """Info how it links to a device."""
         return self._handle("device_info")
 
@@ -1213,6 +1227,8 @@ def mock_storage(
         if store._data is None:
             # No data to load
             if store.key not in data:
+                # Make sure the next attempt will still load
+                store._load_task = None
                 return None
 
             mock_data = data.get(store.key)
@@ -1235,7 +1251,14 @@ def mock_storage(
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
-        data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
+        encoder = store._encoder
+        if encoder and encoder is not JSONEncoder:
+            # If they pass a custom encoder that is not the
+            # default JSONEncoder, we use the slow path of json.dumps
+            dump = ft.partial(json.dumps, cls=store._encoder)
+        else:
+            dump = _orjson_default_encoder
+        data[store.key] = json.loads(dump(data_to_write))
 
     async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
@@ -1304,8 +1327,11 @@ def mock_integration(
     integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
-    hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
-    hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+    integration_cache = hass.data[loader.DATA_INTEGRATIONS]
+    integration_cache[module.DOMAIN] = integration
+
+    module_cache = hass.data[loader.DATA_COMPONENTS]
+    module_cache[module.DOMAIN] = module
 
     return integration
 
@@ -1329,9 +1355,9 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain, platform_name = platform_path.split(".")
-    integration_cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
-    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    domain = platform_path.split(".")[0]
+    integration_cache = hass.data[loader.DATA_INTEGRATIONS]
+    module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))
@@ -1348,7 +1374,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
     def capture_events(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(event_name, capture_events)
+    hass.bus.async_listen(event_name, capture_events, run_immediately=True)
 
     return events
 
@@ -1366,19 +1392,6 @@ def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
     async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
-
-
-def assert_lists_same(a: list[Any], b: list[Any]) -> None:
-    """Compare two lists, ignoring order.
-
-    Check both that all items in a are in b and that all items in b are in a,
-    otherwise assert_lists_same(["1", "1"], ["1", "2"]) could be True.
-    """
-    assert len(a) == len(b)
-    for i in a:
-        assert i in b
-    for i in b:
-        assert i in a
 
 
 _SENTINEL = object()
@@ -1433,3 +1446,17 @@ def async_get_persistent_notifications(
 ) -> dict[str, pn.Notification]:
     """Get the current persistent notifications."""
     return pn._async_get_or_create_notifications(hass)
+
+
+def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
+    """Mock a signal the cloud disconnected."""
+    from homeassistant.components.cloud import (
+        SIGNAL_CLOUD_CONNECTION_STATE,
+        CloudConnectionState,
+    )
+
+    if connected:
+        state = CloudConnectionState.CLOUD_CONNECTED
+    else:
+        state = CloudConnectionState.CLOUD_DISCONNECTED
+    async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)

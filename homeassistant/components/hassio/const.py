@@ -1,5 +1,5 @@
 """Hass.io const variables."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 DOMAIN = "hassio"
 
@@ -9,12 +9,14 @@ ATTR_ADMIN = "admin"
 ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
+ATTR_SESSION_DATA_USER_ID = "user_id"
 ATTR_DISCOVERY = "discovery"
 ATTR_ENABLE = "enable"
 ATTR_ENDPOINT = "endpoint"
 ATTR_FOLDERS = "folders"
 ATTR_HEALTHY = "healthy"
 ATTR_HOMEASSISTANT = "homeassistant"
+ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
 ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
 ATTR_METHOD = "method"
@@ -80,6 +82,26 @@ PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
+
+CORE_CONTAINER = "homeassistant"
+SUPERVISOR_CONTAINER = "hassio_supervisor"
+
+CONTAINER_STATS = "stats"
+CONTAINER_CHANGELOG = "changelog"
+CONTAINER_INFO = "info"
+
+# This is a mapping of which endpoint the key in the addon data
+# is obtained from so we know which endpoint to update when the
+# coordinator polls for updates.
+KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
+    ATTR_VERSION_LATEST: {CONTAINER_INFO, CONTAINER_CHANGELOG},
+    ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
+    ATTR_CPU_PERCENT: {CONTAINER_STATS},
+    ATTR_VERSION: {CONTAINER_INFO},
+    ATTR_STATE: {CONTAINER_INFO},
+}
+
+REQUEST_REFRESH_DELAY = 10
 
 
 class SupervisorEntityModel(StrEnum):

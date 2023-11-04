@@ -9,7 +9,7 @@ from datetime import (
     time as time_sys,
     timedelta,
 )
-from enum import Enum
+from enum import Enum, StrEnum
 import inspect
 import logging
 from numbers import Number
@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -92,7 +93,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
@@ -101,9 +102,23 @@ import homeassistant.util.dt as dt_util
 
 from . import script_variables as script_variables_helper, template as template_helper
 
-# pylint: disable=invalid-name
-
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+
+
+class UrlProtocolSchema(StrEnum):
+    """Valid URL protocol schema values."""
+
+    HTTP = "http"
+    HTTPS = "https"
+    HOMEASSISTANT = "homeassistant"
+
+
+EXTERNAL_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+    {UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+)
+CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+    {UrlProtocolSchema.HOMEASSISTANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+)
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -188,12 +203,9 @@ def boolean(value: Any) -> bool:
     raise vol.Invalid(f"invalid boolean value {value}")
 
 
-_WS = re.compile("\\s*")
-
-
 def whitespace(value: Any) -> str:
     """Validate result contains only whitespace."""
-    if isinstance(value, str) and _WS.fullmatch(value):
+    if isinstance(value, str) and (value == "" or value.isspace()):
         return value
 
     raise vol.Invalid(f"contains non-whitespace: {value}")
@@ -569,7 +581,7 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is str:  # noqa: E721
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -584,7 +596,7 @@ def string(value: Any) -> str:
 def string_with_no_html(value: Any) -> str:
     """Validate that the value is a string without HTML."""
     value = string(value)
-    regex = re.compile(r"<[a-z][\s\S]*>")
+    regex = re.compile(r"<[a-z].*?>", re.IGNORECASE)
     if regex.search(value):
         raise vol.Invalid("the string should not contain HTML")
     return str(value)
@@ -608,7 +620,7 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -630,7 +642,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value does not contain a dynamic template")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -723,18 +735,25 @@ def socket_timeout(value: Any | None) -> object:
             return float_value
         raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as err:
-        raise vol.Invalid(f"Invalid socket timeout: {err}")
+        raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
-# pylint: disable=no-value-for-parameter
-def url(value: Any) -> str:
+def url(
+    value: Any,
+    _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
+) -> str:
     """Validate an URL."""
     url_in = str(value)
 
-    if urlparse(url_in).scheme in ["http", "https"]:
+    if urlparse(url_in).scheme in _schema_list:
         return cast(str, vol.Schema(vol.Url())(url_in))
 
     raise vol.Invalid("invalid url")
+
+
+def configuration_url(value: Any) -> str:
+    """Validate an URL that allows the homeassistant schema."""
+    return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 
 def url_no_path(value: Any) -> str:
@@ -760,7 +779,7 @@ def uuid4_hex(value: Any) -> str:
     try:
         result = UUID(value, version=4)
     except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error))
+        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error)) from error
 
     if result.hex != value.lower():
         # UUID() will create a uuid4 if input is invalid
@@ -1097,7 +1116,8 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
-        with contextlib.suppress(LookupError):
+        # HomeAssistantError is raised if called from the wrong thread
+        with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(
                 hass,
@@ -1126,7 +1146,11 @@ def _no_yaml_config_schema(
 
 
 def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from yaml is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1137,7 +1161,11 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
 
 
 def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from the integration key is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1225,7 +1253,7 @@ def script_action(value: Any) -> dict:
     try:
         action = determine_script_action(value)
     except ValueError as err:
-        raise vol.Invalid(str(err))
+        raise vol.Invalid(str(err)) from err
 
     return ACTION_TYPE_SCHEMAS[action](value)
 
@@ -1265,6 +1293,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
             vol.Remove("metadata"): dict,
         }
@@ -1325,7 +1354,7 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")
@@ -1525,6 +1554,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+CONDITIONS_SCHEMA = vol.All(ensure_list, [CONDITION_SCHEMA])
 
 dynamic_template_condition_action = vol.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1687,7 +1717,12 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Optional(CONF_ERROR, default=False): boolean,
+        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
+        vol.Exclusive(
+            CONF_RESPONSE_VARIABLE,
+            "error_or_response",
+            msg="not allowed to add a response to an error stop action",
+        ): str,
     }
 )
 

@@ -131,6 +131,7 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
     _setup_sensor(hass, 18)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 23)
+    await hass.async_block_till_done()
 
     assert hass.states.get(heater_switch).state == STATE_ON
 
@@ -173,7 +174,7 @@ async def test_heater_switch(
 
 
 async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
-    """Test heater switching input_boolean."""
+    """Test setting a unique ID."""
     unique_id = "some_unique_id"
     _setup_sensor(hass, 18)
     _setup_switch(hass, True)

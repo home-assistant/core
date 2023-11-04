@@ -87,7 +87,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.PLUG,
             on_key="plugStatus",
             on_value=PlugState.PLUGGED.value,
-            translation_key="plugged_in",
         ),
         RenaultBinarySensorEntityDescription(
             key="charging",
@@ -95,7 +94,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
             on_key="chargingStatus",
             on_value=ChargeState.CHARGE_IN_PROGRESS.value,
-            translation_key="charging",
         ),
         RenaultBinarySensorEntityDescription(
             key="hvac_status",
@@ -112,7 +110,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.LOCK,
             on_key="lockStatus",
             on_value="unlocked",
-            translation_key="lock_status",
         ),
         RenaultBinarySensorEntityDescription(
             key="hatch_status",

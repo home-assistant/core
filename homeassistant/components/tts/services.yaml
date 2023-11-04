@@ -1,88 +1,58 @@
 # Describes the format for available TTS services
 
 say:
-  name: Say a TTS message
-  description: Say something using text-to-speech on a media player.
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of media player entities.
       required: true
       selector:
         entity:
           domain: media_player
     message:
-      name: Message
-      description: Text to speak on devices.
       example: "My name is hanna"
       required: true
       selector:
         text:
     cache:
-      name: Cache
-      description: Control file cache of this message.
       default: false
       selector:
         boolean:
     language:
-      name: Language
-      description: Language to use for speech generation.
       example: "ru"
       selector:
         text:
     options:
-      name: Options
-      description:
-        A dictionary containing platform-specific options. Optional depending on
-        the platform.
       advanced: true
       example: platform specific
       selector:
         object:
 
 speak:
-  name: Speak
-  description: Speak something using text-to-speech on a media player.
   target:
     entity:
       domain: tts
   fields:
     media_player_entity_id:
-      name: Media Player Entity
-      description: Name(s) of media player entities.
       required: true
       selector:
         entity:
           domain: media_player
     message:
-      name: Message
-      description: Text to speak on devices.
       example: "My name is hanna"
       required: true
       selector:
         text:
     cache:
-      name: Cache
-      description: Control file cache of this message.
       default: true
       selector:
         boolean:
     language:
-      name: Language
-      description: Language to use for speech generation.
       example: "ru"
       selector:
         text:
     options:
-      name: Options
-      description:
-        A dictionary containing platform-specific options. Optional depending on
-        the platform.
       advanced: true
       example: platform specific
       selector:
         object:
 
 clear_cache:
-  name: Clear TTS cache
-  description: Remove all text-to-speech cache files and RAM cache.

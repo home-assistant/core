@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.websocket_api.messages import (
-    _cached_event_message as lru_event_cache,
+    _partial_cached_event_message as lru_event_cache,
     _state_diff_event,
     cached_event_message,
     message_to_json,
@@ -218,6 +218,21 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
                     "lc": new_state.last_changed.timestamp(),
                     "s": "purple",
                 }
+            }
+        }
+    }
+
+    hass.states.async_set("light.window", "green", {}, context=new_context)
+    await hass.async_block_till_done()
+    last_state_event: Event = state_change_events[-1]
+    new_state: State = last_state_event.data["new_state"]
+    message = _state_diff_event(last_state_event)
+
+    assert message == {
+        "c": {
+            "light.window": {
+                "+": {"lc": new_state.last_changed.timestamp(), "s": "green"},
+                "-": {"a": ["new"]},
             }
         }
     }

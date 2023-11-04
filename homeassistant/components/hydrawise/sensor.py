@@ -1,7 +1,6 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
-from hydrawiser.core import Hydrawiser
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -10,26 +9,27 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
-        name="Next Cycle",
+        translation_key="next_cycle",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="watering_time",
-        name="Watering Time",
+        translation_key="watering_time",
         icon="mdi:water-pump",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
@@ -37,6 +37,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
+# Deprecated since Home Assistant 2023.10.0
+# Can be removed completely in 2024.4.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
@@ -56,28 +58,33 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
-    hydrawise: Hydrawiser = coordinator.api
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    # We don't need to trigger import flow from here as it's triggered from `__init__.py`
+    return  # pragma: no cover
 
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Hydrawise sensor platform."""
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     entities = [
         HydrawiseSensor(data=zone, coordinator=coordinator, description=description)
-        for zone in hydrawise.relays
+        for zone in coordinator.api.relays
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
     ]
-
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and updates the states."""
-        LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
-        relay_data = self.coordinator.api.relays[self.data["relay"] - 1]
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
+        relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
         if self.entity_description.key == "watering_time":
             if relay_data["timestr"] == "Now":
                 self._attr_native_value = int(relay_data["run"] / 60)
@@ -85,8 +92,6 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self._attr_native_value = 0
         else:  # _sensor_type == 'next_cycle'
             next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
-            LOGGER.debug("New cycle time: %s", next_cycle)
             self._attr_native_value = dt_util.utc_from_timestamp(
                 dt_util.as_timestamp(dt_util.now()) + next_cycle
             )
-        super()._handle_coordinator_update()

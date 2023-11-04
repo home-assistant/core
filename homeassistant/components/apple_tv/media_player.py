@@ -282,7 +282,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # If input (file) has a file format supported by pyatv, then stream it with
         # RAOP. Otherwise try to play it with regular AirPlay.
-        if media_type == MediaType.APP:
+        if media_type in {MediaType.APP, MediaType.URL}:
             await self.atv.apps.launch_app(media_id)
             return
 
@@ -371,11 +371,15 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @property
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
-        if self._playing and self._is_feature_available(FeatureName.Repeat):
+        if (
+            self._playing
+            and self._is_feature_available(FeatureName.Repeat)
+            and (repeat := self._playing.repeat)
+        ):
             return {
                 RepeatState.Track: RepeatMode.ONE,
                 RepeatState.All: RepeatMode.ALL,
-            }.get(self._playing.repeat, RepeatMode.OFF)
+            }.get(repeat, RepeatMode.OFF)
         return None
 
     @property

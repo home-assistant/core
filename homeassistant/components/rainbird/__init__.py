@@ -2,16 +2,23 @@
 from __future__ import annotations
 
 from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.exceptions import RainbirdApiException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SERIAL_NUMBER
-from .coordinator import RainbirdUpdateCoordinator
+from .coordinator import RainbirdData
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER]
+PLATFORMS = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.CALENDAR,
+]
 
 
 DOMAIN = "rainbird"
@@ -29,15 +36,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
         )
     )
-    coordinator = RainbirdUpdateCoordinator(
-        hass,
-        name=entry.title,
-        controller=controller,
-        serial_number=entry.data[CONF_SERIAL_NUMBER],
-    )
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        model_info = await controller.get_model_and_version()
+    except RainbirdApiException as err:
+        raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    data = RainbirdData(hass, entry, controller, model_info)
+    await data.coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -68,7 +68,7 @@ async def _async_mock_logbook_platform_with_broken_describe(
 
         @core.callback
         def async_describe_events(
-            hass: HomeAssistant,
+            hass: HomeAssistant,  # noqa: N805
             async_describe_event: Callable[
                 [str, str, Callable[[Event], dict[str, str]]], None
             ],
@@ -91,7 +91,7 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
 
         @core.callback
         def async_describe_events(
-            hass: HomeAssistant,
+            hass: HomeAssistant,  # noqa: N805
             async_describe_event: Callable[
                 [str, str, Callable[[Event], dict[str, str]]], None
             ],

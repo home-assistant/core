@@ -7,8 +7,9 @@ from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant import config as conf_util
@@ -18,7 +19,15 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    EntityServiceResponse,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
@@ -30,7 +39,7 @@ from .typing import ConfigType, DiscoveryInfoType
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
 
-_EntityT = TypeVar("_EntityT", bound=entity.Entity)
+_EntityT = TypeVar("_EntityT", bound=entity.Entity, default=entity.Entity)
 
 
 @bind_hass
@@ -210,24 +219,63 @@ class EntityComponent(Generic[_EntityT]):
         )
 
     @callback
+    def async_register_legacy_entity_service(
+        self,
+        name: str,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        """Register an entity service with a legacy response format."""
+        if isinstance(schema, dict):
+            schema = cv.make_entity_service_schema(schema)
+
+        async def handle_service(
+            call: ServiceCall,
+        ) -> ServiceResponse:
+            """Handle the service."""
+
+            result = await service.entity_service_call(
+                self.hass, self._platforms.values(), func, call, required_features
+            )
+
+            if result:
+                if len(result) > 1:
+                    raise HomeAssistantError(
+                        "Deprecated service call matched more than one entity"
+                    )
+                return result.popitem()[1]
+            return None
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema, supports_response
+        )
+
+    @callback
     def async_register_entity_service(
         self,
         name: str,
         schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> None:
+        async def handle_service(
+            call: ServiceCall,
+        ) -> EntityServiceResponse | None:
             """Handle the service."""
-            await service.entity_service_call(
+            return await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
             )
 
-        self.hass.services.async_register(self.domain, name, handle_service, schema)
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema, supports_response
+        )
 
     async def async_setup_platform(
         self,

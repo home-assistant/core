@@ -31,13 +31,17 @@ ALLOW_NAME_TRANSLATION = {
     "emulated_roku",
     "faa_delays",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "homekit_controller",
     "islamic_prayer_times",
+    "local_calendar",
     "local_ip",
+    "local_todo",
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
+    "zodiac",
 }
 
 REMOVED_TITLE_MSG = (
@@ -58,8 +62,9 @@ def allow_name_translation(integration: Integration) -> bool:
     """Validate that the translation name is not the same as the integration name."""
     # Only enforce for core because custom integrations can't be
     # added to allow list.
-    return integration.core and (
-        integration.domain in ALLOW_NAME_TRANSLATION
+    return (
+        not integration.core
+        or integration.domain in ALLOW_NAME_TRANSLATION
         or integration.quality_scale == "internal"
     )
 
@@ -323,6 +328,21 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 ),
                 slug_validator=cv.slug,
             ),
+            vol.Optional("services"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Optional("fields"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
         }
     )
 
@@ -429,14 +449,6 @@ def validate_translation_file(  # noqa: C901
         strings_schema = gen_auth_schema(config, integration)
     elif integration.domain == "onboarding":
         strings_schema = ONBOARDING_SCHEMA
-    elif integration.domain == "binary_sensor":
-        strings_schema = gen_strings_schema(config, integration).extend(
-            {
-                vol.Optional("device_class"): cv.schema_with_slug_keys(
-                    translation_value_validator, slug_validator=vol.Any("_", cv.slug)
-                )
-            }
-        )
     elif integration.domain == "homeassistant_hardware":
         strings_schema = gen_ha_hardware_schema(config, integration)
     else:
@@ -520,6 +532,11 @@ def validate_translation_file(  # noqa: C901
             integration.add_error(
                 "translations",
                 f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+            )
+        elif match := re.match(RE_REFERENCE, search[key]):
+            integration.add_error(
+                "translations",
+                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
             )
 
 

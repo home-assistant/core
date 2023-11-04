@@ -90,6 +90,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
+    _attr_name = None
 
     _attr_hvac_modes = [
         HVACMode.OFF,
@@ -122,8 +123,22 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             self._attr_fan_modes += [FAN_AUTO]
 
     @property
+    def current_temperature(self) -> float | None:
+        """Return the selected zones current temperature."""
+        if self._myzone:
+            return self._myzone["measuredTemp"]
+        return None
+
+    @property
     def target_temperature(self) -> float | None:
         """Return the current target temperature."""
+        # If the system is in MyZone mode, and a zone is set, return that temperature instead.
+        if (
+            self._myzone
+            and not self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED)
+            and not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED)
+        ):
+            return self._myzone["setTemp"]
         return self._ac["setTemp"]
 
     @property

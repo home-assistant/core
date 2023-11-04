@@ -18,7 +18,6 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.network import get_url
 
 from .const import DATA_TTS_MANAGER, DOMAIN
 from .helper import get_engine_instance
@@ -123,9 +122,6 @@ class TTSMediaSource(MediaSource):
             raise Unresolvable(str(err)) from err
 
         mime_type = mimetypes.guess_type(url)[0] or "audio/mpeg"
-
-        if manager.base_url and manager.base_url != get_url(self.hass):
-            url = f"{manager.base_url}{url}"
 
         return PlayMedia(url, mime_type)
 

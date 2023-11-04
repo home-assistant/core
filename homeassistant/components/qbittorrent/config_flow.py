@@ -1,6 +1,7 @@
 """Config flow for qBittorrent."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from qbittorrent.client import LoginRequired
@@ -13,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 from .helpers import setup_client
+
+_LOGGER = logging.getLogger(__name__)
 
 USER_DATA_SCHEMA = vol.Schema(
     {

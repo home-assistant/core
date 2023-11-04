@@ -24,6 +24,13 @@ CONFIG_ENTRY_DATA = {
 }
 
 
+@pytest.fixture(autouse=True)
+def disable_usb_probing() -> Generator[None, None, None]:
+    """Disallow touching of system USB devices during unit tests."""
+    with patch("homeassistant.components.usb.comports", return_value=[]):
+        yield
+
+
 @pytest.fixture
 def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     """Mock the radio connection and probing of the ZHA config flow."""
@@ -38,7 +45,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     with patch(
         "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
     ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield
@@ -200,7 +207,7 @@ async def test_setup_zha_multipan(
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "SkyConnect Multi-PAN"
+    assert config_entry.title == "SkyConnect Multiprotocol"
 
 
 async def test_setup_zha_multipan_other_device(

@@ -7,6 +7,7 @@ from fullykiosk import FullyKioskError
 import pytest
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.entity import valid_global_mac_address
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -134,3 +135,11 @@ async def test_multiple_kiosk_with_empty_mac(
     assert device2
 
     assert device1 != device2
+
+
+async def test_valid_global_mac_address() -> None:
+    """Test valid_global_mac_address function."""
+    assert valid_global_mac_address("a1:bb:cc:dd:ee:ff")
+    assert not valid_global_mac_address("02:00:00:00:00:00")
+    assert not valid_global_mac_address(None)
+    assert not valid_global_mac_address("foobar")

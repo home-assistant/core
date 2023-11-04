@@ -46,8 +46,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
 import homeassistant.util.dt as dt_util
@@ -267,6 +267,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     """Representation of a Cast device on the network."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_media_image_remotely_accessible = True
     _mz_only = False
@@ -361,15 +362,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         ):
             external_url = None
             internal_url = None
-            tts_base_url = None
             url_description = ""
-            if "tts" in self.hass.config.components:
-                # pylint: disable-next=[import-outside-toplevel]
-                from homeassistant.components import tts
-
-                with suppress(KeyError):  # base_url not configured
-                    tts_base_url = tts.get_base_url(self.hass)
-
             with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
 
@@ -377,8 +370,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 internal_url = get_url(self.hass, allow_external=False)
 
             if media_status.content_id:
-                if tts_base_url and media_status.content_id.startswith(tts_base_url):
-                    url_description = f" from tts.base_url ({tts_base_url})"
                 if external_url and media_status.content_id.startswith(external_url):
                     url_description = f" from external_url ({external_url})"
                 if internal_url and media_status.content_id.startswith(internal_url):

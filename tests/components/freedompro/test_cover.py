@@ -47,7 +47,7 @@ async def test_cover_get_state(
     registry = er.async_get(hass)
     registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device({("freedompro", uid)})
+    device = registry_device.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -66,7 +66,7 @@ async def test_cover_get_state(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -116,7 +116,7 @@ async def test_cover_set_position(
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 33},
@@ -127,7 +127,7 @@ async def test_cover_set_position(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 33
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -164,7 +164,7 @@ async def test_cover_close(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         await async_update_entity(hass, entity_id)
@@ -181,7 +181,7 @@ async def test_cover_close(
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -191,7 +191,7 @@ async def test_cover_close(
 
     states_response[0]["state"]["position"] = 0
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -234,7 +234,7 @@ async def test_cover_open(
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -245,7 +245,7 @@ async def test_cover_open(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

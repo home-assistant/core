@@ -21,3 +21,18 @@
     }),
   ])
 # ---
+# name: test_voice_speaker
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+        'voice': dict({
+          'name': 'voice1',
+          'speaker': 'speaker1',
+        }),
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---

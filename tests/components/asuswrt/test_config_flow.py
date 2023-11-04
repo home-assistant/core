@@ -62,7 +62,7 @@ def mock_unique_id_fixture():
 @pytest.fixture(name="connect")
 def mock_controller_connect(mock_unique_id):
     """Mock a successful connection."""
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
+    with patch("homeassistant.components.asuswrt.bridge.AsusWrtLegacy") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -236,11 +236,12 @@ async def test_on_connect_failed(hass: HomeAssistant, side_effect, error) -> Non
     )
 
     with PATCH_GET_HOST, patch(
-        "homeassistant.components.asuswrt.router.AsusWrt"
+        "homeassistant.components.asuswrt.bridge.AsusWrtLegacy"
     ) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(
             side_effect=side_effect
         )
+        asus_wrt.return_value.async_get_nvram = AsyncMock(return_value={})
         asus_wrt.return_value.is_connected = False
 
         result = await hass.config_entries.flow.async_configure(

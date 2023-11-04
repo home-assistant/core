@@ -14,6 +14,7 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 )
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -46,6 +47,7 @@ ATTR_TARGET_HUMIDITY = "target_humidity"
 AVAILABLE_ATTRIBUTES = {
     ATTR_MODE: "mode",
     ATTR_TARGET_HUMIDITY: "target_humidity",
+    ATTR_HUMIDITY: "humidity",
 }
 
 AVAILABLE_MODES_CA1_CB1 = [
@@ -116,6 +118,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _attr_supported_features = HumidifierEntityFeature.MODES
+    _attr_name = None
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -199,6 +202,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             }
         )
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
+        self._attr_current_humidity = self._attributes[ATTR_HUMIDITY]
         self._mode = self._attributes[ATTR_MODE]
 
     @property
@@ -217,6 +221,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             }
         )
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
+        self._attr_current_humidity = self._attributes[ATTR_HUMIDITY]
         self._mode = self._attributes[ATTR_MODE]
         self.async_write_ha_state()
 

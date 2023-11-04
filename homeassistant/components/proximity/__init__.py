@@ -70,25 +70,25 @@ def async_setup_proximity_component(
     ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
     proximity_devices: list[str] = config[CONF_DEVICES]
     tolerance: int = config[CONF_TOLERANCE]
-    proximity_zone = name
+    proximity_zone = config[CONF_ZONE]
     unit_of_measurement: str = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = f"zone.{config[CONF_ZONE]}"
+    zone_friendly_name = name
 
     proximity = Proximity(
         hass,
-        proximity_zone,
+        zone_friendly_name,
         DEFAULT_DIST_TO_ZONE,
         DEFAULT_DIR_OF_TRAVEL,
         DEFAULT_NEAREST,
         ignored_zones,
         proximity_devices,
         tolerance,
-        zone_id,
+        proximity_zone,
         unit_of_measurement,
     )
-    proximity.entity_id = f"{DOMAIN}.{proximity_zone}"
+    proximity.entity_id = f"{DOMAIN}.{zone_friendly_name}"
 
     proximity.async_write_ha_state()
 
@@ -109,6 +109,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 class Proximity(Entity):
     """Representation of a Proximity."""
+
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
 
     def __init__(
         self,
@@ -167,7 +171,7 @@ class Proximity(Entity):
         devices_to_calculate = False
         devices_in_zone = ""
 
-        zone_state = self.hass.states.get(self.proximity_zone)
+        zone_state = self.hass.states.get(f"zone.{self.proximity_zone}")
         proximity_latitude = (
             zone_state.attributes.get(ATTR_LATITUDE) if zone_state else None
         )
@@ -185,7 +189,7 @@ class Proximity(Entity):
                 devices_to_calculate = True
 
             # Check the location of all devices.
-            if (device_state.state).lower() == (self.friendly_name).lower():
+            if (device_state.state).lower() == (self.proximity_zone).lower():
                 device_friendly = device_state.name
                 if devices_in_zone != "":
                     devices_in_zone = f"{devices_in_zone}, "

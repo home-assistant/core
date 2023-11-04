@@ -31,7 +31,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -45,6 +45,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import convert_isy_value_to_hass
+from .models import IsyData
 
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
@@ -109,7 +110,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY sensor platform."""
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity] = []
     devices: dict[str, DeviceInfo] = isy_data.devices
 
@@ -185,7 +186,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
         # Check if this is a known index pair UOM
         if isinstance(uom, dict):
-            return uom.get(value, value)
+            return uom.get(value, value)  # type: ignore[no-any-return]
 
         if uom in (UOM_INDEX, UOM_ON_OFF):
             return cast(str, self.target.formatted)
@@ -261,6 +262,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Return the target value."""
         return None if self.target is None else self.target.value
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events.
 

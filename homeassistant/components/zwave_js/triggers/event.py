@@ -142,8 +142,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     dev_reg = dr.async_get(hass)
-    nodes = async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)
-    if config[ATTR_EVENT_SOURCE] == "node" and not nodes:
+    if config[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
+        hass, config, dev_reg=dev_reg
+    ):
         raise ValueError(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
@@ -215,7 +216,7 @@ async def async_attach_trigger(
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
-        if not nodes:
+        if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
             client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
             driver = client.driver
@@ -231,7 +232,7 @@ async def async_attach_trigger(
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device({device_identifier})
+            device = dev_reg.async_get_device(identifiers={device_identifier})
             assert device
             # We need to store the device for the callback
             unsubs.append(

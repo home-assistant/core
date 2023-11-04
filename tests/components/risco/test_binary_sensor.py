@@ -41,11 +41,15 @@ async def test_cloud_setup(
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
     registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0")})
+    device = registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_0")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_1")})
+    device = registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_1")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 
@@ -99,11 +103,15 @@ async def test_local_setup(
     assert registry.async_is_registered(SECOND_ALARMED_ENTITY_ID)
 
     registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0_local")})
+    device = registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_0_local")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_1_local")})
+    device = registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_zone_1_local")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 

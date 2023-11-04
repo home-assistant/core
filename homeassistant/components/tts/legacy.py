@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
-import yarl
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
@@ -31,7 +30,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.util.network import normalize_url
 from homeassistant.util.yaml import load_yaml
 
 from .const import (
@@ -39,7 +37,6 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
-    CONF_BASE_URL,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_FIELDS,
@@ -72,16 +69,6 @@ def _deprecated_platform(value: str) -> str:
     return value
 
 
-def _valid_base_url(value: str) -> str:
-    """Validate base url, return value."""
-    url = yarl.URL(cv.url(value))
-
-    if url.path != "/":
-        raise vol.Invalid("Path should be empty")
-
-    return normalize_url(value)
-
-
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
@@ -90,7 +77,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_BASE_URL): _valid_base_url,
         vol.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )

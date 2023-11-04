@@ -14,7 +14,7 @@ from tests.components.discovergy.const import GET_METERS
 @pytest.fixture
 def mock_meters() -> Mock:
     """Patch libraries."""
-    with patch("pydiscovergy.Discovergy.get_meters") as discovergy:
+    with patch("pydiscovergy.Discovergy.meters") as discovergy:
         discovergy.side_effect = AsyncMock(return_value=GET_METERS)
         yield discovergy
 

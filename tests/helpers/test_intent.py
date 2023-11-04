@@ -1,4 +1,5 @@
 """Tests for the intent helpers."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,6 +17,8 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -115,11 +118,15 @@ async def test_match_device_area(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test async_match_state with a device in an area."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_bedroom = area_registry.async_get_or_create("bedroom")
 
     kitchen_device = device_registry.async_get_or_create(
-        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+        config_entry_id=config_entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
@@ -246,3 +253,41 @@ def test_async_remove_no_existing(hass: HomeAssistant) -> None:
     # simply shouldn't cause an exception
 
     assert intent.DATA_KEY not in hass.data
+
+
+async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
+    """Test we don't execute a service in foreground forever."""
+    hass.states.async_set("light.kitchen", "off")
+    call_done = asyncio.Event()
+    calls = []
+
+    # Register a service that takes 0.1 seconds to execute
+    async def mock_service(call):
+        """Mock service."""
+        await asyncio.sleep(0.1)
+        call_done.set()
+        calls.append(call)
+
+    hass.services.async_register("light", "turn_on", mock_service)
+
+    # Create intent handler with a service timeout of 0.05 seconds
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    handler.service_timeout = 0.05
+    intent.async_register(hass, handler)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": "kitchen"}},
+    )
+
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert not call_done.is_set()
+    await call_done.wait()
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "light.kitchen"}

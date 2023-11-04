@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 
-import async_timeout
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-from matter_server.common.errors import MatterError, NodeCommissionFailed
+from matter_server.common.errors import MatterError, NodeCommissionFailed, NodeNotExists
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     matter_client = MatterClient(entry.data[CONF_URL], async_get_clientsession(hass))
     try:
-        async with async_timeout.timeout(CONNECT_TIMEOUT):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             await matter_client.connect()
     except (CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(LISTEN_READY_TIMEOUT):
+        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
     except asyncio.TimeoutError as err:
         listen_task.cancel()
@@ -207,7 +207,9 @@ async def async_remove_config_entry_device(
                 )
 
     matter = get_matter(hass)
-    await matter.matter_client.remove_node(node.node_id)
+    with suppress(NodeNotExists):
+        # ignore if the server has already removed the node.
+        await matter.matter_client.remove_node(node.node_id)
 
     return True
 

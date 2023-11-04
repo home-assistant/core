@@ -6,7 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import dynalite
 from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_get as async_get_issue_registry,
@@ -52,8 +52,11 @@ async def test_flow(
         assert result["result"].state == exp_result
     if exp_reason:
         assert result["reason"] == exp_reason
-    issue = registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
+    issue = registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{dynalite.DOMAIN}"
+    )
     assert issue is not None
+    assert issue.issue_domain == dynalite.DOMAIN
     assert issue.severity == IssueSeverity.WARNING
 
 

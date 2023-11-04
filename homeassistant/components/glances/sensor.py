@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -223,17 +224,17 @@ SENSOR_TYPES = {
         icon="mdi:docker",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("raid", "used"): GlancesSensorEntityDescription(
-        key="used",
-        type="raid",
-        name_suffix="Raid used",
-        icon="mdi:harddisk",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     ("raid", "available"): GlancesSensorEntityDescription(
         key="available",
         type="raid",
         name_suffix="Raid available",
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "used"): GlancesSensorEntityDescription(
+        key="used",
+        type="raid",
+        name_suffix="Raid used",
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -269,36 +270,36 @@ async def async_setup_entry(
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
                 for param in params:
-                    sensor_description = SENSOR_TYPES[(sensor_type, param)]
+                    if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
+                        _migrate_old_unique_ids(
+                            hass,
+                            f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
+                            f"{sensor_label}-{sensor_description.key}",
+                        )
+                        entities.append(
+                            GlancesSensor(
+                                coordinator,
+                                name,
+                                sensor_label,
+                                sensor_description,
+                            )
+                        )
+        else:
+            for sensor in sensors:
+                if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
                     _migrate_old_unique_ids(
                         hass,
-                        f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
-                        f"{sensor_label}-{sensor_description.key}",
+                        f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
+                        f"-{sensor_description.key}",
                     )
                     entities.append(
                         GlancesSensor(
                             coordinator,
                             name,
-                            sensor_label,
+                            "",
                             sensor_description,
                         )
                     )
-        else:
-            for sensor in sensors:
-                sensor_description = SENSOR_TYPES[(sensor_type, sensor)]
-                _migrate_old_unique_ids(
-                    hass,
-                    f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
-                    f"-{sensor_description.key}",
-                )
-                entities.append(
-                    GlancesSensor(
-                        coordinator,
-                        name,
-                        "",
-                        sensor_description,
-                    )
-                )
 
     async_add_entities(entities)
 
@@ -346,5 +347,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         value = self.coordinator.data[self.entity_description.type]
 
         if isinstance(value.get(self._sensor_name_prefix), dict):
-            return value[self._sensor_name_prefix][self.entity_description.key]
-        return value[self.entity_description.key]
+            return cast(
+                StateType, value[self._sensor_name_prefix][self.entity_description.key]
+            )
+        return cast(StateType, value[self.entity_description.key])

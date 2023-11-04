@@ -190,10 +190,13 @@ async def async_setup_entry(
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY
@@ -626,7 +629,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(item.get_uri())
                 return
             try:
-                playlists = soco.get_sonos_playlists()
+                playlists = soco.get_sonos_playlists(complete_result=True)
                 playlist = next(p for p in playlists if p.title == media_id)
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)

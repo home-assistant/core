@@ -51,7 +51,6 @@ async def _async_reboot(controller: Controller) -> None:
 BUTTON_DESCRIPTIONS = (
     RainMachineButtonDescription(
         key=BUTTON_KIND_REBOOT,
-        name="Reboot",
         api_category=DATA_PROVISION_SETTINGS,
         push_action=_async_reboot,
     ),

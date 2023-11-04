@@ -7,6 +7,7 @@ from typing import Any
 from aioairzone_cloud.const import (
     API_CITY,
     API_GROUP_ID,
+    API_GROUPS,
     API_LOCATION_ID,
     API_OLD_ID,
     API_PIN,
@@ -29,7 +30,6 @@ from .coordinator import AirzoneUpdateCoordinator
 
 TO_REDACT_API = [
     API_CITY,
-    API_GROUP_ID,
     API_LOCATION_ID,
     API_OLD_ID,
     API_PIN,
@@ -58,11 +58,17 @@ def gather_ids(api_data: dict[str, Any]) -> dict[str, Any]:
             ids[dev_id] = f"device{dev_idx}"
             dev_idx += 1
 
+    group_idx = 1
     inst_idx = 1
-    for inst_id in api_data[RAW_INSTALLATIONS]:
+    for inst_id, inst_data in api_data[RAW_INSTALLATIONS].items():
         if inst_id not in ids:
             ids[inst_id] = f"installation{inst_idx}"
             inst_idx += 1
+        for group in inst_data[API_GROUPS]:
+            group_id = group[API_GROUP_ID]
+            if group_id not in ids:
+                ids[group_id] = f"group{group_idx}"
+                group_idx += 1
 
     ws_idx = 1
     for ws_id in api_data[RAW_WEBSERVERS]:

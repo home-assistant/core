@@ -137,6 +137,40 @@ MOCK_DATA = {
         "os_version": "5.15.6-200.fc35.x86_64",
         "hr_name": "Fedora Linux 35 64bit",
     },
+    "raid": {
+        "md3": {
+            "status": "active",
+            "type": "raid1",
+            "components": {"sdh1": "2", "sdi1": "0"},
+            "available": "2",
+            "used": "2",
+            "config": "UU",
+        },
+        "md1": {
+            "status": "active",
+            "type": "raid1",
+            "components": {"sdg": "0", "sde": "1"},
+            "available": "2",
+            "used": "2",
+            "config": "UU",
+        },
+        "md4": {
+            "status": "active",
+            "type": "raid1",
+            "components": {"sdf1": "1", "sdb1": "0"},
+            "available": "2",
+            "used": "2",
+            "config": "UU",
+        },
+        "md0": {
+            "status": "active",
+            "type": "raid1",
+            "components": {"sdc": "2", "sdd": "3"},
+            "available": "2",
+            "used": "2",
+            "config": "UU",
+        },
+    },
     "uptime": "3 days, 10:25:20",
 }
 
@@ -156,4 +190,22 @@ HA_SENSOR_DATA: dict[str, Any] = {
         "memory_free": 2745.0,
     },
     "docker": {"docker_active": 2, "docker_cpu_use": 77.2, "docker_memory_use": 1149.6},
+    "raid": {
+        "md3": {
+            "status": "active",
+            "type": "raid1",
+            "components": {"sdh1": "2", "sdi1": "0"},
+            "available": "2",
+            "used": "2",
+            "config": "UU",
+        },
+        "md1": {
+            "status": "active",
+            "type": "raid1",
+            "components": {"sdg": "0", "sde": "1"},
+            "available": "2",
+            "used": "2",
+            "config": "UU",
+        },
+    },
 }

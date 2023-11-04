@@ -26,6 +26,12 @@ USER_INPUT = {
     CONF_VERIFY_SSL: True,
 }
 
+YAML_IMPORT = {
+    CONF_URL: "http://localhost:8080",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+}
+
 
 async def test_flow_user(hass: HomeAssistant, mock_api: requests_mock.Mocker) -> None:
     """Test the user flow."""

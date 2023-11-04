@@ -53,7 +53,7 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
 CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
-TELEGRAM_LOG_DEFAULT: Final = 50
+TELEGRAM_LOG_DEFAULT: Final = 200
 TELEGRAM_LOG_MAX: Final = 5000  # ~2 MB or ~5 hours of reasonable bus load
 
 ##
@@ -114,24 +114,11 @@ class KNXConfigEntryData(TypedDict, total=False):
     telegram_log_size: int  # not required
 
 
-class KNXBusMonitorMessage(TypedDict):
-    """KNX bus monitor message."""
-
-    destination_address: str
-    destination_text: str | None
-    payload: str
-    type: str
-    value: str | None
-    source_address: str
-    source_text: str | None
-    direction: str
-    timestamp: str
-
-
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
     ABSOLUTE = "DPT-7.600"
+    ABSOLUTE_FLOAT = "DPT-9"
     RELATIVE = "DPT-5.001"
 
 
@@ -140,6 +127,8 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.LIGHT,
     Platform.NOTIFY,
@@ -149,6 +138,7 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.WEATHER,
 ]
 

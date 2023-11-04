@@ -1,52 +1,33 @@
 # Describes the format for available webostv services
 
 button:
-  name: Button
-  description: "Send a button press command."
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of the webostv entities where to run the API method.
       required: true
       selector:
         entity:
           integration: webostv
           domain: media_player
     button:
-      name: Button
-      description: >-
-        Name of the button to press.  Known possible values are
-        LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT,
-        MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN,
-        PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
       required: true
       example: "LEFT"
       selector:
         text:
 
 command:
-  name: Command
-  description: "Send a command."
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of the webostv entities where to run the API method.
       required: true
       selector:
         entity:
           integration: webostv
           domain: media_player
     command:
-      name: Command
-      description: Endpoint of the command.
       required: true
       example: "system.launcher/open"
       selector:
         text:
     payload:
-      name: Payload
-      description: >-
-        An optional payload to provide to the endpoint in the format of key value pair(s).
       example: >-
         target: https://www.google.com
       advanced: true
@@ -54,20 +35,14 @@ command:
         object:
 
 select_sound_output:
-  name: Select Sound Output
-  description: "Send the TV the command to change sound output."
   fields:
     entity_id:
-      name: Entity
-      description: Name(s) of the webostv entities to change sound output on.
       required: true
       selector:
         entity:
           integration: webostv
           domain: media_player
     sound_output:
-      name: Sound Output
-      description: Name of the sound output to switch to.
       required: true
       example: "external_speaker"
       selector:

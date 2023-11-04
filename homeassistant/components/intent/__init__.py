@@ -10,6 +10,11 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
@@ -56,6 +61,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         GetStateIntentHandler(),
     )
+    intent.async_register(
+        hass,
+        NevermindIntentHandler(),
+    )
 
     return True
 
@@ -70,18 +79,40 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                SERVICE_OPEN_COVER
-                if self.service == SERVICE_TURN_ON
-                else SERVICE_CLOSE_COVER,
-                {ATTR_ENTITY_ID: state.entity_id},
-                context=intent_obj.context,
-                blocking=True,
-                limit=self.service_timeout,
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        COVER_DOMAIN,
+                        SERVICE_OPEN_COVER
+                        if self.service == SERVICE_TURN_ON
+                        else SERVICE_CLOSE_COVER,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
             )
+            return
 
-        elif not hass.services.has_service(state.domain, self.service):
+        if state.domain == LOCK_DOMAIN:
+            # on = lock
+            # off = unlock
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        LOCK_DOMAIN,
+                        SERVICE_LOCK
+                        if self.service == SERVICE_TURN_ON
+                        else SERVICE_UNLOCK,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
+
+        if not hass.services.has_service(state.domain, self.service):
             raise intent.IntentHandleError(
                 f"Service {self.service} does not support entity {state.entity_id}"
             )
@@ -200,6 +231,16 @@ class GetStateIntentHandler(intent.IntentHandler):
         response.async_set_states(matched_states, unmatched_states)
 
         return response
+
+
+class NevermindIntentHandler(intent.IntentHandler):
+    """Takes no action."""
+
+    intent_type = intent.INTENT_NEVERMIND
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Doe not do anything, and produces an empty response."""
+        return intent_obj.create_response()
 
 
 async def _async_process_intent(hass: HomeAssistant, domain: str, platform):

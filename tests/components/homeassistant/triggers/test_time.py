@@ -8,7 +8,12 @@ import voluptuous as vol
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import time
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -97,6 +102,7 @@ async def test_if_fires_using_at_input_datetime(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
@@ -143,6 +149,7 @@ async def test_if_fires_using_at_input_datetime(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
@@ -210,7 +217,7 @@ async def test_if_not_fires_using_wrong_at(hass: HomeAssistant, calls) -> None:
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
-        with assert_setup_component(0, automation.DOMAIN):
+        with assert_setup_component(1, automation.DOMAIN):
             assert await async_setup_component(
                 hass,
                 automation.DOMAIN,
@@ -226,6 +233,7 @@ async def test_if_not_fires_using_wrong_at(hass: HomeAssistant, calls) -> None:
                 },
             )
         await hass.async_block_till_done()
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
     async_fire_time_changed(
         hass, now.replace(year=now.year + 1, hour=1, minute=0, second=5)
@@ -550,6 +558,7 @@ async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -581,6 +590,7 @@ async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, future + timedelta(seconds=1))
     await hass.async_block_till_done()

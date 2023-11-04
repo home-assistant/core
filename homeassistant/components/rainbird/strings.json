@@ -21,9 +21,52 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Rain Bird",
+        "title": "[%key:component::rainbird::config::step::user::title%]",
         "data": {
           "duration": "Default irrigation time in minutes"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rainsensor": {
+        "name": "Rainsensor"
+      }
+    },
+    "number": {
+      "rain_delay": {
+        "name": "Rain delay"
+      }
+    },
+    "sensor": {
+      "raindelay": {
+        "name": "Raindelay"
+      }
+    }
+  },
+  "services": {
+    "start_irrigation": {
+      "name": "Start irrigation",
+      "description": "Starts the irrigation.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration for this sprinkler to be turned on."
+        }
+      }
+    },
+    "set_rain_delay": {
+      "name": "Set rain delay",
+      "description": "Sets how long automatic irrigation is turned off.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Rainbird Controller Configuration Entry",
+          "description": "The setting will be adjusted on the specified controller."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration for this system to be turned off."
         }
       }
     }

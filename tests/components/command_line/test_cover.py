@@ -25,78 +25,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-
-
-async def test_no_covers_platform_yaml(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
-) -> None:
-    """Test that the cover does not polls when there's no state command."""
-
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ):
-        assert await setup.async_setup_component(
-            hass,
-            COVER_DOMAIN,
-            {
-                COVER_DOMAIN: [
-                    {"platform": "command_line", "covers": {}},
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-        assert "No covers added" in caplog.text
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_cover")
-    assert issue.translation_key == "deprecated_platform_yaml"
-
-
-async def test_state_value_platform_yaml(hass: HomeAssistant) -> None:
-    """Test with state value."""
-    with tempfile.TemporaryDirectory() as tempdirname:
-        path = os.path.join(tempdirname, "cover_status")
-        assert await setup.async_setup_component(
-            hass,
-            COVER_DOMAIN,
-            {
-                COVER_DOMAIN: [
-                    {
-                        "platform": "command_line",
-                        "covers": {
-                            "test": {
-                                "command_state": f"cat {path}",
-                                "command_open": f"echo 1 > {path}",
-                                "command_close": f"echo 1 > {path}",
-                                "command_stop": f"echo 0 > {path}",
-                                "value_template": "{{ value }}",
-                                "friendly_name": "Test",
-                            },
-                        },
-                    },
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-        entity_state = hass.states.get("cover.test")
-        assert entity_state
-        assert entity_state.state == "unknown"
-
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
-            blocking=True,
-        )
-        entity_state = hass.states.get("cover.test")
-        assert entity_state
-        assert entity_state.state == "open"
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
@@ -293,16 +224,19 @@ async def test_updating_to_often(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test handling updating when command already running."""
+
     called = []
+    wait_till_event = asyncio.Event()
+    wait_till_event.set()
 
     class MockCommandCover(CommandCover):
-        """Mock entity that updates slow."""
+        """Mock entity that updates."""
 
         async def _async_update(self) -> None:
-            """Update slow."""
+            """Update the entity."""
             called.append(1)
             # Add waiting time
-            await asyncio.sleep(1)
+            await wait_till_event.wait()
 
     with patch(
         "homeassistant.components.command_line.cover.CommandCover",
@@ -318,7 +252,7 @@ async def test_updating_to_often(
                             "command_state": "echo 1",
                             "value_template": "{{ value }}",
                             "name": "Test",
-                            "scan_interval": 0.1,
+                            "scan_interval": 10,
                         }
                     }
                 ]
@@ -326,22 +260,35 @@ async def test_updating_to_often(
         )
         await hass.async_block_till_done()
 
-    assert len(called) == 0
+    assert not called
+    assert (
+        "Updating Command Line Cover Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+    assert called
+    called.clear()
+
     assert (
         "Updating Command Line Cover Test took longer than the scheduled update interval"
         not in caplog.text
     )
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    # Simulate update takes too long
+    wait_till_event.clear()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await asyncio.sleep(0)
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    wait_till_event.set()
 
-    assert len(called) == 1
+    # Finish processing update
+    await hass.async_block_till_done()
+    assert called
     assert (
         "Updating Command Line Cover Test took longer than the scheduled update interval"
         in caplog.text
     )
-
-    await asyncio.sleep(0.2)
 
 
 async def test_updating_manually(
@@ -352,13 +299,11 @@ async def test_updating_manually(
     called = []
 
     class MockCommandCover(CommandCover):
-        """Mock entity that updates slow."""
+        """Mock entity that updates."""
 
         async def _async_update(self) -> None:
-            """Update slow."""
+            """Update."""
             called.append(1)
-            # Add waiting time
-            await asyncio.sleep(1)
 
     with patch(
         "homeassistant.components.command_line.cover.CommandCover",
@@ -384,7 +329,8 @@ async def test_updating_manually(
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(called) == 1
+    assert called
+    called.clear()
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -393,6 +339,4 @@ async def test_updating_manually(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert len(called) == 2
-
-    await asyncio.sleep(0.2)
+    assert called

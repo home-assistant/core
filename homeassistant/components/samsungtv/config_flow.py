@@ -184,7 +184,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow(result)
         assert method is not None
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
-        return
 
     async def _async_get_device_info_and_method(
         self,

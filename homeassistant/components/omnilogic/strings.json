@@ -27,5 +27,17 @@
         }
       }
     }
+  },
+  "services": {
+    "set_pump_speed": {
+      "name": "Set pump speed",
+      "description": "Sets the run speed of a variable speed pump.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "Speed for the VSP between min and max speed."
+        }
+      }
+    }
   }
 }

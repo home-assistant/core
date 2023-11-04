@@ -33,16 +33,15 @@ async def async_setup_entry(
 class RingChimeSiren(RingEntityMixin, SirenEntity):
     """Creates a siren to play the test chimes of a Chime device."""
 
+    _attr_available_tones = CHIME_TEST_SOUND_KINDS
+    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
+    _attr_translation_key = "siren"
+
     def __init__(self, config_entry: ConfigEntry, device) -> None:
         """Initialize a Ring Chime siren."""
         super().__init__(config_entry.entry_id, device)
         # Entity class attributes
-        self._attr_name = f"{self._device.name} Siren"
         self._attr_unique_id = f"{self._device.id}-siren"
-        self._attr_available_tones = CHIME_TEST_SOUND_KINDS
-        self._attr_supported_features = (
-            SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
-        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Play the test sound on a Ring Chime device."""

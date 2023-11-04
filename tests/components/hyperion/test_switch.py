@@ -164,7 +164,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, device_identifer)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
     assert device.identifiers == {(DOMAIN, device_identifer)}

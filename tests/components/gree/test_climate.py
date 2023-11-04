@@ -34,7 +34,11 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.gree.climate import FAN_MODES_REVERSE, HVAC_MODES_REVERSE
+from homeassistant.components.gree.climate import (
+    FAN_MODES_REVERSE,
+    HVAC_MODES,
+    HVAC_MODES_REVERSE,
+)
 from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -326,7 +330,7 @@ async def test_send_command_device_timeout(
     device().push_state_update.side_effect = DeviceTimeoutError
 
     # Send failure should not raise exceptions or change device state
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID},
@@ -342,7 +346,7 @@ async def test_send_power_on(hass: HomeAssistant, discovery, device, mock_now) -
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
@@ -362,7 +366,7 @@ async def test_send_power_off_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
@@ -384,6 +388,9 @@ async def test_send_target_temperature(
     """Test for sending target temperature command to the device."""
     hass.config.units.temperature_unit = units
 
+    device().power = True
+    device().mode = HVAC_MODES_REVERSE.get(HVACMode.AUTO)
+
     fake_device = device()
     if units == UnitOfTemperature.FAHRENHEIT:
         fake_device.temperature_units = 1
@@ -393,7 +400,7 @@ async def test_send_target_temperature(
     # Make sure we're trying to test something that isn't the default
     assert fake_device.current_temperature != temperature
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
@@ -407,10 +414,45 @@ async def test_send_target_temperature(
         state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         == fake_device.current_temperature
     )
+    assert state.state == HVAC_MODES.get(fake_device.mode)
 
     # Reset config temperature_unit back to CELSIUS, required for
     # additional tests outside this component.
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+
+
+@pytest.mark.parametrize(
+    ("temperature", "hvac_mode"),
+    [
+        (26, HVACMode.OFF),
+        (26, HVACMode.HEAT),
+        (26, HVACMode.COOL),
+        (26, HVACMode.AUTO),
+        (26, HVACMode.DRY),
+        (26, HVACMode.FAN_ONLY),
+    ],
+)
+async def test_send_target_temperature_with_hvac_mode(
+    hass: HomeAssistant, discovery, device, temperature, hvac_mode
+) -> None:
+    """Test for sending target temperature command to the device alongside hvac mode."""
+    await async_setup_gree(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: temperature,
+            ATTR_HVAC_MODE: hvac_mode,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+    assert state.state == hvac_mode
 
 
 @pytest.mark.parametrize(
@@ -428,7 +470,7 @@ async def test_send_target_temperature_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
@@ -475,7 +517,7 @@ async def test_send_preset_mode(
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
@@ -517,7 +559,7 @@ async def test_send_preset_mode_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
@@ -565,7 +607,7 @@ async def test_send_hvac_mode(
     """Test for sending hvac mode command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
@@ -589,7 +631,7 @@ async def test_send_hvac_mode_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
@@ -636,7 +678,7 @@ async def test_send_fan_mode(
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
@@ -679,7 +721,7 @@ async def test_send_fan_mode_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
@@ -717,7 +759,7 @@ async def test_send_swing_mode(
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_SWING_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: swing_mode},
@@ -759,7 +801,7 @@ async def test_send_swing_mode_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_SWING_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: swing_mode},

@@ -197,7 +197,7 @@ class CloudPreferences:
     @property
     def alexa_report_state(self) -> bool:
         """Return if Alexa report state is enabled."""
-        return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)
+        return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)  # type: ignore[no-any-return]
 
     @property
     def alexa_default_expose(self) -> list[str] | None:
@@ -210,7 +210,7 @@ class CloudPreferences:
     @property
     def alexa_entity_configs(self) -> dict[str, Any]:
         """Return Alexa Entity configurations."""
-        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
+        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})  # type: ignore[no-any-return]
 
     @property
     def alexa_settings_version(self) -> int:
@@ -227,7 +227,7 @@ class CloudPreferences:
     @property
     def google_report_state(self) -> bool:
         """Return if Google report state is enabled."""
-        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)
+        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)  # type: ignore[no-any-return]
 
     @property
     def google_secure_devices_pin(self) -> str | None:
@@ -237,7 +237,7 @@ class CloudPreferences:
     @property
     def google_entity_configs(self) -> dict[str, dict[str, Any]]:
         """Return Google Entity configurations."""
-        return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})
+        return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})  # type: ignore[no-any-return]
 
     @property
     def google_settings_version(self) -> int:
@@ -262,12 +262,12 @@ class CloudPreferences:
     @property
     def cloudhooks(self) -> dict[str, Any]:
         """Return the published cloud webhooks."""
-        return self._prefs.get(PREF_CLOUDHOOKS, {})
+        return self._prefs.get(PREF_CLOUDHOOKS, {})  # type: ignore[no-any-return]
 
     @property
     def tts_default_voice(self) -> tuple[str, str]:
         """Return the default TTS voice."""
-        return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
+        return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
 
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""

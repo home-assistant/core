@@ -12,45 +12,44 @@ from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTempe
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FliprEntity
 from .const import DOMAIN
+from .entity import FliprEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="chlorine",
-        name="Chlorine",
+        translation_key="chlorine",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
-        name="pH",
         icon="mdi:pool",
+        device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temperature",
-        name="Water Temp",
+        translation_key="water_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="date_time",
-        name="Last Measured",
+        translation_key="last_measured",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="red_ox",
-        name="Red OX",
+        translation_key="red_ox",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="battery",
-        name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,

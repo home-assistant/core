@@ -1,6 +1,8 @@
 """Support for Google Assistant SDK."""
 from __future__ import annotations
 
+import dataclasses
+
 import aiohttp
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -9,7 +11,12 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -18,18 +25,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ENABLE_CONVERSATION_AGENT,
-    CONF_LANGUAGE_CODE,
-    DATA_MEM_STORAGE,
-    DATA_SESSION,
-    DOMAIN,
-)
+from .const import DATA_MEM_STORAGE, DATA_SESSION, DOMAIN, SUPPORTED_LANGUAGE_CODES
 from .helpers import (
     GoogleAssistantSDKAudioView,
     InMemoryStorage,
     async_send_text_commands,
-    default_language_code,
 )
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
@@ -82,8 +82,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_service(hass)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-    await update_listener(hass, entry)
+    agent = GoogleAssistantConversationAgent(hass, entry)
+    conversation.async_set_agent(hass, entry, agent)
 
     return True
 
@@ -100,8 +100,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for service_name in hass.services.async_services()[DOMAIN]:
             hass.services.async_remove(DOMAIN, service_name)
 
-    if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
-        conversation.async_unset_agent(hass, entry)
+    conversation.async_unset_agent(hass, entry)
 
     return True
 
@@ -109,29 +108,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for Google Assistant SDK."""
 
-    async def send_text_command(call: ServiceCall) -> None:
+    async def send_text_command(call: ServiceCall) -> ServiceResponse:
         """Send a text command to Google Assistant SDK."""
         commands: list[str] = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
         media_players: list[str] | None = call.data.get(
             SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
         )
-        await async_send_text_commands(hass, commands, media_players)
+        command_response_list = await async_send_text_commands(
+            hass, commands, media_players
+        )
+        if call.return_response:
+            return {
+                "responses": [
+                    dataclasses.asdict(command_response)
+                    for command_response in command_response_list
+                ]
+            }
+        return None
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_TEXT_COMMAND,
         send_text_command,
         schema=SERVICE_SEND_TEXT_COMMAND_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
-
-
-async def update_listener(hass, entry):
-    """Handle options update."""
-    if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
-        agent = GoogleAssistantConversationAgent(hass, entry)
-        conversation.async_set_agent(hass, entry, agent)
-    else:
-        conversation.async_unset_agent(hass, entry)
 
 
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
@@ -143,22 +144,12 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         self.entry = entry
         self.assistant: TextAssistant | None = None
         self.session: OAuth2Session | None = None
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return {
-            "name": "Powered by Google Assistant SDK",
-            "url": "https://www.home-assistant.io/integrations/google_assistant_sdk/",
-        }
+        self.language: str | None = None
 
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        language_code = self.entry.options.get(
-            CONF_LANGUAGE_CODE, default_language_code(self.hass)
-        )
-        return [language_code]
+        return SUPPORTED_LANGUAGE_CODES
 
     async def async_process(
         self, user_input: conversation.ConversationInput
@@ -172,12 +163,10 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         if not session.valid_token:
             await session.async_ensure_token_valid()
             self.assistant = None
-        if not self.assistant:
+        if not self.assistant or user_input.language != self.language:
             credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
-            language_code = self.entry.options.get(
-                CONF_LANGUAGE_CODE, default_language_code(self.hass)
-            )
-            self.assistant = TextAssistant(credentials, language_code)
+            self.language = user_input.language
+            self.assistant = TextAssistant(credentials, self.language)
 
         resp = self.assistant.assist(user_input.text)
         text_response = resp[0] or "<empty response>"

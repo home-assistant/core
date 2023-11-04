@@ -13,17 +13,20 @@ from tests.common import MockConfigEntry
 
 async def test_default_prompt(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the default prompt works."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
     for i in range(3):
         area_registry.async_create(f"{i}Empty Area")
 
     device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "1234")},
         name="Test Device",
         manufacturer="Test Manufacturer",
@@ -32,7 +35,7 @@ async def test_default_prompt(
     )
     for i in range(3):
         device_registry.async_get_or_create(
-            config_entry_id="1234",
+            config_entry_id=entry.entry_id,
             connections={("test", f"{i}abcd")},
             name="Test Service",
             manufacturer="Test Manufacturer",
@@ -41,7 +44,7 @@ async def test_default_prompt(
             entry_type=dr.DeviceEntryType.SERVICE,
         )
     device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "5678")},
         name="Test Device 2",
         manufacturer="Test Manufacturer 2",
@@ -49,7 +52,7 @@ async def test_default_prompt(
         suggested_area="Test Area 2",
     )
     device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "9876")},
         name="Test Device 3",
         manufacturer="Test Manufacturer 3",
@@ -57,13 +60,13 @@ async def test_default_prompt(
         suggested_area="Test Area 2",
     )
     device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "qwer")},
         name="Test Device 4",
         suggested_area="Test Area 2",
     )
     device = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "9876-disabled")},
         name="Test Device 3",
         manufacturer="Test Manufacturer 3",
@@ -74,14 +77,14 @@ async def test_default_prompt(
         device.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
     device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "9876-no-name")},
         manufacturer="Test Manufacturer NoName",
         model="Test Model NoName",
         suggested_area="Test Area 2",
     )
     device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("test", "9876-integer-values")},
         name=1,
         manufacturer=2,
@@ -89,16 +92,22 @@ async def test_default_prompt(
         suggested_area="Test Area 2",
     )
     with patch("google.generativeai.chat_async") as mock_chat:
-        result = await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat.mock_calls[0][2] == snapshot
 
 
-async def test_error_handling(hass: HomeAssistant, mock_init_component) -> None:
+async def test_error_handling(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+) -> None:
     """Test that the default prompt works."""
     with patch("google.generativeai.chat_async", side_effect=ClientError("")):
-        result = await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
@@ -119,7 +128,9 @@ async def test_template_error(
     ), patch("google.generativeai.chat_async"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        result = await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result

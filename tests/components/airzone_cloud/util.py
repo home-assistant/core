@@ -3,7 +3,9 @@
 from typing import Any
 from unittest.mock import patch
 
+from aioairzone_cloud.common import OperationMode
 from aioairzone_cloud.const import (
+    API_ACTIVE,
     API_AZ_AIDOO,
     API_AZ_SYSTEM,
     API_AZ_ZONE,
@@ -15,6 +17,7 @@ from aioairzone_cloud.const import (
     API_DISCONNECTION_DATE,
     API_ERRORS,
     API_FAH,
+    API_GROUP_ID,
     API_GROUPS,
     API_HUMIDITY,
     API_INSTALLATION_ID,
@@ -22,7 +25,33 @@ from aioairzone_cloud.const import (
     API_IS_CONNECTED,
     API_LOCAL_TEMP,
     API_META,
+    API_MODE,
+    API_MODE_AVAIL,
     API_NAME,
+    API_OLD_ID,
+    API_POWER,
+    API_RANGE_MAX_AIR,
+    API_RANGE_MIN_AIR,
+    API_RANGE_SP_MAX_AUTO_AIR,
+    API_RANGE_SP_MAX_COOL_AIR,
+    API_RANGE_SP_MAX_DRY_AIR,
+    API_RANGE_SP_MAX_EMERHEAT_AIR,
+    API_RANGE_SP_MAX_HOT_AIR,
+    API_RANGE_SP_MAX_STOP_AIR,
+    API_RANGE_SP_MAX_VENT_AIR,
+    API_RANGE_SP_MIN_AUTO_AIR,
+    API_RANGE_SP_MIN_COOL_AIR,
+    API_RANGE_SP_MIN_DRY_AIR,
+    API_RANGE_SP_MIN_EMERHEAT_AIR,
+    API_RANGE_SP_MIN_HOT_AIR,
+    API_RANGE_SP_MIN_STOP_AIR,
+    API_RANGE_SP_MIN_VENT_AIR,
+    API_SP_AIR_AUTO,
+    API_SP_AIR_COOL,
+    API_SP_AIR_DRY,
+    API_SP_AIR_HEAT,
+    API_SP_AIR_STOP,
+    API_SP_AIR_VENT,
     API_STAT_AP_MAC,
     API_STAT_CHANNEL,
     API_STAT_QUALITY,
@@ -60,6 +89,7 @@ CONFIG = {
 GET_INSTALLATION_MOCK = {
     API_GROUPS: [
         {
+            API_GROUP_ID: "grp1",
             API_NAME: "Group",
             API_DEVICES: [
                 {
@@ -71,6 +101,7 @@ GET_INSTALLATION_MOCK = {
                     API_WS_ID: WS_ID,
                 },
                 {
+                    API_CONFIG: {},
                     API_DEVICE_ID: "zone1",
                     API_NAME: "Salon",
                     API_TYPE: API_AZ_ZONE,
@@ -81,6 +112,7 @@ GET_INSTALLATION_MOCK = {
                     API_WS_ID: WS_ID,
                 },
                 {
+                    API_CONFIG: {},
                     API_DEVICE_ID: "zone2",
                     API_NAME: "Dormitorio",
                     API_TYPE: API_AZ_ZONE,
@@ -93,6 +125,7 @@ GET_INSTALLATION_MOCK = {
             ],
         },
         {
+            API_GROUP_ID: "grp2",
             API_NAME: "Aidoo Group",
             API_DEVICES: [
                 {
@@ -159,43 +192,119 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
 
     if device.get_id() == "aidoo1":
         return {
+            API_ACTIVE: False,
             API_ERRORS: [],
+            API_MODE: OperationMode.HEATING.value,
+            API_MODE_AVAIL: [
+                OperationMode.AUTO.value,
+                OperationMode.COOLING.value,
+                OperationMode.HEATING.value,
+                OperationMode.VENTILATION.value,
+                OperationMode.DRY.value,
+            ],
+            API_SP_AIR_AUTO: {API_CELSIUS: 22, API_FAH: 72},
+            API_SP_AIR_COOL: {API_CELSIUS: 22, API_FAH: 72},
+            API_SP_AIR_HEAT: {API_CELSIUS: 22, API_FAH: 72},
+            API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_AUTO_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_COOL_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_HOT_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_MIN_AIR: {API_CELSIUS: 15, API_FAH: 59},
+            API_RANGE_SP_MIN_AUTO_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_COOL_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_HOT_AIR: {API_CELSIUS: 16, API_FAH: 61},
+            API_POWER: False,
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
-            API_LOCAL_TEMP: {
-                API_CELSIUS: 21,
-                API_FAH: 70,
-            },
+            API_LOCAL_TEMP: {API_CELSIUS: 21, API_FAH: 70},
             API_WARNINGS: [],
         }
     if device.get_id() == "system1":
         return {
-            API_ERRORS: [],
+            API_ERRORS: [
+                {
+                    API_OLD_ID: "error-id",
+                },
+            ],
+            API_MODE: OperationMode.COOLING.value,
+            API_MODE_AVAIL: [
+                OperationMode.COOLING.value,
+                OperationMode.HEATING.value,
+                OperationMode.VENTILATION.value,
+                OperationMode.DRY.value,
+            ],
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
+            API_WARNINGS: [],
+        }
+    if device.get_id() == "zone1":
+        return {
+            API_ACTIVE: True,
+            API_HUMIDITY: 30,
+            API_MODE: OperationMode.COOLING.value,
+            API_MODE_AVAIL: [
+                OperationMode.COOLING.value,
+                OperationMode.HEATING.value,
+                OperationMode.VENTILATION.value,
+                OperationMode.DRY.value,
+            ],
+            API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_COOL_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_SP_MAX_DRY_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_SP_MAX_EMERHEAT_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_HOT_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_STOP_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_SP_MAX_VENT_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_MIN_AIR: {API_CELSIUS: 15, API_FAH: 59},
+            API_RANGE_SP_MIN_COOL_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_DRY_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_EMERHEAT_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_RANGE_SP_MIN_HOT_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_RANGE_SP_MIN_STOP_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_RANGE_SP_MIN_VENT_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_SP_AIR_COOL: {API_CELSIUS: 24, API_FAH: 75},
+            API_SP_AIR_DRY: {API_CELSIUS: 24, API_FAH: 75},
+            API_SP_AIR_HEAT: {API_CELSIUS: 20, API_FAH: 68},
+            API_SP_AIR_VENT: {API_CELSIUS: 24, API_FAH: 75},
+            API_SP_AIR_STOP: {API_CELSIUS: 24, API_FAH: 75},
+            API_POWER: True,
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
+            API_LOCAL_TEMP: {API_FAH: 68, API_CELSIUS: 20},
             API_WARNINGS: [],
         }
     if device.get_id() == "zone2":
         return {
+            API_ACTIVE: False,
             API_HUMIDITY: 24,
+            API_MODE: OperationMode.COOLING.value,
+            API_MODE_AVAIL: [],
+            API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_COOL_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_SP_MAX_DRY_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_SP_MAX_EMERHEAT_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_HOT_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_STOP_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_SP_MAX_VENT_AIR: {API_FAH: 86, API_CELSIUS: 30},
+            API_RANGE_MIN_AIR: {API_CELSIUS: 15, API_FAH: 59},
+            API_RANGE_SP_MIN_COOL_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_DRY_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_EMERHEAT_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_RANGE_SP_MIN_HOT_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_RANGE_SP_MIN_STOP_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_RANGE_SP_MIN_VENT_AIR: {API_FAH: 59, API_CELSIUS: 15},
+            API_SP_AIR_COOL: {API_CELSIUS: 24, API_FAH: 75},
+            API_SP_AIR_DRY: {API_CELSIUS: 24, API_FAH: 75},
+            API_SP_AIR_HEAT: {API_CELSIUS: 20, API_FAH: 68},
+            API_SP_AIR_VENT: {API_CELSIUS: 24, API_FAH: 75},
+            API_SP_AIR_STOP: {API_CELSIUS: 24, API_FAH: 75},
+            API_POWER: False,
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
-            API_LOCAL_TEMP: {
-                API_FAH: 77,
-                API_CELSIUS: 25,
-            },
+            API_LOCAL_TEMP: {API_FAH: 77, API_CELSIUS: 25},
             API_WARNINGS: [],
         }
-    return {
-        API_HUMIDITY: 30,
-        API_IS_CONNECTED: True,
-        API_WS_CONNECTED: True,
-        API_LOCAL_TEMP: {
-            API_FAH: 68,
-            API_CELSIUS: 20,
-        },
-        API_WARNINGS: [],
-    }
+    return None
 
 
 def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
@@ -214,6 +323,7 @@ async def async_init_integration(
 
     config_entry = MockConfigEntry(
         data=CONFIG,
+        entry_id="d186e31edb46d64d14b9b2f11f1ebd9f",
         domain=DOMAIN,
         unique_id=CONFIG[CONF_ID],
     )

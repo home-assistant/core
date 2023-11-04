@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 from aioshelly.exceptions import (
@@ -29,8 +30,8 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-12345",
     port=None,
@@ -38,8 +39,8 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-AABBCCDDEEFF",
     port=None,
@@ -651,7 +652,9 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            data=replace(DISCOVERY_INFO, host=config_flow.INTERNAL_WIFI_AP_IP),
+            data=replace(
+                DISCOVERY_INFO, ip_address=ip_address(config_flow.INTERNAL_WIFI_AP_IP)
+            ),
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
@@ -1117,3 +1120,35 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 0
     assert "device did not update" not in caplog.text
+
+
+async def test_sleeping_device_gen2_with_new_firmware(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 666)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "gen": 2},
+    ), patch("homeassistant.components.shelly.async_setup", return_value=True), patch(
+        "homeassistant.components.shelly.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["data"] == {
+        "host": "1.1.1.1",
+        "model": "SNSW-002P16EU",
+        "sleep_period": 666,
+        "gen": 2,
+    }

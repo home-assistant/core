@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.charging_profile import ChargingMode
 
@@ -11,6 +12,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWBaseEntity
@@ -39,7 +41,7 @@ class BMWSelectEntityDescription(SelectEntityDescription, BMWRequiredKeysMixin):
 SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
     "ac_limit": BMWSelectEntityDescription(
         key="ac_limit",
-        name="AC Charging Limit",
+        translation_key="ac_limit",
         is_available=lambda v: v.is_remote_set_ac_limit_enabled,
         dynamic_options=lambda v: [
             str(lim) for lim in v.charging_profile.ac_available_limits  # type: ignore[union-attr]
@@ -53,7 +55,7 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
     ),
     "charging_mode": BMWSelectEntityDescription(
         key="charging_mode",
-        name="Charging Mode",
+        translation_key="charging_mode",
         is_available=lambda v: v.is_charging_plan_supported,
         options=[c.value for c in ChargingMode if c != ChargingMode.UNKNOWN],
         current_option=lambda v: str(v.charging_profile.charging_mode.value),  # type: ignore[union-attr]
@@ -123,6 +125,9 @@ class BMWSelect(BMWBaseEntity, SelectEntity):
             self.vehicle.vin,
             option,
         )
-        await self.entity_description.remote_service(self.vehicle, option)
+        try:
+            await self.entity_description.remote_service(self.vehicle, option)
+        except MyBMWAPIError as ex:
+            raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()

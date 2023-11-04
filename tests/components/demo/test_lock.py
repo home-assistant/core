@@ -15,7 +15,7 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -27,8 +27,18 @@ POORLY_INSTALLED = "lock.poorly_installed_door"
 OPENABLE_LOCK = "lock.openable_lock"
 
 
+@pytest.fixture
+async def lock_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.LOCK],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass: HomeAssistant, lock_only: None):
     """Set up demo component."""
     assert await async_setup_component(
         hass, LOCK_DOMAIN, {LOCK_DOMAIN: {"platform": DOMAIN}}

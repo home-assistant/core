@@ -131,6 +131,9 @@ class BaseHaScanner(ABC):
                 self.name,
                 SCANNER_WATCHDOG_TIMEOUT,
             )
+            self.scanning = False
+            return
+        self.scanning = not self._connecting
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
@@ -299,11 +302,24 @@ class BaseHaRemoteScanner(BaseHaScanner):
         manufacturer_data: dict[int, bytes],
         tx_power: int | None,
         details: dict[Any, Any],
+        advertisement_monotonic_time: float,
     ) -> None:
         """Call the registered callback."""
-        now = MONOTONIC_TIME()
-        self._last_detection = now
-        if prev_discovery := self._discovered_device_advertisement_datas.get(address):
+        self.scanning = not self._connecting
+        self._last_detection = advertisement_monotonic_time
+        try:
+            prev_discovery = self._discovered_device_advertisement_datas[address]
+        except KeyError:
+            # We expect this is the rare case and since py3.11+ has
+            # near zero cost try on success, and we can avoid .get()
+            # which is slower than [] we use the try/except pattern.
+            device = BLEDevice(
+                address=address,
+                name=local_name,
+                details=self._details | details,
+                rssi=rssi,  # deprecated, will be removed in newer bleak
+            )
+        else:
             # Merge the new data with the old data
             # to function the same as BlueZ which
             # merges the dicts on PropertiesChanged
@@ -314,7 +330,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             prev_manufacturer_data = prev_advertisement.manufacturer_data
             prev_name = prev_device.name
 
-            if local_name and prev_name and len(prev_name) > len(local_name):
+            if prev_name and (not local_name or len(prev_name) > len(local_name)):
                 local_name = prev_name
 
             if service_uuids and service_uuids != prev_service_uuids:
@@ -344,13 +360,6 @@ class BaseHaRemoteScanner(BaseHaScanner):
             device.details = self._details | details
             # pylint: disable-next=protected-access
             device._rssi = rssi  # deprecated, will be removed in newer bleak
-        else:
-            device = BLEDevice(
-                address=address,
-                name=local_name,
-                details=self._details | details,
-                rssi=rssi,  # deprecated, will be removed in newer bleak
-            )
 
         advertisement_data = AdvertisementData(
             local_name=None if local_name == "" else local_name,
@@ -365,7 +374,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             device,
             advertisement_data,
         )
-        self._discovered_device_timestamps[address] = now
+        self._discovered_device_timestamps[address] = advertisement_monotonic_time
         self._new_info_callback(
             BluetoothServiceInfoBleak(
                 name=local_name or address,
@@ -378,7 +387,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 device=device,
                 advertisement=advertisement_data,
                 connectable=self.connectable,
-                time=now,
+                time=advertisement_monotonic_time,
             )
         )
 

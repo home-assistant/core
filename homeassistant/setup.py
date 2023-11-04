@@ -174,7 +174,7 @@ async def _async_setup_component(
     """
     integration: loader.Integration | None = None
 
-    def log_error(msg: str) -> None:
+    def log_error(msg: str, exc_info: Exception | None = None) -> None:
         """Log helper."""
         if integration is None:
             custom = ""
@@ -182,7 +182,9 @@ async def _async_setup_component(
         else:
             custom = "" if integration.is_built_in else "custom integration "
             link = integration.documentation
-        _LOGGER.error("Setup failed for %s%s: %s", custom, domain, msg)
+        _LOGGER.error(
+            "Setup failed for %s%s: %s", custom, domain, msg, exc_info=exc_info
+        )
         async_notify_setup_error(hass, domain, link)
 
     try:
@@ -212,7 +214,7 @@ async def _async_setup_component(
     try:
         component = integration.get_component()
     except ImportError as err:
-        log_error(f"Unable to import component: {err}")
+        log_error(f"Unable to import component: {err}", err)
         return False
 
     processed_config = await conf_util.async_process_component_config(

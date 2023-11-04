@@ -12,5 +12,24 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "oxydo_reduction_potential": {
+        "name": "Oxydo reduction potential"
+      },
+      "ph": {
+        "name": "pH"
+      },
+      "tds": {
+        "name": "TDS"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "salt": {
+        "name": "Salt"
+      }
+    }
   }
 }

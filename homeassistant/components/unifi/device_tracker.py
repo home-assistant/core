@@ -24,7 +24,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -81,6 +80,9 @@ WIRELESS_DISCONNECTION = (
 @callback
 def async_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if obj_id in controller.option_supported_clients:
+        return True
+
     if not controller.option_track_clients:
         return False
 
@@ -139,7 +141,7 @@ class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Device tracker local functions."""
 
     heartbeat_timedelta_fn: Callable[[UniFiController, str], timedelta]
-    ip_address_fn: Callable[[aiounifi.Controller, str], str]
+    ip_address_fn: Callable[[aiounifi.Controller, str], str | None]
     is_connected_fn: Callable[[UniFiController, str], bool]
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
 
@@ -171,6 +173,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"{obj_id}-{controller.site}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
@@ -179,7 +182,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
         has_entity_name=True,
-        icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: controller.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
@@ -190,6 +192,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         is_connected_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].state == 1,
         name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
@@ -204,9 +207,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.register_platform_add_entities(
-        UnifiScannerEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 
 
@@ -247,7 +249,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         return self.entity_description.hostname_fn(self.controller.api, self._obj_id)
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self.entity_description.ip_address_fn(self.controller.api, self._obj_id)
 

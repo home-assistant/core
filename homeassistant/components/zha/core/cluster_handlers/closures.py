@@ -1,4 +1,6 @@
 """Closures cluster handlers module for Zigbee Home Automation."""
+from typing import Any
+
 from zigpy.zcl.clusters import closures
 
 from homeassistant.core import callback
@@ -48,7 +50,7 @@ class DoorLockClusterHandler(ClusterHandler):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from lock cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(
@@ -122,10 +124,18 @@ class WindowCoveringClient(ClientClusterHandler):
 class WindowCovering(ClusterHandler):
     """Window cluster handler."""
 
-    _value_attribute = 8
+    _value_attribute_lift = (
+        closures.WindowCovering.AttributeDefs.current_position_lift_percentage.id
+    )
+    _value_attribute_tilt = (
+        closures.WindowCovering.AttributeDefs.current_position_tilt_percentage.id
+    )
     REPORT_CONFIG = (
         AttrReportConfig(
             attr="current_position_lift_percentage", config=REPORT_CONFIG_IMMEDIATE
+        ),
+        AttrReportConfig(
+            attr="current_position_tilt_percentage", config=REPORT_CONFIG_IMMEDIATE
         ),
     )
 
@@ -138,19 +148,30 @@ class WindowCovering(ClusterHandler):
         if result is not None:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                8,
+                self._value_attribute_lift,
                 "current_position_lift_percentage",
+                result,
+            )
+        result = await self.get_attribute_value(
+            "current_position_tilt_percentage", from_cache=False
+        )
+        self.debug("read current tilt position: %s", result)
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                self._value_attribute_tilt,
+                "current_position_tilt_percentage",
                 result,
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from window_covering cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        if attrid == self._value_attribute:
+        if attrid in (self._value_attribute_lift, self._value_attribute_tilt):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )

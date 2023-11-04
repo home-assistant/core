@@ -1,11 +1,11 @@
 """Config flow for the Home Assistant Yellow integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
@@ -63,6 +63,10 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle logic when on Supervisor host."""
+        return await self.async_step_main_menu()
+
+    async def async_step_main_menu(self, _: None = None) -> FlowResult:
+        """Show the main menu."""
         return self.async_show_menu(
             step_id="main_menu",
             menu_options=[
@@ -80,15 +84,15 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
             if self._hw_settings == user_input:
                 return self.async_create_entry(data={})
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     await async_set_yellow_settings(self.hass, user_input)
             except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
-            return await self.async_step_confirm_reboot()
+            return await self.async_step_reboot_menu()
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 self._hw_settings: dict[str, bool] = await async_get_yellow_settings(
                     self.hass
                 )
@@ -102,7 +106,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
         return self.async_show_form(step_id="hardware_settings", data_schema=schema)
 
-    async def async_step_confirm_reboot(
+    async def async_step_reboot_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reboot host."""
@@ -153,7 +157,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
     def _zha_name(self) -> str:
         """Return the ZHA name."""
-        return "Yellow Multi-PAN"
+        return "Yellow Multiprotocol"
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""

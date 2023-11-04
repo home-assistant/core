@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FiveMEntity, FiveMEntityDescription
 from .const import DOMAIN, NAME_STATUS
+from .entity import FiveMEntity, FiveMEntityDescription
 
 
 @dataclass
@@ -24,7 +24,7 @@ class FiveMBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[FiveMBinarySensorEntityDescription, ...] = (
     FiveMBinarySensorEntityDescription(
         key=NAME_STATUS,
-        name=NAME_STATUS,
+        translation_key="status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )

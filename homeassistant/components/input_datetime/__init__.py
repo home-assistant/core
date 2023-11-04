@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import datetime as py_datetime
 import logging
-from typing import Any
+from typing import Any, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -21,9 +20,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -133,10 +129,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input datetime."""
     component = EntityComponent[InputDatetime](_LOGGER, DOMAIN, hass)
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -226,6 +218,8 @@ class DateTimeStorageCollection(collection.DictStorageCollection):
 class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE, CONF_HAS_DATE, CONF_HAS_TIME})
+
     _attr_should_poll = False
     editable: bool
 
@@ -292,13 +286,12 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
+        elif (time := dt_util.parse_time(old_state.state)) is None:
+            current_datetime = dt_util.parse_datetime(default_value)
         else:
-            if (time := dt_util.parse_time(old_state.state)) is None:
-                current_datetime = dt_util.parse_datetime(default_value)
-            else:
-                current_datetime = py_datetime.datetime.combine(
-                    py_datetime.date.today(), time
-                )
+            current_datetime = py_datetime.datetime.combine(
+                py_datetime.date.today(), time
+            )
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.DEFAULT_TIME_ZONE

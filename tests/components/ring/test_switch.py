@@ -32,7 +32,7 @@ async def test_siren_off_reports_correctly(
 
     state = hass.states.get("switch.front_siren")
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Front siren"
+    assert state.attributes.get("friendly_name") == "Front Siren"
 
 
 async def test_siren_on_reports_correctly(
@@ -43,7 +43,7 @@ async def test_siren_on_reports_correctly(
 
     state = hass.states.get("switch.internal_siren")
     assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Internal siren"
+    assert state.attributes.get("friendly_name") == "Internal Siren"
     assert state.attributes.get("icon") == "mdi:alarm-bell"
 
 
