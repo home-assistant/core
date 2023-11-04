@@ -2,9 +2,40 @@
 import logging
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Roon Event from Config Entry."""
+    roon_server = hass.data[DOMAIN][config_entry.entry_id]
+    event_entities = set()
+
+    @callback
+    def async_add_roon_volume_entity(player_data):
+        """Add or update Roon event Entity."""
+        _LOGGER.error("EVENT async_add_roon_volume_entity called")
+        dev_id = player_data["dev_id"]
+        if dev_id in event_entities:
+            return
+        # new player!
+        event_entity = (RoonEventEntity(roon_server, player_data["display_name"]),)
+        event_entities.add(dev_id)
+        _LOGGER.error("EVENT ADDED %s", event_entity)
+        async_add_entities([event_entity])
+
+    # start listening for players to be added from the server component
+    async_dispatcher_connect(hass, "roon_media_player", async_add_roon_volume_entity)
 
 
 class RoonEventEntity(EventEntity):

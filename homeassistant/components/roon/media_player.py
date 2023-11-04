@@ -29,7 +29,6 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .event import RoonEventEntity
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,11 +73,7 @@ async def async_setup_entry(
             # new player!
             media_player = RoonDevice(roon_server, player_data)
             media_players.add(dev_id)
-            entities = [
-                media_player,
-                RoonEventEntity(roon_server, player_data["display_name"]),
-            ]
-            async_add_entities(entities)
+            async_add_entities([media_player])
         else:
             # update existing player
             async_dispatcher_send(
