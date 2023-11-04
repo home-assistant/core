@@ -27,6 +27,27 @@ async def test_sensor(
     assert state.state == expected_state
 
 
+# https://github.com/home-assistant/core/issues/102339
+async def test_null_blowoutcycle(
+    spa,
+    spa_state,
+    config_entry,
+    hass: HomeAssistant,
+) -> None:
+    """Test blowoutCycle having null value."""
+
+    spa_state.blowout_cycle = None
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = f"sensor.{spa.brand}_{spa.model}_blowout_cycle"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
 async def test_primary_filtration(
     spa, spa_state, setup_entry, hass: HomeAssistant
 ) -> None:

@@ -93,6 +93,9 @@ class SmartTubSensor(SmartTubSensorBase, SensorEntity):
         """Return the current state of the sensor."""
         if isinstance(self._state, Enum):
             return self._state.name.lower()
+        elif self._state is None:
+            return "unknown"
+
         return self._state.lower()
 
 
