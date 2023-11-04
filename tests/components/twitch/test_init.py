@@ -42,7 +42,7 @@ async def test_setup_success(
 async def test_disabled_entity(
     hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
 ) -> None:
-    """Test disable entity."""
+    """Test disabled entity."""
     await setup_integration(hass, config_entry)
 
     entity_registry = er.async_get(hass)
