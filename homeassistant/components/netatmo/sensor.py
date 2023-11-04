@@ -324,7 +324,7 @@ async def async_setup_entry(
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
         if not netatmo_device.room.climate_type:
             msg = f"No climate type found for this room: {netatmo_device.room.name}"
-            _LOGGER.info(msg)
+            _LOGGER.debug(msg)
             return
         async_add_entities(
             NetatmoRoomSensor(netatmo_device, description)
