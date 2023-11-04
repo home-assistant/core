@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    async def blink_refresh(event_time=None):
+    async def blink_refresh(call):
         """Call blink to refresh info."""
         await coordinator.api.refresh(force_cache=True)
 
@@ -120,10 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        await coordinator.api.auth.send_auth_key(
-            hass.data[DOMAIN][entry.entry_id].api,
-            pin,
-        )
+        if coordinator:
+            await coordinator.api.auth.send_auth_key(
+                hass.data[DOMAIN][entry.entry_id].api,
+                pin,
+            )
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)
     hass.services.async_register(
@@ -158,13 +159,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Blink entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            return True
-
-        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-        hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
-
     return unload_ok
 
 

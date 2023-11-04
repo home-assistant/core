@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     sync_modules = []
     for sync_name, sync_module in coordinator.api.sync.items():
-        sync_modules.append(BlinkSyncModuleHA(coordinator, sync_name, sync_module))
+        sync_modules.append(BlinkSyncModuleHA(sync_name, sync_module))
     async_add_entities(sync_modules)
 
 
@@ -52,13 +52,10 @@ class BlinkSyncModuleHA(
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self, coordinator: BlinkUpdateCoordinator, name: str, sync: BlinkSyncModule
-    ) -> None:
+    def __init__(self, name: str, sync: BlinkSyncModule) -> None:
         """Initialize the alarm control panel."""
-        super().__init__(coordinator)
-        self.api: Blink = coordinator.api
-        self._coordinator = coordinator
+        super().__init__(self.coordinator)
+        self.api: Blink = self.coordinator.api
         self.sync = sync
         self._attr_unique_id: str = sync.serial
         self._attr_device_info = DeviceInfo(
@@ -94,7 +91,7 @@ class BlinkSyncModuleHA(
         except asyncio.TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
@@ -104,5 +101,5 @@ class BlinkSyncModuleHA(
         except asyncio.TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er
 
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
         self.async_write_ha_state()

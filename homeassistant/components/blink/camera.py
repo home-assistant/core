@@ -32,10 +32,10 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Blink Camera."""
+
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
-        BlinkCamera(coordinator, name, camera)
-        for name, camera in coordinator.api.cameras.items()
+        BlinkCamera(name, camera) for name, camera in coordinator.api.cameras.items()
     ]
 
     async_add_entities(entities)
@@ -50,11 +50,10 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
+    def __init__(self, name, camera) -> None:
         """Initialize a camera."""
-        super().__init__(coordinator)
+        super().__init__(self.coordinator)
         Camera.__init__(self)
-        self._coordinator = coordinator
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(
@@ -80,7 +79,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             raise HomeAssistantError("Blink failed to arm camera") from er
 
         self._camera.motion_enabled = True
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
@@ -90,7 +89,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
         self._camera.motion_enabled = False
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -106,7 +105,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Trigger camera to take a snapshot."""
         with contextlib.suppress(asyncio.TimeoutError):
             await self._camera.snap_picture()
-            await self._coordinator.api.refresh()
+            await self.coordinator.api.refresh()
         self.async_write_ha_state()
 
     def camera_image(
