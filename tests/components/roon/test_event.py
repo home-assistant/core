@@ -13,7 +13,7 @@ async def test_event() -> None:
     event.async_write_ha_state = MagicMock()
 
     # Test retrieving data from entity
-    assert event.name == "test volume control"
+    assert event.name == "test roon volume"
     assert event.event_types == ["volume_up", "volume_down"]
     assert event.device_class == EventDeviceClass.BUTTON
 

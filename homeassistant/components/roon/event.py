@@ -24,14 +24,12 @@ async def async_setup_entry(
     @callback
     def async_add_roon_volume_entity(player_data):
         """Add or update Roon event Entity."""
-        _LOGGER.error("EVENT async_add_roon_volume_entity called")
         dev_id = player_data["dev_id"]
         if dev_id in event_entities:
             return
         # new player!
-        event_entity = (RoonEventEntity(roon_server, player_data["display_name"]),)
+        event_entity = RoonEventEntity(roon_server, player_data["display_name"])
         event_entities.add(dev_id)
-        _LOGGER.error("EVENT ADDED %s", event_entity)
         async_add_entities([event_entity])
 
     # start listening for players to be added from the server component
@@ -47,7 +45,7 @@ class RoonEventEntity(EventEntity):
     def __init__(self, server, name):
         """Initialize the entity."""
         self._server = server
-        self._name = f"{name} volume control"
+        self._name = f"{name} roon volume"
 
     @property
     def name(self) -> str:
@@ -72,6 +70,7 @@ class RoonEventEntity(EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register volume hooks with the roon api."""
+
         self._server.roonapi.register_volume_control(
             self.entity_id,
             self._name,
