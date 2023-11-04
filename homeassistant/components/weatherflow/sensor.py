@@ -366,6 +366,11 @@ class WeatherFlowSensorEntity(SensorEntity):
             )
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.native_value is not None
+
+    @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self.entity_description.state_class == SensorStateClass.TOTAL:
