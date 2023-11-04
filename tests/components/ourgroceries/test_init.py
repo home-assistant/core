@@ -37,18 +37,19 @@ def login_with_error(exception, ourgroceries: AsyncMock):
 
 
 @pytest.mark.parametrize(
-    ("exception"),
+    ("exception", "status"),
     [
-        (InvalidLoginException),
-        (ClientError),
-        (AsyncIOTimeoutError),
+        (InvalidLoginException, ConfigEntryState.SETUP_ERROR),
+        (ClientError, ConfigEntryState.SETUP_RETRY),
+        (AsyncIOTimeoutError, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_init_failure(
     hass: HomeAssistant,
     login_with_error,
     setup_integration: None,
+    status: ConfigEntryState,
     ourgroceries_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test an initialization error on integration load."""
-    assert ourgroceries_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert ourgroceries_config_entry.state == status

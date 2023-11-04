@@ -28,8 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await og.login()
         lists = (await og.get_my_lists())["shoppingLists"]
-    except (AsyncIOTimeoutError, ClientError, InvalidLoginException) as error:
+    except (AsyncIOTimeoutError, ClientError) as error:
         raise ConfigEntryNotReady from error
+    except InvalidLoginException:
+        return False
 
     coordinator = OurGroceriesDataUpdateCoordinator(hass, og, lists)
     await coordinator.async_config_entry_first_refresh()

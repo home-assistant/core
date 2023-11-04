@@ -26,16 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    og = OurGroceries(data[CONF_USERNAME], data[CONF_PASSWORD])
-    await og.login()
-    return {"title": data[CONF_USERNAME]}
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OurGroceries."""
 
@@ -48,7 +38,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(user_input)
+                og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+                await og.login()
             except (AsyncIOTimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except InvalidLoginException:
@@ -57,7 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

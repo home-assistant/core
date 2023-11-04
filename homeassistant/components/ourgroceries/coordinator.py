@@ -1,15 +1,13 @@
 """The OurGroceries coordinator."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
 
-from aiohttp import ClientError
 from ourgroceries import OurGroceries
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -37,10 +35,7 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from OurGroceries."""
-        try:
-            return {
-                sl["id"]: (await self.og.get_list_items(list_id=sl["id"]))
-                for sl in self.lists
-            }
-        except (AsyncIOTimeoutError, ClientError) as error:
-            raise UpdateFailed(error) from error
+        return {
+            sl["id"]: (await self.og.get_list_items(list_id=sl["id"]))
+            for sl in self.lists
+        }

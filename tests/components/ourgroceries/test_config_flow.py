@@ -13,8 +13,6 @@ from homeassistant.components.ourgroceries.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
@@ -56,7 +54,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ],
 )
 async def test_form_error(
-    hass: HomeAssistant, exception: Exception, error: str
+    hass: HomeAssistant, exception: Exception, error: str, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle form errors."""
     result = await hass.config_entries.flow.async_init(
@@ -77,3 +75,22 @@ async def test_form_error(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+    with patch(
+        "homeassistant.components.ourgroceries.config_flow.OurGroceries.login",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "test-username"
+    assert result3["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
