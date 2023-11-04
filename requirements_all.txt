@@ -132,7 +132,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.22
+SQLAlchemy==2.0.23
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -2214,7 +2214,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
-pytraccar==1.0.0
+pytraccar==2.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
