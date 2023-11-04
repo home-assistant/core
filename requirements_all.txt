@@ -132,7 +132,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.22
+SQLAlchemy==2.0.23
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -192,7 +192,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.1
+aioairzone-cloud==0.3.2
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.2.0
+aioesphomeapi==18.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -255,7 +255,10 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.8
+aiohomekit==3.0.9
+
+# homeassistant.components.http
+aiohttp-zlib-ng==0.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -369,7 +372,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==64
+aiounifi==65
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -378,7 +381,7 @@ aiovlc==0.1.0
 aiovodafone==0.4.2
 
 # homeassistant.components.waqi
-aiowaqi==2.1.0
+aiowaqi==3.0.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -1004,10 +1007,10 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.28
+holidays==0.35
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231030.0
+home-assistant-frontend==20231030.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -1394,7 +1397,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.38
+opower==0.0.39
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1521,7 +1524,7 @@ py-improv-ble-client==1.0.3
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==1.0.0
+py-nextbusnext==1.0.2
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1693,7 +1696,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.13.1
+pyenphase==1.14.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2141,7 +2144,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.5.3
+python-kasa[speedups]==0.5.4
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2211,7 +2214,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
-pytraccar==1.0.0
+pytraccar==2.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -2319,7 +2322,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.12
+reolink-aio==0.7.14
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2758,7 +2761,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.3.1
+yalexs-ble==2.3.2
 
 # homeassistant.components.august
 yalexs==1.10.0
