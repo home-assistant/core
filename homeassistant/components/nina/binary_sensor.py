@@ -77,7 +77,6 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         self._attr_unique_id = f"{region}-{slot_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name=f"{config_entry.title}",
             manufacturer="NINA",
         )
 
