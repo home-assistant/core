@@ -1,0 +1,9 @@
+{
+  "domain": "frank_energie",
+  "name": "Frank Energie",
+  "codeowners": ["@bajansen"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/frank_energie",
+  "iot_class": "cloud_polling",
+  "requirements": ["python-frank-energie==5.0.1"]
+}

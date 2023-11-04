@@ -1871,6 +1871,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "frank_energie": {
+      "name": "Frank Energie",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "free_mobile": {
       "name": "Free Mobile",
       "integration_type": "hub",
