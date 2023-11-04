@@ -15,7 +15,7 @@ from tests.typing import ClientSessionGenerator
     [
         "HWE-P1",
         "HWE-SKT",
-        "HWE-WRT",
+        "HWE-WTR",
         "SDM230",
     ],
 )

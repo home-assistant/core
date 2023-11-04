@@ -141,7 +141,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[HWE-WRT]
+# name: test_diagnostics[HWE-WTR]
   dict({
     'data': dict({
       'data': dict({

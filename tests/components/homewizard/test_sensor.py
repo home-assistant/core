@@ -70,7 +70,7 @@ pytestmark = [
             ],
         ),
         (
-            "HWE-WRT",
+            "HWE-WTR",
             [
                 "sensor.device_wi_fi_ssid",
                 "sensor.device_wi_fi_strength",
@@ -117,7 +117,7 @@ async def test_sensors(
             ],
         ),
         (
-            "HWE-WRT",
+            "HWE-WTR",
             [
                 "sensor.device_wi_fi_strength",
             ],
@@ -182,7 +182,7 @@ async def test_sensors_unreachable(
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-WRT",
+            "HWE-WTR",
             [
                 "sensor.device_dsmr_version",
                 "sensor.device_smart_meter_model",

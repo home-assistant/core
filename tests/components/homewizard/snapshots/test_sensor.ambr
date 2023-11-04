@@ -3244,7 +3244,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_active_water_usage:device-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_active_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3276,7 +3276,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_active_water_usage:entity-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_active_water_usage:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3309,7 +3309,7 @@
     'unit_of_measurement': 'l/min',
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_active_water_usage:state]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_active_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
@@ -3324,7 +3324,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_total_water_usage:device-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3356,7 +3356,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_total_water_usage:entity-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_total_water_usage:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3389,7 +3389,7 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_total_water_usage:state]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -3405,7 +3405,7 @@
     'state': '17.014',
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_wi_fi_ssid:device-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3437,7 +3437,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_wi_fi_ssid:entity-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3468,7 +3468,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_wi_fi_ssid:state]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
@@ -3481,7 +3481,7 @@
     'state': 'My Wi-Fi',
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_wi_fi_strength:device-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3513,7 +3513,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_wi_fi_strength:entity-registry]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_wi_fi_strength:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3546,7 +3546,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[HWE-WRT-entity_ids1][sensor.device_wi_fi_strength:state]
+# name: test_sensors[HWE-WTR-entity_ids1][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',

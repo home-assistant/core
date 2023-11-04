@@ -30,7 +30,7 @@ pytestmark = [
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-WRT",
+            "HWE-WTR",
             [
                 "switch.device",
                 "switch.device_switch_locks",
