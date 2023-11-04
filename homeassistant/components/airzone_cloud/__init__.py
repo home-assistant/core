@@ -7,6 +7,7 @@ from aioairzone_cloud.common import ConnectionOptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
@@ -25,8 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
     )
 
-    # Sharing the aiohttp session causes connections hangs with parallel requests
-    airzone = AirzoneCloudApi(None, options)
+    airzone = AirzoneCloudApi(aiohttp_client.async_get_clientsession(hass), options)
     await airzone.login()
     inst_list = await airzone.list_installations()
     for inst in inst_list:
