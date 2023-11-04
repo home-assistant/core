@@ -82,6 +82,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     def _previous_action_mode(self, coordinator: PlugwiseDataUpdateCoordinator) -> None:
         """Return the previous action-mode when the regulation-mode is not heating or cooling.
+
         Helper for set_hvac_mode().
         """
         # When no cooling available, _previous_mode is always heating
