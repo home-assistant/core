@@ -38,8 +38,8 @@ class ReolinkLightEntityDescription(
     """A class that describes light entities."""
 
     supported_fn: Callable[[Host, int], bool] = lambda api, ch: True
-    get_brightness_fn: Callable[[Host, int], int] | None = None
-    set_brightness_fn: Callable[[Host, int, float], Any] | None = None
+    get_brightness_fn: Callable[[Host, int], int | None] | None = None
+    set_brightness_fn: Callable[[Host, int, int], Any] | None = None
 
 
 LIGHT_ENTITIES = (
@@ -127,13 +127,13 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         if self.entity_description.get_brightness_fn is None:
             return None
 
-        return round(
-            255
-            * (
-                self.entity_description.get_brightness_fn(self._host.api, self._channel)
-                / 100.0
-            )
+        bright_pct = self.entity_description.get_brightness_fn(
+            self._host.api, self._channel
         )
+        if bright_pct is None:
+            return None
+
+        return round(255 * bright_pct / 100.0)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
