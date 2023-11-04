@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
-from homeassistant.components.camera import DynamicStreamSettings, DOMAIN as CAM_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
@@ -120,10 +120,12 @@ class ReolinkVODMediaSource(MediaSource):
 
         entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
-        for config_entry_id in self.data:
+        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
             channels = []
-            host = self.data[config_entry_id].host
-            entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
+            host = self.data[config_entry.entry_id].host
+            entities = er.async_entries_for_config_entry(
+                entity_reg, config_entry.entry_id
+            )
             for entity in entities:
                 if (
                     entity.disabled
@@ -154,7 +156,7 @@ class ReolinkVODMediaSource(MediaSource):
                 children.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"CAM+{config_entry_id}+{ch}",
+                        identifier=f"CAM+{config_entry.entry_id}+{ch}",
                         media_class=MediaClass.CHANNEL,
                         media_content_type=MediaType.PLAYLIST,
                         title=device_name,
