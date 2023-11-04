@@ -19,6 +19,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.issue_registry import IssueRegistry
 import homeassistant.util.dt as dt_util
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -565,3 +566,40 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
             blocking=True,
             return_response=True,
         )
+
+
+async def test_issue_deprecated_service_calendar_list_events(
+    hass: HomeAssistant,
+    issue_registry: IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the issue is raised on deprecated service weather.get_forecast."""
+
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    _ = await hass.services.async_call(
+        DOMAIN,
+        LEGACY_SERVICE_LIST_EVENTS,
+        target={"entity_id": ["calendar.calendar_1"]},
+        service_data={
+            "entity_id": "calendar.calendar_1",
+            "duration": "01:00:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    issue = issue_registry.async_get_issue(
+        "calendar", "deprecated_service_calendar_list_events"
+    )
+    assert issue
+    assert issue.issue_domain == "demo"
+    assert issue.issue_id == "deprecated_service_calendar_list_events"
+    assert issue.translation_key == "deprecated_service_calendar_list_events"
+
+    assert (
+        "Detected use of service 'calendar.list_events'. "
+        "This is deprecated and will stop working in Home Assistant 2024.6. "
+        "Use 'calendar.get_events' instead which supports multiple entities"
+    ) in caplog.text

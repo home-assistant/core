@@ -90,5 +90,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_service_calendar_list_events": {
+      "title": "Detected use of deprecated service `calendar.list_events`",
+      "description": "Use `calendar.get_events` instead which supports multiple entities."
+    }
   }
 }
