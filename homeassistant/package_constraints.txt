@@ -1,4 +1,5 @@
 aiodiscover==1.5.1
+aiohttp-zlib-ng==0.1.1
 aiohttp==3.8.5;python_version<'3.12'
 aiohttp==3.9.0b0;python_version>='3.12'
 aiohttp_cors==0.7.0
@@ -22,7 +23,7 @@ ha-av==10.1.1
 hass-nabucasa==0.74.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.4
-home-assistant-frontend==20231030.0
+home-assistant-frontend==20231030.1
 home-assistant-intents==2023.10.16
 httpx==0.25.0
 ifaddr==0.2.0
@@ -46,7 +47,7 @@ pyudev==0.23.2
 PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
-SQLAlchemy==2.0.22
+SQLAlchemy==2.0.23
 typing-extensions>=4.8.0,<5.0
 ulid-transform==0.9.0
 voluptuous-serialize==2.6.0

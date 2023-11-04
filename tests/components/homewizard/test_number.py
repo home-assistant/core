@@ -18,7 +18,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("device_fixture", ["device-HWE-SKT.json"])
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
 async def test_number_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

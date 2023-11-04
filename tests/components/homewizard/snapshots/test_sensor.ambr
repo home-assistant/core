@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_average_demand:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_average_demand:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -31,7 +31,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_average_demand:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_average_demand:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_average_demand:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_average_demand:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -76,7 +76,7 @@
     'state': '123.0',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_average_demand]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -108,39 +108,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -173,7 +141,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -188,7 +156,7 @@
     'state': '-4',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_1]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -220,39 +188,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -285,7 +221,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -300,7 +236,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_2]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -332,39 +268,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -397,7 +301,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -412,7 +316,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_current_phase_3]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -444,39 +348,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_frequency:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_frequency:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -509,7 +381,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_frequency:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
@@ -524,7 +396,7 @@
     'state': '50',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_frequency]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -556,39 +428,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -609,6 +449,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -621,7 +464,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -636,7 +479,7 @@
     'state': '-123',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -668,39 +511,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -721,6 +532,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -733,7 +547,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -748,7 +562,7 @@
     'state': '-123',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_1]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -780,39 +594,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -833,6 +615,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -845,7 +630,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -860,7 +645,7 @@
     'state': '456',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_2]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -892,39 +677,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -945,6 +698,9 @@
     'id': <ANY>,
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -957,7 +713,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -972,7 +728,7 @@
     'state': '123.456',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_power_phase_3]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_tariff:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1004,39 +760,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_tariff:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_tariff:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_tariff:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1074,7 +798,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_tariff:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_tariff:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1094,7 +818,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_tariff]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1126,39 +850,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1191,7 +883,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1206,7 +898,7 @@
     'state': '230.111',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_1]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1238,39 +930,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1303,7 +963,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1318,7 +978,7 @@
     'state': '230.222',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_2]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1350,39 +1010,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1415,7 +1043,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1430,7 +1058,7 @@
     'state': '230.333',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_voltage_phase_3]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1462,39 +1090,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_water_usage:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_water_usage:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_water_usage:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1527,7 +1123,7 @@
     'unit_of_measurement': 'l/min',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_water_usage:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_active_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Active water usage',
@@ -1542,7 +1138,7 @@
     'state': '12.345',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_active_water_usage]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_dsmr_version:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1574,39 +1170,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_dsmr_version:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_dsmr_version:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_dsmr_version:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1637,7 +1201,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_dsmr_version:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_dsmr_version:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device DSMR version',
@@ -1650,7 +1214,7 @@
     'state': '50',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_dsmr_version]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_gas_meter_identifier:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1682,39 +1246,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_gas_meter_identifier:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_gas_meter_identifier:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_gas_meter_identifier:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1745,7 +1277,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_gas_meter_identifier:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_gas_meter_identifier:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Gas meter identifier',
@@ -1758,7 +1290,7 @@
     'state': '01FFEEDDCCBBAA99887766554433221100',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_gas_meter_identifier]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_long_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1790,39 +1322,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_long_power_failures_detected:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_long_power_failures_detected:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_long_power_failures_detected:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1853,7 +1353,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_long_power_failures_detected:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_long_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Long power failures detected',
@@ -1866,7 +1366,7 @@
     'state': '5',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_long_power_failures_detected]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_peak_demand_current_month:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -1898,39 +1398,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_peak_demand_current_month:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_peak_demand_current_month:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_peak_demand_current_month:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1961,7 +1429,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_peak_demand_current_month:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_peak_demand_current_month:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1975,7 +1443,7 @@
     'state': '1111.0',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_peak_demand_current_month]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2007,39 +1475,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_power_failures_detected:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_power_failures_detected:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_power_failures_detected:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2070,7 +1506,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_power_failures_detected:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Power failures detected',
@@ -2083,7 +1519,7 @@
     'state': '4',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_power_failures_detected]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_smart_meter_identifier:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2115,39 +1551,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_identifier:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_identifier:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_smart_meter_identifier:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2178,7 +1582,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_identifier:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_smart_meter_identifier:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Smart meter identifier',
@@ -2191,7 +1595,7 @@
     'state': '00112233445566778899AABBCCDDEEFF',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_identifier]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_smart_meter_model:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2223,39 +1627,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_model:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_model:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_smart_meter_model:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2286,7 +1658,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_model:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_smart_meter_model:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Smart meter model',
@@ -2299,7 +1671,7 @@
     'state': 'ISKRA  2M550T-101',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_smart_meter_model]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2331,39 +1703,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2396,7 +1736,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2411,7 +1751,7 @@
     'state': '13086.777',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_1:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2443,7 +1783,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2476,7 +1816,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2491,7 +1831,7 @@
     'state': '4321.333',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_2:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2523,7 +1863,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2556,7 +1896,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2571,7 +1911,7 @@
     'state': '8765.444',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_3:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2603,7 +1943,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2636,7 +1976,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2651,7 +1991,7 @@
     'state': '8765.444',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_4:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2683,7 +2023,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_4:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_4:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2716,7 +2056,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_export_tariff_4:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_export_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2731,7 +2071,7 @@
     'state': '8765.444',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2763,7 +2103,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2796,7 +2136,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2811,7 +2151,7 @@
     'state': '13779.338',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_1:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2843,7 +2183,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2876,7 +2216,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2891,7 +2231,7 @@
     'state': '10830.511',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_2:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -2923,7 +2263,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2956,7 +2296,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2971,7 +2311,7 @@
     'state': '2948.827',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_3:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3003,7 +2343,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3036,7 +2376,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3051,7 +2391,7 @@
     'state': '2948.827',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_4:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3083,7 +2423,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_4:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_4:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3116,7 +2456,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_energy_import_tariff_4:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_energy_import_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3131,7 +2471,7 @@
     'state': '2948.827',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_gas:device-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_gas:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3163,7 +2503,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_gas:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_gas:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3196,7 +2536,7 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_gas:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_gas:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'gas',
@@ -3211,7 +2551,7 @@
     'state': '1122.333',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_gas]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -3243,1159 +2583,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_export',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power export',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power export',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_export',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13086.777',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_1:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_export_tariff_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power export tariff 1',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_export_t1_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_1:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power export tariff 1',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_export_tariff_1',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4321.333',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_1]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_2:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_export_tariff_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power export tariff 2',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_export_t2_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_2:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power export tariff 2',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_export_tariff_2',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8765.444',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_2]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_3:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_export_tariff_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power export tariff 3',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_export_t3_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_3:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power export tariff 3',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_export_tariff_3',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8765.444',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_3]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_4:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_4:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_export_tariff_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power export tariff 4',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_export_t4_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_4:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power export tariff 4',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_export_tariff_4',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8765.444',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_export_tariff_4]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_import',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power import',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power import',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_import',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13779.338',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_1:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_import_tariff_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power import tariff 1',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_import_t1_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_1:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power import tariff 1',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_import_tariff_1',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10830.511',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_1]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_2:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_import_tariff_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power import tariff 2',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_import_t2_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_2:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power import tariff 2',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_import_tariff_2',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2948.827',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_2]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_3:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_import_tariff_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power import tariff 3',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_import_t3_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_3:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power import tariff 3',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_import_tariff_3',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2948.827',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_3]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_4:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_4:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_power_import_tariff_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total power import tariff 4',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_power_import_t4_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_4:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total power import tariff 4',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_power_import_tariff_4',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2948.827',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_power_import_tariff_4]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_water_usage:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_water_usage:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_water_usage:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4428,7 +2616,7 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_water_usage:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -4444,7 +2632,7 @@
     'state': '1234.567',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_total_water_usage]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -4476,39 +2664,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4539,7 +2695,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 1',
@@ -4552,7 +2708,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_1]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -4584,39 +2740,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4647,7 +2771,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 2',
@@ -4660,7 +2784,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_2]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -4692,39 +2816,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4755,7 +2847,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage sags detected phase 3',
@@ -4768,7 +2860,7 @@
     'state': '3',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_sags_detected_phase_3]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -4800,39 +2892,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_1:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4863,7 +2923,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_1:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 1',
@@ -4876,7 +2936,7 @@
     'state': '4',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_1]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -4908,39 +2968,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_2:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_2:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4971,7 +2999,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_2:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 2',
@@ -4984,7 +3012,7 @@
     'state': '5',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_2]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -5016,39 +3044,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_3:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_3:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5079,7 +3075,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_3:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Voltage swells detected phase 3',
@@ -5092,7 +3088,7 @@
     'state': '6',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_voltage_swells_detected_phase_3]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -5124,39 +3120,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_ssid:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_ssid:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5187,7 +3151,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_ssid:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
@@ -5200,7 +3164,7 @@
     'state': 'My Wi-Fi',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_ssid]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -5232,39 +3196,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_strength:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_strength:entity-registry]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_wi_fi_strength:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5297,7 +3229,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_strength:state]
+# name: test_sensors_p1_meter[HWE-P1-entity_ids0][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
@@ -5310,37 +3242,5 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
-  })
-# ---
-# name: test_sensors_p1_meter[device-HWE-P1.json-data-HWE-P1.json-entity_ids0][sensor.device_wi_fi_strength]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.19',
-    'via_device_id': None,
   })
 # ---

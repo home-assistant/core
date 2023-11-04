@@ -24,7 +24,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -146,7 +146,9 @@ class DwdWeatherWarningsSensor(
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)}, name=f"{DEFAULT_NAME} {entry.title}"
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=f"{DEFAULT_NAME} {entry.title}",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
         self.api = coordinator.api
