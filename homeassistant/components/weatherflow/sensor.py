@@ -372,7 +372,7 @@ class WeatherFlowSensorEntity(SensorEntity):
             return self.device.last_report
         return None
 
-    def _update_state(self) -> None:
+    def _async_update_state(self) -> None:
         """Update entity state."""
         value = self.entity_description.get_native_value(self.device)
         self._attr_available = value is not None
