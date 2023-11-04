@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from twitchAPI.twitch import TwitchAPIException, TwitchAuthorizationException
 
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
@@ -67,6 +68,46 @@ async def test_disabled_entity(
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.disabled_by == er.RegistryEntryDisabler.USER
+
+
+async def test_coordinator_update_authorization_error(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test coordinator update errors."""
+    await setup_integration(hass, config_entry)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    with patch(
+        "homeassistant.components.twitch.coordinator.TwitchUpdateCoordinator._async_get_data",
+        side_effect=TwitchAuthorizationException,
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+
+async def test_coordinator_update_api_error(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test coordinator update errors."""
+    await setup_integration(hass, config_entry)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    with patch(
+        "homeassistant.components.twitch.coordinator.TwitchUpdateCoordinator._async_get_data",
+        side_effect=TwitchAPIException,
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
