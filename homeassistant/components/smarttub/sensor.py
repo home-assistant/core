@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -93,8 +94,9 @@ class SmartTubSensor(SmartTubSensorBase, SensorEntity):
         """Return the current state of the sensor."""
         if isinstance(self._state, Enum):
             return self._state.name.lower()
-        elif self._state is None:
-            return "unknown"
+
+        if self._state is None:
+            return STATE_UNKNOWN
 
         return self._state.lower()
 
