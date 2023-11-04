@@ -383,4 +383,4 @@ class WeatherFlowSensorEntity(SensorEntity):
         """Subscribe to events."""
         self._update_state()
         for event in self.entity_description.event_subscriptions:
-            self.async_on_remove(self.device.on(event, lambda _: self._update_state()))
+            self.async_on_remove(self.device.on(event, lambda _: self._async_update_state()))
