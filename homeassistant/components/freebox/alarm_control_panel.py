@@ -110,16 +110,12 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         can_arm_home = False
         for nodeid, local_node in self._router.home_devices.items():
             if nodeid == local_node["id"]:
-                alarm2 = next(
-                    filter(
-                        lambda x: (x["name"] == "alarm2" and x["ep_type"] == "signal"),
-                        local_node["show_endpoints"],
-                    ),
-                    None,
-                )
-                if alarm2:
-                    can_arm_home = alarm2["value"]
-                    break
+                for endpoint in local_node["show_endpoints"]:
+                    if endpoint["name"] == "alarm2" and endpoint["ep_type"] == "signal":
+                        can_arm_home = endpoint["value"]
+                        break
+            if can_arm_home:
+                break
 
         if can_arm_home:
             self._attr_supported_features = (
