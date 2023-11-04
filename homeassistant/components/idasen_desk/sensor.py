@@ -96,4 +96,4 @@ class IdasenDeskSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self, *args: Any) -> None:
         """Handle data update."""
         self._attr_native_value = self.entity_description.value_fn(self.coordinator)
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
