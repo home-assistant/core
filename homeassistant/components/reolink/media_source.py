@@ -48,7 +48,7 @@ class ReolinkVODMediaSource(MediaSource):
                 f"Could not resolve identifier '{item.identifier}' of media item."
             )
 
-        identifier = item.identifier.split("/")
+        identifier = item.identifier.split("|")
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
@@ -89,7 +89,7 @@ class ReolinkVODMediaSource(MediaSource):
                 f"Could not resolve identifier '{item.identifier}' during browsing."
             )
 
-        identifier = item.identifier.split("/")
+        identifier = item.identifier.split("|")
         item_type = identifier[0]
 
         if item_type == "CAM":
@@ -142,7 +142,7 @@ class ReolinkVODMediaSource(MediaSource):
                 children.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"CAM/{config_entry_id}/{ch}",
+                        identifier=f"CAM|{config_entry_id}|{ch}",
                         media_class=MediaClass.CHANNEL,
                         media_content_type=MediaType.PLAYLIST,
                         title=device_name,
@@ -163,7 +163,9 @@ class ReolinkVODMediaSource(MediaSource):
             children=children,
         )
 
-    async def _generate_resolution_select(self, config_entry_id: str, channel: int) -> BrowseMediaSource:
+    async def _generate_resolution_select(
+        self, config_entry_id: str, channel: int
+    ) -> BrowseMediaSource:
         """Allow the user to select the high or low playback resolution, (low loads faster)."""
         host = self.data[config_entry_id].host
 
@@ -179,7 +181,7 @@ class ReolinkVODMediaSource(MediaSource):
         children = [
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"RES/{config_entry_id}/{channel}/sub",
+                identifier=f"RES|{config_entry_id}|{channel}|sub",
                 media_class=MediaClass.CHANNEL,
                 media_content_type=MediaType.PLAYLIST,
                 title="Low resolution",
@@ -188,7 +190,7 @@ class ReolinkVODMediaSource(MediaSource):
             ),
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"RES/{config_entry_id}/{channel}/main",
+                identifier=f"RES|{config_entry_id}|{channel}|main",
                 media_class=MediaClass.CHANNEL,
                 media_content_type=MediaType.PLAYLIST,
                 title="High resolution",
@@ -199,7 +201,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"RESs/{config_entry_id}/{channel}",
+            identifier=f"RESs|{config_entry_id}|{channel}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
             title=host.api.camera_name(channel),
@@ -236,7 +238,7 @@ class ReolinkVODMediaSource(MediaSource):
                 children.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"DAY/{config_entry_id}/{channel}/{stream}/{status.year}/{status.month}/{day}",
+                        identifier=f"DAY|{config_entry_id}|{channel}|{stream}|{status.year}|{status.month}|{day}",
                         media_class=MediaClass.DIRECTORY,
                         media_content_type=MediaType.PLAYLIST,
                         title=f"{status.year}/{status.month}/{day}",
@@ -248,7 +250,7 @@ class ReolinkVODMediaSource(MediaSource):
         res_name = "High res." if stream == "main" else "Low res."
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"DAYS/{config_entry_id}/{channel}/{stream}",
+            identifier=f"DAYS|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
             title=f"{host.api.camera_name(channel)} {res_name}",
@@ -295,7 +297,7 @@ class ReolinkVODMediaSource(MediaSource):
             children.append(
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"FILE/{config_entry_id}/{channel}/{stream}/{file.file_name}",
+                    identifier=f"FILE|{config_entry_id}|{channel}|{stream}|{file.file_name}",
                     media_class=MediaClass.VIDEO,
                     media_content_type=MediaType.VIDEO,
                     title=file_name,
@@ -307,7 +309,7 @@ class ReolinkVODMediaSource(MediaSource):
         res_name = "High res." if stream == "main" else "Low res."
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"FILES/{config_entry_id}/{channel}/{stream}",
+            identifier=f"FILES|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
             title=f"{host.api.camera_name(channel)} {res_name} {year}/{month}/{day}",
