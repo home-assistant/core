@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
-from homeassistant.components.camera import DynamicStreamSettings
+from homeassistant.components.camera import DynamicStreamSettings, DOMAIN as CAM_DOMAIN
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
@@ -128,7 +128,7 @@ class ReolinkVODMediaSource(MediaSource):
                 if (
                     entity.disabled
                     or entity.device_id is None
-                    or not entity.entity_id.startswith("camera.")
+                    or entity.domain != CAM_DOMAIN
                 ):
                     continue
 
@@ -141,7 +141,7 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
                 channels.append(ch)
 
-                if host.api.api_version("recReplay", ch) < 1:
+                if host.api.api_version("recReplay", int(ch)) < 1:
                     # playback stream not supported by this camera
                     continue
 
