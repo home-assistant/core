@@ -90,16 +90,16 @@ class HausbusGateway(IBusDataListener, IEventHandler):
             instance,
         )
         self.get_channel_list(object_id)[self.get_channel_id(object_id)] = light
-        asyncio.run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             self._new_channel_listeners[LIGHT_DOMAIN](light), self.hass.loop
-        ).result()
+        )
 
     def add_channel(self, instance: ABusFeature):
         """Add a new Haus-Bus Channel to this gateways channel list."""
         object_id = ObjectId(instance.getObjectId())
         if self.get_channel_id(object_id) not in self.get_channel_list(object_id):
             if HausbusLight.is_light_channel(object_id.getClassId()):
-                self.add_light_channel(instance, object_id)
+                return self.add_light_channel(instance, object_id)
 
     def busDataReceived(self, busDataMessage: BusDataMessage):
         """Handle Haus-Bus messages."""
