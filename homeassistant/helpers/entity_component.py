@@ -20,6 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     Event,
     HomeAssistant,
     ServiceCall,
@@ -218,6 +219,40 @@ class EntityComponent(Generic[_EntityT]):
         )
 
     @callback
+    def async_register_legacy_entity_service(
+        self,
+        name: str,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        """Register an entity service with a legacy response format."""
+        if isinstance(schema, dict):
+            schema = cv.make_entity_service_schema(schema)
+
+        async def handle_service(
+            call: ServiceCall,
+        ) -> ServiceResponse:
+            """Handle the service."""
+
+            result = await service.entity_service_call(
+                self.hass, self._platforms.values(), func, call, required_features
+            )
+
+            if result:
+                if len(result) > 1:
+                    raise HomeAssistantError(
+                        "Deprecated service call matched more than one entity"
+                    )
+                return result.popitem()[1]
+            return None
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema, supports_response
+        )
+
+    @callback
     def async_register_entity_service(
         self,
         name: str,
@@ -230,7 +265,9 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResponse:
+        async def handle_service(
+            call: ServiceCall,
+        ) -> EntityServiceResponse | None:
             """Handle the service."""
             return await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
