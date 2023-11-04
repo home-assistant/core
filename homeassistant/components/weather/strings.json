@@ -107,6 +107,10 @@
     "deprecated_weather_forecast_no_url": {
       "title": "[%key:component::weather::issues::deprecated_weather_forecast_url::title%]",
       "description": "The custom integration `{platform}` implements the `forecast` property or sets `self._attr_forecast` in a subclass of WeatherEntity.\n\nPlease report it to the author of the {platform} integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
+    },
+    "deprecated_service_weather_get_forecast": {
+      "title": "Detected use of deprecated service `weather.get_forecast`",
+      "description": "Use `weather.get_forecasts` instead which supports multiple entities."
     }
   }
 }

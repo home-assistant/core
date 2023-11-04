@@ -1291,3 +1291,52 @@ async def test_issue_forecast_deprecated_no_logging(
         "custom_components.test_weather.weather::weather.test is using a forecast attribute on an instance of WeatherEntity"
         not in caplog.text
     )
+
+
+async def test_issue_deprecated_service_weather_get_forecast(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the issue is raised on deprecated service weather.get_forecast."""
+
+    class MockWeatherMock(MockWeatherTest):
+        """Mock weather class."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the forecast_daily."""
+            return self.forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+    }
+
+    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+
+    _ = await hass.services.async_call(
+        DOMAIN,
+        LEGACY_SERVICE_GET_FORECAST,
+        {
+            "entity_id": entity0.entity_id,
+            "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    issue = issue_registry.async_get_issue(
+        "weather", "deprecated_service_weather_get_forecast"
+    )
+    assert issue
+    assert issue.issue_domain == "test"
+    assert issue.issue_id == "deprecated_service_weather_get_forecast"
+    assert issue.translation_key == "deprecated_service_weather_get_forecast"
+
+    assert (
+        "Detected use of service 'weather.get_forecast'. "
+        "This is deprecated and will stop working in Home Assistant 2024.6. "
+        "Use 'weather.get_forecasts' instead which supports multiple entities"
+    ) in caplog.text

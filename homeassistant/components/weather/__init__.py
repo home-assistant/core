@@ -1109,6 +1109,17 @@ async def async_get_forecast_service(
         "This is deprecated and will stop working in Home Assistant 2024.6. "
         "Use 'weather.get_forecasts' instead which supports multiple entities",
     )
+    ir.async_create_issue(
+        weather.hass,
+        DOMAIN,
+        "deprecated_service_weather_get_forecast",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=weather.platform.platform_name,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_service_weather_get_forecast",
+    )
     return await async_get_forecasts_service(weather, service_call)
 
 
