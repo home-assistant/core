@@ -298,7 +298,7 @@ async def test_check_date_service(
         blocking=True,
         return_response=True,
     )
-    assert response == {"workday": False}
+    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -310,4 +310,4 @@ async def test_check_date_service(
         blocking=True,
         return_response=True,
     )
-    assert response == {"workday": True}
+    assert response == {"binary_sensor.workday_sensor": {"workday": True}}

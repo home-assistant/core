@@ -14,15 +14,13 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-)
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -120,17 +118,12 @@ async def async_setup_entry(
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
         LOGGER.debug("%s %s", _holiday_string, name)
 
-    async def check_date(service_call: ServiceCall) -> ServiceResponse:
-        """Check if date is workday or not."""
-        date_to_test: date = service_call.data[CHECK_DATE]
-        holiday_date = date_to_test in obj_holidays
-        return {"workday": not holiday_date}
-
-    hass.services.async_register(
-        DOMAIN,
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
         SERVICE_CHECK_DATE,
-        check_date,
-        cv.make_entity_service_schema({vol.Required(CHECK_DATE): cv.date}),
+        {vol.Required(CHECK_DATE): cv.date},
+        "check_date",
+        None,
         SupportsResponse.ONLY,
     )
 
@@ -217,3 +210,8 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         if self.is_exclude(day_of_week, adjusted_date):
             self._attr_is_on = False
+
+    async def check_date(self, check_date: date) -> ServiceResponse:
+        """Check if date is workday or not."""
+        holiday_date = check_date in self._obj_holidays
+        return {"workday": not holiday_date}
