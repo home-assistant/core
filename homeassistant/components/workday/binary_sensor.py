@@ -129,6 +129,7 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,
