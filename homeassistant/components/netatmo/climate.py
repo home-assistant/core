@@ -120,7 +120,7 @@ async def async_setup_entry(
     def _create_entity(netatmo_device: NetatmoRoom) -> None:
         if not netatmo_device.room.climate_type:
             msg = f"No climate type found for this room: {netatmo_device.room.name}"
-            _LOGGER.info(msg)
+            _LOGGER.debug(msg)
             return
         entity = NetatmoThermostat(netatmo_device)
         async_add_entities([entity])
