@@ -20,7 +20,5 @@ ROON_APPINFO = {
     "website": "https://www.home-assistant.io/",
 }
 
-ROON_EVENT = "roon_event"
-
 ROON_EVENT_VOLUME_UP = "volume_up"
 ROON_EVENT_VOLUME_DOWN = "volume_down"

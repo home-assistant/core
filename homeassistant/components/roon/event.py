@@ -1,9 +1,11 @@
 """Roon event entities."""
 import logging
+from typing import cast
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,7 +30,7 @@ async def async_setup_entry(
         if dev_id in event_entities:
             return
         # new player!
-        event_entity = RoonEventEntity(roon_server, player_data["display_name"])
+        event_entity = RoonEventEntity(roon_server, player_data)
         event_entities.add(dev_id)
         async_add_entities([event_entity])
 
@@ -42,22 +44,39 @@ class RoonEventEntity(EventEntity):
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ["volume_up", "volume_down"]
 
-    def __init__(self, server, name):
+    def __init__(self, server, player_data):
         """Initialize the entity."""
         self._server = server
-        self._name = f"{name} roon volume"
+        self._player_data = player_data
+        player_name = player_data["display_name"]
+        self._attr_name = f"{player_name} roon volume"
 
     @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        return self._name
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info."""
+        if self.unique_id is None:
+            return None
+        if self._player_data.get("source_controls"):
+            dev_model = self._player_data["source_controls"][0].get("display_name")
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            # Instead of setting the device name to the entity name, roon
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
+            manufacturer="RoonLabs",
+            model=dev_model,
+            via_device=(DOMAIN, self._server.roon_id),
+        )
 
     @callback
-    def _roonapi_volume_callback(self, control_key, event, value) -> None:
+    def _roonapi_volume_callback(
+        self, control_key: str, event: str, value: int
+    ) -> None:
         """Callbacks from the roon api with volume request."""
 
         if event != "set_volume":
-            _LOGGER.info("Received unsupported roon volume event %s", event)
+            _LOGGER.debug("Received unsupported roon volume event %s", event)
             return
 
         if value > 0:
@@ -73,7 +92,7 @@ class RoonEventEntity(EventEntity):
 
         self._server.roonapi.register_volume_control(
             self.entity_id,
-            self._name,
+            self.name,
             self._roonapi_volume_callback,
             0,
             "incremental",

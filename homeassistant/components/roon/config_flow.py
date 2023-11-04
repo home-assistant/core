@@ -2,8 +2,8 @@
 import asyncio
 import logging
 
-from roonapi import RoonApi, RoonDiscovery  # type: ignore[import-untyped]
-import voluptuous as vol  # type: ignore[import-untyped]
+from roonapi import RoonApi, RoonDiscovery
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
