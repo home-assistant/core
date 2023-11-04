@@ -120,7 +120,6 @@ from .const import (  # noqa: F401
     TCP,
     UDP,
     DataType,
-    RegisterBytes,
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
@@ -189,15 +188,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CONF_SWAP_WORD_BYTE,
             ]
         ),
-        vol.Optional(CONF_REGISTER_SIZE_BYTES, default=RegisterBytes.NOT_SET): vol.In(
-            [
-                RegisterBytes.NOT_SET,
-                RegisterBytes.ONE,
-                RegisterBytes.TWO,
-                RegisterBytes.FOUR,
-                RegisterBytes.EIGHT,
-            ]
-        ),
+        vol.Optional(CONF_REGISTER_SIZE_BYTES, default=2): cv.positive_int,
     }
 )
 

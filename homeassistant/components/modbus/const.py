@@ -97,16 +97,6 @@ class DataType(str, Enum):
     FLOAT64 = "float64"
 
 
-class RegisterBytes(int, Enum):
-    """Register size used by sensor."""
-
-    NOT_SET = 0
-    ONE = 1
-    TWO = 2
-    FOUR = 4
-    EIGHT = 8
-
-
 # call types
 CALL_TYPE_COIL = "coil"
 CALL_TYPE_DISCRETE = "discrete_input"
