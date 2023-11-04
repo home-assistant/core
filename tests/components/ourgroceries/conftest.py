@@ -56,11 +56,10 @@ def mock_ourgroceries(items: list[dict]) -> AsyncMock:
 async def mock_setup_integration(
     hass: HomeAssistant,
     ourgroceries: AsyncMock,
-    ourgroceries_config_entry: MockConfigEntry | None,
+    ourgroceries_config_entry: MockConfigEntry,
 ) -> None:
     """Mock setup of the ourgroceries integration."""
-    if ourgroceries_config_entry is not None:
-        ourgroceries_config_entry.add_to_hass(hass)
+    ourgroceries_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.ourgroceries.OurGroceries", return_value=ourgroceries
     ):

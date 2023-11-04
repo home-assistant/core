@@ -10,6 +10,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -33,6 +34,8 @@ class OurGroceriesTodoListEntity(
 ):
     """An OurGroceries TodoListEntity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
@@ -49,7 +52,12 @@ class OurGroceriesTodoListEntity(
         super().__init__(coordinator=coordinator)
         self._list_id = list_id
         self._attr_unique_id = list_id
-        self._attr_name = list_name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, list_id)},
+            manufacturer="OurGroceries",
+            name=list_name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
