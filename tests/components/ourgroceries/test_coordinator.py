@@ -1,14 +1,12 @@
 """Define tests for the OurGroceries coordinator."""
+from asyncio import TimeoutError as AsyncIOTimeoutError
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.ourgroceries.coordinator import (
-    SCAN_INTERVAL,
-    AsyncIOTimeoutError,
-    ClientError,
-)
+from homeassistant.components.ourgroceries.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
