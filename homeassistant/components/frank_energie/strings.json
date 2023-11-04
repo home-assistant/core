@@ -8,5 +8,84 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "electricity_markup": {
+        "name": "Current electricity price (All-in)"
+      },
+      "electricity_market": {
+        "name": "Current electricity market price"
+      },
+      "electricity_tax": {
+        "name": "Current electricity price including tax"
+      },
+      "electricity_tax_vat": {
+        "name": "Current electricity VAT price"
+      },
+      "electricity_sourcing": {
+        "name": "Current electricity sourcing markup"
+      },
+      "electricity_tax_only": {
+        "name": "Current electricity tax only"
+      },
+      "electricity_billed": {
+        "name": "Current electricity billed"
+      },
+      "gas_markup": {
+        "name": "Current gas price (All-in)"
+      },
+      "gas_market": {
+        "name": "Current gas market price"
+      },
+      "gas_tax": {
+        "name": "Current gas price including tax"
+      },
+      "gas_tax_vat": {
+        "name": "Current gas VAT price"
+      },
+      "gas_sourcing": {
+        "name": "Current gas sourcing price"
+      },
+      "gas_tax_only": {
+        "name": "Current gas tax only"
+      },
+      "gas_billed": {
+        "name": "Current gas billed"
+      },
+      "gas_min": {
+        "name": "Lowest gas price today"
+      },
+      "gas_max": {
+        "name": "Highest gas price today"
+      },
+      "electricity_min": {
+        "name": "Lowest energy price today"
+      },
+      "electricity_max": {
+        "name": "Highest energy price today"
+      },
+      "electricity_avg": {
+        "name": "Average electricity price today"
+      },
+      "actual_costs_until_last_meter_reading_date": {
+        "name": "Actual monthly cost"
+      },
+      "expected_costs_until_last_meter_reading_date": {
+        "name": "Expected monthly cost until now"
+      },
+      "expected_costs_this_month": {
+        "name": "Expected cost this month"
+      },
+      "invoice_previous_period": {
+        "name": "Invoice previous period"
+      },
+      "invoice_current_period": {
+        "name": "Invoice current period"
+      },
+      "invoice_upcoming_period": {
+        "name": "Invoice upcoming period"
+      }
+    }
   }
 }

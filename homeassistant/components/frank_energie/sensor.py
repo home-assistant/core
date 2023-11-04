@@ -61,7 +61,7 @@ class FrankEnergieEntityDescription(
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     FrankEnergieEntityDescription(
         key="electricity_markup",
-        name="Current electricity price (All-in)",
+        translation_key="electricity_markup",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -70,7 +70,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_market",
-        name="Current electricity market price",
+        translation_key="electricity_market",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -79,7 +79,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_tax",
-        name="Current electricity price including tax",
+        translation_key="electricity_tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -90,7 +90,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_tax_vat",
-        name="Current electricity VAT price",
+        translation_key="electricity_tax_vat",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -99,7 +99,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_sourcing",
-        name="Current electricity sourcing markup",
+        translation_key="electricity_sourcing",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,7 +108,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_tax_only",
-        name="Current electricity tax only",
+        translation_key="electricity_tax_only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -117,7 +117,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_billed",
-        name="Current electricity billed",
+        translation_key="electricity_billed",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,7 +126,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_markup",
-        name="Current gas price (All-in)",
+        translation_key="gas_markup",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -135,7 +135,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_market",
-        name="Current gas market price",
+        translation_key="gas_market",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -144,7 +144,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_tax",
-        name="Current gas price including tax",
+        translation_key="gas_tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -153,7 +153,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_tax_vat",
-        name="Current gas VAT price",
+        translation_key="gas_tax_vat",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -162,7 +162,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_sourcing",
-        name="Current gas sourcing price",
+        translation_key="gas_sourcing",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -171,7 +171,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_tax_only",
-        name="Current gas tax only",
+        translation_key="gas_tax_only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -180,7 +180,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_billed",
-        name="Current gas billed",
+        translation_key="gas_billed",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -189,7 +189,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_min",
-        name="Lowest gas price today",
+        translation_key="gas_min",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -198,7 +198,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="gas_max",
-        name="Highest gas price today",
+        translation_key="gas_max",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -207,7 +207,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_min",
-        name="Lowest energy price today",
+        translation_key="electricity_min",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -216,7 +216,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_max",
-        name="Highest energy price today",
+        translation_key="electricity_max",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -225,7 +225,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="electricity_avg",
-        name="Average electricity price today",
+        translation_key="electricity_avg",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -233,7 +233,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="actual_costs_until_last_meter_reading_date",
-        name="Actual monthly cost",
+        translation_key="actual_costs_until_last_meter_reading_date",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -246,7 +246,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="expected_costs_until_last_meter_reading_date",
-        name="Expected monthly cost until now",
+        translation_key="expected_costs_until_last_meter_reading_date",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -259,7 +259,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="expected_costs_this_month",
-        name="Expected cost this month",
+        translation_key="expected_costs_this_month",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -269,7 +269,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="invoice_previous_period",
-        name="Invoice previous period",
+        translation_key="invoice_previous_period",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -285,7 +285,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="invoice_current_period",
-        name="Invoice current period",
+        translation_key="invoice_current_period",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -301,7 +301,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="invoice_upcoming_period",
-        name="Invoice upcoming period",
+        translation_key="invoice_upcoming_period",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -340,6 +340,8 @@ async def async_setup_entry(
 
 class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Frank Energie sensor."""
+
+    _attr_has_entity_name = True
 
     _attr_attribution = "Data provided by Frank Energie"
     _attr_icon = "mdi:currency-eur"
