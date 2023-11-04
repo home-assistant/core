@@ -51,7 +51,7 @@ async def async_setup_entry(
 
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
-        BlinkSensor(camera, description)
+        BlinkSensor(coordinator, camera, description)
         for camera in coordinator.api.cameras
         for description in SENSOR_TYPES
     ]
@@ -66,11 +66,12 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
+        coordinator: BlinkUpdateCoordinator,
         camera,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize sensors from Blink camera."""
-        super().__init__(self.coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
 
         self._camera = self.coordinator.api.cameras[camera]

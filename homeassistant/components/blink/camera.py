@@ -35,7 +35,8 @@ async def async_setup_entry(
 
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
-        BlinkCamera(name, camera) for name, camera in coordinator.api.cameras.items()
+        BlinkCamera(coordinator, name, camera)
+        for name, camera in coordinator.api.cameras.items()
     ]
 
     async_add_entities(entities)
@@ -50,9 +51,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, name, camera) -> None:
+    def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
         """Initialize a camera."""
-        super().__init__(self.coordinator)
+        super().__init__(coordinator)
         Camera.__init__(self)
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
