@@ -129,5 +129,22 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "workday": {
+        "state_attributes": {
+          "workdays": {
+            "name": "[%key:component::workday::config::step::options::data::workdays%]"
+          },
+          "excludes": {
+            "name": "[%key:component::workday::config::step::options::data::excludes%]"
+          },
+          "days_offset": {
+            "name": "[%key:component::workday::config::step::options::data::days_offset%]"
+          }
+        }
+      }
+    }
   }
 }
