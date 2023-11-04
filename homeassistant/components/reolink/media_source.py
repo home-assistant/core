@@ -122,6 +122,7 @@ class ReolinkVODMediaSource(MediaSource):
         device_reg = dr.async_get(self.hass)
         for config_entry_id in self.data:
             channels = []
+            host = self.data[config_entry_id].host
             entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
             for entity in entities:
                 if (
@@ -139,6 +140,10 @@ class ReolinkVODMediaSource(MediaSource):
                 if ch in channels:
                     continue
                 channels.append(ch)
+
+                if host.api.api_version("recReplay", ch) < 1:
+                    # playback stream not supported by this camera
+                    continue
 
                 device_name = (
                     device.name_by_user
