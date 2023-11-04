@@ -6,7 +6,6 @@ DOMAIN = "roon"
 
 CONF_ROON_ID = "roon_server_id"
 CONF_ROON_NAME = "roon_server_name"
-CONF_ENABLE_VOLUME_HOOKS = "roon_volume_hooks"
 
 DATA_CONFIGS = "roon_configs"
 

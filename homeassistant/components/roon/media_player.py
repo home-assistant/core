@@ -74,14 +74,10 @@ async def async_setup_entry(
             # new player!
             media_player = RoonDevice(roon_server, player_data)
             media_players.add(dev_id)
-
-            entities = [media_player]
-
-            if roon_server.volume_hook:
-                entities.append(
-                    RoonEventEntity(roon_server, player_data["display_name"])
-                )
-
+            entities = [
+                media_player,
+                RoonEventEntity(roon_server, player_data["display_name"]),
+            ]
             async_add_entities(entities)
         else:
             # update existing player
