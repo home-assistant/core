@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
+
+import caldav
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.core import HomeAssistant
@@ -16,6 +19,25 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
+
+
+async def async_get_calendars(
+    hass: HomeAssistant, client: caldav.DAVClient, component: str
+) -> list[caldav.Calendar]:
+    """Get all calendars that support the specified component."""
+    calendars = await hass.async_add_executor_job(client.principal().calendars)
+    components_results = await asyncio.gather(
+        *[
+            hass.async_add_executor_job(calendar.get_supported_components)
+            for calendar in calendars
+        ]
+    )
+    results = []
+    for calendar, supported_components in zip(calendars, components_results):
+        if component not in supported_components:
+            continue
+        results.append(calendar)
+    return results
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
