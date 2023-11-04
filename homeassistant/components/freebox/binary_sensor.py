@@ -124,14 +124,12 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
         """Initialize a cover for another device."""
-        cover_node = next(
-            filter(
-                lambda x: (x["name"] == self._sensor_name and x["ep_type"] == "signal"),
-                node["type"]["endpoints"],
-            ),
-            None,
-        )
-        super().__init__(hass, router, node, cover_node)
+        for endpoint in node["type"]["endpoints"]:
+            if (
+                endpoint["name"] == self._sensor_name
+                and endpoint["ep_type"] == "signal"
+            ):
+                super().__init__(hass, router, node, endpoint)
 
 
 class FreeboxRaidDegradedSensor(BinarySensorEntity):
