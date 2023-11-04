@@ -1097,6 +1097,9 @@ janus==1.0.0
 # homeassistant.components.abode
 jaraco.abode==3.3.0
 
+# homeassistant.components.abode
+jaraco.functools==3.9.0
+
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
