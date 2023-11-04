@@ -71,7 +71,8 @@ class WeatherFlowSensorEntityDescription(
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
-        raw_sensor_data = getattr(device, self.key)
+        if (raw_sensor_data := getattr(device, self.key)) is None:
+            return None
         return self.raw_data_conv_fn(raw_sensor_data)
 
 
