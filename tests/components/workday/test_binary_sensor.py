@@ -298,7 +298,7 @@ async def test_check_date_service(
         blocking=True,
         return_response=True,
     )
-    assert response == {"date": "2022-12-25", "workday": False}
+    assert response == {"workday": False}
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -310,4 +310,4 @@ async def test_check_date_service(
         blocking=True,
         return_response=True,
     )
-    assert response == {"date": "2022-12-23", "workday": True}
+    assert response == {"workday": True}

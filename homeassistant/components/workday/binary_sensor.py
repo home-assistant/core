@@ -124,10 +124,7 @@ async def async_setup_entry(
         """Check if date is workday or not."""
         date_to_test: date = service_call.data[CHECK_DATE]
         holiday_date = date_to_test in obj_holidays
-
-        date_string = date_to_test.strftime("%Y-%m-%d")
-
-        return {"date": date_string, "workday": not holiday_date}
+        return {"workday": not holiday_date}
 
     hass.services.async_register(
         DOMAIN,
