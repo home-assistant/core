@@ -102,6 +102,11 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_ICON: "mdi:string-lights",
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     state = hass.states.get("light.ledblue_33445566")
@@ -283,6 +288,11 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_ICON: "mdi:string-lights",
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     # Make sure no discovery calls are made while we emulate time passing
@@ -320,6 +330,11 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
             ATTR_SUPPORTED_FEATURES: 0,
             ATTR_ICON: "mdi:string-lights",
+            ATTR_COLOR_MODE: None,
+            ATTR_BRIGHTNESS: None,
+            ATTR_HS_COLOR: None,
+            ATTR_RGB_COLOR: None,
+            ATTR_XY_COLOR: None,
         }
 
         with patch.object(

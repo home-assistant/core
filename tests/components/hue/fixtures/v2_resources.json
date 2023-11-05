@@ -475,6 +475,10 @@
       {
         "rid": "db50a5d9-8cc7-486f-be06-c0b8f0d26c69",
         "rtype": "zigbee_connectivity"
+      },
+      {
+        "rid": "2f029c7b-868b-49e9-aa01-a0bbc595990d",
+        "rtype": "relative_rotary"
       }
     ],
     "type": "device"
@@ -2046,37 +2050,53 @@
     "type": "temperature"
   },
   {
+    "id": "9ad57767-e622-4f91-9086-2e5573bc781b",
+    "type": "behavior_instance",
+    "script_id": "e73bc72d-96b1-46f8-aa57-729861f80c78",
+    "enabled": true,
+    "state": {
+      "timer_state": "stopped"
+    },
     "configuration": {
-      "end_state": "last_state",
+      "duration": {
+        "seconds": 60
+      },
+      "what": [
+        {
+          "group": {
+            "rid": "5e799732-e82e-46ab-b5d9-52b701bd7cbc",
+            "rtype": "room"
+          },
+          "recall": {
+            "rid": "732ff1d9-76a7-4630-aad0-c8acc499bb0b",
+            "rtype": "recipe"
+          }
+        }
+      ],
       "where": [
         {
           "group": {
-            "rid": "c14cf1cf-6c7a-4984-b8bb-c5b71aeb70fc",
-            "rtype": "entertainment_configuration"
+            "rid": "5e799732-e82e-46ab-b5d9-52b701bd7cbc",
+            "rtype": "room"
           }
         }
       ]
     },
     "dependees": [
       {
-        "level": "critical",
         "target": {
-          "rid": "c14cf1cf-6c7a-4984-b8bb-c5b71aeb70fc",
-          "rtype": "entertainment_configuration"
+          "rid": "5e799732-e82e-46ab-b5d9-52b701bd7cbc",
+          "rtype": "room"
         },
+        "level": "critical",
         "type": "ResourceDependee"
       }
     ],
-    "enabled": true,
-    "id": "0670cfb1-2bd7-4237-a0e3-1827a44d7231",
+    "status": "running",
     "last_error": "",
     "metadata": {
-      "name": "state_after_streaming"
-    },
-    "migrated_from": "/resourcelinks/47450",
-    "script_id": "7719b841-6b3d-448d-a0e7-601ae9edb6a2",
-    "status": "running",
-    "type": "behavior_instance"
+      "name": "Timer Test"
+    }
   },
   {
     "configuration_schema": {
@@ -2217,5 +2237,113 @@
     "id": "52612630-841e-4d39-9763-60346a0da759",
     "is_configured": true,
     "type": "geolocation"
+  },
+  {
+    "id": "0240be0e-8b79-4a53-b9bb-b17fa14d7e75",
+    "product_data": {
+      "model_id": "SOC001",
+      "manufacturer_name": "Signify Netherlands B.V.",
+      "product_name": "Hue secure contact sensor",
+      "product_archetype": "unknown_archetype",
+      "certified": true,
+      "software_version": "2.67.9",
+      "hardware_platform_type": "100b-125"
+    },
+    "metadata": {
+      "name": "Test contact sensor",
+      "archetype": "unknown_archetype"
+    },
+    "identify": {},
+    "services": [
+      {
+        "rid": "18802b4a-b2f6-45dc-8813-99cde47f3a4a",
+        "rtype": "contact"
+      },
+      {
+        "rid": "d7fcfab0-69e1-4afb-99df-6ed505211db4",
+        "rtype": "tamper"
+      }
+    ],
+    "type": "device"
+  },
+  {
+    "id": "18802b4a-b2f6-45dc-8813-99cde47f3a4a",
+    "owner": {
+      "rid": "0240be0e-8b79-4a53-b9bb-b17fa14d7e75",
+      "rtype": "device"
+    },
+    "enabled": true,
+    "contact_report": {
+      "changed": "2023-09-27T10:01:36.968Z",
+      "state": "contact"
+    },
+    "type": "contact"
+  },
+  {
+    "id": "d7fcfab0-69e1-4afb-99df-6ed505211db4",
+    "owner": {
+      "rid": "0240be0e-8b79-4a53-b9bb-b17fa14d7e75",
+      "rtype": "device"
+    },
+    "tamper_reports": [
+      {
+        "changed": "2023-09-25T10:02:08.774Z",
+        "source": "battery_door",
+        "state": "not_tampered"
+      }
+    ],
+    "type": "tamper"
+  },
+  {
+    "id": "1cbda90c-b675-46b0-9e97-278e7e7857ed",
+    "id_v1": "/sensors/249",
+    "product_data": {
+      "model_id": "CAMERA",
+      "manufacturer_name": "Signify Netherlands B.V.",
+      "product_name": "Fake Hue Test Camera",
+      "product_archetype": "unknown_archetype",
+      "certified": true,
+      "software_version": "0.0.0",
+      "hardware_platform_type": "0"
+    },
+    "metadata": {
+      "name": "Test Camera",
+      "archetype": "unknown_archetype"
+    },
+    "identify": {},
+    "usertest": {
+      "status": "set",
+      "usertest": false
+    },
+    "services": [
+      {
+        "rid": "d9f2cfee-5879-426b-aa1f-553af8f38176",
+        "rtype": "camera_motion"
+      }
+    ],
+    "type": "device"
+  },
+  {
+    "id": "d9f2cfee-5879-426b-aa1f-553af8f38176",
+    "id_v1": "/sensors/249",
+    "owner": {
+      "rid": "1cbda90c-b675-46b0-9e97-278e7e7857ed",
+      "rtype": "device"
+    },
+    "enabled": true,
+    "motion": {
+      "motion": true,
+      "motion_valid": true,
+      "motion_report": {
+        "changed": "2023-09-27T10:06:41.822Z",
+        "motion": true
+      }
+    },
+    "sensitivity": {
+      "status": "set",
+      "sensitivity": 2,
+      "sensitivity_max": 4
+    },
+    "type": "motion"
   }
 ]

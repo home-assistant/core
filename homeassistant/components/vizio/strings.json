@@ -23,7 +23,7 @@
         "description": "Your VIZIO SmartCast Device is now connected to Home Assistant."
       },
       "pairing_complete_import": {
-        "title": "Pairing Complete",
+        "title": "[%key:component::vizio::config::step::pairing_complete::title%]",
         "description": "Your VIZIO SmartCast Device is now connected to Home Assistant.\n\nYour access token is '**{access_token}**'."
       }
     },
@@ -47,6 +47,26 @@
           "volume_step": "Volume Step Size",
           "include_or_exclude": "Include or Exclude Apps?",
           "apps_to_include_or_exclude": "Apps to Include or Exclude"
+        }
+      }
+    }
+  },
+  "services": {
+    "update_setting": {
+      "name": "Update setting",
+      "description": "Updates the value of a setting on a Vizio media player device.",
+      "fields": {
+        "setting_type": {
+          "name": "Setting type",
+          "description": "The type of setting to be changed. Available types are listed in the 'setting_types' property."
+        },
+        "setting_name": {
+          "name": "Setting name",
+          "description": "The name of the setting to be changed. Available settings for a given setting_type are listed in the '[setting_type]_settings' property."
+        },
+        "new_value": {
+          "name": "New value",
+          "description": "The new value for the setting."
         }
       }
     }

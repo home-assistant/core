@@ -1,17 +1,19 @@
 """Contains the shared Coordinator for Starlink systems."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import async_timeout
 from starlink_grpc import (
     AlertDict,
     ChannelContext,
     GrpcError,
+    LocationDict,
     ObstructionDict,
     StatusDict,
+    location_data,
     reboot,
     set_stow_state,
     status_data,
@@ -28,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class StarlinkData:
     """Contains data pulled from the Starlink system."""
 
+    location: LocationDict
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
@@ -48,18 +51,21 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         )
 
     async def _async_update_data(self) -> StarlinkData:
-        async with async_timeout.timeout(4):
+        async with asyncio.timeout(4):
             try:
                 status = await self.hass.async_add_executor_job(
                     status_data, self.channel_context
                 )
-                return StarlinkData(*status)
+                location = await self.hass.async_add_executor_job(
+                    location_data, self.channel_context
+                )
+                return StarlinkData(location, *status)
             except GrpcError as exc:
                 raise UpdateFailed from exc
 
-    async def async_stow_starlink(self, stow: bool):
+    async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
-        async with async_timeout.timeout(4):
+        async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(
                     set_stow_state, not stow, self.channel_context
@@ -67,9 +73,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             except GrpcError as exc:
                 raise HomeAssistantError from exc
 
-    async def async_reboot_starlink(self):
+    async def async_reboot_starlink(self) -> None:
         """Reboot the Starlink system tied to this coordinator."""
-        async with async_timeout.timeout(4):
+        async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(reboot, self.channel_context)
             except GrpcError as exc:

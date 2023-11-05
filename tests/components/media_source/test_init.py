@@ -95,7 +95,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     media = await media_source.async_browse_media(hass, const.URI_SCHEME)
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert len(media.children) == 1
-    assert media.children[0].title == "Local Media"
+    assert media.children[0].title == "My media"
 
 
 async def test_async_resolve_media(hass: HomeAssistant) -> None:

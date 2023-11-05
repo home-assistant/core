@@ -8,6 +8,7 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import fan, mqtt
 from homeassistant.components.fan import (
+    ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
@@ -15,6 +16,8 @@ from homeassistant.components.fan import (
     NotValidPresetModeError,
 )
 from homeassistant.components.mqtt.fan import (
+    CONF_DIRECTION_COMMAND_TOPIC,
+    CONF_DIRECTION_STATE_TOPIC,
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
     CONF_PERCENTAGE_COMMAND_TOPIC,
@@ -57,6 +60,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -92,12 +96,8 @@ async def test_fail_setup_if_no_command_topic(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test if command fails with command topic."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['fan'][0]['command_topic']"
-        in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -111,6 +111,8 @@ async def test_fail_setup_if_no_command_topic(
                     "command_topic": "command-topic",
                     "payload_off": "StAtE_OfF",
                     "payload_on": "StAtE_On",
+                    "direction_state_topic": "direction-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "oscillation-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "payload_oscillation_off": "OsC_OfF",
@@ -156,6 +158,14 @@ async def test_controlling_state_via_topic(
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get("oscillating") is False
+
+    async_fire_mqtt_message(hass, "direction-state-topic", "forward")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "forward"
+
+    async_fire_mqtt_message(hass, "direction-state-topic", "reverse")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "reverse"
 
     async_fire_mqtt_message(hass, "oscillation-state-topic", "OsC_On")
     state = hass.states.get("fan.test")
@@ -357,6 +367,8 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "direction_state_topic": "direction-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "oscillation-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "percentage_state_topic": "percentage-state-topic",
@@ -372,6 +384,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                         "silent",
                     ],
                     "state_value_template": "{{ value_json.val }}",
+                    "direction_value_template": "{{ value_json.val }}",
                     "oscillation_value_template": "{{ value_json.val }}",
                     "percentage_value_template": "{{ value_json.val }}",
                     "preset_mode_value_template": "{{ value_json.val }}",
@@ -406,6 +419,14 @@ async def test_controlling_state_via_topic_and_json_message(
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get("oscillating") is False
+
+    async_fire_mqtt_message(hass, "direction-state-topic", '{"val":"forward"}')
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "forward"
+
+    async_fire_mqtt_message(hass, "direction-state-topic", '{"val":"reverse"}')
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "reverse"
 
     async_fire_mqtt_message(hass, "oscillation-state-topic", '{"val":"oscillate_on"}')
     state = hass.states.get("fan.test")
@@ -464,6 +485,8 @@ async def test_controlling_state_via_topic_and_json_message(
                     "name": "test",
                     "state_topic": "shared-state-topic",
                     "command_topic": "command-topic",
+                    "direction_state_topic": "shared-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "shared-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "percentage_state_topic": "shared-state-topic",
@@ -479,6 +502,7 @@ async def test_controlling_state_via_topic_and_json_message(
                         "silent",
                     ],
                     "state_value_template": "{{ value_json.state }}",
+                    "direction_value_template": "{{ value_json.direction }}",
                     "oscillation_value_template": "{{ value_json.oscillation }}",
                     "percentage_value_template": "{{ value_json.percentage }}",
                     "preset_mode_value_template": "{{ value_json.preset_mode }}",
@@ -499,15 +523,23 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("direction") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"ON","preset_mode":"eco","oscillation":"oscillate_on","percentage": 50}',
+        """{
+        "state":"ON",
+        "preset_mode":"eco",
+        "oscillation":"oscillate_on",
+        "percentage": 50,
+        "direction": "forward"
+        }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+    assert state.attributes.get("direction") == "forward"
     assert state.attributes.get("oscillating") is True
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 50
     assert state.attributes.get("preset_mode") == "eco"
@@ -515,10 +547,17 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"ON","preset_mode":"auto","oscillation":"oscillate_off","percentage": 10}',
+        """{
+       "state":"ON",
+       "preset_mode":"auto",
+       "oscillation":"oscillate_off",
+       "percentage": 10,
+       "direction": "forward"
+       }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+    assert state.attributes.get("direction") == "forward"
     assert state.attributes.get("oscillating") is False
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 10
     assert state.attributes.get("preset_mode") == "auto"
@@ -526,10 +565,17 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"OFF","preset_mode":"auto","oscillation":"oscillate_off","percentage": 0}',
+        """{
+        "state":"OFF",
+        "preset_mode":"auto",
+        "oscillation":"oscillate_off",
+        "percentage": 0,
+        "direction": "reverse"
+        }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
+    assert state.attributes.get("direction") == "reverse"
     assert state.attributes.get("oscillating") is False
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get("preset_mode") == "auto"
@@ -555,6 +601,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
                     "command_topic": "command-topic",
                     "payload_off": "StAtE_OfF",
                     "payload_on": "StAtE_On",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "payload_oscillation_off": "OsC_OfF",
                     "payload_oscillation_on": "OsC_On",
@@ -593,6 +640,24 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_off(hass, "fan.test")
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "StAtE_OfF", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "forward")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "forward", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "reverse", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -924,6 +989,8 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
                     "name": "test",
                     "command_topic": "command-topic",
                     "command_template": "state: {{ value }}",
+                    "direction_command_topic": "direction-command-topic",
+                    "direction_command_template": "direction: {{ value }}",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "oscillation_command_template": "oscillation: {{ value }}",
                     "percentage_command_topic": "percentage-command-topic",
@@ -967,6 +1034,24 @@ async def test_sending_mqtt_command_templates_(
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "forward")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "direction: forward", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "forward"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "direction: reverse", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("direction") == "reverse"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     with pytest.raises(MultipleInvalid):
@@ -1131,6 +1216,8 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "direction_state_topic": "direction-state-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_state_topic": "oscillation-state-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "percentage_state_topic": "percentage-state-topic",
@@ -1250,6 +1337,15 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+    await common.async_set_direction(hass, "fan.test", "forward")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "forward", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
     await common.async_oscillate(hass, "fan.test", True)
     mqtt_mock.async_publish.assert_called_once_with(
         "oscillation-command-topic", "oscillate_on", 0, False
@@ -1270,6 +1366,15 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_off(hass, "fan.test")
     mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "direction-command-topic", "reverse", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1368,6 +1473,12 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
             ATTR_OSCILLATING,
             True,
         ),
+        (
+            CONF_DIRECTION_STATE_TOPIC,
+            "reverse",
+            ATTR_DIRECTION,
+            "reverse",
+        ),
     ],
 )
 async def test_encoding_subscribable_topics(
@@ -1383,6 +1494,7 @@ async def test_encoding_subscribable_topics(
     config[ATTR_PRESET_MODES] = ["eco", "auto"]
     config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
     config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
+    config[CONF_DIRECTION_COMMAND_TOPIC] = "fan/some_direction_command_topic"
     config[CONF_OSCILLATION_COMMAND_TOPIC] = "fan/some_oscillation_command_topic"
     await help_test_encoding_subscribable_topics(
         hass,
@@ -1404,6 +1516,7 @@ async def test_encoding_subscribable_topics(
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
+                    "direction_command_topic": "direction-command-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
                     "preset_mode_command_topic": "preset-mode-command-topic",
                     "percentage_command_topic": "percentage-command-topic",
@@ -1432,18 +1545,28 @@ async def test_attributes(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is None
+    assert state.attributes.get(fan.ATTR_DIRECTION) is None
 
     await common.async_turn_off(hass, "fan.test")
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is None
+    assert state.attributes.get(fan.ATTR_DIRECTION) is None
 
     await common.async_oscillate(hass, "fan.test", True)
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is True
+    assert state.attributes.get(fan.ATTR_DIRECTION) is None
+
+    await common.async_set_direction(hass, "fan.test", "reverse")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(fan.ATTR_OSCILLATING) is True
+    assert state.attributes.get(fan.ATTR_DIRECTION) == "reverse"
 
     await common.async_oscillate(hass, "fan.test", False)
     state = hass.states.get("fan.test")
@@ -1451,9 +1574,16 @@ async def test_attributes(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
 
+    await common.async_set_direction(hass, "fan.test", "forward")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
+    assert state.attributes.get(fan.ATTR_DIRECTION) == "forward"
+
 
 @pytest.mark.parametrize(
-    ("name", "hass_config", "success", "features"),
+    ("name", "hass_config", "success", "features", "error_message"),
     [
         (
             "test1",
@@ -1467,6 +1597,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature(0),
+            None,
         ),
         (
             "test2",
@@ -1481,6 +1612,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.OSCILLATE,
+            None,
         ),
         (
             "test3",
@@ -1495,6 +1627,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test4",
@@ -1509,6 +1642,7 @@ async def test_attributes(
             },
             False,
             None,
+            "some but not all values in the same group of inclusion 'preset_modes'",
         ),
         (
             "test5",
@@ -1524,6 +1658,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test6",
@@ -1539,6 +1674,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test7",
@@ -1553,6 +1689,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test8",
@@ -1568,6 +1705,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.OSCILLATE | fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test9",
@@ -1583,6 +1721,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test10",
@@ -1598,6 +1737,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test11",
@@ -1614,6 +1754,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE | fan.FanEntityFeature.OSCILLATE,
+            None,
         ),
         (
             "test12",
@@ -1630,6 +1771,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test13",
@@ -1646,6 +1788,7 @@ async def test_attributes(
             },
             False,
             None,
+            "speed_range_max must be > speed_range_min",
         ),
         (
             "test14",
@@ -1662,13 +1805,14 @@ async def test_attributes(
             },
             False,
             None,
+            "speed_range_min must be > 0",
         ),
         (
             "test15",
             {
                 mqtt.DOMAIN: {
                     fan.DOMAIN: {
-                        "name": "test7reset_payload_in_preset_modes_a",
+                        "name": "test15",
                         "command_topic": "command-topic",
                         "preset_mode_command_topic": "preset-mode-command-topic",
                         "preset_modes": ["auto", "smart", "normal", "None"],
@@ -1677,6 +1821,7 @@ async def test_attributes(
             },
             False,
             None,
+            "preset_modes must not contain payload_reset_preset_mode",
         ),
         (
             "test16",
@@ -1693,25 +1838,42 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            "some error",
+        ),
+        (
+            "test17",
+            {
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test17",
+                        "command_topic": "command-topic",
+                        "direction_command_topic": "direction-command-topic",
+                    }
+                }
+            },
+            True,
+            fan.FanEntityFeature.DIRECTION,
+            "some error",
         ),
     ],
 )
 async def test_supported_features(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     name: str,
     success: bool,
-    features,
+    features: fan.FanEntityFeature | None,
+    error_message: str | None,
 ) -> None:
     """Test optimistic mode without state topic."""
+    await mqtt_mock_entry()
+    state = hass.states.get(f"fan.{name}")
+    assert (state is not None) == success
     if success:
-        await mqtt_mock_entry()
-
-        state = hass.states.get(f"fan.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
         return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert error_message in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -2027,6 +2189,13 @@ async def test_entity_debug_info_message(
             "oscillate_on",
             "oscillation_command_template",
         ),
+        (
+            fan.SERVICE_SET_DIRECTION,
+            "direction_command_topic",
+            {fan.ATTR_DIRECTION: "forward"},
+            "forward",
+            "direction_command_template",
+        ),
     ],
 )
 async def test_publishing_with_custom_encoding(
@@ -2069,7 +2238,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -2089,3 +2262,48 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            fan.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "direction_state_topic": "direction-state-topic",
+                    "percentage_state_topic": "percentage-state-topic",
+                    "preset_mode_command_topic": "preset-mode-command-topic",
+                    "preset_mode_state_topic": "preset-mode-state-topic",
+                    "preset_modes": ["eco", "silent"],
+                    "oscillation_state_topic": "oscillation-state-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("state-topic", "ON", "OFF"),
+        ("direction-state-topic", "forward", "reverse"),
+        ("percentage-state-topic", "30", "40"),
+        ("preset-mode-state-topic", "eco", "silent"),
+        ("oscillation-state-topic", "oscillate_on", "oscillate_off"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

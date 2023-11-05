@@ -17,7 +17,7 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import fake_post_request, selected_platforms, simulate_webhook
 
@@ -420,7 +420,7 @@ async def test_camera_reconnect_webhook(hass: HomeAssistant, config_entry) -> No
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt_util.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
         assert fake_post_hits >= calls
@@ -478,7 +478,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", ["camera"]
+        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
@@ -491,7 +491,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 11
+        assert fake_post_hits == 8
 
 
 async def test_camera_image_raises_exception(

@@ -43,7 +43,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
     device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "https://store.steampowered.com"
     assert device.entry_type == dr.DeviceEntryType.SERVICE

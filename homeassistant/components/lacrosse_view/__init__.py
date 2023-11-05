@@ -1,6 +1,8 @@
 """The LaCrosse View integration."""
 from __future__ import annotations
 
+import logging
+
 from lacrosse_view import LaCrosse, LoginError
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +15,7 @@ from .const import DOMAIN
 from .coordinator import LaCrosseUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -22,17 +25,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await api.login(entry.data["username"], entry.data["password"])
+        _LOGGER.debug("Log in successful")
     except LoginError as error:
         raise ConfigEntryAuthFailed from error
 
     coordinator = LaCrosseUpdateCoordinator(hass, api, entry)
 
+    _LOGGER.debug("First refresh")
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
     }
 
+    _LOGGER.debug("Setting up platforms")
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

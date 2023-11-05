@@ -49,11 +49,11 @@ async def _async_set_ratio(device: wizlight, ratio: int) -> None:
 NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     WizNumberEntityDescription(
         key="effect_speed",
+        translation_key="effect_speed",
         native_min_value=10,
         native_max_value=200,
         native_step=1,
         icon="mdi:speedometer",
-        name="Effect speed",
         value_fn=lambda device: cast(int | None, device.state.get_speed()),
         set_value_fn=_async_set_speed,
         required_feature="effect",
@@ -61,11 +61,11 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     ),
     WizNumberEntityDescription(
         key="dual_head_ratio",
+        translation_key="dual_head_ratio",
         native_min_value=0,
         native_max_value=100,
         native_step=1,
         icon="mdi:floor-lamp-dual",
-        name="Dual head ratio",
         value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",

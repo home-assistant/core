@@ -44,33 +44,12 @@
       "lock": { "name": "Button lock on device" }
     },
     "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "comfort_temperature": { "name": "Comfort temperature" },
       "eco_temperature": { "name": "Eco temperature" },
-      "electric_current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "nextchange_preset": { "name": "Next scheduled preset" },
       "nextchange_temperature": { "name": "Next scheduled temperature" },
       "nextchange_time": { "name": "Next scheduled change time" },
-      "power_consumption": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "scheduled_preset": { "name": "Current scheduled preset" },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "total_energy": {
-        "name": "[%key:component::sensor::entity_component::energy::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
-      }
+      "scheduled_preset": { "name": "Current scheduled preset" }
     }
   }
 }

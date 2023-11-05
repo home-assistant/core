@@ -35,6 +35,7 @@ async def test_async_browse_media(
         "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -212,6 +213,7 @@ async def test_async_browse_media_not_found(
         "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -366,6 +368,7 @@ async def test_async_browse_image(
         "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -421,6 +424,7 @@ async def test_async_browse_image_missing(
         "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

@@ -1,5 +1,4 @@
 """Support for LIRC devices."""
-# pylint: disable=import-error
 import logging
 import threading
 import time
@@ -8,6 +7,7 @@ import lirc
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +19,8 @@ DOMAIN = "lirc"
 EVENT_IR_COMMAND_RECEIVED = "ir_command_received"
 
 ICON = "mdi:remote"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -2,12 +2,20 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, intent, script, template
+from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import (
+    config_validation as cv,
+    intent,
+    script,
+    service,
+    template,
+)
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,10 +63,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the intent script component."""
-    intents = config[DOMAIN]
+async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
+    """Handle reload Intent Script service call."""
+    new_config = await async_integration_yaml_config(hass, DOMAIN)
+    existing_intents = hass.data[DOMAIN]
+
+    for intent_type in existing_intents:
+        intent.async_remove(hass, intent_type)
+
+    if not new_config or DOMAIN not in new_config:
+        hass.data[DOMAIN] = {}
+        return
+
+    new_intents = new_config[DOMAIN]
+
+    async_load_intents(hass, new_intents)
+
+
+def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> None:
+    """Load YAML intents into the intent system."""
     template.attach(hass, intents)
+    hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
@@ -67,25 +92,61 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
 
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the intent script component."""
+    intents = config[DOMAIN]
+
+    async_load_intents(hass, intents)
+
+    async def _handle_reload(service_call: ServiceCall) -> None:
+        return await async_reload(hass, service_call)
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        _handle_reload,
+    )
+
     return True
+
+
+class _IntentSpeechRepromptData(TypedDict):
+    """Intent config data type for speech or reprompt info."""
+
+    content: template.Template
+    title: template.Template
+    text: template.Template
+    type: str
+
+
+class _IntentCardData(TypedDict):
+    """Intent config data type for card info."""
+
+    type: str
+    title: template.Template
+    content: template.Template
 
 
 class ScriptIntentHandler(intent.IntentHandler):
     """Respond to an intent with a script."""
 
-    def __init__(self, intent_type, config):
+    def __init__(self, intent_type: str, config: ConfigType) -> None:
         """Initialize the script intent handler."""
         self.intent_type = intent_type
         self.config = config
 
-    async def async_handle(self, intent_obj: intent.Intent):
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        speech = self.config.get(CONF_SPEECH)
-        reprompt = self.config.get(CONF_REPROMPT)
-        card = self.config.get(CONF_CARD)
-        action = self.config.get(CONF_ACTION)
-        is_async_action = self.config.get(CONF_ASYNC_ACTION)
-        slots = {key: value["value"] for key, value in intent_obj.slots.items()}
+        speech: _IntentSpeechRepromptData | None = self.config.get(CONF_SPEECH)
+        reprompt: _IntentSpeechRepromptData | None = self.config.get(CONF_REPROMPT)
+        card: _IntentCardData | None = self.config.get(CONF_CARD)
+        action: script.Script | None = self.config.get(CONF_ACTION)
+        is_async_action: bool = self.config[CONF_ASYNC_ACTION]
+        slots: dict[str, Any] = {
+            key: value["value"] for key, value in intent_obj.slots.items()
+        }
 
         _LOGGER.debug(
             "Intent named %s received with slots: %s",
@@ -103,29 +164,33 @@ class ScriptIntentHandler(intent.IntentHandler):
                     action.async_run(slots, intent_obj.context)
                 )
             else:
-                await action.async_run(slots, intent_obj.context)
+                action_res = await action.async_run(slots, intent_obj.context)
+
+                # if the action returns a response, make it available to the speech/reprompt templates below
+                if action_res and action_res.service_response is not None:
+                    slots["action_response"] = action_res.service_response
 
         response = intent_obj.create_response()
 
         if speech is not None:
             response.async_set_speech(
-                speech[CONF_TEXT].async_render(slots, parse_result=False),
-                speech[CONF_TYPE],
+                speech["text"].async_render(slots, parse_result=False),
+                speech["type"],
             )
 
         if reprompt is not None:
-            text_reprompt = reprompt[CONF_TEXT].async_render(slots, parse_result=False)
+            text_reprompt = reprompt["text"].async_render(slots, parse_result=False)
             if text_reprompt:
                 response.async_set_reprompt(
                     text_reprompt,
-                    reprompt[CONF_TYPE],
+                    reprompt["type"],
                 )
 
         if card is not None:
             response.async_set_card(
-                card[CONF_TITLE].async_render(slots, parse_result=False),
-                card[CONF_CONTENT].async_render(slots, parse_result=False),
-                card[CONF_TYPE],
+                card["title"].async_render(slots, parse_result=False),
+                card["content"].async_render(slots, parse_result=False),
+                card["type"],
             )
 
         return response

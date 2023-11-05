@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
+from .coordinator import QBittorrentDataCoordinator
 from .helpers import setup_client
 
 PLATFORMS = [Platform.SENSOR]
@@ -27,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up qBittorrent from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
+        client = await hass.async_add_executor_job(
             setup_client,
             entry.data[CONF_URL],
             entry.data[CONF_USERNAME],
@@ -35,12 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_VERIFY_SSL],
         )
     except LoginRequired as err:
-        _LOGGER.error("Invalid credentials")
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Invalid credentials") from err
     except RequestException as err:
-        _LOGGER.error("Failed to connect")
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Failed to connect") from err
+    coordinator = QBittorrentDataCoordinator(hass, client)
 
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

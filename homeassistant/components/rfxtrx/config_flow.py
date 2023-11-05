@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import copy
 import itertools
 import os
@@ -346,33 +347,56 @@ class OptionsFlow(config_entries.OptionsFlow):
                 entity_migration_map[new_entity_id] = entry
 
         @callback
-        def _handle_state_change(
+        def _handle_state_removed(
             entity_id: str, old_state: State | None, new_state: State | None
         ) -> None:
             # Wait for entities to finish cleanup
-            if new_state is None and entity_id in pending_entities:
-                pending_entities.remove(entity_id)
-            if not pending_entities:
+            if new_state is None and entity_id in entities_to_be_removed:
+                entities_to_be_removed.remove(entity_id)
+            if not entities_to_be_removed:
                 wait_for_entities.set()
 
         # Create a set with entities to be removed which are currently in the state
         # machine
-        pending_entities = {
+        entities_to_be_removed = {
             entry.entity_id
             for entry in entity_migration_map.values()
             if not self.hass.states.async_available(entry.entity_id)
         }
         wait_for_entities = asyncio.Event()
         remove_track_state_changes = async_track_state_change(
-            self.hass, pending_entities, _handle_state_change
+            self.hass, entities_to_be_removed, _handle_state_removed
         )
 
         for entry in entity_migration_map.values():
             entity_registry.async_remove(entry.entity_id)
 
         # Wait for entities to finish cleanup
-        await wait_for_entities.wait()
+        with suppress(asyncio.TimeoutError):
+            async with asyncio.timeout(10):
+                await wait_for_entities.wait()
         remove_track_state_changes()
+
+        @callback
+        def _handle_state_added(
+            entity_id: str, old_state: State | None, new_state: State | None
+        ) -> None:
+            # Wait for entities to be added
+            if old_state is None and entity_id in entities_to_be_added:
+                entities_to_be_added.remove(entity_id)
+            if not entities_to_be_added:
+                wait_for_entities.set()
+
+        # Create a set with entities to be added to the state machine
+        entities_to_be_added = {
+            entry.entity_id
+            for entry in entity_migration_map.values()
+            if self.hass.states.async_available(entry.entity_id)
+        }
+        wait_for_entities = asyncio.Event()
+        remove_track_state_changes = async_track_state_change(
+            self.hass, entities_to_be_added, _handle_state_added
+        )
 
         for entity_id, entry in entity_migration_map.items():
             entity_registry.async_update_entity(
@@ -381,6 +405,12 @@ class OptionsFlow(config_entries.OptionsFlow):
                 name=entry.name,
                 icon=entry.icon,
             )
+
+        # Wait for entities to finish renaming
+        with suppress(asyncio.TimeoutError):
+            async with asyncio.timeout(10):
+                await wait_for_entities.wait()
+        remove_track_state_changes()
 
         device_registry.async_remove_device(old_device)
 

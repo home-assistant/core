@@ -5,7 +5,6 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from functools import cached_property
 from typing import Any, Generic, TypeVar
 
 from nibe.coil import Coil, CoilData
@@ -15,6 +14,7 @@ from nibe.connection.nibegw import NibeGW, ProductInfo
 from nibe.exceptions import CoilNotFoundException, ReadException
 from nibe.heatpump import HeatPump, Model, Series
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -25,7 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -54,6 +55,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 COIL_READ_RETRIES = 5
 

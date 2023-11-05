@@ -1,14 +1,10 @@
 update_dsp:
-  name: Update DSP
-  description: Update all DSP settings.
   target:
     entity:
       integration: kef
       domain: media_player
 
 set_mode:
-  name: Set mode
-  description: Set the mode of the speaker.
   target:
     entity:
       integration: kef
@@ -16,36 +12,24 @@ set_mode:
 
   fields:
     desk_mode:
-      name: Desk mode
-      description: Desk mode.
       selector:
         boolean:
     wall_mode:
-      name: Wall mode
-      description: Wall mode.
       selector:
         boolean:
     phase_correction:
-      name: Phase correction
-      description: Phase correction.
       selector:
         boolean:
     high_pass:
-      name: High pass
-      description: High-pass mode".
       selector:
         boolean:
     sub_polarity:
-      name: Subwoofer polarity
-      description: Sub polarity.
       selector:
         select:
           options:
             - "-"
             - "+"
     bass_extension:
-      name: Base extension
-      description: Bass extension.
       selector:
         select:
           options:
@@ -54,16 +38,12 @@ set_mode:
             - "Extra"
 
 set_desk_db:
-  name: Set desk dB
-  description: Set the "Desk mode" slider of the speaker in dB.
   target:
     entity:
       integration: kef
       domain: media_player
   fields:
     db_value:
-      name: dB value
-      description: Value of the slider
       example: 0.0
       selector:
         number:
@@ -73,16 +53,12 @@ set_desk_db:
           unit_of_measurement: dB
 
 set_wall_db:
-  name: Set wall dB
-  description: Set the "Wall mode" slider of the speaker in dB.
   target:
     entity:
       integration: kef
       domain: media_player
   fields:
     db_value:
-      name: dB value
-      description: Value of the slider.
       selector:
         number:
           min: -6
@@ -91,16 +67,12 @@ set_wall_db:
           unit_of_measurement: dB
 
 set_treble_db:
-  name: Set treble dB
-  description: Set desk the "Treble trim" slider of the speaker in dB.
   target:
     entity:
       integration: kef
       domain: media_player
   fields:
     db_value:
-      name: dB value
-      description: Value of the slider.
       selector:
         number:
           min: -2
@@ -109,16 +81,12 @@ set_treble_db:
           unit_of_measurement: dB
 
 set_high_hz:
-  name: Set high hertz
-  description: Set the "High-pass mode" slider of the speaker in Hz.
   target:
     entity:
       integration: kef
       domain: media_player
   fields:
     hz_value:
-      name: Hertz value
-      description: Value of the slider.
       selector:
         number:
           min: 50
@@ -127,16 +95,12 @@ set_high_hz:
           unit_of_measurement: Hz
 
 set_low_hz:
-  name: Set low Hertz
-  description: Set the "Sub out low-pass frequency" slider of the speaker in Hz.
   target:
     entity:
       integration: kef
       domain: media_player
   fields:
     hz_value:
-      name: Hertz value
-      description: Value of the slider.
       selector:
         number:
           min: 40
@@ -145,16 +109,12 @@ set_low_hz:
           unit_of_measurement: Hz
 
 set_sub_db:
-  name: Set subwoofer dB
-  description: Set the "Sub gain" slider of the speaker in dB.
   target:
     entity:
       integration: kef
       domain: media_player
   fields:
     db_value:
-      name: dB value
-      description: Value of the slider.
       selector:
         number:
           min: -10

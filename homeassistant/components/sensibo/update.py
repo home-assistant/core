@@ -43,7 +43,6 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
         key="fw_ver_available",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Update available",
         icon="mdi:rocket-launch",
         value_version=lambda data: data.fw_ver,
         value_available=lambda data: data.fw_ver_available,

@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_get_tts_audio
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---
+# name: test_get_tts_audio_raw
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---
+# name: test_voice_speaker
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+        'voice': dict({
+          'name': 'voice1',
+          'speaker': 'speaker1',
+        }),
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---

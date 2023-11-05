@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -47,6 +47,8 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
     )
+    _attr_has_entity_name = True
+    _attr_name = None
     _installation: Installation
 
     def __init__(self, contract: str, auth: Auth) -> None:
@@ -57,14 +59,13 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._auth = auth
 
         self._attr_code_arm_required = False
-        self._attr_name = f"contract {self.contract}"
-        self._attr_unique_id = self.contract
+        self._attr_unique_id = contract
 
         self._attr_device_info = DeviceInfo(
-            name="Prosegur Alarm",
+            name=f"Contract {contract}",
             manufacturer="Prosegur",
             model="smart",
-            identifiers={(DOMAIN, self.contract)},
+            identifiers={(DOMAIN, contract)},
             configuration_url="https://smart.prosegur.com",
         )
 
@@ -72,7 +73,7 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         """Update alarm status."""
 
         try:
-            self._installation = await Installation.retrieve(self._auth)
+            self._installation = await Installation.retrieve(self._auth, self.contract)
         except ConnectionError as err:
             _LOGGER.error(err)
             self._attr_available = False

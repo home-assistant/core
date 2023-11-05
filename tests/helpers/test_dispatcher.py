@@ -151,3 +151,25 @@ async def test_callback_exception_gets_logged(
         f"Exception in functools.partial({bad_handler}) when dispatching 'test': ('bad',)"
         in caplog.text
     )
+
+
+async def test_dispatcher_add_dispatcher(hass: HomeAssistant) -> None:
+    """Test adding a dispatcher from a dispatcher."""
+    calls = []
+
+    @callback
+    def _new_dispatcher(data):
+        calls.append(data)
+
+    @callback
+    def _add_new_dispatcher(data):
+        calls.append(data)
+        async_dispatcher_connect(hass, "test", _new_dispatcher)
+
+    async_dispatcher_connect(hass, "test", _add_new_dispatcher)
+
+    async_dispatcher_send(hass, "test", 3)
+    async_dispatcher_send(hass, "test", 4)
+    async_dispatcher_send(hass, "test", 5)
+
+    assert calls == [3, 4, 4, 5, 5]

@@ -16,11 +16,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -117,11 +120,13 @@ class MoldIndicator(SensorEntity):
         """Register callbacks."""
 
         @callback
-        def mold_indicator_sensors_state_listener(event):
+        def mold_indicator_sensors_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle for state changes for dependent sensors."""
-            new_state = event.data.get("new_state")
-            old_state = event.data.get("old_state")
-            entity = event.data.get("entity_id")
+            new_state = event.data["new_state"]
+            old_state = event.data["old_state"]
+            entity = event.data["entity_id"]
             _LOGGER.debug(
                 "Sensor state change for %s that had old state %s and new state %s",
                 entity,
@@ -173,7 +178,9 @@ class MoldIndicator(SensorEntity):
             EVENT_HOMEASSISTANT_START, mold_indicator_startup
         )
 
-    def _update_sensor(self, entity, old_state, new_state):
+    def _update_sensor(
+        self, entity: str, old_state: State | None, new_state: State | None
+    ) -> bool:
         """Update information based on new sensor states."""
         _LOGGER.debug("Sensor update for %s", entity)
         if new_state is None:
@@ -194,7 +201,7 @@ class MoldIndicator(SensorEntity):
         return True
 
     @staticmethod
-    def _update_temp_sensor(state):
+    def _update_temp_sensor(state: State) -> float | None:
         """Parse temperature sensor value."""
         _LOGGER.debug("Updating temp sensor with value %s", state.state)
 
@@ -235,7 +242,7 @@ class MoldIndicator(SensorEntity):
         return None
 
     @staticmethod
-    def _update_hum_sensor(state):
+    def _update_hum_sensor(state: State) -> float | None:
         """Parse humidity sensor value."""
         _LOGGER.debug("Updating humidity sensor with value %s", state.state)
 

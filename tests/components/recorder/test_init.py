@@ -56,9 +56,14 @@ from homeassistant.components.recorder.services import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
 )
+from homeassistant.components.recorder.table_managers import (
+    state_attributes as state_attributes_table_manager,
+    states_meta as states_meta_table_manager,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -92,6 +97,15 @@ from tests.common import (
 from tests.typing import RecorderInstanceGenerator
 
 
+@pytest.fixture
+def small_cache_size() -> None:
+    """Patch the default cache size to 8."""
+    with patch.object(state_attributes_table_manager, "CACHE_SIZE", 8), patch.object(
+        states_meta_table_manager, "CACHE_SIZE", 8
+    ):
+        yield
+
+
 def _default_recorder(hass):
     """Return a recorder with reasonable defaults."""
     return Recorder(
@@ -105,7 +119,6 @@ def _default_recorder(hass):
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
         exclude_event_types=set(),
-        exclude_attributes_by_domain={},
     )
 
 
@@ -134,7 +147,7 @@ async def test_shutdown_before_startup_finishes(
     session = await hass.async_add_executor_job(instance.get_session)
 
     with patch.object(instance, "engine"):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         await hass.async_block_till_done()
         await hass.async_stop()
 
@@ -193,7 +206,7 @@ async def test_shutdown_closes_connections(
 
     await instance.async_add_executor_job(_ensure_connected)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
 
     assert len(pool.shutdown.mock_calls) == 1
@@ -449,7 +462,7 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
 
     await async_wait_recording_done(hass)
 
-    with patch.object(instance, "db_retry_wait", 0.05), patch.object(
+    with patch.object(instance, "db_retry_wait", 0.01), patch.object(
         instance.event_session,
         "flush",
         side_effect=OperationalError(
@@ -460,8 +473,8 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
             hass.states.async_set(entity_id, "on", attributes)
             hass.states.async_set(entity_id, "off", attributes)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await hass.async_block_till_done()
 
     assert "Error executing query" in caplog.text
@@ -580,7 +593,6 @@ def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) ->
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=invalid-name
 def test_saving_state_include_domains(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
@@ -941,7 +953,6 @@ async def test_defaults_set(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    # pylint: disable=unsubscriptable-object
     assert recorder_config["auto_purge"]
     assert recorder_config["auto_repack"]
     assert recorder_config["purge_keep_days"] == 10
@@ -1425,7 +1436,7 @@ def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1459,7 +1470,7 @@ def test_service_disable_events_not_recording(
         )
         assert len(db_events) == 0
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_ENABLE,
         {},
@@ -1509,7 +1520,7 @@ def test_service_disable_states_not_recording(
     """Test that state changes are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1522,7 +1533,7 @@ def test_service_disable_states_not_recording(
     with session_scope(hass=hass, read_only=True) as session:
         assert len(list(session.query(States))) == 0
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_ENABLE,
         {},
@@ -1562,7 +1573,7 @@ def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
         assert db_run_info[0].start is not None
         assert db_run_info[0].end is None
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1756,7 +1767,7 @@ async def test_database_lock_and_unlock(
 
     # Recording can't be finished while lock is held
     with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(asyncio.shield(task), timeout=1)
+        await asyncio.wait_for(asyncio.shield(task), timeout=0.25)
         db_events = await hass.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
 
@@ -1772,11 +1783,12 @@ async def test_database_lock_and_overflow(
     hass: HomeAssistant,
     recorder_db_url: str,
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # Database locking is only used for SQLite
-        return
+        return pytest.skip("Database locking is only used for SQLite")
 
     # Use file DB, in memory DB cannot do write locks.
     if recorder_db_url == "sqlite://":
@@ -1786,10 +1798,6 @@ async def test_database_lock_and_overflow(
         recorder.CONF_COMMIT_INTERVAL: 0,
         recorder.CONF_DB_URL: recorder_db_url,
     }
-    await async_setup_recorder_instance(hass, config)
-    await hass.async_block_till_done()
-    event_type = "EVENT_TEST"
-    event_types = (event_type,)
 
     def _get_db_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -1799,24 +1807,108 @@ async def test_database_lock_and_overflow(
                 )
             )
 
-    instance = get_instance(hass)
+    with patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
+        recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01
+    ), patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0):
+        await async_setup_recorder_instance(hass, config)
+        await hass.async_block_till_done()
+        event_type = "EVENT_TEST"
+        event_types = (event_type,)
 
-    with patch.object(recorder.core, "MAX_QUEUE_BACKLOG", 1), patch.object(
-        recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.1
-    ):
+        instance = get_instance(hass)
+
         await instance.lock_database()
 
         event_data = {"test_attr": 5, "test_attr_10": "nice"}
-        hass.bus.fire(event_type, event_data)
+        hass.bus.async_fire(event_type, event_data)
 
         # Check that this causes the queue to overflow and write succeeds
         # even before unlocking.
         await async_wait_recording_done(hass)
 
-        db_events = await hass.async_add_executor_job(_get_db_events)
+        db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) == 1
 
+        assert "Database queue backlog reached more than" in caplog.text
         assert not instance.unlock_database()
+
+
+async def test_database_lock_and_overflow_checks_available_memory(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        return pytest.skip("Database locking is only used for SQLite")
+
+    # Use file DB, in memory DB cannot do write locks.
+    if recorder_db_url == "sqlite://":
+        # Use file DB, in memory DB cannot do write locks.
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: recorder_db_url,
+    }
+
+    def _get_db_events():
+        with session_scope(hass=hass, read_only=True) as session:
+            return list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
+
+    await async_setup_recorder_instance(hass, config)
+    await hass.async_block_till_done()
+    event_type = "EVENT_TEST"
+    event_types = (event_type,)
+    await async_wait_recording_done(hass)
+
+    with patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
+        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 1
+    ), patch.object(recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01), patch.object(
+        recorder.core.Recorder,
+        "_available_memory",
+        return_value=recorder.core.ESTIMATED_QUEUE_ITEM_SIZE * 4,
+    ):
+        instance = get_instance(hass)
+
+        await instance.lock_database()
+
+        # Record up to the extended limit (which takes into account the available memory)
+        for _ in range(2):
+            event_data = {"test_attr": 5, "test_attr_10": "nice"}
+            hass.bus.async_fire(event_type, event_data)
+
+        def _wait_database_unlocked():
+            return instance._database_lock_task.database_unlock.wait(0.2)
+
+        databack_unlocked = await hass.async_add_executor_job(_wait_database_unlocked)
+        assert not databack_unlocked
+
+        db_events = await instance.async_add_executor_job(_get_db_events)
+        assert len(db_events) == 0
+
+        assert "Database queue backlog reached more than" not in caplog.text
+
+        # Record beyond the extended limit (which takes into account the available memory)
+        for _ in range(20):
+            event_data = {"test_attr": 5, "test_attr_10": "nice"}
+            hass.bus.async_fire(event_type, event_data)
+
+        # Check that this causes the queue to overflow and write succeeds
+        # even before unlocking.
+        await async_wait_recording_done(hass)
+
+        assert not instance.unlock_database()
+
+        assert "Database queue backlog reached more than" in caplog.text
+
+        db_events = await instance.async_add_executor_job(_get_db_events)
+        assert len(db_events) >= 2
 
 
 async def test_database_lock_timeout(
@@ -1940,13 +2032,10 @@ def test_deduplication_event_data_inside_commit_interval(
         assert all(event.data_id == first_data_id for event in events)
 
 
-# Patch CACHE_SIZE since otherwise
-# the CI can fail because the test takes too long to run
-@patch(
-    "homeassistant.components.recorder.table_managers.state_attributes.CACHE_SIZE", 5
-)
 def test_deduplication_state_attributes_inside_commit_interval(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+    small_cache_size: None,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deduplication of state attributes inside the commit interval."""
     hass = hass_recorder()
@@ -2132,7 +2221,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             return "mysql"
 
         @classmethod
-        def dbapi(cls):
+        def import_dbapi(cls):
             ...
 
         def engine_created(*args):
@@ -2174,17 +2263,14 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     assert connect_params[0]["charset"] == "utf8mb4"
 
 
-@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    core_state: CoreState,
 ) -> None:
-    """Test that an integration's recorder platform can exclude attributes."""
-    hass.state = core_state
+    """Test that an entity can exclude attributes from being recorded."""
     state = "restoring_from_db"
-    attributes = {"test_attr": 5, "excluded": 10}
+    attributes = {"test_attr": 5, "excluded_component": 10, "excluded_integration": 20}
     mock_platform(
         hass,
         "fake_integration.recorder",
@@ -2194,10 +2280,17 @@ async def test_excluding_attributes_by_integration(
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
     await hass.async_block_till_done()
 
+    class EntityWithExcludedAttributes(MockEntity):
+        _entity_component_unrecorded_attributes = frozenset({"excluded_component"})
+        _unrecorded_attributes = frozenset({"excluded_integration"})
+
     entity_id = "test.fake_integration_recorder"
-    platform = MockEntityPlatform(hass, platform_name="fake_integration")
-    entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
-    await platform.async_add_entities([entity_platform])
+    entity_platform = MockEntityPlatform(hass, platform_name="fake_integration")
+    entity = EntityWithExcludedAttributes(
+        entity_id=entity_id,
+        extra_state_attributes=attributes,
+    )
+    await entity_platform.async_add_entities([entity])
     await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
@@ -2224,16 +2317,15 @@ async def test_excluding_attributes_by_integration(
 
 
 async def test_lru_increases_with_many_entities(
-    recorder_mock: Recorder, hass: HomeAssistant
+    small_cache_size: None, recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test that the recorder's internal LRU cache increases with many entities."""
-    # We do not actually want to record 4096 entities so we mock the entity count
-    mock_entity_count = 4096
-    with patch.object(
-        hass.states, "async_entity_ids_count", return_value=mock_entity_count
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await async_wait_recording_done(hass)
+    mock_entity_count = 16
+    for idx in range(mock_entity_count):
+        hass.states.async_set(f"test.entity{idx}", "on")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await async_wait_recording_done(hass)
 
     assert (
         recorder_mock.state_attributes_manager._id_map.get_size()
@@ -2327,3 +2419,49 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
     instance = recorder.get_instance(hass)
     await hass.async_stop()
     assert instance.engine is None
+
+
+async def test_events_are_recorded_until_final_write(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test that events are recorded until the final write."""
+    instance = await async_setup_recorder_instance(hass, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    hass.bus.async_fire("fake_event")
+    await async_wait_recording_done(hass)
+
+    def get_events() -> list[Event]:
+        events: list[Event] = []
+        with session_scope(hass=hass, read_only=True) as session:
+            for select_event, event_types in (
+                session.query(Events, EventTypes)
+                .filter(
+                    Events.event_type_id.in_(
+                        select_event_type_ids(("fake_event", "after_final_write"))
+                    )
+                )
+                .outerjoin(
+                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                )
+            ):
+                select_event = cast(Events, select_event)
+                event_types = cast(EventTypes, event_types)
+
+                native_event = select_event.to_native()
+                native_event.event_type = event_types.event_type
+                events.append(native_event)
+
+        return events
+
+    events = await instance.async_add_executor_job(get_events)
+    assert len(events) == 1
+    db_event = events[0]
+    assert db_event.event_type == "fake_event"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+
+    assert not instance.engine

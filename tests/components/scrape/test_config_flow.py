@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD
 from homeassistant.components.scrape import DOMAIN
-from homeassistant.components.scrape.config_flow import NONE_SENTINEL
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -22,6 +21,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
@@ -70,9 +70,6 @@ async def test_form(
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -82,6 +79,65 @@ async def test_form(
     assert result3["options"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10.0,
+        CONF_ENCODING: "UTF-8",
+        "sensor": [
+            {
+                CONF_NAME: "Current version",
+                CONF_SELECT: ".current-version h1",
+                CONF_INDEX: 0.0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+            }
+        ],
+    }
+
+    assert len(mock_data.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_post(
+    hass: HomeAssistant, get_data: MockRestData, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the form using POST method."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ) as mock_data:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_METHOD: "GET",
+                CONF_PAYLOAD: "POST",
+                CONF_VERIFY_SSL: True,
+                CONF_TIMEOUT: 10.0,
+            },
+        )
+        await hass.async_block_till_done()
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_NAME: "Current version",
+                CONF_SELECT: ".current-version h1",
+                CONF_INDEX: 0.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["version"] == 1
+    assert result3["options"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_PAYLOAD: "POST",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
         CONF_ENCODING: "UTF-8",
@@ -163,9 +219,6 @@ async def test_flow_fails(
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -287,9 +340,6 @@ async def test_options_add_remove_sensor_flow(
                 CONF_NAME: "Template",
                 CONF_SELECT: "template",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -417,9 +467,6 @@ async def test_options_edit_sensor_flow(
             user_input={
                 CONF_SELECT: "template",
                 CONF_INDEX: 0.0,
-                CONF_DEVICE_CLASS: NONE_SENTINEL,
-                CONF_STATE_CLASS: NONE_SENTINEL,
-                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -583,9 +630,6 @@ async def test_sensor_options_remove_device_class(
             CONF_SELECT: ".current-temp h3",
             CONF_INDEX: 0.0,
             CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-            CONF_DEVICE_CLASS: NONE_SENTINEL,
-            CONF_STATE_CLASS: NONE_SENTINEL,
-            CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
         },
     )
     await hass.async_block_till_done()

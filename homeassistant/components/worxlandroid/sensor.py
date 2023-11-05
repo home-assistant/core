@@ -5,7 +5,6 @@ import asyncio
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -95,7 +94,7 @@ class WorxLandroidSensor(SensorEntity):
 
         try:
             session = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(self.timeout):
+            async with asyncio.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth("admin", self.pin)
                 mower_response = await session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -129,9 +128,8 @@ class WorxLandroidSensor(SensorEntity):
             elif self.sensor == "state":
                 self._state = self.get_state(data)
 
-        else:
-            if self.sensor == "error":
-                self._state = "no"
+        elif self.sensor == "error":
+            self._state = "no"
 
     @staticmethod
     def get_error(obj):

@@ -1,11 +1,11 @@
 """The GIOS component."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from gios import Gios
 from gios.exceptions import GiosError
 from gios.model import GiosSensors
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We used to use int in device_entry identifiers, convert this to str.
     device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, station_id)
-    device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
+    device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_ids = (DOMAIN, str(station_id))
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
@@ -88,7 +88,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:
-            async with timeout(API_TIMEOUT):
+            async with asyncio.timeout(API_TIMEOUT):
                 return await self.gios.async_update()
         except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

@@ -261,4 +261,4 @@ async def test_discovery_already_configured(
     flow.context = {"source": SOURCE_DISCOVERY}
 
     with pytest.raises(data_entry_flow.AbortFlow):
-        result = await flow.async_step_discovery(["some-host", ""])
+        await flow.async_step_discovery(["some-host", ""])

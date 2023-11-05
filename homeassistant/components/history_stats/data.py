@@ -5,8 +5,10 @@ from dataclasses import dataclass
 import datetime
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
@@ -55,7 +57,9 @@ class HistoryStats:
         self._start = start
         self._end = end
 
-    async def async_update(self, event: Event | None) -> HistoryStatsState:
+    async def async_update(
+        self, event: EventType[EventStateChangedData] | None
+    ) -> HistoryStatsState:
         """Update the stats at a given time."""
         # Get previous values of start and end
         previous_period_start, previous_period_end = self._period
@@ -78,7 +82,7 @@ class HistoryStats:
         utc_now = dt_util.utcnow()
         now_timestamp = floored_timestamp(utc_now)
 
-        if current_period_start > utc_now:
+        if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
@@ -104,8 +108,7 @@ class HistoryStats:
             )
         ):
             new_data = False
-            if event and event.data["new_state"] is not None:
-                new_state: State = event.data["new_state"]
+            if event and (new_state := event.data["new_state"]) is not None:
                 if (
                     current_period_start_timestamp
                     <= floored_timestamp(new_state.last_changed)
@@ -122,7 +125,9 @@ class HistoryStats:
                 # Don't compute anything as the value cannot have changed
                 return self._state
         else:
-            await self._async_history_from_db(current_period_start, current_period_end)
+            await self._async_history_from_db(
+                current_period_start_timestamp, current_period_end_timestamp
+            )
             self._previous_run_before_start = False
 
         seconds_matched, match_count = self._async_compute_seconds_and_changes(
@@ -135,15 +140,15 @@ class HistoryStats:
 
     async def _async_history_from_db(
         self,
-        current_period_start: datetime.datetime,
-        current_period_end: datetime.datetime,
+        current_period_start_timestamp: float,
+        current_period_end_timestamp: float,
     ) -> None:
         """Update history data for the current period from the database."""
         instance = get_instance(self.hass)
         states = await instance.async_add_executor_job(
             self._state_changes_during_period,
-            current_period_start,
-            current_period_end,
+            current_period_start_timestamp,
+            current_period_end_timestamp,
         )
         self._history_current_period = [
             HistoryState(state.state, state.last_changed.timestamp())
@@ -151,8 +156,11 @@ class HistoryStats:
         ]
 
     def _state_changes_during_period(
-        self, start: datetime.datetime, end: datetime.datetime
+        self, start_ts: float, end_ts: float
     ) -> list[State]:
+        """Return state changes during a period."""
+        start = dt_util.utc_from_timestamp(start_ts)
+        end = dt_util.utc_from_timestamp(end_ts)
         return history.state_changes_during_period(
             self.hass,
             start,

@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
     NotValidPresetModeError,
@@ -42,7 +43,35 @@ async def test_generic_fan(
     state = hass.states.get(entity_id)
 
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
+
+    # Test turn on no speed
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 255
+
+    client.async_send_command.reset_mock()
+
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
 
     # Test turn on setting speed
     await hass.services.async_call(
@@ -73,27 +102,6 @@ async def test_generic_fan(
             {"entity_id": entity_id, "percentage": "bad"},
             blocking=True,
         )
-
-    client.async_send_command.reset_mock()
-
-    # Test turn on no speed
-    await hass.services.async_call(
-        "fan",
-        "turn_on",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 17
-    assert args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "targetValue",
-    }
-    assert args["value"] == 255
 
     client.async_send_command.reset_mock()
 
@@ -139,7 +147,7 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
     client.async_send_command.reset_mock()
@@ -164,8 +172,52 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_PERCENTAGE] == 0
+
+    client.async_send_command.reset_mock()
+
+    # Test setting percentage to 0
+    await hass.services.async_call(
+        "fan",
+        SERVICE_SET_PERCENTAGE,
+        {"entity_id": entity_id, "percentage": 0},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 0
+
+    # Test value is None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 17,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_configurable_speeds_fan(
@@ -179,6 +231,7 @@ async def test_configurable_speeds_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -304,6 +357,7 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -361,6 +415,29 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
 
+    # Test value is None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
@@ -373,6 +450,7 @@ async def test_inovelli_lzw36(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -443,6 +521,7 @@ async def test_inovelli_lzw36(
     assert state.attributes[ATTR_PERCENTAGE] is None
 
     client.async_send_command.reset_mock()
+
     await hass.services.async_call(
         "fan",
         "turn_on",
@@ -478,6 +557,7 @@ async def test_leviton_zw4sf_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -863,3 +943,73 @@ async def test_thermostat_fan_without_preset_modes(
 
     assert not state.attributes.get(ATTR_PRESET_MODE)
     assert not state.attributes.get(ATTR_PRESET_MODES)
+
+
+async def test_honeywell_39358_fan(
+    hass: HomeAssistant, client, fan_honeywell_39358, integration
+) -> None:
+    """Test a Honeywell 39358 fan with 3 fixed speeds."""
+    node = fan_honeywell_39358
+    node_id = 61
+    entity_id = "fan.honeywell_in_wall_smart_fan_control"
+
+    async def get_zwave_speed_from_percentage(percentage):
+        """Set the fan to a particular percentage and get the resulting Zwave speed."""
+        client.async_send_command.reset_mock()
+
+        await hass.services.async_call(
+            "fan",
+            "turn_on",
+            {"entity_id": entity_id, "percentage": percentage},
+            blocking=True,
+        )
+
+        assert len(client.async_send_command.call_args_list) == 1
+        args = client.async_send_command.call_args[0][0]
+        assert args["command"] == "node.set_value"
+        assert args["nodeId"] == node_id
+        return args["value"]
+
+    async def get_percentage_from_zwave_speed(zwave_speed):
+        """Set the underlying device speed and get the resulting percentage."""
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": zwave_speed,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+        node.receive_event(event)
+        state = hass.states.get(entity_id)
+        return state.attributes[ATTR_PERCENTAGE]
+
+    # This device has the speeds:
+    # low = 1-32, med = 33-66, high = 67-99
+    percentages_to_zwave_speeds = [
+        [[0], [0]],
+        [range(1, 34), range(1, 33)],
+        [range(34, 68), range(33, 67)],
+        [range(68, 101), range(67, 100)],
+    ]
+
+    for percentages, zwave_speeds in percentages_to_zwave_speeds:
+        for percentage in percentages:
+            actual_zwave_speed = await get_zwave_speed_from_percentage(percentage)
+            assert actual_zwave_speed in zwave_speeds
+        for zwave_speed in zwave_speeds:
+            actual_percentage = await get_percentage_from_zwave_speed(zwave_speed)
+            assert actual_percentage in percentages
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
+    assert state.attributes[ATTR_PRESET_MODES] == []

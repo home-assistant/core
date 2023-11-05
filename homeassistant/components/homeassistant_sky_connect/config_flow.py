@@ -58,6 +58,7 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
         """Return the radio serial port settings."""
         usb_dev = self.config_entry.data["device"]
+        # The call to get_serial_by_id can be removed in HA Core 2024.1
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
         return silabs_multiprotocol_addon.SerialPortSettings(
             device=dev_path,
@@ -75,7 +76,7 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
 
     def _zha_name(self) -> str:
         """Return the ZHA name."""
-        return "SkyConnect Multi-PAN"
+        return "SkyConnect Multiprotocol"
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""

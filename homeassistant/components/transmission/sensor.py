@@ -2,22 +2,19 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from typing import Any
 
 from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.const import STATE_IDLE, UnitOfDataRate
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TransmissionClient
 from .const import (
-    CONF_LIMIT,
-    CONF_ORDER,
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
     STATE_DOWNLOADING,
@@ -25,6 +22,7 @@ from .const import (
     STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
+from .coordinator import TransmissionDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -34,74 +32,79 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Transmission sensors."""
 
-    tm_client = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data[CONF_NAME]
-
-    dev = [
-        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
-        TransmissionStatusSensor(tm_client, name, "Status"),
-        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
-        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
-        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
-        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
-        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
+    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
     ]
 
-    async_add_entities(dev, True)
+    entities = [
+        TransmissionSpeedSensor(
+            coordinator,
+            "download_speed",
+            "download",
+        ),
+        TransmissionSpeedSensor(
+            coordinator,
+            "upload_speed",
+            "upload",
+        ),
+        TransmissionStatusSensor(
+            coordinator,
+            "transmission_status",
+            "status",
+        ),
+        TransmissionTorrentsSensor(
+            coordinator,
+            "active_torrents",
+            "active_torrents",
+        ),
+        TransmissionTorrentsSensor(
+            coordinator,
+            "paused_torrents",
+            "paused_torrents",
+        ),
+        TransmissionTorrentsSensor(
+            coordinator,
+            "total_torrents",
+            "total_torrents",
+        ),
+        TransmissionTorrentsSensor(
+            coordinator,
+            "completed_torrents",
+            "completed_torrents",
+        ),
+        TransmissionTorrentsSensor(
+            coordinator,
+            "started_torrents",
+            "started_torrents",
+        ),
+    ]
+
+    async_add_entities(entities)
 
 
-class TransmissionSensor(SensorEntity):
+class TransmissionSensor(
+    CoordinatorEntity[TransmissionDataUpdateCoordinator], SensorEntity
+):
     """A base class for all Transmission sensors."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
+    def __init__(
+        self,
+        coordinator: TransmissionDataUpdateCoordinator,
+        sensor_translation_key: str,
+        key: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._tm_client: TransmissionClient = tm_client
-        self._client_name = client_name
-        self._name = sensor_name
-        self._sub_type = sub_type
-        self._state = None
+        super().__init__(coordinator)
+        self._attr_translation_key = sensor_translation_key
+        self._key = key
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Transmission",
-            name=client_name,
-        )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self) -> bool:
-        """Could the device be accessed during the last update call."""
-        return self._tm_client.api.available
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self._tm_client.api.signal_update, update
-            )
         )
 
 
@@ -113,15 +116,15 @@ class TransmissionSpeedSensor(TransmissionSensor):
     _attr_suggested_display_precision = 2
     _attr_suggested_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
 
-    def update(self) -> None:
-        """Get the latest data from Transmission and updates the state."""
-        if data := self._tm_client.api.data:
-            b_spd = (
-                float(data.download_speed)
-                if self._sub_type == "download"
-                else float(data.upload_speed)
-            )
-            self._state = b_spd
+    @property
+    def native_value(self) -> float:
+        """Return the speed of the sensor."""
+        data = self.coordinator.data
+        return (
+            float(data.download_speed)
+            if self._key == "download"
+            else float(data.upload_speed)
+        )
 
 
 class TransmissionStatusSensor(TransmissionSensor):
@@ -129,63 +132,65 @@ class TransmissionStatusSensor(TransmissionSensor):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
-    _attr_translation_key = "transmission_status"
 
-    def update(self) -> None:
-        """Get the latest data from Transmission and updates the state."""
-        if data := self._tm_client.api.data:
-            upload = data.upload_speed
-            download = data.download_speed
-            if upload > 0 and download > 0:
-                self._state = STATE_UP_DOWN
-            elif upload > 0 and download == 0:
-                self._state = STATE_SEEDING
-            elif upload == 0 and download > 0:
-                self._state = STATE_DOWNLOADING
-            else:
-                self._state = STATE_IDLE
-        else:
-            self._state = None
+    @property
+    def native_value(self) -> str:
+        """Return the value of the status sensor."""
+        upload = self.coordinator.data.upload_speed
+        download = self.coordinator.data.download_speed
+        if upload > 0 and download > 0:
+            return STATE_UP_DOWN
+        if upload > 0 and download == 0:
+            return STATE_SEEDING
+        if upload == 0 and download > 0:
+            return STATE_DOWNLOADING
+        return STATE_IDLE
 
 
 class TransmissionTorrentsSensor(TransmissionSensor):
     """Representation of a Transmission torrents sensor."""
 
-    SUBTYPE_MODES = {
-        "started": ("downloading"),
-        "completed": ("seeding"),
-        "paused": ("stopped"),
-        "active": ("seeding", "downloading"),
-        "total": None,
+    MODES: dict[str, list[str] | None] = {
+        "started_torrents": ["downloading"],
+        "completed_torrents": ["seeding"],
+        "paused_torrents": ["stopped"],
+        "active_torrents": [
+            "seeding",
+            "downloading",
+        ],
+        "total_torrents": None,
     }
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return "Torrents"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, if any."""
         info = _torrents_info(
-            torrents=self._tm_client.api.torrents,
-            order=self._tm_client.config_entry.options[CONF_ORDER],
-            limit=self._tm_client.config_entry.options[CONF_LIMIT],
-            statuses=self.SUBTYPE_MODES[self._sub_type],
+            torrents=self.coordinator.torrents,
+            order=self.coordinator.order,
+            limit=self.coordinator.limit,
+            statuses=self.MODES[self._key],
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,
         }
 
-    def update(self) -> None:
-        """Get the latest data from Transmission and updates the state."""
+    @property
+    def native_value(self) -> int:
+        """Return the count of the sensor."""
         torrents = _filter_torrents(
-            self._tm_client.api.torrents, statuses=self.SUBTYPE_MODES[self._sub_type]
+            self.coordinator.torrents, statuses=self.MODES[self._key]
         )
-        self._state = len(torrents)
+        return len(torrents)
 
 
-def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
+def _filter_torrents(
+    torrents: list[Torrent], statuses: list[str] | None = None
+) -> list[Torrent]:
     return [
         torrent
         for torrent in torrents
@@ -193,7 +198,9 @@ def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
     ]
 
 
-def _torrents_info(torrents, order, limit, statuses=None):
+def _torrents_info(
+    torrents: list[Torrent], order: str, limit: int, statuses: list[str] | None = None
+) -> dict[str, Any]:
     infos = {}
     torrents = _filter_torrents(torrents, statuses)
     torrents = SUPPORTED_ORDER_MODES[order](torrents)

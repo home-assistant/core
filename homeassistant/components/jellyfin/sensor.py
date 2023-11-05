@@ -42,6 +42,7 @@ def _count_now_playing(data: JellyfinDataT) -> int:
 SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription] = {
     "sessions": JellyfinSensorEntityDescription(
         key="watching",
+        name=None,
         icon="mdi:television-play",
         native_unit_of_measurement="Watching",
         value_fn=_count_now_playing,

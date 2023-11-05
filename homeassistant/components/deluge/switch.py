@@ -24,6 +24,8 @@ async def async_setup_entry(
 class DelugeSwitch(DelugeEntity, SwitchEntity):
     """Representation of a Deluge switch."""
 
+    _attr_name = None
+
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
         super().__init__(coordinator)

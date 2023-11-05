@@ -33,15 +33,12 @@ async def test_async_setup_entry__not_login(
         hass.config_entries, "async_forward_entry_setup"
     ) as setup_mock, patch(
         "homeassistant.components.vesync.async_process_devices"
-    ) as process_mock, patch.object(
-        hass.services, "async_register"
-    ) as register_mock:
+    ) as process_mock:
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
         assert setups_mock.call_count == 0
         assert setup_mock.call_count == 0
         assert process_mock.call_count == 0
-        assert register_mock.call_count == 0
 
     assert manager.login.call_count == 1
     assert DOMAIN not in hass.data

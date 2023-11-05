@@ -8,27 +8,67 @@ from homeassistant.components.workday.const import (
     DEFAULT_NAME,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
+    DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def init_integration(
     hass: HomeAssistant,
     config: dict[str, Any],
-) -> None:
-    """Set up the Workday integration in Home Assistant."""
+    entry_id: str = "1",
+    source: str = SOURCE_USER,
+) -> MockConfigEntry:
+    """Set up the Scrape integration in Home Assistant."""
 
-    await async_setup_component(
-        hass, "binary_sensor", {"binary_sensor": {"platform": "workday", **config}}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=source,
+        data={},
+        options=config,
+        entry_id=entry_id,
     )
+
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    return config_entry
 
+
+TEST_CONFIG_NO_COUNTRY = {
+    "name": DEFAULT_NAME,
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+}
+TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY = {
+    "name": DEFAULT_NAME,
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2020-02-24"],
+    "remove_holidays": [],
+}
 TEST_CONFIG_WITH_PROVINCE = {
     "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+}
+TEST_CONFIG_INCORRECT_COUNTRY = {
+    "name": DEFAULT_NAME,
+    "country": "ZZ",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
     "workdays": DEFAULT_WORKDAYS,
@@ -156,4 +196,54 @@ TEST_CONFIG_INCORRECT_ADD_REMOVE = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": ["2023-12-32"],
     "remove_holidays": ["2023-12-32"],
+}
+TEST_CONFIG_INCORRECT_ADD_DATE_RANGE = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2023-12-01", "2023-12-30,2023-12-32"],
+    "remove_holidays": [],
+}
+TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": ["2023-12-25", "2023-12-30,2023-12-32"],
+}
+TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2023-12-01", "2023-12-29,2023-12-30,2023-12-31"],
+    "remove_holidays": [],
+}
+TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": ["2023-12-25", "2023-12-29,2023-12-30,2023-12-31"],
+}
+TEST_CONFIG_ADD_REMOVE_DATE_RANGE = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2022-12-01", "2022-12-05,2022-12-15"],
+    "remove_holidays": ["2022-12-04", "2022-12-24,2022-12-26"],
 }

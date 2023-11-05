@@ -23,6 +23,7 @@ from .conftest import (
     CALENDAR_ID,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
+    TEST_EVENT,
     TEST_YAML_ENTITY,
     TEST_YAML_ENTITY_NAME,
     ApiResult,
@@ -35,35 +36,6 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY = TEST_API_ENTITY
 TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
-
-TEST_EVENT = {
-    "summary": "Test All Day Event",
-    "start": {},
-    "end": {},
-    "location": "Test Cases",
-    "description": "test event",
-    "kind": "calendar#event",
-    "created": "2016-06-23T16:37:57.000Z",
-    "transparency": "transparent",
-    "updated": "2016-06-24T01:57:21.045Z",
-    "reminders": {"useDefault": True},
-    "organizer": {
-        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
-        "displayName": "Organizer Name",
-        "self": True,
-    },
-    "sequence": 0,
-    "creator": {
-        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
-        "displayName": "Organizer Name",
-        "self": True,
-    },
-    "id": "_c8rinwq863h45qnucyoi43ny8",
-    "etag": '"2933466882090000"',
-    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
-    "iCalUID": "cydrevtfuybguinhomj@google.com",
-    "status": "confirmed",
-}
 
 
 @pytest.fixture(autouse=True)
@@ -1295,3 +1267,37 @@ async def test_event_without_duration(
     assert state.attributes.get("start_time") == one_hour_from_now.strftime(
         DATE_STR_FORMAT
     )
+
+
+async def test_event_differs_timezone(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test a case where the event has a different start/end timezone."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    end_event = one_hour_from_now + datetime.timedelta(hours=8)
+    event = {
+        **TEST_EVENT,
+        "start": {
+            "dateTime": one_hour_from_now.isoformat(),
+            "timeZone": "America/Regina",
+        },
+        "end": {"dateTime": end_event.isoformat(), "timeZone": "UTC"},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }

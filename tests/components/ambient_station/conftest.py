@@ -28,7 +28,11 @@ def config_fixture(hass):
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        entry_id="382cf7643f016fd48b3fe52163fe8877",
+    )
     entry.add_to_hass(hass)
     return entry
 

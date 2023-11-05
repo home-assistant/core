@@ -11,8 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_PROVINCE, DOMAIN
@@ -36,6 +35,7 @@ class StookalertBinarySensor(BinarySensorEntity):
     _attr_attribution = "Data provided by rivm.nl"
     _attr_device_class = BinarySensorDeviceClass.SAFETY
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""

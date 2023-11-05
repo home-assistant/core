@@ -42,5 +42,83 @@
   },
   "application_credentials": {
     "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your Calendar:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **TV and Limited Input devices** for the Application Type.\n\n"
+  },
+  "services": {
+    "add_event": {
+      "name": "Add event",
+      "description": "Adds a new calendar event.",
+      "fields": {
+        "calendar_id": {
+          "name": "Calendar ID",
+          "description": "The id of the calendar you want."
+        },
+        "summary": {
+          "name": "Summary",
+          "description": "Acts as the title of the event."
+        },
+        "description": {
+          "name": "Description",
+          "description": "The description of the event. Optional."
+        },
+        "start_date_time": {
+          "name": "Start time",
+          "description": "The date and time the event should start."
+        },
+        "end_date_time": {
+          "name": "End time",
+          "description": "The date and time the event should end."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "The date the whole day event should start."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "The date the whole day event should end."
+        },
+        "in": {
+          "name": "In",
+          "description": "Days or weeks that you want to create the event in."
+        }
+      }
+    },
+    "create_event": {
+      "name": "Creates event",
+      "description": "Add a new calendar event.",
+      "fields": {
+        "summary": {
+          "name": "Summary",
+          "description": "[%key:component::google::services::add_event::fields::summary::description%]"
+        },
+        "description": {
+          "name": "Description",
+          "description": "[%key:component::google::services::add_event::fields::description::description%]"
+        },
+        "start_date_time": {
+          "name": "Start time",
+          "description": "The date and time the event should start."
+        },
+        "end_date_time": {
+          "name": "End time",
+          "description": "The date and time the event should end."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "[%key:component::google::services::add_event::fields::start_date::description%]"
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "[%key:component::google::services::add_event::fields::end_date::description%]"
+        },
+        "in": {
+          "name": "In",
+          "description": "Days or weeks that you want to create the event in."
+        },
+        "location": {
+          "name": "[%key:common::config_flow::data::location%]",
+          "description": "The location of the event. Optional."
+        }
+      }
+    }
   }
 }

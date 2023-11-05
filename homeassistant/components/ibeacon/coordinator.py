@@ -200,7 +200,9 @@ class IBeaconCoordinator:
     def _async_purge_untrackable_entities(self, unique_ids: set[str]) -> None:
         """Remove entities that are no longer trackable."""
         for unique_id in unique_ids:
-            if device := self._dev_reg.async_get_device({(DOMAIN, unique_id)}):
+            if device := self._dev_reg.async_get_device(
+                identifiers={(DOMAIN, unique_id)}
+            ):
                 self._dev_reg.async_remove_device(device.id)
             self._last_ibeacon_advertisement_by_unique_id.pop(unique_id, None)
 

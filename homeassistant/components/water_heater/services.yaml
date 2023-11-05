@@ -1,29 +1,21 @@
 # Describes the format for available water_heater services
 
 set_away_mode:
-  name: Set away mode
-  description: Turn away mode on/off for water_heater device.
   target:
     entity:
       domain: water_heater
   fields:
     away_mode:
-      name: Away mode
-      description: New value of away mode.
       required: true
       selector:
         boolean:
 
 set_temperature:
-  name: Set temperature
-  description: Set target temperature of water_heater device.
   target:
     entity:
       domain: water_heater
   fields:
     temperature:
-      name: Temperature
-      description: New target temperature for water heater.
       required: true
       selector:
         number:
@@ -32,23 +24,27 @@ set_temperature:
           step: 0.5
           unit_of_measurement: "°"
     operation_mode:
-      name: Operation mode
-      description: New value of operation mode.
       example: eco
       selector:
         text:
 
 set_operation_mode:
-  name: Set operation mode
-  description: Set operation mode for water_heater device.
   target:
     entity:
       domain: water_heater
   fields:
     operation_mode:
-      name: Operation mode
-      description: New value of operation mode.
       required: true
       example: eco
       selector:
         text:
+
+turn_on:
+  target:
+    entity:
+      domain: water_heater
+
+turn_off:
+  target:
+    entity:
+      domain: water_heater

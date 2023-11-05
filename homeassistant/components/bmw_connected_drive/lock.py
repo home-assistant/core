@@ -4,12 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWBaseEntity
@@ -44,7 +46,7 @@ async def async_setup_entry(
 class BMWLock(BMWBaseEntity, LockEntity):
     """Representation of a MyBMW vehicle lock."""
 
-    _attr_name = "Lock"
+    _attr_translation_key = "lock"
 
     def __init__(
         self,
@@ -66,7 +68,14 @@ class BMWLock(BMWBaseEntity, LockEntity):
             # update callback response
             self._attr_is_locked = True
             self.async_write_ha_state()
-        await self.vehicle.remote_services.trigger_remote_door_lock()
+        try:
+            await self.vehicle.remote_services.trigger_remote_door_lock()
+        except MyBMWAPIError as ex:
+            self._attr_is_locked = False
+            self.async_write_ha_state()
+            raise HomeAssistantError(ex) from ex
+
+        self.coordinator.async_update_listeners()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
@@ -77,7 +86,14 @@ class BMWLock(BMWBaseEntity, LockEntity):
             # update callback response
             self._attr_is_locked = False
             self.async_write_ha_state()
-        await self.vehicle.remote_services.trigger_remote_door_unlock()
+        try:
+            await self.vehicle.remote_services.trigger_remote_door_unlock()
+        except MyBMWAPIError as ex:
+            self._attr_is_locked = True
+            self.async_write_ha_state()
+            raise HomeAssistantError(ex) from ex
+
+        self.coordinator.async_update_listeners()
 
     @callback
     def _handle_coordinator_update(self) -> None:

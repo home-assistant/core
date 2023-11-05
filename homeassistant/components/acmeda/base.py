@@ -14,6 +14,7 @@ class AcmedaBase(entity.Entity):
     """Base representation of an Acmeda roller."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, roller: aiopulse.Roller) -> None:
         """Initialize the roller."""
@@ -73,14 +74,9 @@ class AcmedaBase(entity.Entity):
         return self.roller.id
 
     @property
-    def name(self) -> str | None:
-        """Return the name of roller."""
-        return self.roller.name
-
-    @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return the device info."""
-        return entity.DeviceInfo(
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Rollease Acmeda",
             name=self.roller.name,

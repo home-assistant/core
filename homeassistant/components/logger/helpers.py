@@ -5,10 +5,11 @@ from collections import defaultdict
 from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 import logging
 from typing import Any, cast
 
-from homeassistant.backports.enum import StrEnum
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -16,7 +17,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
     DOMAIN,
-    EVENT_LOGGING_CHANGED,
     LOGGER_DEFAULT,
     LOGGER_LOGS,
     LOGSEVERITY,
@@ -119,7 +119,7 @@ class LoggerSettings:
 
         self._yaml_config = yaml_config
         self._default_level = logging.INFO
-        if DOMAIN in yaml_config:
+        if DOMAIN in yaml_config and LOGGER_DEFAULT in yaml_config[DOMAIN]:
             self._default_level = yaml_config[DOMAIN][LOGGER_DEFAULT]
         self._store: Store[dict[str, dict[str, dict[str, Any]]]] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY

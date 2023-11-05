@@ -20,5 +20,17 @@
       "no_agreements": "This account has no Toon displays.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     }
+  },
+  "services": {
+    "update": {
+      "name": "Update",
+      "description": "Updates all entities with fresh data from Toon.",
+      "fields": {
+        "display": {
+          "name": "Display",
+          "description": "Toon display to update."
+        }
+      }
+    }
   }
 }

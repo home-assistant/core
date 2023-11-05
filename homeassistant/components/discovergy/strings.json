@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "Discovergy API endpoint reachable"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_gas_consumption": {
+        "name": "Total gas consumption"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "total_production": {
+        "name": "Total production"
+      },
+      "phase_1_voltage": {
+        "name": "Phase 1 voltage"
+      },
+      "phase_2_voltage": {
+        "name": "Phase 2 voltage"
+      },
+      "phase_3_voltage": {
+        "name": "Phase 3 voltage"
+      },
+      "phase_1_power": {
+        "name": "Phase 1 power"
+      },
+      "phase_2_power": {
+        "name": "Phase 2 power"
+      },
+      "phase_3_power": {
+        "name": "Phase 3 power"
+      },
+      "last_transmitted": {
+        "name": "Last transmitted"
+      }
+    }
+  }
+}

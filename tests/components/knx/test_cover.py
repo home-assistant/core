@@ -19,8 +19,6 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
                 CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
-                CoverSchema.CONF_ANGLE_STATE_ADDRESS: "1/0/4",
-                CoverSchema.CONF_ANGLE_ADDRESS: "1/0/5",
             }
         }
     )
@@ -28,10 +26,8 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # read position state address and angle state address
     await knx.assert_read("1/0/2")
-    await knx.assert_read("1/0/4")
     # StateUpdater initialize state
     await knx.receive_response("1/0/2", (0x0F,))
-    await knx.receive_response("1/0/4", (0x30,))
     events.clear()
 
     # open cover
@@ -82,6 +78,32 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     assert len(events) == 1
     events.pop()
 
+
+async def test_cover_tilt_absolute(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX cover tilt."""
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+                CoverSchema.CONF_ANGLE_STATE_ADDRESS: "1/0/4",
+                CoverSchema.CONF_ANGLE_ADDRESS: "1/0/5",
+            }
+        }
+    )
+    events = async_capture_events(hass, "state_changed")
+
+    # read position state address and angle state address
+    await knx.assert_read("1/0/2")
+    await knx.assert_read("1/0/4")
+    # StateUpdater initialize state
+    await knx.receive_response("1/0/2", (0x0F,))
+    await knx.receive_response("1/0/4", (0x30,))
+    events.clear()
+
     # set cover tilt position
     await hass.services.async_call(
         "cover",
@@ -102,7 +124,7 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.services.async_call(
         "cover", "close_cover_tilt", target={"entity_id": "cover.test"}, blocking=True
     )
-    await knx.assert_write("1/0/1", True)
+    await knx.assert_write("1/0/5", (0xFF,))
 
     assert len(events) == 1
     events.pop()
@@ -111,4 +133,29 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.services.async_call(
         "cover", "open_cover_tilt", target={"entity_id": "cover.test"}, blocking=True
     )
-    await knx.assert_write("1/0/1", False)
+    await knx.assert_write("1/0/5", (0x00,))
+
+
+async def test_cover_tilt_move_short(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX cover tilt."""
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
+            }
+        }
+    )
+
+    # close cover tilt
+    await hass.services.async_call(
+        "cover", "close_cover_tilt", target={"entity_id": "cover.test"}, blocking=True
+    )
+    await knx.assert_write("1/0/1", 1)
+
+    # open cover tilt
+    await hass.services.async_call(
+        "cover", "open_cover_tilt", target={"entity_id": "cover.test"}, blocking=True
+    )
+    await knx.assert_write("1/0/1", 0)

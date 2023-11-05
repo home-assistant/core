@@ -2,42 +2,41 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 from typing import Any
 
-from aio_geojson_generic_client import GenericFeedManager
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_URL,
-    EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import GeoJsonFeedEntityManager
 from .const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_RADIUS_IN_KM,
-    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
     SOURCE,
 )
-from .manager import GeoJsonFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
 
+# Deprecated.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.string,
@@ -48,28 +47,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the GeoJSON Events platform."""
-    url: str = config[CONF_URL]
-    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    coordinates: tuple[float, float] = (
-        config.get(CONF_LATITUDE, hass.config.latitude),
-        config.get(CONF_LONGITUDE, hass.config.longitude),
-    )
-    radius_in_km: float = config[CONF_RADIUS]
-    # Initialize the entity manager.
-    manager = GeoJsonFeedEntityManager(
-        hass, scan_interval, coordinates, url, radius_in_km
-    )
+    manager: GeoJsonFeedEntityManager = hass.data[DOMAIN][entry.entry_id]
 
     @callback
     def async_add_geolocation(
-        feed_manager: GenericFeedManager,
+        feed_manager: GeoJsonFeedEntityManager,
         external_id: str,
     ) -> None:
         """Add geolocation entity from feed."""
@@ -77,15 +63,41 @@ async def async_setup_platform(
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
 
-    async_dispatcher_connect(hass, manager.signal_new_entity, async_add_geolocation)
+    manager.listeners.append(
+        async_dispatcher_connect(hass, manager.signal_new_entity, async_add_geolocation)
+    )
+    # Do not wait for update here so that the setup can be completed and because an
+    # update will fetch data from the feed via HTTP and then process that data.
+    entry.async_create_task(hass, manager.async_update())
+    _LOGGER.debug("Geolocation setup done")
 
-    await manager.async_init()
 
-    async def start_feed_manager(event: Event) -> None:
-        """Start feed manager."""
-        await manager.async_update()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the GeoJSON Events platform."""
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "GeoJSON feed",
+        },
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 class GeoJsonLocationEvent(GeolocationEvent):
@@ -95,10 +107,15 @@ class GeoJsonLocationEvent(GeolocationEvent):
     _attr_source = SOURCE
     _attr_unit_of_measurement = UnitOfLength.KILOMETERS
 
-    def __init__(self, feed_manager: GenericFeedManager, external_id: str) -> None:
+    def __init__(
+        self,
+        feed_manager: GeoJsonFeedEntityManager,
+        external_id: str,
+    ) -> None:
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._attr_unique_id = f"{feed_manager.entry_id}_{external_id}"
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 

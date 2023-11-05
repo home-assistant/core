@@ -1,4 +1,5 @@
 """The Hunter Douglas PowerView integration."""
+import asyncio
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
@@ -8,7 +9,6 @@ from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 from aiopvapi.userdata import UserData
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -63,20 +63,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             device_info = await async_get_device_info(pv_request, hub_address)
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             rooms = Rooms(pv_request)
             room_data = async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             scenes = Scenes(pv_request)
             scene_data = async_map_data_by_id(
                 (await scenes.get_resources())[SCENE_DATA]
             )
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             shades = Shades(pv_request)
             shade_entries = await shades.get_resources()
             shade_data = async_map_data_by_id(shade_entries[SHADE_DATA])

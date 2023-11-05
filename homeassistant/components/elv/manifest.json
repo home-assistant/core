@@ -2,7 +2,7 @@
   "domain": "elv",
   "name": "ELV PCA",
   "codeowners": ["@majuss"],
-  "documentation": "https://www.home-assistant.io/integrations/pca",
+  "documentation": "https://www.home-assistant.io/integrations/elv",
   "iot_class": "local_polling",
   "loggers": ["pypca"],
   "requirements": ["pypca==0.0.7"]
