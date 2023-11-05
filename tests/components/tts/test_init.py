@@ -15,7 +15,6 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.components.media_source import Unresolvable
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -33,6 +32,7 @@ from .common import (
     get_media_source_url,
     mock_config_entry_setup,
     mock_setup,
+    retrieve_media,
 )
 
 from tests.common import async_mock_service, mock_restore_cache
@@ -75,7 +75,9 @@ async def test_default_entity_attributes() -> None:
 
 
 async def test_config_entry_unload(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Test we can unload config entry."""
     entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
@@ -104,7 +106,12 @@ async def test_config_entry_unload(
         )
         assert len(calls) == 1
 
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        assert (
+            await retrieve_media(
+                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+            )
+            == HTTPStatus.OK
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -1159,6 +1166,7 @@ class MockEntityEmpty(MockTTSEntity):
 )
 async def test_service_get_tts_error(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1173,8 +1181,10 @@ async def test_service_get_tts_error(
         blocking=True,
     )
     assert len(calls) == 1
-    with pytest.raises(Unresolvable):
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
 
 
 async def test_load_cache_legacy_retrieve_without_mem_cache(
