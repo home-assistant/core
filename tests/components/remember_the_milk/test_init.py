@@ -1,70 +1,95 @@
-"""Tests for the Remember The Milk component."""
+"""Tests for the Remember The Milk integration."""
 
-from unittest.mock import Mock, mock_open, patch
+import json
+from unittest.mock import mock_open, patch
+
+import pytest
 
 from homeassistant.components import remember_the_milk as rtm
 from homeassistant.core import HomeAssistant
 
-from .const import JSON_STRING, PROFILE, TOKEN
+from .const import JSON_STRING, PROFILE
 
 
-def test_create_new(hass: HomeAssistant) -> None:
-    """Test creating a new config file."""
+def test_config_load(hass: HomeAssistant) -> None:
+    """Test loading from the file."""
+    config = rtm.RememberTheMilkConfiguration(hass)
     with (
-        patch("builtins.open", mock_open()),
-        patch("os.path.isfile", Mock(return_value=False)),
-        patch.object(rtm.RememberTheMilkConfiguration, "save_config"),
+        patch(
+            "homeassistant.components.remember_the_milk.storage.Path.open",
+            mock_open(read_data=JSON_STRING),
+        ),
     ):
-        config = rtm.RememberTheMilkConfiguration(hass)
-        config.set_token(PROFILE, TOKEN)
-    assert config.get_token(PROFILE) == TOKEN
+        config.setup()
+
+    rtm_id = config.get_rtm_id(PROFILE, "123")
+    assert rtm_id is not None
+    assert rtm_id == (1, 2, 3)
 
 
-def test_load_config(hass: HomeAssistant) -> None:
-    """Test loading an existing token from the file."""
+@pytest.mark.parametrize(
+    "side_effect", [FileNotFoundError("Missing file"), OSError("IO error")]
+)
+def test_config_load_file_error(hass: HomeAssistant, side_effect: Exception) -> None:
+    """Test loading with file error."""
+    config = rtm.RememberTheMilkConfiguration(hass)
     with (
-        patch("builtins.open", mock_open(read_data=JSON_STRING)),
-        patch("os.path.isfile", Mock(return_value=True)),
+        patch(
+            "homeassistant.components.remember_the_milk.storage.Path.open",
+            side_effect=side_effect,
+        ),
     ):
-        config = rtm.RememberTheMilkConfiguration(hass)
-    assert config.get_token(PROFILE) == TOKEN
+        config.setup()
+
+    # The config should be empty and we should not have any errors
+    # when trying to access it.
+    rtm_id = config.get_rtm_id(PROFILE, "123")
+    assert rtm_id is None
 
 
-def test_invalid_data(hass: HomeAssistant) -> None:
-    """Test starts with invalid data and should not raise an exception."""
+def test_config_load_invalid_data(hass: HomeAssistant) -> None:
+    """Test loading invalid data."""
+    config = rtm.RememberTheMilkConfiguration(hass)
     with (
-        patch("builtins.open", mock_open(read_data="random characters")),
-        patch("os.path.isfile", Mock(return_value=True)),
+        patch(
+            "homeassistant.components.remember_the_milk.storage.Path.open",
+            mock_open(read_data="random characters"),
+        ),
     ):
-        config = rtm.RememberTheMilkConfiguration(hass)
-    assert config is not None
+        config.setup()
+
+    # The config should be empty and we should not have any errors
+    # when trying to access it.
+    rtm_id = config.get_rtm_id(PROFILE, "123")
+    assert rtm_id is None
 
 
-def test_id_map(hass: HomeAssistant) -> None:
-    """Test the hass to rtm task is mapping."""
-    hass_id = "hass-id-1234"
-    list_id = "mylist"
-    timeseries_id = "my_timeseries"
-    rtm_id = "rtm-id-4567"
-    with (
-        patch("builtins.open", mock_open()),
-        patch("os.path.isfile", Mock(return_value=False)),
-        patch.object(rtm.RememberTheMilkConfiguration, "save_config"),
+def test_config_set_delete_id(hass: HomeAssistant) -> None:
+    """Test setting and deleting an id from the config."""
+    hass_id = "123"
+    list_id = 1
+    timeseries_id = 2
+    rtm_id = 3
+    open_mock = mock_open()
+    config = rtm.RememberTheMilkConfiguration(hass)
+    with patch(
+        "homeassistant.components.remember_the_milk.storage.Path.open", open_mock
     ):
-        config = rtm.RememberTheMilkConfiguration(hass)
-
+        config.setup()
+        assert open_mock.return_value.write.call_count == 0
         assert config.get_rtm_id(PROFILE, hass_id) is None
+        assert open_mock.return_value.write.call_count == 0
         config.set_rtm_id(PROFILE, hass_id, list_id, timeseries_id, rtm_id)
         assert (list_id, timeseries_id, rtm_id) == config.get_rtm_id(PROFILE, hass_id)
+        assert open_mock.return_value.write.call_count == 1
+        assert open_mock.return_value.write.call_args[0][0] == JSON_STRING
         config.delete_rtm_id(PROFILE, hass_id)
         assert config.get_rtm_id(PROFILE, hass_id) is None
-
-
-def test_load_key_map(hass: HomeAssistant) -> None:
-    """Test loading an existing key map from the file."""
-    with (
-        patch("builtins.open", mock_open(read_data=JSON_STRING)),
-        patch("os.path.isfile", Mock(return_value=True)),
-    ):
-        config = rtm.RememberTheMilkConfiguration(hass)
-    assert config.get_rtm_id(PROFILE, "1234") == ("0", "1", "2")
+        assert open_mock.return_value.write.call_count == 2
+        assert open_mock.return_value.write.call_args[0][0] == json.dumps(
+            {
+                "myprofile": {
+                    "id_map": {},
+                }
+            }
+        )

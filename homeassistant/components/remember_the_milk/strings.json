@@ -24,5 +24,36 @@
         }
       }
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "shared_secret": "Shared secret"
+        }
+      },
+      "auth": {
+        "description": "Follow the link to authorize Home Assistant to access your Remember The Milk account. When done, click on the button below to continue.\n\n[Authorize]({url})"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Remember The Milk integration needs to re-authenticate your account"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "timeout_token": "Timeout getting access token",
+      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
   }
 }

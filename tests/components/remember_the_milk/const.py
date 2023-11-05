@@ -3,12 +3,20 @@
 import json
 
 PROFILE = "myprofile"
-TOKEN = "mytoken"
+# The legacy configuration file format:
+
+#  {
+#    "myprofile": {
+#      "token": "mytoken",
+#        "id_map": {"123": {"list_id": 1, "timeseries_id": 2, "task_id": 3}},
+#    }
+#  }
+
+# The new configuration file format:
 JSON_STRING = json.dumps(
     {
         "myprofile": {
-            "token": "mytoken",
-            "id_map": {"1234": {"list_id": "0", "timeseries_id": "1", "task_id": "2"}},
+            "id_map": {"123": {"list_id": 1, "timeseries_id": 2, "task_id": 3}},
         }
     }
 )
