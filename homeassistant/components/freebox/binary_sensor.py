@@ -125,9 +125,12 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     ) -> None:
         """Initialize a cover for another device."""
         cover_node = next(
-            x
-            for x in node["type"]["endpoints"]
-            if (x["name"] == self._sensor_name and x["ep_type"] == "signal")
+            (
+                x
+                for x in node["type"]["endpoints"]
+                if (x["name"] == self._sensor_name and x["ep_type"] == "signal")
+            ),
+            None,
         )
         super().__init__(hass, router, node, cover_node)
 
