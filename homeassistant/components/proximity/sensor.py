@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-import logging
-
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_NAME, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,8 +16,6 @@ from homeassistant.util import slugify
 
 from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
 from .coordinator import ProximityDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -49,11 +49,8 @@ async def async_setup_platform(
     async_add_entities(ProximitySensor(sensor, coordinator) for sensor in SENSORS)
 
 
-class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator]):
+class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordinator]):
     """Represents a Proximity sensor."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -66,7 +63,7 @@ class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator]):
         self.entity_description = description
 
         self._attr_unique_id = slugify(
-            f"{DOMAIN}_{slugify(coordinator.friendly_name)}_{description.key}"
+            f"{slugify(coordinator.friendly_name)}_{description.key}"
         )
 
     @property
