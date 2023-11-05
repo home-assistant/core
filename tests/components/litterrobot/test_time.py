@@ -16,7 +16,7 @@ from .conftest import setup_integration
 SLEEP_START_TIME_ENTITY_ID = "time.test_sleep_mode_start_time"
 
 
-@pytest.mark.freeze_time(datetime(2023, 11, 1, 12))
+@pytest.mark.freeze_time(datetime(2023, 7, 1, 12))
 async def test_sleep_mode_start_time(
     hass: HomeAssistant, mock_account: MagicMock
 ) -> None:
