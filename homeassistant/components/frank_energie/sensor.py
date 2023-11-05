@@ -42,7 +42,7 @@ from .coordinator import FrankEnergieCoordinator
 
 @dataclass
 class FrankEnergieEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
+    """Mixin values for Frank Energie entities."""
 
     value_fn: Callable[[Invoices | MarketPrices | MonthSummary], StateType]
 
