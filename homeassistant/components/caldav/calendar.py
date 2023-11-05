@@ -24,13 +24,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import async_get_calendars
 from .const import DOMAIN
-from .coordinator import CalDavUpdateCoordinator, async_get_calendars
+from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +106,7 @@ async def async_setup_platform(
 
             name = cust_calendar[CONF_NAME]
             device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
-            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 calendar=calendar,
@@ -122,7 +123,7 @@ async def async_setup_platform(
         if not config[CONF_CUSTOM_CALENDARS]:
             name = calendar.name
             device_id = calendar.name
-            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 calendar=calendar,
@@ -149,7 +150,7 @@ async def async_setup_entry(
         (
             WebDavCalendarEntity(
                 calendar.name,
-                generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
+                async_generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
                 CalDavUpdateCoordinator(
                     hass,
                     calendar=calendar,
