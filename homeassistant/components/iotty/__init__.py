@@ -1,7 +1,6 @@
 """The iotty integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,8 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_add_job(iotty.init)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = iotty
-
-    await asyncio.sleep(3)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
