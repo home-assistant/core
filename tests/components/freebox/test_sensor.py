@@ -115,3 +115,21 @@ async def test_battery(
     assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "25"
     assert hass.states.get("sensor.ouverture_porte_niveau_de_batterie").state == "50"
     assert hass.states.get("sensor.detecteur_niveau_de_batterie").state == "75"
+
+
+async def test_get_hosts_list(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    router_bridge_mode: Mock,
+) -> None:
+    """Test battery sensor."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    # Simulate an update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # If get_hosts_list failed, not called again
+    assert router_bridge_mode.call_count == 1
+    assert router_bridge_mode().lan.get_hosts_list.call_count == 1
