@@ -85,19 +85,12 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         # unless it is already at the maximum value, in which case we set it
         # to None since we can't determine the actual value.
         seconds_ago = self._info["last_fault"]
-        _LOGGER.info(
-            "zone %s - last_fault: %s", 
-            self._zone_number, self._info["last_fault"])
         if seconds_ago < 65536 * 5:
             now = dt_util.now().replace(microsecond=0)
             delta = datetime.timedelta(seconds=seconds_ago)
             last_trip_time = (now - delta).isoformat()
-            _LOGGER.info(
-                "zone %s - last_trip_time:  %s delta: %s now %s",
-                self._zone_number, last_trip_time, delta, now)
         else:
             last_trip_time = None
-            _LOGGER.info("zone %s - last_trip_time reset", self._zone_number)
 
         attr[ATTR_LAST_TRIP_TIME] = last_trip_time
 
