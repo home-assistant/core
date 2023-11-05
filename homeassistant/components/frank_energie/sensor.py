@@ -31,7 +31,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_TIME,
-    CONF_COORDINATOR,
     DATA_MONTH_SUMMARY,
     DOMAIN,
     SERVICE_NAME_COSTS,
@@ -312,7 +311,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Frank Energie sensor entries."""
-    frank_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+    frank_coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add an entity for each sensor type, when authenticated is True,
     # only add the entity if the user is authenticated

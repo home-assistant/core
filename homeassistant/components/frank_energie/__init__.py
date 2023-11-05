@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_AUTH_TOKEN, CONF_COORDINATOR, CONF_REFRESH_TOKEN, DOMAIN
+from .const import CONF_AUTH_TOKEN, CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import FrankEnergieCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -27,10 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Fetch initial data, so we have data when entities subscribe and set up the platform
     await frank_coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_COORDINATOR: frank_coordinator,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = frank_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
