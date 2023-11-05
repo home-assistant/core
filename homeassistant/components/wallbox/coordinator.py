@@ -12,7 +12,7 @@ from wallbox import Wallbox
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CHARGER_CURRENCY_KEY,
@@ -122,30 +122,24 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @_require_authentication
     def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
-        try:
-            data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
-            data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
-                CHARGER_MAX_CHARGING_CURRENT_KEY
-            ]
-            data[CHARGER_LOCKED_UNLOCKED_KEY] = data[CHARGER_DATA_KEY][
-                CHARGER_LOCKED_UNLOCKED_KEY
-            ]
-            data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
-                CHARGER_ENERGY_PRICE_KEY
-            ]
-            data[
-                CHARGER_CURRENCY_KEY
-            ] = f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
+        data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
+        data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
+            CHARGER_MAX_CHARGING_CURRENT_KEY
+        ]
+        data[CHARGER_LOCKED_UNLOCKED_KEY] = data[CHARGER_DATA_KEY][
+            CHARGER_LOCKED_UNLOCKED_KEY
+        ]
+        data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
+            CHARGER_ENERGY_PRICE_KEY
+        ]
+        data[
+            CHARGER_CURRENCY_KEY
+        ] = f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
 
-            data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
-                data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
-            )
-            return data
-        except (
-            ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as wallbox_connection_error:
-            raise UpdateFailed from wallbox_connection_error
+        data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
+            data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
+        )
+        return data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
@@ -155,6 +149,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
         try:
+            self.authenticate()
             self._wallbox.setMaxChargingCurrent(self._station, charging_current)
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
