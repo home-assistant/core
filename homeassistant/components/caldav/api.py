@@ -18,9 +18,8 @@ async def async_get_calendars(
             for calendar in calendars
         ]
     )
-    results = []
-    for calendar, supported_components in zip(calendars, components_results):
-        if component not in supported_components:
-            continue
-        results.append(calendar)
-    return results
+    return [
+        calendar
+        for calendar, supported_components in zip(calendars, components_results)
+        if component in supported_components
+    ]
