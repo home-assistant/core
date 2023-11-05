@@ -981,8 +981,7 @@ omit =
     homeassistant/components/proliphix/climate.py
     homeassistant/components/prowl/notify.py
     homeassistant/components/proximity/__init__.py
-    homeassistant/components/proximity/const.py
-    homeassistant/components/proximity/sensor.py
+    homeassistant/components/proximity/coordinator.py
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
