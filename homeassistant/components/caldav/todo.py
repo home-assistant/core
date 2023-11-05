@@ -11,11 +11,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .api import async_get_calendars, get_attr_value
 from .const import DOMAIN
-from .coordinator import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORTED_COMPONENT = "VTODO"
 TODO_STATUS_MAP = {
     "NEEDS-ACTION": TodoItemStatus.NEEDS_ACTION,
     "IN-PROCESS": TodoItemStatus.NEEDS_ACTION,
@@ -31,21 +32,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
     client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
-    calendars = await hass.async_add_executor_job(client.principal().calendars)
-    entities = []
-    for calendar in calendars:
-        supported_components = await hass.async_add_executor_job(
-            calendar.get_supported_components
-        )
-        if "VTODO" not in supported_components:
-            continue
-        entities.append(
+    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
+    async_add_entities(
+        (
             WebDavTodoListEntity(
                 calendar,
                 entry.entry_id,
             )
-        )
-    async_add_entities(entities, True)
+            for calendar in calendars
+        ),
+        True,
+    )
 
 
 class WebDavTodoListEntity(TodoListEntity):
