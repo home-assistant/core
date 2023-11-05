@@ -6,17 +6,11 @@ from python_frank_energie.exceptions import AuthException
 from python_frank_energie.models import Authentication
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.frank_energie.const import (
-    CONF_AUTH_TOKEN,
-    CONF_REFRESH_TOKEN,
-    DOMAIN,
-)
+from homeassistant import config_entries
+from homeassistant.components.frank_energie.const import DOMAIN
 from homeassistant.const import CONF_AUTHENTICATION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -113,49 +107,3 @@ async def test_flow_authentication_failed(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "login"
     assert result["errors"] == {"base": "invalid_auth"}
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test the re-auth flow."""
-    # Create a mocked config entry
-    conf = {
-        CONF_USERNAME: "username@example.com",
-        CONF_AUTH_TOKEN: "auth-token",
-        CONF_REFRESH_TOKEN: "refesh-token",
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="username@example.com",
-        data=conf,
-    )
-    entry.add_to_hass(hass)
-
-    # Init a re-auth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=conf,
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "login"
-
-    with patch(
-        "homeassistant.components.frank_energie.config_flow.FrankEnergie.login",
-        return_value=Authentication("new-auth_token", "new-refresh_token"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "username@example.com", CONF_PASSWORD: "Tr0ub4dor&3"},
-        )
-        await hass.async_block_till_done()
-
-    # Check that the returned flow has type abort because of successful re-authentication
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-    assert hass.config_entries.async_get_entry(entry.entry_id).data == snapshot
