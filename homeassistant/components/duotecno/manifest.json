@@ -5,6 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/duotecno",
   "iot_class": "local_push",
+  "loggers": ["pyduotecno", "pyduotecno-node", "pyduotecno-unit"],
   "quality_scale": "silver",
   "requirements": ["pyDuotecno==2023.10.1"]
 }

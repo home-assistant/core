@@ -119,7 +119,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.22
+SQLAlchemy==2.0.23
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -173,7 +173,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.1
+aioairzone-cloud==0.3.5
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -234,6 +234,9 @@ aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.0.9
+
+# homeassistant.components.http
+aiohttp-zlib-ng==0.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -344,7 +347,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==64
+aiounifi==65
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -476,7 +479,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.13.0
+bluetooth-data-tools==1.14.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -862,6 +865,9 @@ janus==1.0.0
 # homeassistant.components.abode
 jaraco.abode==3.3.0
 
+# homeassistant.components.abode
+jaraco.functools==3.9.0
+
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
@@ -1072,7 +1078,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.38
+opower==0.0.39
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1166,7 +1172,7 @@ py-improv-ble-client==1.0.3
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==1.0.0
+py-nextbusnext==1.0.2
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1275,7 +1281,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.13.1
+pyenphase==1.14.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1511,7 +1517,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.10.0
+pyschlage==2023.11.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -1646,7 +1652,7 @@ pytile==2023.04.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
-pytraccar==1.0.0
+pytraccar==2.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -1730,7 +1736,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.12
+reolink-aio==0.7.14
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1973,7 +1979,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==3.3.0
+vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
 vehicle==2.0.0
@@ -2058,7 +2064,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.3.1
+yalexs-ble==2.3.2
 
 # homeassistant.components.august
 yalexs==1.10.0
@@ -2082,7 +2088,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.119.0
+zeroconf==0.120.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

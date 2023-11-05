@@ -40,7 +40,7 @@ SELECT_TYPES = (
         key="select_schedule",
         translation_key="select_schedule",
         icon="mdi:calendar-clock",
-        command=lambda api, loc, opt: api.set_schedule_state(loc, opt, STATE_ON),
+        command=lambda api, loc, opt: api.set_schedule_state(loc, STATE_ON, opt),
         options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(

@@ -1528,3 +1528,65 @@ async def test_suggest_report_issue_custom_component(
 
     suggestion = mock_entity._suggest_report_issue()
     assert suggestion == "create a bug report at https://some_url"
+
+
+async def test_reuse_entity_object_after_abort(hass: HomeAssistant) -> None:
+    """Test reuse entity object."""
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = entity.Entity()
+    ent.entity_id = "invalid"
+    with pytest.raises(HomeAssistantError, match="Invalid entity ID: invalid"):
+        await platform.async_add_entities([ent])
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'invalid' cannot be added a second time to an entity platform",
+    ):
+        await platform.async_add_entities([ent])
+
+
+async def test_reuse_entity_object_after_entity_registry_remove(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reuse entity object."""
+    entry = entity_registry.async_get_or_create("test", "test", "5678")
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    ent = entity.Entity()
+    ent._attr_unique_id = "5678"
+    await platform.async_add_entities([ent])
+    assert ent.registry_entry is entry
+    assert len(hass.states.async_entity_ids()) == 1
+
+    entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'test.test_5678' cannot be added a second time",
+    ):
+        await platform.async_add_entities([ent])
+
+
+async def test_reuse_entity_object_after_entity_registry_disabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reuse entity object."""
+    entry = entity_registry.async_get_or_create("test", "test", "5678")
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    ent = entity.Entity()
+    ent._attr_unique_id = "5678"
+    await platform.async_add_entities([ent])
+    assert ent.registry_entry is entry
+    assert len(hass.states.async_entity_ids()) == 1
+
+    entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'test.test_5678' cannot be added a second time",
+    ):
+        await platform.async_add_entities([ent])
