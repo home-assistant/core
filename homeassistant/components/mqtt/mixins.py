@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
-import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,6 +27,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -63,6 +63,7 @@ from homeassistant.helpers.typing import (
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
+from homeassistant.util.yaml import dump as yaml_dump
 
 from . import debug_info, subscription
 from .client import async_publish
@@ -205,6 +206,16 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
         "Device must have at least one identifying value in "
         "'identifiers' and/or 'connections'"
     )
+
+
+def validate_sensor_entity_category(config: ConfigType) -> ConfigType:
+    """Check the sensor's entity category is not set to `config` which is invalid for sensors."""
+    if (
+        CONF_ENTITY_CATEGORY in config
+        and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
+    ):
+        raise vol.Invalid("Entity category `config` is invalid")
+    return config
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
@@ -404,8 +415,8 @@ async def async_setup_entity_entry_helper(
                 error = str(ex)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
-                issue_id = hex(hash(frozenset(yaml_config.items())))
-                yaml_config_str = yaml.dump(dict(yaml_config))
+                issue_id = hex(hash(frozenset(yaml_config)))
+                yaml_config_str = yaml_dump(yaml_config)
                 learn_more_url = (
                     f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
                 )
@@ -427,7 +438,7 @@ async def async_setup_entity_entry_helper(
                     translation_key="invalid_platform_config",
                 )
                 _LOGGER.error(
-                    "%s for manual configured MQTT %s item, in %s, line %s Got %s",
+                    "%s for manually configured MQTT %s item, in %s, line %s Got %s",
                     error,
                     domain,
                     config_file,

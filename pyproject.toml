@@ -25,6 +25,8 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.9.0b0;python_version>='3.12'",
     "aiohttp==3.8.5;python_version<'3.12'",
+    "aiohttp_cors==0.7.0",
+    "aiohttp-zlib-ng==0.1.1",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
