@@ -48,6 +48,7 @@ class HomeAssistantConfig(OrderedDict):
         """Initialize HA config."""
         super().__init__()
         self.errors: list[CheckConfigError] = []
+        self.warnings: list[CheckConfigError] = []
 
     def add_error(
         self,
@@ -55,14 +56,29 @@ class HomeAssistantConfig(OrderedDict):
         domain: str | None = None,
         config: ConfigType | None = None,
     ) -> Self:
-        """Add a single error."""
+        """Add an error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self
 
     @property
     def error_str(self) -> str:
-        """Return errors as a string."""
+        """Concatenate all errors to a string."""
         return "\n".join([err.message for err in self.errors])
+
+    def add_warning(
+        self,
+        message: str,
+        domain: str | None = None,
+        config: ConfigType | None = None,
+    ) -> Self:
+        """Add a warning."""
+        self.warnings.append(CheckConfigError(str(message), domain, config))
+        return self
+
+    @property
+    def warning_str(self) -> str:
+        """Concatenate all warnings to a string."""
+        return "\n".join([err.message for err in self.warnings])
 
 
 async def async_check_ha_config_file(  # noqa: C901
@@ -82,11 +98,36 @@ async def async_check_ha_config_file(  # noqa: C901
         message = f"Package {package} setup failed. Component {component} {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
-        result.add_error(message, domain, pack_config)
+        result.add_warning(message, domain, pack_config)
 
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
-        result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
+        if domain in frontend_dependencies:
+            result.add_error(
+                _format_config_error(ex, domain, config)[0], domain, config
+            )
+        else:
+            result.add_warning(
+                _format_config_error(ex, domain, config)[0], domain, config
+            )
+
+    async def _get_integration(
+        hass: HomeAssistant, domain: str
+    ) -> loader.Integration | None:
+        """Get an integration."""
+        integration: loader.Integration | None = None
+        try:
+            integration = await async_get_integration_with_requirements(hass, domain)
+        except loader.IntegrationNotFound as ex:
+            # We get this error if an integration is not found. In recovery mode and
+            # safe mode, this currently happens for all custom integrations. Don't
+            # show errors for a missing integration in recovery mode or safe mode to
+            # not confuse the user.
+            if not hass.config.recovery_mode and not hass.config.safe_mode:
+                result.add_warning(f"Integration error: {domain} - {ex}")
+        except RequirementsNotFound as ex:
+            result.add_warning(f"Integration error: {domain} - {ex}")
+        return integration
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
@@ -122,22 +163,22 @@ async def async_check_ha_config_file(  # noqa: C901
     # Filter out repeating config sections
     components = {key.partition(" ")[0] for key in config}
 
+    frontend_dependencies: set[str] = set()
+    if "frontend" in components or "default_config" in components:
+        frontend = await _get_integration(hass, "frontend")
+        if frontend:
+            await frontend.resolve_dependencies()
+            frontend_dependencies = frontend.all_dependencies | {"frontend"}
+
     # Process and validate config
     for domain in components:
-        try:
-            integration = await async_get_integration_with_requirements(hass, domain)
-        except loader.IntegrationNotFound as ex:
-            if not hass.config.recovery_mode and not hass.config.safe_mode:
-                result.add_error(f"Integration error: {domain} - {ex}")
-            continue
-        except RequirementsNotFound as ex:
-            result.add_error(f"Integration error: {domain} - {ex}")
+        if not (integration := await _get_integration(hass, domain)):
             continue
 
         try:
             component = integration.get_component()
         except ImportError as ex:
-            result.add_error(f"Component error: {domain} - {ex}")
+            result.add_warning(f"Component error: {domain} - {ex}")
             continue
 
         # Check if the integration has a custom config validator
@@ -216,14 +257,18 @@ async def async_check_ha_config_file(  # noqa: C901
                 )
                 platform = p_integration.get_platform(domain)
             except loader.IntegrationNotFound as ex:
+                # We get this error if an integration is not found. In recovery mode and
+                # safe mode, this currently happens for all custom integrations. Don't
+                # show errors for a missing integration in recovery mode or safe mode to
+                # not confuse the user.
                 if not hass.config.recovery_mode and not hass.config.safe_mode:
-                    result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                    result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
                 continue
             except (
                 RequirementsNotFound,
                 ImportError,
             ) as ex:
-                result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
                 continue
 
             # Validate platform specific schema
