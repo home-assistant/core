@@ -30,11 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     iotty = api.IottyProxy(hass, aiohttp_client.async_get_clientsession(hass), session)
 
-    hass.async_add_job(iotty.init)
+    hass.async_add_job(iotty.init, entry)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = iotty
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    #    await asyncio.sleep(3)
+    #    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
