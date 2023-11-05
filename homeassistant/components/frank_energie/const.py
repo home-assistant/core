@@ -8,6 +8,8 @@ from python_frank_energie.models import Invoices, MarketPrices, MonthSummary
 DOMAIN = "frank_energie"
 
 CONF_COORDINATOR = "coordinator"
+CONF_AUTH_TOKEN = "auth_token"
+CONF_REFRESH_TOKEN = "refresh_token"
 ATTR_TIME = "from_time"
 
 DATA_ELECTRICITY = "electricity"

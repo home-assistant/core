@@ -7,14 +7,12 @@ from python_frank_energie.models import Authentication
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.frank_energie.const import DOMAIN
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_AUTHENTICATION,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
+from homeassistant.components.frank_energie.const import (
+    CONF_AUTH_TOKEN,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
 )
+from homeassistant.const import CONF_AUTHENTICATION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -123,8 +121,8 @@ async def test_reauth_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
     # Create a mocked config entry
     conf = {
         CONF_USERNAME: "username@example.com",
-        CONF_ACCESS_TOKEN: "auth-token",
-        CONF_TOKEN: "refesh-token",
+        CONF_AUTH_TOKEN: "auth-token",
+        CONF_REFRESH_TOKEN: "refesh-token",
     }
 
     entry = MockConfigEntry(

@@ -40,8 +40,8 @@
       'unique_id': 'username@example.com',
     }),
     'data': dict({
-      'access_token': 'auth_token',
-      'token': 'refresh_token',
+      'auth_token': 'auth_token',
+      'refresh_token': 'refresh_token',
       'username': 'username@example.com',
     }),
     'description': None,
@@ -52,8 +52,8 @@
     }),
     'result': ConfigEntrySnapshot({
       'data': dict({
-        'access_token': 'auth_token',
-        'token': 'refresh_token',
+        'auth_token': 'auth_token',
+        'refresh_token': 'refresh_token',
         'username': 'username@example.com',
       }),
       'disabled_by': None,
@@ -75,8 +75,8 @@
 # ---
 # name: test_reauth_flow
   dict({
-    'access_token': 'new-auth_token',
-    'token': 'new-refresh_token',
+    'auth_token': 'new-auth_token',
+    'refresh_token': 'new-refresh_token',
     'username': 'username@example.com',
   })
 # ---
