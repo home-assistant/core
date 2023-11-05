@@ -73,16 +73,6 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
             data_invoices = (
                 await self.api.invoices() if self.api.is_authenticated else None
             )
-        except UpdateFailed as err:
-            # Check if we still have data to work with, if so, return this data. Still log the error as warning
-            if (
-                self.data.electricity.get_future_prices()
-                and self.data.gas.get_future_prices()
-            ):
-                LOGGER.warning(str(err))
-                return self.data
-            # Re-raise the error if there's no data from future left
-            raise err
         except RequestException as ex:
             if str(ex).startswith("user-error:"):
                 raise ConfigEntryAuthFailed from ex
