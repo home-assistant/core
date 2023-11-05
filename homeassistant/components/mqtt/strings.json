@@ -20,6 +20,10 @@
       "title": "MQTT entities with auxiliary heat support found",
       "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deprecated config options from your configuration and restart Home Assistant to fix this issue."
     },
+    "invalid_entity_category": {
+      "title": "An MQTT {domain} with an invalid entity category was found",
+      "description": "Home Assistant detected a manually configured `{domain}` that has an `entity_category` set to `config`. Config with invalid setting:\n\n```yaml\n{config}\n```\n\nWhen set, make sure `entity_category` for a `{domain}` is set to `diagnostic` or `None`. Update your configuration and restart Home Assistant to fix this issue."
+    },
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."

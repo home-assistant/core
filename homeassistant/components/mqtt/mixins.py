@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -208,14 +208,43 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     )
 
 
-def validate_sensor_entity_category(config: ConfigType) -> ConfigType:
+def validate_sensor_entity_category(domain: str) -> Callable[[ConfigType], ConfigType]:
     """Check the sensor's entity category is not set to `config` which is invalid for sensors."""
-    if (
-        CONF_ENTITY_CATEGORY in config
-        and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
-    ):
-        raise vol.Invalid("Entity category `config` is invalid")
-    return config
+
+    # A guard was added to the core sensor platform with HA core 2023.11.0
+    # See: https://github.com/home-assistant/core/pull/101471
+    # A developers blog from october 2021 explains the correct uses of the entity category
+    # See:
+    # https://developers.home-assistant.io/blog/2021/10/26/config-entity/?_highlight=entity_category#entity-categories
+    #
+    # To limitate the impact of the change we use a grace period
+    # of 3 months for user to update there configs.
+
+    def _validate(config: ConfigType) -> ConfigType:
+        if (
+            CONF_ENTITY_CATEGORY in config
+            and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
+        ):
+            config_str = yaml_dump(config)
+            config.pop(CONF_ENTITY_CATEGORY)
+            _LOGGER.warning("Entity category `config` is invalid for sensors, ignoring")
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                domain=DOMAIN,
+                issue_id="invalid_entity_category",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="invalid_entity_category",
+                learn_more_url=(
+                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
+                ),
+                translation_placeholders={"domain": domain, "config": config_str},
+            )
+        return config
+
+    return _validate
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(

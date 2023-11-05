@@ -2152,26 +2152,32 @@ async def test_setup_manual_mqtt_with_invalid_config(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "entity_id"),
     [
-        {
-            mqtt.DOMAIN: {
-                "sensor": {
-                    "name": "test",
-                    "state_topic": "test-topic",
-                    "entity_category": "config",
+        (
+            {
+                mqtt.DOMAIN: {
+                    "sensor": {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "entity_category": "config",
+                    }
                 }
-            }
-        },
-        {
-            mqtt.DOMAIN: {
-                "binary_sensor": {
-                    "name": "test",
-                    "state_topic": "test-topic",
-                    "entity_category": "config",
+            },
+            "sensor.test",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    "binary_sensor": {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "entity_category": "config",
+                    }
                 }
-            }
-        },
+            },
+            "binary_sensor.test",
+        ),
     ],
 )
 @patch(
@@ -2181,10 +2187,13 @@ async def test_setup_manual_mqtt_with_invalid_entity_category(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    entity_id: str,
 ) -> None:
     """Test set up a manual sensor item with an invalid entity category."""
     assert await mqtt_mock_entry()
-    assert "Entity category `config` is invalid" in caplog.text
+    assert "Entity category `config` is invalid for sensors, ignoring" in caplog.text
+    state = hass.states.get(entity_id)
+    assert state is not None
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
