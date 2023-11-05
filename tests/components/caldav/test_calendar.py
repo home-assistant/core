@@ -1056,7 +1056,6 @@ async def test_get_events_custom_calendars(
             _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
             _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
             _mock_calendar("Calendar 3", supported_components=["VTODO"]),
-            # Fallback to allow when no components are supported to be conservative
             _mock_calendar("Calendar 4", supported_components=[]),
         ]
     ],
@@ -1069,22 +1068,17 @@ async def test_calendar_components(hass: HomeAssistant) -> None:
 
     state = hass.states.get("calendar.calendar_1")
     assert state
-    assert state.name == "Calendar 1"
-    assert state.state == STATE_OFF
 
     state = hass.states.get("calendar.calendar_2")
     assert state
-    assert state.name == "Calendar 2"
-    assert state.state == STATE_OFF
 
     # No entity created for To-do only component
     state = hass.states.get("calendar.calendar_3")
     assert not state
 
+    # No entity created when no components exist
     state = hass.states.get("calendar.calendar_4")
-    assert state
-    assert state.name == "Calendar 4"
-    assert state.state == STATE_OFF
+    assert not state
 
 
 @pytest.mark.parametrize("tz", [UTC])
@@ -1109,3 +1103,36 @@ async def test_setup_config_entry(
         "location": "Hamburg",
         "description": "What a beautiful day",
     }
+
+
+@pytest.mark.parametrize(
+    ("calendars"),
+    [
+        [
+            _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
+            _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
+            _mock_calendar("Calendar 3", supported_components=["VTODO"]),
+            _mock_calendar("Calendar 4", supported_components=[]),
+        ]
+    ],
+)
+async def test_config_entry_supported_components(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test that calendars are only created for VEVENT types when using a config entry."""
+    assert await setup_integration()
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state
+
+    state = hass.states.get("calendar.calendar_2")
+    assert state
+
+    # No entity created for To-do only component
+    state = hass.states.get("calendar.calendar_3")
+    assert not state
+
+    # No entity created when no components exist
+    state = hass.states.get("calendar.calendar_4")
+    assert not state
