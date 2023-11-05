@@ -199,7 +199,9 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             stop_handler = hass.data[DATA_STOP_HANDLER]
             await stop_handler(hass, True)
 
-    async def async_handle_update_service(call: ha.ServiceCall) -> None:
+    async def async_handle_update_service(
+        call: ha.ServiceCall,
+    ) -> ha.EntityServiceResponse | None:
         """Service handler for updating an entity."""
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
@@ -225,7 +227,18 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ]
 
         if tasks:
-            await asyncio.gather(*tasks)
+            results = await asyncio.gather(
+                *tasks,
+                return_exceptions=True,
+            )
+            response_data: ha.EntityServiceResponse = {}
+            for entity, result in zip(call.data[ATTR_ENTITY_ID], results):
+                if isinstance(result, Exception):
+                    raise result
+                response_data[entity] = result
+            if call.return_response:
+                return response_data
+        return None
 
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
@@ -245,6 +258,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         SERVICE_UPDATE_ENTITY,
         async_handle_update_service,
         schema=SCHEMA_UPDATE_ENTITY,
+        supports_response=ha.SupportsResponse.OPTIONAL,
     )
 
     async def async_handle_reload_config(call: ha.ServiceCall) -> None:

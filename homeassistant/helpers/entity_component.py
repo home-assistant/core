@@ -43,7 +43,7 @@ _EntityT = TypeVar("_EntityT", bound=entity.Entity, default=entity.Entity)
 
 
 @bind_hass
-async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
+async def async_update_entity(hass: HomeAssistant, entity_id: str) -> ServiceResponse:
     """Trigger an update for an entity."""
     domain = entity_id.partition(".")[0]
     entity_comp: EntityComponent[entity.Entity] | None
@@ -53,15 +53,21 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
         logging.getLogger(__name__).warning(
             "Forced update failed. Component for %s not loaded.", entity_id
         )
-        return
+        return None
 
     if (entity_obj := entity_comp.get_entity(entity_id)) is None:
         logging.getLogger(__name__).warning(
             "Forced update failed. Entity %s not found.", entity_id
         )
-        return
+        return None
 
     await entity_obj.async_update_ha_state(True)
+    attributes = {}
+    if entity_obj.extra_state_attributes:
+        attributes.update(entity_obj.extra_state_attributes)
+    if entity_obj.state_attributes:
+        attributes.update(entity_obj.state_attributes)
+    return {"state": entity_obj.state, "attributes": attributes}
 
 
 class EntityComponent(Generic[_EntityT]):
