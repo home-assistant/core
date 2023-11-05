@@ -1,7 +1,6 @@
 """The iotty integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,11 +13,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Uncomment these when developing
-# _LOGGER.setLevel(logging.DEBUG)
-# logging.getLogger("iottycloud").setLevel(logging.DEBUG)
-
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
@@ -39,8 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_add_job(iotty.init)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = iotty
-
-    await asyncio.sleep(3)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
