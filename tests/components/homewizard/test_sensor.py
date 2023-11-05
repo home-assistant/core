@@ -21,11 +21,10 @@ pytestmark = [
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("device_fixture", "data_fixture", "entity_ids"),
+    ("device_fixture", "entity_ids"),
     [
         (
-            "device-HWE-P1.json",
-            "data-HWE-P1.json",
+            "HWE-P1",
             [
                 "sensor.device_dsmr_version",
                 "sensor.device_smart_meter_model",
@@ -33,16 +32,16 @@ pytestmark = [
                 "sensor.device_wi_fi_ssid",
                 "sensor.device_active_tariff",
                 "sensor.device_wi_fi_strength",
-                "sensor.device_total_power_import",
-                "sensor.device_total_power_import_tariff_1",
-                "sensor.device_total_power_import_tariff_2",
-                "sensor.device_total_power_import_tariff_3",
-                "sensor.device_total_power_import_tariff_4",
-                "sensor.device_total_power_export",
-                "sensor.device_total_power_export_tariff_1",
-                "sensor.device_total_power_export_tariff_2",
-                "sensor.device_total_power_export_tariff_3",
-                "sensor.device_total_power_export_tariff_4",
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
                 "sensor.device_active_power",
                 "sensor.device_active_power_phase_1",
                 "sensor.device_active_power_phase_2",
@@ -116,15 +115,15 @@ async def test_disabled_by_default_sensors(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.parametrize("data_fixture", ["data-HWE-P1-unused-exports.json"])
+@pytest.mark.parametrize("device_fixture", ["HWE-P1-unused-exports"])
 @pytest.mark.parametrize(
     "entity_id",
     [
-        "sensor.device_total_power_export",
-        "sensor.device_total_power_export_tariff_1",
-        "sensor.device_total_power_export_tariff_2",
-        "sensor.device_total_power_export_tariff_3",
-        "sensor.device_total_power_export_tariff_4",
+        "sensor.device_total_energy_export",
+        "sensor.device_total_energy_export_tariff_1",
+        "sensor.device_total_energy_export_tariff_2",
+        "sensor.device_total_energy_export_tariff_3",
+        "sensor.device_total_energy_export_tariff_4",
     ],
 )
 async def test_disabled_by_default_sensors_when_unused(
@@ -147,7 +146,7 @@ async def test_sensors_unreachable(
     exception: Exception,
 ) -> None:
     """Test sensor handles API unreachable."""
-    assert (state := hass.states.get("sensor.device_total_power_import_tariff_1"))
+    assert (state := hass.states.get("sensor.device_total_energy_import_tariff_1"))
     assert state.state == "10830.511"
 
     mock_homewizardenergy.data.side_effect = exception

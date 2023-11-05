@@ -9,7 +9,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.command_line.binary_sensor import CommandBinarySensor
 from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.components.homeassistant import (
@@ -19,37 +18,9 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test sensor setup."""
-    assert await setup.async_setup_component(
-        hass,
-        BINARY_SENSOR_DOMAIN,
-        {
-            BINARY_SENSOR_DOMAIN: {
-                "platform": "command_line",
-                "name": "Test",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_state = hass.states.get("binary_sensor.test")
-    assert entity_state
-    assert entity_state.state == STATE_ON
-    assert entity_state.name == "Test"
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
-    assert issue.translation_key == "deprecated_platform_yaml"
 
 
 @pytest.mark.parametrize(
