@@ -9,6 +9,7 @@ from prayer_times_calculator import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -70,8 +71,8 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     def get_new_prayer_times(self) -> dict[str, Any]:
         """Fetch prayer times for today."""
         calc = PrayerTimesCalculator(
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
+            latitude=self.config_entry.data[CONF_LOCATION][CONF_LATITUDE],
+            longitude=self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
             calculation_method=self.calc_method,
             latitudeAdjustmentMethod=self.lat_adj_method,
             midnightMode=self.midnight_mode,
