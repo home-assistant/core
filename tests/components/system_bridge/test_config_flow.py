@@ -9,8 +9,8 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.response import Response
-from systembridgeconnector.models.system import LastUpdated, System
+from systembridgemodels.response import Response
+from systembridgemodels.system import LastUpdated, System
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
