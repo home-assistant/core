@@ -187,10 +187,10 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
 
     async def async_shutdown(self):
         """Make sure a coordinator is shut down as well as it's connection."""
+        await super().async_shutdown()
         if self.task:
             self.task.cancel()
             await asyncio.wait((self.task,))
-        self._unschedule_refresh()
         await self.connection.stop()
 
 
@@ -229,8 +229,6 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
 
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.data.get(self._coil.address)
-        if data is None:
-            return
-
-        self._async_read_coil(data)
+        if data is not None:
+            self._async_read_coil(data)
         self.async_write_ha_state()
