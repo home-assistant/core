@@ -42,7 +42,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             DeviceProp(),
         )
         device_data = DeviceData(device, product_info.model, device_networking.ip)
-        self.api: RoborockLocalClient | RoborockMqttClient = RoborockLocalClient(device_data)
+        self.api: RoborockLocalClient | RoborockMqttClient = RoborockLocalClient(
+            device_data
+        )
         self.cloud_api = cloud_api
         self.device_info = DeviceInfo(
             name=self.roborock_device_info.device.name,
