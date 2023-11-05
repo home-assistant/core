@@ -3,12 +3,13 @@ import asyncio
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from systembridgeconnector.const import MODEL_SYSTEM, TYPE_DATA_UPDATE
+from systembridgeconnector.const import TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgemodels.const import MODEL_SYSTEM
 from systembridgemodels.response import Response
 from systembridgemodels.system import LastUpdated, System
 
