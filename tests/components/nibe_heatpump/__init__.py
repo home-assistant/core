@@ -1,8 +1,12 @@
 """Tests for the Nibe Heat Pump integration."""
 
 from typing import Any
+from unittest.mock import AsyncMock
 
-from nibe.heatpump import Model
+from nibe.coil import Coil, CoilData
+from nibe.connection import Connection
+from nibe.exceptions import ReadException
+from nibe.heatpump import HeatPump, Model
 
 from homeassistant.components.nibe_heatpump import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -19,6 +23,32 @@ MOCK_ENTRY_DATA = {
     "word_swap": True,
     "connection_type": "nibegw",
 }
+
+
+class MockConnection(Connection):
+    """A mock connection class."""
+
+    def __init__(self) -> None:
+        """Initialize the mock connection."""
+        self.coils: dict[int, Any] = {}
+        self.heatpump: HeatPump
+        self.start = AsyncMock()
+        self.stop = AsyncMock()
+        self.write_coil = AsyncMock()
+        self.verify_connectivity = AsyncMock()
+        self.read_product_info = AsyncMock()
+
+    async def read_coil(self, coil: Coil, timeout: float = 0) -> CoilData:
+        """Read of coils."""
+        if (data := self.coils.get(coil.address, None)) is None:
+            raise ReadException()
+        return CoilData(coil, data)
+
+    async def write_coil(self, coil_data: CoilData, timeout: float = 10.0) -> None:
+        """Write a coil data to the heatpump."""
+
+    async def verify_connectivity(self):
+        """Verify that we have functioning communication."""
 
 
 async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> None:
