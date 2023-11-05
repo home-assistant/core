@@ -28,8 +28,6 @@ class IottyLightSwitch(SwitchEntity):
     _iotty_cloud: Any
     _iotty_device: Any
 
-    # _attr_should_poll = False
-
     def __init__(self, iotty: IottyProxy, iotty_device: LightSwitch) -> None:
         """Initialize the LightSwitch device."""
         _LOGGER.debug(
