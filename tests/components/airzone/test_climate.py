@@ -559,6 +559,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.dorm_2")
+    assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_TEMPERATURE) == 20.5
 
 
