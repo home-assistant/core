@@ -55,7 +55,6 @@ class WebDavTodoListEntity(TodoListEntity):
         self._calendar = calendar
         self._attr_name = (calendar.name or "Unknown").capitalize()
         self._attr_unique_id = f"{config_entry_id}-{calendar.id}"
-        self._attr_should_poll = True
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
