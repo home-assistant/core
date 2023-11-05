@@ -69,6 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
 @dataclass
 class ClientCredential:
     """Represent an OAuth client credential."""
@@ -223,14 +224,18 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
 
     @property
     def redirect_uri(self) -> str:
-        """Return standalone URI if defined"""
+        """Return standalone URI if defined."""
+
         redirect_uri = self.hass.data[DOMAIN].get(REDIRECT_URI_CONFKEY)
         if redirect_uri:
-            _LOGGER.info("Using custom redirect_uri from configuration: %s", redirect_uri)
+            _LOGGER.info(
+                "Using custom redirect_uri from configuration: %s", redirect_uri
+            )
             return redirect_uri
-        else:
-            _LOGGER.debug("Using default redirect_uri behavior")
-            return super().redirect_uri
+
+        _LOGGER.debug("Using default redirect_uri behavior")
+        return super().redirect_uri
+
 
 async def _async_provide_implementation(
     hass: HomeAssistant, domain: str
