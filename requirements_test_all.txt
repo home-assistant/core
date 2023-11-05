@@ -865,6 +865,9 @@ janus==1.0.0
 # homeassistant.components.abode
 jaraco.abode==3.3.0
 
+# homeassistant.components.abode
+jaraco.functools==3.9.0
+
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
@@ -1514,7 +1517,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.10.0
+pyschlage==2023.11.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -1976,7 +1979,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==3.3.0
+vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
 vehicle==2.0.0
