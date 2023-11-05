@@ -62,6 +62,8 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
         host_mock.sw_version = "v1.0.0.0.0.0000"
         host_mock.manufacturer = "Reolink"
         host_mock.model = "RLC-123"
+        host_mock.camera_model.return_value = "RLC-123"
+        host_mock.camera_name.return_value = TEST_NVR_NAME
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
