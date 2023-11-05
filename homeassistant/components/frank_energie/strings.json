@@ -1,12 +1,27 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      }
-    },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "Account is already configured",
+      "reauth_successful": "Re-authentication was successful"
+    },
+    "error": {
+      "invalid_auth": "Credentials rejected, please check your username and password."
+    },
+    "step": {
+      "login": {
+        "data": {
+          "password": "Password",
+          "username": "Username / e-mail"
+        },
+        "title": "Enter your Frank Energie account credentials"
+      },
+      "user": {
+        "data": {
+          "authentication": "Use Frank Energie account credentials"
+        },
+        "title": "Do you want to sign in to Frank Energie?",
+        "description": "Signing in is not required for obtaining energy price data but will add additional sensors specific to your account."
+      }
     }
   },
   "entity": {
