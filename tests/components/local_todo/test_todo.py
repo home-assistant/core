@@ -79,13 +79,13 @@ async def ws_move_item(
     return move
 
 
-async def test_create_item(
+async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
-    """Test creating a todo item."""
+    """Test adding a todo item."""
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -93,8 +93,8 @@ async def test_create_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "replace batteries"},
+        "add_item",
+        {"item": "replace batteries"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -110,16 +110,16 @@ async def test_create_item(
     assert state.state == "1"
 
 
-async def test_delete_item(
+async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
-    """Test deleting a todo item."""
+    """Test removing a todo item."""
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "replace batteries"},
+        "add_item",
+        {"item": "replace batteries"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -136,8 +136,8 @@ async def test_delete_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "delete_item",
-        {"uid": [items[0]["uid"]]},
+        "remove_item",
+        {"item": [items[0]["uid"]]},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -150,17 +150,17 @@ async def test_delete_item(
     assert state.state == "0"
 
 
-async def test_bulk_delete(
+async def test_bulk_remove(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
-    """Test deleting multiple todo items."""
+    """Test removing multiple todo items."""
     for i in range(0, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "create_item",
-            {"summary": f"soda #{i}"},
+            "add_item",
+            {"item": f"soda #{i}"},
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
@@ -175,8 +175,8 @@ async def test_bulk_delete(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "delete_item",
-        {"uid": uids},
+        "remove_item",
+        {"item": uids},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -199,8 +199,8 @@ async def test_update_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "soda"},
+        "add_item",
+        {"item": "soda"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -220,7 +220,7 @@ async def test_update_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": item["uid"], "status": "completed"},
+        {"item": item["uid"], "status": "completed"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -276,8 +276,8 @@ async def test_move_item(
     for i in range(1, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "create_item",
-            {"summary": f"item {i}"},
+            "add_item",
+            {"item": f"item {i}"},
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
@@ -334,8 +334,8 @@ async def test_move_item_previous_unknown(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "item 1"},
+        "add_item",
+        {"item": "item 1"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
