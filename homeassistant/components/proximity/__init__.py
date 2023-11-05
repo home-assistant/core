@@ -104,7 +104,7 @@ class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
     @property
     def state(self) -> str | int | float:
         """Return the state."""
-        return self.coordinator.data["dist_to_zone"]
+        return self.coordinator.data["dist_to_zone_converted"]
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:

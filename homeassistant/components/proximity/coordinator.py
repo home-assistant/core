@@ -42,6 +42,7 @@ class ProximityData(TypedDict):
     """ProximityData type class."""
 
     dist_to_zone: str | float
+    dist_to_zone_converted: str | float
     dir_of_travel: str | float
     nearest: str | float
 
@@ -71,6 +72,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         self.data = {
             "dist_to_zone": DEFAULT_DIST_TO_ZONE,
+            "dist_to_zone_converted": DEFAULT_DIST_TO_ZONE,
             "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
             "nearest": DEFAULT_NEAREST,
         }
@@ -87,6 +89,16 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
+
+    def _convert(self, value: int | float) -> float:
+        """Round and convert given distance value."""
+        return round(
+            DistanceConverter.convert(
+                value,
+                UnitOfLength.METERS,
+                self.unit_of_measurement,
+            )
+        )
 
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
@@ -126,6 +138,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug("no devices_to_calculate -> abort")
             return {
                 "dist_to_zone": DEFAULT_DIST_TO_ZONE,
+                "dist_to_zone_converted": DEFAULT_DIST_TO_ZONE,
                 "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
                 "nearest": DEFAULT_NEAREST,
             }
@@ -135,6 +148,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug("at least one device is in zone -> arrived")
             return {
                 "dist_to_zone": 0,
+                "dist_to_zone_converted": 0,
                 "dir_of_travel": "arrived",
                 "nearest": ", ".join(devices_in_zone),
             }
@@ -167,12 +181,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             # Add the device and distance to a dictionary.
             if proximity is None:
                 continue
-            distances_to_zone[device] = round(
-                DistanceConverter.convert(
-                    proximity, UnitOfLength.METERS, self.unit_of_measurement
-                ),
-                1,
-            )
+            distances_to_zone[device] = proximity
 
         # Loop through each of the distances collected and work out the
         # closest.
@@ -191,6 +200,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             assert device_state
             return {
                 "dist_to_zone": round(distances_to_zone[closest_device]),
+                "dist_to_zone_converted": self._convert(
+                    distances_to_zone[closest_device]
+                ),
                 "dir_of_travel": "unknown",
                 "nearest": device_state.name,
             }
@@ -204,6 +216,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug("no lat and lon in old_state -> unknown")
             return {
                 "dist_to_zone": round(distances_to_zone[state_change_data.entity_id]),
+                "dist_to_zone_converted": self._convert(
+                    distances_to_zone[state_change_data.entity_id]
+                ),
                 "dir_of_travel": "unknown",
                 "nearest": entity_name,
             }
@@ -237,10 +252,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         # Update the proximity entity
         dist_to: float | str
+        dist_to_converted: float | str
         if dist_to_zone is not None:
             dist_to = round(dist_to_zone)
+            dist_to_converted = self._convert(dist_to_zone)
         else:
-            dist_to = DEFAULT_DIST_TO_ZONE
+            dist_to = dist_to_converted = DEFAULT_DIST_TO_ZONE
 
         _LOGGER.debug(
             "%s updated: distance=%s: direction=%s: device=%s",
@@ -252,6 +269,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         return {
             "dist_to_zone": dist_to,
+            "dist_to_zone_converted": dist_to_converted,
             "dir_of_travel": direction_of_travel,
             "nearest": entity_name,
         }

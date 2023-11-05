@@ -4,6 +4,7 @@ from homeassistant.const import UnitOfLength
 
 ATTR_DIR_OF_TRAVEL = "dir_of_travel"
 ATTR_DIST_TO = "dist_to_zone"
+ATTR_DIST_TO_CONVERTED = "dist_to_zone_converted"
 ATTR_NEAREST = "nearest"
 
 CONF_IGNORED_ZONES = "ignored_zones"
