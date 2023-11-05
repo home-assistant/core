@@ -1,48 +1,35 @@
 """Support to interact with Remember The Milk."""
 
-from rtmapi import Rtm, RtmRequestFailedException
+from aiortm import AioRTMClient, AioRTMError, AuthError
 
 from homeassistant.const import CONF_ID, CONF_NAME, STATE_OK
-from homeassistant.core import ServiceCall
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers.entity import Entity
 
 from .const import LOGGER
+from .storage import RememberTheMilkConfiguration
 
 
 class RememberTheMilkEntity(Entity):
     """Representation of an interface to Remember The Milk."""
 
-    def __init__(self, name, api_key, shared_secret, token, rtm_config):
+    def __init__(
+        self,
+        *,
+        name: str,
+        client: AioRTMClient,
+        config_entry_id: str,
+        storage: RememberTheMilkConfiguration,
+        token_valid: bool,
+    ) -> None:
         """Create new instance of Remember The Milk component."""
         self._name = name
-        self._api_key = api_key
-        self._shared_secret = shared_secret
-        self._token = token
-        self._rtm_config = rtm_config
-        self._rtm_api = Rtm(api_key, shared_secret, "delete", token)
-        self._token_valid = None
-        self._check_token()
-        LOGGER.debug("Instance created for account %s", self._name)
+        self._rtm_config = storage
+        self._client = client
+        self._config_entry_id = config_entry_id
+        self._token_valid = token_valid
 
-    def _check_token(self):
-        """Check if the API token is still valid.
-
-        If it is not valid any more, delete it from the configuration. This
-        will trigger a new authentication process.
-        """
-        valid = self._rtm_api.token_valid()
-        if not valid:
-            LOGGER.error(
-                "Token for account %s is invalid. You need to register again!",
-                self.name,
-            )
-            self._rtm_config.delete_token(self._name)
-            self._token_valid = False
-        else:
-            self._token_valid = True
-        return self._token_valid
-
-    def create_task(self, call: ServiceCall) -> None:
+    async def create_task(self, call: ServiceCall) -> None:
         """Create a new task on Remember The Milk.
 
         You can use the smart syntax to define the attributes of a new task,
@@ -50,31 +37,37 @@ class RememberTheMilkEntity(Entity):
         due date to today.
         """
         try:
-            task_name = call.data[CONF_NAME]
-            hass_id = call.data.get(CONF_ID)
-            rtm_id = None
+            task_name: str = call.data[CONF_NAME]
+            hass_id: str | None = call.data.get(CONF_ID)
+            rtm_id: tuple[int, int, int] | None = None
             if hass_id is not None:
-                rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
-            result = self._rtm_api.rtm.timelines.create()
-            timeline = result.timeline.value
+                rtm_id = await self.hass.async_add_executor_job(
+                    self._rtm_config.get_rtm_id, self._name, hass_id
+                )
+            timeline_response = await self._client.rtm.timelines.create()
+            timeline = timeline_response.timeline
 
             if rtm_id is None:
-                result = self._rtm_api.rtm.tasks.add(
-                    timeline=timeline, name=task_name, parse="1"
+                add_response = await self._client.rtm.tasks.add(
+                    timeline=timeline, name=task_name, parse=True
                 )
                 LOGGER.debug(
                     "Created new task '%s' in account %s", task_name, self.name
                 )
-                if hass_id is not None:
-                    self._rtm_config.set_rtm_id(
-                        self._name,
-                        hass_id,
-                        result.list.id,
-                        result.list.taskseries.id,
-                        result.list.taskseries.task.id,
-                    )
+                if hass_id is None:
+                    return
+                task_list = add_response.task_list
+                taskseries = task_list.taskseries[0]
+                await self.hass.async_add_executor_job(
+                    self._rtm_config.set_rtm_id,
+                    self._name,
+                    hass_id,
+                    task_list.id,
+                    taskseries.id,
+                    taskseries.task[0].id,
+                )
             else:
-                self._rtm_api.rtm.tasks.setName(
+                await self._client.rtm.tasks.set_name(
                     name=task_name,
                     list_id=rtm_id[0],
                     taskseries_id=rtm_id[1],
@@ -87,17 +80,26 @@ class RememberTheMilkEntity(Entity):
                     self.name,
                     task_name,
                 )
-        except RtmRequestFailedException as rtm_exception:
+        except AuthError as err:
+            LOGGER.error(
+                "Invalid authentication when creating task for account %s: %s",
+                self._name,
+                err,
+            )
+            self._handle_token(False)
+        except AioRTMError as err:
             LOGGER.error(
                 "Error creating new Remember The Milk task for account %s: %s",
                 self._name,
-                rtm_exception,
+                err,
             )
 
-    def complete_task(self, call: ServiceCall) -> None:
+    async def complete_task(self, call: ServiceCall) -> None:
         """Complete a task that was previously created by this component."""
         hass_id = call.data[CONF_ID]
-        rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
+        rtm_id = await self.hass.async_add_executor_job(
+            self._rtm_config.get_rtm_id, self._name, hass_id
+        )
         if rtm_id is None:
             LOGGER.error(
                 (
@@ -109,31 +111,50 @@ class RememberTheMilkEntity(Entity):
             )
             return
         try:
-            result = self._rtm_api.rtm.timelines.create()
-            timeline = result.timeline.value
-            self._rtm_api.rtm.tasks.complete(
+            result = await self._client.rtm.timelines.create()
+            timeline = result.timeline
+            await self._client.rtm.tasks.complete(
                 list_id=rtm_id[0],
                 taskseries_id=rtm_id[1],
                 task_id=rtm_id[2],
                 timeline=timeline,
             )
-            self._rtm_config.delete_rtm_id(self._name, hass_id)
+            await self.hass.async_add_executor_job(
+                self._rtm_config.delete_rtm_id, self._name, hass_id
+            )
             LOGGER.debug("Completed task with id %s in account %s", hass_id, self._name)
-        except RtmRequestFailedException as rtm_exception:
+        except AuthError as err:
             LOGGER.error(
-                "Error creating new Remember The Milk task for account %s: %s",
+                "Invalid authentication when completing task with id %s for account %s: %s",
+                hass_id,
                 self._name,
-                rtm_exception,
+                err,
+            )
+            self._handle_token(False)
+        except AioRTMError as err:
+            LOGGER.error(
+                "Error completing task with id %s for account %s: %s",
+                hass_id,
+                self._name,
+                err,
             )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if not self._token_valid:
             return "API token invalid"
         return STATE_OK
+
+    @callback
+    def _handle_token(self, token_valid: bool) -> None:
+        self._token_valid = token_valid
+        self.async_write_ha_state()
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self._config_entry_id)
+        )

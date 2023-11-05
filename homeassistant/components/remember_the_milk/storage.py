@@ -1,11 +1,11 @@
-"""Store RTM configuration in Home Assistant storage."""
+"""Provide storage for Remember The Milk integration."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
-from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import LOGGER
@@ -23,7 +23,10 @@ class RememberTheMilkConfiguration:
     def __init__(self, hass: HomeAssistant) -> None:
         """Create new instance of configuration."""
         self._config_file_path = hass.config.path(CONFIG_FILE_NAME)
-        self._config = {}
+        self._config: dict[str, Any] = {}
+
+    def setup(self) -> None:
+        """Set up the configuration."""
         LOGGER.debug("Loading configuration from file: %s", self._config_file_path)
         try:
             self._config = json.loads(
@@ -48,26 +51,6 @@ class RememberTheMilkConfiguration:
             json.dumps(self._config), encoding="utf8"
         )
 
-    def get_token(self, profile_name: str) -> str | None:
-        """Get the server token for a profile."""
-        if profile_name in self._config:
-            return self._config[profile_name][CONF_TOKEN]
-        return None
-
-    def set_token(self, profile_name: str, token: str) -> None:
-        """Store a new server token for a profile."""
-        self._initialize_profile(profile_name)
-        self._config[profile_name][CONF_TOKEN] = token
-        self._save_config()
-
-    def delete_token(self, profile_name: str) -> None:
-        """Delete a token for a profile.
-
-        Usually called when the token has expired.
-        """
-        self._config.pop(profile_name, None)
-        self._save_config()
-
     def _initialize_profile(self, profile_name: str) -> None:
         """Initialize the data structures for a profile."""
         if profile_name not in self._config:
@@ -77,7 +60,7 @@ class RememberTheMilkConfiguration:
 
     def get_rtm_id(
         self, profile_name: str, hass_id: str
-    ) -> tuple[str, str, str] | None:
+    ) -> tuple[int, int, int] | None:
         """Get the RTM ids for a Home Assistant task ID.
 
         The id of a RTM tasks consists of the tuple:
@@ -93,11 +76,11 @@ class RememberTheMilkConfiguration:
         self,
         profile_name: str,
         hass_id: str,
-        list_id: str,
-        time_series_id: str,
-        rtm_task_id: str,
+        list_id: int,
+        time_series_id: int,
+        rtm_task_id: int,
     ) -> None:
-        """Add/Update the RTM task ID for a Home Assistant task IS."""
+        """Add/Update the RTM task ID for a Home Assistant task ID."""
         self._initialize_profile(profile_name)
         id_tuple = {
             CONF_LIST_ID: list_id,

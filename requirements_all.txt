@@ -111,9 +111,6 @@ RachioPy==1.1.0
 # homeassistant.components.python_script
 RestrictedPython==8.0
 
-# homeassistant.components.remember_the_milk
-RtmAPI==0.7.2
-
 # homeassistant.components.recorder
 # homeassistant.components.sql
 SQLAlchemy==2.0.38
@@ -357,6 +354,9 @@ aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
 aioridwell==2024.01.0
+
+# homeassistant.components.remember_the_milk
+aiortm==0.9.45
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.42
@@ -1156,9 +1156,6 @@ homematicip==1.1.7
 
 # homeassistant.components.horizon
 horimote==0.4.1
-
-# homeassistant.components.remember_the_milk
-httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.10.0
