@@ -40,7 +40,7 @@ class IdasenDeskSensorDescription(
 SENSORS = (
     IdasenDeskSensorDescription(
         key="height",
-        name="Height",
+        translation_key="height",
         icon="mdi:arrow-up-down",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
