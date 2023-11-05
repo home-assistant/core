@@ -49,6 +49,7 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
     CONF_PRECISION,
+    CONF_REGISTER_SIZE_BYTES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
@@ -171,6 +172,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             CONF_VIRTUAL_COUNT, 0
         )
         self._slave_size = self._count = config[CONF_COUNT]
+        self._register_size_bytes = config[CONF_REGISTER_SIZE_BYTES]
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
@@ -185,7 +187,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
                 registers[i] = int.from_bytes(
-                    register.to_bytes(2, byteorder="little"),
+                    register.to_bytes(self._register_size_bytes, byteorder="little"),
                     byteorder="big",
                     signed=False,
                 )
@@ -219,7 +221,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
         if self._swap:
             registers = self._swap_registers(registers, self._slave_count)
-        byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
+        byte_string = b"".join(
+            [x.to_bytes(self._register_size_bytes, byteorder="big") for x in registers]
+        )
         if self._data_type == DataType.STRING:
             return byte_string.decode()
         if byte_string == b"nan\x00":

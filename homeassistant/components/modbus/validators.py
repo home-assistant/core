@@ -55,7 +55,15 @@ ENTRY = namedtuple(
 )
 PARM_IS_LEGAL = namedtuple(
     "PARM_IS_LEGAL",
-    ["count", "structure", "slave_count", "swap_byte", "swap_word"],
+    [
+        "count",
+        "structure",
+        "slave_count",
+        "swap_byte",
+        "swap_word",
+        "register_size_4bytes",
+        "register_size_8bytes",
+    ],
 )
 # PARM_IS_LEGAL defines if the keywords:
 #    count:
@@ -63,24 +71,52 @@ PARM_IS_LEGAL = namedtuple(
 #    swap: byte
 #    swap: word
 #    swap: word_byte (identical to swap: word)
+#    register_size_4bytes
+#    register_size_8bytes
 # are legal to use.
 # These keywords are only legal with some datatype: ...
 # As expressed in DEFAULT_STRUCT_FORMAT
 
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT8: ENTRY("b", 1, PARM_IS_LEGAL(False, False, False, False, False)),
-    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(False, False, False, False, False)),
-    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, False, False)),
-    DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
+    DataType.INT8: ENTRY(
+        "b", 1, PARM_IS_LEGAL(False, False, False, False, False, False, False)
+    ),
+    DataType.UINT8: ENTRY(
+        "c", 1, PARM_IS_LEGAL(False, False, False, False, False, False, False)
+    ),
+    DataType.INT16: ENTRY(
+        "h", 1, PARM_IS_LEGAL(False, False, True, True, False, False, False)
+    ),
+    DataType.UINT16: ENTRY(
+        "H", 1, PARM_IS_LEGAL(False, False, True, True, False, False, False)
+    ),
+    DataType.FLOAT16: ENTRY(
+        "e", 1, PARM_IS_LEGAL(False, False, True, True, False, False, False)
+    ),
+    DataType.INT32: ENTRY(
+        "i", 2, PARM_IS_LEGAL(False, False, True, True, True, True, False)
+    ),
+    DataType.UINT32: ENTRY(
+        "I", 2, PARM_IS_LEGAL(False, False, True, True, True, True, False)
+    ),
+    DataType.FLOAT32: ENTRY(
+        "f", 2, PARM_IS_LEGAL(False, False, True, True, True, True, False)
+    ),
+    DataType.INT64: ENTRY(
+        "q", 4, PARM_IS_LEGAL(False, False, True, True, True, True, True)
+    ),
+    DataType.UINT64: ENTRY(
+        "Q", 4, PARM_IS_LEGAL(False, False, True, True, True, True, True)
+    ),
+    DataType.FLOAT64: ENTRY(
+        "d", 4, PARM_IS_LEGAL(False, False, True, True, True, True, True)
+    ),
+    DataType.STRING: ENTRY(
+        "s", -1, PARM_IS_LEGAL(True, False, False, False, False, False, False)
+    ),
+    DataType.CUSTOM: ENTRY(
+        "?", 0, PARM_IS_LEGAL(True, True, False, False, False, True, True)
+    ),
 }
 
 
@@ -121,6 +157,12 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         if not swap_type_validator:
             error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
             raise vol.Invalid(error)
+    if register_size_bytes == 4 and not validator.register_size_4bytes:
+        error = f"{name}: `{CONF_REGISTER_SIZE_BYTES}: {register_size_bytes}` cannot be specified with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if register_size_bytes == 8 and not validator.register_size_8bytes:
+        error = f"{name}: `{CONF_REGISTER_SIZE_BYTES}: {register_size_bytes}` cannot be specified with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
     if register_size_bytes == 0 or register_size_bytes % 2 != 0:
         error = f"{name}: Zero or odd numbers are not valid register sizes."
         raise vol.Invalid(error)
