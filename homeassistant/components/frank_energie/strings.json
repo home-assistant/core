@@ -1,17 +1,17 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured",
-      "reauth_successful": "Re-authentication was successful"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "invalid_auth": "Credentials rejected, please check your username and password."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "login": {
         "data": {
-          "password": "Password",
-          "username": "Username / e-mail"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "Enter your Frank Energie account credentials"
       },
