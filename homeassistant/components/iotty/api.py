@@ -1,6 +1,7 @@
 """API for iotty bound to Home Assistant OAuth."""
 
 import asyncio
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -9,6 +10,7 @@ from iottycloud.cloudapi import CloudApi
 from iottycloud.device import Device
 from iottycloud.verbs import RESULT, STATUS
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
@@ -16,6 +18,8 @@ from homeassistant.helpers.entity import Entity
 from .const import IOTTYAPI_BASE, OAUTH2_CLIENT_ID
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 class IottyProxy(CloudApi):
@@ -39,12 +43,19 @@ class IottyProxy(CloudApi):
         self._entities = {}
         self._hass = hass
 
-    async def init(self):
+    async def init(self, entry):
         """Initialize iotty middleware."""
-        self._devices = await self.get_devices()
-        self._coroutine = self._hass.async_create_background_task(
-            self._polling(), "polling_task"
-        )
+        with suppress(Exception):
+            self._devices = await self.get_devices()
+
+        _LOGGER.debug("info There are %d Devices", len(self._devices))
+
+        await self._hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+        if len(self._devices) > 0:
+            self._coroutine = self._hass.async_create_background_task(
+                self._polling(), "polling_task"
+            )
 
     async def devices(self, device_type: str) -> Any:
         """Get devices for a specific type."""
