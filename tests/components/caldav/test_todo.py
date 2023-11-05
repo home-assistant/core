@@ -79,7 +79,7 @@ def mock_calendars(todos: list[str], supported_components: list[str]) -> list[Mo
     """Fixture to create calendars for the test."""
     calendar = Mock()
     items = [
-        Todo(None, "%d.ics" % idx, item, calendar, str(idx))
+        Todo(None, f"{idx}.ics", item, calendar, str(idx))
         for idx, item in enumerate(todos)
     ]
     calendar.search = MagicMock(return_value=items)
@@ -92,12 +92,26 @@ def mock_calendars(todos: list[str], supported_components: list[str]) -> list[Mo
     ("todos", "expected_state"),
     [
         ([], "0"),
-        ([TODO_NEEDS_ACTION], "1"),
-        ([TODO_NO_STATUS], "1"),
+        (
+            [TODO_NEEDS_ACTION],
+            "1",
+        ),
+        (
+            [TODO_NO_STATUS],
+            "1",
+        ),
         ([TODO_COMPLETED], "0"),
         ([TODO_NO_STATUS, TODO_NEEDS_ACTION, TODO_COMPLETED], "2"),
-        ([TODO_NO_SUMMARY], "1"),
+        ([TODO_NO_SUMMARY], "0"),
     ],
+    ids=(
+        "empty",
+        "needs_action",
+        "no_status",
+        "completed",
+        "all",
+        "no_summary",
+    ),
 )
 async def test_todo_list_state(
     hass: HomeAssistant,

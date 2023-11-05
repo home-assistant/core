@@ -45,6 +45,25 @@ async def async_setup_entry(
     )
 
 
+def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
+    """Convert a caldav Todo into a TodoItem."""
+    if (
+        not hasattr(resource.instance, "vtodo")
+        or not (todo := resource.instance.vtodo)
+        or (uid := get_attr_value(todo, "uid")) is None
+        or (summary := get_attr_value(todo, "summary")) is None
+    ):
+        return None
+    return TodoItem(
+        uid=uid,
+        summary=summary,
+        status=TODO_STATUS_MAP.get(
+            get_attr_value(todo, "status") or "",
+            TodoItemStatus.NEEDS_ACTION,
+        ),
+    )
+
+
 class WebDavTodoListEntity(TodoListEntity):
     """CalDAV To-do list entity."""
 
@@ -65,16 +84,7 @@ class WebDavTodoListEntity(TodoListEntity):
                 include_completed=True,
             )
         )
-        todos = [
-            item.instance.vtodo for item in results if hasattr(item.instance, "vtodo")
-        ]
+        todo_items = [_todo_item(resource) for resource in results]
         self._attr_todo_items = [
-            TodoItem(
-                summary=get_attr_value(todo, "summary") or "",
-                status=TODO_STATUS_MAP.get(
-                    get_attr_value(todo, "status") or "",
-                    TodoItemStatus.NEEDS_ACTION,
-                ),
-            )
-            for todo in todos
+            todo_item for todo_item in todo_items if todo_item is not None
         ]
