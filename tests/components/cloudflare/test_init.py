@@ -1,14 +1,14 @@
 """Test the Cloudflare integration."""
 from unittest.mock import patch
 
-from pycfdns.exceptions import (
-    CloudflareAuthenticationException,
-    CloudflareConnectionException,
-    CloudflareZoneException,
-)
+import pycfdns
 import pytest
 
-from homeassistant.components.cloudflare.const import DOMAIN, SERVICE_UPDATE_RECORDS
+from homeassistant.components.cloudflare.const import (
+    CONF_RECORDS,
+    DOMAIN,
+    SERVICE_UPDATE_RECORDS,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -35,10 +35,7 @@ async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
 
 @pytest.mark.parametrize(
     "side_effect",
-    (
-        CloudflareConnectionException(),
-        CloudflareZoneException(),
-    ),
+    (pycfdns.ComunicationException(),),
 )
 async def test_async_setup_raises_entry_not_ready(
     hass: HomeAssistant, cfupdate, side_effect
@@ -49,7 +46,7 @@ async def test_async_setup_raises_entry_not_ready(
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
 
-    instance.get_zone_id.side_effect = side_effect
+    instance.list_zones.side_effect = side_effect
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -64,7 +61,7 @@ async def test_async_setup_raises_entry_auth_failed(
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
 
-    instance.get_zone_id.side_effect = CloudflareAuthenticationException()
+    instance.list_zones.side_effect = pycfdns.AuthenticationException()
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -81,7 +78,7 @@ async def test_async_setup_raises_entry_auth_failed(
     assert flow["context"]["entry_id"] == entry.entry_id
 
 
-async def test_integration_services(hass: HomeAssistant, cfupdate) -> None:
+async def test_integration_services(hass: HomeAssistant, cfupdate, caplog) -> None:
     """Test integration services."""
     instance = cfupdate.return_value
 
@@ -112,7 +109,8 @@ async def test_integration_services(hass: HomeAssistant, cfupdate) -> None:
         )
         await hass.async_block_till_done()
 
-    instance.update_records.assert_called_once()
+    assert len(instance.update_dns_record.mock_calls) == 2
+    assert "All target records are up to date" not in caplog.text
 
 
 async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) -> None:
@@ -134,4 +132,43 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
         )
         await hass.async_block_till_done()
 
-    instance.update_records.assert_not_called()
+    instance.update_dns_record.assert_not_called()
+
+
+async def test_integration_services_with_nonexisting_record(
+    hass: HomeAssistant, cfupdate, caplog
+) -> None:
+    """Test integration services."""
+    instance = cfupdate.return_value
+
+    entry = await init_integration(
+        hass, data={**ENTRY_CONFIG, CONF_RECORDS: ["nonexisting.example.com"]}
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.cloudflare.async_detect_location_info",
+        return_value=LocationInfo(
+            "0.0.0.0",
+            "US",
+            "USD",
+            "CA",
+            "California",
+            "San Diego",
+            "92122",
+            "America/Los_Angeles",
+            32.8594,
+            -117.2073,
+            True,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_RECORDS,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    instance.update_dns_record.assert_not_called()
+    assert "All target records are up to date" in caplog.text
