@@ -173,7 +173,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.2
+aioairzone-cloud==0.3.5
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -479,7 +479,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.13.0
+bluetooth-data-tools==1.14.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -2088,7 +2088,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.119.0
+zeroconf==0.120.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

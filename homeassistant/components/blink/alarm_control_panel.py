@@ -57,7 +57,7 @@ class BlinkSyncModuleHA(
     ) -> None:
         """Initialize the alarm control panel."""
         super().__init__(coordinator)
-        self.api: Blink = self.coordinator.api
+        self.api: Blink = coordinator.api
         self.sync = sync
         self._attr_unique_id: str = sync.serial
         self._attr_device_info = DeviceInfo(
