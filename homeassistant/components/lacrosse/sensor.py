@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     UnitOfTemperature,
@@ -56,6 +57,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_TYPE): vol.In(TYPES),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -115,9 +117,10 @@ def setup_platform(
         typ: str = device_config[CONF_TYPE]
         sensor_class = TYPE_CLASSES[typ]
         name: str = device_config.get(CONF_NAME, device)
+        unique_id : str = device_config.get(CONF_UNIQUE_ID, device)
 
         sensors.append(
-            sensor_class(hass, lacrosse, device, name, expire_after, device_config)
+            sensor_class(hass, lacrosse, device, name, unique_id, expire_after, device_config)
         )
 
     add_entities(sensors)
@@ -137,6 +140,7 @@ class LaCrosseSensor(SensorEntity):
         lacrosse: pylacrosse.LaCrosse,
         device_id: str,
         name: str,
+        unique_id: str,
         expire_after: int | None,
         config: ConfigType,
     ) -> None:
@@ -149,6 +153,7 @@ class LaCrosseSensor(SensorEntity):
         self._expire_after = expire_after
         self._expiration_trigger: CALLBACK_TYPE | None = None
         self._attr_name = name
+        self._attr_unique_id = unique_id
 
         lacrosse.register_callback(
             int(self._config["id"]), self._callback_lacrosse, None
@@ -209,7 +214,7 @@ class LaCrosseHumidity(LaCrosseSensor):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:water-percent"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
 
     @property
     def native_value(self) -> int | None:
