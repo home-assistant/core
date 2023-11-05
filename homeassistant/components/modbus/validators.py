@@ -63,8 +63,8 @@ PARM_IS_LEGAL = namedtuple(
     ],
 )
 # PARM_IS_LEGAL defines if the keywords:
-#    count: ..
-#    structure: ..
+#    count:
+#    structure:
 #    swap: byte
 #    swap: word
 #    swap: word_byte (identical to swap: word)
@@ -74,16 +74,16 @@ PARM_IS_LEGAL = namedtuple(
 
 DEFAULT_STRUCT_FORMAT = {
     DataType.INT8: ENTRY("b", 1, PARM_IS_LEGAL(False, False, False, False, False)),
-    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(True, False, False, False, False)),
-    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(True, False, True, True, False)),
-    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(True, False, True, True, False)),
-    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(True, False, True, True, False)),
-    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(True, False, True, True, True)),
-    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(True, False, True, True, True)),
-    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(True, False, True, True, True)),
-    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(True, False, True, True, True)),
-    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(True, False, True, True, True)),
-    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(True, False, True, True, True)),
+    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(False, False, False, False, False)),
+    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, True, False, False)),
     DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
