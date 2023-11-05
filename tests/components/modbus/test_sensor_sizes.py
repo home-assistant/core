@@ -116,6 +116,33 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
             },
             2,
         ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE_BYTES: 8,
+                CONF_STRUCTURE: ">Q",
+            },
+            1,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 2,
+                CONF_REGISTER_SIZE_BYTES: 4,
+                CONF_STRUCTURE: ">Q",
+            },
+            2,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 4,
+                CONF_REGISTER_SIZE_BYTES: 2,
+                CONF_STRUCTURE: ">Q",
+            },
+            4,
+        ),
     ],
 )
 async def test_count_is_correct_when_register_bytes_is_set(
@@ -142,12 +169,6 @@ async def test_count_is_correct_when_register_bytes_is_set(
 @pytest.mark.parametrize(
     ("config_addon", "expected_count"),
     [
-        (
-            {
-                CONF_DATA_TYPE: DataType.UINT8,
-            },
-            1,
-        ),
         (
             {
                 CONF_DATA_TYPE: DataType.UINT16,
@@ -309,7 +330,7 @@ async def test_count_is_correct_when_register_bytes_is_not_set(
                     },
                 ]
             },
-            "test entity: `register_size_bytes:10` is out of range. Accepted values are 2, 4 or 8 bytes.",
+            "test entity: `register_size_bytes:10` is not valid, only 2, 4 or 8 are valid.",
         ),
     ],
 )
