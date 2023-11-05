@@ -2,6 +2,7 @@
 import pytest
 import smarttub
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 
@@ -45,7 +46,7 @@ async def test_null_blowoutcycle(
     entity_id = f"sensor.{spa.brand}_{spa.model}_blowout_cycle"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state is None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_primary_filtration(
