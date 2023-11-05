@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
+
+import caldav
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.core import HomeAssistant
@@ -16,6 +19,32 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
+
+
+def get_attr_value(obj: caldav.CalendarObjectResource, attribute: str) -> str | None:
+    """Return the value of the CalDav object attribute if defined."""
+    if hasattr(obj, attribute):
+        return getattr(obj, attribute).value
+    return None
+
+
+async def async_get_calendars(
+    hass: HomeAssistant, client: caldav.DAVClient, component: str
+) -> list[caldav.Calendar]:
+    """Get all calendars that support the specified component."""
+    calendars = await hass.async_add_executor_job(client.principal().calendars)
+    components_results = await asyncio.gather(
+        *[
+            hass.async_add_executor_job(calendar.get_supported_components)
+            for calendar in calendars
+        ]
+    )
+    results = []
+    for calendar, supported_components in zip(calendars, components_results):
+        if component not in supported_components:
+            continue
+        results.append(calendar)
+    return results
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -59,11 +88,11 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=self.get_attr_value(vevent, "summary") or "",
+                    summary=get_attr_value(vevent, "summary") or "",
                     start=self.to_local(vevent.dtstart.value),
                     end=self.to_local(self.get_end_date(vevent)),
-                    location=self.get_attr_value(vevent, "location"),
-                    description=self.get_attr_value(vevent, "description"),
+                    location=get_attr_value(vevent, "location"),
+                    description=get_attr_value(vevent, "description"),
                 )
             )
 
@@ -150,15 +179,15 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
-            self.get_attr_value(vevent, "summary") or "", OFFSET
+            get_attr_value(vevent, "summary") or "", OFFSET
         )
         self.offset = offset
         return CalendarEvent(
             summary=summary,
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
-            location=self.get_attr_value(vevent, "location"),
-            description=self.get_attr_value(vevent, "description"),
+            location=get_attr_value(vevent, "location"),
+            description=get_attr_value(vevent, "description"),
         )
 
     @staticmethod
@@ -207,13 +236,6 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         if isinstance(obj, datetime):
             return dt_util.as_local(obj)
         return obj
-
-    @staticmethod
-    def get_attr_value(obj, attribute):
-        """Return the value of the attribute if defined."""
-        if hasattr(obj, attribute):
-            return getattr(obj, attribute).value
-        return None
 
     @staticmethod
     def get_end_date(obj):
