@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities[switch.device-state_set-power_on-device-HWE-SKT.json]
+# name: test_switch_entities[switch.device-state_set-power_on-HWE-SKT]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -12,7 +12,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[switch.device-state_set-power_on-device-HWE-SKT.json].1
+# name: test_switch_entities[switch.device-state_set-power_on-HWE-SKT].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.device-state_set-power_on-device-HWE-SKT.json].2
+# name: test_switch_entities[switch.device-state_set-power_on-HWE-SKT].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -75,7 +75,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[switch.device_cloud_connection-system_set-cloud_enabled-device-HWE-SKT.json]
+# name: test_switch_entities[switch.device_cloud_connection-system_set-cloud_enabled-HWE-SKT]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -88,7 +88,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[switch.device_cloud_connection-system_set-cloud_enabled-device-HWE-SKT.json].1
+# name: test_switch_entities[switch.device_cloud_connection-system_set-cloud_enabled-HWE-SKT].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -119,7 +119,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.device_cloud_connection-system_set-cloud_enabled-device-HWE-SKT.json].2
+# name: test_switch_entities[switch.device_cloud_connection-system_set-cloud_enabled-HWE-SKT].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -151,7 +151,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[switch.device_switch_lock-state_set-switch_lock-device-HWE-SKT.json]
+# name: test_switch_entities[switch.device_switch_lock-state_set-switch_lock-HWE-SKT]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Switch lock',
@@ -164,7 +164,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[switch.device_switch_lock-state_set-switch_lock-device-HWE-SKT.json].1
+# name: test_switch_entities[switch.device_switch_lock-state_set-switch_lock-HWE-SKT].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -195,7 +195,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.device_switch_lock-state_set-switch_lock-device-HWE-SKT.json].2
+# name: test_switch_entities[switch.device_switch_lock-state_set-switch_lock-HWE-SKT].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
