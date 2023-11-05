@@ -84,7 +84,7 @@ DEFAULT_STRUCT_FORMAT = {
     DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, True, False, False)),
+    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, True, False)),
     DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
 
