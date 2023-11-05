@@ -1603,7 +1603,7 @@ pyairvisual==2023.08.1
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.5.0
+pyatmo==7.6.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
