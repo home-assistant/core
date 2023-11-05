@@ -47,6 +47,7 @@ STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
 CONF_AUTH_DOMAIN = "auth_domain"
 DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
+REDIRECT_URI_CONFKEY = "redirect_uri"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
@@ -57,8 +58,16 @@ CREATE_FIELDS = {
 }
 UPDATE_FIELDS: dict = {}  # Not supported
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(REDIRECT_URI_CONFKEY): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 @dataclass
 class ClientCredential:
@@ -141,7 +150,8 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Application Credentials."""
-    hass.data[DOMAIN] = {}
+    # Allow application_credentials: config entry and fetch its values.
+    hass.data[DOMAIN] = config[DOMAIN]
 
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
@@ -211,6 +221,16 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
         """Name of the implementation."""
         return self._name or self.client_id
 
+    @property
+    def redirect_uri(self) -> str:
+        """Return standalone URI if defined"""
+        redirect_uri = self.hass.data[DOMAIN].get(REDIRECT_URI_CONFKEY)
+        if redirect_uri:
+            _LOGGER.info("Using custom redirect_uri from configuration: %s", redirect_uri)
+            return redirect_uri
+        else:
+            _LOGGER.debug("Using default redirect_uri behavior")
+            return super().redirect_uri
 
 async def _async_provide_implementation(
     hass: HomeAssistant, domain: str
