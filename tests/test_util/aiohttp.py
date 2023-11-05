@@ -265,7 +265,6 @@ class AiohttpClientMockResponse:
 
     def release(self):
         """Mock release."""
-        self.closing = True
 
     def raise_for_status(self):
         """Raise error if status is 400 or higher."""
