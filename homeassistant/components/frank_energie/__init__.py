@@ -4,11 +4,11 @@ from __future__ import annotations
 from python_frank_energie import FrankEnergie
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_COORDINATOR, DOMAIN
+from .const import CONF_AUTH_TOKEN, CONF_COORDINATOR, CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import FrankEnergieCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -24,8 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Initialise the coordinator and save it as domain-data
     api = FrankEnergie(
         clientsession=async_get_clientsession(hass),
-        auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
-        refresh_token=entry.data.get(CONF_TOKEN, None),
+        auth_token=entry.data.get(CONF_AUTH_TOKEN, None),
+        refresh_token=entry.data.get(CONF_REFRESH_TOKEN, None),
     )
     frank_coordinator = FrankEnergieCoordinator(hass, entry, api)
 

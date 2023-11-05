@@ -10,13 +10,12 @@ from python_frank_energie.exceptions import AuthException, RequestException
 from python_frank_energie.models import Invoices, MarketPrices, MonthSummary, PriceData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DeviceResponseEntry
+from .const import CONF_AUTH_TOKEN, CONF_REFRESH_TOKEN, DeviceResponseEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -135,8 +134,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
             updated_tokens = await self.api.renew_token()
 
             data = {
-                CONF_ACCESS_TOKEN: updated_tokens.authToken,
-                CONF_TOKEN: updated_tokens.refreshToken,
+                CONF_AUTH_TOKEN: updated_tokens.authToken,
+                CONF_REFRESH_TOKEN: updated_tokens.refreshToken,
             }
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
