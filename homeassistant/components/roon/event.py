@@ -51,7 +51,6 @@ class RoonEventEntity(EventEntity):
         player_name = player_data["display_name"]
         self._attr_name = f"{player_name} roon volume"
         self._attr_unique_id = self._player_data["dev_id"]
-        _LOGGER.error("Player: %s unique_id %s", self._attr_name, self._attr_unique_id)
 
         if self._player_data.get("source_controls"):
             dev_model = self._player_data["source_controls"][0].get("display_name")
