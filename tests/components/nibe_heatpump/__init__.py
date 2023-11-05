@@ -51,7 +51,7 @@ class MockConnection(Connection):
         """Verify that we have functioning communication."""
 
 
-async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> MockConfigEntry:
     """Add entry and get the coordinator."""
     entry = MockConfigEntry(domain=DOMAIN, title="Dummy", data=data)
 
@@ -59,8 +59,9 @@ async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
+    return entry
 
 
-async def async_add_model(hass: HomeAssistant, model: Model):
+async def async_add_model(hass: HomeAssistant, model: Model) -> MockConfigEntry:
     """Add entry of specific model."""
-    await async_add_entry(hass, {**MOCK_ENTRY_DATA, "model": model.name})
+    return await async_add_entry(hass, {**MOCK_ENTRY_DATA, "model": model.name})
