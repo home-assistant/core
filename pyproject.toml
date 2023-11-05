@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.11.0.dev0"
+version     = "2023.12.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -25,6 +25,8 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.9.0b0;python_version>='3.12'",
     "aiohttp==3.8.5;python_version<'3.12'",
+    "aiohttp_cors==0.7.0",
+    "aiohttp-zlib-ng==0.1.1",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
@@ -491,9 +493,6 @@ filterwarnings = [
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
     # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
-    # https://github.com/pytest-dev/pytest/pull/10894 - >=7.4.0
-    "ignore:ast.(Str|Num|NameConstant) is deprecated and will be removed in Python 3.14:DeprecationWarning:_pytest.assertion.rewrite",
-    "ignore:Attribute s is deprecated and will be removed in Python 3.14:DeprecationWarning:_pytest.assertion.rewrite",
     # https://github.com/bachya/pytile/pull/280 - >2023.08.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
     # https://github.com/rytilahti/python-miio/pull/1809 - >0.5.12

@@ -47,6 +47,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
+from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA  # noqa: F401
 from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
@@ -232,7 +233,7 @@ async def async_check_config_schema(
 ) -> None:
     """Validate manually configured MQTT items."""
     mqtt_data = get_mqtt_data(hass)
-    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml[DOMAIN]
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
             schema = mqtt_data.reload_schema[domain]

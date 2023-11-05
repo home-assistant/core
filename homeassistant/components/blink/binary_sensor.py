@@ -47,6 +47,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the blink binary sensors."""
+
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
 
     entities = [
@@ -72,9 +73,11 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
         super().__init__(coordinator)
         self.entity_description = description
         self._camera = coordinator.api.cameras[camera]
-        self._attr_unique_id = f"{self._camera.serial}-{description.key}"
+        serial = self._camera.serial
+        self._attr_unique_id = f"{serial}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._camera.serial)},
+            identifiers={(DOMAIN, serial)},
+            serial_number=serial,
             name=camera,
             manufacturer=DEFAULT_BRAND,
             model=self._camera.camera_type,
