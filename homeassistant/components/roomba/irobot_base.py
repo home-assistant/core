@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_IDLE, STATE_PAUSED
+from homeassistant.const import ATTR_CONNECTIONS, STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -83,7 +83,7 @@ class IRobotEntity(Entity):
         if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
             "wlan0HwAddr", self.vacuum_state.get("mac")
         ):
-            self._attr_device_info["connections"] = {
+            self._attr_device_info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, mac_address)
             }
 
@@ -115,7 +115,7 @@ class IRobotEntity(Entity):
     @property
     def battery_stats(self):
         """Return the battery stats."""
-        return self.vacuum_state.get("bbchg3")
+        return self.vacuum_state.get("bbchg3", {})
 
     @property
     def _robot_state(self):
