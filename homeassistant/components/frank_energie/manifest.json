@@ -1,7 +1,7 @@
 {
   "domain": "frank_energie",
   "name": "Frank Energie",
-  "codeowners": ["@bajansen"],
+  "codeowners": ["@bajansen", "@DCSBL"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/frank_energie",
   "iot_class": "cloud_polling",
