@@ -50,15 +50,13 @@ class RoonEventEntity(EventEntity):
         self._player_data = player_data
         player_name = player_data["display_name"]
         self._attr_name = f"{player_name} roon volume"
+        self._attr_unique_id = self._player_data["dev_id"]
+        _LOGGER.error("Player: %s unique_id %s", self._attr_name, self._attr_unique_id)
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info."""
-        if self.unique_id is None:
-            return None
         if self._player_data.get("source_controls"):
             dev_model = self._player_data["source_controls"][0].get("display_name")
-        return DeviceInfo(
+
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             # Instead of setting the device name to the entity name, roon
             # should be updated to set has_entity_name = True, and set the entity
@@ -91,7 +89,7 @@ class RoonEventEntity(EventEntity):
         """Register volume hooks with the roon api."""
 
         self._server.roonapi.register_volume_control(
-            self.entity_id,
+            self.unique_id,
             self.name,
             self._roonapi_volume_callback,
             0,
