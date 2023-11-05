@@ -1,0 +1,82 @@
+# serializer version: 1
+# name: test_flow_anonymous
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'frank_energie',
+    }),
+    'data': dict({
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'frank_energie',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'frank_energie',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Frank Energie',
+      'unique_id': 'frank_energie',
+      'version': 1,
+    }),
+    'title': 'Frank Energie',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_flow_authenticated
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'username@example.com',
+    }),
+    'data': dict({
+      'access_token': 'auth_token',
+      'token': 'refresh_token',
+      'username': 'username@example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'frank_energie',
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'access_token': 'auth_token',
+        'token': 'refresh_token',
+        'username': 'username@example.com',
+      }),
+      'disabled_by': None,
+      'domain': 'frank_energie',
+      'entry_id': <ANY>,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'username@example.com',
+      'unique_id': 'username@example.com',
+      'version': 1,
+    }),
+    'title': 'username@example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_reauth_flow
+  dict({
+    'access_token': 'new-auth_token',
+    'token': 'new-refresh_token',
+    'username': 'username@example.com',
+  })
+# ---
