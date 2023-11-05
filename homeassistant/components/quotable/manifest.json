@@ -1,0 +1,9 @@
+{
+  "domain": "quotable",
+  "name": "Quotable",
+  "codeowners": [],
+  "dependencies": [],
+  "documentation": "https://github.com/lukePeavey/quotable",
+  "iot_class": "cloud_polling",
+  "requirements": []
+}
