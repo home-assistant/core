@@ -22,8 +22,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MelCloudDevice
-from .const import ATTR_STATUS
-
+from .const import {
+    ATTR_STATUS,
+    SERVICE_SET_ZONE_1_TARGET_HEAT_TEMPERATURE
+}
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
