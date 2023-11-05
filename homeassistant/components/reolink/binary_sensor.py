@@ -32,7 +32,7 @@ from .entity import ReolinkChannelCoordinatorEntity
 class ReolinkBinarySensorEntityDescriptionMixin:
     """Mixin values for Reolink binary sensor entities."""
 
-    value: Callable[[Host, int | None], bool]
+    value: Callable[[Host, int], bool]
 
 
 @dataclass
@@ -43,7 +43,7 @@ class ReolinkBinarySensorEntityDescription(
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    supported: Callable[[Host, int | None], bool] = lambda host, ch: True
+    supported: Callable[[Host, int], bool] = lambda host, ch: True
 
 
 BINARY_SENSORS = (
@@ -169,6 +169,6 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
             )
         )
 
-    async def _async_handle_event(self, event):
+    async def _async_handle_event(self, event: str) -> None:
         """Handle incoming event for motion detection."""
         self.async_write_ha_state()
