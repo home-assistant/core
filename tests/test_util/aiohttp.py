@@ -279,7 +279,6 @@ class AiohttpClientMockResponse:
 
     def close(self):
         """Mock close."""
-        self.closing = True
 
     @property
     def response(self):
