@@ -192,7 +192,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.2
+aioairzone-cloud==0.3.5
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -372,7 +372,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==64
+aiounifi==65
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -565,7 +565,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.13.0
+bluetooth-data-tools==1.14.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -785,7 +785,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.3.15
+evohome-async==0.4.4
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -1050,7 +1050,7 @@ ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==5.1.0
+ical==6.0.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1096,6 +1096,9 @@ janus==1.0.0
 
 # homeassistant.components.abode
 jaraco.abode==3.3.0
+
+# homeassistant.components.abode
+jaraco.functools==3.9.0
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -1600,7 +1603,7 @@ pyairvisual==2023.08.1
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.5.0
+pyatmo==7.6.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -1627,7 +1630,7 @@ pybravia==0.3.3
 pycarwings2==2.14
 
 # homeassistant.components.cloudflare
-pycfdns==2.0.1
+pycfdns==3.0.0
 
 # homeassistant.components.channels
 pychannels==1.2.3
@@ -2010,7 +2013,7 @@ pysabnzbd==1.1.1
 pysaj==0.0.16
 
 # homeassistant.components.schlage
-pyschlage==2023.10.0
+pyschlage==2023.11.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -2190,7 +2193,7 @@ python-ripple-api==0.0.3
 python-roborock==0.35.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.33
+python-smarttub==0.0.35
 
 # homeassistant.components.songpal
 python-songpal==0.15.2
@@ -2536,10 +2539,10 @@ switchbot-api==1.2.1
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.8.4
+systembridgeconnector==3.9.4
 
 # homeassistant.components.tailscale
-tailscale==0.2.0
+tailscale==0.6.0
 
 # homeassistant.components.tank_utility
 tank-utility==1.5.0
@@ -2661,7 +2664,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==3.3.0
+vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
 vehicle==2.0.0
@@ -2794,7 +2797,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.119.0
+zeroconf==0.120.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
