@@ -76,13 +76,15 @@ async def async_setup_entry(
     ]
     async_add_entities(
         RoborockSelectEntity(
-            f"{description.key}_{slugify(device_id)}",
-            coordinator,
-            description,
+            f"{description.key}_{slugify(device_id)}", coordinator, description, options
         )
         for device_id, coordinator in coordinators.items()
         for description in SELECT_DESCRIPTIONS
-        if description.options_lambda(coordinator.roborock_device_info.props.status)
+        if (
+            options := description.options_lambda(
+                coordinator.roborock_device_info.props.status
+            )
+        )
         is not None
     )
 
@@ -97,13 +99,11 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockSelectDescription,
+        options: list[str],
     ) -> None:
         """Create a select entity."""
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator)
-        options = self.entity_description.options_lambda(self._device_status)
-        # We know options is not none as this object would not have been created if it wasn't.
-        assert options is not None
         self._attr_options = options
 
     async def async_select_option(self, option: str) -> None:

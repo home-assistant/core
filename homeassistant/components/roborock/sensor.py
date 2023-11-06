@@ -65,9 +65,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
         translation_key="main_brush_time_left",
-        value_fn=lambda data: data.consumable.main_brush_time_left
-        if data.consumable is not None
-        else None,
+        value_fn=lambda data: data.consumable.main_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
@@ -76,9 +74,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
         translation_key="side_brush_time_left",
-        value_fn=lambda data: data.consumable.side_brush_time_left
-        if data.consumable is not None
-        else None,
+        value_fn=lambda data: data.consumable.side_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
@@ -87,9 +83,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:air-filter",
         device_class=SensorDeviceClass.DURATION,
         translation_key="filter_time_left",
-        value_fn=lambda data: data.consumable.filter_time_left
-        if data.consumable is not None
-        else None,
+        value_fn=lambda data: data.consumable.filter_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
@@ -98,9 +92,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:eye-outline",
         device_class=SensorDeviceClass.DURATION,
         translation_key="sensor_time_left",
-        value_fn=lambda data: data.consumable.sensor_time_left
-        if data.consumable is not None
-        else None,
+        value_fn=lambda data: data.consumable.sensor_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
@@ -108,9 +100,7 @@ SENSOR_DESCRIPTIONS = [
         key="cleaning_time",
         translation_key="cleaning_time",
         device_class=SensorDeviceClass.DURATION,
-        value_fn=lambda data: data.status.clean_time
-        if data.consumable is not None
-        else None,
+        value_fn=lambda data: data.status.clean_time,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
