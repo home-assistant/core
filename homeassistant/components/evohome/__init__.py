@@ -497,18 +497,6 @@ class EvoBroker:
             )
             self.temps = None  # these are now stale, will fall back to v2 temps
 
-        except KeyError as err:
-            _LOGGER.warning(
-                (
-                    "Unable to obtain high-precision temperatures. "
-                    "It appears the JSON schema is not as expected, "
-                    "so the high-precision feature will be disabled until next restart."
-                    "Message is: %s"
-                ),
-                err,
-            )
-            self.client_v1 = self.temps = None
-
         else:
             if (
                 str(self.client_v1.location_id)
@@ -519,7 +507,7 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.client_v1 = self.temps = None
+                self.temps = self.client_v1 = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
@@ -556,10 +544,7 @@ class EvoBroker:
         await self._update_v2_api_state()
 
         if self.client_v1:
-            try:
-                await self._update_v1_api_temps()
-            except evohomeasync.EvohomeError:
-                self.temps = None  # these are now stale, will fall back to v2 temps
+            await self._update_v1_api_temps()
 
 
 class EvoDevice(Entity):
