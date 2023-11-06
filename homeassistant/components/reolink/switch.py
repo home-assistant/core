@@ -159,7 +159,7 @@ SWITCH_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "HDR"),
-        value=lambda api, ch: api.HDR_on(ch),
+        value=lambda api, ch: api.HDR_on(ch) is True,
         method=lambda api, ch, value: api.set_HDR(ch, value),
     ),
 )
