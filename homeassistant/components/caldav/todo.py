@@ -84,7 +84,8 @@ class WebDavTodoListEntity(TodoListEntity):
                 include_completed=True,
             )
         )
-        todo_items = [_todo_item(resource) for resource in results]
         self._attr_todo_items = [
-            todo_item for todo_item in todo_items if todo_item is not None
+            todo_item
+            for resource in results
+            if (todo_item := _todo_item(resource)) is not None
         ]
