@@ -461,9 +461,6 @@ class UtilityMeterSensor(RestoreSensor):
     @callback
     def async_reading(self, event: EventType[EventStateChangedData]) -> None:
         """Handle the sensor state changes."""
-        _LOGGER.warning("TESTE Period: %s", self._sensor_periodically_resetting)
-        _LOGGER.warning("TESTE Avail: %s", self._sensor_always_available)
-        _LOGGER.warning("TESTE State: %s", self.hass.states.get(self._sensor_source_id))
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
         ) is None or source_state.state == STATE_UNAVAILABLE:
