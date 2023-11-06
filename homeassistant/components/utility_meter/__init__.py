@@ -27,7 +27,6 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
-    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -266,12 +265,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new = {**config_entry.options}
         new[CONF_METER_PERIODICALLY_RESETTING] = True
         config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=new)
-
-    if config_entry.version == 2:
-        new = {**config_entry.options}
-        new[CONF_SENSOR_ALWAYS_AVAILABLE] = False
-        config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, options=new)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
