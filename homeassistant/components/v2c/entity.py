@@ -1,0 +1,31 @@
+"""Support for V2C EVSE."""
+from __future__ import annotations
+
+from pytrydan import TrydanData
+
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import V2CUpdateCoordinator
+
+
+class V2CBaseEntity(CoordinatorEntity[V2CUpdateCoordinator]):
+    """Defines a base v2c entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: V2CUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Init the Enphase base entity."""
+        self.entity_description = description
+        super().__init__(coordinator)
+
+    @property
+    def data(self) -> TrydanData:
+        """Return envoy data."""
+        data = self.coordinator.evse.data
+        assert data is not None
+        return data
