@@ -11,7 +11,6 @@ from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
-from homeassistant.components.dsmr.const import BELGIUM_5MIN_GAS_METER_READING
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -483,6 +482,10 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     from dsmr_parser.obis_references import (
         BELGIUM_CURRENT_AVERAGE_DEMAND,
         BELGIUM_MAXIMUM_DEMAND_MONTH,
+        BELGIUM_MBUS1_METER_READING2,
+        BELGIUM_MBUS2_METER_READING2,
+        BELGIUM_MBUS3_METER_READING2,
+        BELGIUM_MBUS4_METER_READING2,
         ELECTRICITY_ACTIVE_TARIFF,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
@@ -500,11 +503,32 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     }
 
     telegram = {
-        BELGIUM_5MIN_GAS_METER_READING: MBusObject(
-            BELGIUM_5MIN_GAS_METER_READING,
+        BELGIUM_MBUS1_METER_READING2: MBusObject(
+            BELGIUM_MBUS1_METER_READING2,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS2_METER_READING2: MBusObject(
+            BELGIUM_MBUS2_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": Decimal(745.696), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS3_METER_READING2: MBusObject(
+            BELGIUM_MBUS3_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": Decimal(745.697), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS4_METER_READING2: MBusObject(
+            BELGIUM_MBUS4_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": Decimal(745.698), "unit": "m3"},
             ],
         ),
         BELGIUM_CURRENT_AVERAGE_DEMAND: CosemObject(
@@ -562,6 +586,146 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     assert max_demand.state == "4.11"
     assert max_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
     assert max_demand.attributes.get(ATTR_STATE_CLASS) is None
+
+    # check if gas consumption is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "745.695"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+
+async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+    """Test if Belgian meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        BELGIUM_MBUS1_METER_READING1,
+        BELGIUM_MBUS3_METER_READING2,
+    )
+    from dsmr_parser.objects import MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5B",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        BELGIUM_MBUS1_METER_READING1: MBusObject(
+            BELGIUM_MBUS1_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(745.695), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS3_METER_READING2: MBusObject(
+            BELGIUM_MBUS3_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": Decimal(745.696), "unit": "m3"},
+            ],
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if gas consumption is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "745.696"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+
+async def test_belgian_meter_alt2(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+    """Test if Belgian meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        BELGIUM_MBUS1_METER_READING2,
+        BELGIUM_MBUS2_METER_READING1,
+    )
+    from dsmr_parser.objects import MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5B",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        BELGIUM_MBUS1_METER_READING2: MBusObject(
+            BELGIUM_MBUS1_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(745.695), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS2_METER_READING1: MBusObject(
+            BELGIUM_MBUS2_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": Decimal(745.696), "unit": "m3"},
+            ],
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
