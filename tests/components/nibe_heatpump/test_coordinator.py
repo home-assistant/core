@@ -80,13 +80,10 @@ async def test_pushed_update(
 
     coils[coil_id] = 10
     await async_add_model(hass, Model.S320)
-    heatpump = mock_connection.heatpump
 
     assert hass.states.get(entity_id) == snapshot(name="1. initial values")
 
-    coil = heatpump.get_coil_by_address(coil_id)
-    heatpump.notify_coil_update(CoilData(coil, 20))
-
+    mock_connection.mock_coil_update(coil_id, 20)
     assert hass.states.get(entity_id) == snapshot(name="2. pushed values")
 
     coils[coil_id] = 30
