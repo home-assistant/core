@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import asdict
 import logging
+from typing import Any
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -15,6 +16,7 @@ from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
 from systembridgemodels.open_path import OpenPath
 from systembridgemodels.open_url import OpenUrl
+from systembridgemodels.processes import Process
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +25,7 @@ from homeassistant.const import (
     CONF_COMMAND,
     CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
@@ -62,6 +65,8 @@ CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
 
+SERVICE_GET_PROCESS_BY_ID = "get_process_by_id"
+SERVICE_GET_PROCESSES_BY_NAME = "get_processes_by_name"
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
@@ -200,6 +205,54 @@ async def async_setup_entry(
                 raise vol.Invalid(f"Could not find device {device}") from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
+    async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the get process by id service call."""
+        _LOGGER.info("Get process by id: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes.processes
+        # Find process.id from list
+        return next(
+            (
+                process
+                for process in processes
+                if process.id == service_call.data[CONF_ID]
+            ),
+            Process(
+                id=service_call.data[CONF_ID],
+                name="",
+                cpu_usage=None,
+                created=None,
+                memory_usage=None,
+                path=None,
+                status=None,
+                username=None,
+                working_directory=None,
+            ),
+        ).dict()
+
+    async def handle_get_processes_by_name(
+        call: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle the get process by name service call."""
+        _LOGGER.info("Get process by name: %s", call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes.processes
+        # Find processes from list
+        items: list[dict[str, Any]] = [
+            process.dict()
+            for process in processes
+            if call.data[CONF_NAME].lower() in process.name.lower()
+        ]
+
+        return {
+            "count": len(items),
+            "processes": list(items),
+        }
+
     async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
         _LOGGER.debug("Open path: %s", service_call.data)
@@ -253,6 +306,32 @@ async def async_setup_entry(
             KeyboardText(text=service_call.data[CONF_TEXT])
         )
         return asdict(response)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESS_BY_ID,
+        handle_get_process_by_id,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_ID): cv.positive_int,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESSES_BY_NAME,
+        handle_get_processes_by_name,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_NAME): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,

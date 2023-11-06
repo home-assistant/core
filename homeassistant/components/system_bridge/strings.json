@@ -107,6 +107,34 @@
         }
       }
     },
+    "get_process_by_id": {
+      "name": "Get process by ID",
+      "description": "Gets a process by the ID.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "id": {
+          "name": "ID",
+          "description": "ID of the process to get."
+        }
+      }
+    },
+    "get_processes_by_name": {
+      "name": "Get processes by name",
+      "description": "Gets a list of processes by the name.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the process to get."
+        }
+      }
+    },
     "open_url": {
       "name": "Open URL",
       "description": "Opens a URL on the server using the default application.",
