@@ -69,7 +69,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(
             CONF_METER_PERIODICALLY_RESETTING,
         ): selector.BooleanSelector(),
-        vol.Required(
+        vol.Optional(
             CONF_SENSOR_ALWAYS_AVAILABLE,
             default=False,
         ): selector.BooleanSelector(),
