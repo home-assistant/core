@@ -41,13 +41,6 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        if item.domain != DOMAIN:
-            raise Unresolvable(f"Unknown domain '{item.domain}' of media item.")
-        if not isinstance(item.identifier, str):
-            raise Unresolvable(
-                f"Could not resolve identifier '{item.identifier}' of media item."
-            )
-
         identifier = item.identifier.split("+")
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
@@ -78,16 +71,8 @@ class ReolinkVODMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if item.domain != DOMAIN:
-            raise Unresolvable(f"Unknown domain '{item.domain}' during browsing.")
-
         if item.identifier is None:
             return await self._generate_root()
-
-        if not isinstance(item.identifier, str):
-            raise Unresolvable(
-                f"Could not resolve identifier '{item.identifier}' during browsing."
-            )
 
         identifier = item.identifier.split("+")
         item_type = identifier[0]
@@ -135,11 +120,8 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
 
                 device = device_reg.async_get(entity.device_id)
-                if device is None:
-                    continue
-
                 ch = entity.unique_id.split("_")[1]
-                if ch in channels:
+                if ch in channels or device is None:
                     continue
                 channels.append(ch)
 
