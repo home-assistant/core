@@ -1982,7 +1982,7 @@ uvcclient==0.11.0
 vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
-vehicle==2.0.0
+vehicle==2.2.0
 
 # homeassistant.components.velbus
 velbus-aio==2023.10.2
