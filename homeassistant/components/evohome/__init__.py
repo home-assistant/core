@@ -148,37 +148,22 @@ def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
     try:
         raise err
 
-    except evohomeasync2.AuthenticationFailed as exc:
+    except evohomeasync2.AuthenticationFailed:
         _LOGGER.error(
             (
-                "Failed to authenticate with the vendor's server. Check your username"
-                " and password. NB: Some special password characters that work"
-                " correctly via the website will not work via the web API. Message"
-                " is: %s"
+                "Unable to authenticate with the vendor's server. "
+                "Check your username/password. NB: Some special password characters "
+                "that work correctly via the website will not work via the web API. "
+                "Message: %s"
             ),
-            exc,
+            err,
         )
 
     except evohomeasync2.RequestFailed as exc:
-        if exc.status is None:
+        if exc.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 (
                     "Unable to connect with the vendor's server. "
-                    "Check your network and the vendor's service status page. "
-                    "Message is: %s"
-                ),
-                exc,
-            )
-
-        elif exc.status == HTTPStatus.SERVICE_UNAVAILABLE:
-            _LOGGER.warning(
-                "The vendor says their server is currently unavailable. "
-                "Check the vendor's service status page"
-            )
-
-        elif exc.status == HTTPStatus.TOO_MANY_REQUESTS:
-            _LOGGER.warning(
-                (
                     "The vendor's API rate limit has been exceeded. "
                     "If this message persists, consider increasing the %s"
                 ),
@@ -186,10 +171,25 @@ def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
             )
 
         else:
-            raise  # we don't expect/handle any other Exceptions
+            _LOGGER.warning(
+                (
+                    "Unable to connect with the vendor's server. "
+                    "Check your network and the vendor's service status page. "
+                    "HTTP status: %s, message: %s"
+                ),
+                exc.status,
+                err,
+            )
 
-    except evohomeasync2.EvohomeError as exc:
-        _LOGGER.error("Something unexpected has gone wrong. Message is: %s", exc)
+    except evohomeasync2.EvohomeError:
+        _LOGGER.warning(
+            (
+                "Unable to connect with the vendor's server. "
+                "Check your network and the vendor's service status page. "
+                "Message: %s"
+            ),
+            err,
+        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -479,7 +479,7 @@ class EvoBroker:
 
         def get_session_id(client_v1: evohomeasync.EvohomeClient) -> str | None:
             user_data = client_v1.user_data if client_v1 else None
-            return user_data.get("sessionId") if user_data else None  # type: ignore[return-value]
+            return user_data.get("sessionId") if user_data else None
 
         session_id = get_session_id(self.client_v1)
 
