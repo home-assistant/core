@@ -22,7 +22,7 @@
     },
     "invalid_entity_category": {
       "title": "An MQTT {domain} with an invalid entity category was found",
-      "description": "Home Assistant detected a manually configured `{domain}` that has an `entity_category` set to `config`. Config with invalid setting:\n\n```yaml\n{config}\n```\n\nWhen set, make sure `entity_category` for a `{domain}` is set to `diagnostic` or `None`. Update your configuration and restart Home Assistant to fix this issue."
+      "description": "Home Assistant detected a manually configured MQTT `{domain}` entity that has an `entity_category` set to `config`. \nConfiguration file: **{config_file}**\nNear line: **{line}**\n\nConfig with invalid setting:\n\n```yaml\n{config}\n```\n\nWhen set, make sure `entity_category` for a `{domain}` is set to `diagnostic` or `None`. Update your YAML configuration and restart Home Assistant to fix this issue."
     },
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",

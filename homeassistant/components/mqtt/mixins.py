@@ -208,7 +208,9 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     )
 
 
-def validate_sensor_entity_category(domain: str) -> Callable[[ConfigType], ConfigType]:
+def validate_sensor_entity_category(
+    domain: str, discovery: bool
+) -> Callable[[ConfigType], ConfigType]:
     """Check the sensor's entity category is not set to `config` which is invalid for sensors."""
 
     # A guard was added to the core sensor platform with HA core 2023.11.0
@@ -225,9 +227,19 @@ def validate_sensor_entity_category(domain: str) -> Callable[[ConfigType], Confi
             CONF_ENTITY_CATEGORY in config
             and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
         ):
-            config_str = yaml_dump(config)
+            config_str: str
+            if not discovery:
+                config_str = yaml_dump(config)
             config.pop(CONF_ENTITY_CATEGORY)
-            _LOGGER.warning("Entity category `config` is invalid for sensors, ignoring")
+            _LOGGER.warning(
+                "Entity category `config` is invalid for sensors, ignoring. "
+                "This stops working from HA Core 2024.2.0"
+            )
+            # We only open an issue if the user can fix it
+            if discovery:
+                return config
+            config_file = getattr(config, "__config_file__", "?")
+            line = getattr(config, "__line__", "?")
             hass = async_get_hass()
             async_create_issue(
                 hass,
@@ -240,7 +252,12 @@ def validate_sensor_entity_category(domain: str) -> Callable[[ConfigType], Confi
                 learn_more_url=(
                     f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
                 ),
-                translation_placeholders={"domain": domain, "config": config_str},
+                translation_placeholders={
+                    "domain": domain,
+                    "config": config_str,
+                    "config_file": config_file,
+                    "line": line,
+                },
             )
         return config
 
