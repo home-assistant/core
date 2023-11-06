@@ -14,9 +14,9 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
+from .entity import SystemBridgeEntity
 
 
 @dataclass

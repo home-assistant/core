@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -23,7 +23,6 @@ from .const import (
     CONF_WATERING_TIME,
     DEFAULT_WATERING_TIME,
     DOMAIN,
-    LOGGER,
 )
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
@@ -65,7 +64,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return
+    return  # pragma: no cover
 
 
 async def async_setup_entry(
@@ -124,14 +123,11 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         elif self.entity_description.key == "auto_watering":
             self.coordinator.api.suspend_zone(365, zone_number)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update device state."""
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
         zone_number = self.data["relay"]
-        LOGGER.debug("Updating Hydrawise switch: %s", self.name)
         timestr = self.coordinator.api.relays_by_zone_number[zone_number]["timestr"]
         if self.entity_description.key == "manual_watering":
             self._attr_is_on = timestr == "Now"
         elif self.entity_description.key == "auto_watering":
             self._attr_is_on = timestr not in {"", "Now"}
-        super()._handle_coordinator_update()

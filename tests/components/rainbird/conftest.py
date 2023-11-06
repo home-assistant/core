@@ -86,7 +86,7 @@ def yaml_config() -> dict[str, Any]:
 
 
 @pytest.fixture
-async def unique_id() -> str:
+async def config_entry_unique_id() -> str:
     """Fixture for serial number used in the config entry."""
     return SERIAL_NUMBER
 
@@ -100,13 +100,13 @@ async def config_entry_data() -> dict[str, Any]:
 @pytest.fixture
 async def config_entry(
     config_entry_data: dict[str, Any] | None,
-    unique_id: str,
+    config_entry_unique_id: str | None,
 ) -> MockConfigEntry | None:
     """Fixture for MockConfigEntry."""
     if config_entry_data is None:
         return None
     return MockConfigEntry(
-        unique_id=unique_id,
+        unique_id=config_entry_unique_id,
         domain=DOMAIN,
         data=config_entry_data,
         options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},

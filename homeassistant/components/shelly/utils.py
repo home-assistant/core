@@ -375,13 +375,10 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 
 @callback
-def device_update_info(
+def update_device_fw_info(
     hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
 ) -> None:
-    """Update device registry info."""
-
-    LOGGER.debug("Updating device registry info for %s", entry.title)
-
+    """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
     dev_reg = dr_async_get(hass)
@@ -389,6 +386,11 @@ def device_update_info(
         identifiers={(DOMAIN, entry.entry_id)},
         connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
+        if device.sw_version == shellydevice.firmware_version:
+            return
+
+        LOGGER.debug("Updating device registry info for %s", entry.title)
+
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 

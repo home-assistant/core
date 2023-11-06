@@ -4,7 +4,6 @@
       "user": {
         "title": "Set up Transmission Client",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -20,7 +19,6 @@
       }
     },
     "error": {
-      "name_exists": "Name already exists",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
@@ -32,9 +30,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure options for Transmission",
         "data": {
-          "scan_interval": "Update frequency",
           "limit": "Limit",
           "order": "Order"
         }
