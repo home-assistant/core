@@ -1,8 +1,9 @@
 """Tests for the Reolink media_source platform."""
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
@@ -11,13 +12,31 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.components.reolink import const
+from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_NVR_NAME
+from .conftest import (
+    TEST_HOST2,
+    TEST_MAC2,
+    TEST_NVR_NAME,
+    TEST_NVR_NAME2,
+    TEST_PASSWORD2,
+    TEST_PORT,
+    TEST_USE_HTTPS,
+    TEST_USERNAME2,
+)
 
 from tests.common import MockConfigEntry
 
@@ -207,3 +226,44 @@ async def test_browsing_errors(
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
     with pytest.raises(Unresolvable):
         await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
+
+
+async def test_browsing_not_loaded(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing a Reolink camera integration which is not loaded."""
+    reolink_connect.api_version.return_value = 1
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+    await hass.async_block_till_done()
+
+    reolink_connect.get_host_data = AsyncMock(side_effect=ReolinkError("Test error"))
+    config_entry2 = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC2),
+        data={
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME2,
+            CONF_PASSWORD: TEST_PASSWORD2,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME2,
+    )
+    config_entry2.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry2.entry_id) is False
+    await hass.async_block_till_done()
+
+    # browse root
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+
+    assert browse.domain == DOMAIN
+    assert browse.title == "Reolink"
+    assert browse.identifier is None
+    assert len(browse.children) == 1

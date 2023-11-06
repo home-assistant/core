@@ -19,8 +19,10 @@ TEST_USERNAME2 = "username"
 TEST_PASSWORD = "password"
 TEST_PASSWORD2 = "new_password"
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
+TEST_MAC2 = "12:34:56:78:9a:bc"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
+TEST_NVR_NAME2 = "test2_reolink_name"
 TEST_USE_HTTPS = True
 
 
