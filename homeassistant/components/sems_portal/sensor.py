@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CURRENCY_DOLLAR,
     PERCENTAGE,
-    UnitOfPower,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DOMAIN, SemsDataUpdateCoordinator
 
 
-class SemsSensor(SensorEntity):
+class SemsInformationSensor(SensorEntity):
     """Used to represent a SemsSensor."""
 
     _attr_has_entity_name = True
@@ -32,15 +32,15 @@ class SemsSensor(SensorEntity):
 
     def __init__(
         self,
-        device: Any,
         config_entry: ConfigEntry,
         description: SensorEntityDescription,
+        coordinator: SemsDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
 
-        deviceName = device["name"]
-        deviceModel = device["model"]
-        self.device = device
+        self.coordinator = coordinator
+        deviceName = coordinator.data["powerPlant"]["info"]["name"]
+        deviceModel = coordinator.data["powerPlant"]["info"]["model"]
         self._config_entry_id = config_entry.entry_id
         self.entity_description = description
         self._attr_unique_id = f"{deviceName}-{description.key}"
@@ -54,8 +54,76 @@ class SemsSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        sensor_type = self.entity_description.key
-        return self.device[sensor_type]
+        return self.coordinator.data["powerPlant"]["info"][self.entity_description.key]
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data from OWM and updates the states."""
+        await self.coordinator.async_request_refresh()
+
+
+class SemsInverterSensor(SensorEntity):
+    """Used to represent a SemsSensor."""
+
+    _attr_has_entity_name = True
+
+    entity_description: SensorEntityDescription
+
+    def getInverterByName(
+        self, coordinator: SemsDataUpdateCoordinator, name: str
+    ) -> Any:
+        """Retrieve the inverter by name."""
+
+        for inverter in coordinator.data["powerPlant"]["inverters"]:
+            if inverter["name"] == name:
+                return inverter
+        return None
+
+    def __init__(
+        self,
+        name: str,
+        model: str,
+        config_entry: ConfigEntry,
+        description: SensorEntityDescription,
+        coordinator: SemsDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+
+        self.coordinator = coordinator
+        self.deviceName = name
+        deviceName = self.deviceName
+        deviceModel = model
+        self._config_entry_id = config_entry.entry_id
+        self.entity_description = description
+        self._attr_unique_id = f"{deviceName}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, deviceName)},
+            manufacturer="Goodwe",
+            model=deviceModel,
+            name=deviceName,
+        )
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self.getInverterByName(self.coordinator, self.deviceName)[
+            self.entity_description.key
+        ]
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data from OWM and updates the states."""
+        await self.coordinator.async_request_refresh()
 
 
 async def async_setup_entry(
@@ -68,22 +136,22 @@ async def async_setup_entry(
     coordinator: SemsDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     interters = coordinator.data["powerPlant"]["inverters"]
-    powerPlantInformation = coordinator.data["powerPlant"]["info"]
 
     inverterEntities = [
-        SemsSensor(device, config_entry, description)
+        SemsInverterSensor(
+            inverter["name"], inverter["model"], config_entry, description, coordinator
+        )
         for description in SENSOR_TYPES_INVERTERS
-        for device in interters
+        for inverter in interters
     ]
 
     powerPlantInformationEntities = [
-        SemsSensor(powerPlantInformation, config_entry, description)
+        SemsInformationSensor(config_entry, description, coordinator)
         for description in SENSOR_TYPES_POWERSTATION
     ]
 
-    inverterEntities += powerPlantInformationEntities
-
     async_add_entities(inverterEntities)
+    async_add_entities(powerPlantInformationEntities)
 
 
 SENSOR_TYPES_INVERTERS: tuple[SensorEntityDescription, ...] = (
@@ -111,38 +179,38 @@ SENSOR_TYPES_POWERSTATION: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         name="Battery Capacity",
         key="battery_capacity",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Capacity",
         key="capacity",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Month Generation",
         key="monthGeneration",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Generation Live",
         key="generationLive",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Generation Today",
         key="generationToday",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="All Time Generation",
         key="allTimeGeneration",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Today Income",
@@ -159,8 +227,8 @@ SENSOR_TYPES_POWERSTATION: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         name="Battery",
         key="battery",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Battery Status",
@@ -177,8 +245,8 @@ SENSOR_TYPES_POWERSTATION: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         name="House Load",
         key="houseLoad",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="House Load Status",
@@ -189,8 +257,8 @@ SENSOR_TYPES_POWERSTATION: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         name="Grid Load",
         key="gridLoad",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
         name="Grid Load Status",
