@@ -1299,7 +1299,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==2.0.0
+nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
 nibe==2.4.0
