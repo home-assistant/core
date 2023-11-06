@@ -125,8 +125,8 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
                 channels.append(ch)
 
-                if host.api.api_version("recReplay", int(ch)) < 1:
-                    # playback stream not supported by this camera
+                if host.api.api_version("recReplay", int(ch)) < 1 or not host.api.hdd_info:
+                    # playback stream not supported by this camera or no storage installed
                     continue
 
                 device_name = (
