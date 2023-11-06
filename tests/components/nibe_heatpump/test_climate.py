@@ -3,7 +3,12 @@ from typing import Any
 from unittest.mock import call, patch
 
 from nibe.coil import CoilData
-from nibe.coil_groups import CLIMATE_COILGROUPS, UNIT_COILGROUPS
+from nibe.coil_groups import (
+    CLIMATE_COILGROUPS,
+    UNIT_COILGROUPS,
+    ClimateCoilGroup,
+    UnitCoilGroup,
+)
 from nibe.heatpump import Model
 import pytest
 from syrupy import SnapshotAssertion
@@ -31,6 +36,26 @@ async def fixture_single_platform():
         yield
 
 
+def _setup_climate_group(
+    coils: dict[int, Any], model: Model, climate_id: str
+) -> tuple[ClimateCoilGroup, UnitCoilGroup]:
+    """Initialize coils for a climate group, with some default values."""
+    climate = CLIMATE_COILGROUPS[model.series][climate_id]
+    unit = UNIT_COILGROUPS[model.series]["main"]
+
+    if climate.active_accessory is not None:
+        coils[climate.active_accessory] = "ON"
+    coils[climate.current] = 20.5
+    coils[climate.setpoint_heat] = 21.0
+    coils[climate.setpoint_cool] = 30.0
+    coils[climate.mixing_valve_state] = 20
+    coils[climate.use_room_sensor] = "ON"
+    coils[unit.prio] = "OFF"
+    coils[unit.cooling_with_room_sensor] = "ON"
+
+    return climate, unit
+
+
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
@@ -49,17 +74,7 @@ async def test_basic(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting of value."""
-    climate = CLIMATE_COILGROUPS[model.series][climate_id]
-    unit = UNIT_COILGROUPS[model.series]["main"]
-    if climate.active_accessory is not None:
-        coils[climate.active_accessory] = "ON"
-    coils[climate.current] = 20.5
-    coils[climate.setpoint_heat] = 21.0
-    coils[climate.setpoint_cool] = 30.0
-    coils[climate.mixing_valve_state] = 20
-    coils[climate.use_room_sensor] = "ON"
-    coils[unit.prio] = "OFF"
-    coils[unit.cooling_with_room_sensor] = "ON"
+    climate, unit = _setup_climate_group(coils, model, climate_id)
 
     await async_add_model(hass, model)
 
@@ -112,17 +127,7 @@ async def test_set_temperature(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting temperature."""
-    climate = CLIMATE_COILGROUPS[model.series][climate_id]
-    unit = UNIT_COILGROUPS[model.series]["main"]
-    if climate.active_accessory is not None:
-        coils[climate.active_accessory] = "ON"
-    coils[climate.current] = 20.5
-    coils[climate.setpoint_heat] = 21.0
-    coils[climate.setpoint_cool] = 30.0
-    coils[climate.mixing_valve_state] = 20
-    coils[climate.use_room_sensor] = "ON"
-    coils[unit.prio] = "OFF"
-    coils[unit.cooling_with_room_sensor] = "ON"
+    climate, _ = _setup_climate_group(coils, model, climate_id)
 
     await async_add_model(hass, model)
 
@@ -199,6 +204,14 @@ async def test_set_temperature(
 
 
 @pytest.mark.parametrize(
+    ("hvac_mode", "cooling_with_room_sensor", "use_room_sensor"),
+    [
+        (HVACMode.HEAT_COOL, "ON", "ON"),
+        (HVACMode.HEAT, "OFF", "ON"),
+        (HVACMode.AUTO, "OFF", "OFF"),
+    ],
+)
+@pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
         (Model.S320, "s1", "climate.climate_system_s1"),
@@ -211,22 +224,14 @@ async def test_set_hvac_mode(
     model: Model,
     climate_id: str,
     entity_id: str,
+    cooling_with_room_sensor: str,
+    use_room_sensor: str,
+    hvac_mode: HVACMode,
     coils: dict[int, Any],
     entity_registry_enabled_by_default: None,
-    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test setting the hvac mode."""
-    climate = CLIMATE_COILGROUPS[model.series][climate_id]
-    unit = UNIT_COILGROUPS[model.series]["main"]
-    if climate.active_accessory is not None:
-        coils[climate.active_accessory] = "ON"
-    coils[climate.current] = 20.5
-    coils[climate.setpoint_heat] = 21.0
-    coils[climate.setpoint_cool] = 30.0
-    coils[climate.mixing_valve_state] = 20
-    coils[climate.use_room_sensor] = "ON"
-    coils[unit.prio] = "OFF"
-    coils[unit.cooling_with_room_sensor] = "ON"
+    """Test setting a hvac mode."""
+    climate, unit = _setup_climate_group(coils, model, climate_id)
 
     await async_add_model(hass, model)
 
@@ -242,51 +247,38 @@ async def test_set_hvac_mode(
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            ATTR_HVAC_MODE: hvac_mode,
         },
         blocking=True,
     )
     await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == [
-        call(CoilData(coil_cooling_with_room_sensor, "ON")),
-        call(CoilData(coil_use_room_sensor, "ON")),
+        call(CoilData(coil_cooling_with_room_sensor, cooling_with_room_sensor)),
+        call(CoilData(coil_use_room_sensor, use_room_sensor)),
     ]
-    mock_connection.write_coil.reset_mock()
 
-    await hass.services.async_call(
-        PLATFORM_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
 
-    assert mock_connection.write_coil.mock_calls == [
-        call(CoilData(coil_cooling_with_room_sensor, "OFF")),
-        call(CoilData(coil_use_room_sensor, "ON")),
-    ]
-    mock_connection.write_coil.reset_mock()
+@pytest.mark.parametrize(
+    ("model", "climate_id", "entity_id"),
+    [
+        (Model.S320, "s1", "climate.climate_system_s1"),
+        (Model.F1155, "s2", "climate.climate_system_s2"),
+    ],
+)
+async def test_set_invalid_hvac_mode(
+    hass: HomeAssistant,
+    mock_connection: MockConnection,
+    model: Model,
+    climate_id: str,
+    entity_id: str,
+    coils: dict[int, Any],
+    entity_registry_enabled_by_default: None,
+) -> None:
+    """Test setting an invalid hvac mode."""
+    _setup_climate_group(coils, model, climate_id)
 
-    await hass.services.async_call(
-        PLATFORM_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_HVAC_MODE: HVACMode.AUTO,
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert mock_connection.write_coil.mock_calls == [
-        call(CoilData(coil_cooling_with_room_sensor, "OFF")),
-        call(CoilData(coil_use_room_sensor, "OFF")),
-    ]
-    mock_connection.write_coil.reset_mock()
+    await async_add_model(hass, model)
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -294,11 +286,10 @@ async def test_set_hvac_mode(
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: entity_id,
-                ATTR_HVAC_MODE: HVACMode.COOL,
+                ATTR_HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
         await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == []
-    mock_connection.write_coil.reset_mock()
