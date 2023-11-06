@@ -492,7 +492,7 @@ class EvoBroker:
             )
             self.temps = self.client_v1 = None
 
-        except evohomeasync.EvohomeError as exc:
+        except evohomeasync.RequestFailed as exc:
             _LOGGER.warning(
                 (
                     "Unable to obtain the latest high-precision temperatures. "
@@ -511,7 +511,7 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.client_v1 = self.temps = None
+                self.temps = self.client_v1 = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
@@ -547,10 +547,7 @@ class EvoBroker:
         await self._update_v2_api_state()
 
         if self.client_v1:
-            try:
-                await self._update_v1_api_temps()
-            except evohomeasync.EvohomeError:
-                self.temps = None  # these are now stale, will fall back to v2 temps
+            await self._update_v1_api_temps()
 
 
 class EvoDevice(Entity):
