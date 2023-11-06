@@ -971,12 +971,16 @@ class PipelineRun:
         # pipeline.tts_engine can't be None or this function is not called
         engine = cast(str, self.pipeline.tts_engine)
 
-        tts_options = {}
+        tts_options: dict[str, Any] = {}
         if self.pipeline.tts_voice is not None:
             tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
 
         if self.tts_audio_output is not None:
-            tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
+            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
+            if self.tts_audio_output == "wav":
+                # 16 Khz, 16-bit mono
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = 16000
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = 1
 
         try:
             options_supported = await tts.async_support_options(
