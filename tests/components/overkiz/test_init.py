@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_HOST, TEST_PASSWORD
+from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
 from tests.common import MockConfigEntry, mock_registry
 
@@ -23,7 +23,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HOST},
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "server": TEST_SERVER},
     )
 
     mock_entry.add_to_hass(hass)
