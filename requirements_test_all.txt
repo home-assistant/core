@@ -1242,7 +1242,7 @@ pybotvac==0.0.24
 pybravia==0.3.3
 
 # homeassistant.components.cloudflare
-pycfdns==2.0.1
+pycfdns==3.0.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
