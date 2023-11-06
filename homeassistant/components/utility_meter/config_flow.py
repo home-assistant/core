@@ -108,7 +108,7 @@ CONFIG_SCHEMA = vol.Schema(
             CONF_METER_PERIODICALLY_RESETTING,
             default=True,
         ): selector.BooleanSelector(),
-        vol.Required(
+        vol.Optional(
             CONF_SENSOR_ALWAYS_AVAILABLE,
             default=False,
         ): selector.BooleanSelector(),
