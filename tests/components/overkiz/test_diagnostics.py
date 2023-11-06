@@ -1,5 +1,5 @@
 """Tests for the diagnostics data provided by the Overkiz integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
 
@@ -17,16 +17,12 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    info = {
-        "hz_actual": (3200000001, 0),
-        "arch_string_raw": "aargh",
-        "brand_raw": "Intel Ryzen 7",
-        "hz_advertised": (3600000001, 0),
-    }
+    diagnostics = {"test": "test"}
 
-    with patch(
-        "pyoverkiz.client.OverkizClient.get_diagnostic_data",
-        return_value=info,
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        get_diagnostic_data=AsyncMock(return_value=diagnostics),
+        get_execution_history=AsyncMock(return_value=[]),
     ):
         assert (
             await get_diagnostics_for_config_entry(hass, hass_client, init_integration)

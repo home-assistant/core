@@ -1,6 +1,6 @@
 """Configuration for overkiz tests."""
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -15,14 +15,7 @@ from tests.components.overkiz.test_config_flow import (
     TEST_PASSWORD,
 )
 
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+MOCK_SETUP_RESPONSE = Mock(devices=[], gateways=[])
 
 
 @pytest.fixture
@@ -37,6 +30,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.overkiz.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -44,7 +46,14 @@ async def init_integration(
     """Set up the Overkiz integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_setup=AsyncMock(return_value=MOCK_SETUP_RESPONSE),
+        get_scenarios=AsyncMock(return_value=[]),
+        fetch_events=AsyncMock(return_value=[]),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry

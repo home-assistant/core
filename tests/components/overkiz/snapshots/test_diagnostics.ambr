@@ -1,0 +1,11 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'execution_history': list([
+    ]),
+    'server': 'somfy_europe',
+    'setup': dict({
+      'test': 'test',
+    }),
+  })
+# ---
