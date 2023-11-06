@@ -57,6 +57,7 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
         host_mock.use_https = TEST_USE_HTTPS
         host_mock.is_admin = True
         host_mock.user_level = "admin"
+        host_mock.stream_channels = [0]
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
