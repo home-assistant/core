@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -34,7 +35,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            evse = Trydan(user_input[CONF_HOST])
+            evse = Trydan(
+                user_input[CONF_HOST],
+                client=get_async_client(self.hass, verify_ssl=False),
+            )
 
             try:
                 await evse.get_data()

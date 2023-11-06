@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -60,9 +59,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up V2C sensor platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    evse_data = coordinator.evse.data
-    assert evse_data is not None
-    _LOGGER.debug("EVSE data: %s", evse_data)
 
     entities: list[Entity] = [
         V2CPowerSensorEntity(coordinator, description, config_entry.entry_id)
@@ -90,16 +86,8 @@ class V2CPowerSensorEntity(V2CSensorBaseEntity):
         """Initialize V2C Power entity."""
         super().__init__(coordinator, description)
         self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.evse.host)},
-            manufacturer="V2C",
-            model="Trydan",
-            name=coordinator.name,
-            sw_version=coordinator.evse.firmware_version,
-        )
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        assert self.data is not None
         return self.entity_description.value_fn(self.data)
