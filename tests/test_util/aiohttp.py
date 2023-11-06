@@ -150,7 +150,11 @@ class AiohttpClientMocker:
         raise AssertionError(f"No mock registered for {method.upper()} {url} {params}")
 
     async def wait_for_close(self):
-        """Wait until all requests are done."""
+        """Wait until all requests are done.
+
+        For the purposes of mocking, we only need to run
+        the event loop once to let the request finish.
+        """
         await asyncio.sleep(0)
 
 
