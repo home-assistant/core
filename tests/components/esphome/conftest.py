@@ -250,6 +250,13 @@ async def _mock_generic_device_entry(
             try_connect_done.set()
             return result
 
+        def stop_callback(self) -> None:
+            """Stop the reconnect logic."""
+            # For the purposes of testing, we don't want to wait
+            # for the reconnect logic to finish trying to connect
+            self._cancel_connect("forced disconnect from test")
+            super().stop_callback()
+
     with patch(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
     ):
