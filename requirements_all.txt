@@ -1603,7 +1603,7 @@ pyairvisual==2023.08.1
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.5.0
+pyatmo==7.6.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -2190,7 +2190,7 @@ python-ripple-api==0.0.3
 python-roborock==0.35.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.33
+python-smarttub==0.0.35
 
 # homeassistant.components.songpal
 python-songpal==0.15.2
