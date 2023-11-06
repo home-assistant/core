@@ -317,7 +317,6 @@ omit =
     homeassistant/components/enocean/binary_sensor.py
     homeassistant/components/enocean/device.py
     homeassistant/components/enocean/dongle.py
-    homeassistant/components/enocean/light.py
     homeassistant/components/enocean/sensor.py
     homeassistant/components/enocean/switch.py
     homeassistant/components/enphase_envoy/__init__.py
