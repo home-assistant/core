@@ -1,15 +1,12 @@
 """Test the V2C config flow."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from pytrydan.exceptions import TrydanError
 
 from homeassistant import config_entries
 from homeassistant.components.v2c.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -57,5 +54,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
