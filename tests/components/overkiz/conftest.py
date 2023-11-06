@@ -8,6 +8,7 @@ from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.overkiz import load_setup_fixture
 from tests.components.overkiz.test_config_flow import (
     TEST_EMAIL,
     TEST_GATEWAY_ID,
@@ -49,7 +50,7 @@ async def init_integration(
     with patch.multiple(
         "pyoverkiz.client.OverkizClient",
         login=AsyncMock(return_value=True),
-        get_setup=AsyncMock(return_value=MOCK_SETUP_RESPONSE),
+        get_setup=AsyncMock(return_value=load_setup_fixture()),
         get_scenarios=AsyncMock(return_value=[]),
         fetch_events=AsyncMock(return_value=[]),
     ):
