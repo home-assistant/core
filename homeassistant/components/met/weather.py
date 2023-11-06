@@ -31,13 +31,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import MetDataUpdateCoordinator
-from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
+from .const import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
+)
 
 DEFAULT_NAME = "Met.no"
 
@@ -55,12 +63,12 @@ async def async_setup_entry(
     is_metric = hass.config.units is METRIC_SYSTEM
     if config_entry.data.get(CONF_TRACK_HOME, False):
         name = hass.config.location_name
-    elif (name := config_entry.data.get(CONF_NAME)) and name is None:
-        name = DEFAULT_NAME
-    elif TYPE_CHECKING:
-        assert isinstance(name, str)
+    else:
+        name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+        if TYPE_CHECKING:
+            assert isinstance(name, str)
 
-    entities = [MetWeather(coordinator, config_entry.data, False, name, is_metric)]
+    entities = [MetWeather(coordinator, config_entry, False, name, is_metric)]
 
     # Add hourly entity to legacy config entries
     if entity_registry.async_get_entity_id(
@@ -69,9 +77,7 @@ async def async_setup_entry(
         _calculate_unique_id(config_entry.data, True),
     ):
         name = f"{name} hourly"
-        entities.append(
-            MetWeather(coordinator, config_entry.data, True, name, is_metric)
-        )
+        entities.append(MetWeather(coordinator, config_entry, True, name, is_metric))
 
     async_add_entities(entities)
 
@@ -114,22 +120,22 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: MetDataUpdateCoordinator,
-        config: MappingProxyType[str, Any],
+        config_entry: ConfigEntry,
         hourly: bool,
         name: str,
         is_metric: bool,
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._attr_unique_id = _calculate_unique_id(config, hourly)
-        self._config = config
+        self._attr_unique_id = _calculate_unique_id(config_entry.data, hourly)
+        self._config = config_entry.data
         self._is_metric = is_metric
         self._hourly = hourly
         self._attr_entity_registry_enabled_default = not hourly
         self._attr_device_info = DeviceInfo(
             name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Met.no",
             model="Forecast",
             configuration_url="https://www.met.no/en",
@@ -143,6 +149,10 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         condition = self.coordinator.data.current_weather_data.get("condition")
         if condition is None:
             return None
+
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
+            condition = ATTR_CONDITION_CLEAR_NIGHT
+
         return format_condition(condition)
 
     @property

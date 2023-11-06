@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.energy_production import (
@@ -87,6 +87,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     MultilevelSensorScaleType,
     MultilevelSensorType,
 )
+from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
@@ -355,24 +356,22 @@ class NumericSensorDataTemplateData:
     unit_of_measurement: str | None = None
 
 
+T = TypeVar(
+    "T",
+    MultilevelSensorType,
+    MultilevelSensorScaleType,
+    MeterScaleType,
+    EnergyProductionParameter,
+    EnergyProductionScaleType,
+)
+
+
 class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
     @staticmethod
     def find_key_from_matching_set(
-        enum_value: MultilevelSensorType
-        | MultilevelSensorScaleType
-        | MeterScaleType
-        | EnergyProductionParameter
-        | EnergyProductionScaleType,
-        set_map: Mapping[
-            str,
-            list[MultilevelSensorType]
-            | list[MultilevelSensorScaleType]
-            | list[MeterScaleType]
-            | list[EnergyProductionScaleType]
-            | list[EnergyProductionParameter],
-        ],
+        enum_value: T, set_map: Mapping[str, list[T]]
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
         for key, value_set in set_map.items():
@@ -393,7 +392,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
-            meter_scale_type = get_meter_scale_type(value)
+            try:
+                meter_scale_type = get_meter_scale_type(value)
+            except UnknownValueData:
+                return NumericSensorDataTemplateData()
+
             unit = self.find_key_from_matching_set(meter_scale_type, METER_UNIT_MAP)
             # We do this because even though these are energy scales, they don't meet
             # the unit requirements for the energy device class.
@@ -418,8 +421,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             )
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
-            sensor_type = get_multilevel_sensor_type(value)
-            multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
+            try:
+                sensor_type = get_multilevel_sensor_type(value)
+                multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
+            except UnknownValueData:
+                return NumericSensorDataTemplateData()
             unit = self.find_key_from_matching_set(
                 multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
             )

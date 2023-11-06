@@ -1,9 +1,11 @@
 """Rest API for Home Assistant."""
 import asyncio
-from asyncio import timeout
+from asyncio import shield, timeout
+from collections.abc import Collection
 from functools import lru_cache
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
@@ -16,6 +18,7 @@ from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import (
     CONTENT_TYPE_JSON,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -38,10 +41,12 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.json import json_loads
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +62,7 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
+SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -369,19 +375,33 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
+        changed_states: list[ReadOnlyDict[str, Collection[Any]]] = []
+
+        @ha.callback
+        def _async_save_changed_entities(
+            event: EventType[EventStateChangedData],
+        ) -> None:
+            if event.context == context and (state := event.data["new_state"]):
+                changed_states.append(state.as_dict())
+
+        cancel_listen = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_save_changed_entities, run_immediately=True
+        )
 
         try:
-            await hass.services.async_call(
-                domain, service, data, blocking=True, context=context
-            )
+            async with timeout(SERVICE_WAIT_TIMEOUT):
+                # shield the service call from cancellation on connection drop
+                await shield(
+                    hass.services.async_call(
+                        domain, service, data, blocking=True, context=context
+                    )
+                )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
-
-        changed_states = []
-
-        for state in hass.states.async_all():
-            if state.context is context:
-                changed_states.append(state)
+        except TimeoutError:
+            pass
+        finally:
+            cancel_listen()
 
         return self.json(changed_states)
 

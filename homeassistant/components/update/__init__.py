@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -191,6 +191,10 @@ def _version_is_newer(latest_version: str, installed_version: str) -> bool:
 
 class UpdateEntity(RestoreEntity):
     """Representation of an update entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_PICTURE, ATTR_IN_PROGRESS, ATTR_RELEASE_SUMMARY}
+    )
 
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False

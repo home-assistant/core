@@ -194,22 +194,25 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(
-        self, entry: float | int | str | bytes
-    ) -> float | int | str | bytes | None:
+    def __process_raw_value(self, entry: float | int | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
-            return entry
+            return entry.decode()
+        if entry != entry:  # noqa: PLR0124
+            # NaN float detection replace with None
+            return None
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
-            return self._min_value
+            return str(self._min_value)
         if self._max_value is not None and val > self._max_value:
-            return self._max_value
+            return str(self._max_value)
         if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
-            return 0
-        return val
+            return "0"
+        if self._precision == 0:
+            return str(int(round(val, 0)))
+        return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
@@ -219,6 +222,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
+        if byte_string == b"nan\x00":
+            return None
 
         try:
             val = struct.unpack(self._structure, byte_string)
@@ -227,49 +232,19 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             msg = f"Received {recv_size} bytes, unpack error {err}"
             _LOGGER.error(msg)
             return None
-        # Issue: https://github.com/home-assistant/core/issues/41944
-        # If unpack() returns a tuple greater than 1, don't try to process the value.
-        # Instead, return the values of unpack(...) separated by commas.
         if len(val) > 1:
             # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry)
-
-                # We could convert int to float, and the code would still work; however
-                # we lose some precision, and unit tests will fail. Therefore, we do
-                # the conversion only when it's absolutely necessary.
-                if isinstance(v_temp, int) and self._precision == 0:
-                    v_result.append(str(v_temp))
-                elif v_temp is None:
-                    v_result.append("0")
-                elif v_temp != v_temp:  # noqa: PLR0124
-                    # NaN float detection replace with None
+                if v_temp is None:
                     v_result.append("0")
                 else:
-                    v_result.append(f"{float(v_temp):.{self._precision}f}")
+                    v_result.append(str(v_temp))
             return ",".join(map(str, v_result))
 
-        # NaN float detection replace with None
-        if val[0] != val[0]:  # noqa: PLR0124
-            return None
-        if byte_string == b"nan\x00":
-            return None
-
         # Apply scale, precision, limits to floats and ints
-        val_result = self.__process_raw_value(val[0])
-
-        # We could convert int to float, and the code would still work; however
-        # we lose some precision, and unit tests will fail. Therefore, we do
-        # the conversion only when it's absolutely necessary.
-
-        if val_result is None:
-            return None
-        if isinstance(val_result, int) and self._precision == 0:
-            return str(val_result)
-        if isinstance(val_result, bytes):
-            return val_result.decode()
-        return f"{float(val_result):.{self._precision}f}"
+        return self.__process_raw_value(val[0])
 
 
 class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
