@@ -16,6 +16,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
+from .util import listify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ def _get_stop_tags(
     title_counts = Counter(tags.values())
 
     stop_directions: dict[str, str] = {}
-    for direction in route_config["route"]["direction"]:
+    for direction in listify(route_config["route"]["direction"]):
         for stop in direction["stop"]:
             stop_directions[stop["tag"]] = direction["name"]
 

@@ -3,6 +3,7 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homewizard_energy.errors import NotFoundError
 from homewizard_energy.models import Data, Device, State, System
 import pytest
 
@@ -10,39 +11,18 @@ from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 
 
 @pytest.fixture
 def device_fixture() -> str:
-    """Return the device fixture for a specific device."""
-    return "device-HWE-P1.json"
-
-
-@pytest.fixture
-def data_fixture() -> str:
-    """Return the data fixture for a specific device."""
-    return "data-HWE-P1.json"
-
-
-@pytest.fixture
-def state_fixture() -> str:
-    """Return the state fixture for a specific device."""
-    return "state.json"
-
-
-@pytest.fixture
-def system_fixture() -> str:
-    """Return the system fixture for a specific device."""
-    return "system.json"
+    """Return the device fixtures for a specific device."""
+    return "HWE-P1"
 
 
 @pytest.fixture
 def mock_homewizardenergy(
     device_fixture: str,
-    data_fixture: str,
-    state_fixture: str,
-    system_fixture: str,
 ) -> MagicMock:
     """Return a mock bridge."""
     with patch(
@@ -53,18 +33,28 @@ def mock_homewizardenergy(
         new=homewizard,
     ):
         client = homewizard.return_value
+
         client.device.return_value = Device.from_dict(
-            json.loads(load_fixture(device_fixture, DOMAIN))
+            json.loads(load_fixture(f"{device_fixture}/device.json", DOMAIN))
         )
         client.data.return_value = Data.from_dict(
-            json.loads(load_fixture(data_fixture, DOMAIN))
+            json.loads(load_fixture(f"{device_fixture}/data.json", DOMAIN))
         )
-        client.state.return_value = State.from_dict(
-            json.loads(load_fixture(state_fixture, DOMAIN))
-        )
-        client.system.return_value = System.from_dict(
-            json.loads(load_fixture(system_fixture, DOMAIN))
-        )
+
+        if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists():
+            client.state.return_value = State.from_dict(
+                json.loads(load_fixture(f"{device_fixture}/state.json", DOMAIN))
+            )
+        else:
+            client.state.side_effect = NotFoundError
+
+        if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists():
+            client.system.return_value = System.from_dict(
+                json.loads(load_fixture(f"{device_fixture}/system.json", DOMAIN))
+            )
+        else:
+            client.system.side_effect = NotFoundError
+
         yield client
 
 

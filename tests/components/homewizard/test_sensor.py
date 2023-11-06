@@ -21,11 +21,10 @@ pytestmark = [
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("device_fixture", "data_fixture", "entity_ids"),
+    ("device_fixture", "entity_ids"),
     [
         (
-            "device-HWE-P1.json",
-            "data-HWE-P1.json",
+            "HWE-P1",
             [
                 "sensor.device_dsmr_version",
                 "sensor.device_smart_meter_model",
@@ -116,7 +115,7 @@ async def test_disabled_by_default_sensors(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.parametrize("data_fixture", ["data-HWE-P1-unused-exports.json"])
+@pytest.mark.parametrize("device_fixture", ["HWE-P1-unused-exports"])
 @pytest.mark.parametrize(
     "entity_id",
     [
