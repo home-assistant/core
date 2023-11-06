@@ -207,5 +207,10 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads MQTT entities from the YAML-configuration."
     }
+  },
+  "exceptions": {
+    "invalid_platform_config": {
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` failed. See logs for more details."
+    }
   }
 }

@@ -22,6 +22,7 @@ from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
@@ -238,14 +239,53 @@ async def handle_call_service(
         connection.send_result(msg["id"], {"context": context})
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
-            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
+            connection.send_error(
+                msg["id"],
+                const.ERR_NOT_FOUND,
+                f"Service {err.domain}.{err.service} not found.",
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            )
         else:
-            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+            # The called service called another service which does not exist
+            connection.send_error(
+                msg["id"],
+                const.ERR_HOME_ASSISTANT_ERROR,
+                f"Service {err.domain}.{err.service} called service "
+                f"{msg['domain']}.{msg['service']} which was not found.",
+                translation_domain=const.DOMAIN,
+                translation_key="child_service_not_found",
+                translation_placeholders={
+                    "domain": err.domain,
+                    "service": err.service,
+                    "child_domain": msg["domain"],
+                    "child_service": msg["service"],
+                },
+            )
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            f"Validation error: {err}",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
-        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
