@@ -19,6 +19,3 @@ ROON_APPINFO = {
     "email": "home_assistant@users.noreply.github.com",
     "website": "https://www.home-assistant.io/",
 }
-
-ROON_EVENT_VOLUME_UP = "volume_up"
-ROON_EVENT_VOLUME_DOWN = "volume_down"
