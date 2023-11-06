@@ -33,7 +33,11 @@ async def setup_hausbus_integration(hass: HomeAssistant, *, entry_id="1"):
         domain=HAUSBUS_DOMAIN,
         entry_id=entry_id,
     )
+
     config_entry.add_to_hass(hass)
+    config_entry.add_to_manager(hass.config_entries)
+
+    hass.data.setdefault(HAUSBUS_DOMAIN, {})
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
