@@ -169,6 +169,7 @@ class HassIOIngress(HomeAssistantView):
             headers = _response_header(result)
             content_length_int = 0
             content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            # Avoid parsing content_type in simple cases for better performance
             if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
                 content_type = (maybe_content_type.partition(";"))[0].strip()
             else:
