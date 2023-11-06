@@ -58,6 +58,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -158,6 +159,7 @@ async def async_setup_entry(
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
     tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
+    sensor_always_available = config_entry.options[CONF_SENSOR_ALWAYS_AVAILABLE]
 
     meters = []
     tariffs = config_entry.options[CONF_TARIFFS]
@@ -178,6 +180,7 @@ async def async_setup_entry(
             tariff=None,
             unique_id=entry_id,
             device_info=device_info,
+            sensor_always_available=sensor_always_available,
         )
         meters.append(meter_sensor)
         hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -198,6 +201,7 @@ async def async_setup_entry(
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
                 device_info=device_info,
+                sensor_always_available=sensor_always_available,
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -372,6 +376,7 @@ class UtilityMeterSensor(RestoreSensor):
         unique_id,
         suggested_entity_id=None,
         device_info=None,
+        sensor_always_available=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
@@ -397,6 +402,7 @@ class UtilityMeterSensor(RestoreSensor):
             _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
         else:
             self._cron_pattern = cron_pattern
+        self._sensor_always_available = sensor_always_available
         self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
         self._sensor_periodically_resetting = periodically_resetting
@@ -455,11 +461,15 @@ class UtilityMeterSensor(RestoreSensor):
     @callback
     def async_reading(self, event: EventType[EventStateChangedData]) -> None:
         """Handle the sensor state changes."""
+        _LOGGER.warning("TESTE Period: %s", self._sensor_periodically_resetting)
+        _LOGGER.warning("TESTE Avail: %s", self._sensor_always_available)
+        _LOGGER.warning("TESTE State: %s", self.hass.states.get(self._sensor_source_id))
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
         ) is None or source_state.state == STATE_UNAVAILABLE:
-            self._attr_available = False
-            self.async_write_ha_state()
+            if not self._sensor_always_available:
+                self._attr_available = False
+                self.async_write_ha_state()
             return
 
         self._attr_available = True

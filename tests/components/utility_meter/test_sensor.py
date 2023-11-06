@@ -80,6 +80,7 @@ def set_utc(hass: HomeAssistant):
                 "net_consumption": False,
                 "offset": 0,
                 "periodically_resetting": True,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
@@ -230,6 +231,33 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     assert state is not None
     assert state.state == "unavailable"
 
+    if not yaml_config:
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "periodically_resetting": True,
+                "sensor_always_available": True,
+                "source": entity_id,
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        # test unavailable state
+        state = hass.states.get("sensor.energy_bill_offpeak")
+        assert state is not None
+        assert state.state == "3"
+
+        # test unknown state
+        hass.states.async_set(
+            entity_id, None, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.energy_bill_offpeak")
+        assert state is not None
+        assert state.state == "3"
+
 
 @pytest.mark.parametrize(
     "yaml_config",
@@ -275,6 +303,7 @@ async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
                 "net_consumption": False,
                 "offset": 0,
                 "periodically_resetting": True,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
@@ -434,6 +463,7 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
                     "net_consumption": True,
                     "offset": 0,
                     "periodically_resetting": True,
+                    "sensor_always_available": False,
                     "source": "sensor.energy",
                     "tariffs": [],
                 },
@@ -445,6 +475,7 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
                     "offset": 0,
                     "periodically_resetting": True,
                     "source": "sensor.gas",
+                    "sensor_always_available": False,
                     "tariffs": [],
                 },
             ],
@@ -524,6 +555,7 @@ async def test_device_class(
                 "offset": 0,
                 "periodically_resetting": True,
                 "source": "sensor.energy",
+                "sensor_always_available": False,
                 "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
             },
         ),
@@ -694,6 +726,7 @@ async def test_restore_state(
                 "net_consumption": True,
                 "offset": 0,
                 "periodically_resetting": True,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": [],
             },
@@ -765,6 +798,7 @@ async def test_net_consumption(
                 "name": "Energy bill",
                 "net_consumption": False,
                 "offset": 0,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": [],
             },
@@ -851,6 +885,7 @@ async def test_non_net_consumption(
                 "net_consumption": False,
                 "offset": 0,
                 "periodically_resetting": True,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": [],
             },
@@ -963,6 +998,7 @@ async def test_delta_values(
                 "net_consumption": False,
                 "offset": 0,
                 "periodically_resetting": False,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": [],
             },
@@ -1096,6 +1132,7 @@ async def test_non_periodically_resetting(
                 "net_consumption": False,
                 "offset": 0,
                 "periodically_resetting": False,
+                "sensor_always_available": False,
                 "source": "sensor.energy",
                 "tariffs": ["low", "high"],
             },
@@ -1536,6 +1573,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
+            "sensor_always_available": False,
             "source": "sensor.test_source",
             "tariffs": ["peak", "offpeak"],
         },
@@ -1565,6 +1603,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
+            "sensor_always_available": False,
             "source": "sensor.test_source",
             "tariffs": [],
         },
