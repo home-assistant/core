@@ -4,7 +4,7 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
@@ -245,6 +245,7 @@ async def test_form_invalid_auth_cloud(
     [
         (BadCredentialsException, "invalid_auth"),
         (TooManyRequestsException, "too_many_requests"),
+        (ClientConnectorCertificateError("", ""), "certificate_verify_failed"),
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),

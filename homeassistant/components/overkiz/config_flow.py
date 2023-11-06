@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast
 
-from aiohttp import ClientConnectorError, ClientError
+from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
 from pyoverkiz.enums import APIType, Server
@@ -291,7 +291,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "too_many_requests"
             except BadCredentialsException:
                 errors["base"] = "invalid_auth"
-            except (TimeoutError, ClientError, ClientConnectorError):
+            except ClientConnectorCertificateError:
+                errors["base"] = "certificate_verify_failed"
+            except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
