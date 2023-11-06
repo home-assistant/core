@@ -10,7 +10,7 @@ from epicstore_api import EpicGamesStoreAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_LOCALE, DOMAIN
 from .helper import format_game_data, get_country_from_locale
