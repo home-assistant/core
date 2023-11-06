@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_component import EntityComponent
@@ -30,7 +31,7 @@ class GetTemperatureIntent(intent.IntentHandler):
 
         component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
         entities: list[ClimateEntity] = list(component.entities)
-        climate_state: State | None = None
+        climate_entity: ClimateEntity | None = None
 
         if not entities:
             raise intent.IntentHandleError("No climate entities")
@@ -38,6 +39,8 @@ class GetTemperatureIntent(intent.IntentHandler):
         if "area" in slots:
             # Filter by area
             area_name = slots["area"]["value"]
+            climate_state: State | None = None
+
             for maybe_climate in intent.async_match_states(
                 hass, area_name=area_name, domains=[DOMAIN]
             ):
@@ -46,19 +49,34 @@ class GetTemperatureIntent(intent.IntentHandler):
 
             if climate_state is None:
                 raise intent.IntentHandleError(f"No climate entity in area {area_name}")
+
+            climate_entity = component.get_entity(climate_state.entity_id)
         else:
             # First entity
             climate_entity = entities[0]
-            climate_state = hass.states.get(climate_entity.entity_id)
 
-            if climate_state is None:
-                raise intent.IntentHandleError(
-                    f"No state for climate entity {climate_entity.entity_id}"
+        assert climate_entity is not None
+
+        if climate_entity.current_temperature is None:
+            raise intent.IntentHandleError(
+                f"No temperature for entity: {climate_entity.entity_id}"
+            )
+
+        # Construct a state that will be compatible with intent sentences
+        temperature_state = State(
+            entity_id=climate_entity.entity_id,
+            state=str(
+                hass.config.units.temperature(
+                    climate_entity.current_temperature,
+                    climate_entity.temperature_unit,
                 )
-
-        assert climate_state is not None
+            ),
+            attributes={
+                ATTR_UNIT_OF_MEASUREMENT: hass.config.units.temperature_unit,
+            },
+        )
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.QUERY_ANSWER
-        response.async_set_states(matched_states=[climate_state])
+        response.async_set_states(matched_states=[temperature_state])
         return response

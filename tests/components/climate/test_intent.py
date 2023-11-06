@@ -101,7 +101,7 @@ async def create_mock_platform(
 class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
 
@@ -117,6 +117,7 @@ async def test_get_temperature(
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
     climate_1._attr_unique_id = "1234"
+    climate_1._attr_current_temperature = 10.0
     entity_registry.async_get_or_create(
         DOMAIN, "test", "1234", suggested_object_id="climate_1"
     )
@@ -124,6 +125,7 @@ async def test_get_temperature(
     climate_2 = MockClimateEntity()
     climate_2._attr_name = "Climate 2"
     climate_2._attr_unique_id = "5678"
+    climate_2._attr_current_temperature = 22.0
     entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", suggested_object_id="climate_2"
     )
@@ -141,9 +143,6 @@ async def test_get_temperature(
     )
     entity_registry.async_update_entity(climate_2.entity_id, area_id=bedroom_area.id)
 
-    hass.states.async_set(climate_1.entity_id, "30")
-    hass.states.async_set(climate_2.entity_id, "55")
-
     # First climate entity will be selected (no area)
     response = await intent.async_handle(
         hass, "test", climate_intent.INTENT_GET_TEMPERATURE, {}
@@ -151,7 +150,7 @@ async def test_get_temperature(
     assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_1.entity_id
-    assert response.matched_states[0].state == "30"
+    assert float(response.matched_states[0].state) == 10.0
 
     # Select by area instead (climate_2)
     response = await intent.async_handle(
@@ -163,7 +162,7 @@ async def test_get_temperature(
     assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
-    assert response.matched_states[0].state == "55"
+    assert float(response.matched_states[0].state) == 22.0
 
 
 async def test_get_temperature_no_entities(
