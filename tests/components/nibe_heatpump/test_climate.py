@@ -99,14 +99,36 @@ async def test_basic(
     mock_connection.mock_coil_update(unit.prio, None)
     assert hass.states.get(entity_id) == snapshot(name="off (auto)")
 
-    if climate.active_accessory:
-        mock_connection.mock_coil_update(climate.active_accessory, "OFF")
-        assert hass.states.get(entity_id) == snapshot(
-            name="unavailable (not supported)"
-        )
-
     coils.clear()
     assert hass.states.get(entity_id) == snapshot(name="unavailable")
+
+
+@pytest.mark.parametrize(
+    ("model", "climate_id", "entity_id"),
+    [
+        (Model.F1155, "s2", "climate.climate_system_s2"),
+        (Model.F1155, "s3", "climate.climate_system_s3"),
+    ],
+)
+async def test_active_accessory(
+    hass: HomeAssistant,
+    mock_connection: MockConnection,
+    model: Model,
+    climate_id: str,
+    entity_id: str,
+    coils: dict[int, Any],
+    entity_registry_enabled_by_default: None,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test climate groups that can be deactivated by configuration."""
+    climate, unit = _setup_climate_group(coils, model, climate_id)
+
+    await async_add_model(hass, model)
+
+    assert hass.states.get(entity_id) == snapshot(name="initial")
+
+    mock_connection.mock_coil_update(climate.active_accessory, "OFF")
+    assert hass.states.get(entity_id) == snapshot(name="unavailable (not supported)")
 
 
 @pytest.mark.parametrize(
