@@ -98,3 +98,7 @@ class RoonEventEntity(EventEntity):
             0,
             False,
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister volume hooks from the roon api."""
+        self._server.roonapi.unregister_volume_control(self.unique_id)
