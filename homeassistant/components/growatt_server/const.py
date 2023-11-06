@@ -8,6 +8,7 @@ DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
 
 SERVER_URLS = [
+    "https://openapi.growatt.com/",
     "https://server-api.growatt.com/",
     "https://server-us.growatt.com/",
     "http://server.smten.com/",
