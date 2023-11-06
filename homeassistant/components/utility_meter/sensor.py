@@ -159,7 +159,9 @@ async def async_setup_entry(
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
     tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
-    sensor_always_available = config_entry.options.get(CONF_SENSOR_ALWAYS_AVAILABLE, False)
+    sensor_always_available = config_entry.options.get(
+        CONF_SENSOR_ALWAYS_AVAILABLE, False
+    )
 
     meters = []
     tariffs = config_entry.options[CONF_TARIFFS]

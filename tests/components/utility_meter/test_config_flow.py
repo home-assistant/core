@@ -33,7 +33,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "cycle": "monthly",
                 "name": "Electricity meter",
                 "offset": 0,
-                "sensor_always_available": False,
                 "source": input_sensor_entity_id,
                 "tariffs": [],
             },
@@ -88,7 +87,6 @@ async def test_tariffs(hass: HomeAssistant) -> None:
             "cycle": "monthly",
             "name": "Electricity meter",
             "offset": 0,
-            "sensor_always_available": False,
             "source": input_sensor_entity_id,
             "tariffs": ["cat", "dog", "horse", "cow"],
         },
@@ -104,8 +102,8 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "periodically_resetting": True,
-        "offset": 0,
         "sensor_always_available": False,
+        "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": ["cat", "dog", "horse", "cow"],
     }
@@ -138,7 +136,6 @@ async def test_tariffs(hass: HomeAssistant) -> None:
             "name": "Electricity meter",
             "offset": 0,
             "source": input_sensor_entity_id,
-            "sensor_always_available": False,
             "tariffs": ["cat", "cat", "cat", "cat"],
         },
     )
@@ -165,7 +162,6 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
             "name": "Electricity meter",
             "offset": 0,
             "periodically_resetting": False,
-            "sensor_always_available": False,
             "source": input_sensor_entity_id,
             "tariffs": [],
         },
@@ -181,8 +177,8 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "periodically_resetting": False,
-        "offset": 0,
         "sensor_always_available": False,
+        "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": [],
     }
@@ -229,7 +225,6 @@ async def test_options(hass: HomeAssistant) -> None:
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "sensor_always_available": False,
             "source": input_sensor1_entity_id,
             "tariffs": "",
         },
@@ -352,7 +347,6 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "sensor_always_available": False,
             "source": current_entity_source.entity_id,
             "tariffs": [],
         },
@@ -380,7 +374,6 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "periodically_resetting": True,
-            "sensor_always_available": False,
             "source": current_entity_source.entity_id,
         },
     )
@@ -411,7 +404,6 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "periodically_resetting": True,
-            "sensor_always_available": False,
             "source": current_entity_source.entity_id,
         },
     )
@@ -444,7 +436,6 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "periodically_resetting": True,
-            "sensor_always_available": False,
             "source": current_entity_source.entity_id,
         },
     )
