@@ -9,7 +9,7 @@ import wave
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import assist_pipeline, stt
+from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.components.assist_pipeline.const import (
     CONF_DEBUG_RECORDING_DIR,
     DOMAIN,
@@ -660,3 +660,42 @@ def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
     assert run_1 == run_1
     assert run_1 != run_2
     assert run_1 != 1234
+
+
+async def test_tts_audio_output(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test using tts_audio_output with wav sets options correctly."""
+
+    def event_callback(event):
+        pass
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        tts_input="This is a test.",
+        conversation_id=None,
+        device_id=None,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.TTS,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=event_callback,
+            tts_audio_output="wav",
+        ),
+    )
+    await pipeline_input.validate()
+
+    # Verify TTS audio settings
+    assert pipeline_input.run.tts_options is not None
+    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
+    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_RATE) == 16000
+    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS) == 1
