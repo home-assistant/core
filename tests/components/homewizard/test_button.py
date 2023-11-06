@@ -17,7 +17,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize("device_fixture", ["device-sdm230.json"])
+@pytest.mark.parametrize("device_fixture", ["SDM230"])
 async def test_identify_button_entity_not_loaded_when_not_available(
     hass: HomeAssistant,
 ) -> None:

@@ -987,7 +987,7 @@ class Entity(ABC):
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
-        if self._platform_state == EntityPlatformState.ADDED:
+        if self._platform_state != EntityPlatformState.NOT_ADDED:
             raise HomeAssistantError(
                 f"Entity '{self.entity_id}' cannot be added a second time to an entity"
                 " platform"
@@ -1009,7 +1009,7 @@ class Entity(ABC):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
 
-        self._platform_state = EntityPlatformState.NOT_ADDED
+        self._platform_state = EntityPlatformState.REMOVED
         self._call_on_remove_callbacks()
 
         self.hass = None  # type: ignore[assignment]
@@ -1156,6 +1156,7 @@ class Entity(ABC):
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
+        self._platform_state = EntityPlatformState.NOT_ADDED
         await self.platform.async_add_entities([self])
 
     @callback

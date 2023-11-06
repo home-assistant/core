@@ -10,16 +10,11 @@ from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import (
-    NEW_PRAYER_TIMES,
-    NEW_PRAYER_TIMES_TIMESTAMPS,
-    NOW,
-    PRAYER_TIMES,
-    PRAYER_TIMES_TIMESTAMPS,
-)
+from . import NEW_PRAYER_TIMES, NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -85,7 +80,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
-        assert islamic_prayer_times.DOMAIN not in hass.data
 
 
 async def test_options_listener(hass: HomeAssistant) -> None:
@@ -108,8 +102,8 @@ async def test_options_listener(hass: HomeAssistant) -> None:
         assert mock_fetch_prayer_times.call_count == 2
 
 
-async def test_islamic_prayer_times_timestamp_format(hass: HomeAssistant) -> None:
-    """Test Islamic prayer times timestamp format."""
+async def test_update_failed(hass: HomeAssistant) -> None:
+    """Test integrations tries to update after 1 min if update fails."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
 
@@ -120,33 +114,30 @@ async def test_islamic_prayer_times_timestamp_format(hass: HomeAssistant) -> Non
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.data[islamic_prayer_times.DOMAIN].data == PRAYER_TIMES_TIMESTAMPS
-
-
-async def test_update(hass: HomeAssistant) -> None:
-    """Test sensors are updated with new prayer times."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
-    entry.add_to_hass(hass)
+        assert entry.state is config_entries.ConfigEntryState.LOADED
 
     with patch(
         "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times"
-    ) as FetchPrayerTimes, freeze_time(NOW):
+    ) as FetchPrayerTimes:
         FetchPrayerTimes.side_effect = [
-            PRAYER_TIMES,
+            InvalidResponseError,
             NEW_PRAYER_TIMES,
         ]
+        future = PRAYER_TIMES_TIMESTAMPS["Midnight"] + timedelta(days=1, minutes=1)
+        with freeze_time(future):
+            async_fire_time_changed(hass, future)
+            await hass.async_block_till_done()
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+            state = hass.states.get("sensor.islamic_prayer_times_fajr_prayer")
+            assert state.state == STATE_UNAVAILABLE
 
-        pt_data = hass.data[islamic_prayer_times.DOMAIN]
-        assert pt_data.data == PRAYER_TIMES_TIMESTAMPS
-
-        future = pt_data.data["Midnight"] + timedelta(days=1, minutes=1)
-
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        assert pt_data.data == NEW_PRAYER_TIMES_TIMESTAMPS
+        # coordinator tries to update after 1 minute
+        future = future + timedelta(minutes=1)
+        with freeze_time(future):
+            async_fire_time_changed(hass, future)
+            await hass.async_block_till_done()
+            state = hass.states.get("sensor.islamic_prayer_times_fajr_prayer")
+            assert state.state == "2020-01-02T06:00:00+00:00"
 
 
 @pytest.mark.parametrize(
