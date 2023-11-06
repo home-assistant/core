@@ -46,6 +46,7 @@ SENSORS = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        suggested_display_precision=3,
         value_fn=lambda coordinator: coordinator.desk.height,
     ),
 )
@@ -83,7 +84,7 @@ class IdasenDeskSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_unique_id = f"{self.entity_description.key}-{address}"
+        self._attr_unique_id = f"{description.key}-{address}"
         self._attr_device_info = device_info
         self._address = address
 
