@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+import socket
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -21,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -57,7 +59,6 @@ from .const import (
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
-from .util import async_create_cloud_clientsession
 
 DEFAULT_MODE = MODE_PROD
 
@@ -229,7 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await prefs.async_initialize()
 
     # Initialize Cloud
-    websession = async_create_cloud_clientsession(hass)
+    websession = async_get_clientsession(hass, family=socket.AF_INET)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
 
