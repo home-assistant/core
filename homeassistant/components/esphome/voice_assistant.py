@@ -90,6 +90,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.handle_event = handle_event
         self.handle_finished = handle_finished
         self._tts_done = asyncio.Event()
+        self._tts_task: asyncio.Task | None = None
 
     async def start_server(self) -> int:
         """Start accepting connections."""
@@ -191,7 +192,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
             if self.device_info.voice_assistant_version >= 2:
                 media_id = event.data["tts_output"]["media_id"]
-                self.hass.async_create_background_task(
+                self._tts_task = self.hass.async_create_background_task(
                     self._send_tts(media_id), "esphome_voice_assistant_tts"
                 )
             else:
@@ -353,4 +354,5 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
             )
+            self._tts_task = None
             self._tts_done.set()
