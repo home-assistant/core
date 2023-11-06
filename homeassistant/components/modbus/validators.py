@@ -73,8 +73,6 @@ PARM_IS_LEGAL = namedtuple(
 # As expressed in DEFAULT_STRUCT_FORMAT
 
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT8: ENTRY("b", 1, PARM_IS_LEGAL(False, False, False, False, False)),
-    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(False, False, False, False, False)),
     DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
     DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
     DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
