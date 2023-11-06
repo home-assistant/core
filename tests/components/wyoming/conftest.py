@@ -8,7 +8,7 @@ from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import STT_INFO, TTS_INFO, WAKE_WORD_INFO
+from . import HANDLE_INFO, INTENT_INFO, STT_INFO, TTS_INFO, WAKE_WORD_INFO
 
 from tests.common import MockConfigEntry
 
@@ -68,6 +68,36 @@ def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
+def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Intent Recognition",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def handle_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Intent Handling",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
 async def init_wyoming_stt(hass: HomeAssistant, stt_config_entry: ConfigEntry):
     """Initialize Wyoming STT."""
     with patch(
@@ -97,6 +127,26 @@ async def init_wyoming_wake_word(
         return_value=WAKE_WORD_INFO,
     ):
         await hass.config_entries.async_setup(wake_word_config_entry.entry_id)
+
+
+@pytest.fixture
+async def init_wyoming_intent(hass: HomeAssistant, intent_config_entry: ConfigEntry):
+    """Initialize Wyoming intent recognition."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=INTENT_INFO,
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+
+@pytest.fixture
+async def init_wyoming_handle(hass: HomeAssistant, handle_config_entry: ConfigEntry):
+    """Initialize Wyoming intent handling."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=HANDLE_INFO,
+    ):
+        await hass.config_entries.async_setup(handle_config_entry.entry_id)
 
 
 @pytest.fixture

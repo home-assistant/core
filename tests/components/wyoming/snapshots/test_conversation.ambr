@@ -1,0 +1,78 @@
+# serializer version: 1
+# name: test_intent_handled
+  list([
+    dict({
+      'data': dict({
+        'text': 'Turn on test light',
+      }),
+      'payload': None,
+      'type': 'transcript',
+    }),
+  ])
+# ---
+# name: test_intent_handling_client_dropped
+  list([
+    dict({
+      'data': dict({
+        'text': 'This will never be handled',
+      }),
+      'payload': None,
+      'type': 'transcript',
+    }),
+  ])
+# ---
+# name: test_intent_not_handled
+  list([
+    dict({
+      'data': dict({
+        'text': "You won't understand this",
+      }),
+      'payload': None,
+      'type': 'transcript',
+    }),
+  ])
+# ---
+# name: test_intent_not_recognized
+  list([
+    dict({
+      'data': dict({
+        'text': "You won't understand this",
+      }),
+      'payload': None,
+      'type': 'recognize',
+    }),
+  ])
+# ---
+# name: test_intent_recognition_client_dropped
+  list([
+    dict({
+      'data': dict({
+        'text': 'This will never be recognized',
+      }),
+      'payload': None,
+      'type': 'recognize',
+    }),
+  ])
+# ---
+# name: test_intent_recognition_failed
+  list([
+    dict({
+      'data': dict({
+        'text': 'Do something unexpected',
+      }),
+      'payload': None,
+      'type': 'recognize',
+    }),
+  ])
+# ---
+# name: test_intent_recognized
+  list([
+    dict({
+      'data': dict({
+        'text': 'Turn on test light',
+      }),
+      'payload': None,
+      'type': 'recognize',
+    }),
+  ])
+# ---

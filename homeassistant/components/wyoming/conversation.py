@@ -39,11 +39,13 @@ class WyomingConversationAgent(agent.AbstractConversationAgent):
         self._intent_service: IntentProgram | None = None
         self._handle_service: HandleProgram | None = None
 
+        # Intent (recognition) services take in text and return an intent with entities/slots
         for intent_program in service.info.intent:
             if intent_program.installed:
                 self._intent_service = intent_program
                 break
 
+        # (Intent) handling services take in text and produce a text response
         for handle_program in service.info.handle:
             if handle_program.installed:
                 self._handle_service = handle_program
@@ -85,53 +87,84 @@ class WyomingConversationAgent(agent.AbstractConversationAgent):
     async def _async_process_intent(
         self, user_input: agent.ConversationInput
     ) -> agent.ConversationResult:
+        """Process input for an intent recognition service."""
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
                 # Recognize -> Intent | NotRecognized
                 await client.write_event(Recognize(user_input.text).event())
                 result_event = await client.read_event()
 
-                if result_event is not None:
-                    if Intent.is_type(result_event.type):
-                        result_intent = Intent.from_event(result_event)
-                        _LOGGER.debug("Recognized intent: %s", result_intent)
-                        intent_slots = {
-                            e.name: {"value": e.value} for e in result_intent.entities
-                        }
-                        intent_response = await intent.async_handle(
-                            self.hass,
-                            DOMAIN,
-                            intent_type=result_intent.name,
-                            slots=intent_slots,
-                            text_input=user_input.text,
-                            context=user_input.context,
-                            language=user_input.language,
-                        )
+                if result_event is None:
+                    return _error_result(
+                        user_input.language,
+                        intent.IntentResponseErrorCode.UNKNOWN,
+                        "Client connection lost",
+                    )
 
-                        return agent.ConversationResult(
-                            response=intent_response,
-                            conversation_id=user_input.conversation_id,
-                        )
+                if Intent.is_type(result_event.type):
+                    # Intent was recognized
+                    result_intent = Intent.from_event(result_event)
+                    _LOGGER.debug("Recognized intent: %s", result_intent)
+                    intent_slots = {
+                        e.name: {"value": e.value} for e in result_intent.entities
+                    }
+                    intent_response = await intent.async_handle(
+                        self.hass,
+                        DOMAIN,
+                        intent_type=result_intent.name,
+                        slots=intent_slots,
+                        text_input=user_input.text,
+                        context=user_input.context,
+                        language=user_input.language,
+                    )
 
-                    if NotRecognized.is_type(result_event.type):
-                        _LOGGER.warning("No intent was recognized")
+                    if result_intent.text is not None:
+                        # Text response from client
+                        intent_response.async_set_speech(result_intent.text)
+
+                    return agent.ConversationResult(
+                        response=intent_response,
+                        conversation_id=user_input.conversation_id,
+                    )
+
+                if NotRecognized.is_type(result_event.type):
+                    # No intent was recognized
+                    not_recognized = NotRecognized.from_event(result_event)
+                    _LOGGER.warning("No intent was recognized")
+                    return _error_result(
+                        user_input.language,
+                        intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                        not_recognized.text,
+                    )
 
         except (OSError, WyomingError):
             _LOGGER.exception("Unexpected error during intent recognition")
 
-        return _empty_result(user_input.language)
+        return _error_result(
+            user_input.language,
+            intent.IntentResponseErrorCode.UNKNOWN,
+            "Unexpected error",
+        )
 
     async def _async_process_handle(
         self, user_input: agent.ConversationInput
     ) -> agent.ConversationResult:
+        """Process input for an intent handling services."""
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
                 # Transcript -> Handled | NotHandled
                 await client.write_event(Transcript(user_input.text).event())
                 result_event = await client.read_event()
 
+                if result_event is None:
+                    return _error_result(
+                        user_input.language,
+                        intent.IntentResponseErrorCode.UNKNOWN,
+                        "Client connection lost",
+                    )
+
                 if Handled.is_type(result_event.type):
-                    # Handled contains response text only
+                    # Intent was successfully handled
                     result_handled = Handled.from_event(result_event)
                     _LOGGER.debug("User input was handled: %s", result_handled)
                     response = intent.IntentResponse(user_input.language)
@@ -142,14 +175,32 @@ class WyomingConversationAgent(agent.AbstractConversationAgent):
                     )
 
                 if NotHandled.is_type(result_event.type):
+                    # Failed to handle intent
+                    not_handled = NotHandled.from_event(result_event)
                     _LOGGER.warning("User input was not handled")
+                    return _error_result(
+                        user_input.language,
+                        intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                        not_handled.text,
+                    )
 
         except (OSError, WyomingError):
             _LOGGER.exception("Unexpected error during user input handling")
 
-        return _empty_result(user_input.language)
+        return _error_result(
+            user_input.language,
+            intent.IntentResponseErrorCode.UNKNOWN,
+            "Unexpected error",
+        )
 
 
-def _empty_result(language: str) -> agent.ConversationResult:
+def _error_result(
+    language: str,
+    error_code: intent.IntentResponseErrorCode,
+    message: str | None = None,
+) -> agent.ConversationResult:
     """Return an empty conversation result."""
-    return agent.ConversationResult(response=intent.IntentResponse(language))
+    response = intent.IntentResponse(language)
+    response.async_set_error(error_code, message or "")
+
+    return agent.ConversationResult(response=response)

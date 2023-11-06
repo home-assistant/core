@@ -5,7 +5,11 @@ from wyoming.info import (
     AsrModel,
     AsrProgram,
     Attribution,
+    HandleModel,
+    HandleProgram,
     Info,
+    IntentModel,
+    IntentProgram,
     TtsProgram,
     TtsVoice,
     TtsVoiceSpeaker,
@@ -67,6 +71,44 @@ WAKE_WORD_INFO = Info(
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],
+                )
+            ],
+        )
+    ]
+)
+INTENT_INFO = Info(
+    intent=[
+        IntentProgram(
+            name="Test Intent Recognition",
+            description="Test Intent Recognition",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                IntentModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-us"],
+                )
+            ],
+        )
+    ]
+)
+HANDLE_INFO = Info(
+    handle=[
+        HandleProgram(
+            name="Test Intent Handling",
+            description="Test Intent Handling",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                HandleModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-us"],
                 )
             ],
         )
