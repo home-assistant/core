@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     host = entry.data[CONF_HOST]
     trydan = Trydan(host, get_async_client(hass, verify_ssl=False))
-    coordinator = V2CUpdateCoordinator(hass, trydan, entry)
+    coordinator = V2CUpdateCoordinator(hass, trydan, host)
 
     await coordinator.async_config_entry_first_refresh()
 

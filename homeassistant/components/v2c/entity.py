@@ -26,6 +26,6 @@ class V2CBaseEntity(CoordinatorEntity[V2CUpdateCoordinator]):
     @property
     def data(self) -> TrydanData:
         """Return v2c evse data."""
-        data = self.coordinator.evse.data
+        data = self.coordinator.data
         assert data is not None
         return data

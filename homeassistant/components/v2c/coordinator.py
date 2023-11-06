@@ -8,7 +8,6 @@ from pytrydan import Trydan, TrydanData
 from pytrydan.exceptions import TrydanError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -20,14 +19,15 @@ _LOGGER = logging.getLogger(__name__)
 class V2CUpdateCoordinator(DataUpdateCoordinator[TrydanData]):
     """DataUpdateCoordinator to gather data from any v2c."""
 
-    def __init__(self, hass: HomeAssistant, evse: Trydan, entry: ConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, evse: Trydan, host: str) -> None:
         """Initialize DataUpdateCoordinator for a v2c evse."""
         self.evse = evse
-        self.config_entry = entry
         super().__init__(
             hass,
             _LOGGER,
-            name=self.config_entry.data[CONF_HOST],
+            name=f"EVSE {host}",
             update_interval=SCAN_INTERVAL,
         )
 
@@ -35,6 +35,7 @@ class V2CUpdateCoordinator(DataUpdateCoordinator[TrydanData]):
         """Fetch sensor data from api."""
         try:
             data: TrydanData = await self.evse.get_data()
+            _LOGGER.debug("Received data: %s", data)
             return data
         except TrydanError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
