@@ -24,7 +24,7 @@ from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
 
 if TYPE_CHECKING:
-    from evohomeasync2 import HotWater
+    from evohomeasync2 import HotWater  # type: ignore[import-untyped]
 
     from . import EvoBroker
 

@@ -11,9 +11,9 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-import evohomeasync
-import evohomeasync2
-import voluptuous as vol
+import evohomeasync  # type: ignore[import-untyped]
+import evohomeasync2  # type: ignore[import-untyped]
+import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,

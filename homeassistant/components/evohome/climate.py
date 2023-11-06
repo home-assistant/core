@@ -48,7 +48,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from evohomeasync2 import ControlSystem, Zone
+    from evohomeasync2 import ControlSystem, Zone  # type: ignore[import-untyped]
 
     from . import EvoBroker
 
