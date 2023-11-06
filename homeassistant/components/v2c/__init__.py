@@ -18,8 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up V2C from a config entry."""
 
     host = entry.data[CONF_HOST]
-    envoy = Trydan(host, get_async_client(hass, verify_ssl=False))
-    coordinator = V2CUpdateCoordinator(hass, envoy, entry)
+    trydan = Trydan(host, get_async_client(hass, verify_ssl=False))
+    coordinator = V2CUpdateCoordinator(hass, trydan, entry)
 
     await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:

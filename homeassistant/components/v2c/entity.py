@@ -19,13 +19,13 @@ class V2CBaseEntity(CoordinatorEntity[V2CUpdateCoordinator]):
         coordinator: V2CUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
-        """Init the Enphase base entity."""
+        """Init the V2C base entity."""
         self.entity_description = description
         super().__init__(coordinator)
 
     @property
     def data(self) -> TrydanData:
-        """Return envoy data."""
+        """Return v2c evse data."""
         data = self.coordinator.evse.data
         assert data is not None
         return data
