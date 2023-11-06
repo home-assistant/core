@@ -85,13 +85,10 @@ class HausbusLight(HausbusChannel, LightEntity):
 
         if isinstance(self._channel, Dimmer):
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-            cast(Dimmer, self._channel.getStatus())
         if isinstance(self._channel, Led):
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-            cast(Led, self._channel.getStatus())
         if isinstance(self._channel, RGBDimmer):
             self._attr_supported_color_modes.add(ColorMode.HS)
-            cast(RGBDimmer, self._channel.getStatus())
 
     @staticmethod
     def is_light_channel(class_id: int) -> bool:
@@ -99,6 +96,15 @@ class HausbusLight(HausbusChannel, LightEntity):
         if class_id in (Dimmer.CLASS_ID, RGBDimmer.CLASS_ID, Led.CLASS_ID):
             return True
         return False
+
+    def get_hardware_status(self):
+        """Request status of a light channel from hardware."""
+        if isinstance(self._channel, Dimmer):
+            cast(Dimmer, self._channel.getStatus())
+        if isinstance(self._channel, Led):
+            cast(Led, self._channel.getStatus())
+        if isinstance(self._channel, RGBDimmer):
+            cast(RGBDimmer, self._channel.getStatus())
 
     def set_light_color(self, red: int, green: int, blue: int):
         """Set the brightness of a light channel."""

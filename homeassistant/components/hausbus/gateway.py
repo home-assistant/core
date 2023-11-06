@@ -62,15 +62,15 @@ class HausbusGateway(IBusDataListener, IEventHandler):
         if device_id not in self.channels:
             self.channels[device_id] = {}
 
-    def get_device(self, object_id: ObjectId) -> HausbusDevice:
+    def get_device(self, object_id: ObjectId) -> HausbusDevice | None:
         """Get the device referenced by ObjectId from the devices list."""
-        return self.devices[str(object_id.getDeviceId())]
+        return self.devices.get(str(object_id.getDeviceId()), None)
 
     def get_channel_list(
         self, object_id: ObjectId
-    ) -> dict[tuple[str, str], HausbusChannel]:
+    ) -> dict[tuple[str, str], HausbusChannel] | None:
         """Get the channel list of a device referenced by ObjectId."""
-        return self.channels[str(object_id.getDeviceId())]
+        return self.channels.get(str(object_id.getDeviceId()), None)
 
     def get_channel_id(self, object_id: ObjectId) -> tuple[str, str]:
         """Get the channel identifier from an ObjectId."""
@@ -79,25 +79,36 @@ class HausbusGateway(IBusDataListener, IEventHandler):
     def get_channel(self, object_id: ObjectId) -> HausbusChannel | None:
         """Get channel from channel list."""
         channels = self.get_channel_list(object_id)
-        channel_id = self.get_channel_id(object_id)
-        return channels.get(channel_id, None)
+        if channels is not None:
+            channel_id = self.get_channel_id(object_id)
+            return channels.get(channel_id, None)
+        return None
 
     def add_light_channel(self, instance: ABusFeature, object_id: ObjectId):
         """Add a new Haus-Bus Light Channel to this gateways channel list."""
-        light = HausbusLight(
-            object_id.getInstanceId(),
-            self.get_device(object_id),
-            instance,
-        )
-        self.get_channel_list(object_id)[self.get_channel_id(object_id)] = light
-        asyncio.run_coroutine_threadsafe(
-            self._new_channel_listeners[LIGHT_DOMAIN](light), self.hass.loop
-        )
+        device = self.get_device(object_id)
+        if device is not None:
+            light = HausbusLight(
+                object_id.getInstanceId(),
+                device,
+                instance,
+            )
+            channel_list = self.get_channel_list(object_id)
+            if channel_list is not None:
+                channel_list[self.get_channel_id(object_id)] = light
+                asyncio.run_coroutine_threadsafe(
+                    self._new_channel_listeners[LIGHT_DOMAIN](light), self.hass.loop
+                ).result()
+                light.get_hardware_status()
 
     def add_channel(self, instance: ABusFeature):
         """Add a new Haus-Bus Channel to this gateways channel list."""
         object_id = ObjectId(instance.getObjectId())
-        if self.get_channel_id(object_id) not in self.get_channel_list(object_id):
+        channel_list = self.get_channel_list(object_id)
+        if (
+            channel_list is not None
+            and self.get_channel_id(object_id) not in channel_list
+        ):
             if HausbusLight.is_light_channel(object_id.getClassId()):
                 self.add_light_channel(instance, object_id)
 
@@ -121,7 +132,8 @@ class HausbusGateway(IBusDataListener, IEventHandler):
         if isinstance(data, Configuration):
             config = cast(Configuration, data)
             device = self.get_device(object_id)
-            device.set_type(config.getFCKE())
+            if device is not None:
+                device.set_type(config.getFCKE())
             controller.getRemoteObjects()
         if isinstance(data, RemoteObjects):
             instances: list[ABusFeature] = self.home_server.getDeviceInstances(
