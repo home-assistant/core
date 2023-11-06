@@ -2536,7 +2536,7 @@ synology-srm==0.2.0
 systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
-tailscale==0.2.0
+tailscale==0.6.0
 
 # homeassistant.components.tank_utility
 tank-utility==1.5.0
