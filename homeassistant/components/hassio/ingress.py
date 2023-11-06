@@ -169,7 +169,10 @@ class HassIOIngress(HomeAssistantView):
             headers = _response_header(result)
             content_length_int = 0
             content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
-            content_type = result.headers.get(hdrs.CONTENT_TYPE) or result.content_type
+            if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
+                content_type = (maybe_content_type.partition(";"))[0].strip()
+            else:
+                content_type = result.content_type
             # Simple request
             if result.status in (204, 304) or (
                 content_length is not UNDEFINED
