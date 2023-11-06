@@ -898,7 +898,7 @@ insteon-frontend-home-assistant==0.4.0
 intellifire4py==2.2.2
 
 # homeassistant.components.iotty
-iottycloud==0.1.0
+iottycloud==0.1.1
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
