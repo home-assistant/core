@@ -25,7 +25,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -73,6 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = self._create_cloud_client(
                 username=username, password=password, server=server
             )
+            verify_ssl = user_input[CONF_VERIFY_SSL]
 
             await client.login(register_event_listener=False)
             gateways = await client.get_gateways()
@@ -98,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Verify SSL blocked by https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/5
             # Somfy (self-signed) SSL cert uses the wrong common name
-            session = async_create_clientsession(self.hass, verify_ssl=False)
+            session = async_create_clientsession(self.hass, verify_ssl=verify_ssl)
 
             # Local API
             local_client = OverkizClient(
@@ -338,6 +345,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, default=self._host): str,
                     vol.Required(CONF_USERNAME, default=self._user): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
             description_placeholders=description_placeholders,

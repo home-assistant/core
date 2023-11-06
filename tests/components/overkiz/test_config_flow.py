@@ -330,6 +330,7 @@ async def test_form_local_developer_mode_disabled(
                 "username": TEST_EMAIL,
                 "password": TEST_PASSWORD,
                 "host": "gateway-1234-5678-1234.local:8443",
+                "verify_ssl": True,
             },
         )
 
@@ -468,7 +469,12 @@ async def test_local_abort_on_duplicate_entry(
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "username": TEST_EMAIL, "password": TEST_PASSWORD},
+            {
+                "host": TEST_HOST,
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD,
+                "verify_ssl": True,
+            },
         )
 
     assert result4["type"] == data_entry_flow.FlowResultType.ABORT
@@ -894,7 +900,7 @@ async def test_local_zeroconf_flow(
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD, "verify_ssl": False},
         )
 
     assert result4["type"] == "create_entry"
@@ -906,6 +912,7 @@ async def test_local_zeroconf_flow(
         "host": "gateway-1234-5678-9123.local:8443",
         "api_type": "local",
         "token": "1234123412341234",
+        "verify_ssl": False,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
