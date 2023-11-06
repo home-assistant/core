@@ -167,9 +167,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
         if service == SVC_RESET_ZONE_OVERRIDE:
-            await self._evo_broker.call_client_api(
-                self._evo_device.cancel_temp_override()
-            )
+            await self._evo_broker.call_client_api(self._evo_device.reset_mode())
             return
 
         # otherwise it is SVC_SET_ZONE_OVERRIDE
@@ -264,18 +262,14 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
         else:  # HVACMode.HEAT
-            await self._evo_broker.call_client_api(
-                self._evo_device.cancel_temp_override()
-            )
+            await self._evo_broker.call_client_api(self._evo_device.reset_mode())
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
         if evo_preset_mode == EVO_FOLLOW:
-            await self._evo_broker.call_client_api(
-                self._evo_device.cancel_temp_override()
-            )
+            await self._evo_broker.call_client_api(self._evo_device.reset_mode())
             return
 
         temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
@@ -352,7 +346,7 @@ class EvoController(EvoClimateEntity):
         """Set a Controller to any of its native EVO_* operating modes."""
         until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_status(mode, until=until)
+            self._evo_tcs.set_mode(mode, until=until)
         )
 
     @property

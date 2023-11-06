@@ -173,7 +173,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.2
+aioairzone-cloud==0.3.5
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -479,7 +479,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.13.0
+bluetooth-data-tools==1.14.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -830,7 +830,7 @@ ibeacon-ble==1.0.1
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==5.1.0
+ical==6.0.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1221,7 +1221,7 @@ pyairvisual==2023.08.1
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.5.0
+pyatmo==7.6.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -1242,7 +1242,7 @@ pybotvac==0.0.24
 pybravia==0.3.3
 
 # homeassistant.components.cloudflare
-pycfdns==2.0.1
+pycfdns==3.0.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
@@ -1634,7 +1634,7 @@ python-qbittorrent==0.4.3
 python-roborock==0.35.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.33
+python-smarttub==0.0.35
 
 # homeassistant.components.songpal
 python-songpal==0.15.2
@@ -1893,7 +1893,7 @@ switchbot-api==1.2.1
 systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
-tailscale==0.2.0
+tailscale==0.6.0
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
@@ -2088,7 +2088,7 @@ yt-dlp==2023.9.24
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.119.0
+zeroconf==0.120.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
