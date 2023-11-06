@@ -1,6 +1,7 @@
 """CalDAV todo platform."""
 from __future__ import annotations
 
+from datetime import timedelta
 from functools import partial
 import logging
 
@@ -15,6 +16,8 @@ from .api import async_get_calendars, get_attr_value
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=15)
 
 SUPPORTED_COMPONENT = "VTODO"
 TODO_STATUS_MAP = {
