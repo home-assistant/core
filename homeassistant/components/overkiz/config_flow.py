@@ -46,7 +46,7 @@ class DeveloperModeDisabled(HomeAssistantError):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
-    VERSION = 2
+    VERSION = 1
 
     _config_entry: ConfigEntry | None
     _api_type: APIType

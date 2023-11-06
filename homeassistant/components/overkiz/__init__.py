@@ -88,6 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             username=username, password=password, session=session, server=server
         )
 
+    await _async_migrate_entries(hass, entry)
+
     try:
         await client.login()
 
