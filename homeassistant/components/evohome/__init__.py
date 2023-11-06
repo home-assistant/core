@@ -11,8 +11,8 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-import evohomeasync  # type: ignore[import-untyped]
-import evohomeasync2  # type: ignore[import-untyped]
+import evohomeasync
+import evohomeasync2
 import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.const import (
@@ -143,12 +143,12 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(exc: evohomeasync2.RequestFailed) -> None:
+def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
     """Return False if the exception can't be ignored."""
     try:
-        raise exc
+        raise err
 
-    except evohomeasync2.AuthenticationFailed:
+    except evohomeasync2.AuthenticationFailed as exc:
         _LOGGER.error(
             (
                 "Failed to authenticate with the vendor's server. Check your username"
@@ -159,7 +159,7 @@ def _handle_exception(exc: evohomeasync2.RequestFailed) -> None:
             exc,
         )
 
-    except evohomeasync2.RequestFailed:
+    except evohomeasync2.RequestFailed as exc:
         if exc.status is None:
             _LOGGER.warning(
                 (
@@ -187,6 +187,9 @@ def _handle_exception(exc: evohomeasync2.RequestFailed) -> None:
 
         else:
             raise  # we don't expect/handle any other Exceptions
+
+    except evohomeasync2.EvohomeError as exc:
+        _LOGGER.error("Something unexpected has gone wrong. Message is: %s", exc)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -276,7 +279,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     async_track_time_interval(
-        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
+        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]  # type: ignore[arg-type]
     )
 
     setup_service_functions(hass, broker)
@@ -285,7 +288,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def setup_service_functions(hass: HomeAssistant, broker: EvoBroker):
+def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
@@ -431,6 +434,9 @@ class EvoBroker:
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
+
+        assert isinstance(self.client.access_token_expires, dt)  # mypy
+
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
@@ -442,8 +448,8 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
-            app_storage[USER_DATA] = {
-                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
+            app_storage[USER_DATA] = {  # type: ignore[assignment]
+                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},  # type: ignore[index]
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
         else:
@@ -462,18 +468,18 @@ class EvoBroker:
             return
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self.hass, 1, self._update_v2_api_state)
+            async_call_later(self.hass, 1, self._update_v2_api_state)  # type: ignore[arg-type]
 
         return result
 
-    async def _update_v1_api_temps(self, *args, **kwargs) -> None:
+    async def _update_v1_api_temps(self, *args: tuple, **kwargs: dict) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
-        assert isinstance(self.client_v1, evohomeasync.EvohomeClient)
+        assert self.client_v1  # mypy
 
         def get_session_id(client_v1: evohomeasync.EvohomeClient) -> str | None:
             user_data = client_v1.user_data if client_v1 else None
-            return user_data.get("sessionId") if user_data else None
+            return user_data.get("sessionId") if user_data else None  # type: ignore[return-value]
 
         session_id = get_session_id(self.client_v1)
 
@@ -516,12 +522,12 @@ class EvoBroker:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
         finally:
-            if session_id != get_session_id(self.client_v1):
+            if self.client_v1 and session_id != get_session_id(self.client_v1):
                 await self.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
-    async def _update_v2_api_state(self, *args, **kwargs) -> None:
+    async def _update_v2_api_state(self, *args: tuple, **kwargs: dict) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
         access_token = self.client.access_token
 
@@ -537,7 +543,7 @@ class EvoBroker:
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
 
-    async def async_update(self, *args, **kwargs) -> None:
+    async def async_update(self, *args: tuple, **kwargs: dict) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
@@ -622,16 +628,17 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
-        if self._evo_device.TYPE == "domesticHotWater":
+        if isinstance(self._evo_device, evohomeasync2.HotWater):
             dev_id = self._evo_device.dhwId
         else:
+            assert isinstance(self._evo_device, evohomeasync2.Zone)  # mypy
             dev_id = self._evo_device.zoneId
 
         if self._evo_broker.temps and self._evo_broker.temps[dev_id] is not None:
             return self._evo_broker.temps[dev_id]
 
-        if self._evo_device.temperatureStatus["isAvailable"]:
-            return self._evo_device.temperatureStatus["temperature"]
+        if self._evo_device.temperatureStatus["isAvailable"]:  # type: ignore[index]
+            return self._evo_device.temperatureStatus["temperature"]  # type: ignore[no-any-return, index]
 
         return None
 
@@ -701,7 +708,7 @@ class EvoChild(EvoDevice):
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.get_schedule(), update_state=False
+            self._evo_device.get_schedule(), update_state=False  # type: ignore[union-attr]
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
