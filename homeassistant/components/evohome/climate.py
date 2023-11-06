@@ -48,7 +48,6 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import EvoBroker
     from evohomeasync2 import ControlSystem, Zone
 
     from . import EvoBroker
