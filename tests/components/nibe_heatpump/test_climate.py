@@ -91,7 +91,7 @@ async def test_basic(
         )
 
     coils.clear()
-    assert hass.states.get(entity_id) == snapshot(name="off (auto)")
+    assert hass.states.get(entity_id) == snapshot(name="unavailable")
 
 
 @pytest.mark.parametrize(

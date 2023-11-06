@@ -205,7 +205,6 @@
 # name: test_basic[Model.F1155-s2-climate.climate_system_s2][unavailable]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20.5,
       'friendly_name': 'Climate System S2',
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
@@ -215,16 +214,13 @@
       'max_temp': 35.0,
       'min_temp': 5.0,
       'supported_features': <ClimateEntityFeature: 3>,
-      'target_temp_high': None,
-      'target_temp_low': None,
       'target_temp_step': 0.5,
-      'temperature': None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'auto',
+    'state': 'unavailable',
   })
 # ---
 # name: test_basic[Model.S320-s1-climate.climate_system_s1][cooling]
@@ -414,6 +410,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 20.5,
       'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
