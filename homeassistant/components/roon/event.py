@@ -35,7 +35,11 @@ async def async_setup_entry(
         async_add_entities([event_entity])
 
     # start listening for players to be added from the server component
-    async_dispatcher_connect(hass, "roon_media_player", async_add_roon_volume_entity)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, "roon_media_player", async_add_roon_volume_entity
+        )
+    )
 
 
 class RoonEventEntity(EventEntity):
@@ -43,6 +47,7 @@ class RoonEventEntity(EventEntity):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ["volume_up", "volume_down"]
+    _attr_translation_key = "volume"
 
     def __init__(self, server, player_data):
         """Initialize the entity."""
