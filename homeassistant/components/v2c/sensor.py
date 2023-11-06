@@ -44,6 +44,7 @@ class V2CPowerSensorEntityDescription(
 POWER_SENSORS = (
     V2CPowerSensorEntityDescription(
         key="charge_power",
+        translation_key="charge_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,

@@ -2,9 +2,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytrydan.exceptions import TrydanError
 
 from homeassistant import config_entries
-from homeassistant.components.v2c.config_flow import CannotConnect
 from homeassistant.components.v2c.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,8 +21,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.v2c.config_flow.validate_input",
-        return_value={"host": "1.1.1.1"},
+        "pytrydan.Trydan.get_data",
+        return_value={},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -47,8 +47,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.v2c.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "pytrydan.Trydan.get_data",
+        side_effect=TrydanError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -57,5 +57,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["errors"] == {"base": "cannot_connect"}
