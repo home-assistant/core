@@ -23,7 +23,6 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        version=1,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
     )
 

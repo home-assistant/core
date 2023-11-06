@@ -81,7 +81,7 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -121,7 +121,7 @@ async def test_form_only_cloud_supported(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER2},
+        {"hub": TEST_SERVER2},
     )
 
     assert result2["type"] == "form"
@@ -153,7 +153,7 @@ async def test_form_local_happy_flow(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -214,7 +214,7 @@ async def test_form_invalid_auth_cloud(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -267,7 +267,7 @@ async def test_form_invalid_auth_local(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -305,7 +305,7 @@ async def test_form_local_developer_mode_disabled(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -357,7 +357,7 @@ async def test_form_invalid_cozytouch_auth(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER_COZYTOUCH},
+        {"hub": TEST_SERVER_COZYTOUCH},
     )
 
     assert result2["type"] == "form"
@@ -384,7 +384,7 @@ async def test_cloud_abort_on_duplicate_entry(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "server": TEST_SERVER},
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -395,7 +395,7 @@ async def test_cloud_abort_on_duplicate_entry(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -434,7 +434,7 @@ async def test_local_abort_on_duplicate_entry(
             "host": TEST_HOST,
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
-            "server": TEST_SERVER,
+            "hub": TEST_SERVER,
         },
     ).add_to_hass(hass)
 
@@ -446,7 +446,7 @@ async def test_local_abort_on_duplicate_entry(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -502,7 +502,7 @@ async def test_cloud_allow_multiple_unique_entries(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -531,7 +531,7 @@ async def test_cloud_allow_multiple_unique_entries(
         "api_type": "cloud",
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD,
-        "server": TEST_SERVER,
+        "hub": TEST_SERVER,
     }
 
 
@@ -545,7 +545,7 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
-            "server": TEST_SERVER2,
+            "hub": TEST_SERVER2,
             "api_type": "cloud",
         },
     )
@@ -592,7 +592,7 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
-            "server": TEST_SERVER2,
+            "hub": TEST_SERVER2,
             "api_type": "cloud",
         },
     )
@@ -637,7 +637,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
-            "server": TEST_SERVER,
+            "hub": TEST_SERVER,
             "api_type": "local",
         },
     )
@@ -695,7 +695,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
-            "server": TEST_SERVER,
+            "hub": TEST_SERVER,
             "api_type": "local",
         },
     )
@@ -757,7 +757,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -784,7 +784,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result4["data"] == {
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD,
-        "server": TEST_SERVER,
+        "hub": TEST_SERVER,
         "api_type": "cloud",
     }
 
@@ -827,7 +827,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -855,7 +855,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert result4["data"] == {
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD,
-        "server": TEST_SERVER,
+        "hub": TEST_SERVER,
         "api_type": "cloud",
     }
 
@@ -877,7 +877,7 @@ async def test_local_zeroconf_flow(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"server": TEST_SERVER},
+        {"hub": TEST_SERVER},
     )
 
     assert result2["type"] == "form"
@@ -909,7 +909,7 @@ async def test_local_zeroconf_flow(
     assert result4["data"] == {
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD,
-        "server": TEST_SERVER,
+        "hub": TEST_SERVER,
         "host": "gateway-1234-5678-9123.local:8443",
         "api_type": "local",
         "token": "1234123412341234",

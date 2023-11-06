@@ -36,7 +36,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_API_TYPE, CONF_SERVER, DEFAULT_SERVER, DOMAIN, LOGGER
+from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 
 
 class DeveloperModeDisabled(HomeAssistantError):
@@ -102,9 +102,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.activate_local_token(
                 gateway_id=gateway_id, token=token, label="Home Assistant/local"
             )
-
-            # Verify SSL blocked by https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/5
-            # Somfy (self-signed) SSL cert uses the wrong common name
             session = async_create_clientsession(self.hass, verify_ssl=verify_ssl)
 
             # Local API
@@ -120,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             user_input[CONF_TOKEN] = token
         else:
-            server = SUPPORTED_SERVERS[user_input[CONF_SERVER]]
+            server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
             client = self._create_cloud_client(
                 username=username, password=password, server=server
             )
@@ -141,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step via config flow."""
         if user_input:
-            self._server = user_input[CONF_SERVER]
+            self._server = user_input[CONF_HUB]
 
             # Some Overkiz hubs do support a local API
             # Users can choose between local or cloud API.
@@ -154,7 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SERVER, default=self._server): vol.In(
+                    vol.Required(CONF_HUB, default=self._server): vol.In(
                         {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
                     ),
                 }
@@ -196,9 +193,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self._user = user_input[CONF_USERNAME]
-            user_input[
-                CONF_SERVER
-            ] = self._server  # inherit the server from previous step
+
+            # inherit the server from previous step
+            user_input[CONF_HUB] = self._server
 
             try:
                 await self.async_validate_input(user_input)
@@ -207,9 +204,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except BadCredentialsException as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
-                if user_input[
-                    CONF_SERVER
-                ] == Server.ATLANTIC_COZYTOUCH and not isinstance(
+                if user_input[CONF_HUB] == Server.ATLANTIC_COZYTOUCH and not isinstance(
                     exception, CozyTouchBadCredentialsException
                 ):
                     description_placeholders["unsupported_device"] = "CozyTouch"
@@ -281,9 +276,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._host = user_input[CONF_HOST]
             self._user = user_input[CONF_USERNAME]
-            user_input[
-                CONF_SERVER
-            ] = self._server  # inherit the server from previous step
+
+            # inherit the server from previous step
+            user_input[CONF_HUB] = self._server
 
             try:
                 user_input = await self.async_validate_input(user_input)
@@ -407,7 +402,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._user = self._config_entry.data[CONF_USERNAME]
-        self._server = self._config_entry.data[CONF_SERVER]
+        self._server = self._config_entry.data[CONF_HUB]
         self._api_type = self._config_entry.data[CONF_API_TYPE]
 
         return await self.async_step_user(dict(entry_data))

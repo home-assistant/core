@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -34,7 +35,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_API_TYPE,
     CONF_HUB,
-    CONF_SERVER,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -54,39 +54,20 @@ class HomeAssistantOverkizData:
     scenarios: list[Scenario]
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate an old config entry."""
-
-    LOGGER.debug("Migrating from version %s", entry.version)
-
-    # v1 -> v2: CONF_HUB renamed to CONF_SERVER and CONF_API_TYPE added
-    if entry.version == 1:
-        v2_entry_data = {**entry.data}
-        v2_entry_data[CONF_SERVER] = entry.data[CONF_HUB]
-        v2_entry_data.pop(CONF_HUB)
-        v2_entry_data[CONF_API_TYPE] = APIType.CLOUD  # V1 only supports cloud
-
-        entry.version = 2
-        hass.config_entries.async_update_entry(entry, data=v2_entry_data)
-
-        LOGGER.debug("Migration to version %s successful", entry.version)
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
 
     client: OverkizClient | None = None
 
+    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+
     # Local API
-    if entry.data[CONF_API_TYPE] == APIType.LOCAL:
+    if api_type == APIType.LOCAL:
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
-
-        # Verify SSL blocked by https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/5
-        # Somfy (self-signed) SSL cert uses the wrong common name
-        session = async_create_clientsession(hass, verify_ssl=False)
+        session = async_create_clientsession(
+            hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+        )
 
         client = OverkizClient(
             username="",
@@ -99,15 +80,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         username = entry.data[CONF_USERNAME]
         password = entry.data[CONF_PASSWORD]
-        server = SUPPORTED_SERVERS[entry.data[CONF_SERVER]]
+        server = SUPPORTED_SERVERS[entry.data[CONF_HUB]]
 
         # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
         session = async_create_clientsession(hass)
         client = OverkizClient(
             username=username, password=password, session=session, server=server
         )
-
-    await _async_migrate_entries(hass, entry)
 
     try:
         await client.login()
