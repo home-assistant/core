@@ -3,6 +3,7 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -16,10 +17,12 @@ async def async_setup_entry(
     """Set up Vogel's MotionMount from a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    unique_id = format_mac(coordinator.mm.mac.hex())
+
     async_add_entities(
         [
-            MotionMountExtension(coordinator, entry.entry_id),
-            MotionMountTurn(coordinator, entry.entry_id),
+            MotionMountExtension(coordinator, unique_id),
+            MotionMountTurn(coordinator, unique_id),
         ]
     )
 
