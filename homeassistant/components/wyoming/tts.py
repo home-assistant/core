@@ -4,7 +4,7 @@ import io
 import logging
 import wave
 
-from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStop
+from wyoming.audio import AudioChunk, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.tts import Synthesize, SynthesizeVoice
 
@@ -147,27 +147,4 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except (OSError, WyomingError):
             return (None, None)
 
-        if options.get(tts.ATTR_AUDIO_OUTPUT) != "raw":
-            return ("wav", data)
-
-        # Raw output (convert to 16Khz, 16-bit mono)
-        with io.BytesIO(data) as wav_io:
-            wav_reader: wave.Wave_read = wave.open(wav_io, "rb")
-            raw_data = (
-                AudioChunkConverter(
-                    rate=16000,
-                    width=2,
-                    channels=1,
-                )
-                .convert(
-                    AudioChunk(
-                        audio=wav_reader.readframes(wav_reader.getnframes()),
-                        rate=wav_reader.getframerate(),
-                        width=wav_reader.getsampwidth(),
-                        channels=wav_reader.getnchannels(),
-                    )
-                )
-                .audio
-            )
-
-        return ("raw", raw_data)
+        return ("wav", data)

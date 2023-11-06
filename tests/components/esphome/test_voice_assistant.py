@@ -371,6 +371,39 @@ async def test_send_tts(
         voice_assistant_udp_server_v2.transport.sendto.assert_called()
 
 
+async def test_send_tts_wrong_sample_rate(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server calls sendto to transmit audio data to device."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(22050)  # should be 16000
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(_ONE_SECOND))
+
+        wav_bytes = wav_io.getvalue()
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("wav", wav_bytes),
+    ), pytest.raises(ValueError):
+        voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        assert voice_assistant_udp_server_v2._tts_task is not None
+        await voice_assistant_udp_server_v2._tts_task  # raises ValueError
+
+
 async def test_send_tts_wrong_format(
     hass: HomeAssistant,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,

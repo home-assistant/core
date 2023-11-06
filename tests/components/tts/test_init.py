@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import tts
+from homeassistant.components import ffmpeg, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -1759,3 +1759,12 @@ async def test_ws_list_voices(
             {"voice_id": "fran_drescher", "name": "Fran Drescher"},
         ]
     }
+
+
+async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
+    """Test that ffmpeg failing during audio conversion will raise an error."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    with pytest.raises(RuntimeError):
+        # Simulate a bad WAV file
+        await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
