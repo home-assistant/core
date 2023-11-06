@@ -1,6 +1,5 @@
 """Test the hausbus gateway class."""
 
-from threading import Thread
 from typing import cast
 from unittest.mock import Mock, patch
 
@@ -14,14 +13,13 @@ from pyhausbus.de.hausbus.homeassistant.proxy.Dimmer import Dimmer
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.ObjectId import ObjectId
 
-from homeassistant.components.hausbus.const import DOMAIN
 from homeassistant.components.hausbus.gateway import HausbusGateway
 from homeassistant.components.hausbus.light import HausbusLight
 from homeassistant.components.light import ColorMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .helpers import setup_hausbus_integration
+from .helpers import add_channel_from_thread, create_gateway, setup_hausbus_integration
 
 
 async def test_init(hass: HomeAssistant) -> None:
@@ -51,18 +49,7 @@ async def test_init(hass: HomeAssistant) -> None:
 
 async def test_add_device(hass: HomeAssistant) -> None:
     """Test adding a device to the hausbus gateway."""
-    config_entry = setup_hausbus_integration(hass)
-
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "device_1"
@@ -76,18 +63,7 @@ async def test_add_device(hass: HomeAssistant) -> None:
 
 async def test_get_device(hass: HomeAssistant) -> None:
     """Test getting a device from to the hausbus gateway."""
-    config_entry = setup_hausbus_integration(hass)
-
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -104,18 +80,7 @@ async def test_get_device(hass: HomeAssistant) -> None:
 
 async def test_get_channel_list(hass: HomeAssistant) -> None:
     """Test getting a channel list."""
-    config_entry = setup_hausbus_integration(hass)
-
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -132,18 +97,7 @@ async def test_get_channel_list(hass: HomeAssistant) -> None:
 
 async def test_get_channel_id(hass: HomeAssistant) -> None:
     """Test getting a channel id."""
-    config_entry = setup_hausbus_integration(hass)
-
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
+    gateway = await create_gateway(hass)
 
     # Get the device by ObjectId
     object_id = ObjectId(
@@ -157,21 +111,10 @@ async def test_get_channel_id(hass: HomeAssistant) -> None:
 
 async def test_get_channel(hass: HomeAssistant) -> None:
     """Test adding and getting a Dimmer channel."""
-    config_entry = await setup_hausbus_integration(hass)
+    gateway = await create_gateway(hass)
 
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
-
-    # add gateway to hass
-    hass.data[DOMAIN][config_entry.entry_id] = gateway
+    # get mock config entry with id "1"
+    config_entry = hass.config_entries.async_get_entry("1")
 
     # setup light domain
     await hass.config_entries.async_forward_entry_setups(config_entry, [Platform.LIGHT])
@@ -187,16 +130,7 @@ async def test_get_channel(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.hausbus.light.Dimmer.getStatus", return_value=True
     ):
-        # channels are added from a bus message thread
-        thread = Thread(target=gateway.add_channel, args=[dimmer])
-        thread.start()
-        # channel entity creation is added to hass loop, wait until this is finished
-        while thread.is_alive():
-            await hass.async_block_till_done()
-        thread.join()
-
-    # adding entity is done asynchronously on hass loop, wait until this is finished
-    await hass.async_block_till_done()
+        await add_channel_from_thread(hass, dimmer, gateway)
 
     # retrieve the dimmer channel by using its objectId
     channel = cast(HausbusLight, gateway.get_channel(ObjectId(dimmer.getObjectId())))
@@ -208,18 +142,7 @@ async def test_get_channel(hass: HomeAssistant) -> None:
 
 async def test_get_unknown_channel(hass: HomeAssistant) -> None:
     """Test getting a channel that is not defined."""
-    config_entry = setup_hausbus_integration(hass)
-
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
+    gateway = await create_gateway(hass)
 
     # Get the device by ObjectId
     object_id = ObjectId(
@@ -232,19 +155,9 @@ async def test_get_unknown_channel(hass: HomeAssistant) -> None:
 
 async def test_own_bus_data_received(hass: HomeAssistant) -> None:
     """Test handling of own bus data."""
-    config_entry = await setup_hausbus_integration(hass)
+    gateway = await create_gateway(hass)
 
-    # Create a mock HomeServer
-    mock_home_server = Mock(Spec=HomeServer)
     mock_controller = Mock(Spec=Controller)
-
-    # Patch the HomeServer constructor to return the mock_home_server
-    with patch(
-        "homeassistant.components.hausbus.gateway.HomeServer",
-        return_value=mock_home_server,
-    ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
 
     sender = 0x270E0000  # = 0x27 0E 00 00, with class_id = 0x02 and instance_id = 0x03
     receiver = 0x270E0000
