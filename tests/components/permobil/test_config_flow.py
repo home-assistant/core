@@ -233,9 +233,13 @@ async def test_config_flow_invalid_email(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
-    """Test the config flow reauth."""
+    """Test the config flow reauth make sure that the values are replaced."""
+    # new token and code
+    reauth_token = ("b" * 256, "reauth_date")
+    reauth_code = "567890"
     mock_api: Mock = Mock()
     mock_api.request_application_code = AsyncMock()
+    mock_api.request_application_token = AsyncMock(return_value=reauth_token)
     mock_entry = MockConfigEntry(
         domain="permobil",
         data={
@@ -261,8 +265,66 @@ async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
+    # request request new token
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_CODE: reauth_code},
+    )
 
-async def test_config_flow_reauth_fail(hass: HomeAssistant) -> None:
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_EMAIL] == MOCK_EMAIL
+    assert result["data"][CONF_REGION] == MOCK_URL
+
+    # check that the reauth values have replaced the old ones
+    assert result["data"][CONF_CODE] == reauth_code
+    assert result["data"][CONF_TOKEN] == reauth_token[0]
+    assert result["data"][CONF_TTL] == reauth_token[1]
+
+
+async def test_config_flow_reauth_fail_invalid_code(hass: HomeAssistant) -> None:
+    """Test the config flow reauth when the email code fails."""
+    # new code
+    reauth_invalid_code = "567890"  # pretend this code is invalid/incorrect
+    mock_api: Mock = Mock()
+    mock_api.request_application_code = AsyncMock()
+    mock_api.request_application_token = AsyncMock(side_effect=MyPermobilAPIException)
+    mock_entry = MockConfigEntry(
+        domain="permobil",
+        data={
+            CONF_EMAIL: MOCK_EMAIL,
+            CONF_REGION: MOCK_URL,
+            CONF_CODE: MOCK_CODE,
+            CONF_TOKEN: MOCK_TOKEN[0],
+            CONF_TTL: MOCK_TOKEN[1],
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.permobil.config_flow.MyPermobil",
+        return_value=mock_api,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "reauth", "entry_id": mock_entry.entry_id},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "email_code"
+    assert result["errors"] == {}
+
+    # request request new token but have the API return error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_CODE: reauth_invalid_code},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "email_code"
+    assert result["errors"]["base"] == "invalid_code"
+
+
+async def test_config_flow_reauth_fail_code_request(hass: HomeAssistant) -> None:
     """Test the config flow reauth."""
     mock_api: Mock = Mock()
     mock_api.request_application_code = AsyncMock(side_effect=MyPermobilAPIException)
