@@ -22,8 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = V2CUpdateCoordinator(hass, trydan, entry)
 
     await coordinator.async_config_entry_first_refresh()
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(entry)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
