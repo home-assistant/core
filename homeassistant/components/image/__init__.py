@@ -67,6 +67,16 @@ def valid_image_content_type(content_type: str | None) -> str:
         raise ImageContentTypeError
     return content_type
 
+def _get_image_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
+    """Get image component from entity_id."""
+    if (component := hass.data.get(DOMAIN)) is None:
+        raise HomeAssistantError("Image integration not set up")
+
+    if (image := component.get_entity(entity_id)) is None:
+        raise HomeAssistantError("Image not found")
+
+    return cast(ImageEntity, camera)
+
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
