@@ -44,7 +44,6 @@ async def async_setup_entry(
     )
 
 
-@callback
 async def async_add_tracked_entities(
     hass: HomeAssistant,
     tado_device: Any,
