@@ -75,7 +75,7 @@ def _get_image_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     if (image := component.get_entity(entity_id)) is None:
         raise HomeAssistantError("Image not found")
 
-    return cast(ImageEntity, camera)
+    return cast(ImageEntity, image)
 
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
