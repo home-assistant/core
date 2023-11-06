@@ -32,15 +32,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
         if user_input is None:
-            return self._show_user_form(errors)
+            return self._show_user_form({})
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        user_id = await self.hass.async_add_executor_job(
-            _authenticate, username, password, errors
+        user_id, errors = await self.hass.async_add_executor_job(
+            _authenticate, username, password
         )
-        if errors:
+        if user_id is None:
             return self._show_user_form(errors)
 
         await self.async_set_unique_id(user_id)
@@ -64,16 +63,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         assert self.reauth_entry is not None
-        errors: dict[str, str] = {}
         if user_input is None:
-            return self._show_reauth_form(errors)
+            return self._show_reauth_form({})
 
         username = self.reauth_entry.data[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        user_id = await self.hass.async_add_executor_job(
-            _authenticate, username, password, errors
+        user_id, errors = await self.hass.async_add_executor_job(
+            _authenticate, username, password
         )
-        if errors:
+        if user_id is None:
             return self._show_reauth_form(errors)
 
         if self.reauth_entry.unique_id != user_id:
@@ -96,19 +94,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def _authenticate(username: str, password: str, errors: dict[str, str]) -> str | None:
+def _authenticate(username: str, password: str) -> tuple[str | None, dict[str, str]]:
     """Authenticate with the Schlage API."""
+    user_id = None
+    errors: dict[str, str] = {}
     try:
         auth = pyschlage.Auth(username, password)
         auth.authenticate()
     except NotAuthorizedError:
         errors["base"] = "invalid_auth"
-        return None
     except Exception:  # pylint: disable=broad-except
         LOGGER.exception("Unknown error")
         errors["base"] = "unknown"
-        return None
-
-    # The user_id property will make a blocking call if it's not already
-    # cached. To avoid blocking the event loop, we read it here.
-    return auth.user_id
+    else:
+        # The user_id property will make a blocking call if it's not already
+        # cached. To avoid blocking the event loop, we read it here.
+        user_id = auth.user_id
+    return user_id, errors
