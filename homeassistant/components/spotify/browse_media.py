@@ -498,6 +498,7 @@ def _make_media_children(items):
             item_id = item["id"]
         except KeyError:
             _LOGGER.debug("Missing ID for media item: %s", item)
+            _LOGGER.debug("Missing ID for media item: %s", item)
             continue
         children.append(
             BrowseMedia(
