@@ -13,9 +13,11 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
 
@@ -34,16 +36,17 @@ async def test_alarm_changed_from_external(
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
     await setup_platform(hass, ALARM_CONTROL_PANEL_DOMAIN)
 
+    # Attributes
+    assert hass.states.get("alarm_control_panel.systeme_d_alarme").attributes[
+        "supported_features"
+    ] == (
+        AlarmControlPanelEntityFeature.ARM_AWAY | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
     # Initial state
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
         == STATE_ALARM_ARMING
-    )
-    assert (
-        hass.states.get("alarm_control_panel.systeme_d_alarme").attributes[
-            "supported_features"
-        ]
-        == AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
     # Now simulate a changed status
@@ -68,16 +71,17 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
     await setup_platform(hass, ALARM_CONTROL_PANEL_DOMAIN)
 
+    # Attributes
+    assert hass.states.get("alarm_control_panel.systeme_d_alarme").attributes[
+        "supported_features"
+    ] == (
+        AlarmControlPanelEntityFeature.ARM_AWAY | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
     # Initial state: arm_away
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
         == STATE_ALARM_ARMED_AWAY
-    )
-    assert (
-        hass.states.get("alarm_control_panel.systeme_d_alarme").attributes[
-            "supported_features"
-        ]
-        == AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
     # Now call for a change -> disarmed
@@ -108,4 +112,19 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
         == STATE_ALARM_ARMING
+    )
+
+    # Now call for a change -> trigger
+    data_get_home_endpoint_value["value"] = "alarm1_alert_timer"
+    router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
+    await hass.services.async_call(
+        ALARM_CONTROL_PANEL_DOMAIN,
+        SERVICE_ALARM_TRIGGER,
+        {ATTR_ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
+        blocking=True,
+    )
+
+    assert (
+        hass.states.get("alarm_control_panel.systeme_d_alarme").state
+        == STATE_ALARM_TRIGGERED
     )

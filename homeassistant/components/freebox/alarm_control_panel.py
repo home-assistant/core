@@ -113,7 +113,11 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             self._attr_supported_features = (
                 AlarmControlPanelEntityFeature.ARM_AWAY
                 | AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.TRIGGER
             )
 
         else:
-            self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+            self._attr_supported_features = (
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.TRIGGER
+            )
