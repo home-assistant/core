@@ -36,6 +36,7 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
         """Initialize Extension number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{unique_id}-extension"
+        self._attr_native_value = self.coordinator.data["extension"]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -59,6 +60,7 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
         """Initialize Turn number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{unique_id}-turn"
+        self._attr_native_value = self.coordinator.data["turn"] * -1
 
     @callback
     def _handle_coordinator_update(self) -> None:

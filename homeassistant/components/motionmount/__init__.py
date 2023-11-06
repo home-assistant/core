@@ -1,7 +1,7 @@
 """The Vogel's MotionMount integration."""
 from __future__ import annotations
 
-import motionmount  # type: ignore[import]
+import motionmount  # type: ignore[import-untyped]
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Validate the API connection
     await mm.connect()
+    await coordinator.async_config_entry_first_refresh()
 
     # Store an API object for your platforms to access
     hass.data[DOMAIN][entry.entry_id] = coordinator
