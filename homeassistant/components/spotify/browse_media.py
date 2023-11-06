@@ -346,7 +346,9 @@ def _build_item_browse_media(
         str(BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED): _browsing_get_iterable_items(
             media_content_type, spotify
         ),
-        str(MediaType.PLAYLIST): _browsing_get_playlist(media_content_id, spotify),
+        str(MediaType.PLAYLIST): _browsing_get_playlist(
+            media_content_type, media_content_id, spotify
+        ),
     }
 
     extract_object = {
@@ -436,13 +438,14 @@ def _browsing_get_iterable_items(media_content_type, spotify):
     return media, items
 
 
-def _browsing_get_playlist(media_content_id, spotify):
+def _browsing_get_playlist(media_content_type, media_content_id, spotify):
     """Get items and media."""
     items = []
     media: dict[str, Any] | None = None
 
-    if media := spotify.playlist(media_content_id):
-        items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
+    if media_content_type == MediaType.PLAYLIST:
+        if media := spotify.playlist(media_content_id):
+            items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
 
     return media, items
 
