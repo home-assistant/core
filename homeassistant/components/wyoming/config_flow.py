@@ -59,12 +59,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # wake-word-detection
         wake_installed = [wake for wake in service.info.wake if wake.installed]
 
+        # intent recognition
+        intent_installed = [
+            intent for intent in service.info.intent if intent.installed
+        ]
+
+        # intent handling
+        handle_installed = [
+            handle for handle in service.info.handle if handle.installed
+        ]
+
         if asr_installed:
             name = asr_installed[0].name
         elif tts_installed:
             name = tts_installed[0].name
         elif wake_installed:
             name = wake_installed[0].name
+        elif intent_installed:
+            name = intent_installed[0].name
+        elif handle_installed:
+            name = handle_installed[0].name
         else:
             return self.async_abort(reason="no_services")
 
@@ -97,6 +111,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     not any(asr for asr in service.info.asr if asr.installed)
                     and not any(tts for tts in service.info.tts if tts.installed)
                     and not any(wake for wake in service.info.wake if wake.installed)
+                    and not any(
+                        intent for intent in service.info.intent if intent.installed
+                    )
+                    and not any(
+                        handle for handle in service.info.handle if handle.installed
+                    )
                 ):
                     return self.async_abort(reason="no_services")
 
