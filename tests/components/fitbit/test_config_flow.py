@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+import time
 from typing import Any
 from unittest.mock import patch
 
@@ -16,9 +17,7 @@ from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from .conftest import (
     CLIENT_ID,
-    FAKE_ACCESS_TOKEN,
     FAKE_AUTH_IMPL,
-    FAKE_REFRESH_TOKEN,
     PROFILE_API_URL,
     PROFILE_USER_ID,
     SERVER_ACCESS_TOKEN,
@@ -87,6 +86,57 @@ async def test_full_flow(
         "auth_implementation": FAKE_AUTH_IMPL,
         "token": SERVER_ACCESS_TOKEN,
     }
+
+
+@pytest.mark.parametrize(
+    ("status_code", "error_reason"),
+    [
+        (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
+    ],
+)
+async def test_token_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    profile: None,
+    setup_credentials: None,
+    status_code: HTTPStatus,
+    error_reason: str,
+) -> None:
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
+    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URL}"
+        f"&state={state}"
+        "&scope=activity+heartrate+nutrition+profile+settings+sleep+weight&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        status=status_code,
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == error_reason
 
 
 @pytest.mark.parametrize(
@@ -204,6 +254,11 @@ async def test_config_entry_already_exists(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "token_expiration_time",
+    [time.time() + 86400, time.time() - 86400],
+    ids=("token_active", "token_expired"),
+)
 async def test_import_fitbit_config(
     hass: HomeAssistant,
     fitbit_config_setup: None,
@@ -235,16 +290,20 @@ async def test_import_fitbit_config(
     assert config_entry.unique_id == PROFILE_USER_ID
 
     data = dict(config_entry.data)
+    # Verify imported values from fitbit.conf and configuration.yaml and
+    # that the token is updated.
     assert "token" in data
+    expires_at = data["token"]["expires_at"]
+    assert expires_at > time.time()
     del data["token"]["expires_at"]
-    # Verify imported values from fitbit.conf and configuration.yaml
     assert dict(config_entry.data) == {
         "auth_implementation": DOMAIN,
         "clock_format": "24H",
         "monitored_resources": ["activities/steps"],
         "token": {
-            "access_token": FAKE_ACCESS_TOKEN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": "server-access-token",
+            "refresh_token": "server-refresh-token",
+            "scope": "activity heartrate nutrition profile settings sleep weight",
         },
         "unit_system": "default",
     }
@@ -452,7 +511,7 @@ async def test_reauth_flow(
             "refresh_token": "updated-refresh-token",
             "access_token": "updated-access-token",
             "type": "Bearer",
-            "expires_in": 60,
+            "expires_in": "60",
         },
     )
 

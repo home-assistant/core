@@ -129,5 +129,34 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "workday": {
+        "state_attributes": {
+          "workdays": {
+            "name": "[%key:component::workday::config::step::options::data::workdays%]"
+          },
+          "excludes": {
+            "name": "[%key:component::workday::config::step::options::data::excludes%]"
+          },
+          "days_offset": {
+            "name": "[%key:component::workday::config::step::options::data::days_offset%]"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "check_date": {
+      "name": "Check date",
+      "description": "Check if date is workday.",
+      "fields": {
+        "check_date": {
+          "name": "Date",
+          "description": "Date to check if workday."
+        }
+      }
+    }
   }
 }

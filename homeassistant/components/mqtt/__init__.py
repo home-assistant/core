@@ -233,7 +233,7 @@ async def async_check_config_schema(
 ) -> None:
     """Validate manually configured MQTT items."""
     mqtt_data = get_mqtt_data(hass)
-    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml[DOMAIN]
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
             schema = mqtt_data.reload_schema[domain]

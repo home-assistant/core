@@ -30,6 +30,12 @@ LIST_TASKS_RESPONSE = {
     "items": [],
 }
 
+LIST_TASKS_RESPONSE_WATER = {
+    "items": [
+        {"id": "some-task-id", "title": "Water", "status": "needsAction"},
+    ],
+}
+
 
 @pytest.fixture
 def platforms() -> list[str]:
@@ -198,8 +204,8 @@ async def test_create_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "Soda"},
+        "add_item",
+        {"item": "Soda"},
         target={"entity_id": "todo.my_tasks"},
         blocking=True,
     )
@@ -215,7 +221,7 @@ async def test_create_todo_list_item(
     [
         [
             LIST_TASK_LIST_RESPONSE,
-            LIST_TASKS_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
             EMPTY_RESPONSE,  # update
             LIST_TASKS_RESPONSE,  # refresh after update
         ]
@@ -234,12 +240,12 @@ async def test_update_todo_list_item(
 
     state = hass.states.get("todo.my_tasks")
     assert state
-    assert state.state == "0"
+    assert state.state == "1"
 
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": "some-task-id", "summary": "Soda", "status": "completed"},
+        {"item": "some-task-id", "rename": "Soda", "status": "completed"},
         target={"entity_id": "todo.my_tasks"},
         blocking=True,
     )
@@ -255,7 +261,7 @@ async def test_update_todo_list_item(
     [
         [
             LIST_TASK_LIST_RESPONSE,
-            LIST_TASKS_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
             EMPTY_RESPONSE,  # update
             LIST_TASKS_RESPONSE,  # refresh after update
         ]
@@ -274,12 +280,12 @@ async def test_partial_update_title(
 
     state = hass.states.get("todo.my_tasks")
     assert state
-    assert state.state == "0"
+    assert state.state == "1"
 
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": "some-task-id", "summary": "Soda"},
+        {"item": "some-task-id", "rename": "Soda"},
         target={"entity_id": "todo.my_tasks"},
         blocking=True,
     )
@@ -295,7 +301,7 @@ async def test_partial_update_title(
     [
         [
             LIST_TASK_LIST_RESPONSE,
-            LIST_TASKS_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
             EMPTY_RESPONSE,  # update
             LIST_TASKS_RESPONSE,  # refresh after update
         ]
@@ -314,12 +320,12 @@ async def test_partial_update_status(
 
     state = hass.states.get("todo.my_tasks")
     assert state
-    assert state.state == "0"
+    assert state.state == "1"
 
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": "some-task-id", "status": "needs_action"},
+        {"item": "some-task-id", "status": "needs_action"},
         target={"entity_id": "todo.my_tasks"},
         blocking=True,
     )

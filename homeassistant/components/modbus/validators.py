@@ -63,8 +63,8 @@ PARM_IS_LEGAL = namedtuple(
     ],
 )
 # PARM_IS_LEGAL defines if the keywords:
-#    count: ..
-#    structure: ..
+#    count:
+#    structure:
 #    swap: byte
 #    swap: word
 #    swap: word_byte (identical to swap: word)
@@ -84,7 +84,7 @@ DEFAULT_STRUCT_FORMAT = {
     DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, False, False)),
+    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, True, False)),
     DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
 
