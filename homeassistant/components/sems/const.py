@@ -2,7 +2,7 @@
 
 from typing import Final
 
-DOMAIN = "sems_portal"
+DOMAIN = "sems"
 MANUFACTURER: Final = "Goodwee"
 CONF_NAME: Final = "name"
 CONF_EMAIL: Final = "email"

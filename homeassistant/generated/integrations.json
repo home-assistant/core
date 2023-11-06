@@ -4947,7 +4947,7 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "sems_portal": {
+    "sems": {
       "name": "SEMS Portal",
       "integration_type": "hub",
       "config_flow": true,

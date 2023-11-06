@@ -413,7 +413,7 @@ FLOWS = {
         "scrape",
         "screenlogic",
         "season",
-        "sems_portal",
+        "sems",
         "sense",
         "sensibo",
         "sensirion_ble",

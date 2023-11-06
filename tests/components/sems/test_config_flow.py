@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.sems_portal.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.sems_portal.const import DOMAIN
+from homeassistant.components.sems.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.sems.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -21,7 +21,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.sems_portal.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sems.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -51,7 +51,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.sems_portal.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sems.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.sems_portal.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.sems.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
