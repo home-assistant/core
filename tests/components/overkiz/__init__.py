@@ -8,7 +8,7 @@ from tests.common import load_json_object_fixture
 def load_setup_fixture(
     fixture: str = "overkiz/setup_tahoma_switch.json",
 ) -> Setup:
-    """Return activities from fixture."""
+    """Return setup from fixture."""
     setup_json = load_json_object_fixture(fixture)
     setup = Setup(**humps.decamelize(setup_json))
 
