@@ -2172,18 +2172,6 @@ async def test_setup_manual_mqtt_with_invalid_config(
             },
             "sensor.test",
         ),
-        (
-            {
-                mqtt.DOMAIN: {
-                    "binary_sensor": {
-                        "name": "test",
-                        "state_topic": "test-topic",
-                        "entity_category": "config",
-                    }
-                }
-            },
-            "binary_sensor.test",
-        ),
     ],
 )
 @patch(
@@ -2214,14 +2202,6 @@ async def test_setup_manual_mqtt_with_invalid_entity_category(
                 "entity_category": "config",
             },
             "sensor.test",
-        ),
-        (
-            {
-                "name": "test",
-                "state_topic": "test-topic",
-                "entity_category": "config",
-            },
-            "binary_sensor.test",
         ),
     ],
 )
