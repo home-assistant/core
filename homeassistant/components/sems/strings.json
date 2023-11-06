@@ -17,5 +17,69 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "inner_temp": {
+        "name": "Inner Temp"
+      },
+      "powerstation_id": {
+        "name": "Powerstation Id"
+      },
+      "station_name": {
+        "name": "Station Name"
+      },
+      "battery_capacity": {
+        "name": "Battery Capacity"
+      },
+      "capacity": {
+        "name": "Capacity"
+      },
+      "month_generation": {
+        "name": "Month Generation"
+      },
+      "generation_live": {
+        "name": "Generation Live"
+      },
+      "generation_today": {
+        "name": "Generation Today"
+      },
+      "alltime_generation": {
+        "name": "All Time Generation"
+      },
+      "today_income": {
+        "name": "Today Income"
+      },
+      "total_income": {
+        "name": "Total Income"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_status": {
+        "name": "Battery Status"
+      },
+      "battery_status_str": {
+        "name": "Battery Status Str"
+      },
+      "house_load": {
+        "name": "House Load"
+      },
+      "house_load_status": {
+        "name": "House Load Status"
+      },
+      "grid_load": {
+        "name": "Grid Load"
+      },
+      "grid_load_status": {
+        "name": "Grid Load Status"
+      },
+      "soc": {
+        "name": "Soc"
+      },
+      "soc_text": {
+        "name": "Soc Text"
+      }
+    }
   }
 }
