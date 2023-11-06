@@ -149,6 +149,10 @@ class AiohttpClientMocker:
 
         raise AssertionError(f"No mock registered for {method.upper()} {url} {params}")
 
+    async def wait_for_close(self):
+        """Wait until all requests are done."""
+        await asyncio.sleep(0)
+
 
 class AiohttpClientMockResponse:
     """Mock Aiohttp client response."""
