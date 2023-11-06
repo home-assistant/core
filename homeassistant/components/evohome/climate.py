@@ -1,9 +1,9 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 from __future__ import annotations
 
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -47,6 +47,12 @@ from .const import (
     EVO_TEMPOVER,
 )
 
+if TYPE_CHECKING:
+    from evohomeasync2 import ControlSystem, Zone
+
+    from . import EvoBroker
+
+
 _LOGGER = logging.getLogger(__name__)
 
 PRESET_RESET = "Reset"  # reset all child zones to EVO_FOLLOW
@@ -85,7 +91,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -141,7 +147,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: Zone) -> None:
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
@@ -174,7 +180,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
-            duration = data[ATTR_DURATION_UNTIL]
+            duration: td = data[ATTR_DURATION_UNTIL]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
@@ -306,7 +312,7 @@ class EvoController(EvoClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: ControlSystem) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 

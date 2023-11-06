@@ -4,11 +4,12 @@ Such systems include evohome, Round Thermostat, and others.
 """
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import evohomeasync
 import evohomeasync2
@@ -38,6 +39,10 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
+
+if TYPE_CHECKING:
+    from evohomeasync2 import ControlSystem, HotWater, Location, Zone
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,10 +143,10 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err) -> None:
+def _handle_exception(exc: evohomeasync2.RequestFailed) -> None:
     """Return False if the exception can't be ignored."""
     try:
-        raise err
+        raise exc
 
     except evohomeasync2.AuthenticationFailed:
         _LOGGER.error(
@@ -151,27 +156,27 @@ def _handle_exception(err) -> None:
                 " correctly via the website will not work via the web API. Message"
                 " is: %s"
             ),
-            err,
+            exc,
         )
 
     except evohomeasync2.RequestFailed:
-        if err.status is None:
+        if exc.status is None:
             _LOGGER.warning(
                 (
                     "Unable to connect with the vendor's server. "
                     "Check your network and the vendor's service status page. "
                     "Message is: %s"
                 ),
-                err,
+                exc,
             )
 
-        elif err.status == HTTPStatus.SERVICE_UNAVAILABLE:
+        elif exc.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
+        elif exc.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 (
                     "The vendor's API rate limit has been exceeded. "
@@ -187,7 +192,7 @@ def _handle_exception(err) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell TCC system."""
 
-    async def load_auth_tokens(store) -> tuple[dict, dict | None]:
+    async def load_auth_tokens(store: Store) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
         tokens = dict(app_storage or {})
 
@@ -280,7 +285,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def setup_service_functions(hass: HomeAssistant, broker):
+def setup_service_functions(hass: HomeAssistant, broker: EvoBroker):
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
@@ -417,12 +422,12 @@ class EvoBroker:
         self.params = params
 
         loc_idx = params[CONF_LOCATION_IDX]
+        self._location: Location = client.locations[loc_idx]
+
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-        self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
-        self.tcs_utc_offset = timedelta(
-            minutes=client.locations[loc_idx].timeZone[UTC_OFFSET]
-        )
-        self.temps: dict[str, Any] | None = {}
+        self.tcs: ControlSystem = self._location._gateways[0]._control_systems[0]
+        self.tcs_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
+        self.temps: dict[str, int | None] | None = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
@@ -446,7 +451,9 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, update_state=True) -> Any:
+    async def call_client_api(
+        self, api_function: Coroutine, update_state: bool = True
+    ) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
@@ -462,16 +469,16 @@ class EvoBroker:
     async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
-        assert self.client_v1
+        assert isinstance(self.client_v1, evohomeasync.EvohomeClient)
 
-        def get_session_id(client_v1) -> str | None:
+        def get_session_id(client_v1: evohomeasync.EvohomeClient) -> str | None:
             user_data = client_v1.user_data if client_v1 else None
             return user_data.get("sessionId") if user_data else None
 
         session_id = get_session_id(self.client_v1)
 
         try:
-            temps = list(await self.client_v1.temperatures(force_refresh=True))
+            temps = await self.client_v1.temperatures(force_refresh=True)
 
         except evohomeasync.InvalidSchema as exc:
             _LOGGER.warning(
@@ -485,7 +492,7 @@ class EvoBroker:
             )
             self.temps = self.client_v1 = None
 
-        except evohomeasync.EvohomeError as exc:
+        except evohomeasync.RequestFailed as exc:
             _LOGGER.warning(
                 (
                     "Unable to obtain the latest high-precision temperatures. "
@@ -498,10 +505,7 @@ class EvoBroker:
             self.temps = None  # these are now stale, will fall back to v2 temps
 
         else:
-            if (
-                str(self.client_v1.location_id)
-                != self.client.locations[self.params[CONF_LOCATION_IDX]].locationId
-            ):
+            if str(self.client_v1.location_id) != self._location.locationId:
                 _LOGGER.warning(
                     "The v2 API's configured location doesn't match "
                     "the v1 API's default location (there is more than one location), "
@@ -521,9 +525,8 @@ class EvoBroker:
         """Get the latest modes, temperatures, setpoints of a Location."""
         access_token = self.client.access_token
 
-        loc_idx = self.params[CONF_LOCATION_IDX]
         try:
-            status = await self.client.locations[loc_idx].refresh_status()
+            status = await self._location.refresh_status()
         except evohomeasync2.EvohomeError as err:
             _handle_exception(err)
         else:
@@ -556,7 +559,9 @@ class EvoDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(
+        self, evo_broker: EvoBroker, evo_device: ControlSystem | HotWater | Zone
+    ) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
@@ -608,7 +613,7 @@ class EvoChild(EvoDevice):
     This includes (up to 12) Heating Zones and (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_broker, evo_device) -> None:
+    def __init__(self, evo_broker: EvoBroker, evo_device: HotWater | Zone) -> None:
         """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
         self._schedule: dict[str, Any] = {}
