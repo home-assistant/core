@@ -32,6 +32,7 @@ from aioairzone_cloud.const import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -204,6 +205,9 @@ class AirzoneDeviceClimate(AirzoneClimate):
             }
         await self._async_update_params(params)
 
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+
 
 class AirzoneDeviceGroupClimate(AirzoneClimate):
     """Define an Airzone Cloud DeviceGroup base class."""
@@ -237,6 +241,9 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
                 API_UNITS: TemperatureUnit.CELSIUS.value,
             }
         await self._async_update_params(params)
+
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
