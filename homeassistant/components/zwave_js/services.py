@@ -4,11 +4,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator, Sequence
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
+from zwave_js_server.const.command_class.notification import NotificationType
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -39,6 +40,8 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+T = TypeVar("T", ZwaveNode, Endpoint)
+
 
 def parameter_name_does_not_need_bitmask(
     val: dict[str, int | str | list[str]]
@@ -66,8 +69,8 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
 
 
 def get_valid_responses_from_results(
-    zwave_objects: Sequence[ZwaveNode | Endpoint], results: Sequence[Any]
-) -> Generator[tuple[ZwaveNode | Endpoint, Any], None, None]:
+    zwave_objects: Sequence[T], results: Sequence[Any]
+) -> Generator[tuple[T, Any], None, None]:
     """Return valid responses from a list of results."""
     for zwave_object, result in zip(zwave_objects, results):
         if not isinstance(result, Exception):
@@ -91,6 +94,49 @@ def raise_exceptions_from_results(
         if len(lines) > 1:
             lines.insert(0, f"{len(errors)} error(s):")
         raise HomeAssistantError("\n".join(lines))
+
+
+async def _async_invoke_cc_api(
+    nodes_or_endpoints: set[T],
+    command_class: CommandClass,
+    method_name: str,
+    *args: Any,
+) -> None:
+    """Invoke the CC API on a node endpoint."""
+    nodes_or_endpoints_list = list(nodes_or_endpoints)
+    results = await asyncio.gather(
+        *(
+            node_or_endpoint.async_invoke_cc_api(command_class, method_name, *args)
+            for node_or_endpoint in nodes_or_endpoints_list
+        ),
+        return_exceptions=True,
+    )
+    for node_or_endpoint, result in get_valid_responses_from_results(
+        nodes_or_endpoints_list, results
+    ):
+        if isinstance(node_or_endpoint, ZwaveNode):
+            _LOGGER.info(
+                (
+                    "Invoked %s CC API method %s on node %s with the following result: "
+                    "%s"
+                ),
+                command_class.name,
+                method_name,
+                node_or_endpoint,
+                result,
+            )
+        else:
+            _LOGGER.info(
+                (
+                    "Invoked %s CC API method %s on endpoint %s with the following "
+                    "result: %s"
+                ),
+                command_class.name,
+                method_name,
+                node_or_endpoint,
+                result,
+            )
+    raise_exceptions_from_results(nodes_or_endpoints_list, results)
 
 
 class ZWaveServices:
@@ -406,6 +452,34 @@ class ZWaveServices:
             ),
         )
 
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_REFRESH_NOTIFICATIONS,
+            self.async_refresh_notifications,
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Required(const.ATTR_NOTIFICATION_TYPE): vol.All(
+                            vol.Coerce(int), vol.Coerce(NotificationType)
+                        ),
+                        vol.Optional(const.ATTR_NOTIFICATION_EVENT): vol.Coerce(int),
+                    },
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
+                    get_nodes_from_service_data,
+                    has_at_least_one_node,
+                ),
+            ),
+        )
+
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
@@ -643,38 +717,14 @@ class ZWaveServices:
         method_name: str = service.data[const.ATTR_METHOD_NAME]
         parameters: list[Any] = service.data[const.ATTR_PARAMETERS]
 
-        async def _async_invoke_cc_api(endpoints: set[Endpoint]) -> None:
-            """Invoke the CC API on a node endpoint."""
-            results = await asyncio.gather(
-                *(
-                    endpoint.async_invoke_cc_api(
-                        command_class, method_name, *parameters
-                    )
-                    for endpoint in endpoints
-                ),
-                return_exceptions=True,
-            )
-            endpoints_list = list(endpoints)
-            for endpoint, result in get_valid_responses_from_results(
-                endpoints_list, results
-            ):
-                _LOGGER.info(
-                    (
-                        "Invoked %s CC API method %s on endpoint %s with the following "
-                        "result: %s"
-                    ),
-                    command_class.name,
-                    method_name,
-                    endpoint,
-                    result,
-                )
-            raise_exceptions_from_results(endpoints_list, results)
-
         # If an endpoint is provided, we assume the user wants to call the CC API on
         # that endpoint for all target nodes
         if (endpoint := service.data.get(const.ATTR_ENDPOINT)) is not None:
             await _async_invoke_cc_api(
-                {node.endpoints[endpoint] for node in service.data[const.ATTR_NODES]}
+                {node.endpoints[endpoint] for node in service.data[const.ATTR_NODES]},
+                command_class,
+                method_name,
+                *parameters,
             )
             return
 
@@ -723,4 +773,14 @@ class ZWaveServices:
                 node.endpoints[endpoint_idx if endpoint_idx is not None else 0]
             )
 
-        await _async_invoke_cc_api(endpoints)
+        await _async_invoke_cc_api(endpoints, command_class, method_name, *parameters)
+
+    async def async_refresh_notifications(self, service: ServiceCall) -> None:
+        """Refresh notifications on a node."""
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
+        notification_type: NotificationType = service.data[const.ATTR_NOTIFICATION_TYPE]
+        notification_event: int | None = service.data.get(const.ATTR_NOTIFICATION_EVENT)
+        param: dict[str, int] = {"notificationType": notification_type.value}
+        if notification_event is not None:
+            param["notificationEvent"] = notification_event
+        await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
