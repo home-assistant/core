@@ -219,10 +219,9 @@ async def test_irrigation_service(
 
 
 @pytest.mark.parametrize(
-    ("yaml_config", "config_entry_data"),
+    ("config_entry_data"),
     [
         (
-            {},
             {
                 "host": HOST,
                 "password": PASSWORD,
@@ -232,7 +231,7 @@ async def test_irrigation_service(
                     "1": "Garden Sprinkler",
                     "2": "Back Yard",
                 },
-            },
+            }
         )
     ],
 )

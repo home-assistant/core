@@ -17,7 +17,6 @@ from homeassistant.components.rainbird.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
@@ -80,12 +79,6 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def yaml_config() -> dict[str, Any]:
-    """Fixture for configuration.yaml."""
-    return {}
-
-
-@pytest.fixture
 async def config_entry_unique_id() -> str:
     """Fixture for serial number used in the config entry."""
     return SERIAL_NUMBER
@@ -125,17 +118,17 @@ async def add_config_entry(
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     platforms: list[str],
-    yaml_config: dict[str, Any],
 ) -> Generator[ComponentSetup, None, None]:
     """Fixture for setting up the component."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
 
         async def func() -> bool:
-            result = await async_setup_component(hass, DOMAIN, yaml_config)
+            await config_entry.async_setup(hass)
             await hass.async_block_till_done()
-            return result
+            return True
 
         yield func
 

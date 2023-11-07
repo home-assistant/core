@@ -22,9 +22,9 @@ from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 @pytest.mark.parametrize(
-    ("yaml_config", "config_entry_data", "initial_response"),
+    ("config_entry_data", "initial_response"),
     [
-        ({}, CONFIG_ENTRY_DATA, None),
+        (CONFIG_ENTRY_DATA, None),
     ],
     ids=["config_entry"],
 )
@@ -50,22 +50,19 @@ async def test_init_success(
 
 
 @pytest.mark.parametrize(
-    ("yaml_config", "config_entry_data", "responses", "config_entry_states"),
+    ("config_entry_data", "responses", "config_entry_states"),
     [
         (
-            {},
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
             [ConfigEntryState.SETUP_RETRY],
         ),
         (
-            {},
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
             [ConfigEntryState.SETUP_RETRY],
         ),
         (
-            {},
             CONFIG_ENTRY_DATA,
             [
                 mock_response(MODEL_AND_VERSION_RESPONSE),
@@ -74,7 +71,6 @@ async def test_init_success(
             [ConfigEntryState.SETUP_RETRY],
         ),
         (
-            {},
             CONFIG_ENTRY_DATA,
             [
                 mock_response(MODEL_AND_VERSION_RESPONSE),
