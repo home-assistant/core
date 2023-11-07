@@ -6,18 +6,17 @@ from http import HTTPStatus
 
 import pytest
 
-from homeassistant.components.rainbird import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
     CONFIG_ENTRY_DATA,
     MODEL_AND_VERSION_RESPONSE,
-    ComponentSetup,
     mock_response,
     mock_response_error,
 )
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
@@ -30,7 +29,7 @@ from tests.test_util.aiohttp import AiohttpClientMockResponse
 )
 async def test_init_success(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     initial_response: AiohttpClientMockResponse | None,
 ) -> None:
@@ -38,29 +37,26 @@ async def test_init_success(
     if initial_response:
         responses.insert(0, initial_response)
 
-    assert await setup_integration()
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entries[0].state is ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data", "responses", "config_entry_states"),
+    ("config_entry_data", "responses", "config_entry_state"),
     [
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
-            [ConfigEntryState.SETUP_RETRY],
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
-            [ConfigEntryState.SETUP_RETRY],
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -68,7 +64,7 @@ async def test_init_success(
                 mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
             ],
-            [ConfigEntryState.SETUP_RETRY],
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -76,7 +72,7 @@ async def test_init_success(
                 mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR),
             ],
-            [ConfigEntryState.SETUP_RETRY],
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
     ids=[
@@ -88,13 +84,10 @@ async def test_init_success(
 )
 async def test_communication_failure(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry_states: list[ConfigEntryState],
+    config_entry: MockConfigEntry,
+    config_entry_state: list[ConfigEntryState],
 ) -> None:
     """Test unable to talk to device on startup, which fails setup."""
 
-    assert await setup_integration()
-
-    assert [
-        entry.state for entry in hass.config_entries.async_entries(DOMAIN)
-    ] == config_entry_states
+    await config_entry.async_setup(hass)
+    assert config_entry.state == config_entry_state

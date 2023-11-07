@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -20,8 +19,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
-ComponentSetup = Callable[[], Awaitable[bool]]
 
 HOST = "example.com"
 URL = "http://example.com/stick"
@@ -115,22 +112,15 @@ async def add_config_entry(
         config_entry.add_to_hass(hass)
 
 
-@pytest.fixture
-async def setup_integration(
+@pytest.fixture(autouse=True)
+def setup_platforms(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     platforms: list[str],
-) -> Generator[ComponentSetup, None, None]:
-    """Fixture for setting up the component."""
+) -> None:
+    """Fixture for setting up the default platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
-
-        async def func() -> bool:
-            await config_entry.async_setup(hass)
-            await hass.async_block_till_done()
-            return True
-
-        yield func
+        yield
 
 
 def rainbird_response(data: str) -> bytes:
