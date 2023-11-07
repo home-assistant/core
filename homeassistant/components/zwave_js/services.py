@@ -469,9 +469,7 @@ class ZWaveServices:
                         vol.Required(const.ATTR_NOTIFICATION_TYPE): vol.All(
                             vol.Coerce(int), vol.Coerce(NotificationType)
                         ),
-                        vol.Optional(const.ATTR_NOTIFICATION_EVENT): vol.All(
-                            vol.Coerce(int)
-                        ),
+                        vol.Optional(const.ATTR_NOTIFICATION_EVENT): vol.Coerce(int),
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
