@@ -52,7 +52,7 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
     def __init__(
         self,
         hass: HomeAssistant,
-        LOGGER: logging.Logger,
+        logger: logging.Logger,
         client: Twitch,
         options: Mapping[str, Any],
     ) -> None:
