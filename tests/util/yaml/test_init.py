@@ -547,3 +547,36 @@ async def test_loading_actual_file_with_syntax(
             "fixtures", "bad.yaml.txt"
         )
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
+
+
+def test_string_annotated(try_both_loaders) -> None:
+    """Test strings are annotated with file + line."""
+    conf = (
+        "key1: str\n"
+        "key2:\n"
+        "  blah: blah\n"
+        "key3:\n"
+        " - 1\n"
+        " - 2\n"
+        " - 3\n"
+        "key4: yes\n"
+        "key5: 1\n"
+        "key6: 1.0\n"
+    )
+    expected_annotations = {
+        "key1": [("<file>", 0), ("<file>", 0)],
+        "key2": [("<file>", 1), ("<file>", 2)],
+        "key3": [("<file>", 3), ("<file>", 4)],
+        "key4": [("<file>", 7), (None, None)],
+        "key5": [("<file>", 8), (None, None)],
+        "key6": [("<file>", 9), (None, None)],
+    }
+    with io.StringIO(conf) as file:
+        doc = yaml_loader.parse_yaml(file)
+    for key, value in doc.items():
+        assert getattr(key, "__config_file__", None) == expected_annotations[key][0][0]
+        assert getattr(key, "__line__", None) == expected_annotations[key][0][1]
+        assert (
+            getattr(value, "__config_file__", None) == expected_annotations[key][1][0]
+        )
+        assert getattr(value, "__line__", None) == expected_annotations[key][1][1]
