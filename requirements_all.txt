@@ -785,7 +785,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.4.4
+evohome-async==0.4.6
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -1509,7 +1509,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.0.0
+pvo==2.1.0
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1699,7 +1699,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.1
+pyenphase==1.14.2
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2325,7 +2325,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.14
+reolink-aio==0.7.15
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2667,7 +2667,7 @@ uvcclient==0.11.0
 vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
-vehicle==2.0.0
+vehicle==2.2.0
 
 # homeassistant.components.velbus
 velbus-aio==2023.10.2
