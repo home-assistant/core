@@ -16,12 +16,9 @@ class MotionMountEntity(CoordinatorEntity[MotionMountCoordinator], Entity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        unique_id = format_mac(self.coordinator.mm.mac.hex())
+        unique_id = format_mac(coordinator.mm.mac.hex())
 
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self.coordinator.mm.name,
             manufacturer="Vogel's",
