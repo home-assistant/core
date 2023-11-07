@@ -85,11 +85,11 @@ async def _async_get_component_icons(
 class _IconsCache:
     """Cache for flattened icons."""
 
-    __slots__ = ("hass", "loaded", "cache")
+    __slots__ = ("_hass", "loaded", "cache")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
-        self.hass = hass
+        self._hass = hass
         self.loaded: set[str] = set()
         self.cache: dict[str, dict[str, Any]] = {}
 
@@ -115,13 +115,13 @@ class _IconsCache:
 
         integrations: dict[str, Integration] = {}
         domains = list({loaded.rpartition(".")[-1] for loaded in components})
-        ints_or_excs = await async_get_integrations(self.hass, domains)
+        ints_or_excs = await async_get_integrations(self._hass, domains)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
                 raise int_or_exc
             integrations[domain] = int_or_exc
 
-        icons = await _async_get_component_icons(self.hass, components, integrations)
+        icons = await _async_get_component_icons(self._hass, components, integrations)
 
         self._build_category_cache(components, icons)
 
