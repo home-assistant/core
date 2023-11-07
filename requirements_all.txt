@@ -1370,7 +1370,7 @@ onvif-zeep-async==3.1.12
 open-garage==0.2.0
 
 # homeassistant.components.open_meteo
-open-meteo==0.2.1
+open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
 openai==0.27.2
@@ -2785,7 +2785,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.9.24
+yt-dlp==2023.10.13
 
 # homeassistant.components.zamg
 zamg==0.3.0
