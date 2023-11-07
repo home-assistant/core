@@ -21,14 +21,17 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN
+from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
@@ -68,7 +71,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
-        invert_position=True,
+        invert_position=False,
         is_closed_fn=is_closed,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
@@ -144,7 +147,6 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
         device_class=CoverDeviceClass.SHUTTER,
-        invert_position=False,
         is_closed_fn=is_closed,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
@@ -228,6 +230,45 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     """Representation of an Overkiz Cover."""
 
     entity_description: OverkizCoverDescription
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_url, coordinator, description)
+
+        # Overkiz does support covers where only tilt commands are supported
+        # and HA sets by default open/close as supported feature which conflicts
+        supported_features = CoverEntityFeature(0)
+
+        if self.entity_description.open_command:
+            supported_features |= CoverEntityFeature.OPEN
+
+            if self.entity_description.stop_command:
+                supported_features |= CoverEntityFeature.STOP
+
+        if self.entity_description.close_command:
+            supported_features |= CoverEntityFeature.CLOSE
+
+        if self.entity_description.open_tilt_command:
+            supported_features |= CoverEntityFeature.OPEN_TILT
+
+            if self.entity_description.stop_tilt_command:
+                supported_features |= CoverEntityFeature.STOP_TILT
+
+        if self.entity_description.close_tilt_command:
+            supported_features |= CoverEntityFeature.CLOSE_TILT
+
+        if self.entity_description.set_tilt_position_command:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        if self.entity_description.set_position_command:
+            supported_features |= CoverEntityFeature.SET_POSITION
+
+        self._attr_supported_features = supported_features
 
     @property
     def is_closed(self) -> bool | None:
