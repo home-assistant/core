@@ -6149,6 +6149,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "v2c": {
+      "name": "V2C",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "vallox": {
       "name": "Vallox",
       "integration_type": "hub",
