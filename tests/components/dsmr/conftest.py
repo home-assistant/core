@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from dsmr_parser.clients.protocol import DSMRProtocol
 from dsmr_parser.clients.rfxtrx_protocol import RFXtrxDSMRProtocol
 from dsmr_parser.obis_references import (
+    BELGIUM_EQUIPMENT_IDENTIFIER,
     EQUIPMENT_IDENTIFIER,
     EQUIPMENT_IDENTIFIER_GAS,
     LUXEMBOURG_EQUIPMENT_IDENTIFIER,
@@ -81,6 +82,15 @@ async def dsmr_connection_send_validate_fixture(hass):
 
     async def connection_factory(*args, **kwargs):
         """Return mocked out Asyncio classes."""
+        if args[1] == "5B":
+            protocol.telegram = {
+                BELGIUM_EQUIPMENT_IDENTIFIER: CosemObject(
+                    BELGIUM_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
+                ),
+                EQUIPMENT_IDENTIFIER_GAS: CosemObject(
+                    EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
+                ),
+            }
         if args[1] == "5L":
             protocol.telegram = {
                 LUXEMBOURG_EQUIPMENT_IDENTIFIER: CosemObject(
