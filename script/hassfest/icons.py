@@ -25,23 +25,23 @@ def icon_value_validator(value: Any) -> str:
 
 def icon_schema(integration_type: str) -> vol.Schema:
     """Create a icon schema."""
+
+    state_validator = cv.schema_with_slug_keys(
+        icon_value_validator,
+        slug_validator=translation_key_validator,
+    )
+
     if integration_type == "entity":
         return vol.Schema(
             {
-                vol.Optional("entity_component"): cv.schema_with_slug_keys(
+                vol.Required("entity_component"): cv.schema_with_slug_keys(
                     {
                         vol.Required("icon"): str,
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            icon_value_validator,
-                            slug_validator=translation_key_validator,
-                        ),
+                        vol.Optional("state"): state_validator,
                         vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                             {
                                 vol.Required("icon"): str,
-                                vol.Required("state"): cv.schema_with_slug_keys(
-                                    icon_value_validator,
-                                    slug_validator=translation_key_validator,
-                                ),
+                                vol.Required("state"): state_validator,
                             },
                             slug_validator=translation_key_validator,
                         ),
@@ -52,21 +52,15 @@ def icon_schema(integration_type: str) -> vol.Schema:
         )
     return vol.Schema(
         {
-            vol.Optional("entity"): cv.schema_with_slug_keys(
+            vol.Required("entity"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
                     {
                         vol.Optional("icon"): icon_value_validator,
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            icon_value_validator,
-                            slug_validator=translation_key_validator,
-                        ),
+                        vol.Optional("state"): state_validator,
                         vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                             {
                                 vol.Optional("icon"): icon_value_validator,
-                                vol.Optional("state"): cv.schema_with_slug_keys(
-                                    icon_value_validator,
-                                    slug_validator=translation_key_validator,
-                                ),
+                                vol.Optional("state"): state_validator,
                             },
                             slug_validator=translation_key_validator,
                         ),

@@ -167,7 +167,7 @@ async def async_get_icons(
     """
     lock = hass.data.setdefault(ICON_LOAD_LOCK, asyncio.Lock())
 
-    if integrations is not None:
+    if integrations:
         components = set(integrations)
     else:
         components = set(hass.config.components)
