@@ -36,10 +36,6 @@ class RoborockEntity(Entity):
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
-        if attribute not in self._api.cache:
-            raise HomeAssistantError(
-                f"Attempted to get {attribute.name} from the cache - but it does not exist."
-            )
         return self._api.cache[attribute]
 
     async def send(
