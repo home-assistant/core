@@ -7,8 +7,11 @@ from pymelcloud import DEVICE_TYPE_ATW, AtwDevice
 from pymelcloud.atw_device import (
     PROPERTY_OPERATION_MODE,
     PROPERTY_TARGET_TANK_TEMPERATURE,
+    PROPERTY_ZONE_1_TARGET_HEAT_FLOW_TEMPERATURE,
+    PROPERTY_ZONE_1_TARGET_TEMPERATURE,
 )
 from pymelcloud.device import PROPERTY_POWER
+import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     DEFAULT_MAX_TEMP,
@@ -19,10 +22,17 @@ from homeassistant.components.water_heater import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MelCloudDevice
-from .const import ATTR_STATUS
+from .const import (
+    ATTR_STATUS,
+    CONF_ZONE_1_TARGET_HEAT_FLOW_TEMPERATURE,
+    CONF_ZONE_1_TARGET_HEAT_TEMPERATURE,
+    SERVICE_SET_ZONE_1_TARGET_HEAT_FLOW_TEMPERATURE,
+    SERVICE_SET_ZONE_1_TARGET_HEAT_TEMPERATURE,
+)
 
 
 async def async_setup_entry(
@@ -36,6 +46,27 @@ async def async_setup_entry(
             for mel_device in mel_devices[DEVICE_TYPE_ATW]
         ],
         True,
+    )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_ZONE_1_TARGET_HEAT_TEMPERATURE,
+        {
+            vol.Required(CONF_ZONE_1_TARGET_HEAT_TEMPERATURE): vol.All(
+                vol.Coerce(int), vol.Range(min=10, max=30)
+            )
+        },
+        "async_set_zone_1_target_heat_temperature",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_ZONE_1_TARGET_HEAT_FLOW_TEMPERATURE,
+        {
+            vol.Required(CONF_ZONE_1_TARGET_HEAT_FLOW_TEMPERATURE): vol.All(
+                vol.Coerce(int), vol.Range(min=25, max=60)
+            )
+        },
+        "async_set_zone_1_target_heat_flow_temperature",
     )
 
 
@@ -123,3 +154,15 @@ class AtwWaterHeater(WaterHeaterEntity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.target_tank_temperature_max or DEFAULT_MAX_TEMP
+
+    async def async_set_zone_1_target_heat_temperature(self, temperature: int) -> None:
+        """Set zone 1 target heat temperature."""
+        await self._device.set({PROPERTY_ZONE_1_TARGET_TEMPERATURE: temperature})
+
+    async def async_set_zone_1_target_heat_flow_temperature(
+        self, temperature: int
+    ) -> None:
+        """Set zone 1 target heat flow temperature."""
+        await self._device.set(
+            {PROPERTY_ZONE_1_TARGET_HEAT_FLOW_TEMPERATURE: temperature}
+        )
