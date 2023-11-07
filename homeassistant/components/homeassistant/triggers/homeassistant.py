@@ -1,11 +1,7 @@
 """Offer Home Assistant core automation rules."""
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_EVENT,
-    CONF_PLATFORM,
-    EVENT_HOMEASSISTANT_STOP_PENDING,
-)
+from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOPPING
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -51,9 +47,7 @@ async def async_attach_trigger(
                 event.context,
             )
 
-        return hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP_PENDING, hass_shutdown
-        )
+        return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOPPING, hass_shutdown)
 
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.

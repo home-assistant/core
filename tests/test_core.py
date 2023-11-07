@@ -28,7 +28,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_STOP_PENDING,
+    EVENT_HOMEASSISTANT_STOPPING,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -387,7 +387,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
 
 async def test_stage_shutdown(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff."""
-    test_stop_pending = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP_PENDING)
+    test_stop_pending = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
     test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
     test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
@@ -404,7 +404,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff with exit code checks."""
-    test_stop_pending = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP_PENDING)
+    test_stop_pending = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
     test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
     test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
@@ -429,7 +429,7 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
         if hass.exit_code == expected_exit_code:
             event_call_counters[3] += 1
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP_PENDING, async_on_stop_pending)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOPPING, async_on_stop_pending)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, async_on_final_write)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_on_close)

@@ -63,7 +63,7 @@ from .const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_STOP_PENDING,
+    EVENT_HOMEASSISTANT_STOPPING,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -822,7 +822,7 @@ class HomeAssistant:
 
         # stage 1
         self.state = CoreState.stopping
-        self.bus.async_fire(EVENT_HOMEASSISTANT_STOP_PENDING)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STOPPING)
         try:
             async with self.timeout.async_timeout(STOP_PENDING_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
