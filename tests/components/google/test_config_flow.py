@@ -37,7 +37,7 @@ from homeassistant.util.dt import utcnow
 from .conftest import CLIENT_ID, CLIENT_SECRET, EMAIL_ADDRESS, YieldFixture
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AioHttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 CODE_CHECK_INTERVAL = 1
@@ -649,7 +649,7 @@ async def test_web_auth_compatibility(
     hass: HomeAssistant,
     current_request_with_host: None,
     mock_code_flow: Mock,
-    aioclient_mock: AioHttpClientMocker,
+    aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test that we can callback to web auth tokens."""
@@ -728,7 +728,7 @@ async def test_web_reauth_flow(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
-    aioclient_mock: AioHttpClientMocker,
+    aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,
     entry_data: dict[str, Any],
 ) -> None:
