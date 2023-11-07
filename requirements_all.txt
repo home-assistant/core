@@ -542,7 +542,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.2
+blinkpy==0.22.3
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -2301,7 +2301,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==0.1.1
+radios==0.2.0
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0

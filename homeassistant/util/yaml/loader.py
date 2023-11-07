@@ -240,7 +240,7 @@ def _add_reference(  # type: ignore[no-untyped-def]
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
     setattr(obj, "__config_file__", loader.get_name())
-    setattr(obj, "__line__", node.start_mark.line)
+    setattr(obj, "__line__", node.start_mark.line + 1)
     return obj
 
 
