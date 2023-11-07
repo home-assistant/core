@@ -5482,6 +5482,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sveriges_radio_traffic": {
+      "name": "Sveriges Radio Traffic",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "swiss_hydrological_data": {
       "name": "Swiss Hydrological Data",
       "integration_type": "hub",
