@@ -241,7 +241,9 @@ async def test_expired_after_exchange(
 ) -> None:
     """Test credential exchange expires."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -276,7 +278,6 @@ async def test_exchange_error(
         hass,
         DOMAIN,
         ClientCredential(CLIENT_ID, CLIENT_SECRET),
-        DOMAIN,
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -344,7 +345,7 @@ async def test_duplicate_config_entries(
 ) -> None:
     """Test that the same account cannot be setup twice."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     # Load a config entry
@@ -386,7 +387,7 @@ async def test_multiple_config_entries(
 ) -> None:
     """Test that multiple config entries can be set at once."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     # Load a config entry
@@ -483,7 +484,6 @@ async def test_reauth_flow(
         hass,
         DOMAIN,
         ClientCredential(CLIENT_ID, CLIENT_SECRET),
-        DOMAIN,
     )
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -559,7 +559,9 @@ async def test_calendar_lookup_failure(
 ) -> None:
     """Test successful config flow and title fetch fails gracefully."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "device_auth"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -654,7 +656,9 @@ async def test_web_auth_compatibility(
 ) -> None:
     """Test that we can callback to web auth tokens."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     with patch(
@@ -743,10 +747,7 @@ async def test_web_reauth_flow(
     )
     config_entry.add_to_hass(hass)
     await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-        DOMAIN,
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     entries = hass.config_entries.async_entries(DOMAIN)

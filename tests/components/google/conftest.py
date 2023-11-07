@@ -353,7 +353,6 @@ def component_setup(
             hass,
             DOMAIN,
             ClientCredential("client-id", "client-secret"),
-            DOMAIN,
         )
         config_entry.add_to_hass(hass)
         return await hass.config_entries.async_setup(config_entry.entry_id)
