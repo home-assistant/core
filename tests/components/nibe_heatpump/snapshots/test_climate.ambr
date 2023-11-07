@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][1. initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][2. idle]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
