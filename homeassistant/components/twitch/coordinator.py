@@ -59,7 +59,7 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]
         """Initialize coordinator."""
         super().__init__(
             hass,
-            LOGGER,
+            logger,
             # Name of the data. For logging purposes.
             name=DOMAIN,
             # Polling interval. Will only be polled if there are subscribers.
