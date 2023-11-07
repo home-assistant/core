@@ -329,7 +329,6 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
-
         if command := self.entity_description.open_command:
             if self.is_running(command):
                 return True
@@ -344,7 +343,6 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is opening or not."""
-
         if command := self.entity_description.close_command:
             if self.is_running(command):
                 return True
