@@ -71,9 +71,9 @@ MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
 def valid_text_size_configuration(config: ConfigType) -> ConfigType:
     """Validate that the text length configuration is valid, throws if it isn't."""
     if config[CONF_MIN] >= config[CONF_MAX]:
-        raise ValueError("text length min must be >= max")
+        raise vol.Invalid("text length min must be >= max")
     if config[CONF_MAX] > MAX_LENGTH_STATE_STATE:
-        raise ValueError(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
+        raise vol.Invalid(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
 
     return config
 
