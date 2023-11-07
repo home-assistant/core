@@ -1611,9 +1611,6 @@ python-matter-server==4.0.0
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
 
-# homeassistant.components.myq
-python-myq==3.1.13
-
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
