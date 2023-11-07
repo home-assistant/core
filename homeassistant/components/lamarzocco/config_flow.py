@@ -128,7 +128,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Let user select machine to connect to."""
         errors = {}
-        if user_input is not None:
+        if user_input:
             serial_number = user_input[CONF_MACHINE]
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
