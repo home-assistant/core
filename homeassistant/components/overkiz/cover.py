@@ -240,6 +240,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """Initialize the device."""
         super().__init__(device_url, coordinator, description)
 
+        # Use device url as unique ID for backwards compatibility
+        self._attr_unique_id = self.device.device_url
+
         # Overkiz does support covers where only tilt commands are supported
         # and HA sets by default open/close as supported feature which conflicts
         supported_features = CoverEntityFeature(0)
