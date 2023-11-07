@@ -37,7 +37,7 @@ MACHINE_DATA = {
 }
 
 DISCOVERED_INFO = {
-    CONF_NAME: "GS3_01234",
+    CONF_NAME: "GS3_GS01234",
     CONF_MAC: "aa:bb:cc:dd:ee:ff",
 }
 
@@ -56,8 +56,12 @@ MACHINE_SELECTION = {
     CONF_HOST: "192.168.1.1",
 }
 
+HOST_SELECTION = {
+    CONF_HOST: "192.168.1.1",
+}
+
 LM_SERVICE_INFO = BluetoothServiceInfo(
-    name="GS3_01234",
+    name="GS3_GS01234",
     address="aa:bb:cc:dd:ee:ff",
     rssi=-63,
     manufacturer_data={},

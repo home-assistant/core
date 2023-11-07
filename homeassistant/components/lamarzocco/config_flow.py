@@ -65,17 +65,17 @@ async def get_machines(
         lm = LaMarzoccoClient(hass, data)
         machines = await lm.get_all_machines(data)
 
-        if not machines:
-            raise NoMachines
-
-        return machines
-
     except AuthFail:
         _LOGGER.error("Server rejected login credentials")
         raise InvalidAuth
     except RequestNotSuccessful:
         _LOGGER.error("Failed to connect to server")
         raise CannotConnect
+
+    if not machines:
+        raise NoMachines
+
+    return machines
 
 
 class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -116,6 +116,15 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_machines"
 
             if not errors:
+                if self._discovered:
+                    serials = [machine[0] for machine in self._machines]
+                    if self._discovered[CONF_MACHINE] not in serials:
+                        errors["base"] = "machine_not_found"
+                    else:
+                        self._config = data
+                        return await self.async_step_host_selection()
+
+            if not errors:
                 self._config = data
                 return await self.async_step_machine_selection()
 
@@ -123,11 +132,37 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=LOGIN_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_host_selection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Machine was discovered, only enter host."""
+        errors: dict[str, str] = {}
+        if user_input:
+            # if host is set, check if we can connect to it
+            if user_input.get(CONF_HOST):
+                lm = LaMarzoccoClient(self.hass, self._config)
+                if not await lm.check_local_connection(
+                    credentials=self._config,
+                    host=user_input[CONF_HOST],
+                    serial=self._discovered[CONF_MACHINE],
+                ):
+                    errors[CONF_HOST] = "cannot_connect"
+            if not errors:
+                return self.async_create_entry(
+                    title=self._discovered[CONF_MACHINE],
+                    data=self._config | user_input,
+                )
+        return self.async_show_form(
+            step_id="host_selection",
+            data_schema=vol.Schema({vol.Optional(CONF_HOST): cv.string}),
+            errors=errors,
+        )
+
     async def async_step_machine_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Let user select machine to connect to."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input:
             serial_number = user_input[CONF_MACHINE]
             await self.async_set_unique_id(serial_number)
@@ -191,7 +226,10 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered[CONF_NAME] = name
         self._discovered[CONF_MAC] = address
 
-        await self.async_set_unique_id(address)
+        serial = name.split("_")[1]
+        self._discovered[CONF_MACHINE] = serial
+
+        await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
 
         return await self.async_step_user()
