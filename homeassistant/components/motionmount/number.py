@@ -30,10 +30,10 @@ async def async_setup_entry(
 class MotionMountExtension(MotionMountEntity, NumberEntity):
     """The target extension position of a MotionMount."""
 
-    _attr_name = "Extension"
     _attr_native_max_value = 100
     _attr_native_min_value = 0
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_translation_key = "motionmount_extension"
 
     def __init__(self, coordinator: MotionMountCoordinator, unique_id: str) -> None:
         """Initialize Extension number."""
@@ -48,16 +48,16 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for extension."""
-        await self.coordinator.mm.set_extension(value)
+        await self.coordinator.mm.set_extension(int(value))
 
 
 class MotionMountTurn(MotionMountEntity, NumberEntity):
     """The target turn position of a MotionMount."""
 
-    _attr_name = "Turn"
     _attr_native_max_value = 100
     _attr_native_min_value = -100
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_translation_key = "motionmount_turn"
 
     def __init__(self, coordinator: MotionMountCoordinator, unique_id: str) -> None:
         """Initialize Turn number."""
@@ -72,4 +72,4 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
-        await self.coordinator.mm.set_turn(value * -1)
+        await self.coordinator.mm.set_turn(int(value * -1))

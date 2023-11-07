@@ -23,5 +23,15 @@
       "not_connected": "Failed to connect.",
       "invalid_response": "Failed to connect due to an invalid response from the MotionMount."
     }
+  },
+  "entity": {
+    "number": {
+      "motionmount_extension": {
+        "name": "Extension"
+      },
+      "motionmount_turn": {
+        "name": "Turn"
+      }
+    }
   }
 }
