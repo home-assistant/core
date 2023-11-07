@@ -371,6 +371,16 @@ def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     return _add_reference(obj, loader, node)
 
 
+def _handle_scalar_tag(
+    loader: LoaderType, node: yaml.nodes.ScalarNode
+) -> str | int | float | None:
+    """Add line number and file name to Load YAML sequence."""
+    obj = loader.construct_scalar(node)
+    if not isinstance(obj, str):
+        return obj
+    return _add_reference(obj, loader, node)
+
+
 def _env_var_yaml(loader: LoaderType, node: yaml.nodes.Node) -> str:
     """Load environment variables and embed it into the configuration YAML."""
     args = node.value.split()
@@ -400,6 +410,7 @@ def add_constructor(tag: Any, constructor: Any) -> None:
 
 add_constructor("!include", _include_yaml)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _handle_mapping_tag)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG, _handle_scalar_tag)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 add_constructor("!env_var", _env_var_yaml)
 add_constructor("!secret", secret_yaml)
