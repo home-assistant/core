@@ -124,7 +124,6 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         self._robot_serial: str = self.robot.serial
         self._attr_unique_id: str = self.robot.serial
         self._status_state: str | None = None
-        self._clean_state: str | None = None
         self._state: dict[str, Any] | None = None
         self._clean_time_start: str | None = None
         self._clean_time_stop: str | None = None
@@ -169,23 +168,23 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             robot_alert = None
         if self._state["state"] == 1:
             if self._state["details"]["isCharging"]:
-                self._clean_state = STATE_DOCKED
+                self._attr_state = STATE_DOCKED
                 self._status_state = "Charging"
             elif (
                 self._state["details"]["isDocked"]
                 and not self._state["details"]["isCharging"]
             ):
-                self._clean_state = STATE_DOCKED
+                self._attr_state = STATE_DOCKED
                 self._status_state = "Docked"
             else:
-                self._clean_state = STATE_IDLE
+                self._attr_state = STATE_IDLE
                 self._status_state = "Stopped"
 
             if robot_alert is not None:
                 self._status_state = robot_alert
         elif self._state["state"] == 2:
             if robot_alert is None:
-                self._clean_state = STATE_CLEANING
+                self._attr_state = STATE_CLEANING
                 self._status_state = (
                     f"{MODE.get(self._state['cleaning']['mode'])} "
                     f"{ACTION.get(self._state['action'])}"
@@ -200,10 +199,10 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             else:
                 self._status_state = robot_alert
         elif self._state["state"] == 3:
-            self._clean_state = STATE_PAUSED
+            self._attr_state = STATE_PAUSED
             self._status_state = "Paused"
         elif self._state["state"] == 4:
-            self._clean_state = STATE_ERROR
+            self._attr_state = STATE_ERROR
             self._status_state = ERRORS.get(self._state["error"])
 
         self._attr_battery_level = self._state["details"]["charge"]
@@ -262,11 +261,6 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     )
 
     @property
-    def state(self) -> str | None:
-        """Return the status of the vacuum cleaner."""
-        return self._clean_state
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
@@ -299,7 +293,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        device_info = super().device_info
+        device_info = self._attr_device_info
         if self._robot_stats:
             device_info["manufacturer"] = self._robot_stats["battery"]["vendor"]
             device_info["model"] = self._robot_stats["model"]
@@ -331,9 +325,9 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         try:
-            if self._clean_state == STATE_CLEANING:
+            if self._attr_state == STATE_CLEANING:
                 self.robot.pause_cleaning()
-            self._clean_state = STATE_RETURNING
+            self._attr_state = STATE_RETURNING
             self.robot.send_to_base()
         except NeatoRobotException as ex:
             _LOGGER.error(
@@ -383,7 +377,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 return
             _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
 
-        self._clean_state = STATE_CLEANING
+        self._attr_state = STATE_CLEANING
         try:
             self.robot.start_cleaning(mode, navigation, category, boundary_id)
         except NeatoRobotException as ex:

@@ -35,7 +35,8 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
             LOGGER,
             name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             # use the default scan interval and add a random number of seconds to avoid timeouts when
-            # the BSB-Lan device is already/still busy retrieving data, e.g. for MQTT or internal logging.
+            # the BSB-Lan device is already/still busy retrieving data,
+            # e.g. for MQTT or internal logging.
             update_interval=SCAN_INTERVAL + timedelta(seconds=randint(1, 8)),
         )
 
@@ -50,5 +51,6 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
             return await self.client.state()
         except BSBLANConnectionError as err:
             raise UpdateFailed(
-                f"Error while establishing connection with BSB-Lan device at {self.config_entry.data[CONF_HOST]}"
+                f"Error while establishing connection with "
+                f"BSB-Lan device at {self.config_entry.data[CONF_HOST]}"
             ) from err

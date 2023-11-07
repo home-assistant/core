@@ -25,6 +25,7 @@ from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -58,6 +59,7 @@ from .const import (
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
+    ATTR_QUIRK_ID,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
@@ -134,6 +136,7 @@ class ZHADevice(LogMixin):
             f"{self._zigpy_device.__class__.__module__}."
             f"{self._zigpy_device.__class__.__name__}"
         )
+        self.quirk_id = getattr(self._zigpy_device, ATTR_QUIRK_ID, None)
 
         if self.is_mains_powered:
             self.consider_unavailable_time = async_get_zha_config_value(
@@ -420,7 +423,9 @@ class ZHADevice(LogMixin):
         """Update device sw version."""
         if self.device_id is None:
             return
-        self._zha_gateway.ha_device_registry.async_update_device(
+
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_update_device(
             self.device_id, sw_version=f"0x{sw_version:08x}"
         )
 
@@ -534,6 +539,7 @@ class ZHADevice(LogMixin):
             ATTR_NAME: self.name or ieee,
             ATTR_QUIRK_APPLIED: self.quirk_applied,
             ATTR_QUIRK_CLASS: self.quirk_class,
+            ATTR_QUIRK_ID: self.quirk_id,
             ATTR_MANUFACTURER_CODE: self.manufacturer_code,
             ATTR_POWER_SOURCE: self.power_source,
             ATTR_LQI: self.lqi,
@@ -658,7 +664,8 @@ class ZHADevice(LogMixin):
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names
 
-        reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
+        device_registry = dr.async_get(self.hass)
+        reg_device = device_registry.async_get(self.device_id)
         if reg_device is not None:
             device_info["user_given_name"] = reg_device.name_by_user
             device_info["device_reg_id"] = reg_device.id

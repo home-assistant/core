@@ -1,6 +1,7 @@
 """Tests for ZHA config flow."""
 import copy
 from datetime import timedelta
+from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
@@ -10,6 +11,7 @@ import serial.tools.list_ports
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+import zigpy.device
 from zigpy.exceptions import NetworkNotFormed
 import zigpy.types
 
@@ -141,8 +143,8 @@ def com_port(device="/dev/ttyUSB1234"):
 async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.200",
-        addresses=["192.168.1.200"],
+        ip_address=ip_address("192.168.1.200"),
+        ip_addresses=[ip_address("192.168.1.200")],
         hostname="tube._tube_zb_gw._tcp.local.",
         name="tube",
         port=6053,
@@ -191,8 +193,8 @@ async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
 async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> None:
     """Test zeroconf flow -- zigate radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.200",
-        addresses=["192.168.1.200"],
+        ip_address=ip_address("192.168.1.200"),
+        ip_addresses=[ip_address("192.168.1.200")],
         hostname="_zigate-zigbee-gateway._tcp.local.",
         name="any",
         port=1234,
@@ -246,8 +248,8 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> Non
 async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- efr32 radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.200",
-        addresses=["192.168.1.200"],
+        ip_address=ip_address("192.168.1.200"),
+        ip_addresses=[ip_address("192.168.1.200")],
         hostname="efr32._esphomelib._tcp.local.",
         name="efr32",
         port=1234,
@@ -309,8 +311,8 @@ async def test_discovery_via_zeroconf_ip_change(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.22",
-        addresses=["192.168.1.22"],
+        ip_address=ip_address("192.168.1.22"),
+        ip_addresses=[ip_address("192.168.1.22")],
         hostname="tube_zb_gw_cc2652p2_poe.local.",
         name="mock_name",
         port=6053,
@@ -342,8 +344,8 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> 
     entry.add_to_hass(hass)
 
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.22",
-        addresses=["192.168.1.22"],
+        ip_address=ip_address("192.168.1.22"),
+        ip_addresses=[ip_address("192.168.1.22")],
         hostname="tube_zb_gw_cc2652p2_poe.local.",
         name="mock_name",
         port=6053,
@@ -364,8 +366,8 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> 
 async def test_discovery_confirm_final_abort_if_entries(hass: HomeAssistant) -> None:
     """Test discovery aborts if ZHA was set up after the confirmation dialog is shown."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.200",
-        addresses=["192.168.1.200"],
+        ip_address=ip_address("192.168.1.200"),
+        ip_addresses=[ip_address("192.168.1.200")],
         hostname="tube._tube_zb_gw._tcp.local.",
         name="tube",
         port=6053,
@@ -697,8 +699,8 @@ async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> Non
 async def test_discovery_already_setup(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.200",
-        addresses=["192.168.1.200"],
+        ip_address=ip_address("192.168.1.200"),
+        ip_addresses=[ip_address("192.168.1.200")],
         hostname="_tube_zb_gw._tcp.local.",
         name="mock_name",
         port=6053,
@@ -1174,6 +1176,7 @@ async def test_onboarding_auto_formation_new_hardware(
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",

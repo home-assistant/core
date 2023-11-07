@@ -1,4 +1,5 @@
 """Define tests for the OpenUV config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -157,8 +158,8 @@ async def test_step_homekit_zeroconf_ip_already_exists(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -185,8 +186,8 @@ async def test_step_homekit_zeroconf_ip_change(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.2",
-                addresses=["192.168.1.2"],
+                ip_address=ip_address("192.168.1.2"),
+                ip_addresses=[ip_address("192.168.1.2")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -214,8 +215,8 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -264,8 +265,8 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -284,8 +285,8 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

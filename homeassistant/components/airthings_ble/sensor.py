@@ -144,7 +144,8 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
             not matching_reg_entry or "(" not in entry.unique_id
         ):
             matching_reg_entry = entry
-    if not matching_reg_entry:
+    if not matching_reg_entry or matching_reg_entry.unique_id == new_unique_id:
+        # Already has the newest unique id format
         return
     entity_id = matching_reg_entry.entity_id
     ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
@@ -223,6 +224,14 @@ class AirthingsSensor(
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
             model=airthings_device.model,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Check if device and sensor is available in data."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data.sensors
         )
 
     @property

@@ -195,6 +195,8 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
 
+        self._attr_assumed_state = self._template is None
+
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
@@ -467,8 +469,3 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None
-
-    @property
-    def assumed_state(self) -> bool:
-        """State is assumed, if no template given."""
-        return self._template is None

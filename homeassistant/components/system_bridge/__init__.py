@@ -9,18 +9,20 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.keyboard_key import KeyboardKey
-from systembridgeconnector.models.keyboard_text import KeyboardText
-from systembridgeconnector.models.open_path import OpenPath
-from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
+from systembridgemodels.keyboard_key import KeyboardKey
+from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.open_path import OpenPath
+from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COMMAND,
+    CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_NAME,
     CONF_PATH,
     CONF_PORT,
     CONF_URL,
@@ -28,10 +30,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -40,7 +44,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 CONF_BRIDGE = "bridge"
@@ -142,7 +149,24 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Set up all platforms except notify
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
+
+    # Set up notify platform
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {
+                CONF_NAME: f"{DOMAIN}_{coordinator.data.system.hostname}",
+                CONF_ENTITY_ID: entry.entry_id,
+            },
+            hass.data[DOMAIN][entry.entry_id],
+        )
+    )
 
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
@@ -277,7 +301,9 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
     if unload_ok:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             entry.entry_id
@@ -302,43 +328,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
-    """Defines a base System Bridge entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: SystemBridgeDataUpdateCoordinator,
-        api_port: int,
-        key: str,
-    ) -> None:
-        """Initialize the System Bridge entity."""
-        super().__init__(coordinator)
-
-        self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}"
-        self._configuration_url = (
-            f"http://{self._hostname}:{api_port}/app/settings.html"
-        )
-        self._mac_address = coordinator.data.system.mac_address
-        self._uuid = coordinator.data.system.uuid
-        self._version = coordinator.data.system.version
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this System Bridge instance."""
-        return DeviceInfo(
-            configuration_url=self._configuration_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
-            identifiers={(DOMAIN, self._uuid)},
-            name=self._hostname,
-            sw_version=self._version,
-        )

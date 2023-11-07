@@ -2,7 +2,7 @@
 import logging
 
 from aioruckus import AjaxSession
-from aioruckus.exceptions import AuthenticationError
+from aioruckus.exceptions import AuthenticationError, SchemaError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -31,16 +31,18 @@ _LOGGER = logging.getLogger(__package__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ruckus Unleashed from a config entry."""
 
+    ruckus = AjaxSession.async_create(
+        entry.data[CONF_HOST],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+    )
     try:
-        ruckus = AjaxSession.async_create(
-            entry.data[CONF_HOST],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
         await ruckus.login()
-    except (ConnectionRefusedError, ConnectionError) as conerr:
+    except (ConnectionError, SchemaError) as conerr:
+        await ruckus.close()
         raise ConfigEntryNotReady from conerr
     except AuthenticationError as autherr:
+        await ruckus.close()
         raise ConfigEntryAuthFailed from autherr
 
     coordinator = RuckusUnleashedDataUpdateCoordinator(hass, ruckus=ruckus)
@@ -84,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         for listener in hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENERS]:
             listener()
-            await hass.data[DOMAIN][entry.entry_id][COORDINATOR].ruckus.close()
+        await hass.data[DOMAIN][entry.entry_id][COORDINATOR].ruckus.close()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

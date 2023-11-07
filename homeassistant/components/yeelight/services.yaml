@@ -25,7 +25,7 @@ set_color_scene:
     rgb_color:
       example: "[255, 100, 100]"
       selector:
-        object:
+        color_rgb:
     brightness:
       selector:
         number:
