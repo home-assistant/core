@@ -1660,6 +1660,9 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.3.8
 
+# homeassistant.components.v2c
+pytrydan==0.1.2
+
 # homeassistant.components.usb
 pyudev==0.23.2
 
