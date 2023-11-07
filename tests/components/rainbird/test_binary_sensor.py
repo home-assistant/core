@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
     RAIN_SENSOR_OFF,
     RAIN_SENSOR_ON,
     SERIAL_NUMBER,
@@ -87,9 +88,9 @@ async def test_unique_id(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id"),
+    ("config_entry_data", "config_entry_unique_id"),
     [
-        (None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None),
     ],
 )
 async def test_no_unique_id(

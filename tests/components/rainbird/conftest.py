@@ -79,6 +79,11 @@ CONFIG = {
     }
 }
 
+CONFIG_ENTRY_DATA_OLD_FORMAT = {
+    "host": HOST,
+    "password": PASSWORD,
+    "serial_number": SERIAL_NUMBER,
+}
 CONFIG_ENTRY_DATA = {
     "host": HOST,
     "password": PASSWORD,

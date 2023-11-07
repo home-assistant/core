@@ -17,7 +17,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import mock_response, mock_response_error
+from .conftest import (
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
+    mock_response,
+    mock_response_error,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
@@ -280,9 +284,9 @@ async def test_program_schedule_disabled(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id"),
+    ("config_entry_data", "config_entry_unique_id"),
     [
-        (None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None),
     ],
 )
 async def test_no_unique_id(

@@ -64,16 +64,21 @@ async def _fix_unique_id(
     hass: HomeAssistant, controller: AsyncRainbirdController, entry: ConfigEntry
 ):
     """Update the config entry with a unique id based on the mac address."""
-    try:
-        wifi_params = await controller.get_wifi_params()
-    except RainbirdApiException as err:
-        _LOGGER.warning("Unable to fix missing unique id: %s", err)
+    if not (mac_address := entry.data.get(CONF_MAC)):
+        try:
+            wifi_params = await controller.get_wifi_params()
+        except RainbirdApiException as err:
+            _LOGGER.warning("Unable to fix missing unique id: %s", err)
+            return
+
+        if (mac_address := wifi_params.mac_address) is None:
+            _LOGGER.warning("Unable to fix missing unique id (mac address was None)")
+            return
+
+    new_unique_id = format_mac(mac_address)
+    if entry.unique_id == new_unique_id and CONF_MAC in entry.data:
         return
 
-    if (mac_address := wifi_params.mac_address) is None:
-        _LOGGER.warning("Unable to fix missing unique id (mac address was None)")
-        return
-    new_unique_id = format_mac(mac_address)
     entries = hass.config_entries.async_entries(DOMAIN)
     for existing_entry in entries:
         if existing_entry.unique_id == new_unique_id:

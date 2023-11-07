@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     ACK_ECHO,
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
     RAIN_DELAY,
     RAIN_DELAY_OFF,
     SERIAL_NUMBER,
@@ -162,9 +163,9 @@ async def test_set_value_error(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id"),
+    ("config_entry_data", "config_entry_unique_id"),
     [
-        (None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None),
     ],
 )
 async def test_no_unique_id(

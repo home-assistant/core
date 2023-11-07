@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import (
     CONFIG_ENTRY_DATA,
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
     MAC_ADDRESS,
     MAC_ADDRESS_UNIQUE_ID,
     MODEL_AND_VERSION_RESPONSE,
@@ -142,19 +143,19 @@ async def test_fix_unique_id(
     [
         (
             None,
-            CONFIG_ENTRY_DATA,
+            CONFIG_ENTRY_DATA_OLD_FORMAT,
             mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
             "Unable to fix missing unique id:",
         ),
         (
             None,
-            CONFIG_ENTRY_DATA,
+            CONFIG_ENTRY_DATA_OLD_FORMAT,
             mock_response_error(HTTPStatus.NOT_FOUND),
             "Unable to fix missing unique id:",
         ),
         (
             None,
-            CONFIG_ENTRY_DATA,
+            CONFIG_ENTRY_DATA_OLD_FORMAT,
             mock_response("bogus"),
             "Unable to fix missing unique id (mac address was None)",
         ),
@@ -207,7 +208,7 @@ async def test_fix_unique_id_duplicate(
     other_entry = MockConfigEntry(
         unique_id=None,
         domain=DOMAIN,
-        data=CONFIG_ENTRY_DATA,
+        data=CONFIG_ENTRY_DATA_OLD_FORMAT,
     )
     other_entry.add_to_hass(hass)
 

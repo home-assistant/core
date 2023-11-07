@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
-    CONFIG_ENTRY_DATA,
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
     RAIN_DELAY,
     RAIN_DELAY_OFF,
     mock_response_error,
@@ -65,7 +65,7 @@ async def test_sensors(
         (
             None,
             {
-                **CONFIG_ENTRY_DATA,
+                **CONFIG_ENTRY_DATA_OLD_FORMAT,
                 "serial_number": 0,
             },
             mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
@@ -74,7 +74,7 @@ async def test_sensors(
         (
             "0",
             {
-                **CONFIG_ENTRY_DATA,
+                **CONFIG_ENTRY_DATA_OLD_FORMAT,
                 "serial_number": 0,
             },
             None,
