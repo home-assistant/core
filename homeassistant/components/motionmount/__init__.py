@@ -1,7 +1,7 @@
 """The Vogel's MotionMount integration."""
 from __future__ import annotations
 
-import motionmount  # type: ignore[import-untyped]
+import motionmount
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -21,11 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     # Create API instance
-    coordinator = MotionMountCoordinator(hass)
-    mm = motionmount.MotionMount(
-        entry.data[CONF_HOST], entry.data[CONF_PORT], coordinator.motionmount_callback
-    )
-    coordinator.mm = mm
+    mm = motionmount.MotionMount(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    coordinator = MotionMountCoordinator(hass, mm)
+    mm.add_listener(coordinator.motionmount_callback)
 
     # Validate the API connection
     await mm.connect()
@@ -43,6 +41,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator.mm.remove_listener(coordinator.motionmount_callback)
         await coordinator.mm.disconnect()
 
     return unload_ok

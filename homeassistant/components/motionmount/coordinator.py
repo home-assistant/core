@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-import motionmount  # type: ignore[import-untyped]
+import motionmount
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -13,19 +13,15 @@ _LOGGER = logging.getLogger(__name__)
 class MotionMountCoordinator(DataUpdateCoordinator):
     """Coordinator for MotionMount."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, mm: motionmount.MotionMount) -> None:
         """Initialize the MotionMount coordinator."""
         super().__init__(hass, _LOGGER, name="MotionMount")
-        self._mm: motionmount.MotionMount = None
+        self._mm = mm
 
     @property
     def mm(self) -> motionmount.MotionMount:
         """Returns the MotionMount."""
         return self._mm
-
-    @mm.setter
-    def mm(self, new_value: motionmount.MotionMount) -> None:
-        self._mm = new_value
 
     async def _async_update_data(self) -> dict[str, Any]:
         return self._get_data_from_motionmount()
