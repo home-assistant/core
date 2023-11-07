@@ -213,8 +213,12 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            await self.coordinator.mill_data_connection.set_operation_mode_control_individually()
-            await self.coordinator.async_request_refresh()
+            if self._attr_extra_state_attributes["configured_operation_mode"] in OperationMode._value2member_map_:
+                await self.coordinator.mill_data_connection._set_operation_mode(OperationMode(self._attr_extra_state_attributes["configured_operation_mode"]))
+                await self.coordinator.async_request_refresh()
+            else:
+                await self.coordinator.mill_data_connection.set_operation_mode_control_individually()
+                await self.coordinator.async_request_refresh()
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.set_operation_mode_off()
             await self.coordinator.async_request_refresh()
@@ -230,12 +234,14 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         data = self.coordinator.data
         self._attr_target_temperature = data["set_temperature"]
         self._attr_current_temperature = data["ambient_temperature"]
-
         if data["operation_mode"] == OperationMode.OFF.value:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
         else:
             self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_extra_state_attributes = {
+                "configured_operation_mode": data["operation_mode"]
+            }
             if data["current_power"] > 0:
                 self._attr_hvac_action = HVACAction.HEATING
             else:
