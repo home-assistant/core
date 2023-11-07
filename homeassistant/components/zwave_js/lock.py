@@ -11,10 +11,12 @@ from zwave_js_server.const.command_class.lock import (
     ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
+    DoorLockCCConfigurationSetOptions,
     DoorLockMode,
+    OperationType,
 )
 from zwave_js_server.exceptions import BaseZwaveJSServerError
-from zwave_js_server.util.lock import clear_usercode, set_usercode
+from zwave_js_server.util.lock import clear_usercode, set_configuration, set_usercode
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,10 +28,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_AUTO_RELOCK_TIME,
+    ATTR_BLOCK_TO_BLOCK,
+    ATTR_HOLD_AND_RELEASE_TIME,
+    ATTR_INSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION,
+    ATTR_LOCK_TIMEOUT,
+    ATTR_OPERATION_TYPE,
+    ATTR_OUTSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION,
+    ATTR_TWIST_ASSIST,
     DATA_CLIENT,
     DOMAIN,
     LOGGER,
     SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )
 from .discovery import ZwaveDiscoveryInfo
@@ -92,6 +103,30 @@ async def async_setup_entry(
         "async_clear_lock_usercode",
     )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_LOCK_CONFIGURATION,
+        {
+            vol.Required(ATTR_OPERATION_TYPE): vol.All(
+                cv.string,
+                vol.Upper,
+                vol.In(["TIMED", "CONSTANT"]),
+                lambda x: OperationType[x],
+            ),
+            vol.Optional(ATTR_LOCK_TIMEOUT): vol.Coerce(int),
+            vol.Optional(ATTR_OUTSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION): vol.All(
+                [cv.boolean], vol.Length(4, 4)
+            ),
+            vol.Optional(ATTR_INSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION): vol.All(
+                [cv.boolean], vol.Length(4, 4)
+            ),
+            vol.Optional(ATTR_AUTO_RELOCK_TIME): vol.Coerce(int),
+            vol.Optional(ATTR_HOLD_AND_RELEASE_TIME): vol.Coerce(int),
+            vol.Optional(ATTR_TWIST_ASSIST): vol.Coerce(bool),
+            vol.Optional(ATTR_BLOCK_TO_BLOCK): vol.Coerce(bool),
+        },
+        "async_set_lock_configuration",
+    )
+
 
 class ZWaveLock(ZWaveBaseEntity, LockEntity):
     """Representation of a Z-Wave lock."""
@@ -138,9 +173,10 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             await set_usercode(self.info.node, code_slot, usercode)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to set lock usercode on code_slot {code_slot}: {err}"
+                f"Unable to set lock usercode on lock {self.entity_id} code_slot "
+                f"{code_slot}: {err}"
             ) from err
-        LOGGER.debug("User code at slot %s set", code_slot)
+        LOGGER.debug("User code at slot %s on lock %s set", code_slot, self.entity_id)
 
     async def async_clear_lock_usercode(self, code_slot: int) -> None:
         """Clear the usercode at index X on the lock."""
@@ -148,6 +184,51 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             await clear_usercode(self.info.node, code_slot)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to clear lock usercode on code_slot {code_slot}: {err}"
+                f"Unable to clear lock usercode on lock {self.entity_id} code_slot "
+                f"{code_slot}: {err}"
             ) from err
-        LOGGER.debug("User code at slot %s cleared", code_slot)
+        LOGGER.debug(
+            "User code at slot %s on lock %s cleared", code_slot, self.entity_id
+        )
+
+    async def async_set_lock_configuration(
+        self,
+        operation_type: OperationType,
+        lock_timeout: int | None,
+        outside_handles_can_open_door_configuration: list[bool] | None,
+        inside_handles_can_open_door_configuration: list[bool] | None,
+        auto_relock_time: int | None,
+        hold_and_release_time: int | None,
+        twist_assist: bool | None,
+        block_to_block: bool | None,
+    ) -> None:
+        """Set the lock configuration."""
+        params: dict[str, Any] = {"operation_type": operation_type}
+        for attr, val in (
+            ("lock_timeout", lock_timeout),
+            (
+                "outside_handles_can_open_door_configuration",
+                outside_handles_can_open_door_configuration,
+            ),
+            (
+                "inside_handles_can_open_door_configuration",
+                inside_handles_can_open_door_configuration,
+            ),
+            ("auto_relock_time", auto_relock_time),
+            ("hold_and_release_time", hold_and_release_time),
+            ("twist_assist", twist_assist),
+            ("block_to_block", block_to_block),
+        ):
+            if val is not None:
+                params[attr] = val
+        configuration = DoorLockCCConfigurationSetOptions(**params)
+        result = await set_configuration(
+            self.info.node.endpoints[self.info.primary_value.endpoint or 0],
+            configuration,
+        )
+        if result is None:
+            return
+        msg = f"Result status is {result.status}"
+        if result.remaining_duration is not None:
+            msg += f"and remaining duration is {str(result.remaining_duration)}"
+        LOGGER.info("%s after setting lock configuration for %s", msg, self.entity_id)
