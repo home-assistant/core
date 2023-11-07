@@ -213,7 +213,7 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizCover] = []
 
-    for device in data.platforms[Platform.SWITCH]:
+    for device in data.platforms[Platform.COVER]:
         if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
             device.ui_class
         ):
