@@ -98,7 +98,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         device_class=CoverDeviceClass.SHUTTER,
     ),
-    OverkizCoverDescription(  # To check, it looks like this device can only tilt. Ask help from an owner
+    OverkizCoverDescription(
         key=UIClass.ADJUSTABLE_SLATS_ROLLER_SHUTTER,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
