@@ -1281,7 +1281,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.1
+pyenphase==1.14.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1736,7 +1736,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.14
+reolink-aio==0.7.15
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1982,7 +1982,7 @@ uvcclient==0.11.0
 vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
-vehicle==2.0.0
+vehicle==2.2.0
 
 # homeassistant.components.velbus
 velbus-aio==2023.10.2
