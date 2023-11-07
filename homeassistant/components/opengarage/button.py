@@ -1,0 +1,89 @@
+"""OpenGarage button."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, cast
+
+import opengarage
+
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import OpenGarageDataUpdateCoordinator
+from .const import DOMAIN
+from .entity import OpenGarageEntity
+
+
+@dataclass
+class OpenGarageButtonEntityDescriptionMixin:
+    """Mixin to describe a OpenGarage button entity."""
+
+    press_action: Callable[[opengarage.OpenGarage], Any]
+
+
+@dataclass
+class OpenGarageButtonEntityDescription(
+    ButtonEntityDescription, OpenGarageButtonEntityDescriptionMixin
+):
+    """OpenGarage Browser button description."""
+
+
+BUTTONS: tuple[OpenGarageButtonEntityDescription, ...] = (
+    OpenGarageButtonEntityDescription(
+        key="reboot_device",
+        translation_key="reboot_device",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda opengarage: opengarage.reboot(),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the OpenGarage button entities."""
+    coordinator: OpenGarageDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+
+    async_add_entities(
+        OpenGarageButtonEntity(
+            coordinator, cast(str, config_entry.unique_id), description
+        )
+        for description in BUTTONS
+    )
+
+
+class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
+    """Representation of a OpenGarage button."""
+
+    entity_description: OpenGarageButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinator: OpenGarageDataUpdateCoordinator,
+        device_id: str,
+        description: OpenGarageButtonEntityDescription,
+    ) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator, device_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.data['name']}-{description.key}"
+
+    async def async_press(self) -> None:
+        """Set the value of the entity."""
+        await self.entity_description.press_action(
+            self.coordinator.open_garage_connection
+        )
+        await self.coordinator.async_refresh()

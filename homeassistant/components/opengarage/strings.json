@@ -27,6 +27,11 @@
       "vehicle": {
         "name": "Vehicle"
       }
+    },
+    "button": {
+      "reboot_device": {
+        "name": "Reboot device"
+      }
     }
   }
 }
