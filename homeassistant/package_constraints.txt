@@ -13,13 +13,14 @@ bleak-retry-connector==3.3.0
 bleak==0.21.1
 bluetooth-adapters==0.16.1
 bluetooth-auto-recovery==1.2.3
-bluetooth-data-tools==1.13.0
+bluetooth-data-tools==1.14.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.4
 dbus-fast==2.12.0
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
+ha-ffmpeg==3.1.0
 hass-nabucasa==0.74.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.4
@@ -54,7 +55,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
 yarl==1.9.2
-zeroconf==0.119.0
+zeroconf==0.120.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -150,7 +151,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.24.3
+protobuf==4.25.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
