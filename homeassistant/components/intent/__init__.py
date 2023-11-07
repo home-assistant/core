@@ -79,13 +79,16 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
+            if self.service == SERVICE_TURN_ON:
+                service_name = SERVICE_OPEN_COVER
+            else:
+                service_name = SERVICE_CLOSE_COVER
+
             await self._run_then_background(
                 hass.async_create_task(
                     hass.services.async_call(
                         COVER_DOMAIN,
-                        SERVICE_OPEN_COVER
-                        if self.service == SERVICE_TURN_ON
-                        else SERVICE_CLOSE_COVER,
+                        service_name,
                         {ATTR_ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
@@ -97,13 +100,16 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == LOCK_DOMAIN:
             # on = lock
             # off = unlock
+            if self.service == SERVICE_TURN_ON:
+                service_name = SERVICE_LOCK
+            else:
+                service_name = SERVICE_UNLOCK
+
             await self._run_then_background(
                 hass.async_create_task(
                     hass.services.async_call(
                         LOCK_DOMAIN,
-                        SERVICE_LOCK
-                        if self.service == SERVICE_TURN_ON
-                        else SERVICE_UNLOCK,
+                        service_name,
                         {ATTR_ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
