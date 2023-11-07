@@ -350,7 +350,10 @@ def component_setup(
     async def _setup_func() -> bool:
         assert await async_setup_component(hass, "application_credentials", {})
         await async_import_client_credential(
-            hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
+            hass,
+            DOMAIN,
+            ClientCredential("client-id", "client-secret"),
+            DOMAIN,
         )
         config_entry.add_to_hass(hass)
         return await hass.config_entries.async_setup(config_entry.entry_id)
