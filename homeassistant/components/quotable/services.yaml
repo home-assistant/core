@@ -1,0 +1,22 @@
+get_tags:
+
+search_authors:
+  fields:
+    query:
+      required: true
+      example: albert
+      selector:
+        text:
+
+fetch_a_quote:
+  fields:
+    tags:
+      required: false
+      example: "love|peace"
+      selector:
+        text:
+    authors:
+      required: false
+      example: "albert-einstein|barack-obama"
+      selector:
+        text:

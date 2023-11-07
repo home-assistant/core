@@ -1,0 +1,32 @@
+{
+  "services": {
+    "get_tags": {
+      "name": "Get Tags",
+      "description": "Gets a list of available tags."
+    },
+    "search_authors": {
+      "name": "Search Authors",
+      "description": "Searches authors based on specified free-text query.",
+      "fields": {
+        "query": {
+          "name": "Query",
+          "description": "Query string to search for."
+        }
+      }
+    },
+    "fetch_a_quote": {
+      "name": "Fetch a Quote",
+      "description": "Fetches a random quote based on specified parameters.",
+      "fields": {
+        "tags": {
+          "name": "Tags",
+          "description": "A list of tags separated by a pipe (|) symbol."
+        },
+        "authors": {
+          "name": "Authors",
+          "description": "A list of author slugs separated by a pipe (|) symbol."
+        }
+      }
+    }
+  }
+}
