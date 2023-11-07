@@ -367,12 +367,10 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def moving_offset(self) -> int | None:
         """Return the offset between the targeted position and the current one if the cover is moving."""
-
-        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
         current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
         target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
 
-        if not is_moving or not current_closure or not target_closure:
+        if not current_closure or not target_closure:
             return None
 
         return cast(int, current_closure.value) - cast(int, target_closure.value)
