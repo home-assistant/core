@@ -3,7 +3,7 @@
   "name": "SEMS Portal",
   "codeowners": ["@andrewgierens"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/sems_portal",
+  "documentation": "https://www.home-assistant.io/integrations/sems",
   "homekit": {},
   "iot_class": "cloud_polling",
   "loggers": ["sems"],
