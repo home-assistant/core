@@ -556,7 +556,7 @@ class ZWaveServices:
             ),
             return_exceptions=True,
         )
-        nodes_or_endpoints_list: list[ZwaveNode | Endpoint] = (
+        nodes_or_endpoints_list: list[T] = (
             list(nodes)
             if value_size is None
             else [node.endpoints[endpoint] for node in nodes]
