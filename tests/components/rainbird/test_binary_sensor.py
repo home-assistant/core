@@ -3,12 +3,14 @@
 
 import pytest
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, SERIAL_NUMBER, ComponentSetup
+from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, SERIAL_NUMBER
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
@@ -18,20 +20,26 @@ def platforms() -> list[Platform]:
     return [Platform.BINARY_SENSOR]
 
 
+@pytest.fixture(autouse=True)
+async def setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> list[Platform]:
+    """Fixture to setup the config entry."""
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("rain_response", "expected_state"),
     [(RAIN_SENSOR_OFF, "off"), (RAIN_SENSOR_ON, "on")],
 )
 async def test_rainsensor(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
     expected_state: bool,
 ) -> None:
     """Test rainsensor binary sensor."""
-
-    assert await setup_integration()
 
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
     assert rainsensor is not None
@@ -53,14 +61,10 @@ async def test_rainsensor(
 )
 async def test_unique_id(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     entity_registry: er.EntityRegistry,
     entity_unique_id: str,
 ) -> None:
     """Test rainsensor binary sensor."""
-
-    assert await setup_integration()
-
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
     assert rainsensor is not None
     assert rainsensor.attributes == {
@@ -83,13 +87,10 @@ async def test_unique_id(
 )
 async def test_no_unique_id(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test rainsensor binary sensor with no unique id."""
-
-    assert await setup_integration()
 
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
     assert rainsensor is not None

@@ -3,11 +3,14 @@
 
 import pytest
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import CONFIG_ENTRY_DATA, RAIN_DELAY, RAIN_DELAY_OFF, ComponentSetup
+from .conftest import CONFIG_ENTRY_DATA, RAIN_DELAY, RAIN_DELAY_OFF
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -16,19 +19,25 @@ def platforms() -> list[str]:
     return [Platform.SENSOR]
 
 
+@pytest.fixture(autouse=True)
+async def setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> list[Platform]:
+    """Fixture to setup the config entry."""
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("rain_delay_response", "expected_state"),
     [(RAIN_DELAY, "16"), (RAIN_DELAY_OFF, "0")],
 )
 async def test_sensors(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     entity_registry: er.EntityRegistry,
     expected_state: str,
 ) -> None:
     """Test sensor platform."""
-
-    assert await setup_integration()
 
     raindelay = hass.states.get("sensor.rain_bird_controller_raindelay")
     assert raindelay is not None
@@ -66,13 +75,10 @@ async def test_sensors(
 )
 async def test_sensor_no_unique_id(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     entity_registry: er.EntityRegistry,
     config_entry_unique_id: str | None,
 ) -> None:
     """Test sensor platform with no unique id."""
-
-    assert await setup_integration()
 
     raindelay = hass.states.get("sensor.rain_bird_controller_raindelay")
     assert raindelay is not None
