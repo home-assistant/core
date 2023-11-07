@@ -564,12 +564,12 @@ def test_string_annotated(try_both_loaders) -> None:
         "key6: 1.0\n"
     )
     expected_annotations = {
-        "key1": [("<file>", 0), ("<file>", 0)],
-        "key2": [("<file>", 1), ("<file>", 2)],
-        "key3": [("<file>", 3), ("<file>", 4)],
-        "key4": [("<file>", 7), (None, None)],
-        "key5": [("<file>", 8), (None, None)],
-        "key6": [("<file>", 9), (None, None)],
+        "key1": [("<file>", 1), ("<file>", 1)],
+        "key2": [("<file>", 2), ("<file>", 3)],
+        "key3": [("<file>", 4), ("<file>", 5)],
+        "key4": [("<file>", 8), (None, None)],
+        "key5": [("<file>", 9), (None, None)],
+        "key6": [("<file>", 10), (None, None)],
     }
     with io.StringIO(conf) as file:
         doc = yaml_loader.parse_yaml(file)
