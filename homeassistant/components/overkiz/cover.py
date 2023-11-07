@@ -52,7 +52,7 @@ class OverkizCoverDescription(CoverEntityDescription):
     invert_position: bool = True
     set_position_command: OverkizCommand | None = None
     is_closed_fn: Callable[[Device], bool | None] | None = None
-    current_tilt_position: OverkizState | None = None
+    current_tilt_position_state: OverkizState | None = None
     set_tilt_position_command: OverkizCommand | None = None
     open_tilt_command: OverkizCommand | None = None
     close_tilt_command: OverkizCommand | None = None
@@ -63,22 +63,23 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ## Overrides via UIWidget
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING_UNO,
+        device_class=CoverDeviceClass.AWNING,
         current_position_state=OverkizState.CORE_DEPLOYMENT,
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
         invert_position=True,
         is_closed_fn=is_closed,
-        current_tilt_position=OverkizState.CORE_SLATE_ORIENTATION,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
         open_tilt_command=OverkizCommand.OPEN_SLATS,
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.AWNING,
     ),
     ## Default behavior via UIClass
     OverkizCoverDescription(
         key=UIClass.AWNING,
+        device_class=CoverDeviceClass.AWNING,
         current_position_state=OverkizState.CORE_DEPLOYMENT,
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
@@ -86,113 +87,112 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         invert_position=False,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.AWNING,
     ),
     OverkizCoverDescription(
         key=UIClass.ROLLER_SHUTTER,
+        device_class=CoverDeviceClass.SHUTTER,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.SHUTTER,
     ),
     OverkizCoverDescription(
         key=UIClass.ADJUSTABLE_SLATS_ROLLER_SHUTTER,
+        device_class=CoverDeviceClass.BLIND,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        current_tilt_position=OverkizState.CORE_SLATE_ORIENTATION,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
         stop_tilt_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.BLIND,
     ),
     OverkizCoverDescription(
         key=UIClass.CURTAIN,
+        device_class=CoverDeviceClass.CURTAIN,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.CURTAIN,
     ),
     OverkizCoverDescription(
         key=UIClass.EXTERIOR_SCREEN,
+        device_class=CoverDeviceClass.BLIND,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.BLIND,
     ),
     OverkizCoverDescription(
         key=UIClass.EXTERIOR_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        current_tilt_position=OverkizState.CORE_SLATE_ORIENTATION,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
         stop_tilt_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.BLIND,
     ),
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
+        device_class=CoverDeviceClass.AWNING,
         current_position_state=OverkizState.CORE_DEPLOYMENT,
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
         invert_position=False,
         is_closed_fn=is_closed,
-        current_tilt_position=OverkizState.CORE_SLATE_ORIENTATION,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
         open_tilt_command=OverkizCommand.OPEN_SLATS,
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.AWNING,
     ),
     OverkizCoverDescription(
         key=UIClass.GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.GARAGE,
     ),
     OverkizCoverDescription(
         key=UIClass.SCREEN,
+        device_class=CoverDeviceClass.BLIND,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.BLIND,
     ),
     OverkizCoverDescription(
         key=UIClass.SHUTTER,
+        device_class=CoverDeviceClass.SHUTTER,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.SHUTTER,
     ),
     OverkizCoverDescription(
         key=UIClass.SWINGING_SHUTTER,
+        device_class=CoverDeviceClass.SHUTTER,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
-        device_class=CoverDeviceClass.SHUTTER,
     ),
     # OverkizCoverDescription(
     #     key=UIClass.VENETIAN_BLIND,
@@ -236,11 +236,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-
         if is_closed_fn := self.entity_description.is_closed_fn:
             return is_closed_fn(self.device)
-
-        # Fallback to self.current_cover_position == 0 ?
 
         return None
 
@@ -252,16 +249,17 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """
         state_name = self.entity_description.current_position_state
 
-        if not state_name:
-            return None
+        if (
+            state_name
+            and (state := self.device.states[state_name])
+            and (position := state.value_as_int)
+        ):
+            if self.entity_description.invert_position:
+                position = 100 - position
 
-        if state := self.device.states[state_name]:
-            position = cast(int, state.value)
+            return position
 
-        if self.entity_description.invert_position:
-            position = 100 - position
-
-        return position
+        return None
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -293,13 +291,17 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        state_name = self.entity_description.current_position_state
+        state_name = self.entity_description.current_tilt_position_state
 
-        if not state_name:
-            return None
+        if (
+            state_name
+            and (state := self.device.states[state_name])
+            and (position := state.value_as_int)
+        ):
+            if self.entity_description.invert_position:
+                position = 100 - position
 
-        if state := self.device.states[state_name]:
-            return cast(int, state.value)
+            return position
 
         return None
 
