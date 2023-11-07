@@ -98,11 +98,13 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            data = user_input.copy()
-            data |= self._discovered
-            data[CONF_PORT] = DEFAULT_PORT_LOCAL
-            data[CONF_CLIENT_ID] = DEFAULT_CLIENT_ID
-            data[CONF_CLIENT_SECRET] = DEFAULT_CLIENT_SECRET
+            data = {
+                **user_input,
+                **self._discovered,
+                CONF_PORT: DEFAULT_PORT_LOCAL,
+                CONF_CLIENT_ID: DEFAULT_CLIENT_ID,
+                CONF_CLIENT_SECRET: DEFAULT_CLIENT_SECRET,
+            }
 
             try:
                 self._machines = await get_machines(self.hass, data)
