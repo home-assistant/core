@@ -2161,9 +2161,6 @@ python-miio==0.5.12
 # homeassistant.components.mpd
 python-mpd2==3.0.5
 
-# homeassistant.components.myq
-python-myq==3.1.13
-
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
