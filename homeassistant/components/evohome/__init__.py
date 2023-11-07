@@ -440,7 +440,7 @@ class EvoBroker:
 
         assert isinstance(self.client.access_token_expires, dt)  # mypy
 
-        # evo uses naive/local datetimes
+        # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
         app_storage = {
@@ -451,8 +451,9 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
+            user_id = self.client_v1.user_data["userInfo"]["userID"]
             app_storage[USER_DATA] = {
-                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
+                "userInfo": {"userID": user_id},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
         else:
