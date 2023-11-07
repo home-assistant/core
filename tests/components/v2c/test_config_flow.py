@@ -1,6 +1,7 @@
 """Test the V2C config flow."""
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytrydan.exceptions import TrydanError
 
 from homeassistant import config_entries
@@ -37,7 +38,16 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (TrydanError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -45,7 +55,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "pytrydan.Trydan.get_data",
-        side_effect=TrydanError,
+        side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -55,7 +65,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error}
 
     with patch(
         "pytrydan.Trydan.get_data",
