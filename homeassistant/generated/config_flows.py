@@ -213,6 +213,7 @@ FLOWS = {
         "imap",
         "inkbird",
         "insteon",
+        "instructure",
         "intellifire",
         "ios",
         "iotawatt",
