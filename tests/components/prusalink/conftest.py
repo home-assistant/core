@@ -33,6 +33,14 @@ def mock_version_api(hass):
 
 
 @pytest.fixture
+def mock_get_legacy_printer(hass):
+    """Mock PrusaLink printer API."""
+    resp = {"telemetry": {"material": "PLA"}}
+    with patch("pyprusalink.PrusaLink.get_legacy_printer", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
 def mock_get_status_idle(hass):
     """Mock PrusaLink printer API."""
     resp = {
@@ -130,5 +138,7 @@ def mock_job_api_paused(hass, mock_get_status_printing, mock_job_api_printing):
 
 
 @pytest.fixture
-def mock_api(mock_version_api, mock_get_status_idle, mock_job_api_idle):
+def mock_api(
+    mock_version_api, mock_get_legacy_printer, mock_get_status_idle, mock_job_api_idle
+):
     """Mock PrusaLink API."""

@@ -45,6 +45,9 @@ async def test_failed_update(
         "homeassistant.components.prusalink.PrusaLink.get_status",
         side_effect=exception,
     ), patch(
+        "homeassistant.components.prusalink.PrusaLink.get_legacy_printer",
+        side_effect=exception,
+    ), patch(
         "homeassistant.components.prusalink.PrusaLink.get_job",
         side_effect=exception,
     ):

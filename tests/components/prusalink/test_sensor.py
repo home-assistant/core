@@ -96,6 +96,10 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.state == "100"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
+    state = hass.states.get("sensor.mock_title_material")
+    assert state is not None
+    assert state.state == "PLA"
+
     state = hass.states.get("sensor.mock_title_print_flow")
     assert state is not None
     assert state.state == "100"

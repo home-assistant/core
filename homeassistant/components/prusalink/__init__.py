@@ -8,7 +8,7 @@ import logging
 from time import monotonic
 from typing import Generic, TypeVar
 
-from pyprusalink import JobInfo, PrinterStatus, PrusaLink
+from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinators = {
+        "legacy_status": LegacyStatusCoordinator(hass, api),
         "status": StatusCoordinator(hass, api),
         "job": JobUpdateCoordinator(hass, api),
     }
@@ -83,7 +84,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-T = TypeVar("T", PrinterStatus, JobInfo)
+T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
 class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
@@ -137,6 +138,14 @@ class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
     async def _fetch_data(self) -> PrinterStatus:
         """Fetch the printer data."""
         return await self.api.get_status()
+
+
+class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
+    """Printer legacy update coordinator."""
+
+    async def _fetch_data(self) -> LegacyPrinterStatus:
+        """Fetch the printer data."""
+        return await self.api.get_legacy_printer()
 
 
 class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):

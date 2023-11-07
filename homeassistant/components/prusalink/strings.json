@@ -49,6 +49,9 @@
       "filename": {
         "name": "Filename"
       },
+      "material": {
+        "name": "Material"
+      },
       "print_start": {
         "name": "Print start"
       },

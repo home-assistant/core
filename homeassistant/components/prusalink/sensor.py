@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from typing import Generic, TypeVar, cast
 
 from pyprusalink.types import JobInfo, PrinterState, PrinterStatus
+from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,7 +30,7 @@ from homeassistant.util.variance import ignore_variance
 
 from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
 
-T = TypeVar("T", PrinterStatus, JobInfo)
+T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
 @dataclass
@@ -130,6 +131,14 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
             value_fn=lambda data: cast(float, data["printer"]["fan_print"]),
             entity_registry_enabled_default=False,
+        ),
+    ),
+    "legacy_status": (
+        PrusaLinkSensorEntityDescription[LegacyPrinterStatus](
+            key="printer.telemetry.material",
+            translation_key="material",
+            icon="mdi:palette-swatch-variant",
+            value_fn=lambda data: cast(str, data["telemetry"]["material"]),
         ),
     ),
     "job": (
