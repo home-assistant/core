@@ -5,7 +5,7 @@
       "user": {
         "description": "Select your server. The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo) and Atlantic (Cozytouch).",
         "data": {
-          "server": "Server"
+          "hub": "Server"
         }
       },
       "local_or_cloud": {
