@@ -1718,7 +1718,7 @@ qingping-ble==0.8.2
 qnapstats==0.4.0
 
 # homeassistant.components.radio_browser
-radios==0.1.1
+radios==0.2.0
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
