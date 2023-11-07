@@ -55,7 +55,7 @@ class WebsocketStateManager(asyncio.Event):
 
         if not fail:
             self.clear()
-        new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
+        new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER * 2)
         async_fire_time_changed(self.hass, new_time)
         await self.hass.async_block_till_done()
 
