@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Final
 
 from homeassistant.components.sensor import (
@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utcnow
 
 from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
@@ -29,7 +28,9 @@ NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 class VodafoneStationBaseEntityDescription:
     """Vodafone Station entity base description."""
 
-    value: Callable[[Any, Any], Any] = lambda val, key: val[key]
+    value: Callable[
+        [Any, Any], Any
+    ] = lambda coordinator, key: coordinator.data.sensors[key]
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
@@ -40,18 +41,16 @@ class VodafoneStationEntityDescription(
     """Vodafone Station entity description."""
 
 
-def _calculate_uptime(value: dict, key: str) -> datetime:
+def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:
     """Calculate device uptime."""
-    d = int(value[key].split(":")[0])
-    h = int(value[key].split(":")[1])
-    m = int(value[key].split(":")[2])
 
-    return utcnow() - timedelta(days=d, hours=h, minutes=m)
+    return coordinator.api.convert_uptime(coordinator.data.sensors[key])
 
 
-def _line_connection(value: dict, key: str) -> str | None:
+def _line_connection(coordinator: VodafoneStationRouter, key: str) -> str | None:
     """Identify line type."""
 
+    value = coordinator.data.sensors
     internet_ip = value[key]
     dsl_ip = value.get("dsl_ipaddr")
     fiber_ip = value.get("fiber_ipaddr")
@@ -141,7 +140,7 @@ SENSOR_TYPES: Final = (
         icon="mdi:chip",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda value, key: float(value[key][:-1]),
+        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
     ),
     VodafoneStationEntityDescription(
         key="sys_memory_usage",
@@ -149,7 +148,7 @@ SENSOR_TYPES: Final = (
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda value, key: float(value[key][:-1]),
+        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
     ),
     VodafoneStationEntityDescription(
         key="sys_reboot_cause",
@@ -200,5 +199,5 @@ class VodafoneStationSensorEntity(
     def native_value(self) -> StateType:
         """Sensor value."""
         return self.entity_description.value(
-            self.coordinator.data.sensors, self.entity_description.key
+            self.coordinator, self.entity_description.key
         )

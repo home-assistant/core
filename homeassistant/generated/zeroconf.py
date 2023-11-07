@@ -20,10 +20,6 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "819LMB": {
-        "always_discover": True,
-        "domain": "myq",
-    },
     "AC02": {
         "always_discover": True,
         "domain": "tado",
@@ -143,10 +139,6 @@ HOMEKIT = {
     "LIFX Z": {
         "always_discover": True,
         "domain": "lifx",
-    },
-    "MYQ": {
-        "always_discover": True,
-        "domain": "myq",
     },
     "NL29": {
         "always_discover": False,
