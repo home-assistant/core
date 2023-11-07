@@ -5,7 +5,7 @@ from datetime import datetime as dt, timedelta as td
 import logging
 from typing import Any
 
-import evohomeasync2 as evo  # type: ignore[import-untyped]
+import evohomeasync2 as evo
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -217,7 +217,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         if not self._evo_device.setpointStatus:
             return None
 
-        return self._evo_device.setpointStatus["targetHeatTemperature"]  # type: ignore[no-any-return]
+        return self._evo_device.setpointStatus["targetHeatTemperature"]
 
     @property
     def preset_mode(self) -> str | None:
@@ -240,7 +240,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         The default is 5, but is user-configurable within 5-35 (in Celsius).
         """
-        return self._evo_device.setpointCapabilities["minHeatSetpoint"]  # type: ignore[no-any-return]
+        return self._evo_device.setpointCapabilities["minHeatSetpoint"]
 
     @property
     def max_temp(self) -> float:
@@ -248,7 +248,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         The default is 35, but is user-configurable within 5-35 (in Celsius).
         """
-        return self._evo_device.setpointCapabilities["maxHeatSetpoint"]  # type: ignore[no-any-return]
+        return self._evo_device.setpointCapabilities["maxHeatSetpoint"]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
