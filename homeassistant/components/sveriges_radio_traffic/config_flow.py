@@ -64,7 +64,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": "Traffic information"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
