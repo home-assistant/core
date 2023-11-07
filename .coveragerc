@@ -916,7 +916,6 @@ omit =
     homeassistant/components/overkiz/climate_entities/*
     homeassistant/components/overkiz/coordinator.py
     homeassistant/components/overkiz/cover.py
-    homeassistant/components/overkiz/cover_entities/*
     homeassistant/components/overkiz/entity.py
     homeassistant/components/overkiz/executor.py
     homeassistant/components/overkiz/light.py
