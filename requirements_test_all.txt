@@ -128,7 +128,7 @@ Tami4EdgeAPI==2.1
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.0.0
+accuweather==2.0.1
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -173,7 +173,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.5
+aioairzone-cloud==0.3.6
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -596,7 +596,7 @@ easyenergy==0.3.0
 electrickiwi-api==0.8.5
 
 # homeassistant.components.elgato
-elgato==5.0.0
+elgato==5.1.0
 
 # homeassistant.components.elkm1
 elkm1-lib==2.2.6
@@ -707,7 +707,7 @@ georss-qld-bushfire-alert-client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==3.2.0
+gios==3.2.1
 
 # homeassistant.components.glances
 glances-api==0.4.3
@@ -1007,7 +1007,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.0
+nettigo-air-monitor==2.2.1
 
 # homeassistant.components.nexia
 nexia==2.0.7
@@ -1019,7 +1019,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==2.0.0
+nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
 nibe==2.4.0
@@ -1157,7 +1157,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.0.0
+pvo==2.1.0
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1284,7 +1284,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.1
+pyenphase==1.14.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1739,7 +1739,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.14
+reolink-aio==0.7.15
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1893,7 +1893,7 @@ surepy==0.8.0
 switchbot-api==1.2.1
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.8.4
+systembridgeconnector==3.9.5
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
@@ -1938,7 +1938,7 @@ total-connect-client==2023.2
 tplink-omada-client==1.3.2
 
 # homeassistant.components.transmission
-transmission-rpc==4.1.5
+transmission-rpc==7.0.3
 
 # homeassistant.components.twinkly
 ttls==1.5.1
@@ -1985,7 +1985,7 @@ uvcclient==0.11.0
 vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
-vehicle==2.0.0
+vehicle==2.2.0
 
 # homeassistant.components.velbus
 velbus-aio==2023.10.2
