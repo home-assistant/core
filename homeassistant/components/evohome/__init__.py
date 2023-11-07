@@ -11,8 +11,8 @@ import logging
 import re
 from typing import Any, TypeAlias
 
-import evohomeasync  # type: ignore[import-untyped]
-import evohomeasync2 as evo  # type: ignore[import-untyped]
+import evohomeasync
+import evohomeasync2 as evo
 import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.const import (
@@ -654,7 +654,7 @@ class EvoChild(EvoDevice):
             return None
 
         if self._evo_device.temperatureStatus.get("isAvailable"):
-            return self._evo_device.temperatureStatus["temperature"]  # type: ignore[no-any-return]
+            return self._evo_device.temperatureStatus["temperature"]
 
         return None
 
