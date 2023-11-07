@@ -7,9 +7,9 @@ from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
-from pydantic import ValidationError
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -74,7 +74,7 @@ def _convert_item(item: TodoItem) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo."""
     try:
         return Todo(**dataclasses.asdict(item, dict_factory=_todo_dict_factory))
-    except ValidationError as err:
+    except CalendarParseError as err:
         _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, err)
         raise HomeAssistantError("Error parsing todo input fields") from err
 
@@ -139,20 +139,28 @@ class LocalTodoListEntity(TodoListEntity):
         await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
-    async def async_move_todo_item(self, uid: str, pos: int) -> None:
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
         """Re-order an item to the To-do list."""
+        if uid == previous_uid:
+            return
         todos = self._calendar.todos
-        found_item: Todo | None = None
-        for idx, itm in enumerate(todos):
-            if itm.uid == uid:
-                found_item = itm
-                todos.pop(idx)
-                break
-        if found_item is None:
+        item_idx: dict[str, int] = {itm.uid: idx for idx, itm in enumerate(todos)}
+        if uid not in item_idx:
             raise HomeAssistantError(
-                f"Item '{uid}' not found in todo list {self.entity_id}"
+                "Item '{uid}' not found in todo list {self.entity_id}"
             )
-        todos.insert(pos, found_item)
+        if previous_uid and previous_uid not in item_idx:
+            raise HomeAssistantError(
+                "Item '{previous_uid}' not found in todo list {self.entity_id}"
+            )
+        dst_idx = item_idx[previous_uid] + 1 if previous_uid else 0
+        src_idx = item_idx[uid]
+        src_item = todos.pop(src_idx)
+        if dst_idx > src_idx:
+            dst_idx -= 1
+        todos.insert(dst_idx, src_item)
         await self._async_save()
         await self.async_update_ha_state(force_refresh=True)
 
