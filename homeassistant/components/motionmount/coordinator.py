@@ -24,13 +24,6 @@ class MotionMountCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._mm
 
     async def _async_update_data(self) -> dict[str, Any]:
-        return self._get_data_from_motionmount()
-
-    def motionmount_callback(self) -> None:
-        """Update data from updated MotionMount."""
-        self.async_set_updated_data(self._get_data_from_motionmount())
-
-    def _get_data_from_motionmount(self) -> dict[str, Any]:
         return {
             "extension": self._mm.extension,
             "turn": self._mm.turn,
@@ -39,3 +32,7 @@ class MotionMountCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "target_turn": self._mm.target_turn,
             "error_status": self._mm.error_status,
         }
+
+    def motionmount_callback(self) -> None:
+        """Update data from updated MotionMount."""
+        self.hass.add_job(self.async_refresh)
