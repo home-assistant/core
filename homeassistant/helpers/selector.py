@@ -99,6 +99,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.media_player import MediaPlayerEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
+    from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
@@ -118,6 +119,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
         "RemoteEntityFeature": RemoteEntityFeature,
         "SirenEntityFeature": SirenEntityFeature,
+        "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
@@ -457,7 +459,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
 
 class ConditionSelectorConfig(TypedDict):
-    """Class to represent an action selector config."""
+    """Class to represent an condition selector config."""
 
 
 @SELECTORS.register("condition")
@@ -1276,6 +1278,27 @@ class TimeSelector(Selector[TimeSelectorConfig]):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+class TriggerSelectorConfig(TypedDict):
+    """Class to represent an trigger selector config."""
+
+
+@SELECTORS.register("trigger")
+class TriggerSelector(Selector[TriggerSelectorConfig]):
+    """Selector of a trigger sequence (script syntax)."""
+
+    selector_type = "trigger"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
 class FileSelectorConfig(TypedDict):

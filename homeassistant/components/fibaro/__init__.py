@@ -101,6 +101,7 @@ class FibaroController:
         self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
         self.hub_serial: str  # Unique serial number of the hub
         self.hub_name: str  # The friendly name of the hub
+        self.hub_model: str
         self.hub_software_version: str
         self.hub_api_url: str = config[CONF_URL]
         # Device infos by fibaro device id
@@ -113,6 +114,7 @@ class FibaroController:
         info = self._client.read_info()
         self.hub_serial = info.serial_number
         self.hub_name = info.hc_name
+        self.hub_model = info.platform
         self.hub_software_version = info.current_version
 
         if connected is False:
@@ -184,12 +186,13 @@ class FibaroController:
 
         resolver = FibaroStateResolver(state)
         for event in resolver.get_events():
-            fibaro_id = event.fibaro_id
+            # event does not always have a fibaro id, therefore it is
+            # essential that we first check for relevant event type
             if (
                 event.event_type.lower() == "centralsceneevent"
-                and fibaro_id in self._event_callbacks
+                and event.fibaro_id in self._event_callbacks
             ):
-                for callback in self._event_callbacks[fibaro_id]:
+                for callback in self._event_callbacks[event.fibaro_id]:
                     callback(event)
 
     def register(self, device_id: int, callback: Any) -> None:
@@ -406,9 +409,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller.hub_serial)},
+        serial_number=controller.hub_serial,
         manufacturer="Fibaro",
         name=controller.hub_name,
-        model=controller.hub_serial,
+        model=controller.hub_model,
         sw_version=controller.hub_software_version,
         configuration_url=controller.hub_api_url.removesuffix("/api/"),
     )

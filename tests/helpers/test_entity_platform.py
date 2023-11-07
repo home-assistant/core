@@ -9,7 +9,14 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    CoreState,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     device_registry as dr,
@@ -558,24 +565,32 @@ async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
     entity1 = MockEntity(name="test_1")
+    entity2 = MockEntity(name="test_1")
 
     async def _delayed_update(*args, **kwargs):
-        await asyncio.sleep(0.01)
+        update_called.set()
+        await update_done.wait()
 
     entity1.async_update = _delayed_update
+    entity2.async_update = _delayed_update
 
-    # Add, remove, add, remove and make sure no updates
-    # cause the entity to reappear after removal
-    for _ in range(2):
-        await component.async_add_entities([entity1])
-        assert len(hass.states.async_entity_ids()) == 1
-        entity1.async_write_ha_state()
-        assert hass.states.get(entity1.entity_id) is not None
-        task = asyncio.create_task(entity1.async_update_ha_state(True))
-        await entity1.async_remove()
-        assert len(hass.states.async_entity_ids()) == 0
+    # Add, remove, and make sure no updates
+    # cause the entity to reappear after removal and
+    # that we can add another entity with the same entity_id
+    for entity in [entity1, entity2]:
+        update_called = asyncio.Event()
+        update_done = asyncio.Event()
+        await component.async_add_entities([entity])
+        assert hass.states.async_entity_ids() == ["test_domain.test_1"]
+        entity.async_write_ha_state()
+        assert hass.states.get(entity.entity_id) is not None
+        task = asyncio.create_task(entity.async_update_ha_state(True))
+        await update_called.wait()
+        await entity.async_remove()
+        assert hass.states.async_entity_ids() == []
+        update_done.set()
         await task
-        assert len(hass.states.async_entity_ids()) == 0
+        assert hass.states.async_entity_ids() == []
 
 
 async def test_not_adding_duplicate_entities_with_unique_id(
@@ -1489,6 +1504,121 @@ async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     assert len(entities) == 2
     assert entity1 in entities
     assert entity2 in entities
+
+
+async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
+    """Test an entity service that does supports response data."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": "response-value"}
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity = MockEntity(entity_id="mock_integration.entity")
+    await entity_platform.async_add_entities([entity])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity": {"response-key": "response-value"}
+    }
+
+
+async def test_register_entity_service_response_data_multiple_matches(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entity service that does supports response data and matching many entities."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity1": {
+            "response-key": "response-value-mock_integration.entity1"
+        },
+        "mock_integration.entity2": {
+            "response-key": "response-value-mock_integration.entity2"
+        },
+    }
+
+
+async def test_register_entity_service_response_data_multiple_matches_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity service response matching many entities raises."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        if target.entity_id == "mock_integration.entity1":
+            raise RuntimeError("Something went wrong")
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+    with pytest.raises(RuntimeError, match="Something went wrong"):
+        await hass.services.async_call(
+            "mock_platform",
+            "hello",
+            service_data={"some": "data"},
+            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_invalid_entity_id(hass: HomeAssistant) -> None:

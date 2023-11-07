@@ -22,6 +22,20 @@ VALID_RGBW_COLOR = {"rgbw_color": (255, 63, 111, 10)}
 VALID_RGBWW_COLOR = {"rgbww_color": (255, 63, 111, 10, 20)}
 VALID_XY_COLOR = {"xy_color": (0.59, 0.274)}
 
+NONE_BRIGHTNESS = {"brightness": None}
+NONE_FLASH = {"flash": None}
+NONE_EFFECT = {"effect": None}
+NONE_TRANSITION = {"transition": None}
+NONE_COLOR_NAME = {"color_name": None}
+NONE_COLOR_TEMP = {"color_temp": None}
+NONE_HS_COLOR = {"hs_color": None}
+NONE_KELVIN = {"kelvin": None}
+NONE_PROFILE = {"profile": None}
+NONE_RGB_COLOR = {"rgb_color": None}
+NONE_RGBW_COLOR = {"rgbw_color": None}
+NONE_RGBWW_COLOR = {"rgbww_color": None}
+NONE_XY_COLOR = {"xy_color": None}
+
 
 async def test_reproducing_states(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
@@ -237,3 +251,39 @@ async def test_deprecation_warning(
     )
     assert len(turn_on_calls) == 1
     assert DEPRECATION_WARNING % ["brightness_pct"] in caplog.text
+
+
+@pytest.mark.parametrize(
+    "saved_state",
+    (
+        NONE_BRIGHTNESS,
+        NONE_FLASH,
+        NONE_EFFECT,
+        NONE_TRANSITION,
+        NONE_COLOR_NAME,
+        NONE_COLOR_TEMP,
+        NONE_HS_COLOR,
+        NONE_KELVIN,
+        NONE_PROFILE,
+        NONE_RGB_COLOR,
+        NONE_RGBW_COLOR,
+        NONE_RGBWW_COLOR,
+        NONE_XY_COLOR,
+    ),
+)
+async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
+    """Test filtering of parameters which are None."""
+    hass.states.async_set("light.entity", "off", {})
+
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+
+    await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
+
+    assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].domain == "light"
+    assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity"}
+
+    # This should do nothing, the light is already in the desired state
+    hass.states.async_set("light.entity", "on", {})
+    await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
+    assert len(turn_on_calls) == 1
