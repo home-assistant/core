@@ -1,0 +1,15 @@
+{
+  "domain": "krisinformation",
+  "name": "krisinformation",
+  "codeowners": [
+    "@philipperhult"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/krisinformation",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
