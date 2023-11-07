@@ -5,14 +5,14 @@ Such systems include evohome, Round Thermostat, and others.
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt, timedelta as td
 from http import HTTPStatus
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any, TypeAlias
 
-import evohomeasync
-import evohomeasync2
+import evohomeasync  # type: ignore[import-untyped]
+import evohomeasync2 as evo  # type: ignore[import-untyped]
 import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.const import (
@@ -40,8 +40,8 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
 
-if TYPE_CHECKING:
-    from evohomeasync2 import ControlSystem, HotWater, Location, Zone
+_EvoChildT: TypeAlias = evo.HotWater | evo.Zone
+_EvoDeviceT: TypeAlias = evo.ControlSystem | evo.HotWater | evo.Zone
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,8 +53,8 @@ USER_DATA = "user_data"
 
 CONF_LOCATION_IDX = "location_idx"
 
-SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
+SCAN_INTERVAL_DEFAULT = td(seconds=300)
+SCAN_INTERVAL_MINIMUM = td(seconds=60)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -94,7 +94,7 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
-            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
+            cv.time_period, vol.Range(min=td(days=0), max=td(days=1))
         ),
     }
 )
@@ -104,14 +104,14 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
 def _dt_local_to_aware(dt_naive: dt) -> dt:
     dt_aware = dt_util.now() + (dt_naive - dt.now())
     if dt_aware.microsecond >= 500000:
-        dt_aware += timedelta(seconds=1)
+        dt_aware += td(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
 def _dt_aware_to_naive(dt_aware: dt) -> dt:
     dt_naive = dt.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
-        dt_naive += timedelta(seconds=1)
+        dt_naive += td(seconds=1)
     return dt_naive.replace(microsecond=0)
 
 
@@ -143,12 +143,12 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
+def _handle_exception(err: evo.EvohomeError) -> None:
     """Return False if the exception can't be ignored."""
     try:
         raise err
 
-    except evohomeasync2.AuthenticationFailed:
+    except evo.AuthenticationFailed:
         _LOGGER.error(
             (
                 "Unable to authenticate with the vendor's server. "
@@ -159,7 +159,7 @@ def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
             err,
         )
 
-    except evohomeasync2.RequestFailed as exc:
+    except evo.RequestFailed as exc:
         if exc.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 (
@@ -181,7 +181,7 @@ def _handle_exception(err: evohomeasync2.EvohomeError) -> None:
                 err,
             )
 
-    except evohomeasync2.EvohomeError:
+    except evo.EvohomeError:
         _LOGGER.warning(
             (
                 "Unable to connect with the vendor's server. "
@@ -204,7 +204,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await store.async_save({})
             return ({}, None)
 
-        # evohomeasync2 requires naive/local datetimes as strings
+        # evo requires naive/local datetimes as strings
         if tokens.get(ACCESS_TOKEN_EXPIRES) is not None and (
             expires := dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
         ):
@@ -216,7 +216,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
     tokens, user_data = await load_auth_tokens(store)
 
-    client_v2 = evohomeasync2.EvohomeClient(
+    client_v2 = evo.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
         config[DOMAIN][CONF_PASSWORD],
         **tokens,
@@ -225,7 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         await client_v2.login()
-    except evohomeasync2.AuthenticationFailed as err:
+    except evo.AuthenticationFailed as err:
         _handle_exception(err)
         return False
     finally:
@@ -279,7 +279,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     async_track_time_interval(
-        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]  # type: ignore[arg-type]
+        hass,
+        broker.async_update,  # type: ignore[arg-type]
+        config[DOMAIN][CONF_SCAN_INTERVAL],
     )
 
     setup_service_functions(hass, broker)
@@ -363,7 +365,7 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
                 vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
                 vol.Optional(ATTR_DURATION_HOURS): vol.All(
                     cv.time_period,
-                    vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+                    vol.Range(min=td(hours=0), max=td(hours=24)),
                 ),
             }
         )
@@ -377,7 +379,7 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
                 vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
                 vol.Optional(ATTR_DURATION_DAYS): vol.All(
                     cv.time_period,
-                    vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+                    vol.Range(min=td(days=1), max=td(days=99)),
                 ),
             }
         )
@@ -412,12 +414,13 @@ class EvoBroker:
     def __init__(
         self,
         hass: HomeAssistant,
-        client: evohomeasync2.EvohomeClient,
+        client: evo.EvohomeClient,
         client_v1: evohomeasync.EvohomeClient | None,
         store: Store[dict[str, Any]],
         params: ConfigType,
     ) -> None:
         """Initialize the evohome client and its data structure."""
+
         self.hass = hass
         self.client = client
         self.client_v1 = client_v1
@@ -425,11 +428,11 @@ class EvoBroker:
         self.params = params
 
         loc_idx = params[CONF_LOCATION_IDX]
-        self._location: Location = client.locations[loc_idx]
+        self._location: evo.Location = client.locations[loc_idx]
 
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-        self.tcs: ControlSystem = self._location._gateways[0]._control_systems[0]
-        self.tcs_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
+        self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]
+        self.tcs_utc_offset = td(minutes=self._location.timeZone[UTC_OFFSET])
         self.temps: dict[str, int | None] | None = {}
 
     async def save_auth_tokens(self) -> None:
@@ -437,7 +440,7 @@ class EvoBroker:
 
         assert isinstance(self.client.access_token_expires, dt)  # mypy
 
-        # evohomeasync2 uses naive/local datetimes
+        # evo uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
         app_storage = {
@@ -448,8 +451,8 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
-            app_storage[USER_DATA] = {  # type: ignore[assignment]
-                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},  # type: ignore[index]
+            app_storage[USER_DATA] = {
+                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
         else:
@@ -461,9 +464,10 @@ class EvoBroker:
         self, api_function: Coroutine, update_state: bool = True
     ) -> Any:
         """Call a client API and update the broker state if required."""
+
         try:
             result = await api_function
-        except evohomeasync2.EvohomeError as err:
+        except evo.EvohomeError as err:
             _handle_exception(err)
             return
 
@@ -529,11 +533,12 @@ class EvoBroker:
 
     async def _update_v2_api_state(self, *args: tuple, **kwargs: dict) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
+
         access_token = self.client.access_token
 
         try:
             status = await self._location.refresh_status()
-        except evohomeasync2.EvohomeError as err:
+        except evo.EvohomeError as err:
             _handle_exception(err)
         else:
             async_dispatcher_send(self.hass, DOMAIN)
@@ -550,6 +555,7 @@ class EvoBroker:
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
+
         await self._update_v2_api_state()
 
         if self.client_v1:
@@ -565,10 +571,11 @@ class EvoDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(
-        self, evo_broker: EvoBroker, evo_device: ControlSystem | HotWater | Zone
-    ) -> None:
+    _evo_device: _EvoDeviceT
+
+    def __init__(self, evo_broker: EvoBroker, evo_device: _EvoDeviceT) -> None:
         """Initialize the evohome entity."""
+
         self._evo_device = evo_device
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
@@ -577,6 +584,7 @@ class EvoDevice(Entity):
 
     async def async_refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
+
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
             return
@@ -598,6 +606,7 @@ class EvoDevice(Entity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the evohome-specific state attributes."""
+
         status = self._device_state_attrs
         if "systemModeStatus" in status:
             convert_until(status["systemModeStatus"], "timeUntil")
@@ -619,37 +628,43 @@ class EvoChild(EvoDevice):
     This includes (up to 12) Heating Zones and (optionally) a DHW controller.
     """
 
-    def __init__(self, evo_broker: EvoBroker, evo_device: HotWater | Zone) -> None:
+    _evo_device: _EvoChildT
+
+    def __init__(self, evo_broker: EvoBroker, evo_device: _EvoChildT) -> None:
         """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
+
         self._schedule: dict[str, Any] = {}
         self._setpoints: dict[str, Any] = {}
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
-        if isinstance(self._evo_device, evohomeasync2.HotWater):
+
+        if isinstance(self._evo_device, evo.HotWater):
             dev_id = self._evo_device.dhwId
         else:
-            assert isinstance(self._evo_device, evohomeasync2.Zone)  # mypy
             dev_id = self._evo_device.zoneId
 
-        if self._evo_broker.temps and self._evo_broker.temps[dev_id] is not None:
+        if self._evo_broker.temps and self._evo_broker.temps.get(dev_id) is not None:
             return self._evo_broker.temps[dev_id]
 
-        if self._evo_device.temperatureStatus["isAvailable"]:  # type: ignore[index]
-            return self._evo_device.temperatureStatus["temperature"]  # type: ignore[no-any-return, index]
+        if not self._evo_device.temperatureStatus:
+            return None
+
+        if self._evo_device.temperatureStatus.get("isAvailable"):
+            return self._evo_device.temperatureStatus["temperature"]  # type: ignore[no-any-return]
 
         return None
 
     @property
-    def setpoints(self) -> dict[str, Any]:
+    def setpoints(self) -> dict[str, int | str]:
         """Return the current/next setpoints from the schedule.
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
 
-        def _dt_evo_to_aware(dt_naive: dt, utc_offset: timedelta) -> dt:
+        def _dt_evo_to_aware(dt_naive: dt, utc_offset: td) -> dt:
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
@@ -678,7 +693,7 @@ class EvoChild(EvoDevice):
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
             ):
-                sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
+                sp_date = (day_time + td(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]
 
@@ -705,16 +720,28 @@ class EvoChild(EvoDevice):
 
         return self._setpoints
 
+    async def _next_sp_from(self) -> dt | None:
+        """Return the datetime of the next setpoint, if any."""
+
+        await self._update_schedule()
+        next_sp_from = self.setpoints.get("next_sp_from", "")
+
+        if not next_sp_from:
+            return None
+        return dt_util.as_utc(dt_util.parse_datetime(next_sp_from))  # type: ignore[arg-type]
+
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
+
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.get_schedule(), update_state=False  # type: ignore[union-attr]
+            self._evo_device.get_schedule(), update_state=False
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
     async def async_update(self) -> None:
         """Get the latest state data."""
+
         next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")
         next_sp_from_dt = dt_util.parse_datetime(next_sp_from)
         if next_sp_from_dt is None or dt_util.now() >= next_sp_from_dt:

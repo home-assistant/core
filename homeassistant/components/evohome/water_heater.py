@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+
+from evohomeasync2 import HotWater  # type: ignore[import-untyped]
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -20,14 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild
+from . import EvoBroker, EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
-
-if TYPE_CHECKING:
-    from evohomeasync2 import HotWater  # type: ignore[import-untyped]
-
-    from . import EvoBroker
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +46,8 @@ async def async_setup_platform(
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
+    assert isinstance(broker.tcs.hotwater, HotWater)  # mypy
+
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
         broker.tcs.hotwater.TYPE,
@@ -70,6 +67,8 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
+    _evo_device: HotWater
+
     def __init__(self, evo_broker: EvoBroker, evo_device: HotWater) -> None:
         """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
@@ -84,15 +83,23 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         )
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operating mode (Auto, On, or Off)."""
+
+        if not self._evo_device.stateStatus:
+            return None
+
         if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:
             return STATE_AUTO
         return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
-    def is_away_mode_on(self) -> bool:
+    def is_away_mode_on(self) -> bool | None:
         """Return True if away mode is on."""
+
+        if not self._evo_device.stateStatus:
+            return None
+
         is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
         is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
         return is_off and is_permanent
@@ -102,21 +109,20 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
 
         Except for Auto, the mode is only until the next SetPoint.
         """
+
         if operation_mode == STATE_AUTO:
             await self._evo_broker.call_client_api(self._evo_device.reset_mode())
         else:
             await self._update_schedule()
-            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
+            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))  # type: ignore[arg-type]
             until = dt_util.as_utc(until) if until else None
 
-            if operation_mode == STATE_ON:
-                await self._evo_broker.call_client_api(
-                    self._evo_device.set_on(until=until)
-                )
-            else:  # STATE_OFF
-                await self._evo_broker.call_client_api(
-                    self._evo_device.set_off(until=until)
-                )
+        if operation_mode == STATE_ON:
+            await self._evo_broker.call_client_api(self._evo_device.set_on(until=until))
+        else:  # STATE_OFF
+            await self._evo_broker.call_client_api(
+                self._evo_device.set_off(until=until)
+            )
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
@@ -126,11 +132,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.reset_mode())
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: dict) -> None:
         """Turn on."""
         await self._evo_broker.call_client_api(self._evo_device.set_on())
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: dict) -> None:
         """Turn off."""
         await self._evo_broker.call_client_api(self._evo_device.set_off())
 
