@@ -230,7 +230,6 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
         )
 
 
-
 async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(
