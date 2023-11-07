@@ -24,7 +24,7 @@ async def async_get_config_entry_diagnostics(
     data = {
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
-        "api_type": entry.data[CONF_API_TYPE],
+        "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
@@ -54,7 +54,7 @@ async def async_get_device_diagnostics(
         },
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
-        "api_type": entry.data[CONF_API_TYPE],
+        "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
