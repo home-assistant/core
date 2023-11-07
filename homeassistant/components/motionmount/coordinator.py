@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class MotionMountCoordinator(DataUpdateCoordinator):
+class MotionMountCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for MotionMount."""
 
     def __init__(self, hass: HomeAssistant, mm: motionmount.MotionMount) -> None:

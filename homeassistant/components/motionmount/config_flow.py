@@ -159,7 +159,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {CONF_UUID: format_mac(mm.mac.hex()), CONF_NAME: mm.name}
 
-    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
+    def _show_setup_form(self, errors: dict[str, str] | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

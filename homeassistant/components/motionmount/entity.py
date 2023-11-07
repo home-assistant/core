@@ -7,7 +7,7 @@ from .const import DOMAIN
 from .coordinator import MotionMountCoordinator
 
 
-class MotionMountEntity(CoordinatorEntity, Entity):
+class MotionMountEntity(CoordinatorEntity[MotionMountCoordinator], Entity):
     """Representation of a MotionMount entity."""
 
     _attr_has_entity_name = True
