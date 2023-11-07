@@ -972,8 +972,6 @@
   dict({
     'api_type': 'cloud',
     'execution_history': list([
-      list([
-      ]),
     ]),
     'server': 'somfy_europe',
     'setup': dict({

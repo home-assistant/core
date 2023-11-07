@@ -29,9 +29,10 @@ async def async_get_config_entry_diagnostics(
 
     # Only Overkiz cloud servers expose an endpoint with execution history
     if client.api_type == APIType.CLOUD:
-        data["execution_history"] = (
-            [repr(execution) for execution in await client.get_execution_history()],
-        )
+        execution_history = [
+            repr(execution) for execution in await client.get_execution_history()
+        ]
+        data["execution_history"] = execution_history
 
     return data
 
