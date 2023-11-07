@@ -46,9 +46,10 @@ async def async_setup_platform(
 
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
-        broker.tcs.hotwater.zone_type,
-        broker.tcs.hotwater.zoneId,
+        broker.tcs.hotwater.TYPE,
+        broker.tcs.hotwater.dhwId,
     )
+
     new_entity = EvoDHW(broker, broker.tcs.hotwater)
 
     async_add_entities([new_entity], update_before_add=True)
@@ -95,7 +96,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         Except for Auto, the mode is only until the next SetPoint.
         """
         if operation_mode == STATE_AUTO:
-            await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
+            await self._evo_broker.call_client_api(self._evo_device.reset_mode())
         else:
             await self._update_schedule()
             until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
@@ -103,28 +104,28 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
 
             if operation_mode == STATE_ON:
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_on(until=until)
+                    self._evo_device.set_on(until=until)
                 )
             else:  # STATE_OFF
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_off(until=until)
+                    self._evo_device.set_off(until=until)
                 )
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
+        await self._evo_broker.call_client_api(self._evo_device.set_off())
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
+        await self._evo_broker.call_client_api(self._evo_device.reset_mode())
 
     async def async_turn_on(self):
         """Turn on."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_on())
+        await self._evo_broker.call_client_api(self._evo_device.set_on())
 
     async def async_turn_off(self):
         """Turn off."""
-        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
+        await self._evo_broker.call_client_api(self._evo_device.set_off())
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""

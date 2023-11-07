@@ -134,9 +134,26 @@ class ActiveConnection:
         self.send_message(messages.event_message(msg_id, event))
 
     @callback
-    def send_error(self, msg_id: int, code: str, message: str) -> None:
-        """Send a error message."""
-        self.send_message(messages.error_message(msg_id, code, message))
+    def send_error(
+        self,
+        msg_id: int,
+        code: str,
+        message: str,
+        translation_key: str | None = None,
+        translation_domain: str | None = None,
+        translation_placeholders: dict[str, Any] | None = None,
+    ) -> None:
+        """Send an error message."""
+        self.send_message(
+            messages.error_message(
+                msg_id,
+                code,
+                message,
+                translation_key=translation_key,
+                translation_domain=translation_domain,
+                translation_placeholders=translation_placeholders,
+            )
+        )
 
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:

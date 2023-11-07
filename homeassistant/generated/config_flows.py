@@ -301,7 +301,6 @@ FLOWS = {
         "mqtt",
         "mullvad",
         "mutesync",
-        "myq",
         "mysensors",
         "mystrom",
         "nam",
