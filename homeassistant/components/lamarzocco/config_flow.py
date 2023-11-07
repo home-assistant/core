@@ -97,7 +97,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        if user_input is not None:
+        if user_input:
             data = {
                 **user_input,
                 **self._discovered,
