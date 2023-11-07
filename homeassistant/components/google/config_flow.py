@@ -20,11 +20,19 @@ from .api import (
     AccessTokenAuthImpl,
     DeviceAuth,
     DeviceFlow,
+    InvalidCredential,
     OAuthError,
     async_create_device_flow,
     get_feature_access,
 )
-from .const import CONF_CALENDAR_ACCESS, DOMAIN, FeatureAccess
+from .const import (
+    CONF_CALENDAR_ACCESS,
+    CONF_CREDENTIAL_TYPE,
+    DEFAULT_FEATURE_ACCESS,
+    DOMAIN,
+    CredentialType,
+    FeatureAccess,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +49,27 @@ class OAuth2FlowHandler(
         super().__init__()
         self._reauth_config_entry: config_entries.ConfigEntry | None = None
         self._device_flow: DeviceFlow | None = None
+        # We first attempt using device auth (which was recommended) with a
+        # fallback to web auth. We now prefer web auth since the credentials
+        # can be shared across Google integrations.
+        self._web_auth = False
 
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
+
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data that needs to be appended to the authorize url."""
+        if not self._web_auth:
+            raise ValueError("Unexpected state; should only be called during web auth")
+        return {
+            "scope": DEFAULT_FEATURE_ACCESS.scope,
+            # Add params to ensure we get back a refresh token
+            "access_type": "offline",
+            "prompt": "consent",
+        }
 
     async def async_step_import(self, info: dict[str, Any]) -> FlowResult:
         """Import existing auth into a new config entry."""
@@ -68,6 +92,9 @@ class OAuth2FlowHandler(
         # prompt the user to visit a URL and enter a code. The device flow
         # background task will poll the exchange endpoint to get valid
         # creds or until a timeout is complete.
+        if self._web_auth:
+            return await super().async_step_auth(user_input)
+
         if user_input is not None:
             return self.async_show_progress_done(next_step_id="creation")
 
@@ -94,6 +121,10 @@ class OAuth2FlowHandler(
             except TimeoutError as err:
                 _LOGGER.error("Timeout initializing device flow: %s", str(err))
                 return self.async_abort(reason="timeout_connect")
+            except InvalidCredential:
+                _LOGGER.debug("Falling back to Web Auth and restarting flow")
+                self._web_auth = True
+                return await super().async_step_auth()
             except OAuthError as err:
                 _LOGGER.error("Error initializing device flow: %s", str(err))
                 return self.async_abort(reason="oauth_error")
@@ -125,12 +156,15 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle external yaml configuration."""
-        if self.external_data.get(DEVICE_AUTH_CREDS) is None:
+        if not self._web_auth and self.external_data.get(DEVICE_AUTH_CREDS) is None:
             return self.async_abort(reason="code_expired")
         return await super().async_step_creation(user_input)
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
+        data[CONF_CREDENTIAL_TYPE] = (
+            CredentialType.WEB_AUTH if self._web_auth else CredentialType.DEVICE_AUTH
+        )
         if self._reauth_config_entry:
             self.hass.config_entries.async_update_entry(
                 self._reauth_config_entry, data=data
@@ -170,6 +204,7 @@ class OAuth2FlowHandler(
         self._reauth_config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        self._web_auth = entry_data.get(CONF_CREDENTIAL_TYPE) == CredentialType.WEB_AUTH
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
