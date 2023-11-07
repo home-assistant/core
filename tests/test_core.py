@@ -387,7 +387,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
 
 async def test_stage_shutdown(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff."""
-    test_stop_pending = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)
+    test_stopping = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
     test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
     test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
@@ -395,7 +395,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 
     await hass.async_stop()
 
-    assert len(test_stop_pending) == 1
+    assert len(test_stopping) == 1
     assert len(test_stop) == 1
     assert len(test_close) == 1
     assert len(test_final_write) == 1
@@ -404,7 +404,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff with exit code checks."""
-    test_stop_pending = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)
+    test_stopping = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
     test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
     test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
@@ -413,7 +413,7 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     event_call_counters = [0, 0, 0, 0]
     expected_exit_code = 101
 
-    async def async_on_stop_pending(event) -> None:
+    async def async_on_stopping(event) -> None:
         if hass.exit_code == expected_exit_code:
             event_call_counters[0] += 1
 
@@ -429,14 +429,14 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
         if hass.exit_code == expected_exit_code:
             event_call_counters[3] += 1
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOPPING, async_on_stop_pending)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOPPING, async_on_stopping)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, async_on_final_write)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_on_close)
 
     await hass.async_stop(expected_exit_code)
 
-    assert len(test_stop_pending) == 1
+    assert len(test_stopping) == 1
     assert len(test_stop) == 1
     assert len(test_close) == 1
     assert len(test_final_write) == 1
