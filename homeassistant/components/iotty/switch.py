@@ -25,8 +25,8 @@ class IottyLightSwitch(SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
-    _iotty_cloud: Any
-    _iotty_device: Any
+    _iotty_cloud: IottyProxy
+    _iotty_device: LightSwitch
 
     def __init__(self, iotty: IottyProxy, iotty_device: LightSwitch) -> None:
         """Initialize the LightSwitch device."""
@@ -82,7 +82,7 @@ async def async_setup_entry(
     iotty = hass.data[DOMAIN][config_entry.entry_id]
     _ls_list = await iotty.devices(LS_DEVICE_TYPE_UID)
 
-    _LOGGER.info("Found %d LightSwitches", len(_ls_list))
+    _LOGGER.debug("Found %d LightSwitches", len(_ls_list))
 
     entities = []
     for _ls in _ls_list:
