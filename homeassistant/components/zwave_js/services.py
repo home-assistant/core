@@ -66,7 +66,7 @@ def parameter_name_does_not_need_bitmask(
 def check_base_2(val: int) -> int:
     """Check if value is a power of 2."""
     if not math.log2(val).is_integer():
-        raise vol.Invalid("Must be one of 1, 2, or 4")
+        raise vol.Invalid("Value must be a power of 2.")
     return val
 
 
