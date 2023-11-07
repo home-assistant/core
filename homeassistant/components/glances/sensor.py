@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -25,6 +26,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
@@ -238,6 +240,13 @@ SENSOR_TYPES = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "uptime": GlancesSensorEntityDescription(
+        key="uptime",
+        type="uptime",
+        name_suffix="Uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:clock",
+    ),
 }
 
 
@@ -300,6 +309,7 @@ async def async_setup_entry(
                             sensor_description,
                         )
                     )
+    entities.append(GlancesSensor(coordinator, name, "", SENSOR_TYPES["uptime"]))
 
     async_add_entities(entities)
 
@@ -344,6 +354,24 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     @property
     def native_value(self) -> StateType:
         """Return the state of the resources."""
+        if self.entity_description.type == "uptime":
+            uptime = self.coordinator.data[self.entity_description.type]
+            if uptime.find("day") > -1:
+                uptime = datetime.strptime(uptime.replace("s", ""), "%d day %H:%M:%S")
+                uptime_delta = timedelta(
+                    days=uptime.day,
+                    hours=uptime.hour,
+                    minutes=uptime.minute,
+                    seconds=uptime.second,
+                )
+            else:
+                uptime = datetime.strptime(uptime, "%H:%M:%S")
+                uptime_delta = timedelta(
+                    hours=uptime.hour, minutes=uptime.minute, seconds=uptime.second
+                )
+
+            self.coordinator.data["uptime"] = {"uptime": dt_util.now() - uptime_delta}
+
         value = self.coordinator.data[self.entity_description.type]
 
         if isinstance(value.get(self._sensor_name_prefix), dict):
