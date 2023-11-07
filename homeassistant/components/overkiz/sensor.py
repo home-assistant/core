@@ -101,7 +101,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
