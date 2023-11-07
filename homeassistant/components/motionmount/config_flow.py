@@ -70,7 +70,6 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             updates={
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                CONF_NAME: name,
             }
         )
 
@@ -102,7 +101,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # configured or ignored
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host, CONF_PORT: port, CONF_NAME: name}
+                updates={CONF_HOST: host, CONF_PORT: port}
             )
 
         self.context.update({"title_placeholders": {"name": name}})
@@ -126,7 +125,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if unique_id:
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host, CONF_PORT: port, CONF_NAME: name}
+                updates={CONF_HOST: host, CONF_PORT: port}
             )
 
         await self._async_handle_discovery_without_unique_id()
