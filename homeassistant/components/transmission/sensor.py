@@ -206,7 +206,7 @@ def _torrents_info(
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
     for torrent in torrents[:limit]:
         info = infos[torrent.name] = {
-            "added_date": torrent.date_added,
+            "added_date": torrent.added_date,
             "percent_done": f"{torrent.percent_done * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,
