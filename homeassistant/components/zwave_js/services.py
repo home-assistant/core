@@ -90,10 +90,10 @@ def get_valid_responses_from_results(
 
 
 def raise_exceptions_from_results(
-    zwave_objects: Sequence[ZwaveNode | Endpoint],
-    results: Sequence[Any],
+    zwave_objects: Sequence[T], results: Sequence[Any]
 ) -> None:
     """Raise list of exceptions from a list of results."""
+    errors: list[tuple[T, Any]]
     if errors := [
         tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
     ]:
@@ -511,7 +511,7 @@ class ZWaveServices:
         value_size = service.data.get(const.ATTR_VALUE_SIZE)
         value_format = service.data.get(const.ATTR_VALUE_FORMAT)
 
-        nodes_without_endpoints = set()
+        nodes_without_endpoints: set[ZwaveNode] = set()
         # Remove nodes that don't have the specified endpoint
         for node in nodes:
             if endpoint not in node.endpoints:
@@ -556,11 +556,11 @@ class ZWaveServices:
             ),
             return_exceptions=True,
         )
-        nodes_or_endpoints_list: list[T] = (
-            list(nodes)
-            if value_size is None
-            else [node.endpoints[endpoint] for node in nodes]
-        )
+        nodes_or_endpoints_list: list[ZwaveNode] | list[Endpoint]
+        if value_size is None:
+            nodes_or_endpoints_list = list(nodes)
+        else:
+            nodes_or_endpoints_list = [node.endpoints[endpoint] for node in nodes]
         for node_or_endpoint, result in get_valid_responses_from_results(
             nodes_or_endpoints_list, results
         ):
@@ -666,7 +666,7 @@ class ZWaveServices:
         results = await asyncio.gather(*coros, return_exceptions=True)
         nodes_list = list(nodes)
         # multiple set_values my fail so we will track the entire list
-        set_value_failed_nodes_list: list[ZwaveNode | Endpoint] = []
+        set_value_failed_nodes_list: list[ZwaveNode] = []
         set_value_failed_error_list: list[SetValueFailed] = []
         for node_, result in get_valid_responses_from_results(nodes_list, results):
             if result and result.status not in SET_VALUE_SUCCESS:
