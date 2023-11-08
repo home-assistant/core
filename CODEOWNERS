@@ -311,8 +311,8 @@ build.json @home-assistant/supervisor
 /tests/components/ecobee/ @marthoc @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
-/homeassistant/components/econet/ @vangorra @w1ll1am23
-/tests/components/econet/ @vangorra @w1ll1am23
+/homeassistant/components/econet/ @w1ll1am23
+/tests/components/econet/ @w1ll1am23
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
@@ -710,6 +710,8 @@ build.json @home-assistant/supervisor
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
+/homeassistant/components/local_todo/ @allenporter
+/tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
 /homeassistant/components/logbook/ @home-assistant/core
@@ -809,8 +811,6 @@ build.json @home-assistant/supervisor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
-/homeassistant/components/myq/ @ehendrix23 @Lash-L
-/tests/components/myq/ @ehendrix23 @Lash-L
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
@@ -1373,6 +1373,8 @@ build.json @home-assistant/supervisor
 /tests/components/usgs_earthquakes_feed/ @exxamalte
 /homeassistant/components/utility_meter/ @dgomes
 /tests/components/utility_meter/ @dgomes
+/homeassistant/components/v2c/ @dgomes
+/tests/components/v2c/ @dgomes
 /homeassistant/components/vacuum/ @home-assistant/core
 /tests/components/vacuum/ @home-assistant/core
 /homeassistant/components/vallox/ @andre-richter @slovdahl @viiru-
@@ -1382,8 +1384,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velux/ @Julius2342
 /homeassistant/components/venstar/ @garbled1 @jhollowe
 /tests/components/venstar/ @garbled1 @jhollowe
-/homeassistant/components/verisure/ @frenck
-/tests/components/verisure/ @frenck
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
@@ -1499,8 +1499,8 @@ build.json @home-assistant/supervisor
 /tests/components/zerproc/ @emlove
 /homeassistant/components/zeversolar/ @kvanzuijlen
 /tests/components/zeversolar/ @kvanzuijlen
-/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly
-/tests/components/zha/ @dmulcahey @adminiuga @puddly
+/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core

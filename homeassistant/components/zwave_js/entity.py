@@ -206,7 +206,7 @@ class ZWaveBaseEntity(Entity):
         ):
             name += f" ({primary_value.endpoint})"
 
-        return name
+        return name.strip()
 
     @property
     def available(self) -> bool:

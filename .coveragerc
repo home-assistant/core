@@ -769,9 +769,6 @@ omit =
     homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mycroft/*
-    homeassistant/components/myq/__init__.py
-    homeassistant/components/myq/cover.py
-    homeassistant/components/myq/light.py
     homeassistant/components/mysensors/__init__.py
     homeassistant/components/mysensors/climate.py
     homeassistant/components/mysensors/cover.py
@@ -989,6 +986,7 @@ omit =
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/__init__.py
+    homeassistant/components/qbittorrent/coordinator.py
     homeassistant/components/qbittorrent/sensor.py
     homeassistant/components/qnap/__init__.py
     homeassistant/components/qnap/coordinator.py
@@ -1290,9 +1288,11 @@ omit =
     homeassistant/components/system_bridge/__init__.py
     homeassistant/components/system_bridge/binary_sensor.py
     homeassistant/components/system_bridge/coordinator.py
+    homeassistant/components/system_bridge/entity.py
     homeassistant/components/system_bridge/media_player.py
     homeassistant/components/system_bridge/notify.py
     homeassistant/components/system_bridge/sensor.py
+    homeassistant/components/system_bridge/update.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/__init__.py
     homeassistant/components/tado/binary_sensor.py
@@ -1430,6 +1430,10 @@ omit =
     homeassistant/components/upnp/device.py
     homeassistant/components/upnp/sensor.py
     homeassistant/components/vasttrafik/sensor.py
+    homeassistant/components/v2c/__init__.py
+    homeassistant/components/v2c/coordinator.py
+    homeassistant/components/v2c/entity.py
+    homeassistant/components/v2c/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
     homeassistant/components/velbus/button.py

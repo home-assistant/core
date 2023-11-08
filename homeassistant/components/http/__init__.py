@@ -23,6 +23,7 @@ from aiohttp.web_urldispatcher import (
     UrlDispatcher,
     UrlMappingMatchInfo,
 )
+from aiohttp_zlib_ng import enable_zlib_ng
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -173,6 +174,8 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
+    enable_zlib_ng()
+
     conf: ConfData | None = config.get(DOMAIN)
 
     if conf is None:

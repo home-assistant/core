@@ -28,7 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator
 from .const import (
     DOMAIN,
     LOGGER,
@@ -37,6 +36,7 @@ from .const import (
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
 )
+from .coordinator import Coordinator
 
 
 async def async_setup_entry(
