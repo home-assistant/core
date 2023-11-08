@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -42,8 +41,3 @@ class AcaiaEntity(CoordinatorEntity[AcaiaApiCoordinator]):
             name=self._scale.name,
             manufacturer="acaia",
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
