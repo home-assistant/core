@@ -91,7 +91,7 @@ async def async_setup_entry(
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[Entity] = [
-        V2CPowerSensorEntity(coordinator, description, config_entry.entry_id)
+        V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
         for description in TRYDAN_SENSORS
     ]
     async_add_entities(entities)
@@ -99,10 +99,6 @@ async def async_setup_entry(
 
 class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
     """Defines a base v2c sensor entity."""
-
-
-class V2CPowerSensorEntity(V2CSensorBaseEntity):
-    """V2C Power sensor entity."""
 
     entity_description: V2CSensorEntityDescription
     _attr_icon = "mdi:ev-station"
