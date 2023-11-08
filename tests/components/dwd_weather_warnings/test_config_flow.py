@@ -12,7 +12,7 @@ from homeassistant.components.dwd_weather_warnings.const import (
     CURRENT_WARNING_SENSOR,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -68,81 +68,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_REGION_IDENTIFIER: "807111000",
     }
-
-
-async def test_import_flow_full_data(hass: HomeAssistant) -> None:
-    """Test import of a full YAML configuration with both success and failure."""
-    # Test abort due to invalid identifier.
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=False,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DEMO_YAML_CONFIGURATION.copy(),
-        )
-
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_identifier"
-
-    # Test successful import.
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DEMO_YAML_CONFIGURATION.copy(),
-        )
-
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Unit Test"
-    assert result["data"] == {
-        CONF_REGION_IDENTIFIER: "807111000",
-    }
-
-
-async def test_import_flow_no_name(hass: HomeAssistant) -> None:
-    """Test a successful import of a YAML configuration with no name set."""
-    data = DEMO_YAML_CONFIGURATION.copy()
-    data.pop(CONF_NAME)
-
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "807111000"
-    assert result["data"] == {
-        CONF_REGION_IDENTIFIER: "807111000",
-    }
-
-
-async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test aborting, if the warncell ID / name is already configured during the import."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEMO_CONFIG_ENTRY.copy(),
-        unique_id=DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=DEMO_YAML_CONFIGURATION.copy()
-    )
-
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:

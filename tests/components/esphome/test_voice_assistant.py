@@ -1,8 +1,10 @@
 """Test ESPHome voice assistant server."""
 
 import asyncio
+import io
 import socket
 from unittest.mock import Mock, patch
+import wave
 
 from aioesphomeapi import VoiceAssistantEventType
 import pytest
@@ -10,10 +12,12 @@ import pytest
 from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
-    PipelineNotFound,
     PipelineStage,
 )
-from homeassistant.components.assist_pipeline.error import WakeWordDetectionError
+from homeassistant.components.assist_pipeline.error import (
+    WakeWordDetectionAborted,
+    WakeWordDetectionError,
+)
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
 from homeassistant.core import HomeAssistant
@@ -338,9 +342,18 @@ async def test_send_tts(
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test the UDP server calls sendto to transmit audio data to device."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(_ONE_SECOND))
+
+        wav_bytes = wav_io.getvalue()
+
     with patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("raw", bytes(1024)),
+        return_value=("wav", wav_bytes),
     ):
         voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
 
@@ -358,6 +371,63 @@ async def test_send_tts(
         voice_assistant_udp_server_v2.transport.sendto.assert_called()
 
 
+async def test_send_tts_wrong_sample_rate(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server calls sendto to transmit audio data to device."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(22050)  # should be 16000
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(_ONE_SECOND))
+
+        wav_bytes = wav_io.getvalue()
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("wav", wav_bytes),
+    ), pytest.raises(ValueError):
+        voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        assert voice_assistant_udp_server_v2._tts_task is not None
+        await voice_assistant_udp_server_v2._tts_task  # raises ValueError
+
+
+async def test_send_tts_wrong_format(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that only WAV audio will be streamed."""
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("raw", bytes(1024)),
+    ), pytest.raises(ValueError):
+        voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        assert voice_assistant_udp_server_v2._tts_task is not None
+        await voice_assistant_udp_server_v2._tts_task  # raises ValueError
+
+
 async def test_wake_word(
     hass: HomeAssistant,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
@@ -370,6 +440,8 @@ async def test_wake_word(
     with patch(
         "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
+    ), patch(
+        "asyncio.Event.wait"  # TTS wait event
     ):
         voice_assistant_udp_server_v2.transport = Mock()
 
@@ -377,7 +449,6 @@ async def test_wake_word(
             device_id="mock-device-id",
             conversation_id=None,
             flags=2,
-            pipeline_timeout=1,
         )
 
 
@@ -410,38 +481,28 @@ async def test_wake_word_exception(
             device_id="mock-device-id",
             conversation_id=None,
             flags=2,
-            pipeline_timeout=1,
         )
 
 
-async def test_pipeline_timeout(
+async def test_wake_word_abort_exception(
     hass: HomeAssistant,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test that the pipeline is set to start with Wake word."""
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
-        raise PipelineNotFound("not-found", "Pipeline not found")
+        raise WakeWordDetectionAborted
 
     with patch(
         "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
-    ):
+    ), patch.object(voice_assistant_udp_server_v2, "handle_event") as mock_handle_event:
         voice_assistant_udp_server_v2.transport = Mock()
-
-        def handle_event(
-            event_type: VoiceAssistantEventType, data: dict[str, str] | None
-        ) -> None:
-            if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
-                assert data is not None
-                assert data["code"] == "pipeline not found"
-                assert data["message"] == "Selected pipeline not found"
-
-        voice_assistant_udp_server_v2.handle_event = handle_event
 
         await voice_assistant_udp_server_v2.run_pipeline(
             device_id="mock-device-id",
             conversation_id=None,
             flags=2,
-            pipeline_timeout=1,
         )
+
+        mock_handle_event.assert_not_called()

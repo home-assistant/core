@@ -283,3 +283,13 @@ async def test_shopping_list_add_item(
     assert result.response.speech == {
         "plain": {"speech": "Added apples", "extra_data": None}
     }
+
+
+async def test_nevermind_item(hass: HomeAssistant, init_components) -> None:
+    """Test HassNevermind intent through the default agent."""
+    result = await conversation.async_converse(hass, "nevermind", None, Context())
+    assert result.response.intent is not None
+    assert result.response.intent.intent_type == intent.INTENT_NEVERMIND
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not result.response.speech

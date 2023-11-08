@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydrawise.legacy import LegacyHydrawise
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -12,8 +11,9 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -23,7 +23,6 @@ from .const import (
     CONF_WATERING_TIME,
     DEFAULT_WATERING_TIME,
     DOMAIN,
-    LOGGER,
 )
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
@@ -31,18 +30,20 @@ from .entity import HydrawiseEntity
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="auto_watering",
-        name="Automatic Watering",
+        translation_key="auto_watering",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     SwitchEntityDescription(
         key="manual_watering",
-        name="Manual Watering",
+        translation_key="manual_watering",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
 
 SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
+# Deprecated since Home Assistant 2023.10.0
+# Can be removed completely in 2024.4.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=SWITCH_KEYS): vol.All(
@@ -62,10 +63,20 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
-    hydrawise: LegacyHydrawise = coordinator.api
-    monitored_conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
-    default_watering_timer: int = config[CONF_WATERING_TIME]
+    # We don't need to trigger import flow from here as it's triggered from `__init__.py`
+    return  # pragma: no cover
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Hydrawise switch platform."""
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    default_watering_timer = DEFAULT_WATERING_TIME
 
     entities = [
         HydrawiseSwitch(
@@ -74,12 +85,11 @@ def setup_platform(
             description=description,
             default_watering_timer=default_watering_timer,
         )
-        for zone in hydrawise.relays
+        for zone in coordinator.api.relays
         for description in SWITCH_TYPES
-        if description.key in monitored_conditions
     ]
 
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
@@ -113,14 +123,11 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         elif self.entity_description.key == "auto_watering":
             self.coordinator.api.suspend_zone(365, zone_number)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update device state."""
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
         zone_number = self.data["relay"]
-        LOGGER.debug("Updating Hydrawise switch: %s", self.name)
         timestr = self.coordinator.api.relays_by_zone_number[zone_number]["timestr"]
         if self.entity_description.key == "manual_watering":
             self._attr_is_on = timestr == "Now"
         elif self.entity_description.key == "auto_watering":
             self._attr_is_on = timestr not in {"", "Now"}
-        super()._handle_coordinator_update()

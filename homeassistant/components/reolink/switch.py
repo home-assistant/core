@@ -129,6 +129,7 @@ SWITCH_ENTITIES = (
         key="record",
         translation_key="record",
         icon="mdi:record-rec",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "recording") and api.is_nvr,
         value=lambda api, ch: api.recording_enabled(ch),
         method=lambda api, ch, value: api.set_recording(ch, value),
@@ -150,6 +151,16 @@ SWITCH_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
         value=lambda api, ch: api.doorbell_button_sound(ch),
         method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="hdr",
+        translation_key="hdr",
+        icon="mdi:hdr",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "HDR"),
+        value=lambda api, ch: api.HDR_on(ch) is True,
+        method=lambda api, ch, value: api.set_HDR(ch, value),
     ),
 )
 
@@ -185,6 +196,7 @@ NVR_SWITCH_ENTITIES = (
         key="record",
         translation_key="record",
         icon="mdi:record-rec",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "recording"),
         value=lambda api: api.recording_enabled(),
         method=lambda api, value: api.set_recording(None, value),

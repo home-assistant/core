@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, is_callback
+from homeassistant.helpers.aiohttp_compat import enable_compression
 from homeassistant.helpers.json import (
     find_paths_unserializable_data,
     json_bytes,
@@ -72,7 +73,7 @@ class HomeAssistantView:
             status=int(status_code),
             headers=headers,
         )
-        response.enable_compression()
+        enable_compression(response)
         return response
 
     def json_message(
