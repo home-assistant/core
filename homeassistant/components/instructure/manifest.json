@@ -1,0 +1,15 @@
+{
+  "domain": "instructure",
+  "name": "canvas",
+  "codeowners": [
+    "@theowiik"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/instructure",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
