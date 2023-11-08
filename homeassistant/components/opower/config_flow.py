@@ -5,7 +5,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from opower import CannotConnect, InvalidAuth, Opower, get_supported_utility_names
+from opower import (
+    CannotConnect,
+    InvalidAuth,
+    Opower,
+    get_supported_utility_names,
+    select_utility,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,9 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_UTILITY): vol.In(
-            get_supported_utility_names(supports_mfa=True)
-        ),
+        vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names()),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
@@ -38,7 +42,7 @@ async def _validate_login(
         login_data[CONF_UTILITY],
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
-        login_data.get(CONF_TOTP_SECRET, None),
+        login_data.get(CONF_TOTP_SECRET),
     )
     errors: dict[str, str] = {}
     try:
@@ -48,12 +52,6 @@ async def _validate_login(
     except CannotConnect:
         errors["base"] = "cannot_connect"
     return errors
-
-
-@callback
-def _supports_mfa(utility: str) -> bool:
-    """Return whether the utility supports MFA."""
-    return utility not in get_supported_utility_names(supports_mfa=False)
 
 
 class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -78,7 +76,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input[CONF_USERNAME],
                 }
             )
-            if _supports_mfa(user_input[CONF_UTILITY]):
+            if select_utility(user_input[CONF_UTILITY]).accepts_mfa():
                 self.utility_info = user_input
                 return await self.async_step_mfa()
 
@@ -154,7 +152,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_USERNAME): self.reauth_entry.data[CONF_USERNAME],
             vol.Required(CONF_PASSWORD): str,
         }
-        if _supports_mfa(self.reauth_entry.data[CONF_UTILITY]):
+        if select_utility(self.reauth_entry.data[CONF_UTILITY]).accepts_mfa():
             schema[vol.Optional(CONF_TOTP_SECRET)] = str
         return self.async_show_form(
             step_id="reauth_confirm",

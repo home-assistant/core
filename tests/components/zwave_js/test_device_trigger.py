@@ -144,6 +144,7 @@ async def test_if_notification_notification_fires(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 113,
             "args": {
                 "type": 6,
@@ -273,6 +274,7 @@ async def test_if_entry_control_notification_fires(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 111,
             "args": {
                 "eventType": 5,

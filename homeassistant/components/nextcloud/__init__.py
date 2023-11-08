@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     for entity in entities:
         old_uid_start = f"{entry.data[CONF_URL]}#nextcloud_"
-        new_uid_start = f"{entry.data[CONF_URL]}#"
+        new_uid_start = f"{entry.entry_id}#"
         if entity.unique_id.startswith(old_uid_start):
             new_uid = entity.unique_id.replace(old_uid_start, new_uid_start)
             _LOGGER.debug("migrate unique id '%s' to '%s'", entity.unique_id, new_uid)

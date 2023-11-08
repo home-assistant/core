@@ -223,6 +223,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "Auto",
+          "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
           "autoadaptive": "Auto adaptive"
@@ -308,6 +309,9 @@
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
+      },
+      "hdr": {
+        "name": "HDR"
       }
     }
   }

@@ -148,6 +148,11 @@ EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
 SIGNAL_CONFIG_ENTRY_CHANGED = "config_entry_changed"
 
+NO_RESET_TRIES_STATES = {
+    ConfigEntryState.SETUP_RETRY,
+    ConfigEntryState.SETUP_IN_PROGRESS,
+}
+
 
 class ConfigEntryChange(StrEnum):
     """What was changed in a config entry."""
@@ -218,8 +223,12 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
+        "_reauth_lock",
         "_tasks",
         "_background_tasks",
+        "_integration_for_domain",
+        "_tries",
+        "_setup_again_job",
     )
 
     def __init__(
@@ -313,16 +322,21 @@ class ConfigEntry:
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
+        # Reauth lock to prevent concurrent reauth flows
+        self._reauth_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
+
+        self._integration_for_domain: loader.Integration | None = None
+        self._tries = 0
+        self._setup_again_job: HassJob | None = None
 
     async def async_setup(
         self,
         hass: HomeAssistant,
         *,
         integration: loader.Integration | None = None,
-        tries: int = 0,
     ) -> None:
         """Set up an entry."""
         current_entry.set(self)
@@ -331,6 +345,7 @@ class ConfigEntry:
 
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
+            self._integration_for_domain = integration
 
         # Only store setup result as state if it was not forwarded.
         if self.domain == integration.domain:
@@ -419,50 +434,31 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
-            wait_time = 2 ** min(tries, 4) * 5 + (
+            wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
-            tries += 1
+            self._tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            if tries == 1:
-                _LOGGER.warning(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in"
-                        " background"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                )
-            else:
-                _LOGGER.debug(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in %d"
-                        " seconds"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                    wait_time,
-                )
-
-            async def setup_again(*_: Any) -> None:
-                """Run setup again."""
-                # Check again when we fire in case shutdown
-                # has started so we do not block shutdown
-                if hass.is_stopping:
-                    return
-                self._async_cancel_retry_setup = None
-                await self.async_setup(hass, integration=integration, tries=tries)
+            _LOGGER.debug(
+                (
+                    "Config entry '%s' for %s integration not %s; Retrying in %d"
+                    " seconds"
+                ),
+                self.title,
+                self.domain,
+                ready_message,
+                wait_time,
+            )
 
             if hass.state == CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
-                    hass, wait_time, setup_again
+                    hass, wait_time, self._async_get_setup_again_job(hass)
                 )
             else:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                    EVENT_HOMEASSISTANT_STARTED,
+                    functools.partial(self._async_setup_again, hass),
                 )
 
             await self._async_process_on_unload(hass)
@@ -482,6 +478,24 @@ class ConfigEntry:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
             self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
+
+    async def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:
+        """Run setup again."""
+        # Check again when we fire in case shutdown
+        # has started so we do not block shutdown
+        if not hass.is_stopping:
+            self._async_cancel_retry_setup = None
+            await self.async_setup(hass)
+
+    @callback
+    def _async_get_setup_again_job(self, hass: HomeAssistant) -> HassJob:
+        """Get a job that will call setup again."""
+        if not self._setup_again_job:
+            self._setup_again_job = HassJob(
+                functools.partial(self._async_setup_again, hass),
+                cancel_on_shutdown=True,
+            )
+        return self._setup_again_job
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -508,7 +522,7 @@ class ConfigEntry:
         if self.state == ConfigEntryState.NOT_LOADED:
             return True
 
-        if integration is None:
+        if not integration and (integration := self._integration_for_domain) is None:
             try:
                 integration = await loader.async_get_integration(hass, self.domain)
             except loader.IntegrationNotFound:
@@ -566,14 +580,15 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE:
             return
 
-        try:
-            integration = await loader.async_get_integration(hass, self.domain)
-        except loader.IntegrationNotFound:
-            # The integration was likely a custom_component
-            # that was uninstalled, or an integration
-            # that has been renamed without removing the config
-            # entry.
-            return
+        if not (integration := self._integration_for_domain):
+            try:
+                integration = await loader.async_get_integration(hass, self.domain)
+            except loader.IntegrationNotFound:
+                # The integration was likely a custom_component
+                # that was uninstalled, or an integration
+                # that has been renamed without removing the config
+                # entry.
+                return
 
         component = integration.get_component()
         if not hasattr(component, "async_remove_entry"):
@@ -592,6 +607,8 @@ class ConfigEntry:
         self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
     ) -> None:
         """Set the state of the config entry."""
+        if state not in NO_RESET_TRIES_STATES:
+            self._tries = 0
         self.state = state
         self.reason = reason
         async_dispatcher_send(
@@ -617,7 +634,8 @@ class ConfigEntry:
         if self.version == handler.VERSION:
             return True
 
-        integration = await loader.async_get_integration(hass, self.domain)
+        if not (integration := self._integration_for_domain):
+            integration = await loader.async_get_integration(hass, self.domain)
         component = integration.get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
@@ -712,12 +730,28 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
-
         hass.async_create_task(
-            hass.config_entries.flow.async_init(
+            self._async_init_reauth(hass, context, data),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow."""
+        async with self._reauth_lock:
+            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+                # Reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -727,9 +761,7 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            ),
-            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-        )
+            )
 
     @callback
     def async_get_active_flows(
@@ -739,7 +771,9 @@ class ConfigEntry:
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(
-                self.domain, match_context={"entry_id": self.entry_id}
+                self.domain,
+                match_context={"entry_id": self.entry_id},
+                include_uninitialized=True,
             )
             if flow["context"].get("source") in sources
         )
@@ -833,7 +867,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         flow_id = uuid_util.random_uuid_hex()
         if context["source"] == SOURCE_IMPORT:
-            init_done: asyncio.Future[None] = asyncio.Future()
+            init_done: asyncio.Future[None] = self.hass.loop.create_future()
             self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
         task = asyncio.create_task(
@@ -1021,7 +1055,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
-        self._domain_index: dict[str, list[str]] = {}
+        self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1051,9 +1085,7 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return [
-            self._entries[entry_id] for entry_id in self._domain_index.get(domain, [])
-        ]
+        return list(self._domain_index.get(domain, []))
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
@@ -1062,7 +1094,7 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
-        self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
+        self._domain_index.setdefault(entry.domain, []).append(entry)
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1080,7 +1112,7 @@ class ConfigEntries:
         await entry.async_remove(self.hass)
 
         del self._entries[entry.entry_id]
-        self._domain_index[entry.domain].remove(entry.entry_id)
+        self._domain_index[entry.domain].remove(entry)
         if not self._domain_index[entry.domain]:
             del self._domain_index[entry.domain]
         self._async_schedule_save()
@@ -1147,7 +1179,7 @@ class ConfigEntries:
             return
 
         entries = {}
-        domain_index: dict[str, list[str]] = {}
+        domain_index: dict[str, list[ConfigEntry]] = {}
 
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
@@ -1162,7 +1194,7 @@ class ConfigEntries:
             domain = entry["domain"]
             entry_id = entry["entry_id"]
 
-            entries[entry_id] = ConfigEntry(
+            config_entry = ConfigEntry(
                 version=entry["version"],
                 domain=domain,
                 entry_id=entry_id,
@@ -1181,7 +1213,8 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            domain_index.setdefault(domain, []).append(entry_id)
+            entries[entry_id] = config_entry
+            domain_index.setdefault(domain, []).append(config_entry)
 
         self._domain_index = domain_index
         self._entries = entries
@@ -1322,7 +1355,7 @@ class ConfigEntries:
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
         ):
-            if value == UNDEFINED or getattr(entry, attr) == value:
+            if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
             setattr(entry, attr, value)
@@ -2055,7 +2088,9 @@ async def _async_get_flow_handler(
     """Get a flow handler for specified domain."""
 
     # First check if there is a handler registered for the domain
-    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
+    if loader.is_component_module_loaded(hass, f"{domain}.config_flow") and (
+        handler := HANDLERS.get(domain)
+    ):
         return handler
 
     await _load_integration(hass, domain, hass_config)

@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, patch
+from uuid import uuid4
 
 import pytest
 
@@ -192,6 +193,38 @@ async def test_report_state(
         mock_call.assert_called_once_with(
             REPORT_STATE_BASE_URL,
             {"requestId": ANY, "agentUserId": agent_user_id, "payload": message},
+        )
+
+
+async def test_report_event(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the report event function."""
+    agent_user_id = "user"
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
+    await config.async_connect_agent_user(agent_user_id)
+    message = {"devices": {}}
+
+    with patch.object(config, "async_call_homegraph_api"):
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await hass.async_block_till_done()
+
+    event_id = uuid4().hex
+    with patch.object(config, "async_call_homegraph_api") as mock_call:
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await config.async_report_state(message, agent_user_id, event_id=event_id)
+        mock_call.assert_called_once_with(
+            REPORT_STATE_BASE_URL,
+            {
+                "requestId": ANY,
+                "agentUserId": agent_user_id,
+                "payload": message,
+                "eventId": event_id,
+            },
         )
 
 

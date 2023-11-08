@@ -46,6 +46,31 @@
           }
         }
       }
+    },
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      }
+    },
+    "sensor": {
+      "direction": {
+        "name": "Direction"
+      },
+      "modified": {
+        "name": "Modified"
+      },
+      "photo_time": {
+        "name": "Photo time"
+      },
+      "photo_url": {
+        "name": "Photo url"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "camera_type": {
+        "name": "Camera type"
+      }
     }
   }
 }

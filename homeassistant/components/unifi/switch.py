@@ -43,7 +43,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -58,6 +58,14 @@ from .entity import (
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
+
+
+@callback
+def async_block_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if client is allowed."""
+    if obj_id in controller.option_supported_clients:
+        return True
+    return obj_id in controller.option_block_clients
 
 
 @callback
@@ -198,7 +206,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         icon="mdi:ethernet",
-        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
+        allowed_fn=async_block_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_block_client_control_fn,
@@ -320,19 +328,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if not controller.is_admin:
-        return
-
-    for mac in controller.option_block_clients:
-        if mac not in controller.api.clients and mac in controller.api.clients_all:
-            controller.api.clients.process_raw(
-                [dict(controller.api.clients_all[mac].raw)]
-            )
-
-    controller.register_platform_add_entities(
-        UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiSwitchEntity,
+        ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 

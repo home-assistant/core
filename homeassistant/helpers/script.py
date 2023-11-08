@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from copy import copy
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -401,7 +402,7 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> ServiceResponse:
+    async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
@@ -443,7 +444,7 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return response
+        return ScriptRunResult(response, self._variables)
 
     async def _async_step(self, log_exceptions):
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -910,7 +911,7 @@ class _ScriptRun:
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
         with trace_path("choose"):
@@ -932,7 +933,7 @@ class _ScriptRun:
 
     async def _async_if_step(self) -> None:
         """If sequence."""
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         if_data = await self._script._async_get_if_data(self._step)
 
         test_conditions = False
@@ -1046,7 +1047,7 @@ class _ScriptRun:
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         scripts = await self._script._async_get_parallel_scripts(self._step)
 
         async def async_run_with_trace(idx: int, script: Script) -> None:
@@ -1106,9 +1107,8 @@ class _QueuedScriptRun(_ScriptRun):
             await super().async_run()
 
     def _finish(self) -> None:
-        # pylint: disable=protected-access
         if self.lock_acquired:
-            self._script._queue_lck.release()
+            self._script._queue_lck.release()  # pylint: disable=protected-access
             self.lock_acquired = False
         super()._finish()
 
@@ -1187,6 +1187,14 @@ class _IfData(TypedDict):
     if_conditions: list[ConditionCheckerType]
     if_then: Script
     if_else: Script | None
+
+
+@dataclass
+class ScriptRunResult:
+    """Container with the result of a script run."""
+
+    service_response: ServiceResponse
+    variables: dict
 
 
 class Script:
@@ -1480,7 +1488,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> ServiceResponse:
+    ) -> ScriptRunResult | None:
         """Run script."""
         if context is None:
             self._log(

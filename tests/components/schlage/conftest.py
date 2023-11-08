@@ -85,4 +85,5 @@ def mock_lock():
     )
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
+    mock_lock.keypad_disabled.return_value = False
     return mock_lock
