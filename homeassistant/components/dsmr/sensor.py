@@ -404,30 +404,42 @@ def create_mbus_entity(
     mbus: int, mtype: int, telegram: dict[str, DSMRObject]
 ) -> DSMRSensorEntityDescription | None:
     """Create a new MBUS Entity."""
-    if mtype == 3:
-        obis_reference = getattr(obis_references, f"BELGIUM_MBUS{mbus}_METER_READING2")
-        if obis_reference in telegram:
-            return DSMRSensorEntityDescription(
-                key=f"mbus{mbus}_gas_reading",
-                name=f"Gas consumption mbus{mbus}",
-                obis_reference=obis_reference,
-                is_gas=True,
-                force_update=True,
-                device_class=SensorDeviceClass.GAS,
-                state_class=SensorStateClass.TOTAL_INCREASING,
+    if (
+        mtype == 3
+        and (
+            obis_reference := getattr(
+                obis_references, f"BELGIUM_MBUS{mbus}_METER_READING2"
             )
-    if mtype == 7:
-        obis_reference = getattr(obis_references, f"BELGIUM_MBUS{mbus}_METER_READING1")
-        if obis_reference in telegram:
-            return DSMRSensorEntityDescription(
-                key=f"mbus{mbus}_water_reading",
-                name=f"Water consumption mbus{mbus}",
-                obis_reference=obis_reference,
-                is_water=True,
-                force_update=True,
-                device_class=SensorDeviceClass.WATER,
-                state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+        in telegram
+    ):
+        return DSMRSensorEntityDescription(
+            key=f"mbus{mbus}_gas_reading",
+            name=f"Gas consumption mbus{mbus}",
+            obis_reference=obis_reference,
+            is_gas=True,
+            force_update=True,
+            device_class=SensorDeviceClass.GAS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+    if (
+        mtype == 7
+        and (
+            obis_reference := getattr(
+                obis_references, f"BELGIUM_MBUS{mbus}_METER_READING1"
             )
+        )
+        in telegram
+    ):
+        return DSMRSensorEntityDescription(
+            key=f"mbus{mbus}_water_reading",
+            name=f"Water consumption mbus{mbus}",
+            obis_reference=obis_reference,
+            is_water=True,
+            force_update=True,
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
     return None
 
 
@@ -453,33 +465,36 @@ def create_mbus_entities(
 ) -> list[DSMREntity]:
     """Create MBUS Entities."""
     entities = []
-    if telegram:
-        for idx in range(1, 5):
-            device_type = getattr(obis_references, f"BELGIUM_MBUS{idx}_DEVICE_TYPE")
-            if device_type in telegram:
-                type_ = int(telegram[device_type].value)
-                if type_ not in (3, 7):
-                    continue
-                serial_ = ""
-                if (
-                    identifier := getattr(
-                        obis_references,
-                        f"BELGIUM_MBUS{idx}_EQUIPMENT_IDENTIFIER",
-                    )
-                ) in telegram:
-                    serial_ = telegram[identifier].value
-                if description := create_mbus_entity(idx, type_, telegram):
-                    entities.append(
-                        DSMREntity(
-                            description,
-                            entry,
-                            telegram,
-                            *device_class_and_uom(
-                                telegram, description
-                            ),  # type: ignore[arg-type]
-                            serial_,
-                        )
-                    )
+    if not telegram:
+        return []
+    for idx in range(1, 5):
+        if (
+            device_type := getattr(obis_references, f"BELGIUM_MBUS{idx}_DEVICE_TYPE")
+        ) not in telegram:
+            continue
+        if (type_ := int(telegram[device_type].value)) not in (3, 7):
+            continue
+        if (
+            identifier := getattr(
+                obis_references,
+                f"BELGIUM_MBUS{idx}_EQUIPMENT_IDENTIFIER",
+            )
+        ) in telegram:
+            serial_ = telegram[identifier].value
+        else:
+            serial_ = ""
+        if description := create_mbus_entity(idx, type_, telegram):
+            entities.append(
+                DSMREntity(
+                    description,
+                    entry,
+                    telegram,
+                    *device_class_and_uom(
+                        telegram, description
+                    ),  # type: ignore[arg-type]
+                    serial_,
+                )
+            )
     return entities
 
 
