@@ -102,9 +102,10 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         """Set alarm features."""
         # Search if the arm home feature is present => has an "alarm2" endpoint
         can_arm_home = next(
-            filter(
-                lambda x: (x["name"] == "alarm2" and x["ep_type"] == "signal"),
-                self._node["show_endpoints"],
+            (
+                endpoint
+                for endpoint in self._node["show_endpoints"]
+                if endpoint["name"] == "alarm2" and endpoint["ep_type"] == "signal"
             ),
             None,
         )
