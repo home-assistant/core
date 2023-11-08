@@ -24,6 +24,7 @@ from homeassistant.components import (
     prometheus,
     sensor,
     switch,
+    update,
 )
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -105,6 +106,34 @@ async def generate_latest_metrics(client):
     assert len(body) > 3
 
     return body
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_setup_enumeration(hass, hass_client, entity_registry, namespace):
+    """Test that setup enumerates existing states/entities."""
+
+    # The order of when things are created must be carefully controlled in
+    # this test, so we don't use fixtures.
+
+    sensor_1 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_1",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="outside_temperature",
+        original_name="Outside Temperature",
+    )
+    set_state_with_entry(hass, sensor_1, 12.3, {})
+    assert await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
+
+    client = await hass_client()
+    body = await generate_latest_metrics(client)
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 12.3' in body
+    )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -230,6 +259,12 @@ async def test_sensor_device_class(client, sensor_entities) -> None:
         'sensor_power_kwh{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 14.0' in body
+    )
+
+    assert (
+        'sensor_timestamp_seconds{domain="sensor",'
+        'entity="sensor.timestamp",'
+        'friendly_name="Timestamp"} 1.691445808136036e+09' in body
     )
 
 
@@ -510,6 +545,23 @@ async def test_cover(client, cover_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_device_tracker(client, device_tracker_entities) -> None:
+    """Test prometheus metrics for device_tracker."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 1.0' in body
+    )
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.watch",'
+        'friendly_name="Watch"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_counter(client, counter_entities) -> None:
     """Test prometheus metrics for counter."""
     body = await generate_latest_metrics(client)
@@ -518,6 +570,23 @@ async def test_counter(client, counter_entities) -> None:
         'counter_value{domain="counter",'
         'entity="counter.counter",'
         'friendly_name="None"} 2.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_update(client, update_entities) -> None:
+    """Test prometheus metrics for update."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'update_state{domain="update",'
+        'entity="update.firmware",'
+        'friendly_name="Firmware"} 1.0' in body
+    )
+    assert (
+        'update_state{domain="update",'
+        'entity="update.addon",'
+        'friendly_name="Addon"} 0.0' in body
     )
 
 
@@ -1032,6 +1101,16 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_11, 50)
     data["sensor_11"] = sensor_11
 
+    sensor_12 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_12",
+        original_device_class=SensorDeviceClass.TIMESTAMP,
+        suggested_object_id="Timestamp",
+        original_name="Timestamp",
+    )
+    set_state_with_entry(hass, sensor_12, "2023-08-07T15:03:28.136036-0700")
+    data["sensor_12"] = sensor_12
     await hass.async_block_till_done()
     return data
 
@@ -1525,6 +1604,36 @@ async def counter_fixture(
     )
     set_state_with_entry(hass, counter_1, 2)
     data["counter_1"] = counter_1
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="update_entities")
+async def update_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate update entities."""
+    data = {}
+    update_1 = entity_registry.async_get_or_create(
+        domain=update.DOMAIN,
+        platform="test",
+        unique_id="update_1",
+        suggested_object_id="firmware",
+        original_name="Firmware",
+    )
+    set_state_with_entry(hass, update_1, STATE_ON)
+    data["update_1"] = update_1
+
+    update_2 = entity_registry.async_get_or_create(
+        domain=update.DOMAIN,
+        platform="test",
+        unique_id="update_2",
+        suggested_object_id="addon",
+        original_name="Addon",
+    )
+    set_state_with_entry(hass, update_2, STATE_OFF)
+    data["update_2"] = update_2
 
     await hass.async_block_till_done()
     return data

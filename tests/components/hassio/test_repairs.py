@@ -84,6 +84,7 @@ async def test_supervisor_issue_repair_flow(
         "errors": None,
         "description_placeholders": {"reference": "/dev/sda1"},
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -292,6 +293,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
         "errors": None,
         "description_placeholders": None,
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -371,6 +373,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         "errors": None,
         "description_placeholders": None,
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -580,6 +583,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
         "errors": None,
         "description_placeholders": {"components": "Home Assistant\n- test"},
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")

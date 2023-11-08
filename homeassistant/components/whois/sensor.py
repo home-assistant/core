@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import cast
 
 from whois import Domain
@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
@@ -45,7 +46,10 @@ def _days_until_expiration(domain: Domain) -> int | None:
     if domain.expiration_date is None:
         return None
     # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
-    return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
+    return cast(
+        int,
+        (domain.expiration_date - dt_util.utcnow().replace(tzinfo=None)).days,
+    )
 
 
 def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
@@ -55,7 +59,7 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
 
     # If timezone info isn't provided by the Whois, assume UTC.
     if timestamp.tzinfo is None:
-        return timestamp.replace(tzinfo=timezone.utc)
+        return timestamp.replace(tzinfo=UTC)
 
     return timestamp
 

@@ -34,7 +34,9 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -125,6 +127,7 @@ class BrWeather(WeatherEntity):
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_should_poll = False
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(self, config, coordinates):
         """Initialize the platform with a data instance and station name."""
@@ -154,6 +157,10 @@ class BrWeather(WeatherEntity):
         if not self.hass:
             return
         self.async_write_ha_state()
+        assert self.platform.config_entry
+        self.platform.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("daily",))
+        )
 
     def _calc_condition(self, data: BrData):
         """Return the current condition."""
@@ -185,3 +192,7 @@ class BrWeather(WeatherEntity):
             fcdata_out.append(data_out)
 
         return fcdata_out
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._attr_forecast

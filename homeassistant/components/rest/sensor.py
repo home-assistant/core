@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
-    SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
@@ -31,7 +30,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerSensorEntity,
@@ -118,7 +117,7 @@ async def async_setup_platform(
     )
 
 
-class RestSensor(ManualTriggerSensorEntity, RestEntity, SensorEntity):
+class RestSensor(ManualTriggerSensorEntity, RestEntity):
     """Implementation of a REST sensor."""
 
     def __init__(

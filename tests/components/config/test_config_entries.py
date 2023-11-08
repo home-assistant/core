@@ -396,6 +396,7 @@ async def test_initialize_flow(hass: HomeAssistant, client) -> None:
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
+        "preview": None,
     }
 
 
@@ -571,6 +572,7 @@ async def test_two_step_flow(
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -647,6 +649,7 @@ async def test_continue_flow_unauth(
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     hass_admin_user.groups = []
@@ -795,6 +798,9 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
+                async def async_step_user(self, user_input=None):
+                    raise NotImplementedError
+
             return OptionsFlowHandler()
 
     mock_integration(hass, MockModule("test"))
@@ -822,6 +828,7 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
         "description_placeholders": {"enabled": "Set to true to be true"},
         "errors": None,
         "last_step": None,
+        "preview": None,
     }
 
 
@@ -917,6 +924,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -998,6 +1006,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -1264,6 +1273,9 @@ async def test_ignore_flow(
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
             return self.async_show_form(step_id="account")
+
+        async def async_step_account(self, user_input=None):
+            raise NotImplementedError
 
     ws_client = await hass_ws_client(hass)
 

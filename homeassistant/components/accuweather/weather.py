@@ -17,7 +17,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -27,9 +28,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import AccuWeatherDataUpdateCoordinator
@@ -40,7 +40,7 @@ from .const import (
     ATTR_SPEED,
     ATTR_VALUE,
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
 )
 
@@ -58,7 +58,7 @@ async def async_setup_entry(
 
 
 class AccuWeatherEntity(
-    CoordinatorEntity[AccuWeatherDataUpdateCoordinator], WeatherEntity
+    SingleCoordinatorWeatherEntity[AccuWeatherDataUpdateCoordinator]
 ):
     """Define an AccuWeather entity."""
 
@@ -76,18 +76,13 @@ class AccuWeatherEntity(
         self._attr_unique_id = coordinator.location_key
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = coordinator.device_info
+        if self.coordinator.forecast:
+            self._attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        try:
-            return [
-                k
-                for k, v in CONDITION_CLASSES.items()
-                if self.coordinator.data["WeatherIcon"] in v
-            ][0]
-        except IndexError:
-            return None
+        return CONDITION_MAP.get(self.coordinator.data["WeatherIcon"])
 
     @property
     def cloud_coverage(self) -> float:
@@ -177,9 +172,12 @@ class AccuWeatherEntity(
                 ],
                 ATTR_FORECAST_UV_INDEX: item["UVIndex"][ATTR_VALUE],
                 ATTR_FORECAST_WIND_BEARING: item["WindDay"][ATTR_DIRECTION]["Degrees"],
-                ATTR_FORECAST_CONDITION: [
-                    k for k, v in CONDITION_CLASSES.items() if item["IconDay"] in v
-                ][0],
+                ATTR_FORECAST_CONDITION: CONDITION_MAP.get(item["IconDay"]),
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
+
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self.forecast

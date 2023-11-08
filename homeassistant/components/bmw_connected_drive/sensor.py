@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH, PERCENTAGE, VOLUME, UnitOfElectricCurrent
@@ -94,6 +95,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key_class="fuel_and_battery",
         unit_type=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
@@ -102,6 +104,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:speedometer",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "remaining_range_total": BMWSensorEntityDescription(
         key="remaining_range_total",
@@ -110,6 +113,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_range_electric": BMWSensorEntityDescription(
         key="remaining_range_electric",
@@ -118,6 +122,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_range_fuel": BMWSensorEntityDescription(
         key="remaining_range_fuel",
@@ -126,6 +131,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_fuel": BMWSensorEntityDescription(
         key="remaining_fuel",
@@ -134,6 +140,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:gas-station",
         unit_type=VOLUME,
         value=lambda x, hass: convert_and_round(x, hass.config.units.volume, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_fuel_percent": BMWSensorEntityDescription(
         key="remaining_fuel_percent",
@@ -141,6 +148,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
         unit_type=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 

@@ -95,16 +95,18 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 class IssueRegistry:
     """Class to hold a registry of issues."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, *, read_only: bool = False) -> None:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
+        self._read_only = read_only
         self._store = IssueRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            read_only=read_only,
         )
 
     @callback
@@ -278,10 +280,10 @@ def async_get(hass: HomeAssistant) -> IssueRegistry:
     return cast(IssueRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
     """Load issue registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = IssueRegistry(hass)
+    hass.data[DATA_REGISTRY] = IssueRegistry(hass, read_only=read_only)
     await hass.data[DATA_REGISTRY].async_load()
 
 

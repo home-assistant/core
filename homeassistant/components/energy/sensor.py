@@ -377,11 +377,10 @@ class EnergyCostSensor(SensorEntity):
         if energy_price_unit is None:
             converted_energy_price = energy_price
         else:
-            if self._adapter.source_type == "grid":
-                converter: Callable[
-                    [float, str, str], float
-                ] = unit_conversion.EnergyConverter.convert
-            elif self._adapter.source_type in ("gas", "water"):
+            converter: Callable[[float, str, str], float]
+            if energy_unit in VALID_ENERGY_UNITS:
+                converter = unit_conversion.EnergyConverter.convert
+            else:
                 converter = unit_conversion.VolumeConverter.convert
 
             converted_energy_price = converter(

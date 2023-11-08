@@ -1,0 +1,10 @@
+{
+  "kind": "youtube#SubscriptionListResponse",
+  "etag": "6C9iFE7CzKQqPrEoJlE0H2U27xI",
+  "nextPageToken": "CAEQAA",
+  "pageInfo": {
+    "totalResults": 0,
+    "resultsPerPage": 1
+  },
+  "items": []
+}

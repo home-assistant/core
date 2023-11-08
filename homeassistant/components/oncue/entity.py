@@ -20,6 +20,8 @@ class OncueEntity(
 ):
     """Representation of an Oncue entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[str, OncueDevice]],
@@ -33,7 +35,7 @@ class OncueEntity(
         self.entity_description = description
         self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
-        self._attr_name = f"{device.name} {sensor.display_name}"
+        self._attr_name = sensor.display_name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,

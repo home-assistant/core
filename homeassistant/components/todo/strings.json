@@ -1,0 +1,56 @@
+{
+  "title": "To-do list",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::todo::title%]"
+    }
+  },
+  "services": {
+    "add_item": {
+      "name": "Add to-do list item",
+      "description": "Add a new to-do list item.",
+      "fields": {
+        "item": {
+          "name": "Item name",
+          "description": "The name that represents the to-do item."
+        }
+      }
+    },
+    "update_item": {
+      "name": "Update to-do list item",
+      "description": "Update an existing to-do list item based on its name.",
+      "fields": {
+        "item": {
+          "name": "Item name",
+          "description": "The name for the to-do list item."
+        },
+        "rename": {
+          "name": "Rename item",
+          "description": "The new name of the to-do item"
+        },
+        "status": {
+          "name": "Set status",
+          "description": "A status or confirmation of the to-do item."
+        }
+      }
+    },
+    "remove_item": {
+      "name": "Remove a to-do list item",
+      "description": "Remove an existing to-do list item by its name.",
+      "fields": {
+        "item": {
+          "name": "Item name",
+          "description": "The name for the to-do list items."
+        }
+      }
+    }
+  },
+  "selector": {
+    "status": {
+      "options": {
+        "needs_action": "Not completed",
+        "completed": "Completed"
+      }
+    }
+  }
+}

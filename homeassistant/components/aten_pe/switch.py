@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from atenpdu import AtenPE, AtenPEError  # pylint: disable=import-error
+from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
 
 from homeassistant.components.switch import (

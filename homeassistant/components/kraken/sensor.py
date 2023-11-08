@@ -47,93 +47,93 @@ class KrakenSensorEntityDescription(SensorEntityDescription, KrakenRequiredKeysM
 SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
     KrakenSensorEntityDescription(
         key="ask",
-        name="Ask",
+        translation_key="ask",
         value_fn=lambda x, y: x.data[y]["ask"][0],
     ),
     KrakenSensorEntityDescription(
         key="ask_volume",
-        name="Ask Volume",
+        translation_key="ask_volume",
         value_fn=lambda x, y: x.data[y]["ask"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="bid",
-        name="Bid",
+        translation_key="bid",
         value_fn=lambda x, y: x.data[y]["bid"][0],
     ),
     KrakenSensorEntityDescription(
         key="bid_volume",
-        name="Bid Volume",
+        translation_key="bid_volume",
         value_fn=lambda x, y: x.data[y]["bid"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="volume_today",
-        name="Volume Today",
+        translation_key="volume_today",
         value_fn=lambda x, y: x.data[y]["volume"][0],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="volume_last_24h",
-        name="Volume last 24h",
+        translation_key="volume_last_24h",
         value_fn=lambda x, y: x.data[y]["volume"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="volume_weighted_average_today",
-        name="Volume weighted average today",
+        translation_key="volume_weighted_average_today",
         value_fn=lambda x, y: x.data[y]["volume_weighted_average"][0],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="volume_weighted_average_last_24h",
-        name="Volume weighted average last 24h",
+        translation_key="volume_weighted_average_last_24h",
         value_fn=lambda x, y: x.data[y]["volume_weighted_average"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="number_of_trades_today",
-        name="Number of trades today",
+        translation_key="number_of_trades_today",
         value_fn=lambda x, y: x.data[y]["number_of_trades"][0],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="number_of_trades_last_24h",
-        name="Number of trades last 24h",
+        translation_key="number_of_trades_last_24h",
         value_fn=lambda x, y: x.data[y]["number_of_trades"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="last_trade_closed",
-        name="Last trade closed",
+        translation_key="last_trade_closed",
         value_fn=lambda x, y: x.data[y]["last_trade_closed"][0],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="low_today",
-        name="Low today",
+        translation_key="low_today",
         value_fn=lambda x, y: x.data[y]["low"][0],
     ),
     KrakenSensorEntityDescription(
         key="low_last_24h",
-        name="Low last 24h",
+        translation_key="low_last_24h",
         value_fn=lambda x, y: x.data[y]["low"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="high_today",
-        name="High today",
+        translation_key="high_today",
         value_fn=lambda x, y: x.data[y]["high"][0],
     ),
     KrakenSensorEntityDescription(
         key="high_last_24h",
-        name="High last 24h",
+        translation_key="high_last_24h",
         value_fn=lambda x, y: x.data[y]["high"][1],
         entity_registry_enabled_default=False,
     ),
     KrakenSensorEntityDescription(
         key="opening_price_today",
-        name="Opening price today",
+        translation_key="opening_price_today",
         value_fn=lambda x, y: x.data[y]["opening_price"],
         entity_registry_enabled_default=False,
     ),
@@ -207,6 +207,9 @@ class KrakenSensor(
 
     entity_description: KrakenSensorEntityDescription
 
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         kraken_data: KrakenData,
@@ -233,7 +236,6 @@ class KrakenSensor(
         ).lower()
         self._received_data_at_least_once = False
         self._available = True
-        self._attr_state_class = SensorStateClass.MEASUREMENT
 
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.kraken.com/",
@@ -242,7 +244,6 @@ class KrakenSensor(
             manufacturer="Kraken.com",
             name=self._device_name,
         )
-        self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

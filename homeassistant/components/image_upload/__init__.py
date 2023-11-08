@@ -78,8 +78,10 @@ class ImageStorageCollection(collection.DictStorageCollection):
         data = self.CREATE_SCHEMA(dict(data))
         uploaded_file: FileField = data["file"]
 
-        if not uploaded_file.content_type.startswith(
-            ("image/gif", "image/jpeg", "image/png")
+        if uploaded_file.content_type not in (
+            "image/gif",
+            "image/jpeg",
+            "image/png",
         ):
             raise vol.Invalid("Only jpeg, png, and gif images are allowed")
 

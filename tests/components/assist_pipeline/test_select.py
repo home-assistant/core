@@ -26,7 +26,6 @@ from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
 class SelectPlatform(MockPlatform):
     """Fake select platform."""
 
-    # pylint: disable=method-hidden
     async def async_setup_entry(
         self,
         hass: HomeAssistant,
@@ -71,6 +70,8 @@ async def pipeline_1(
             "tts_voice": None,
             "stt_engine": None,
             "stt_language": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
 
@@ -91,6 +92,8 @@ async def pipeline_2(
             "tts_voice": None,
             "stt_engine": None,
             "stt_language": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
         }
     )
 
