@@ -2,7 +2,12 @@
   "domain": "instructure",
   "name": "canvas",
   "codeowners": [
-    "@theowiik"
+    "@theowiik",
+    "@elias-carlson",
+    "@erikwessman",
+    "Caodongying",
+    "@F-MertGultekin",
+    "@Lemi007"
   ],
   "config_flow": true,
   "dependencies": [],

@@ -14,13 +14,14 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+HOST = "host"
+ACCESS_TOKEN = "access_token"
 
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(HOST): str,
+        vol.Required(ACCESS_TOKEN): str,
     }
 )
 
@@ -35,7 +36,7 @@ class PlaceholderHub:
         """Initialize."""
         self.host = host
 
-    async def authenticate(self, username: str, password: str) -> bool:
+    async def authenticate(self, access_token: str) -> bool:
         """Test if we can authenticate with the host."""
         return True
 
@@ -53,9 +54,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    hub = PlaceholderHub(data[HOST])
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data[ACCESS_TOKEN]):
         raise InvalidAuth
 
     # If you cannot connect:
@@ -64,7 +65,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": "Canvas"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
