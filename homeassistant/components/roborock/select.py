@@ -3,6 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from roborock.containers import Status
+from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -37,6 +38,8 @@ class RoborockSelectDescription(
 ):
     """Class to describe an Roborock select entity."""
 
+    protocol_listener: RoborockDataProtocol | None = None
+
 
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
     RoborockSelectDescription(
@@ -49,6 +52,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         if data.water_box_mode is not None
         else None,
         parameter_lambda=lambda key, status: [status.get_mop_intensity_code(key)],
+        protocol_listener=RoborockDataProtocol.WATER_BOX_MODE,
     ),
     RoborockSelectDescription(
         key="mop_mode",
@@ -105,6 +109,8 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator)
         self._attr_options = options
+        if (protocol := self.entity_description.protocol_listener) is not None:
+            self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
