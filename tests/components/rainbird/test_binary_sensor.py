@@ -14,7 +14,6 @@ from .conftest import (
     CONFIG_ENTRY_DATA_OLD_FORMAT,
     RAIN_SENSOR_OFF,
     RAIN_SENSOR_ON,
-    SERIAL_NUMBER,
     mock_response_error,
 )
 
@@ -59,49 +58,24 @@ async def test_rainsensor(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id", "entity_unique_id"),
+    ("config_entry_data", "config_entry_unique_id", "setup_config_entry"),
     [
-        (SERIAL_NUMBER, "1263613994342-rainsensor"),
-        # Some existing config entries may have a "0" serial number but preserve
-        # their unique id
-        (0, "0-rainsensor"),
-    ],
-)
-async def test_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_unique_id: str,
-) -> None:
-    """Test rainsensor binary sensor."""
-    rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
-    assert rainsensor is not None
-    assert rainsensor.attributes == {
-        "friendly_name": "Rain Bird Controller Rainsensor",
-        "icon": "mdi:water",
-    }
-
-    entity_entry = entity_registry.async_get(
-        "binary_sensor.rain_bird_controller_rainsensor"
-    )
-    assert entity_entry
-    assert entity_entry.unique_id == entity_unique_id
-
-
-@pytest.mark.parametrize(
-    ("config_entry_data", "config_entry_unique_id"),
-    [
-        (CONFIG_ENTRY_DATA_OLD_FORMAT, None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None, None),
     ],
 )
 async def test_no_unique_id(
     hass: HomeAssistant,
     responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test rainsensor binary sensor with no unique id."""
 
     # Failure to migrate config entry to a unique id
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
     assert rainsensor is not None

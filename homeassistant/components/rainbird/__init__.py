@@ -42,8 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    if entry.unique_id is None:
-        await _fix_unique_id(hass, controller, entry)
+    await _fix_unique_id(hass, controller, entry)
 
     try:
         model_info = await controller.get_model_and_version()
@@ -64,6 +63,7 @@ async def _fix_unique_id(
     hass: HomeAssistant, controller: AsyncRainbirdController, entry: ConfigEntry
 ):
     """Update the config entry with a unique id based on the mac address."""
+    _LOGGER.debug("Checking for migration of config entry (%s)", entry.unique_id)
     if not (mac_address := entry.data.get(CONF_MAC)):
         try:
             wifi_params = await controller.get_wifi_params()
@@ -77,6 +77,7 @@ async def _fix_unique_id(
 
     new_unique_id = format_mac(mac_address)
     if entry.unique_id == new_unique_id and CONF_MAC in entry.data:
+        _LOGGER.debug("Config entry already in correct state")
         return
 
     entries = hass.config_entries.async_entries(DOMAIN)

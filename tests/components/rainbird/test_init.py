@@ -6,6 +6,7 @@ from http import HTTPStatus
 
 import pytest
 
+from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
@@ -110,8 +111,8 @@ async def test_communication_failure(
 )
 async def test_fix_unique_id(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test fix of a config entry with no unique id."""
 
@@ -123,7 +124,8 @@ async def test_fix_unique_id(
     assert entries[0].unique_id is None
     assert entries[0].data.get(CONF_MAC) is None
 
-    assert await setup_integration()
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     # Verify config entry now has a unique id
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -164,28 +166,20 @@ async def test_fix_unique_id(
 )
 async def test_fix_unique_id_failure(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     initial_response: AiohttpClientMockResponse,
     responses: list[AiohttpClientMockResponse],
     expected_warning: str,
     caplog: pytest.LogCaptureFixture,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test a failure during fix of a config entry with no unique id."""
 
     responses.insert(0, initial_response)
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.NOT_LOADED
-    assert entries[0].unique_id is None
-
-    assert await setup_integration()
-
+    await config_entry.async_setup(hass)
     # Config entry is loaded, but not updated
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
-    assert entries[0].unique_id is None
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.unique_id is None
 
     assert expected_warning in caplog.text
 
@@ -196,12 +190,11 @@ async def test_fix_unique_id_failure(
 )
 async def test_fix_unique_id_duplicate(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a config entry unique id already exists during fix."""
-
     # Add a second config entry that has no unique id, but has the same
     # mac address. When fixing the unique id, it can't use the mac address
     # since it already exists.
@@ -218,21 +211,13 @@ async def test_fix_unique_id_duplicate(
     responses.append(mock_json_response(WIFI_PARAMS_RESPONSE))
     responses.extend(responses_copy)
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 2
-    assert entries[0].state == ConfigEntryState.NOT_LOADED
-    assert entries[0].unique_id is MAC_ADDRESS_UNIQUE_ID
-    assert entries[1].state == ConfigEntryState.NOT_LOADED
-    assert entries[1].unique_id is None
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.unique_id == MAC_ADDRESS_UNIQUE_ID
 
-    assert await setup_integration()
-
+    await other_entry.async_setup(hass)
+    assert other_entry.state == ConfigEntryState.LOADED
     # Config entry unique id could not be updated since it already exists
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 2
-    assert entries[0].state == ConfigEntryState.LOADED
-    assert entries[0].unique_id is MAC_ADDRESS_UNIQUE_ID
-    assert entries[1].state == ConfigEntryState.LOADED
-    assert entries[1].unique_id is None
+    assert other_entry.unique_id is None
 
     assert "Unable to fix missing unique id (already exists)" in caplog.text

@@ -15,6 +15,7 @@ from .conftest import (
     RAIN_DELAY_OFF,
     mock_response_error,
 )
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
@@ -55,24 +56,15 @@ async def test_sensors(
 
     entity_entry = entity_registry.async_get("sensor.rain_bird_controller_raindelay")
     assert entity_entry
-    assert entity_entry.unique_id == "1263613994342-raindelay"
+    assert entity_entry.unique_id == "4c:a1:61:00:11:22-raindelay"
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id", "config_entry_data", "initial_response"),
+    ("config_entry_unique_id", "config_entry_data", "setup_config_entry"),
     [
         # Config entry setup without a unique id since it had no serial number
         (
             None,
-            {
-                **CONFIG_ENTRY_DATA_OLD_FORMAT,
-                "serial_number": 0,
-            },
-            mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
-        ),
-        # Legacy case for old config entries with serial number 0 preserves old behavior
-        (
-            "0",
             {
                 **CONFIG_ENTRY_DATA_OLD_FORMAT,
                 "serial_number": 0,
@@ -86,13 +78,15 @@ async def test_sensor_no_unique_id(
     entity_registry: er.EntityRegistry,
     responses: list[AiohttpClientMockResponse],
     config_entry_unique_id: str | None,
-    initial_response: AiohttpClientMockResponse,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor platform with no unique id."""
 
     # Failure to migrate config entry to a unique id
-    if initial_response:
-        responses.insert(0, initial_response)
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     raindelay = hass.states.get("sensor.rain_bird_controller_raindelay")
     assert raindelay is not None
