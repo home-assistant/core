@@ -1,6 +1,5 @@
 """Tests for the AsusWrt sensor."""
 from datetime import timedelta
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -217,10 +216,7 @@ async def test_connect_fail(hass: HomeAssistant, connect_legacy, side_effect) ->
     )
     config_entry.add_to_hass(hass)
 
-    connect_legacy.return_value.connection.async_connect = AsyncMock(
-        side_effect=side_effect
-    )
-    connect_legacy.return_value.async_get_nvram = AsyncMock()
+    connect_legacy.return_value.connection.async_connect.side_effect = side_effect
     connect_legacy.return_value.is_connected = False
 
     # initial setup fail
