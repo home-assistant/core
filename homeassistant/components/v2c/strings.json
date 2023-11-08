@@ -19,6 +19,18 @@
     "sensor": {
       "charge_power": {
         "name": "Charge power"
+      },
+      "charge_energy": {
+        "name": "Charge energy"
+      },
+      "charge_time": {
+        "name": "Charge time"
+      },
+      "house_power": {
+        "name": "House power"
+      },
+      "fv_power": {
+        "name": "Photovoltaic power"
       }
     }
   }
