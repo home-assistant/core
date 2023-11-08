@@ -276,3 +276,35 @@ async def test_fix_entity_unique_ids(
 
     entity_unique_id = next(iter(entity_registry.entities.values())).unique_id
     assert entity_unique_id == expected_unique_id
+
+
+@pytest.mark.parametrize("config_entry_unique_id", [(SERIAL_NUMBER)])
+async def test_cannot_fix_entity_unique_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test cleanup of a entity unique id that cannot be repaired."""
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        "number",
+        unique_id=f"{SERIAL_NUMBER}-rain-delay",
+        config_entry=config_entry,
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        "number",
+        unique_id=f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+        config_entry=config_entry,
+    )
+    assert len(entity_registry.entities) == 2
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    # Cleaned up entry
+    assert len(entity_registry.entities) == 1
+
+    entity_unique_id = next(iter(entity_registry.entities.values())).unique_id
+    assert entity_unique_id == f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay"
