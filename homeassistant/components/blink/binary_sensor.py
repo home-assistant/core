@@ -47,6 +47,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the blink binary sensors."""
+
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
 
     entities = [

@@ -559,6 +559,7 @@ async def test_forecast_subscription(
         assert forecast1 == snapshot
 
         freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         msg = await client.receive_json()
 
@@ -575,5 +576,8 @@ async def test_forecast_subscription(
                 "subscription": subscription_id,
             }
         )
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         msg = await client.receive_json()
         assert msg["success"]

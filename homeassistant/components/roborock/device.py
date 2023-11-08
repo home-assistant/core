@@ -37,7 +37,7 @@ class RoborockEntity(Entity):
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
-        return self._api.cache.get(attribute)
+        return self._api.cache[attribute]
 
     async def send(
         self,
@@ -46,7 +46,7 @@ class RoborockEntity(Entity):
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
-            response = await self._api.send_command(command, params)
+            response: dict = await self._api.send_command(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
                 f"Error while calling {command.name if isinstance(command, RoborockCommand) else command} with {params}"
@@ -81,11 +81,7 @@ class RoborockCoordinatedEntity(
     def _device_status(self) -> Status:
         """Return the status of the device."""
         data = self.coordinator.data
-        if data:
-            status = data.status
-            if status:
-                return status
-        return Status({})
+        return data.status
 
     @property
     def cloud_api(self) -> RoborockMqttClient:

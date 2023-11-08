@@ -5,13 +5,14 @@ import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
 
-from aiohttp import ClientError, ServerDisconnectedError
+from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.enums import OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    NotSuchTokenException,
     TooManyRequestsException,
 )
 from pyoverkiz.models import Device, Scenario
@@ -67,11 +68,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 client.get_scenarios(),
             ]
         )
-    except BadCredentialsException as exception:
+    except (BadCredentialsException, NotSuchTokenException) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
-    except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
+    except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
@@ -129,10 +130,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
             model=gateway.sub_type.beautify_name if gateway.sub_type else None,
-            manufacturer=server.manufacturer,
+            manufacturer=client.server.manufacturer,
             name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
-            configuration_url=server.configuration_url,
+            configuration_url=client.server.configuration_url,
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
