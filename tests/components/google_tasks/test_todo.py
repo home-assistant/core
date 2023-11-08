@@ -57,7 +57,6 @@ LIST_TASKS_RESPONSE_MULTIPLE = {
 }
 
 
-
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
@@ -118,10 +117,10 @@ def create_response_object(api_response: dict | list) -> tuple[Response, bytes]:
 
 
 def create_batch_response_object(
-    contentids: list[str], api_responses: list[dict | list | Response]
+    content_ids: list[str], api_responses: list[dict | list | Response]
 ) -> tuple[Response, bytes]:
     """Create a batch response in the multipart/mixed format."""
-    assert len(api_responses) == len(contentids)
+    assert len(api_responses) == len(content_ids)
     content = []
     for api_response in api_responses:
         status = 200
@@ -134,7 +133,7 @@ def create_batch_response_object(
             [
                 f"--{BOUNDARY}",
                 "Content-Type: application/http",
-                f"{CONTENT_ID}: {contentids.pop()}",
+                f"{CONTENT_ID}: {content_ids.pop()}",
                 "",
                 f"HTTP/1.1 {status} OK",
                 "Content-Type: application/json; charset=UTF-8",
@@ -167,13 +166,13 @@ def create_batch_response_handler(
     def _handler(url, method, **kwargs) -> tuple[Response, bytes]:
         next_api_response = api_responses.pop(0)
         if method == "POST" and (body := kwargs.get("body")):
-            contentids = [
+            content_ids = [
                 line[len(CONTENT_ID) + 2 :]
                 for line in body.splitlines()
                 if line.startswith(f"{CONTENT_ID}:")
             ]
-            if contentids:
-                return create_batch_response_object(contentids, next_api_response)
+            if content_ids:
+                return create_batch_response_object(content_ids, next_api_response)
         return create_response_object(next_api_response)
 
     return _handler
@@ -685,7 +684,7 @@ async def test_delete_invalid_json_response(
             create_batch_response_handler(
                 [
                     LIST_TASK_LIST_RESPONSE,
-                    LIST_TASKS_RESPONSE,
+                    LIST_TASKS_RESPONSE_MULTIPLE,
                     [Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR})],
                 ]
             )
@@ -705,13 +704,13 @@ async def test_delete_server_error(
 
     state = hass.states.get("todo.my_tasks")
     assert state
-    assert state.state == "0"
+    assert state.state == "3"
 
     with pytest.raises(HomeAssistantError, match="responded with error"):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "delete_item",
-            {"uid": ["some-task-id-1"]},
+            "remove_item",
+            {"item": ["some-task-id-1"]},
             target={"entity_id": "todo.my_tasks"},
             blocking=True,
         )
