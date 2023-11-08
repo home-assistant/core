@@ -422,7 +422,7 @@ class EvoBroker:
         self.tcs_utc_offset = timedelta(
             minutes=client.locations[loc_idx].timeZone[UTC_OFFSET]
         )
-        self.temps: dict[str, Any] | None = {}
+        self.temps: dict[str, float | None] = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
@@ -473,6 +473,7 @@ class EvoBroker:
 
         session_id = get_session_id(self.client_v1)
 
+        self.temps = {}  # these are now stale, will fall back to v2 temps
         try:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
 
@@ -486,7 +487,7 @@ class EvoBroker:
                 ),
                 exc,
             )
-            self.temps = self.client_v1 = None
+            self.client_v1 = None
 
         except evohomeasync.EvohomeError as exc:
             _LOGGER.warning(
@@ -498,7 +499,6 @@ class EvoBroker:
                 ),
                 exc,
             )
-            self.temps = None  # these are now stale, will fall back to v2 temps
 
         else:
             if (
@@ -510,7 +510,7 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.temps = self.client_v1 = None
+                self.client_v1 = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
@@ -558,6 +558,8 @@ class EvoDevice(Entity):
     """
 
     _attr_should_poll = False
+
+    _evo_id: str
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome entity."""
@@ -620,18 +622,10 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
-        if self._evo_device.TYPE == "domesticHotWater":
-            dev_id = self._evo_device.dhwId
-        else:
-            dev_id = self._evo_device.zoneId
 
-        if self._evo_broker.temps and self._evo_broker.temps[dev_id] is not None:
-            return self._evo_broker.temps[dev_id]
-
-        if self._evo_device.temperatureStatus["isAvailable"]:
-            return self._evo_device.temperatureStatus["temperature"]
-
-        return None
+        if self._evo_broker.temps.get(self._evo_id) is not None:
+            return self._evo_broker.temps[self._evo_id]
+        return self._evo_device.temperature
 
     @property
     def setpoints(self) -> dict[str, Any]:

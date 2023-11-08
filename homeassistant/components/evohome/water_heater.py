@@ -68,6 +68,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         super().__init__(evo_broker, evo_device)
 
         self._attr_unique_id = evo_device.dhwId
+        self._evo_id = evo_device.dhwId
 
         self._attr_precision = (
             PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
