@@ -68,7 +68,7 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     def is_on(self) -> bool:
         """Return the current state of the on/off zone.
 
-        The zone is considered 'on' if & only if it is override/on (e.g. timer/on is 'off').
+        The zone is considered 'on' if the mode is either 'override' or 'timer'.
         """
         return (
             self._zone.data["mode"] in ["override", "timer"]
