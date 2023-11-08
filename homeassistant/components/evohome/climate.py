@@ -393,7 +393,7 @@ class EvoController(EvoClimateEntity):
         until = dt_util.as_utc(until) if until else None
 
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_mode(mode, until=until)  # type: ignore[arg-type]
+            self._evo_tcs.set_mode(mode, until=until)
         )
 
     @property
@@ -413,9 +413,9 @@ class EvoController(EvoClimateEntity):
         Controllers do not have a current temp, but one is expected by HA.
         """
         temps = [
-            z.temperatureStatus["temperature"]  # type: ignore[index]
+            z.temperatureStatus["temperature"]
             for z in self._evo_tcs.zones.values()
-            if z.temperatureStatus.get("isAvailable")  # type: ignore[union-attr]
+            if z.temperatureStatus.get("isAvailable")
         ]
         return round(sum(temps) / len(temps), 1) if temps else None
 
