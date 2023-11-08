@@ -27,10 +27,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Suppress very verbose logging from client
-logger = logging.getLogger("azure")
-logger.setLevel(logging.WARNING)
-
 
 class AzureDataExplorerClient:
     """Class for Azure Data Explorer Client."""

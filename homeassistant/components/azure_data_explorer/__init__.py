@@ -55,17 +55,15 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     deprecated warning and pass the rest to the config flow.
     """
 
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
-    if DOMAIN not in yaml_config:
-        return True
-    hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN][CONF_FILTER]
-
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: {}})
+    if DOMAIN in yaml_config:
+        hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN][CONF_FILTER]
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
+    # hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     adx = AzureDataExplorer(hass, entry)
     try:
         await adx.test_connection()
