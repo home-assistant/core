@@ -93,7 +93,7 @@ def raise_exceptions_from_results(
     zwave_objects: Sequence[T], results: Sequence[Any]
 ) -> None:
     """Raise list of exceptions from a list of results."""
-    errors: list[tuple[T, Any]]
+    errors: Sequence[tuple[T, Any]]
     if errors := [
         tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
     ]:
@@ -566,7 +566,7 @@ class ZWaveServices:
             ):
                 zwave_value = result[0]
                 cmd_status = result[1]
-                if cmd_status == CommandStatus.ACCEPTED:
+                if cmd_status.status == CommandStatus.ACCEPTED:
                     msg = "Set configuration parameter %s on Node %s with value %s"
                 else:
                     msg = (

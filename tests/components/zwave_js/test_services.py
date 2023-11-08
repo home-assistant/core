@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import voluptuous as vol
 from zwave_js_server.exceptions import FailedZWaveCommand
+from zwave_js_server.model.value import SetConfigParameterResult
 
 from homeassistant.components.group import Group
 from homeassistant.components.zwave_js.const import (
@@ -58,7 +59,12 @@ from tests.common import MockConfigEntry
 
 
 async def test_set_config_parameter(
-    hass: HomeAssistant, client, multisensor_6, aeotec_zw164_siren, integration
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    aeotec_zw164_siren,
+    integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the set_config_parameter service."""
     dev_reg = async_get_dev_reg(hass)
@@ -482,6 +488,75 @@ async def test_set_config_parameter(
             },
             blocking=True,
         )
+
+    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
+
+    caplog.clear()
+
+    config_value = aeotec_zw164_siren.values["2-112-0-32"]
+    cmd_result = SetConfigParameterResult("accepted", {"status": 255})
+
+    # Test accepted return
+    with patch(
+        "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
+        return_value=(config_value, cmd_result),
+    ) as mock_set_raw_config_parameter_value:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
+                ATTR_ENDPOINT: 0,
+                ATTR_CONFIG_PARAMETER: 32,
+                ATTR_VALUE_SIZE: 2,
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+        assert len(mock_set_raw_config_parameter_value.call_args_list) == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][0] == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][1] == 32
+        assert mock_set_raw_config_parameter_value.call_args[1] == {
+            "property_key": None,
+            "value_size": 2,
+            "value_format": 1,
+        }
+
+    assert "Set configuration parameter" in caplog.text
+    caplog.clear()
+
+    # Test queued return
+    cmd_result.status = "queued"
+    with patch(
+        "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
+        return_value=(config_value, cmd_result),
+    ) as mock_set_raw_config_parameter_value:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
+                ATTR_ENDPOINT: 0,
+                ATTR_CONFIG_PARAMETER: 32,
+                ATTR_VALUE_SIZE: 2,
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+        assert len(mock_set_raw_config_parameter_value.call_args_list) == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][0] == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][1] == 32
+        assert mock_set_raw_config_parameter_value.call_args[1] == {
+            "property_key": None,
+            "value_size": 2,
+            "value_format": 1,
+        }
+
+    assert "Added command to queue" in caplog.text
+    caplog.clear()
 
 
 async def test_set_config_parameter_gather(
