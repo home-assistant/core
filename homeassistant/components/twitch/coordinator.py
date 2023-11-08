@@ -43,9 +43,7 @@ def chunk_list(lst: list, chunk_size: int) -> list[list]:
     return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
-class TwitchUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, TwitchChannelData | None]]
-):
+class TwitchUpdateCoordinator(DataUpdateCoordinator[dict[str, TwitchChannelData]]):
     """Twitch shared data update coordinator."""
 
     def __init__(
@@ -65,9 +63,9 @@ class TwitchUpdateCoordinator(
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=30),
         )
-        self._client = client
-        self._user = user
-        self._channel_logins = [channel.login for channel in channels]
+        self._client: Twitch = client
+        self._user: TwitchUser = user
+        self._channel_logins: list[str] = [channel.login for channel in channels]
 
         self._coordinators: dict[str, TwitchChannelUpdateCoordinator] = {}
         for channel in channels:
@@ -79,17 +77,11 @@ class TwitchUpdateCoordinator(
                 channel,
             )
 
-    async def _update_channel_data(
-        self,
-        channel_login: str,
-    ) -> TwitchChannelData | None:
-        """Update channel coordinator data."""
-        await self._coordinators[channel_login].async_refresh()
-        self.logger.debug("Channel data updated for: %s", channel_login)
-        return self._coordinators[channel_login].data
-
-    async def _async_update_data(self) -> dict[str, TwitchChannelData | None]:
+    async def _async_update_data(self) -> dict[str, TwitchChannelData]:
         """Return data from the coordinator."""
+        # Setup result dict
+        result: dict[str, TwitchChannelData] = {}
+
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
@@ -100,18 +92,18 @@ class TwitchUpdateCoordinator(
                         # Update channel user data
                         self._coordinators[channel.login].set_channel_user_data(channel)
 
-                # Now update individual channel data coordinators and return the results
-                return {
-                    channel: await self._update_channel_data(channel)
-                    for channel in self._channel_logins
-                }
-
+                # Now update individual channel data coordinators
+                for channel in self._channel_logins:
+                    await self._coordinators[channel].async_refresh()
+                    result[channel] = self._coordinators[channel].data
         except TwitchAuthorizationException as err:
             self.logger.error("Error while authenticating", exc_info=err)
             raise ConfigEntryAuthFailed from err
         except (TwitchAPIException, TwitchBackendException, KeyError) as err:
             self.logger.error("Error while fetching data", exc_info=err)
             raise UpdateFailed from err
+
+        return result
 
 
 class TwitchChannelUpdateCoordinator(DataUpdateCoordinator[TwitchChannelData]):
@@ -185,7 +177,7 @@ class TwitchChannelUpdateCoordinator(DataUpdateCoordinator[TwitchChannelData]):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with asyncio.timeout(30):
+            async with asyncio.timeout(60):
                 return await self._get_channel_data()
         except TwitchAuthorizationException as err:
             self.logger.error("Error while authenticating: %s", err)
