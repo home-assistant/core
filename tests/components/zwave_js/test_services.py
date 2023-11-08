@@ -259,7 +259,7 @@ async def test_set_config_parameter(
         DOMAIN,
         SERVICE_SET_CONFIG_PARAMETER,
         {
-            ATTR_ENTITY_ID: [AIR_TEMPERATURE_SENSOR, "siren.indoor_siren_6_2"],
+            ATTR_ENTITY_ID: [AIR_TEMPERATURE_SENSOR, "siren.indoor_siren_6_tone_id"],
             ATTR_ENDPOINT: 1,
             ATTR_CONFIG_PARAMETER: 32,
             ATTR_VALUE_SIZE: 2,
