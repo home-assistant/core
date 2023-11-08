@@ -18,6 +18,8 @@ from dsmr_parser.obis_references import (
     BELGIUM_MBUS2_METER_READING2,
     BELGIUM_MBUS3_METER_READING1,
     BELGIUM_MBUS3_METER_READING2,
+    BELGIUM_MBUS4_METER_READING1,
+    BELGIUM_MBUS4_METER_READING2,
 )
 import pytest
 
@@ -626,6 +628,18 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
             BELGIUM_MBUS2_METER_READING1,
             BELGIUM_MBUS3_METER_READING2,
             "745.695",
+        ),
+        (
+            BELGIUM_MBUS4_METER_READING2,
+            BELGIUM_MBUS2_METER_READING1,
+            BELGIUM_MBUS3_METER_READING1,
+            "745.695",
+        ),
+        (
+            BELGIUM_MBUS4_METER_READING1,
+            BELGIUM_MBUS2_METER_READING1,
+            BELGIUM_MBUS3_METER_READING2,
+            "745.697",
         ),
     ],
 )

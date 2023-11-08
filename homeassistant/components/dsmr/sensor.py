@@ -394,16 +394,14 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 )
 
 
-def add_gas_sensor_5B(
-    telegram: dict[str, DSMRObject]
-) -> DSMRSensorEntityDescription:
+def add_gas_sensor_5B(telegram: dict[str, DSMRObject]) -> DSMRSensorEntityDescription:
     """Return correct entity for 5B Gas meter."""
     ref = None
     if obis_references.BELGIUM_MBUS1_METER_READING2 in telegram:
         ref = obis_references.BELGIUM_MBUS1_METER_READING2
     elif obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
         ref = obis_references.BELGIUM_MBUS2_METER_READING2
-    elif obis_references.BELGIUM_MBU3_METER_READING2 in telegram:
+    elif obis_references.BELGIUM_MBUS3_METER_READING2 in telegram:
         ref = obis_references.BELGIUM_MBUS3_METER_READING2
     elif obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
         ref = obis_references.BELGIUM_MBUS4_METER_READING2
