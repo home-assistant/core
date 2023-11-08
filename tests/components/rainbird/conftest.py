@@ -100,14 +100,23 @@ def platforms() -> list[Platform]:
 
 @pytest.fixture
 async def config_entry_unique_id() -> str:
-    """Fixture for serial number used in the config entry."""
+    """Fixture for config entry unique id."""
+    return MAC_ADDRESS_UNIQUE_ID
+
+
+@pytest.fixture
+async def serial_number() -> int:
+    """Fixture for serial number used in the config entry data."""
     return SERIAL_NUMBER
 
 
 @pytest.fixture
-async def config_entry_data() -> dict[str, Any]:
+async def config_entry_data(serial_number: int) -> dict[str, Any]:
     """Fixture for MockConfigEntry data."""
-    return CONFIG_ENTRY_DATA
+    return {
+        **CONFIG_ENTRY_DATA,
+        "serial_number": serial_number,
+    }
 
 
 @pytest.fixture

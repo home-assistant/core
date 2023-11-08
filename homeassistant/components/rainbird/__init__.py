@@ -10,9 +10,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
+from .const import CONF_SERIAL_NUMBER
 from .coordinator import RainbirdData
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    await _fix_unique_id(hass, controller, entry)
+    await _async_fix_unique_id(hass, controller, entry)
+    if mac_address := entry.data.get(CONF_MAC):
+        _async_fix_entity_unique_id(
+            hass,
+            er.async_get(hass),
+            entry.entry_id,
+            format_mac(mac_address),
+            str(entry.data[CONF_SERIAL_NUMBER]),
+        )
 
     try:
         model_info = await controller.get_model_and_version()
@@ -59,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _fix_unique_id(
+async def _async_fix_unique_id(
     hass: HomeAssistant, controller: AsyncRainbirdController, entry: ConfigEntry
 ):
     """Update the config entry with a unique id based on the mac address."""
@@ -95,6 +106,38 @@ async def _fix_unique_id(
             CONF_MAC: mac_address,
         },
     )
+
+
+def _async_fix_entity_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_id: str,
+    mac_address: str,
+    serial_number: str,
+) -> None:
+    """Migrate existing entity if current one can't be found and an old one exists."""
+    entity_entries = async_entries_for_config_entry(entity_registry, config_entry_id)
+    for entity_entry in entity_entries:
+        unique_id = str(entity_entry.unique_id)
+        if unique_id.startswith(mac_address):
+            continue
+        if unique_id.startswith(str(serial_number)):
+            suffix = unique_id[len(serial_number) :]
+            new_unique_id = f"{mac_address}{suffix}"
+            _LOGGER.debug("Updating unique id from %s to %s", unique_id, new_unique_id)
+            try:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+            except ValueError:
+                _LOGGER.debug(
+                    (
+                        "Entity %s can't be migrated because the unique ID is taken; "
+                        "Cleaning it up since it is likely no longer valid"
+                    ),
+                    entity_entry.entity_id,
+                )
+                entity_registry.async_remove(entity_entry.entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

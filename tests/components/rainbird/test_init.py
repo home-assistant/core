@@ -10,6 +10,7 @@ from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     CONFIG_ENTRY_DATA,
@@ -17,6 +18,7 @@ from .conftest import (
     MAC_ADDRESS,
     MAC_ADDRESS_UNIQUE_ID,
     MODEL_AND_VERSION_RESPONSE,
+    SERIAL_NUMBER,
     WIFI_PARAMS_RESPONSE,
     mock_json_response,
     mock_response,
@@ -27,22 +29,11 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
-@pytest.mark.parametrize(
-    ("config_entry_data", "initial_response"),
-    [
-        (CONFIG_ENTRY_DATA, None),
-    ],
-    ids=["config_entry"],
-)
 async def test_init_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    responses: list[AiohttpClientMockResponse],
-    initial_response: AiohttpClientMockResponse | None,
 ) -> None:
     """Test successful setup and unload."""
-    if initial_response:
-        responses.insert(0, initial_response)
 
     await config_entry.async_setup(hass)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -221,3 +212,67 @@ async def test_fix_unique_id_duplicate(
     assert other_entry.unique_id is None
 
     assert "Unable to fix missing unique id (already exists)" in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "config_entry_unique_id",
+        "serial_number",
+        "entity_unique_id",
+        "expected_unique_id",
+    ),
+    [
+        (SERIAL_NUMBER, SERIAL_NUMBER, SERIAL_NUMBER, MAC_ADDRESS_UNIQUE_ID),
+        (
+            SERIAL_NUMBER,
+            SERIAL_NUMBER,
+            f"{SERIAL_NUMBER}-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+        ),
+        ("0", 0, "0", MAC_ADDRESS_UNIQUE_ID),
+        (
+            "0",
+            0,
+            "0-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+        ),
+        (
+            MAC_ADDRESS_UNIQUE_ID,
+            SERIAL_NUMBER,
+            MAC_ADDRESS_UNIQUE_ID,
+            MAC_ADDRESS_UNIQUE_ID,
+        ),
+        (
+            MAC_ADDRESS_UNIQUE_ID,
+            SERIAL_NUMBER,
+            f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+        ),
+    ],
+    ids=(
+        "serial-number",
+        "serial-number-with-suffix",
+        "zero-serial",
+        "zero-serial-suffix",
+        "new-format",
+        "new-format-suffx",
+    ),
+)
+async def test_fix_entity_unique_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_unique_id: str,
+    expected_unique_id: str,
+) -> None:
+    """Test fixing entity unique ids from old unique id formats."""
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        DOMAIN, "number", unique_id=entity_unique_id, config_entry=config_entry
+    )
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    entity_unique_id = next(iter(entity_registry.entities.values())).unique_id
+    assert entity_unique_id == expected_unique_id
