@@ -65,7 +65,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CO2signal sensor."""
     coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)
+    async_add_entities(
+        [CO2Sensor(coordinator, description) for description in SENSORS], False
+    )
 
 
 class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
