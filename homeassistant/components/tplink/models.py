@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from .coordinator import TPLinkDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(slots=True)
 class TPLinkData:
     """Data for the tplink integration."""
 
