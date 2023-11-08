@@ -16,7 +16,7 @@ class CrisisAlerter:
         self.language = language
         self.location = location
 
-    def get_news(
+    def news(
         self,
         counties: str | None = None,
         all_counties: bool | None = None,
@@ -25,7 +25,7 @@ class CrisisAlerter:
         use_centralized_no_of_articles: bool = False,
         include_test: bool = False,
     ):
-        """Get news"""
+        """Fetch news from Krisinformation"""
         return self.request_builder(
             "news",
             language=self.language,
@@ -35,6 +35,65 @@ class CrisisAlerter:
             numberOfNewsArticles=number_of_news_articles,
             useCentralizedNoOfArticles=use_centralized_no_of_articles,
             includeTest=include_test,
+        )
+
+    def vmas(
+        self, counties: str = None, all_counties: bool = False, is_test: bool = False
+    ):
+        """Fetch VMA from Krisinformation"""
+        if is_test:
+            # Return a test example of a VMA
+            return self.request_builder("testvmas")
+        return self.request_builder(
+            "vmas",
+            language=self.language,
+            counties=counties,
+            allCounties=all_counties,
+        )
+
+    def notifications(
+        self,
+        include_draft_notifications: bool = False,
+        include_test_notifications: bool = False,
+    ):
+        """Retrieve editorial notifications (push notifications in the app) from Krisinformation."""
+        return self.request_builder(
+            "notifications",
+            includeDraftNotifications=include_draft_notifications,
+            includeTestNotifications=include_test_notifications,
+        )
+
+    def right_nows(self, counties: str = None):
+        """ "Retrieve 'Current News' blocks from crisis information.n"""
+        return self.request_builder(
+            "rightnows",
+            language=self.language,
+            counties=counties,
+        )
+
+    def custom_feeds(self, feeds: str | None = None, days: int = 7):
+        """Retrieve custom feeds from Krisinformation (SMHI (1) and Travikverket (2))"""
+        return self.request_builder(
+            "customfeeds",
+            feeds=feeds,
+            days=days,
+        )
+
+    def features(self, counties: str = None):
+        """Retrieve 'Prepare yourself'-pages from Krisinformation"""
+        return self.request_builder(
+            "features",
+            language=self.language,
+            counties=counties,
+        )
+
+    def top_stories(self, counties: str | None, all_counties: bool | None = None):
+        """Retrieve 'Top Stories' from Krisinformation"""
+        return self.request_builder(
+            "topstories",
+            language=self.language,
+            counties=counties,
+            allCounties=all_counties,
         )
 
     def request_builder(self, service, **parameters):

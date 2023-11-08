@@ -54,7 +54,7 @@ class CrisisAlerterSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest alerts."""
         try:
-            response = self._crisis_alerter.get_news()
+            response = self._crisis_alerter.news()
             self._state = response[0]["PushMessage"]
         except Error as error:
             _LOGGER.error("Error fetching data: %s", error)
