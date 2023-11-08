@@ -24,7 +24,7 @@ def async_refresh_after(
 
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
-        await self.coordinator.async_request_refresh_without_children()
+        await self.coordinator.async_request_refresh()
 
     return _async_wrap
 

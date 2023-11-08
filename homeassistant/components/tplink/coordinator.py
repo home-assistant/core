@@ -22,11 +22,10 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         device: SmartDevice,
+        update_interval: timedelta,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
-        self.update_children = True
-        update_interval = timedelta(seconds=5)
         super().__init__(
             hass,
             _LOGGER,
@@ -39,19 +38,9 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
-    async def async_request_refresh_without_children(self) -> None:
-        """Request a refresh without the children."""
-        # If the children do get updated this is ok as this is an
-        # optimization to reduce the number of requests on the device
-        # when we do not need it.
-        self.update_children = False
-        await self.async_request_refresh()
-
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:
-            await self.device.update(update_children=self.update_children)
+            await self.device.update(update_children=False)
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
-        finally:
-            self.update_children = True

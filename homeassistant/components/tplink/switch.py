@@ -16,6 +16,7 @@ from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +27,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    device = cast(SmartPlug, coordinator.device)
+    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    parent_coordinator = data.parent_coordinator
+    device = cast(SmartPlug, parent_coordinator.device)
     if not device.is_plug and not device.is_strip and not device.is_dimmer:
         return
     entities: list = []
@@ -35,11 +37,11 @@ async def async_setup_entry(
         # Historically we only add the children if the device is a strip
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
         for child in device.children:
-            entities.append(SmartPlugSwitchChild(device, coordinator, child))
+            entities.append(SmartPlugSwitchChild(device, parent_coordinator, child))
     elif device.is_plug:
-        entities.append(SmartPlugSwitch(device, coordinator))
+        entities.append(SmartPlugSwitch(device, parent_coordinator))
 
-    entities.append(SmartPlugLedSwitch(device, coordinator))
+    entities.append(SmartPlugLedSwitch(device, parent_coordinator))
 
     async_add_entities(entities)
 
