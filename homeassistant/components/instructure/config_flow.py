@@ -11,16 +11,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from .api_wrapper import ApiWrapper
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-HOST = "host"
+HOST_PREFIX = "host_prefix"
 ACCESS_TOKEN = "access_token"
 
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(HOST): str,
+        vol.Required(HOST_PREFIX): str,
         vol.Required(ACCESS_TOKEN): str,
     }
 )
@@ -32,13 +33,13 @@ class PlaceholderHub:
     TODO Remove this placeholder class and replace with things from your PyPI package.
     """
 
-    def __init__(self, host: str) -> None:
+    def __init__(self, host_prefix: str) -> None:
         """Initialize."""
-        self.host = host
+        self.host = f"https://{host_prefix}.instructure.com/api/v1"
 
     async def authenticate(self, access_token: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
+        api = ApiWrapper(self.host, access_token)
+        return await api.test_auth()
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -54,7 +55,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data[HOST])
+    hub = PlaceholderHub(data[HOST_PREFIX])
 
     if not await hub.authenticate(data[ACCESS_TOKEN]):
         raise InvalidAuth
