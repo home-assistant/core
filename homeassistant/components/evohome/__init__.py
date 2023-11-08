@@ -442,6 +442,8 @@ class EvoBroker:
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
 
+        assert isinstance(self.client.access_token_expires, datetime)  # mypy
+
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
