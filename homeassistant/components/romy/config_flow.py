@@ -49,7 +49,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         data = self.discovery_schema or _schema_with_defaults()
 
-        if user_input is not None:
+        if user_input:
             # Save the user input and finish the setup
             new_romy = await romy.create_romy(
                 user_input[CONF_HOST], user_input.get(CONF_PASSWORD, "")
