@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class OpenAQDeviceSensors(str, Enum):
     """Sensors to report in home assistant."""
 
@@ -17,6 +18,7 @@ class OpenAQDeviceSensors(str, Enum):
     Concentration_of_Carbon_Monoxide = "CO"
     Concentration_of_Carbon_Dioxide = "CO2"
     Concentration_of_Sulphure_Dioxide = "SULPHUR_DIOXIDE"
+
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Configure the sensor platform."""

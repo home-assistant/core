@@ -1,5 +1,7 @@
 """Adds config flow for OpenAQ."""
 
+from .const import DOMAIN
+
 from homeassistant import config_entries
 
 
