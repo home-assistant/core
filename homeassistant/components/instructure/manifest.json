@@ -1,9 +1,11 @@
 {
   "domain": "instructure",
   "name": "canvas",
-  "codeowners": ["@theowiik"],
+  "codeowners": [
+    "@theowiik"
+  ],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/instructure",
   "homekit": {},
   "iot_class": "cloud_polling",

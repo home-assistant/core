@@ -1,82 +1,90 @@
 """Test the canvas config flow."""
-
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
-from homeassistant.components.instructure.const import (
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.instructure.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.instructure.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
+from homeassistant.data_entry_flow import FlowResultType
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
-
-
-async def test_full_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-    setup_credentials,
-) -> None:
-    """Check full flow."""
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        "instructure", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
 
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
+    with patch(
+        "homeassistant.components.instructure.config_flow.PlaceholderHub.authenticate",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
 
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Name of the device"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
+
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.instructure.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        "homeassistant.components.instructure.config_flow.PlaceholderHub.authenticate",
+        side_effect=InvalidAuth,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.instructure.config_flow.PlaceholderHub.authenticate",
+        side_effect=CannotConnect,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
