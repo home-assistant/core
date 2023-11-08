@@ -130,7 +130,7 @@ class TwitchChannelUpdateCoordinator(DataUpdateCoordinator[TwitchChannelData]):
             hass,
             logger,
             # Name of the data. For logging purposes.
-            name=DOMAIN,
+            name=f"{DOMAIN}_{channel.login}",
             # Disable interval, TwitchUpdateCoordinator will handle the update interval
             update_interval=None,
         )
