@@ -39,7 +39,7 @@ class PlaceholderHub:
 
     async def authenticate(self, access_token: str) -> bool:
         api = ApiWrapper(self.host, access_token)
-        return await api.test_auth()
+        return await api.async_test_authentication()
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
