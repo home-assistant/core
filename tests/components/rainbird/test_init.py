@@ -267,15 +267,16 @@ async def test_fix_entity_unique_ids(
     """Test fixing entity unique ids from old unique id formats."""
 
     entity_registry = er.async_get(hass)
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "number", unique_id=entity_unique_id, config_entry=config_entry
     )
 
     await config_entry.async_setup(hass)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    entity_unique_id = next(iter(entity_registry.entities.values())).unique_id
-    assert entity_unique_id == expected_unique_id
+    entity_entry = entity_registry.async_get(entity_entry.id)
+    assert entity_entry
+    assert entity_entry.unique_id == expected_unique_id
 
 
 @pytest.mark.parametrize("config_entry_unique_id", [(SERIAL_NUMBER)])
