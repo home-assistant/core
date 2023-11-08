@@ -386,7 +386,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Remove in Home Assistant 2022.9
     def _rewrite_enqueue(value: dict[str, Any]) -> dict[str, Any]:
         """Rewrite the enqueue value."""
-        if value[ATTR_MEDIA_ENQUEUE] is True:
+        if ATTR_MEDIA_ENQUEUE not in value:
+            pass
+        elif value[ATTR_MEDIA_ENQUEUE] is True:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.ADD
             _LOGGER.warning(
                 "Playing media with enqueue set to True is deprecated. Use 'add'"
