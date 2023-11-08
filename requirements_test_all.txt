@@ -1190,7 +1190,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.10.1
+pyDuotecno==2023.11.1
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
