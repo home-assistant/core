@@ -46,6 +46,8 @@ async def async_setup_platform(
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
+    assert isinstance(broker.tcs.hotwater, evo.HotWater)  # mypy hint
+
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",
         broker.tcs.hotwater.TYPE,
