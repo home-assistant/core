@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from aiohttp import ClientError
 from pydrawise import HydrawiseBase
 from pydrawise.schema import User
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
 
@@ -26,8 +25,4 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[User]):
 
     async def _async_update_data(self) -> User:
         """Fetch the latest data from Hydrawise."""
-        try:
-            return await self.api.get_user()
-        except ClientError as ex:
-            LOGGER.debug("Failed to refresh Hydrawise data: %s", ex)
-            raise UpdateFailed("Failed to refresh Hydrawise data") from ex
+        return await self.api.get_user()

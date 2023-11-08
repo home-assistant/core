@@ -34,7 +34,7 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=self.controller.name if self.zone is None else self.zone.name,
+            name=controller.name if zone is None else zone.name,
             manufacturer=MANUFACTURER,
         )
         if zone is not None:

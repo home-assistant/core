@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from pydrawise.schema import Zone
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -93,28 +94,28 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        assert self.zone is not None
+        zone: Zone = self.zone
         if self.entity_description.key == "manual_watering":
             await self.coordinator.api.start_zone(
-                self.zone, custom_run_duration=DEFAULT_WATERING_TIME
+                zone, custom_run_duration=DEFAULT_WATERING_TIME
             )
         elif self.entity_description.key == "auto_watering":
-            await self.coordinator.api.resume_zone(self.zone)
+            await self.coordinator.api.resume_zone(zone)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        assert self.zone is not None
+        zone: Zone = self.zone
         if self.entity_description.key == "manual_watering":
-            await self.coordinator.api.stop_zone(self.zone)
+            await self.coordinator.api.stop_zone(zone)
         elif self.entity_description.key == "auto_watering":
             await self.coordinator.api.suspend_zone(
-                self.zone, dt_util.now() + timedelta(days=365)
+                zone, dt_util.now() + timedelta(days=365)
             )
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        assert self.zone is not None
+        zone: Zone = self.zone
         if self.entity_description.key == "manual_watering":
-            self._attr_is_on = self.zone.scheduled_runs.current_run is not None
+            self._attr_is_on = zone.scheduled_runs.current_run is not None
         elif self.entity_description.key == "auto_watering":
-            self._attr_is_on = self.zone.status.suspended_until is None
+            self._attr_is_on = zone.status.suspended_until is None
