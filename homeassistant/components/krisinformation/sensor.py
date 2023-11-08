@@ -1,14 +1,16 @@
+"""Support for Krisinformation sensor."""
 from datetime import timedelta
 import logging
-from homeassistant.components.krisinformation.crisis_alerter import CrisisAlerter, Error
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.const import CONF_NAME
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, DEFAULT_NAME
+from .const import DEFAULT_NAME
+from .crisis_alerter import CrisisAlerter, Error
 
 _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
@@ -34,11 +36,11 @@ class CrisisAlerterSensor(SensorEntity):
     _attr_attribution = "Alerts provided by Krisinformation"
     _attr_icon = "mdi:alert"
 
-    def __init__(self, crisis_alerter: CrisisAlerter, name: str):
+    def __init__(self, crisis_alerter: CrisisAlerter, name: str) -> None:
         """Initialize the sensor."""
         self._crisis_alerter = crisis_alerter
         self._name = name
-        self._state = None
+        self._state: str | None = None
 
     @property
     def name(self):

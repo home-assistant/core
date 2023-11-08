@@ -1,18 +1,20 @@
-"""Crisis Alerter from Krisinformation"""
-import requests
+"""Crisis Alerter from Krisinformation."""
 import json
+
+import requests
 
 API_BASE_URL = "https://api.krisinformation.se/v3/"
 
 
 class Error(Exception):
-    pass
+    """Base class for exceptions in this module."""
 
 
 class CrisisAlerter:
-    """Crisis Alerter from Krisinformation"""
+    """Crisis Alerter from Krisinformation."""
 
-    def __init__(self, language: str = "sv", location: str | None = None):
+    def __init__(self, language: str = "sv", location: str | None = None) -> None:
+        """Initialize the sensor."""
         self.language = language
         self.location = location
 
@@ -25,7 +27,7 @@ class CrisisAlerter:
         use_centralized_no_of_articles: bool = False,
         include_test: bool = False,
     ):
-        """Fetch news from Krisinformation"""
+        """Fetch news from Krisinformation."""
         return self.request_builder(
             "news",
             language=self.language,
@@ -38,9 +40,12 @@ class CrisisAlerter:
         )
 
     def vmas(
-        self, counties: str = None, all_counties: bool = False, is_test: bool = False
+        self,
+        counties: str | None = None,
+        all_counties: bool = False,
+        is_test: bool = False,
     ):
-        """Fetch VMA from Krisinformation"""
+        """Fetch VMA from Krisinformation."""
         if is_test:
             # Return a test example of a VMA
             return self.request_builder("testvmas")
@@ -63,8 +68,8 @@ class CrisisAlerter:
             includeTestNotifications=include_test_notifications,
         )
 
-    def right_nows(self, counties: str = None):
-        """ "Retrieve 'Current News' blocks from crisis information.n"""
+    def right_nows(self, counties: str | None = None):
+        """Retrieve 'Current News' blocks from crisis information."""
         return self.request_builder(
             "rightnows",
             language=self.language,
@@ -72,23 +77,25 @@ class CrisisAlerter:
         )
 
     def custom_feeds(self, feeds: str | None = None, days: int = 7):
-        """Retrieve custom feeds from Krisinformation (SMHI (1) and Travikverket (2))"""
+        """Retrieve custom feeds from Krisinformation, SMHI (1) and Travikverket (2)."""
         return self.request_builder(
             "customfeeds",
             feeds=feeds,
             days=days,
         )
 
-    def features(self, counties: str = None):
-        """Retrieve 'Prepare yourself'-pages from Krisinformation"""
+    def features(self, counties: str | None = None):
+        """Retrieve 'Prepare yourself'-pages from Krisinformation."""
         return self.request_builder(
             "features",
             language=self.language,
             counties=counties,
         )
 
-    def top_stories(self, counties: str | None, all_counties: bool | None = None):
-        """Retrieve 'Top Stories' from Krisinformation"""
+    def top_stories(
+        self, counties: str | None = None, all_counties: bool | None = None
+    ):
+        """Retrieve 'Top Stories' from Krisinformation."""
         return self.request_builder(
             "topstories",
             language=self.language,
@@ -97,17 +104,16 @@ class CrisisAlerter:
         )
 
     def request_builder(self, service, **parameters):
-        """request builder"""
+        """Request builder."""
         urlformat = "{baseurl}/{service}?{parameters}&format=json"
         url = urlformat.format(
             baseurl=API_BASE_URL,
             service=service,
             parameters="&".join(
-                ["{}={}".format(key, value) for key, value in parameters.items()]
+                [f"{key}={value}" for key, value in parameters.items()]
             ),
         )
-        res = requests.get(url)
+        res = requests.get(url, timeout=10)
         if res.status_code == 200:
             return json.loads(res.content.decode("UTF-8"))
-        else:
-            raise Error("Error: " + str(res.status_code) + str(res.content))
+        raise Error("Error: " + str(res.status_code) + str(res.content))

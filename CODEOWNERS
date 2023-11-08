@@ -670,6 +670,8 @@ build.json @home-assistant/supervisor
 /tests/components/kostal_plenticore/ @stegm
 /homeassistant/components/kraken/ @eifinger
 /tests/components/kraken/ @eifinger
+/homeassistant/components/krisinformation/ @philipperhult, @obennet @vlbin
+/tests/components/krisinformation/ @philipperhult, @obennet @vlbin
 /homeassistant/components/kulersky/ @emlove
 /tests/components/kulersky/ @emlove
 /homeassistant/components/lacrosse_view/ @IceBotYT
