@@ -5,7 +5,7 @@ Such systems include evohome, Round Thermostat, and others.
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from datetime import datetime as dt, timedelta as td
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import re
@@ -53,8 +53,8 @@ USER_DATA = "user_data"
 
 CONF_LOCATION_IDX = "location_idx"
 
-SCAN_INTERVAL_DEFAULT = td(seconds=300)
-SCAN_INTERVAL_MINIMUM = td(seconds=60)
+SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
+SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -94,29 +94,29 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
-            cv.time_period, vol.Range(min=td(days=0), max=td(days=1))
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
         ),
     }
 )
 # system mode schemas are built dynamically, below
 
 
-def _dt_local_to_aware(dt_naive: dt) -> dt:
-    dt_aware = dt_util.now() + (dt_naive - dt.now())
+def _dt_local_to_aware(dt_naive: datetime) -> datetime:
+    dt_aware = dt_util.now() + (dt_naive - datetime.now())
     if dt_aware.microsecond >= 500000:
-        dt_aware += td(seconds=1)
+        dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _dt_aware_to_naive(dt_aware: dt) -> dt:
-    dt_naive = dt.now() + (dt_aware - dt_util.now())
+def _dt_aware_to_naive(dt_aware: datetime) -> datetime:
+    dt_naive = datetime.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
-        dt_naive += td(seconds=1)
+        dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
 
 
 def convert_until(status_dict: dict, until_key: str) -> None:
-    """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
+    """Reformat a datetime str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
     if until_key in status_dict and (  # only present for certain modes
         dt_utc_naive := dt_util.parse_datetime(status_dict[until_key])
     ):
@@ -365,7 +365,7 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
                 vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
                 vol.Optional(ATTR_DURATION_HOURS): vol.All(
                     cv.time_period,
-                    vol.Range(min=td(hours=0), max=td(hours=24)),
+                    vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
                 ),
             }
         )
@@ -379,7 +379,7 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
                 vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
                 vol.Optional(ATTR_DURATION_DAYS): vol.All(
                     cv.time_period,
-                    vol.Range(min=td(days=1), max=td(days=99)),
+                    vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
                 ),
             }
         )
@@ -432,13 +432,13 @@ class EvoBroker:
 
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]
-        self.tcs_utc_offset = td(minutes=self._location.timeZone[UTC_OFFSET])
+        self.tcs_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
         self.temps: dict[str, int | None] | None = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
 
-        assert isinstance(self.client.access_token_expires, dt)  # mypy
+        assert isinstance(self.client.access_token_expires, datetime)  # mypy
 
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
@@ -451,8 +451,8 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
-            user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index,unused-ignore]
-            app_storage[USER_DATA] = {  # type: ignore[assignment,unused-ignore]
+            user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index]
+            app_storage[USER_DATA] = {  # type: ignore[assignment]
                 "userInfo": {"userID": user_id},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
@@ -665,7 +665,7 @@ class EvoChild(EvoDevice):
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
 
-        def _dt_evo_to_aware(dt_naive: dt, utc_offset: td) -> dt:
+        def _dt_evo_to_aware(dt_naive: datetime, utc_offset: timedelta) -> datetime:
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
@@ -694,7 +694,7 @@ class EvoChild(EvoDevice):
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
             ):
-                sp_date = (day_time + td(days=offset)).strftime("%Y-%m-%d")
+                sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]
 
@@ -721,7 +721,7 @@ class EvoChild(EvoDevice):
 
         return self._setpoints
 
-    async def _next_sp_from(self) -> dt | None:
+    async def _next_sp_from(self) -> datetime | None:
         """Return the datetime of the next setpoint, if any."""
 
         await self._update_schedule()

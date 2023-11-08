@@ -1,7 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 from __future__ import annotations
 
-from datetime import datetime as dt, timedelta as td
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -180,7 +180,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
-            duration: td = data[ATTR_DURATION_UNTIL]
+            duration: timedelta = data[ATTR_DURATION_UNTIL]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))  # type: ignore[arg-type]
@@ -254,7 +254,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """Set a new target temperature."""
 
         temperature: float = kwargs["temperature"]
-        until: dt | None = kwargs.get("until")
+        until: datetime | None = kwargs.get("until")
 
         if until is None:
             if not self._evo_device.setpointStatus:
@@ -383,13 +383,13 @@ class EvoController(EvoClimateEntity):
 
         await self._set_tcs_mode(mode, until=until)
 
-    async def _set_tcs_mode(self, mode: str, until: dt | None = None) -> None:
+    async def _set_tcs_mode(self, mode: str, until: datetime | None = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
 
         until = dt_util.as_utc(until) if until else None
 
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_mode(mode, until=until)  # type: ignore[arg-type,unused-ignore]
+            self._evo_tcs.set_mode(mode, until=until)  # type: ignore[arg-type]
         )
 
     @property
@@ -409,9 +409,9 @@ class EvoController(EvoClimateEntity):
         Controllers do not have a current temp, but one is expected by HA.
         """
         temps = [
-            z.temperatureStatus["temperature"]  # type: ignore[index,unused-ignore]
+            z.temperatureStatus["temperature"]  # type: ignore[index]
             for z in self._evo_tcs.zones.values()
-            if z.temperatureStatus.get("isAvailable")  # type: ignore[union-attr,unused-ignore]
+            if z.temperatureStatus.get("isAvailable")  # type: ignore[union-attr]
         ]
         return round(sum(temps) / len(temps), 1) if temps else None
 
