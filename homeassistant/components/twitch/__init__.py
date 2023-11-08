@@ -4,19 +4,21 @@ from __future__ import annotations
 import logging
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
-from twitchAPI.twitch import Twitch
+from twitchAPI.helper import first
+from twitchAPI.twitch import Twitch, TwitchUser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
-from .coordinator import TwitchUpdateCoordinator
+from .const import CONF_CHANNELS, DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .coordinator import TwitchUpdateCoordinator, chunk_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +47,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.auto_refresh_auth = False
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
+    if (user := await first(client.get_users())) is None:
+        raise ConfigEntryNotReady("No user found from Twitch API")
+
+    channel_options: list[str] = entry.options[CONF_CHANNELS]
+
+    entity_registry = er.async_get(hass)
+
+    enabled_channels: list[TwitchUser] = []
+    # Split channels into chunks of 100 to avoid hitting the rate limit
+    for chunk in chunk_list(channel_options, 100):
+        async for channel in client.get_users(logins=chunk):
+            # Check if the entity is disabled
+            if (
+                entity := entity_registry.async_get(
+                    f"sensor.{channel.display_name.lower()}"
+                )
+            ) is not None and entity.disabled:
+                _LOGGER.debug(
+                    "Channel %s is disabled",
+                    channel.display_name,
+                )
+                continue
+            enabled_channels.append(channel)
+
+    _LOGGER.debug("Enabled channels: %s", len(enabled_channels))
+
+    # Create shared channel update coordinator
     coordinator = TwitchUpdateCoordinator(
         hass,
         _LOGGER,
         client,
-        entry.options,
+        user,
+        enabled_channels,
     )
 
     # Fetch initial data so we have data when entities subscribe

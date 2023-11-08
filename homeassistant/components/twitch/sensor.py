@@ -17,7 +17,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_CHANNELS, DOMAIN
-from .coordinator import TwitchUpdateCoordinator
+from .coordinator import TwitchChannelData, TwitchUpdateCoordinator
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -85,15 +85,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize entries."""
-    coordinator: TwitchUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    data: dict[str, TwitchChannelData | None] = coordinator.data
 
     entities: list[TwitchSensor] = []
-    for channel_data in coordinator.data.values():
+    for channel, channel_data in data.items():
+        if channel_data is None:
+            raise ValueError(f"Channel {channel} not found on initialization")
+
         entities.append(
             TwitchSensor(
                 coordinator,
                 channel_data.user.id,
                 channel_data.user.display_name,
+                channel,
             )
         )
 
@@ -110,17 +115,20 @@ class TwitchSensor(SensorEntity):
         coordinator: TwitchUpdateCoordinator,
         key: str,
         name: str,
+        channel: str,
     ) -> None:
         """Initialize the sensor."""
         self.coordinator = coordinator
         self._key = key
         self._attr_name = name
         self._attr_unique_id = key
+        self._channel = channel
 
     async def async_update(self) -> None:
         """Update device state."""
-        channel_data = self.coordinator.data.get(self._key)
-        assert channel_data is not None
+        channel_data = self.coordinator.data[self._channel]
+        if channel_data is None:
+            raise ValueError(f"Channel {self._channel} not found on update")
 
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: channel_data.followers,
