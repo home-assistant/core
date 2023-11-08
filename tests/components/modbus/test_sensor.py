@@ -247,7 +247,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}:` missing, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
         (
             {
