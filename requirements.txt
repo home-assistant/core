@@ -8,7 +8,7 @@ aiohttp-zlib-ng==0.1.1
 astral==2.2
 attrs==23.1.0
 atomicwrites-homeassistant==1.4.1
-awesomeversion==23.8.0
+awesomeversion==23.11.0
 bcrypt==4.0.1
 certifi>=2021.5.30
 ciso8601==2.3.0

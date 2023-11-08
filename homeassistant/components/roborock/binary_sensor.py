@@ -26,7 +26,7 @@ from .device import RoborockCoordinatedEntity
 class RoborockBinarySensorDescriptionMixin:
     """A class that describes binary sensor entities."""
 
-    value_fn: Callable[[DeviceProp], bool]
+    value_fn: Callable[[DeviceProp], bool | int | None]
 
 
 @dataclass
