@@ -3,7 +3,7 @@ import asyncio
 import io
 from itertools import chain
 
-from roborock import MultiMapsList, RoborockCommand
+from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
@@ -72,7 +72,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             self.map_flag == self.coordinator.current_map
             and self.image_last_updated is not None
             and self.coordinator.roborock_device_info.props.status is not None
-            and self.coordinator.roborock_device_info.props.status.in_cleaning
+            and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
         )
 
     def _handle_coordinator_update(self):
@@ -109,34 +109,39 @@ async def create_coordinator_maps(
     Only one map can be loaded at a time per device.
     """
     entities = []
-    maps: MultiMapsList = await coord.cloud_api.get_multi_maps_list()
-    cur_map = coord.current_map
-    # Sort the maps so that we start with the current map and we can skip the load_multi_map call.
-    maps_info = sorted(
-        maps.map_info, key=lambda data: data.mapFlag == cur_map, reverse=True
-    )
-    for roborock_map in maps_info:
-        # Load the map - so we can access it with get_map_v1
-        if len(maps.map_info) != 1 or roborock_map != cur_map:
-            # Only change the map and sleep if we have multiple maps.
-            await coord.api.send_command(
-                RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
-            )
-            # We cannot get the map until the roborock servers fully process the map change.
-            await asyncio.sleep(3)
-        # Get the map data
-        api_data: bytes = await coord.cloud_api.get_map_v1()
-        entities.append(
-            RoborockMap(
-                f"{slugify(coord.roborock_device_info.device.duid)}_map_{roborock_map.name}",
-                coord,
-                roborock_map.mapFlag,
-                api_data,
-                roborock_map.name,
-            )
+    maps = await coord.cloud_api.get_multi_maps_list()
+    if maps is not None and maps.map_info is not None:
+        cur_map = coord.current_map
+        # This won't be None at this point as the coordinator will have run first.
+        assert cur_map is not None
+        # Sort the maps so that we start with the current map and we can skip the load_multi_map call.
+        maps_info = sorted(
+            maps.map_info, key=lambda data: data.mapFlag == cur_map, reverse=True
         )
-    if len(maps.map_info) != 1:
-        # Set the map back to the map the user previously had selected so that it does not change the end user's app
-        # Only needs to happen when we changed maps above.
-        await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
+        for roborock_map in maps_info:
+            # Load the map - so we can access it with get_map_v1
+            if len(maps.map_info) != 1 or roborock_map.mapFlag != cur_map:
+                # Only change the map and sleep if we have multiple maps.
+                await coord.api.send_command(
+                    RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
+                )
+                # We cannot get the map until the roborock servers fully process the map change.
+                await asyncio.sleep(3)
+            # Get the map data
+            api_data: bytes = await coord.cloud_api.get_map_v1()
+            entities.append(
+                RoborockMap(
+                    f"{slugify(coord.roborock_device_info.device.duid)}_map_{roborock_map.name}",
+                    coord,
+                    roborock_map.mapFlag,
+                    api_data,
+                    roborock_map.name,
+                )
+            )
+        if len(maps.map_info) != 1:
+            # Set the map back to the map the user previously had selected so that it does not change the end user's app
+            # Only needs to happen when we changed maps above.
+            await coord.cloud_api.send_command(
+                RoborockCommand.LOAD_MULTI_MAP, [cur_map]
+            )
     return entities
