@@ -35,47 +35,6 @@ class CannotConnect(HomeAssistantError):
     """Unable to connect to the web site."""
 
 
-class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
-    """Class to manage fetching Met data."""
-
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-        """Initialize global Met data updater."""
-        self._unsub_track_home: Callable[[], None] | None = None
-        self.weather = MetWeatherData(hass, config_entry.data)
-        self.weather.set_coordinates()
-
-        update_interval = timedelta(minutes=randrange(55, 65))
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
-
-    async def _async_update_data(self) -> MetWeatherData:
-        """Fetch data from Met."""
-        try:
-            return await self.weather.fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
-
-    def track_home(self) -> None:
-        """Start tracking changes to HA home setting."""
-        if self._unsub_track_home:
-            return
-
-        async def _async_update_weather_data(_event: Event | None = None) -> None:
-            """Update weather data."""
-            if self.weather.set_coordinates():
-                await self.async_refresh()
-
-        self._unsub_track_home = self.hass.bus.async_listen(
-            EVENT_CORE_CONFIG_UPDATE, _async_update_weather_data
-        )
-
-    def untrack_home(self) -> None:
-        """Stop tracking changes to HA home setting."""
-        if self._unsub_track_home:
-            self._unsub_track_home()
-            self._unsub_track_home = None
-
-
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
@@ -124,3 +83,44 @@ class MetWeatherData:
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self
+
+
+class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
+    """Class to manage fetching Met data."""
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize global Met data updater."""
+        self._unsub_track_home: Callable[[], None] | None = None
+        self.weather = MetWeatherData(hass, config_entry.data)
+        self.weather.set_coordinates()
+
+        update_interval = timedelta(minutes=randrange(55, 65))
+
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+
+    async def _async_update_data(self) -> MetWeatherData:
+        """Fetch data from Met."""
+        try:
+            return await self.weather.fetch_data()
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}") from err
+
+    def track_home(self) -> None:
+        """Start tracking changes to HA home setting."""
+        if self._unsub_track_home:
+            return
+
+        async def _async_update_weather_data(_event: Event | None = None) -> None:
+            """Update weather data."""
+            if self.weather.set_coordinates():
+                await self.async_refresh()
+
+        self._unsub_track_home = self.hass.bus.async_listen(
+            EVENT_CORE_CONFIG_UPDATE, _async_update_weather_data
+        )
+
+    def untrack_home(self) -> None:
+        """Stop tracking changes to HA home setting."""
+        if self._unsub_track_home:
+            self._unsub_track_home()
+            self._unsub_track_home = None
