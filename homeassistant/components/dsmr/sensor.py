@@ -396,30 +396,28 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 
 def add_gas_sensor_5B(
     telegram: dict[str, DSMRObject]
-) -> tuple[DSMRSensorEntityDescription]:
+) -> DSMRSensorEntityDescription:
     """Return correct entity for 5B Gas meter."""
     ref = None
-    if obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS4_METER_READING2
-    if obis_references.BELGIUM_MBUS3_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS3_METER_READING2
-    if obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS2_METER_READING2
     if obis_references.BELGIUM_MBUS1_METER_READING2 in telegram:
         ref = obis_references.BELGIUM_MBUS1_METER_READING2
-    if ref is None:
+    elif obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS2_METER_READING2
+    elif obis_references.BELGIUM_MBU3_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS3_METER_READING2
+    elif obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS4_METER_READING2
+    elif ref is None:
         ref = obis_references.BELGIUM_MBUS1_METER_READING2
-    return (
-        DSMRSensorEntityDescription(
-            key="belgium_5min_gas_meter_reading",
-            translation_key="gas_meter_reading",
-            obis_reference=ref,
-            dsmr_versions={"5B"},
-            is_gas=True,
-            force_update=True,
-            device_class=SensorDeviceClass.GAS,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
+    return DSMRSensorEntityDescription(
+        key="belgium_5min_gas_meter_reading",
+        translation_key="gas_meter_reading",
+        obis_reference=ref,
+        dsmr_versions={"5B"},
+        is_gas=True,
+        force_update=True,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     )
 
 
@@ -458,7 +456,7 @@ async def async_setup_entry(
 
         all_sensors = SENSORS
         if dsmr_version == "5B":
-            all_sensors = SENSORS + add_gas_sensor_5B(telegram)
+            all_sensors += (add_gas_sensor_5B(telegram),)
 
         entities.extend(
             [
