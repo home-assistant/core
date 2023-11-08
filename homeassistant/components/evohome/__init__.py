@@ -451,8 +451,8 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
-            user_id = self.client_v1.user_data["userInfo"]["userID"]
-            app_storage[USER_DATA] = {
+            user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index,unused-ignore]
+            app_storage[USER_DATA] = {  # type: ignore[assignment,unused-ignore]
                 "userInfo": {"userID": user_id},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
