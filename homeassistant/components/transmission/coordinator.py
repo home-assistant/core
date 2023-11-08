@@ -146,7 +146,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         """Stop all active torrents."""
         if not self.torrents:
             return
-        torrent_ids = [torrent.id for torrent in self.torrents]
+        torrent_ids: list[int | str] = [torrent.id for torrent in self.torrents]
         self.api.stop_torrent(torrent_ids)
 
     def set_alt_speed_enabled(self, is_enabled: bool) -> None:
@@ -158,4 +158,4 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         if self._session is None:
             return None
 
-        return self._session.alt_speed_enabled  # type: ignore[no-any-return]
+        return self._session.alt_speed_enabled
