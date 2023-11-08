@@ -427,7 +427,9 @@ class EvoBroker:
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
+        access_token_expires = _dt_local_to_aware(
+            self.client.access_token_expires  # type: ignore[arg-type]
+        )
 
         app_storage = {
             CONF_USERNAME: self.client.username,
@@ -437,8 +439,9 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
-            app_storage[USER_DATA] = {
-                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
+            user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index]
+            app_storage[USER_DATA] = {  # type: ignore[assignment]
+                "userInfo": {"userID": user_id},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
         else:
@@ -497,18 +500,6 @@ class EvoBroker:
             )
             self.temps = None  # these are now stale, will fall back to v2 temps
 
-        except KeyError as err:
-            _LOGGER.warning(
-                (
-                    "Unable to obtain high-precision temperatures. "
-                    "It appears the JSON schema is not as expected, "
-                    "so the high-precision feature will be disabled until next restart."
-                    "Message is: %s"
-                ),
-                err,
-            )
-            self.client_v1 = self.temps = None
-
         else:
             if (
                 str(self.client_v1.location_id)
@@ -519,7 +510,7 @@ class EvoBroker:
                     "the v1 API's default location (there is more than one location), "
                     "so the high-precision feature will be disabled until next restart"
                 )
-                self.client_v1 = self.temps = None
+                self.temps = self.client_v1 = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
@@ -556,10 +547,7 @@ class EvoBroker:
         await self._update_v2_api_state()
 
         if self.client_v1:
-            try:
-                await self._update_v1_api_temps()
-            except evohomeasync.EvohomeError:
-                self.temps = None  # these are now stale, will fall back to v2 temps
+            await self._update_v1_api_temps()
 
 
 class EvoDevice(Entity):

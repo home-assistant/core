@@ -24,10 +24,10 @@ from .conftest import (
     SERIAL_RESPONSE,
     URL,
     ZERO_SERIAL_RESPONSE,
-    ComponentSetup,
     mock_response,
 )
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
@@ -129,17 +129,14 @@ async def test_controller_flow(
 )
 async def test_multiple_config_entries(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     config_flow_responses: list[AiohttpClientMockResponse],
     expected_config_entry: dict[str, Any] | None,
 ) -> None:
     """Test setting up multiple config entries that refer to different devices."""
-    assert await setup_integration()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
@@ -177,16 +174,13 @@ async def test_multiple_config_entries(
 )
 async def test_duplicate_config_entries(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     config_flow_responses: list[AiohttpClientMockResponse],
 ) -> None:
     """Test that a device can not be registered twice."""
-    assert await setup_integration()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
