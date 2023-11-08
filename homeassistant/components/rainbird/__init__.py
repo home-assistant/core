@@ -121,13 +121,13 @@ def _async_fix_entity_unique_id(
         unique_id = str(entity_entry.unique_id)
         if unique_id.startswith(mac_address):
             continue
-        if unique_id.startswith(str(serial_number)):
-            suffix = unique_id[len(serial_number) :]
+        if (suffix := unique_id.removeprefix(str(serial_number))) != unique_id:
             new_unique_id = f"{mac_address}{suffix}"
             _LOGGER.debug("Updating unique id from %s to %s", unique_id, new_unique_id)
+            entity_id = entity_entry.entity_id
             try:
                 entity_registry.async_update_entity(
-                    entity_entry.entity_id, new_unique_id=new_unique_id
+                    entity_id, new_unique_id=new_unique_id
                 )
             except ValueError:
                 _LOGGER.debug(
@@ -135,9 +135,9 @@ def _async_fix_entity_unique_id(
                         "Entity %s can't be migrated because the unique ID is taken; "
                         "Cleaning it up since it is likely no longer valid"
                     ),
-                    entity_entry.entity_id,
+                    entity_id,
                 )
-                entity_registry.async_remove(entity_entry.entity_id)
+                entity_registry.async_remove(entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

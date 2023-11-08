@@ -292,7 +292,7 @@ async def test_cannot_fix_entity_unique_id(
         unique_id=f"{SERIAL_NUMBER}-rain-delay",
         config_entry=config_entry,
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "number",
         unique_id=f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
@@ -306,5 +306,7 @@ async def test_cannot_fix_entity_unique_id(
     # Cleaned up entry
     assert len(entity_registry.entities) == 1
 
-    entity_unique_id = next(iter(entity_registry.entities.values())).unique_id
-    assert entity_unique_id == f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay"
+    # The existing entity entry that had the mac address as unique id should remain.
+    entity_entry = entity_registry.async_get(entity_entry.id)
+    assert entity_entry
+    assert entity_entry.unique_id == f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay"
