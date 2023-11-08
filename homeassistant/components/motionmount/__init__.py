@@ -6,6 +6,7 @@ import motionmount
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import MotionMountCoordinator
@@ -26,8 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mm.add_listener(coordinator.motionmount_callback)
 
     # Validate the API connection
-    await mm.connect()
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await mm.connect()
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as ex:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to {entry.data[CONF_HOST]}"
+        ) from ex
 
     # Store an API object for your platforms to access
     hass.data[DOMAIN][entry.entry_id] = coordinator
