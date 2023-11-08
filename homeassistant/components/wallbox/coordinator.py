@@ -149,7 +149,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
         try:
-            self.authenticate()
             self._wallbox.setMaxChargingCurrent(self._station, charging_current)
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
