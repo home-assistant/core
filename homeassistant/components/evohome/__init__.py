@@ -13,7 +13,7 @@ from typing import Any, TypeAlias
 
 import evohomeasync
 import evohomeasync2 as evo
-import voluptuous as vol  # type: ignore[import-untyped]
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -278,9 +278,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
+    async def _broker_async_update(_: datetime) -> None:
+        """Test if camera is back online."""
+        await broker.async_update()
+
     async_track_time_interval(
         hass,
-        broker.async_update,  # type: ignore[arg-type]
+        _broker_async_update,
         config[DOMAIN][CONF_SCAN_INTERVAL],
     )
 
@@ -443,7 +447,7 @@ class EvoBroker:
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
-        app_storage = {
+        app_storage: dict[str, Any] = {
             CONF_USERNAME: self.client.username,
             REFRESH_TOKEN: self.client.refresh_token,
             ACCESS_TOKEN: self.client.access_token,
@@ -452,7 +456,7 @@ class EvoBroker:
 
         if self.client_v1 and self.client_v1.user_data:
             user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index]
-            app_storage[USER_DATA] = {  # type: ignore[assignment]
+            app_storage[USER_DATA] = {
                 "userInfo": {"userID": user_id},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
@@ -473,7 +477,7 @@ class EvoBroker:
             return
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self.hass, 1, self._update_v2_api_state)  # type: ignore[arg-type]
+            async_call_later(self.hass, 1, self._update_v2_api_state)
 
         return result
 
@@ -532,7 +536,7 @@ class EvoBroker:
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
-    async def _update_v2_api_state(self, *args: tuple, **kwargs: dict) -> None:
+    async def _update_v2_api_state(self, _: datetime | None = None) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
 
         access_token = self.client.access_token
@@ -725,11 +729,11 @@ class EvoChild(EvoDevice):
         """Return the datetime of the next setpoint, if any."""
 
         await self._update_schedule()
-        next_sp_from = self.setpoints.get("next_sp_from", "")
-
-        if not next_sp_from:
-            return None
-        return dt_util.as_utc(dt_util.parse_datetime(next_sp_from))  # type: ignore[arg-type]
+        if (next_sp_from := self.setpoints.get("next_sp_from", "")) and (
+            next_sp_from_dt := dt_util.parse_datetime(str(next_sp_from))
+        ):
+            return dt_util.as_utc(next_sp_from_dt)
+        return None
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""

@@ -183,7 +183,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
             duration: timedelta = data[ATTR_DURATION_UNTIL]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
-                until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))  # type: ignore[arg-type]
+                until = dt_util.parse_datetime(
+                    str(self.setpoints.get("next_sp_from", ""))
+                )
             else:
                 until = dt_util.now() + data[ATTR_DURATION_UNTIL]
         else:
@@ -263,7 +265,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
             if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 await self._update_schedule()
-                until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))  # type: ignore[arg-type]
+                until = dt_util.parse_datetime(
+                    str(self.setpoints.get("next_sp_from", ""))
+                )
 
             elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
                 until = dt_util.parse_datetime(self._evo_device.setpointStatus["until"])
@@ -314,7 +318,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         if evo_preset_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))  # type: ignore[arg-type]
+            until = dt_util.parse_datetime(str(self.setpoints.get("next_sp_from", "")))
         else:  # EVO_PERMOVER
             until = None
 
