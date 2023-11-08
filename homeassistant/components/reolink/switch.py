@@ -152,6 +152,16 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.doorbell_button_sound(ch),
         method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="hdr",
+        translation_key="hdr",
+        icon="mdi:hdr",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "HDR"),
+        value=lambda api, ch: api.HDR_on(ch) is True,
+        method=lambda api, ch, value: api.set_HDR(ch, value),
+    ),
 )
 
 NVR_SWITCH_ENTITIES = (
