@@ -44,7 +44,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import (
-    BELGIUM_5MIN_GAS_METER_READING,
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_PROTOCOL,
@@ -383,16 +382,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key="belgium_5min_gas_meter_reading",
-        translation_key="gas_meter_reading",
-        obis_reference=BELGIUM_5MIN_GAS_METER_READING,
-        dsmr_versions={"5B"},
-        is_gas=True,
-        force_update=True,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
         key="gas_meter_reading",
         translation_key="gas_meter_reading",
         obis_reference=obis_references.GAS_METER_READING,
@@ -403,6 +392,31 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
+
+
+def add_gas_sensor_5B(telegram: dict[str, DSMRObject]) -> DSMRSensorEntityDescription:
+    """Return correct entity for 5B Gas meter."""
+    ref = None
+    if obis_references.BELGIUM_MBUS1_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS1_METER_READING2
+    elif obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS2_METER_READING2
+    elif obis_references.BELGIUM_MBUS3_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS3_METER_READING2
+    elif obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS4_METER_READING2
+    elif ref is None:
+        ref = obis_references.BELGIUM_MBUS1_METER_READING2
+    return DSMRSensorEntityDescription(
+        key="belgium_5min_gas_meter_reading",
+        translation_key="gas_meter_reading",
+        obis_reference=ref,
+        dsmr_versions={"5B"},
+        is_gas=True,
+        force_update=True,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    )
 
 
 async def async_setup_entry(
@@ -438,6 +452,10 @@ async def async_setup_entry(
                 return (entity_description.device_class, UNIT_CONVERSION[uom])
             return (entity_description.device_class, uom)
 
+        all_sensors = SENSORS
+        if dsmr_version == "5B":
+            all_sensors += (add_gas_sensor_5B(telegram),)
+
         entities.extend(
             [
                 DSMREntity(
@@ -448,7 +466,7 @@ async def async_setup_entry(
                         telegram, description
                     ),  # type: ignore[arg-type]
                 )
-                for description in SENSORS
+                for description in all_sensors
                 if (
                     description.dsmr_versions is None
                     or dsmr_version in description.dsmr_versions

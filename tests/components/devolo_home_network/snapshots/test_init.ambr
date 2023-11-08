@@ -5,6 +5,10 @@
     'config_entries': <ANY>,
     'configuration_url': 'http://192.0.2.1',
     'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
