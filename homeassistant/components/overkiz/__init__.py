@@ -15,7 +15,7 @@ from pyoverkiz.exceptions import (
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, Setup, Scenario
+from pyoverkiz.models import Device, OverkizServer, Setup, Scenario
 from pyoverkiz.utils import generate_local_server
 
 from homeassistant.config_entries import ConfigEntry
@@ -63,29 +63,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Local API
     if api_type == APIType.LOCAL:
-        host = entry.data[CONF_HOST]
-        token = entry.data[CONF_TOKEN]
-        session = async_create_clientsession(
-            hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+        client = create_local_client(
+            hass,
+            host=entry.data[CONF_HOST],
+            token=entry.data[CONF_TOKEN],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
         )
 
-        client = OverkizClient(
-            username="",
-            password="",
-            token=token,
-            session=session,
-            server=generate_local_server(host=host),
-        )
     # Overkiz Cloud API
     else:
-        username = entry.data[CONF_USERNAME]
-        password = entry.data[CONF_PASSWORD]
-        server = SUPPORTED_SERVERS[entry.data[CONF_HUB]]
-
-        # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
-        session = async_create_clientsession(hass)
-        client = OverkizClient(
-            username=username, password=password, session=session, server=server
+        client = create_cloud_client(
+            hass,
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            server=SUPPORTED_SERVERS[entry.data[CONF_HUB]],
         )
 
     await _async_migrate_entries(hass, entry)
@@ -241,3 +232,30 @@ async def _async_migrate_entries(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     return True
+
+
+def create_local_client(
+    hass: HomeAssistant, host: str, token: str, verify_ssl: bool
+) -> OverkizClient:
+    """Create Overkiz local client."""
+    session = async_create_clientsession(hass, verify_ssl=verify_ssl)
+
+    return OverkizClient(
+        username="",
+        password="",
+        token=token,
+        session=session,
+        server=generate_local_server(host=host),
+    )
+
+
+def create_cloud_client(
+    hass: HomeAssistant, username: str, password: str, server: OverkizServer
+) -> OverkizClient:
+    """Create Overkiz cloud client."""
+    # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
+    session = async_create_clientsession(hass)
+
+    return OverkizClient(
+        username=username, password=password, session=session, server=server
+    )
