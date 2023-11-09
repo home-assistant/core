@@ -39,11 +39,14 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
         """Initialize Extension number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{unique_id}-extension"
-        self._attr_native_value = self.coordinator.data["extension"]
+
+    @property
+    def native_value(self) -> float:
+        """Get native value."""
+        return float(self.coordinator.data["extension"])
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self.coordinator.data["extension"]
         self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
@@ -63,11 +66,14 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
         """Initialize Turn number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{unique_id}-turn"
-        self._attr_native_value = self.coordinator.data["turn"] * -1
+
+    @property
+    def native_value(self) -> float:
+        """Get native value."""
+        return float(self.coordinator.data["turn"]) * -1
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self.coordinator.data["turn"] * -1
         self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
