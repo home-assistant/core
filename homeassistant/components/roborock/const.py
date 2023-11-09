@@ -17,6 +17,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
+    Platform.VACUUM,
 ]
 
 IMAGE_DRAWABLES: list[Drawable] = [
