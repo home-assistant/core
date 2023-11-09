@@ -85,7 +85,6 @@ class V2CSettingsNumberEntity(V2CBaseEntity, NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the state of the setting entity."""
-
         return self.entity_description.value_fn(self.data)
 
     async def async_set_native_value(self, value: float) -> None:
