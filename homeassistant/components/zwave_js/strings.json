@@ -416,11 +416,11 @@
         },
         "twist_assist": {
           "name": "Twist assist",
-          "description": "Twist Assist enabled."
+          "description": "Enable Twist Assist."
         },
         "block_to_block": {
           "name": "Block to block",
-          "description": "Block-to-block functionality enabled."
+          "description": "Enable block-to-block functionality."
         }
       }
     }
