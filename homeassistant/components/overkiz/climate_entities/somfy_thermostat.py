@@ -33,10 +33,12 @@ OVERKIZ_TO_PRESET_MODES: dict[OverkizCommandParam, str] = {
     OverkizCommandParam.AT_HOME_MODE: PRESET_HOME,
     OverkizCommandParam.AWAY_MODE: PRESET_AWAY,
     OverkizCommandParam.FREEZE_MODE: PRESET_FREEZE,
+    OverkizCommandParam.GEOFENCING_MODE: PRESET_NONE,
     OverkizCommandParam.MANUAL_MODE: PRESET_NONE,
     OverkizCommandParam.SLEEPING_MODE: PRESET_NIGHT,
     OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
 }
+
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 TARGET_TEMP_TO_OVERKIZ = {
     PRESET_HOME: OverkizState.SOMFY_THERMOSTAT_AT_HOME_TARGET_TEMPERATURE,

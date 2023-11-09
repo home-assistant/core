@@ -7,8 +7,6 @@ from transmission_rpc import Torrent
 
 DOMAIN = "transmission"
 
-SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle mode"}
-
 ORDER_NEWEST_FIRST = "newest_first"
 ORDER_OLDEST_FIRST = "oldest_first"
 ORDER_BEST_RATIO_FIRST = "best_ratio_first"

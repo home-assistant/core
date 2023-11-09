@@ -769,9 +769,6 @@ omit =
     homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mycroft/*
-    homeassistant/components/myq/__init__.py
-    homeassistant/components/myq/cover.py
-    homeassistant/components/myq/light.py
     homeassistant/components/mysensors/__init__.py
     homeassistant/components/mysensors/climate.py
     homeassistant/components/mysensors/cover.py
@@ -822,7 +819,6 @@ omit =
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
-    homeassistant/components/nibe_heatpump/climate.py
     homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
@@ -1433,6 +1429,11 @@ omit =
     homeassistant/components/upnp/device.py
     homeassistant/components/upnp/sensor.py
     homeassistant/components/vasttrafik/sensor.py
+    homeassistant/components/v2c/__init__.py
+    homeassistant/components/v2c/coordinator.py
+    homeassistant/components/v2c/entity.py
+    homeassistant/components/v2c/sensor.py
+    homeassistant/components/v2c/switch.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
     homeassistant/components/velbus/button.py

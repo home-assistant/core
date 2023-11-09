@@ -117,7 +117,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:information-outline",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
-        value_fn=lambda data: data.status.state.name,
+        value_fn=lambda data: data.status.state_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockStateCode.keys(),
     ),
@@ -142,7 +142,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:alert-circle",
         translation_key="vacuum_error",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda data: data.status.error_code.name,
+        value_fn=lambda data: data.status.error_code_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockErrorCode.keys(),
     ),
@@ -157,7 +157,9 @@ SENSOR_DESCRIPTIONS = [
         key="last_clean_start",
         translation_key="last_clean_start",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.begin_datetime,
+        value_fn=lambda data: data.last_clean_record.begin_datetime
+        if data.last_clean_record is not None
+        else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -165,7 +167,9 @@ SENSOR_DESCRIPTIONS = [
         key="last_clean_end",
         translation_key="last_clean_end",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.end_datetime,
+        value_fn=lambda data: data.last_clean_record.end_datetime
+        if data.last_clean_record is not None
+        else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
