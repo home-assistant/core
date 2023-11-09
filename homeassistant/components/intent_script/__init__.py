@@ -6,6 +6,7 @@ from typing import Any, TypedDict
 
 import voluptuous as vol
 
+from homeassistant.components.script import CONF_MODE
 from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
@@ -32,7 +33,6 @@ CONF_TITLE = "title"
 CONF_CONTENT = "content"
 CONF_TEXT = "text"
 CONF_ASYNC_ACTION = "async_action"
-CONF_SCRIPT_MODE = "script_mode"
 
 DEFAULT_CONF_ASYNC_ACTION = False
 
@@ -44,9 +44,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION
                 ): cv.boolean,
-                vol.Optional(
-                    CONF_SCRIPT_MODE, default=script.DEFAULT_SCRIPT_MODE
-                ): vol.In(script.SCRIPT_MODE_CHOICES),
+                vol.Optional(CONF_MODE, default=script.DEFAULT_SCRIPT_MODE): vol.In(
+                    script.SCRIPT_MODE_CHOICES
+                ),
                 vol.Optional(CONF_CARD): {
                     vol.Optional(CONF_TYPE, default="simple"): cv.string,
                     vol.Required(CONF_TITLE): cv.template,
@@ -91,7 +91,7 @@ def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> N
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
-            script_mode: str = conf.get(CONF_SCRIPT_MODE, script.DEFAULT_SCRIPT_MODE)
+            script_mode: str = conf.get(CONF_MODE, script.DEFAULT_SCRIPT_MODE)
             conf[CONF_ACTION] = script.Script(
                 hass,
                 conf[CONF_ACTION],
