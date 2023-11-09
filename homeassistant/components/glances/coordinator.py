@@ -1,5 +1,4 @@
 """Coordinator for Glances integration."""
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -8,9 +7,10 @@ from glances_api import Glances, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +30,15 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=f"{DOMAIN} - {self.host}",
-            update_interval=timedelta(seconds=60),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Glances REST API."""
         try:
-            await self.api.get_data("all")
+            data = await self.api.get_ha_sensor_data()
+        except exceptions.GlancesApiAuthorizationError as err:
+            raise ConfigEntryAuthFailed from err
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
-        return self.api.data
+        return data or {}

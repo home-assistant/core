@@ -13,9 +13,11 @@ import voluptuous as vol
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .bridge import HueBridge
 from .const import DOMAIN
@@ -31,7 +33,7 @@ ATTR_BRIGHTNESS = "brightness"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -62,7 +64,7 @@ async def async_setup_entry(
     )
 
     # add platform service to turn_on/activate scene with advanced options
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_ACTIVATE_SCENE,
         {
@@ -71,7 +73,7 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=600)
+                vol.Coerce(float), vol.Range(min=0, max=3600)
             ),
             vol.Optional(ATTR_BRIGHTNESS): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=255)
@@ -84,6 +86,8 @@ async def async_setup_entry(
 class HueSceneEntityBase(HueBaseEntity, SceneEntity):
     """Base Representation of a Scene entity from Hue Scenes."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         bridge: HueBridge,
@@ -95,6 +99,11 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         self.resource = resource
         self.controller = controller
         self.group = self.controller.get_group(self.resource.id)
+        # we create a virtual service/device for Hue zones/rooms
+        # so we have a parent for grouped lights and scenes
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.group.id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -110,23 +119,8 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
 
     @property
     def name(self) -> str:
-        """Return default entity name."""
-        return f"{self.group.metadata.name} {self.resource.metadata.name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device (service) info."""
-        # we create a virtual service/device for Hue scenes
-        # so we have a parent for grouped lights and scenes
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
-            entry_type=DeviceEntryType.SERVICE,
-            name=self.group.metadata.name,
-            manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
-            model=self.group.type.value.title(),
-            suggested_area=self.group.metadata.name,
-            via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
-        )
+        """Return name of the scene."""
+        return self.resource.metadata.name
 
 
 class HueSceneEntity(HueSceneEntityBase):

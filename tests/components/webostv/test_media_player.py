@@ -61,9 +61,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
@@ -90,7 +90,7 @@ async def test_services_with_parameters(
     await setup_webostv(hass)
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **attr_data}
-    assert await hass.services.async_call(MP_DOMAIN, service, data, True)
+    await hass.services.async_call(MP_DOMAIN, service, data, True)
 
     getattr(client, client_call[0]).assert_called_once_with(client_call[1])
 
@@ -111,7 +111,7 @@ async def test_services(hass: HomeAssistant, client, service, client_call) -> No
     await setup_webostv(hass)
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
-    assert await hass.services.async_call(MP_DOMAIN, service, data, True)
+    await hass.services.async_call(MP_DOMAIN, service, data, True)
 
     getattr(client, client_call).assert_called_once()
 
@@ -123,17 +123,13 @@ async def test_media_play_pause(hass: HomeAssistant, client) -> None:
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
     # After init state is playing - check pause call
-    assert await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, True
-    )
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, True)
 
     client.pause.assert_called_once()
     client.play.assert_not_called()
 
     # After pause state is paused - check play call
-    assert await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, True
-    )
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, True)
 
     client.play.assert_called_once()
     client.pause.assert_called_once()
@@ -154,7 +150,7 @@ async def test_media_next_previous_track(
 
     # check channel up/down for live TV channels
     data = {ATTR_ENTITY_ID: ENTITY_ID}
-    assert await hass.services.async_call(MP_DOMAIN, service, data, True)
+    await hass.services.async_call(MP_DOMAIN, service, data, True)
 
     getattr(client, client_call[0]).assert_not_called()
     getattr(client, client_call[1]).assert_called_once()
@@ -162,7 +158,7 @@ async def test_media_next_previous_track(
     # check next/previous for not Live TV channels
     monkeypatch.setattr(client, "current_app_id", "in1")
     data = {ATTR_ENTITY_ID: ENTITY_ID}
-    assert await hass.services.async_call(MP_DOMAIN, service, data, True)
+    await hass.services.async_call(MP_DOMAIN, service, data, True)
 
     getattr(client, client_call[0]).assert_called_once()
     getattr(client, client_call[1]).assert_called_once()
@@ -179,7 +175,7 @@ async def test_select_source_with_empty_source_list(
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "nonexistent",
     }
-    assert await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 
     client.launch_app.assert_not_called()
     client.set_input.assert_not_called()
@@ -195,7 +191,7 @@ async def test_select_app_source(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "Live TV",
     }
-    assert await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 
     client.launch_app.assert_called_once_with(LIVE_TV_APP_ID)
     client.set_input.assert_not_called()
@@ -210,7 +206,7 @@ async def test_select_input_source(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "Input01",
     }
-    assert await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 
     client.launch_app.assert_not_called()
     client.set_input.assert_called_once_with("in1")
@@ -224,8 +220,8 @@ async def test_button(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_BUTTON: "test",
     }
-    assert await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data, True)
-
+    await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data, True)
+    await hass.async_block_till_done()
     client.button.assert_called_once()
     client.button.assert_called_with("test")
 
@@ -238,8 +234,8 @@ async def test_command(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_COMMAND: "test",
     }
-    assert await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
-
+    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
+    await hass.async_block_till_done()
     client.request.assert_called_with("test", payload=None)
 
 
@@ -252,8 +248,8 @@ async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
         ATTR_COMMAND: "test",
         ATTR_PAYLOAD: {"target": "https://www.google.com"},
     }
-    assert await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
-
+    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
+    await hass.async_block_till_done()
     client.request.assert_called_with(
         "test", payload={"target": "https://www.google.com"}
     )
@@ -267,15 +263,13 @@ async def test_select_sound_output(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_SOUND_OUTPUT: "external_speaker",
     }
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True
-    )
-
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True)
+    await hass.async_block_till_done()
     client.change_sound_output.assert_called_once_with("external_speaker")
 
 
 async def test_device_info_startup_off(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test device info when device is off at startup."""
     monkeypatch.setattr(client, "system_info", None)
@@ -285,8 +279,7 @@ async def test_device_info_startup_off(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    device_reg = device_registry.async_get(hass)
-    device = device_reg.async_get_device({(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
 
     assert device
     assert device.identifiers == {(DOMAIN, entry.unique_id)}
@@ -296,7 +289,9 @@ async def test_device_info_startup_off(
     assert device.model is None
 
 
-async def test_entity_attributes(hass: HomeAssistant, client, monkeypatch) -> None:
+async def test_entity_attributes(
+    hass: HomeAssistant, client, monkeypatch, device_registry: dr.DeviceRegistry
+) -> None:
     """Test entity attributes."""
     entry = await setup_webostv(hass)
     await client.mock_state_update()
@@ -331,8 +326,7 @@ async def test_entity_attributes(hass: HomeAssistant, client, monkeypatch) -> No
     assert attrs[ATTR_MEDIA_TITLE] == "Channel Name 2"
 
     # Device Info
-    device_reg = device_registry.async_get(hass)
-    device = device_reg.async_get_device({(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
 
     assert device
     assert device.identifiers == {(DOMAIN, entry.unique_id)}
@@ -359,9 +353,7 @@ async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_MATCH_NONE,
         ATTR_SOUND_OUTPUT: "external_speaker",
     }
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True)
 
     client.change_sound_output.assert_not_called()
 
@@ -384,7 +376,7 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
         ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
         ATTR_MEDIA_CONTENT_ID: media_id,
     }
-    assert await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
 
     client.set_channel.assert_called_once_with(ch_id)
 
@@ -479,7 +471,7 @@ async def test_client_disconnected(hass: HomeAssistant, client, monkeypatch) -> 
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     monkeypatch.setattr(client, "connect", Mock(side_effect=asyncio.TimeoutError))
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
 
@@ -493,7 +485,7 @@ async def test_control_error_handling(
 
     # Device on, raise HomeAssistantError
     with pytest.raises(HomeAssistantError) as exc:
-        assert await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+        await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
     assert (
         str(exc.value)
@@ -505,7 +497,7 @@ async def test_control_error_handling(
     monkeypatch.setattr(client, "is_on", False)
     monkeypatch.setattr(client, "play", Mock(side_effect=asyncio.TimeoutError))
     await client.mock_state_update()
-    assert await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
     assert client.play.call_count == 1
     assert (
@@ -804,7 +796,7 @@ async def test_reauth_reconnect(hass: HomeAssistant, client, monkeypatch) -> Non
 
     assert entry.state == ConfigEntryState.LOADED
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED

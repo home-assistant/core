@@ -1,10 +1,10 @@
 """Coordinator to fetch data from the Picnic API."""
+import asyncio
 from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
 
-import async_timeout
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
 
@@ -44,7 +44,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
             # Update the auth token in the config entry if applicable

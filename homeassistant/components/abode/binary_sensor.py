@@ -42,6 +42,7 @@ async def async_setup_entry(
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
+    _attr_name = None
     _device: ABBinarySensor
 
     @property

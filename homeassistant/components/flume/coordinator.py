@@ -93,8 +93,11 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     def _update_lists(self):
         """Query flume for notification list."""
+        # Get notifications (read or unread).
+        # The related binary sensors (leak detected, high flow, low battery)
+        # will be active until the notification is deleted in the Flume app.
         self.notifications: list[dict[str, Any]] = pyflume.FlumeNotificationList(
-            self.auth, read="true"
+            self.auth, read=None
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)
 

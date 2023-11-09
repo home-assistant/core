@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.select import (
@@ -30,9 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -139,10 +135,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent[InputSelect](_LOGGER, DOMAIN, hass)
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -156,7 +148,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         InputSelectStore(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         ),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -168,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -232,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputSelectStorageCollection(collection.StorageCollection):
+class InputSelectStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_select))
@@ -247,15 +238,20 @@ class InputSelectStorageCollection(collection.StorageCollection):
         return cast(str, info[CONF_NAME])
 
     async def _update_data(
-        self, data: dict[str, Any], update_data: dict[str, Any]
+        self, item: dict[str, Any], update_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
+
+    _entity_component_unrecorded_attributes = (
+        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}
+    )
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -303,12 +299,9 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         if option not in self.options:
-            _LOGGER.warning(
-                "Invalid option: %s (possible options: %s)",
-                option,
-                ", ".join(self.options),
+            raise HomeAssistantError(
+                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
             )
-            return
         self._attr_current_option = option
         self.async_write_ha_state()
 

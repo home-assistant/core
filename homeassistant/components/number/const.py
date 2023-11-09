@@ -1,13 +1,14 @@
 """Provides the constants needed for the component."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
@@ -121,8 +123,23 @@ class NumberDeviceClass(StrEnum):
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
     """
 
+    DURATION = "duration"
+    """Fixed duration.
+
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
+    """
+
     ENERGY = "energy"
     """Energy.
+
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
+    ENERGY_STORAGE = "energy_storage"
+    """Stored energy.
+
+    Use this device class for sensors measuring stored energy, for example the amount
+    of electric energy currently stored in a battery or the capacity of a battery.
 
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
@@ -199,8 +216,14 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    PH = "ph"
+    """Potential hydrogen (acidity/alkalinity).
+
+    Unit of measurement: Unitless
+    """
+
     PM1 = "pm1"
-    """Particulate matter <= 0.1 μm.
+    """Particulate matter <= 1 μm.
 
     Unit of measurement: `µg/m³`
     """
@@ -300,6 +323,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
+    """Ratio of VOC.
+
+    Unit of measurement: `ppm`, `ppb`
+    """
+
     VOLTAGE = "voltage"
     """Voltage.
 
@@ -308,6 +337,18 @@ class NumberDeviceClass(StrEnum):
 
     VOLUME = "volume"
     """Generic volume.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    VOLUME_STORAGE = "volume_storage"
+    """Generic stored volume.
+
+    Use this device class for sensors measuring stored volume, for example the amount
+    of fuel in a fuel tank.
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
@@ -364,7 +405,15 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),
     NumberDeviceClass.DISTANCE: set(UnitOfLength),
+    NumberDeviceClass.DURATION: {
+        UnitOfTime.DAYS,
+        UnitOfTime.HOURS,
+        UnitOfTime.MINUTES,
+        UnitOfTime.SECONDS,
+        UnitOfTime.MILLISECONDS,
+    },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
+    NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
     NumberDeviceClass.GAS: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -379,6 +428,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PH: {None},
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -399,8 +449,13 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
+    NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
+    },
     NumberDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     NumberDeviceClass.VOLUME: set(UnitOfVolume),
+    NumberDeviceClass.VOLUME_STORAGE: set(UnitOfVolume),
     NumberDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,

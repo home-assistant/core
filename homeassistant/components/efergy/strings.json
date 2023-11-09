@@ -16,5 +16,39 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "instant_readings": {
+        "name": "Power usage"
+      },
+      "energy_day": {
+        "name": "Daily consumption"
+      },
+      "energy_week": {
+        "name": "Weekly consumption"
+      },
+      "energy_month": {
+        "name": "Monthly consumption"
+      },
+      "energy_year": {
+        "name": "Yearly consumption"
+      },
+      "budget": {
+        "name": "Energy budget"
+      },
+      "cost_day": {
+        "name": "Daily energy cost"
+      },
+      "cost_week": {
+        "name": "Weekly energy cost"
+      },
+      "cost_month": {
+        "name": "Monthly energy cost"
+      },
+      "cost_year": {
+        "name": "Yearly energy cost"
+      }
+    }
   }
 }

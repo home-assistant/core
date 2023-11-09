@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Final
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -25,8 +26,7 @@ CONF_STATION = "station"
 
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
-ATTR_FORECAST_DETAILED_DESCRIPTION = "detailed_description"
-ATTR_FORECAST_DAYTIME = "daytime"
+ATTR_FORECAST_DETAILED_DESCRIPTION: Final = "detailed_description"
 
 CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_EXCEPTIONAL: [
@@ -75,10 +75,7 @@ CONDITION_CLASSES: dict[str, list[str]] = {
 DAYNIGHT = "daynight"
 HOURLY = "hourly"
 
-NWS_DATA = "nws data"
-COORDINATOR_OBSERVATION = "coordinator_observation"
-COORDINATOR_FORECAST = "coordinator_forecast"
-COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"
-
 OBSERVATION_VALID_TIME = timedelta(minutes=20)
 FORECAST_VALID_TIME = timedelta(minutes=45)
+# A lot of stations update once hourly plus some wiggle room
+UPDATE_TIME_PERIOD = timedelta(minutes=70)

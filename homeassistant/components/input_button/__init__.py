@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
@@ -19,9 +18,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -56,7 +52,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-class InputButtonStorageCollection(collection.StorageCollection):
+class InputButtonStorageCollection(collection.DictStorageCollection):
     """Input button collection stored in storage."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
@@ -70,19 +66,15 @@ class InputButtonStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input button."""
     component = EntityComponent[InputButton](_LOGGER, DOMAIN, hass)
-
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     id_manager = collection.IDManager()
 
@@ -95,7 +87,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = InputButtonStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -107,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -138,6 +129,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
+
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
     editable: bool

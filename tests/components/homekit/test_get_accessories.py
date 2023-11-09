@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import homeassistant.components.climate as climate
-import homeassistant.components.cover as cover
+from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
@@ -17,9 +17,13 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
-import homeassistant.components.media_player.const as media_player_c
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.sensor import SensorDeviceClass
-import homeassistant.components.vacuum as vacuum
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -90,7 +94,7 @@ def test_customize_options(config, name) -> None:
             "Thermostat",
             "climate.test",
             "auto",
-            {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE},
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE},
             {},
         ),
         ("HumidifierDehumidifier", "humidifier.test", "auto", {}, {}),
@@ -118,7 +122,8 @@ def test_types(type_name, entity_id, state, attrs, config) -> None:
             "open",
             {
                 ATTR_DEVICE_CLASS: "garage",
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE,
             },
         ),
         (
@@ -127,26 +132,20 @@ def test_types(type_name, entity_id, state, attrs, config) -> None:
             "open",
             {
                 ATTR_DEVICE_CLASS: "window",
-                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
             },
         ),
         (
             "WindowCovering",
             "cover.set_position",
             "open",
-            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION},
+            {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION},
         ),
         (
             "WindowCovering",
             "cover.tilt",
             "open",
-            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_TILT_POSITION},
-        ),
-        (
-            "WindowCoveringBasic",
-            "cover.open_window",
-            "open",
-            {ATTR_SUPPORTED_FEATURES: (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)},
+            {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION},
         ),
         (
             "WindowCoveringBasic",
@@ -154,10 +153,29 @@ def test_types(type_name, entity_id, state, attrs, config) -> None:
             "open",
             {
                 ATTR_SUPPORTED_FEATURES: (
-                    cover.SUPPORT_OPEN
-                    | cover.SUPPORT_CLOSE
-                    | cover.SUPPORT_SET_TILT_POSITION
+                    CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
                 )
+            },
+        ),
+        (
+            "WindowCoveringBasic",
+            "cover.open_window",
+            "open",
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    CoverEntityFeature.OPEN
+                    | CoverEntityFeature.CLOSE
+                    | CoverEntityFeature.SET_TILT_POSITION
+                )
+            },
+        ),
+        (
+            "Door",
+            "cover.door",
+            "open",
+            {
+                ATTR_DEVICE_CLASS: "door",
+                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
             },
         ),
     ],
@@ -179,8 +197,8 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
             "media_player.test",
             "on",
             {
-                ATTR_SUPPORTED_FEATURES: media_player_c.MediaPlayerEntityFeature.TURN_ON
-                | media_player_c.MediaPlayerEntityFeature.TURN_OFF
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
             },
             {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}},
         ),
@@ -188,7 +206,14 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
             "TelevisionMediaPlayer",
             "media_player.tv",
             "on",
-            {ATTR_DEVICE_CLASS: "tv"},
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV},
+            {},
+        ),
+        (
+            "ReceiverMediaPlayer",
+            "media_player.receiver",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.RECEIVER},
             {},
         ),
     ],
@@ -291,6 +316,13 @@ def test_type_sensors(type_name, entity_id, state, attrs) -> None:
     ("type_name", "entity_id", "state", "attrs", "config"),
     [
         ("Outlet", "switch.test", "on", {}, {CONF_TYPE: TYPE_OUTLET}),
+        (
+            "Outlet",
+            "switch.test",
+            "on",
+            {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET},
+            {},
+        ),
         ("Switch", "automation.test", "on", {}, {}),
         ("Switch", "button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "input_boolean.test", "on", {}, {}),
@@ -325,8 +357,8 @@ def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
             "vacuum.dock_vacuum",
             "docked",
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_START
-                | vacuum.SUPPORT_RETURN_HOME
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.START
+                | VacuumEntityFeature.RETURN_HOME
             },
         ),
         ("Vacuum", "vacuum.basic_vacuum", "off", {}),

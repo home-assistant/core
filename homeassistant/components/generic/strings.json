@@ -1,4 +1,5 @@
 {
+  "title": "Generic Camera",
   "config": {
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -81,6 +82,12 @@
       "stream_no_route_to_host": "[%key:component::generic::config::error::stream_no_route_to_host%]",
       "stream_io_error": "[%key:component::generic::config::error::stream_io_error%]",
       "stream_not_permitted": "[%key:component::generic::config::error::stream_not_permitted%]"
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads generic cameras from the YAML-configuration."
     }
   }
 }

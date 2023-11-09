@@ -1,7 +1,9 @@
 """Define tests for the Elexa Guardian config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from aioguardian.errors import GuardianError
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import dhcp, zeroconf
@@ -15,6 +17,8 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_duplicate_error(
@@ -76,8 +80,8 @@ async def test_step_user(hass: HomeAssistant, config, setup_guardian) -> None:
 async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
     """Test the zeroconf step."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.100",
-        addresses=["192.168.1.100"],
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
         port=7777,
         hostname="GVC1-ABCD.local.",
         type="_api._udp.local.",
@@ -106,8 +110,8 @@ async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
 async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
     """Test the zeroconf step aborting because it's already in progress."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.100",
-        addresses=["192.168.1.100"],
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
         port=7777,
         hostname="GVC1-ABCD.local.",
         type="_api._udp.local.",

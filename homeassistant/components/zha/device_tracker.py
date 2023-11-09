@@ -8,17 +8,17 @@ from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_POWER_CONFIGURATION,
-    DATA_ZHA,
+    CLUSTER_HANDLER_POWER_CONFIGURATION,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 from .sensor import Battery
@@ -32,7 +32,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation device tracker from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.DEVICE_TRACKER]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.DEVICE_TRACKER]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -44,16 +45,19 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_POWER_CONFIGURATION)
 class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
     _attr_should_poll = True  # BaseZhaEntity defaults to False
+    _attr_name: str = "Device scanner"
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize the ZHA device tracker."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._battery_cluster_handler = self.cluster_handlers.get(
+            CLUSTER_HANDLER_POWER_CONFIGURATION
+        )
         self._connected = False
         self._keepalive_interval = 60
         self._battery_level = None
@@ -61,9 +65,9 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        if self._battery_channel:
+        if self._battery_cluster_handler:
             self.async_accept_signal(
-                self._battery_channel,
+                self._battery_cluster_handler,
                 SIGNAL_ATTR_UPDATED,
                 self.async_battery_percentage_remaining_updated,
             )
@@ -108,17 +112,19 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return self._battery_level
 
     @property  # type: ignore[misc]
-    def device_info(  # pylint: disable=overridden-final-method
+    def device_info(
         self,
     ) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because
         # it doesn't track IP-based devices.
         # Call Super because ScannerEntity overrode it.
-        return super(ZhaEntity, self).device_info
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return ZhaEntity.device_info.fget(self)  # type: ignore[attr-defined]
 
     @property
     def unique_id(self) -> str:
         """Return unique ID."""
         # Call Super because ScannerEntity overrode it.
-        return super(ZhaEntity, self).unique_id
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return ZhaEntity.unique_id.fget(self)  # type: ignore[attr-defined]

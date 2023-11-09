@@ -1,4 +1,5 @@
 """Test the Tradfri config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -113,8 +114,8 @@ async def test_discovery_connection(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="123.123.123.123",
-            addresses=["123.123.123.123"],
+            ip_address=ip_address("123.123.123.123"),
+            ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -148,8 +149,8 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="new-host",
-            addresses=["new-host"],
+            ip_address=ip_address("123.123.123.124"),
+            ip_addresses=[ip_address("123.123.123.124")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -161,21 +162,7 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     assert flow["type"] == data_entry_flow.FlowResultType.ABORT
     assert flow["reason"] == "already_configured"
 
-    assert entry.data["host"] == "new-host"
-
-
-async def test_import_duplicate_aborted(hass: HomeAssistant) -> None:
-    """Test a duplicate import host is ignored."""
-    MockConfigEntry(domain="tradfri", data={"host": "some-host"}).add_to_hass(hass)
-
-    flow = await hass.config_entries.flow.async_init(
-        "tradfri",
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={"host": "some-host"},
-    )
-
-    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
-    assert flow["reason"] == "already_configured"
+    assert entry.data["host"] == "123.123.123.124"
 
 
 async def test_duplicate_discovery(
@@ -186,8 +173,8 @@ async def test_duplicate_discovery(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="123.123.123.123",
-            addresses=["123.123.123.123"],
+            ip_address=ip_address("123.123.123.123"),
+            ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -202,8 +189,8 @@ async def test_duplicate_discovery(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="123.123.123.123",
-            addresses=["123.123.123.123"],
+            ip_address=ip_address("123.123.123.123"),
+            ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -219,7 +206,7 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     """Test a duplicate discovery host aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain="tradfri",
-        data={"host": "some-host"},
+        data={"host": "123.123.123.123"},
     )
     entry.add_to_hass(hass)
 
@@ -227,8 +214,8 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="some-host",
-            addresses=["some-host"],
+            ip_address=ip_address("123.123.123.123"),
+            ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

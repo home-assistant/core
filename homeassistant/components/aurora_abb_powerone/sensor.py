@@ -34,7 +34,7 @@ SENSOR_TYPES = [
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Power Output",
+        translation_key="power_output",
     ),
     SensorEntityDescription(
         key="temp",
@@ -42,14 +42,13 @@ SENSOR_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Temperature",
     ),
     SensorEntityDescription(
         key="totalenergy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Total Energy",
+        translation_key="total_energy",
     ),
 ]
 
@@ -74,6 +73,8 @@ async def async_setup_entry(
 
 class AuroraSensor(AuroraEntity, SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

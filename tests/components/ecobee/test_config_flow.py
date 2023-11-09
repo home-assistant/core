@@ -14,7 +14,7 @@ from homeassistant.components.ecobee.const import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
@@ -144,7 +144,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_t
     MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "homeassistant.components.ecobee.config_flow.load_json_object",
         return_value=MOCK_ECOBEE_CONF,
     ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
@@ -173,11 +173,9 @@ async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(
     MOCK_ECOBEE_CONF = {}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "homeassistant.components.ecobee.config_flow.load_json_object",
         return_value=MOCK_ECOBEE_CONF,
-    ), patch.object(
-        flow, "async_step_user", return_value=mock_coro()
-    ) as mock_async_step_user:
+    ), patch.object(flow, "async_step_user") as mock_async_step_user:
         await flow.async_step_import(import_data=None)
 
         mock_async_step_user.assert_called_once_with(
@@ -196,12 +194,12 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_t
     MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "homeassistant.components.ecobee.config_flow.load_json_object",
         return_value=MOCK_ECOBEE_CONF,
     ), patch(
         "homeassistant.components.ecobee.config_flow.Ecobee"
     ) as mock_ecobee, patch.object(
-        flow, "async_step_user", return_value=mock_coro()
+        flow, "async_step_user"
     ) as mock_async_step_user:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.refresh_tokens.return_value = False

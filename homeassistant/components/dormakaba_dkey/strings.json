@@ -5,11 +5,14 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "reauth_confirm": {
+        "description": "The activation code is no longer valid, a new unused activation code is needed.\n\n"
       },
       "associate": {
         "description": "Provide an unused activation code.\n\nTo create an activation code, create a new key in the dKey admin app, then choose to share the key and share an activation code.\n\nMake sure to close the dKey admin app before proceeding.",
@@ -19,6 +22,7 @@
       }
     },
     "error": {
+      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and try again.",
       "invalid_code": "Invalid activation code. An activation code consist of 8 characters, separated by a dash, e.g. GBZT-HXC0.",
       "wrong_code": "Wrong activation code. Note that an activation code can only be used once."
     },
@@ -26,7 +30,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "deadbolt": {
+        "name": "Deadbolt"
+      }
     }
   }
 }

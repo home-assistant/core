@@ -67,7 +67,8 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_parse_discovery(discovery_info)
 

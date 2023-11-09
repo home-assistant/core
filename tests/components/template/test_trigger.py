@@ -7,7 +7,12 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.template import trigger as template_trigger
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -389,7 +394,7 @@ async def test_if_action(hass: HomeAssistant, start_ha, calls) -> None:
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -405,6 +410,7 @@ async def test_if_fires_on_change_with_bad_template(
     hass: HomeAssistant, start_ha, calls
 ) -> None:
     """Test for firing on change with bad template."""
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])

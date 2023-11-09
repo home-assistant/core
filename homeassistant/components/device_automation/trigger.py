@@ -7,7 +7,11 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    TriggerActionType,
+    TriggerInfo,
+    TriggerProtocol,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -20,27 +24,12 @@ from .helpers import async_validate_device_automation_config
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
-class DeviceAutomationTriggerProtocol(Protocol):
+class DeviceAutomationTriggerProtocol(TriggerProtocol, Protocol):
     """Define the format of device_trigger modules.
 
-    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config
+    from TriggerProtocol.
     """
-
-    TRIGGER_SCHEMA: vol.Schema
-
-    async def async_validate_trigger_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-
-    async def async_attach_trigger(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
-    ) -> CALLBACK_TYPE:
-        """Attach a trigger."""
 
     async def async_get_trigger_capabilities(
         self, hass: HomeAssistant, config: ConfigType

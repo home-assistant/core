@@ -35,7 +35,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
-from homeassistant.util.json import load_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .const import DOMAIN, SERVICE_DISMISS
 
@@ -113,7 +113,6 @@ SUBSCRIPTION_SCHEMA = vol.All(
     dict,
     vol.Schema(
         {
-            # pylint: disable=no-value-for-parameter
             vol.Required(ATTR_ENDPOINT): vol.Url(),
             vol.Required(ATTR_KEYS): KEYS_SCHEMA,
             vol.Optional(ATTR_EXPIRATIONTIME): vol.Any(None, cv.positive_int),
@@ -175,9 +174,6 @@ def get_service(
 
     registrations = _load_config(json_path)
 
-    if registrations is None:
-        return None
-
     vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
     vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
     vapid_email = config[ATTR_VAPID_EMAIL]
@@ -197,10 +193,10 @@ def get_service(
     )
 
 
-def _load_config(filename):
+def _load_config(filename: str) -> JsonObjectType:
     """Load configuration."""
     with suppress(HomeAssistantError):
-        return load_json(filename)
+        return load_json_object(filename)
     return {}
 
 

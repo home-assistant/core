@@ -1,10 +1,8 @@
 """Support for manual alarms."""
 from __future__ import annotations
 
-import copy
 import datetime
 import logging
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -30,6 +28,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
@@ -74,15 +73,16 @@ ATTR_NEXT_STATE = "next_state"
 
 def _state_validator(config):
     """Validate the state."""
-    config = copy.deepcopy(config)
     for state in SUPPORTED_PRETRIGGER_STATES:
         if CONF_DELAY_TIME not in config[state]:
-            config[state][CONF_DELAY_TIME] = config[CONF_DELAY_TIME]
+            config[state] = config[state] | {CONF_DELAY_TIME: config[CONF_DELAY_TIME]}
         if CONF_TRIGGER_TIME not in config[state]:
-            config[state][CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
+            config[state] = config[state] | {
+                CONF_TRIGGER_TIME: config[CONF_TRIGGER_TIME]
+            }
     for state in SUPPORTED_ARMING_STATES:
         if CONF_ARMING_TIME not in config[state]:
-            config[state][CONF_ARMING_TIME] = config[CONF_ARMING_TIME]
+            config[state] = config[state] | {CONF_ARMING_TIME: config[CONF_ARMING_TIME]}
 
     return config
 
@@ -279,62 +279,40 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
+        if isinstance(self._code, str) and self._code.isdigit():
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if not self._async_validate_code(code, STATE_ALARM_DISARMED):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_DISARMED)
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_HOME
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_HOME)
         self._async_update_state(STATE_ALARM_ARMED_HOME)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_AWAY
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_AWAY)
         self._async_update_state(STATE_ALARM_ARMED_AWAY)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_NIGHT
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_NIGHT)
         self._async_update_state(STATE_ALARM_ARMED_NIGHT)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_VACATION
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_VACATION)
         self._async_update_state(STATE_ALARM_ARMED_VACATION)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        if self.code_arm_required and not self._async_validate_code(
-            code, STATE_ALARM_ARMED_CUSTOM_BYPASS
-        ):
-            return
-
+        self._async_validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS)
         self._async_update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
@@ -383,18 +361,22 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def _async_validate_code(self, code, state):
         """Validate given code."""
-        if self._code is None:
-            return True
+        if (
+            state != STATE_ALARM_DISARMED and not self.code_arm_required
+        ) or self._code is None:
+            return
+
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
             alarm_code = self._code.async_render(
                 parse_result=False, from_state=self._state, to_state=state
             )
-        check = not alarm_code or code == alarm_code
-        if not check:
-            _LOGGER.warning("Invalid code given for %s", state)
-        return check
+
+        if not alarm_code or code == alarm_code:
+            return
+
+        raise HomeAssistantError("Invalid alarm code provided")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

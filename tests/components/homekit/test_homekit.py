@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from uuid import uuid1
 
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
@@ -23,17 +25,24 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
+    CONF_ADVERTISE_IP,
     DEFAULT_PORT,
     DOMAIN,
-    HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_UNPAIR,
 )
+from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
+from homeassistant.components.light import (
+    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ColorMode,
+)
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -46,9 +55,14 @@ from homeassistant.const import (
     PERCENTAGE,
     SERVICE_RELOAD,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, HomeAssistantError, State
-from homeassistant.helpers import device_registry, entity_registry as er, instance_id
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    instance_id,
+)
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -110,7 +124,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
         exclude_accessory_mode=False,
         entity_config={},
         homekit_mode=homekit_mode,
-        advertise_ip=None,
+        advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
         devices=devices,
@@ -159,12 +173,12 @@ async def test_setup_min(hass: HomeAssistant, mock_async_zeroconf: None) -> None
         hass,
         BRIDGE_NAME,
         DEFAULT_PORT,
-        "1.2.3.4",
+        [None],
         ANY,
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -201,12 +215,12 @@ async def test_removing_entry(
         hass,
         BRIDGE_NAME,
         DEFAULT_PORT,
-        "1.2.3.4",
+        [None],
         ANY,
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -239,7 +253,7 @@ async def test_homekit_setup(
         {},
         {},
         HOMEKIT_MODE_BRIDGE,
-        advertise_ip=None,
+        advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
     )
@@ -316,7 +330,81 @@ async def test_homekit_setup_ip_address(
     )
 
 
-async def test_homekit_setup_advertise_ip(
+async def test_homekit_with_single_advertise_ips(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup with a single advertise ips."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345, CONF_ADVERTISE_IP: "1.3.4.4"},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        mock_driver.async_start = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_driver.assert_called_with(
+        hass,
+        entry.entry_id,
+        ANY,
+        entry.title,
+        loop=hass.loop,
+        address=[None],
+        port=ANY,
+        persist_file=ANY,
+        advertised_address="1.3.4.4",
+        async_zeroconf_instance=mock_async_zeroconf,
+        zeroconf_server=ANY,
+        loader=ANY,
+        iid_storage=ANY,
+    )
+
+
+async def test_homekit_with_many_advertise_ips(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup with many advertise ips."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "mock_name",
+            CONF_PORT: 12345,
+            CONF_ADVERTISE_IP: ["1.3.4.4", "4.3.2.2"],
+        },
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        mock_driver.async_start = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_driver.assert_called_with(
+        hass,
+        entry.entry_id,
+        ANY,
+        entry.title,
+        loop=hass.loop,
+        address=[None],
+        port=ANY,
+        persist_file=ANY,
+        advertised_address=["1.3.4.4", "4.3.2.2"],
+        async_zeroconf_instance=mock_async_zeroconf,
+        zeroconf_server=ANY,
+        loader=ANY,
+        iid_storage=ANY,
+    )
+
+
+async def test_homekit_setup_advertise_ips(
     hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
 ) -> None:
     """Test setup with given IP address to advertise."""
@@ -450,7 +538,7 @@ async def test_homekit_remove_accessory(
     acc_mock.stop = AsyncMock()
     homekit.bridge.accessories = {6: acc_mock}
 
-    acc = await homekit.async_remove_bridge_accessory(6)
+    acc = homekit.async_remove_bridge_accessory(6)
     assert acc is acc_mock
     assert len(homekit.bridge.accessories) == 0
 
@@ -503,15 +591,12 @@ async def test_homekit_entity_glob_filter(
 
 
 async def test_homekit_entity_glob_filter_with_config_entities(
-    hass: HomeAssistant, mock_async_zeroconf: None, entity_reg
+    hass: HomeAssistant, mock_async_zeroconf: None, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the entity filter with configuration entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.const import EntityCategory
-    from homeassistant.helpers.entity_registry import RegistryEntry
-
-    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    select_config_entity = entity_registry.async_get_or_create(
         "select",
         "any",
         "any",
@@ -520,7 +605,7 @@ async def test_homekit_entity_glob_filter_with_config_entities(
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
 
-    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    switch_config_entity = entity_registry.async_get_or_create(
         "switch",
         "any",
         "any",
@@ -559,14 +644,12 @@ async def test_homekit_entity_glob_filter_with_config_entities(
 
 
 async def test_homekit_entity_glob_filter_with_hidden_entities(
-    hass: HomeAssistant, mock_async_zeroconf: None, entity_reg
+    hass: HomeAssistant, mock_async_zeroconf: None, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the entity filter with hidden entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.helpers.entity_registry import RegistryEntry
-
-    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    select_config_entity = entity_registry.async_get_or_create(
         "select",
         "any",
         "any",
@@ -575,7 +658,7 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
 
-    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    switch_config_entity = entity_registry.async_get_or_create(
         "switch",
         "any",
         "any",
@@ -614,7 +697,10 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
 
 
 async def test_homekit_start(
-    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None, device_reg
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -627,8 +713,8 @@ async def test_homekit_start(
     acc = Accessory(hk_driver, "any")
     homekit.driver.accessory = acc
 
-    connection = (device_registry.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
-    bridge_with_wrong_mac = device_reg.async_get_or_create(
+    connection = (dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
+    bridge_with_wrong_mac = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={connection},
         manufacturer="Any",
@@ -661,14 +747,14 @@ async def test_homekit_start(
     await hass.async_block_till_done()
     assert not hk_driver_start.called
 
-    assert device_reg.async_get(bridge_with_wrong_mac.id) is None
+    assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
-    device = device_reg.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
-    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
-    assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    formatted_mac = dr.format_mac(homekit.driver.state.mac)
+    assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
 
     # Start again to make sure the registry entry is kept
     homekit.status = STATUS_READY
@@ -679,14 +765,15 @@ async def test_homekit_start(
     ) as hk_driver_start:
         await homekit.async_start()
 
-    device = device_reg.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
-    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
-    assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    formatted_mac = dr.format_mac(homekit.driver.state.mac)
+    assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    assert device.model == "HomeBridge"
 
-    assert len(device_reg.devices) == 1
+    assert len(device_registry.devices) == 1
     assert homekit.driver.state.config_version == 1
 
 
@@ -736,23 +823,25 @@ async def test_homekit_start_with_a_device(
     hk_driver,
     mock_async_zeroconf: None,
     demo_cleanup,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test HomeKit start method with a device."""
 
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
-    reg_entry = entity_reg.async_get("light.ceiling_lights")
+    reg_entry = entity_registry.async_get("light.ceiling_lights")
     assert reg_entry is not None
     device_id = reg_entry.device_id
     await async_init_entry(hass, entry)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, None, devices=[device_id])
     homekit.driver = hk_driver
+    homekit.aid_storage = MagicMock()
 
     with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
@@ -780,6 +869,7 @@ async def test_homekit_stop(hass: HomeAssistant) -> None:
     homekit.driver.async_stop = AsyncMock()
     homekit.bridge = Mock()
     homekit.bridge.accessories = {}
+    homekit.aid_storage = MagicMock()
 
     assert homekit.status == STATUS_READY
     await homekit.async_stop()
@@ -794,6 +884,7 @@ async def test_homekit_stop(hass: HomeAssistant) -> None:
 
     # Test if driver is started
     homekit.status = STATUS_RUNNING
+    homekit._cancel_reload_dispatcher = lambda: None
     await homekit.async_stop()
     await hass.async_block_till_done()
     assert homekit.driver.async_stop.called is True
@@ -812,14 +903,10 @@ async def test_homekit_reset_accessories(
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
 
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
-        "pyhap.accessory.Bridge.add_accessory"
-    ) as mock_add_accessory, patch(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch(
+    ), patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
-    ), patch.object(
+    ) as mock_run_accessory, patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
@@ -834,14 +921,129 @@ async def test_homekit_reset_accessories(
             blocking=True,
         )
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-        assert mock_add_accessory.called
+        assert mock_run_accessory.called
         homekit.status = STATUS_READY
         await homekit.async_stop()
 
 
+async def test_homekit_reload_accessory_can_change_class(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
+    """Test reloading a HomeKit Accessory in brdige mode.
+
+    This test ensure when device class changes the HomeKit class changes.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "switch.outlet"
+    hass.states.async_set(entity_id, "on", {ATTR_DEVICE_CLASS: None})
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        bridge: HomeBridge = homekit.driver.accessory
+        await bridge.run()
+        switch_accessory = next(iter(bridge.accessories.values()))
+        assert type(switch_accessory).__name__ == "Switch"
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(
+            entity_id, "off", {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET}
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        outlet_accessory = next(iter(bridge.accessories.values()))
+        assert type(outlet_accessory).__name__ == "Outlet"
+
+        await homekit.async_stop()
+
+
+async def test_homekit_reload_accessory_in_accessory_mode(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
+    """Test reloading a HomeKit Accessory in accessory mode.
+
+    This test ensure a device class changes can change the class of
+    the accessory.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "switch.outlet"
+    hass.states.async_set(entity_id, "on", {ATTR_DEVICE_CLASS: None})
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        primary_accessory = homekit.driver.accessory
+        await primary_accessory.run()
+        assert type(primary_accessory).__name__ == "Switch"
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(
+            entity_id, "off", {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET}
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        primary_accessory = homekit.driver.accessory
+        assert type(primary_accessory).__name__ == "Outlet"
+
+        await homekit.async_stop()
+
+
+async def test_homekit_reload_accessory_same_class(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
+    """Test reloading a HomeKit Accessory in bridge mode.
+
+    The class of the accessory remains the same.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "light.color"
+    hass.states.async_set(
+        entity_id,
+        "on",
+        {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS], ATTR_COLOR_MODE: ColorMode.HS},
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        bridge: HomeBridge = homekit.driver.accessory
+        await bridge.run()
+        light_accessory_color = next(iter(bridge.accessories.values()))
+        assert not hasattr(light_accessory_color, "char_color_temp")
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(
+            entity_id,
+            "on",
+            {
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS, ColorMode.COLOR_TEMP],
+                ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
+            },
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        light_accessory_color_and_temp = next(iter(bridge.accessories.values()))
+        assert hasattr(light_accessory_color_and_temp, "char_color_temp")
+
+        await homekit.async_stop()
+
+
 async def test_homekit_unpair(
-    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_async_zeroconf: None
 ) -> None:
     """Test unpairing HomeKit accessories."""
 
@@ -867,15 +1069,15 @@ async def test_homekit_unpair(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
-        state.add_paired_client("client2", "any", b"0")
-        state.add_paired_client("client3", "any", b"1")
-        state.add_paired_client("client4", "any", b"0")
-        state.add_paired_client("client5", "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
 
-        formatted_mac = device_registry.format_mac(state.mac)
-        hk_bridge_dev = device_reg.async_get_device(
-            {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
+        formatted_mac = dr.format_mac(state.mac)
+        hk_bridge_dev = device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
         )
 
         await hass.services.async_call(
@@ -890,7 +1092,7 @@ async def test_homekit_unpair(
 
 
 async def test_homekit_unpair_missing_device_id(
-    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_async_zeroconf: None
 ) -> None:
     """Test unpairing HomeKit accessories with invalid device id."""
 
@@ -916,7 +1118,8 @@ async def test_homekit_unpair_missing_device_id(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -925,12 +1128,12 @@ async def test_homekit_unpair_missing_device_id(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
 async def test_homekit_unpair_not_homekit_device(
-    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_async_zeroconf: None
 ) -> None:
     """Test unpairing HomeKit accessories with a non-homekit device id."""
 
@@ -940,6 +1143,7 @@ async def test_homekit_unpair_not_homekit_device(
     not_homekit_entry = MockConfigEntry(
         domain="not_homekit", data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    not_homekit_entry.add_to_hass(hass)
     entity_id = "light.demo"
     hass.states.async_set("light.demo", "on")
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -957,16 +1161,17 @@ async def test_homekit_unpair_not_homekit_device(
         homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
 
-        device_entry = device_reg.async_get_or_create(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=not_homekit_entry.entry_id,
             sw_version="0.16.0",
             model="Powerwall 2",
             manufacturer="Tesla",
-            connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         )
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -975,7 +1180,7 @@ async def test_homekit_unpair_not_homekit_device(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -994,8 +1199,8 @@ async def test_homekit_reset_accessories_not_supported(
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
         "pyhap.accessory.Bridge.add_accessory"
     ) as mock_add_accessory, patch(
-        "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
+    ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
@@ -1019,7 +1224,7 @@ async def test_homekit_reset_accessories_not_supported(
         )
         await hass.async_block_till_done()
 
-        assert hk_driver_config_changed.call_count == 2
+        assert hk_driver_async_update_advertisement.call_count == 1
         assert not mock_add_accessory.called
         assert len(homekit.bridge.accessories) == 0
         homekit.status = STATUS_STOPPED
@@ -1083,22 +1288,25 @@ async def test_homekit_reset_accessories_not_bridged(
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
         "pyhap.accessory.Bridge.add_accessory"
     ) as mock_add_accessory, patch(
-        "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
+    ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
 
+        assert hk_driver_async_update_advertisement.call_count == 0
         acc_mock = MagicMock()
         acc_mock.entity_id = entity_id
         acc_mock.stop = AsyncMock()
+        acc_mock.to_HAP = lambda: {}
 
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
         homekit.driver.aio_stop_event = MagicMock()
+        assert hk_driver_async_update_advertisement.call_count == 0
 
         await hass.services.async_call(
             DOMAIN,
@@ -1108,7 +1316,7 @@ async def test_homekit_reset_accessories_not_bridged(
         )
         await hass.async_block_till_done()
 
-        assert hk_driver_config_changed.call_count == 0
+        assert hk_driver_async_update_advertisement.call_count == 0
         assert not mock_add_accessory.called
         homekit.status = STATUS_STOPPED
 
@@ -1126,8 +1334,8 @@ async def test_homekit_reset_single_accessory(
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
 
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
-        "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
+    ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch(
         f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
@@ -1144,7 +1352,7 @@ async def test_homekit_reset_single_accessory(
         )
         await hass.async_block_till_done()
         assert mock_run.called
-        assert hk_driver_config_changed.call_count == 1
+        assert hk_driver_async_update_advertisement.call_count == 1
         homekit.status = STATUS_READY
         await homekit.async_stop()
 
@@ -1299,7 +1507,11 @@ async def test_homekit_too_many_accessories(
 
 
 async def test_homekit_finds_linked_batteries(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1311,30 +1523,30 @@ async def test_homekit_finds_linked_batteries(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         hw_version="2.34",
         model="Powerwall 2",
         manufacturer="Tesla",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    binary_charging_sensor = entity_reg.async_get_or_create(
+    binary_charging_sensor = entity_registry.async_get_or_create(
         "binary_sensor",
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    battery_sensor = entity_reg.async_get_or_create(
+    battery_sensor = entity_registry.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_reg.async_get_or_create(
+    light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
 
@@ -1372,7 +1584,11 @@ async def test_homekit_finds_linked_batteries(
 
 
 async def test_homekit_async_get_integration_fails(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test that we continue if async_get_integration fails."""
     entry = await async_init_integration(hass)
@@ -1383,28 +1599,28 @@ async def test_homekit_async_get_integration_fails(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         model="Powerwall 2",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    binary_charging_sensor = entity_reg.async_get_or_create(
+    binary_charging_sensor = entity_registry.async_get_or_create(
         "binary_sensor",
         "invalid_integration_does_not_exist",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    battery_sensor = entity_reg.async_get_or_create(
+    battery_sensor = entity_registry.async_get_or_create(
         "sensor",
         "invalid_integration_does_not_exist",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_reg.async_get_or_create(
+    light = entity_registry.async_get_or_create(
         "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
     )
 
@@ -1468,12 +1684,12 @@ async def test_yaml_updates_update_config_entry_for_name(
         hass,
         BRIDGE_NAME,
         12345,
-        "1.2.3.4",
+        [None],
         ANY,
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1585,16 +1801,18 @@ async def test_homekit_uses_system_zeroconf(
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser
-            == system_async_zc
-        )
+        entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+        assert entry_data.homekit.driver.advertiser == system_async_zc
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
 
 async def test_homekit_ignored_missing_devices(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit handles a device in the entity registry but missing from the device registry."""
 
@@ -1606,40 +1824,55 @@ async def test_homekit_ignored_missing_devices(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         model="Powerwall 2",
         manufacturer="Tesla",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "binary_sensor",
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_reg.async_get_or_create(
+    light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
-    before_removal = entity_reg.entities.copy()
     # Delete the device to make sure we fallback
     # to using the platform
-    device_reg.async_remove_device(device_entry.id)
+    device_registry.async_remove_device(device_entry.id)
     # Wait for the entities to be removed
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     # Restore the registry
-    entity_reg.entities = before_removal
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "powerwall",
+        "battery_charging",
+        device_id=device_entry.id,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "powerwall",
+        "battery",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.BATTERY,
+    )
+    light = entity_registry.async_get_or_create(
+        "light", "powerwall", "demo", device_id=device_entry.id
+    )
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)
@@ -1664,7 +1897,11 @@ async def test_homekit_ignored_missing_devices(
 
 
 async def test_homekit_finds_linked_motion_sensors(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1676,22 +1913,22 @@ async def test_homekit_finds_linked_motion_sensors(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         model="Camera Server",
         manufacturer="Ubq",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    binary_motion_sensor = entity_reg.async_get_or_create(
+    binary_motion_sensor = entity_registry.async_get_or_create(
         "binary_sensor",
         "camera",
         "motion_sensor",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.MOTION,
     )
-    camera = entity_reg.async_get_or_create(
+    camera = entity_registry.async_get_or_create(
         "camera", "camera", "demo", device_id=device_entry.id
     )
 
@@ -1726,7 +1963,11 @@ async def test_homekit_finds_linked_motion_sensors(
 
 
 async def test_homekit_finds_linked_humidity_sensors(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1738,22 +1979,22 @@ async def test_homekit_finds_linked_humidity_sensors(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.1",
         model="Smart Brainy Clever Humidifier",
         manufacturer="Home Assistant",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    humidity_sensor = entity_reg.async_get_or_create(
+    humidity_sensor = entity_registry.async_get_or_create(
         "sensor",
         "humidifier",
         "humidity_sensor",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.HUMIDITY,
     )
-    humidifier = entity_reg.async_get_or_create(
+    humidifier = entity_registry.async_get_or_create(
         "humidifier", "humidifier", "demo", device_id=device_entry.id
     )
 
@@ -1814,12 +2055,12 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         hass,
         "reloadable",
         12345,
-        "1.2.3.4",
+        [None],
         ANY,
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1849,12 +2090,12 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         hass,
         "reloadable",
         45678,
-        "1.2.3.4",
+        [None],
         ANY,
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1862,7 +2103,10 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
 
 
 async def test_homekit_start_in_accessory_mode(
-    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None, device_reg
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test HomeKit start method in accessory mode."""
     entry = await async_init_integration(hass)
@@ -1891,12 +2135,22 @@ async def test_homekit_start_in_accessory_mode(
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
 
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    )
+    assert device
+    formatted_mac = dr.format_mac(homekit.driver.state.mac)
+    assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    assert device.model == "Light"
+
+    assert len(device_registry.devices) == 1
+
 
 async def test_homekit_start_in_accessory_mode_unsupported_entity(
     hass: HomeAssistant,
     hk_driver,
     mock_async_zeroconf: None,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test HomeKit start method in accessory mode with an unsupported entity."""
@@ -1930,7 +2184,7 @@ async def test_homekit_start_in_accessory_mode_missing_entity(
     hass: HomeAssistant,
     hk_driver,
     mock_async_zeroconf: None,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test HomeKit start method in accessory mode when entity is not available."""

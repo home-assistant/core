@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Generator
 import random
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -33,9 +33,9 @@ AID_MIN = 2
 AID_MAX = 18446744073709551615
 
 
-def get_system_unique_id(entity: er.RegistryEntry) -> str:
+def get_system_unique_id(entity: er.RegistryEntry, entity_unique_id: str) -> str:
     """Determine the system wide unique_id for an entity."""
-    return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
+    return f"{entity.platform}.{entity.domain}.{entity_unique_id}"
 
 
 def _generate_aids(unique_id: str | None, entity_id: str) -> Generator[int, None, None]:
@@ -72,30 +72,41 @@ class AccessoryAidStorage:
         self.allocated_aids: set[int] = set()
         self._entry_id = entry_id
         self.store: Store | None = None
-        self._entity_registry: er.EntityRegistry | None = None
+        self._entity_registry = er.async_get(hass)
 
     async def async_initialize(self) -> None:
         """Load the latest AID data."""
-        self._entity_registry = er.async_get(self.hass)
         aidstore = get_aid_storage_filename_for_entry_id(self._entry_id)
         self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 
         if not (raw_storage := await self.store.async_load()):
             # There is no data about aid allocations yet
             return
-
         assert isinstance(raw_storage, dict)
         self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
         """Generate a stable aid for an entity id."""
-        assert self._entity_registry is not None
-        if not (entity := self._entity_registry.async_get(entity_id)):
+        if not (entry := self._entity_registry.async_get(entity_id)):
             return self.get_or_allocate_aid(None, entity_id)
 
-        sys_unique_id = get_system_unique_id(entity)
+        sys_unique_id = get_system_unique_id(entry, entry.unique_id)
+        self._migrate_unique_id_aid_assignment_if_needed(sys_unique_id, entry)
         return self.get_or_allocate_aid(sys_unique_id, entity_id)
+
+    def _migrate_unique_id_aid_assignment_if_needed(
+        self, sys_unique_id: str, entry: er.RegistryEntry
+    ) -> None:
+        """Migrate the unique id aid assignment if its changed."""
+        if sys_unique_id in self.allocations or not (
+            previous_unique_id := entry.previous_unique_id
+        ):
+            return
+        old_sys_unique_id = get_system_unique_id(entry, previous_unique_id)
+        if aid := self.allocations.pop(old_sys_unique_id, None):
+            self.allocations[sys_unique_id] = aid
+            self.async_schedule_save()
 
     def get_or_allocate_aid(self, unique_id: str | None, entity_id: str) -> int:
         """Allocate (and return) a new aid for an accessory."""
@@ -140,6 +151,6 @@ class AccessoryAidStorage:
         return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> dict[str, dict[str, int]]:
         """Return data of entity map to store in a file."""
         return {ALLOCATIONS_KEY: self.allocations}

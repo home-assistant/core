@@ -5,9 +5,11 @@ from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
+from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
+from typing import Any
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
@@ -21,8 +23,13 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import area_registry, device_registry, entity_registry, start
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    start,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -52,15 +59,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[
-    entity_registry.RegistryEntry | None,
-    device_registry.DeviceEntry | None,
-    area_registry.AreaEntry | None,
-]:
+) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
     """Get registry entries."""
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
-    area_reg = area_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
         device_entry = dev_reg.devices.get(entity_entry.device_id)
@@ -85,19 +88,19 @@ def _get_registry_entries(
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
+    _store: GoogleConfigStore
     _unsub_report_state: Callable[[], None] | None = None
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize abstract config."""
         self.hass = hass
-        self._store = None
-        self._google_sync_unsub = {}
+        self._google_sync_unsub: dict[str, CALLBACK_TYPE] = {}
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
         self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Perform async initialization of config."""
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_initialize()
@@ -181,7 +184,9 @@ class AbstractConfig(ABC):
         """If an entity should have 2FA checked."""
         return True
 
-    async def async_report_state(self, message, agent_user_id: str):
+    async def async_report_state(
+        self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
+    ) -> HTTPStatus | None:
         """Send a state report to Google."""
         raise NotImplementedError
 
@@ -194,7 +199,7 @@ class AbstractConfig(ABC):
         await gather(*jobs)
 
     @callback
-    def async_enable_report_state(self):
+    def async_enable_report_state(self) -> None:
         """Enable proactive mode."""
         # Circular dep
         # pylint: disable-next=import-outside-toplevel
@@ -204,7 +209,7 @@ class AbstractConfig(ABC):
             self._unsub_report_state = async_enable_report_state(self.hass, self)
 
     @callback
-    def async_disable_report_state(self):
+    def async_disable_report_state(self) -> None:
         """Disable report state."""
         if self._unsub_report_state is not None:
             self._unsub_report_state()
@@ -219,7 +224,7 @@ class AbstractConfig(ABC):
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 
-    async def async_sync_entities_all(self):
+    async def async_sync_entities_all(self) -> int:
         """Sync all entities to Google for all registered agents."""
         if not self._store.agent_user_ids:
             return 204
@@ -231,6 +236,33 @@ class AbstractConfig(ABC):
             )
         )
         return max(res, default=204)
+
+    async def async_sync_notification(
+        self, agent_user_id: str, event_id: str, payload: dict[str, Any]
+    ) -> HTTPStatus:
+        """Sync notifications to Google."""
+        # Remove any pending sync
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+        status = await self.async_report_state(payload, agent_user_id, event_id)
+        assert status is not None
+        if status == HTTPStatus.NOT_FOUND:
+            await self.async_disconnect_agent_user(agent_user_id)
+        return status
+
+    async def async_sync_notification_all(
+        self, event_id: str, payload: dict[str, Any]
+    ) -> HTTPStatus:
+        """Sync notification to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return HTTPStatus.NO_CONTENT
+
+        res = await gather(
+            *(
+                self.async_sync_notification(agent_user_id, event_id, payload)
+                for agent_user_id in self._store.agent_user_ids
+            )
+        )
+        return max(res, default=HTTPStatus.NO_CONTENT)
 
     @callback
     def async_schedule_google_sync(self, agent_user_id: str):
@@ -248,7 +280,7 @@ class AbstractConfig(ABC):
         )
 
     @callback
-    def async_schedule_google_sync_all(self):
+    def async_schedule_google_sync_all(self) -> None:
         """Schedule a sync for all registered agents."""
         for agent_user_id in self._store.agent_user_ids:
             self.async_schedule_google_sync(agent_user_id)
@@ -278,7 +310,7 @@ class AbstractConfig(ABC):
         self._store.pop_agent_user_id(agent_user_id)
 
     @callback
-    def async_enable_local_sdk(self):
+    def async_enable_local_sdk(self) -> None:
         """Enable the local SDK."""
         setup_successful = True
         setup_webhook_ids = []
@@ -322,7 +354,7 @@ class AbstractConfig(ABC):
         self._local_sdk_active = setup_successful
 
     @callback
-    def async_disable_local_sdk(self):
+    def async_disable_local_sdk(self) -> None:
         """Disable the local SDK."""
         if not self._local_sdk_active:
             return
@@ -489,8 +521,33 @@ def get_google_type(domain, device_class):
     return typ if typ is not None else DOMAIN_TO_GOOGLE_TYPES[domain]
 
 
+@lru_cache(maxsize=4096)
+def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
+    """Return all supported traits for state."""
+    domain = state.domain
+    attributes = state.attributes
+    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+    if not isinstance(features, int):
+        _LOGGER.warning(
+            "Entity %s contains invalid supported_features value %s",
+            state.entity_id,
+            features,
+        )
+        return []
+
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    return [
+        Trait
+        for Trait in trait.TRAITS
+        if Trait.supported(domain, features, device_class, attributes)
+    ]
+
+
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
+
+    __slots__ = ("hass", "config", "state", "_traits")
 
     def __init__(
         self, hass: HomeAssistant, config: AbstractConfig, state: State
@@ -499,7 +556,11 @@ class GoogleEntity:
         self.hass = hass
         self.config = config
         self.state = state
-        self._traits = None
+        self._traits: list[trait._Trait] | None = None
+
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
 
     @property
     def entity_id(self):
@@ -507,30 +568,14 @@ class GoogleEntity:
         return self.state.entity_id
 
     @callback
-    def traits(self):
+    def traits(self) -> list[trait._Trait]:
         """Return traits for entity."""
         if self._traits is not None:
             return self._traits
-
         state = self.state
-        domain = state.domain
-        attributes = state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-        if not isinstance(features, int):
-            _LOGGER.warning(
-                "Entity %s contains invalid supported_features value %s",
-                self.entity_id,
-                features,
-            )
-            return []
-
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-
         self._traits = [
             Trait(self.hass, state, self.config)
-            for Trait in trait.TRAITS
-            if Trait.supported(domain, features, device_class, attributes)
+            for Trait in supported_traits_for_state(state)
         ]
         return self._traits
 
@@ -553,18 +598,8 @@ class GoogleEntity:
 
     @callback
     def is_supported(self) -> bool:
-        """Return if the entity is supported by Google."""
-        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
-
-        result = self.config.is_supported_cache.get(self.entity_id)
-
-        if result is None or result[0] != features:
-            result = self.config.is_supported_cache[self.entity_id] = (
-                features,
-                bool(self.traits()),
-            )
-
-        return result[1]
+        """Return if entity is supported."""
+        return bool(self.traits())
 
     @callback
     def might_2fa(self) -> bool:
@@ -612,7 +647,6 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-
         # Add aliases
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
@@ -633,6 +667,10 @@ class GoogleEntity:
         # Add trait sync attributes
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
+
+        # Add trait options
+        for trt in traits:
+            device.update(trt.sync_options())
 
         # Add roomhint
         if room := entity_config.get(CONF_ROOM_HINT):
@@ -675,6 +713,16 @@ class GoogleEntity:
             deep_update(attrs, trt.query_attributes())
 
         return attrs
+
+    @callback
+    def notifications_serialize(self) -> dict[str, Any] | None:
+        """Serialize the payload for notifications to be sent."""
+        notifications: dict[str, Any] = {}
+
+        for trt in self.traits():
+            deep_update(notifications, trt.query_notifications() or {})
+
+        return notifications or None
 
     @callback
     def reachable_device_serialize(self):
@@ -725,18 +773,63 @@ def deep_update(target, source):
 
 
 @callback
+def async_get_google_entity_if_supported_cached(
+    hass: HomeAssistant, config: AbstractConfig, state: State
+) -> GoogleEntity | None:
+    """Return a GoogleEntity if entity is supported checking the cache first.
+
+    This function will check the cache, and call async_get_google_entity_if_supported
+    if the entity is not in the cache, which will update the cache.
+    """
+    entity_id = state.entity_id
+    is_supported_cache = config.is_supported_cache
+    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    if result := is_supported_cache.get(entity_id):
+        cached_features, supported = result
+        if cached_features == features:
+            return GoogleEntity(hass, config, state) if supported else None
+    # Cache miss, check if entity is supported
+    return async_get_google_entity_if_supported(hass, config, state)
+
+
+@callback
+def async_get_google_entity_if_supported(
+    hass: HomeAssistant, config: AbstractConfig, state: State
+) -> GoogleEntity | None:
+    """Return a GoogleEntity if entity is supported.
+
+    This function will update the cache, but it does not check the cache first.
+    """
+    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    entity = GoogleEntity(hass, config, state)
+    is_supported = bool(entity.traits())
+    config.is_supported_cache[state.entity_id] = (features, is_supported)
+    return entity if is_supported else None
+
+
+@callback
 def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
-    entities = []
+    entities: list[GoogleEntity] = []
+    is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+        entity_id = state.entity_id
+        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             continue
-
-        entity = GoogleEntity(hass, config, state)
-
-        if entity.is_supported():
+        # Check check inlined for performance to avoid
+        # function calls for every entity since we enumerate
+        # the entire state machine here
+        features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        if result := is_supported_cache.get(entity_id):
+            cached_features, supported = result
+            if cached_features == features:
+                if supported:
+                    entities.append(GoogleEntity(hass, config, state))
+                continue
+            # Cached features don't match, fall through to check
+            # if the entity is supported and update the cache.
+        if entity := async_get_google_entity_if_supported(hass, config, state):
             entities.append(entity)
-
     return entities

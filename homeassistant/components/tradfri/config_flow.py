@@ -5,7 +5,6 @@ import asyncio
 from typing import Any
 from uuid import uuid4
 
-import async_timeout
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
@@ -108,30 +107,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = host
         return await self.async_step_auth()
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Import a config entry."""
-        self._async_abort_entries_match({CONF_HOST: user_input["host"]})
-
-        # Happens if user has host directly in configuration.yaml
-        if "key" not in user_input:
-            self._host = user_input["host"]
-            return await self.async_step_auth()
-
-        try:
-            data = await get_gateway_info(
-                self.hass,
-                user_input["host"],
-                # Old config format had a fixed identity
-                user_input.get("identity", "homeassistant"),
-                user_input["key"],
-            )
-
-            return await self._entry_from_data(data)
-        except AuthError:
-            # If we fail to connect, just pass it on to discovery
-            self._host = user_input["host"]
-            return await self.async_step_auth()
-
     async def _entry_from_data(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry from data."""
         host = data[CONF_HOST]
@@ -147,7 +122,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if same_hub_entries:
             await asyncio.wait(
                 [
-                    self.hass.config_entries.async_remove(entry_id)
+                    asyncio.create_task(self.hass.config_entries.async_remove(entry_id))
                     for entry_id in same_hub_entries
                 ]
             )
@@ -165,7 +140,7 @@ async def authenticate(
     api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err

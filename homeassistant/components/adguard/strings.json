@@ -24,5 +24,109 @@
       "existing_instance_updated": "Updated existing configuration.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "dns_queries": {
+        "name": "DNS queries"
+      },
+      "dns_queries_blocked": {
+        "name": "DNS queries blocked"
+      },
+      "dns_queries_blocked_ratio": {
+        "name": "DNS queries blocked ratio"
+      },
+      "parental_control_blocked": {
+        "name": "Parental control blocked"
+      },
+      "safe_browsing_blocked": {
+        "name": "Safe browsing blocked"
+      },
+      "safe_searches_enforced": {
+        "name": "Safe searches enforced"
+      },
+      "average_processing_speed": {
+        "name": "Average processing speed"
+      },
+      "rules_count": {
+        "name": "Rules count"
+      }
+    },
+    "switch": {
+      "protection": {
+        "name": "Protection"
+      },
+      "parental": {
+        "name": "Parental control"
+      },
+      "safe_search": {
+        "name": "Safe search"
+      },
+      "safe_browsing": {
+        "name": "Safe browsing"
+      },
+      "filtering": {
+        "name": "Filtering"
+      },
+      "query_log": {
+        "name": "Query log"
+      }
+    }
+  },
+  "services": {
+    "add_url": {
+      "name": "Add URL",
+      "description": "Add a new filter subscription to AdGuard Home.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "The name of the filter subscription."
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "The filter URL to subscribe to, containing the filter rules."
+        }
+      }
+    },
+    "remove_url": {
+      "name": "Remove URL",
+      "description": "Removes a filter subscription from AdGuard Home.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "The filter subscription URL to remove."
+        }
+      }
+    },
+    "enable_url": {
+      "name": "Enable URL",
+      "description": "Enables a filter subscription in AdGuard Home.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "The filter subscription URL to enable."
+        }
+      }
+    },
+    "disable_url": {
+      "name": "Disable URL",
+      "description": "Disables a filter subscription in AdGuard Home.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "The filter subscription URL to disable."
+        }
+      }
+    },
+    "refresh": {
+      "name": "Refresh",
+      "description": "Refresh all filter subscriptions in AdGuard Home.",
+      "fields": {
+        "force": {
+          "name": "Force",
+          "description": "Force update (bypasses AdGuard Home throttling). \"true\" to force, or \"false\" to omit for a regular refresh."
+        }
+      }
+    }
   }
 }

@@ -9,7 +9,7 @@ from google_nest_sdm.device_traits import ConnectivityTrait, InfoTrait
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
 
@@ -66,10 +66,7 @@ class NestDeviceInfo:
     @property
     def device_model(self) -> str | None:
         """Return device model information."""
-        # The API intentionally returns minimal information about specific
-        # devices, instead relying on traits, but we can infer a generic model
-        # name based on the type
-        return DEVICE_TYPE_MAP.get(self._device.type)
+        return DEVICE_TYPE_MAP.get(self._device.type) if self._device.type else None
 
     @property
     def suggested_area(self) -> str | None:
@@ -100,6 +97,8 @@ def async_nest_devices_by_device_id(hass: HomeAssistant) -> Mapping[str, Device]
     device_registry = dr.async_get(hass)
     devices = {}
     for nest_device_id, device in async_nest_devices(hass).items():
-        if device_entry := device_registry.async_get_device({(DOMAIN, nest_device_id)}):
+        if device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, nest_device_id)}
+        ):
             devices[device_entry.id] = device
     return devices

@@ -21,11 +21,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -44,6 +43,7 @@ from .const import (
     TYPE_INSTEON_MOTION,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyData
 
 DEVICE_PARENT_REQUIRED = [
     BinarySensorDeviceClass.OPENING,
@@ -79,7 +79,7 @@ async def async_setup_entry(
         | ISYBinarySensorProgramEntity
     )
 
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
     for node in isy_data.nodes[Platform.BINARY_SENSOR]:
         assert isinstance(node, Node)
@@ -249,7 +249,8 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the ISY binary sensor device."""
         super().__init__(node, device_info=device_info)
-        self._device_class = force_device_class
+        # This was discovered by parsing the device type code during init
+        self._attr_device_class = force_device_class
 
     @property
     def is_on(self) -> bool | None:
@@ -257,14 +258,6 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return bool(self._node.status)
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of this device.
-
-        This was discovered by parsing the device type code during init
-        """
-        return self._device_class
 
 
 class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
@@ -400,12 +393,18 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         Insteon leak sensors set their primary node to On when the state is
         DRY, not WET, so we invert the binary state if the user indicates
         that it is a moisture sensor.
+
+        Dusk/Dawn sensors set their node to On when DUSK, not light detected,
+        so this is inverted as well.
         """
         if self._computed_state is None:
-            # Do this first so we don't invert None on moisture sensors
+            # Do this first so we don't invert None on moisture or light sensors
             return None
 
-        if self.device_class == BinarySensorDeviceClass.MOISTURE:
+        if self.device_class in (
+            BinarySensorDeviceClass.LIGHT,
+            BinarySensorDeviceClass.MOISTURE,
+        ):
             return not self._computed_state
 
         return self._computed_state
@@ -413,6 +412,8 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
 
 class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity):
     """Representation of the battery state of an ISY sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
 
     def __init__(
         self,
@@ -487,15 +488,8 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
             self._heartbeat_timer = None
             self.async_write_ha_state()
 
-        point_in_time = dt_util.utcnow() + timedelta(hours=25)
-        _LOGGER.debug(
-            "Heartbeat timer starting. Now: %s Then: %s",
-            dt_util.utcnow(),
-            point_in_time,
-        )
-
-        self._heartbeat_timer = async_track_point_in_utc_time(
-            self.hass, timer_elapsed, point_in_time
+        self._heartbeat_timer = async_call_later(
+            self.hass, timedelta(hours=25), timer_elapsed
         )
 
     @callback
@@ -514,11 +508,6 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         parent control event is received.
         """
         return bool(self._computed_state)
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Get the class of this device."""
-        return BinarySensorDeviceClass.BATTERY
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

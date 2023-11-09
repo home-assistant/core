@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
@@ -40,8 +40,7 @@ class IntellifireLightEntityDescription(
 INTELLIFIRE_LIGHTS: tuple[IntellifireLightEntityDescription, ...] = (
     IntellifireLightEntityDescription(
         key="lights",
-        name="Lights",
-        has_entity_name=True,
+        translation_key="lights",
         set_fn=lambda control_api, level: control_api.set_lights(level=level),
         value_fn=lambda data: data.light_level,
     ),
@@ -49,7 +48,7 @@ INTELLIFIRE_LIGHTS: tuple[IntellifireLightEntityDescription, ...] = (
 
 
 class IntellifireLight(IntellifireEntity, LightEntity):
-    """This is a Light entity for the fireplace."""
+    """Light entity for the fireplace."""
 
     entity_description: IntellifireLightEntityDescription
     _attr_color_mode = ColorMode.BRIGHTNESS
@@ -95,3 +94,4 @@ async def async_setup_entry(
             for description in INTELLIFIRE_LIGHTS
         )
         return
+    LOGGER.debug("Disabling Lights - IntelliFire device does not appear to have one")

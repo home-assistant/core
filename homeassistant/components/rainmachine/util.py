@@ -4,12 +4,12 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 from typing import Any
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -55,7 +55,7 @@ def async_finish_entity_domain_replacements(
     entity_replacement_strategies: Iterable[EntityDomainReplacementStrategy],
 ) -> None:
     """Remove old entities and create a repairs issue with info on their replacement."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     for strategy in entity_replacement_strategies:
         try:
             [registry_entry] = [
@@ -106,6 +106,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             name=name,
             update_interval=update_interval,
             update_method=update_method,
+            always_update=False,
         )
 
         self._rebooting = False

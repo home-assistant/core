@@ -1,4 +1,4 @@
-"""This platform allows several sensors to be grouped into one sensor to provide numeric combinations."""
+"""Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,10 +33,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
@@ -54,6 +53,7 @@ ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
+ATTR_PRODUCT = "product"
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: "min",
     ATTR_MAX_VALUE: "max",
@@ -62,6 +62,7 @@ SENSOR_TYPES = {
     ATTR_LAST: "last",
     ATTR_RANGE: "range",
     ATTR_SUM: "sum",
+    ATTR_PRODUCT: "product",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -132,6 +133,23 @@ async def async_setup_entry(
                 None,
             )
         ]
+    )
+
+
+@callback
+def async_create_preview_sensor(
+    name: str, validated_config: dict[str, Any]
+) -> SensorGroup:
+    """Create a preview sensor."""
+    return SensorGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        validated_config.get(CONF_IGNORE_NON_NUMERIC, False),
+        validated_config[CONF_TYPE],
+        None,
+        None,
+        None,
     )
 
 
@@ -226,6 +244,17 @@ def calc_sum(
     return {}, result
 
 
+def calc_product(
+    sensor_values: list[tuple[str, float, State]]
+) -> tuple[dict[str, str | None], float]:
+    """Calculate a product of values."""
+    result = 1.0
+    for _, sensor_value, _ in sensor_values:
+        result *= sensor_value
+
+    return {}, result
+
+
 CALC_TYPES: dict[
     str,
     Callable[
@@ -239,6 +268,7 @@ CALC_TYPES: dict[
     "last": calc_last,
     "range": calc_range,
     "sum": calc_sum,
+    "product": calc_product,
 }
 
 
@@ -280,23 +310,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(event: Event) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
 
     @callback
     def async_update_group_state(self) -> None:

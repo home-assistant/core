@@ -30,7 +30,7 @@ MOCK_DATA_NEXT = (
     '"ipAddress":false}}'
 )
 
-MOCK_DATA_MISSING = '{"software": {},' '"system": {},' '"wan": {}}'
+MOCK_DATA_MISSING = '{"software": {},"system": {},"wan": {}}'
 
 
 async def test_setup_minimum(
@@ -44,6 +44,7 @@ async def test_setup_minimum(
         "sensor",
         {"sensor": {"platform": "google_wifi", "monitored_conditions": ["uptime"]}},
     )
+    await hass.async_block_till_done()
     assert_setup_component(1, "sensor")
 
 
@@ -72,6 +73,7 @@ async def test_setup_get(
             }
         },
     )
+    await hass.async_block_till_done()
     assert_setup_component(6, "sensor")
 
 

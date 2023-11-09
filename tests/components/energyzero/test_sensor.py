@@ -1,5 +1,4 @@
 """Tests for the sensors provided by the EnergyZero integration."""
-
 from unittest.mock import MagicMock
 
 from energyzero import EnergyZeroNoDataError
@@ -40,6 +39,11 @@ pytestmark = [pytest.mark.freeze_time("2022-12-07 15:00:00")]
         (
             "sensor.energyzero_today_energy_highest_price_time",
             "today_energy_highest_price_time",
+            "today_energy",
+        ),
+        (
+            "sensor.energyzero_today_energy_hours_priced_equal_or_lower",
+            "today_energy_hours_priced_equal_or_lower",
             "today_energy",
         ),
         (

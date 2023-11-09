@@ -104,7 +104,7 @@ def setup_platform(
     if not CV2_IMPORTED:
         _LOGGER.error(
             "No OpenCV library found! Install or compile for your system "
-            "following instructions here: http://opencv.org/releases.html"
+            "following instructions here: https://opencv.org/?s=releases"
         )
         return
 
@@ -188,7 +188,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
                 cv_image, scaleFactor=scale, minNeighbors=neighbors, minSize=min_size
             )
             regions = []
-            # pylint: disable=invalid-name
             for x, y, w, h in detections:
                 regions.append((int(x), int(y), int(w), int(h)))
                 total_matches += 1

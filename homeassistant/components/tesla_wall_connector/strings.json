@@ -16,5 +16,47 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "vehicle_connected": {
+        "name": "Vehicle connected"
+      },
+      "contactor_closed": {
+        "name": "Contactor closed"
+      }
+    },
+    "sensor": {
+      "evse_state": {
+        "name": "State"
+      },
+      "handle_temp_c": {
+        "name": "Handle temperature"
+      },
+      "grid_v": {
+        "name": "Grid voltage"
+      },
+      "grid_hz": {
+        "name": "Grid frequency"
+      },
+      "current_a_a": {
+        "name": "Phase A current"
+      },
+      "current_b_a": {
+        "name": "Phase B current"
+      },
+      "current_c_a": {
+        "name": "Phase C current"
+      },
+      "voltage_a_v": {
+        "name": "Phase A voltage"
+      },
+      "voltage_b_v": {
+        "name": "Phase B voltage"
+      },
+      "voltage_c_v": {
+        "name": "Phase C voltage"
+      }
+    }
   }
 }

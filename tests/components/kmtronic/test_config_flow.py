@@ -1,8 +1,9 @@
 """Test the kmtronic config flow."""
 from http import HTTPStatus
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
@@ -12,8 +13,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_form(hass: HomeAssistant) -> None:
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -25,10 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
         return_value=[Mock()],
-    ), patch(
-        "homeassistant.components.kmtronic.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -37,6 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 "password": "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "1.1.1.1"
@@ -45,7 +46,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 

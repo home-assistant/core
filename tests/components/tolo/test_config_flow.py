@@ -23,6 +23,18 @@ def toloclient_fixture() -> Mock:
         yield toloclient
 
 
+@pytest.fixture
+def coordinator_toloclient() -> Mock:
+    """Patch ToloClient in async_setup_entry.
+
+    Throw exception to abort entry setup and prevent socket IO. Only testing config flow.
+    """
+    with patch(
+        "homeassistant.components.tolo.ToloClient", side_effect=Exception
+    ) as toloclient:
+        yield toloclient
+
+
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -> None:
     """Test a user initiated config flow with provided host which times out."""
     toloclient().get_status_info.side_effect = ResponseTimedOutError()
@@ -34,18 +46,20 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock) -> None:
+async def test_user_walkthrough(
+    hass: HomeAssistant, toloclient: Mock, coordinator_toloclient: Mock
+) -> None:
     """Test complete user flow with first wrong and then correct host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
 
@@ -55,7 +69,7 @@ async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock) -> None:
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == SOURCE_USER
+    assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
@@ -70,7 +84,9 @@ async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock) -> None:
     assert result3["data"][CONF_HOST] == "127.0.0.1"
 
 
-async def test_dhcp(hass: HomeAssistant, toloclient: Mock) -> None:
+async def test_dhcp(
+    hass: HomeAssistant, toloclient: Mock, coordinator_toloclient: Mock
+) -> None:
     """Test starting a flow from discovery."""
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
 

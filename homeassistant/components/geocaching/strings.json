@@ -21,5 +21,24 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "find_count": {
+        "name": "Total finds"
+      },
+      "hide_count": {
+        "name": "Total hides"
+      },
+      "favorite_points": {
+        "name": "Favorite points"
+      },
+      "souvenir_count": {
+        "name": "Total souvenirs"
+      },
+      "awarded_favorite_points": {
+        "name": "Awarded favorite points"
+      }
+    }
   }
 }

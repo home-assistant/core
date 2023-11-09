@@ -79,6 +79,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
+        if self.value == "-":
+            return None
         return self.value
 
     @property

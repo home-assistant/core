@@ -19,6 +19,7 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_covers import (
+    Door,
     GarageDoorOpener,
     Window,
     WindowCovering,
@@ -73,17 +74,19 @@ async def test_garage_door_open_close(hass: HomeAssistant, hk_driver, events) ->
     assert acc.char_obstruction_detected.value is True
 
     hass.states.async_set(
-        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: False}
+        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: True}
     )
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
-    assert acc.char_obstruction_detected.value is False
+    assert acc.char_obstruction_detected.value is True
+    assert acc.available is False
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
+    assert acc.available is True
 
     # Set from HomeKit
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
@@ -126,6 +129,58 @@ async def test_garage_door_open_close(hass: HomeAssistant, hk_driver, events) ->
     assert acc.char_target_state.value == HK_DOOR_OPEN
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_door_instantiate_set_position(
+    hass: HomeAssistant, hk_driver, events
+) -> None:
+    """Test if Door accessory is instantiated correctly and can set position."""
+    entity_id = "cover.door"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 0,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Door(hass, hk_driver, "Door", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 12  # Door
+
+    assert acc.char_current_position.value == 0
+    assert acc.char_target_position.value == 0
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 50,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 50
+    assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 2
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: "GARBAGE",
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 50
+    assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 2
 
 
 async def test_windowcovering_set_cover_position(

@@ -1,0 +1,35 @@
+{
+  "printer-state": "idle",
+  "printer-name": "Test Printer",
+  "printer-location": null,
+  "printer-make-and-model": "Test HA-1000 Series",
+  "printer-device-id": "MFG:TEST;CMD:ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF;MDL:HA-1000 Series;CLS:PRINTER;DES:TEST HA-1000 Series;CID:EpsonRGB;FID:FXN,DPA,WFA,ETN,AFN,DAN,WRA;RID:20;DDS:022500;ELG:1000;SN:555534593035345555;URF:CP1,PQ4-5,OB9,OFU0,RS360,SRGB24,W8,DM3,IS1-7-6,V1.4,MT1-3-7-8-10-11-12;",
+  "printer-uri-supported": [
+    "ipps://192.168.1.31:631/ipp/print",
+    "ipp://192.168.1.31:631/ipp/print"
+  ],
+  "uri-authentication-supported": ["none", "none"],
+  "uri-security-supported": ["tls", "none"],
+  "printer-info": "Test HA-1000 Series",
+  "printer-up-time": 30,
+  "printer-firmware-string-version": "20.23.06HA",
+  "printer-more-info": "http://192.168.1.31:80/PRESENTATION/BONJOUR",
+  "marker-names": [
+    "Black ink",
+    "Photo black ink",
+    "Cyan ink",
+    "Yellow ink",
+    "Magenta ink"
+  ],
+  "marker-types": [
+    "ink-cartridge",
+    "ink-cartridge",
+    "ink-cartridge",
+    "ink-cartridge",
+    "ink-cartridge"
+  ],
+  "marker-colors": ["#000000", "#000000", "#00FFFF", "#FFFF00", "#FF00FF"],
+  "marker-levels": [58, 98, 91, 95, 73],
+  "marker-low-levels": [10, 10, 10, 10, 10],
+  "marker-high-levels": [100, 100, 100, 100, 100]
+}

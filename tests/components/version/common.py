@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Any, Final
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant import config_entries
 from homeassistant.components.version.const import (
     DEFAULT_CONFIGURATION,
@@ -14,7 +16,6 @@ from homeassistant.components.version.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -37,6 +38,7 @@ TEST_DEFAULT_IMPORT_CONFIG: Final = {
 
 async def mock_get_version_update(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     version: str = MOCK_VERSION,
     data: dict[str, Any] = MOCK_VERSION_DATA,
     side_effect: Exception = None,
@@ -47,7 +49,8 @@ async def mock_get_version_update(
         return_value=(version, data),
         side_effect=side_effect,
     ):
-        async_fire_time_changed(hass, dt.utcnow() + UPDATE_COORDINATOR_UPDATE_INTERVAL)
+        freezer.tick(UPDATE_COORDINATOR_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
 

@@ -17,7 +17,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 
@@ -27,13 +27,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro covers."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            FibaroCover(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.COVER
-            ]
-        ],
+        [FibaroCover(device) for device in controller.fibaro_devices[Platform.COVER]],
         True,
     )
 
@@ -94,9 +90,9 @@ class FibaroCover(FibaroDevice, CoverEntity):
         """Return if the cover is closed."""
         if self._is_open_close_only():
             state = self.fibaro_device.state
-            if not state.has_value or state.str_value.lower() == "unknown":
+            if not state.has_value or state.str_value().lower() == "unknown":
                 return None
-            return state.str_value.lower() == "closed"
+            return state.str_value().lower() == "closed"
 
         if self.current_cover_position is None:
             return None

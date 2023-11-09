@@ -21,25 +21,28 @@ from homeassistant.components.zwave_js.helpers import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_conditions(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected onditions from a zwave_js."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
@@ -60,7 +63,7 @@ async def test_get_conditions(
             "type": "config_parameter",
             "device_id": device.id,
             "value_id": value_id,
-            "subtype": f"{config_value.property_} ({name})",
+            "subtype": f"{config_value.property_} ({name}) on endpoint 0",
             "metadata": {},
         },
         {
@@ -78,8 +81,8 @@ async def test_get_conditions(
         assert condition in conditions
 
     # Test that we don't return actions for a controller node
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
     )
     assert device
     assert (
@@ -91,12 +94,16 @@ async def test_get_conditions(
 
 
 async def test_node_status_state(
-    hass: HomeAssistant, client, lock_schlage_be469, integration, calls
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    calls,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -252,12 +259,16 @@ async def test_node_status_state(
 
 
 async def test_config_parameter_state(
-    hass: HomeAssistant, client, lock_schlage_be469, integration, calls
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    calls,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -368,12 +379,16 @@ async def test_config_parameter_state(
 
 
 async def test_value_state(
-    hass: HomeAssistant, client, lock_schlage_be469, integration, calls
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    calls,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for value conditions."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -416,12 +431,15 @@ async def test_value_state(
 
 
 async def test_get_condition_capabilities_node_status(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we don't get capabilities from a node_status condition."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -453,12 +471,15 @@ async def test_get_condition_capabilities_node_status(
 
 
 async def test_get_condition_capabilities_value(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected capabilities from a value condition."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -502,13 +523,16 @@ async def test_get_condition_capabilities_value(
 
 
 async def test_get_condition_capabilities_config_parameter(
-    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected capabilities from a config_parameter condition."""
     node = climate_radio_thermostat_ct100_plus
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
     )
     assert device
 
@@ -585,12 +609,15 @@ async def test_get_condition_capabilities_config_parameter(
 
 
 async def test_failure_scenarios(
-    hass: HomeAssistant, client, hank_binary_switch, integration
+    hass: HomeAssistant,
+    client,
+    hank_binary_switch,
+    integration,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test failure scenarios."""
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, hank_binary_switch)}
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
     assert device
 

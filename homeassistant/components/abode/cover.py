@@ -29,6 +29,7 @@ class AbodeCover(AbodeDevice, CoverEntity):
     """Representation of an Abode cover."""
 
     _device: AbodeCV
+    _attr_name = None
 
     @property
     def is_closed(self) -> bool:

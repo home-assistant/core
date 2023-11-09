@@ -6,7 +6,7 @@
         "title": "Add Derivative sensor",
         "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "round": "Precision",
           "source": "Input sensor",
           "time_window": "Time window",
@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "data": {
-          "name": "[%key:component::derivative::config::step::user::data::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "round": "[%key:component::derivative::config::step::user::data::round%]",
           "source": "[%key:component::derivative::config::step::user::data::source%]",
           "time_window": "[%key:component::derivative::config::step::user::data::time_window%]",
@@ -35,7 +35,7 @@
         "data_description": {
           "round": "[%key:component::derivative::config::step::user::data_description::round%]",
           "time_window": "[%key:component::derivative::config::step::user::data_description::time_window%]",
-          "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]."
+          "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]"
         }
       }
     }

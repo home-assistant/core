@@ -6,8 +6,9 @@ from collections.abc import Callable
 import contextlib
 from datetime import datetime, timedelta
 import logging
+import math
 import statistics
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -32,7 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HomeAssistant,
     State,
     callback,
@@ -41,12 +41,18 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    StateType,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
@@ -77,6 +83,7 @@ STAT_DISTANCE_95P = "distance_95_percent_of_values"
 STAT_DISTANCE_99P = "distance_99_percent_of_values"
 STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MEAN = "mean"
+STAT_MEAN_CIRCULAR = "mean_circular"
 STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
 STAT_PERCENTILE = "percentile"
@@ -106,6 +113,7 @@ STATS_NUMERIC_SUPPORT = {
     STAT_DISTANCE_99P,
     STAT_DISTANCE_ABSOLUTE,
     STAT_MEAN,
+    STAT_MEAN_CIRCULAR,
     STAT_MEDIAN,
     STAT_NOISINESS,
     STAT_PERCENTILE,
@@ -155,6 +163,7 @@ STATS_NUMERIC_RETAIN_UNIT = {
     STAT_DISTANCE_99P,
     STAT_DISTANCE_ABSOLUTE,
     STAT_MEAN,
+    STAT_MEAN_CIRCULAR,
     STAT_MEDIAN,
     STAT_NOISINESS,
     STAT_PERCENTILE,
@@ -308,9 +317,11 @@ class StatisticsSensor(SensorEntity):
         """Register callbacks."""
 
         @callback
-        def async_stats_sensor_state_listener(event: Event) -> None:
+        def async_stats_sensor_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle the sensor state changes."""
-            if (new_state := event.data.get("new_state")) is None:
+            if (new_state := event.data["new_state"]) is None:
                 return
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)
@@ -410,7 +421,7 @@ class StatisticsSensor(SensorEntity):
         return None
 
     @property
-    def state_class(self) -> Literal[SensorStateClass.MEASUREMENT] | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity."""
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
@@ -672,6 +683,13 @@ class StatisticsSensor(SensorEntity):
     def _stat_mean(self) -> StateType:
         if len(self.states) > 0:
             return statistics.mean(self.states)
+        return None
+
+    def _stat_mean_circular(self) -> StateType:
+        if len(self.states) > 0:
+            sin_sum = sum(math.sin(math.radians(x)) for x in self.states)
+            cos_sum = sum(math.cos(math.radians(x)) for x in self.states)
+            return (math.degrees(math.atan2(sin_sum, cos_sum)) + 360) % 360
         return None
 
     def _stat_median(self) -> StateType:

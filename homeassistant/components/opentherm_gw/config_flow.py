@@ -68,10 +68,8 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
             try:
-                await asyncio.wait_for(
-                    test_connection(),
-                    timeout=CONNECTION_TIMEOUT,
-                )
+                async with asyncio.timeout(CONNECTION_TIMEOUT):
+                    await test_connection()
             except asyncio.TimeoutError:
                 return self._show_form({"base": "timeout_connect"})
             except (ConnectionError, SerialException):

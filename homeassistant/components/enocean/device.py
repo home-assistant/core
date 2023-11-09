@@ -11,10 +11,9 @@ from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 class EnOceanEntity(Entity):
     """Parent class for all entities associated with the EnOcean component."""
 
-    def __init__(self, dev_id, dev_name="EnOcean device"):
+    def __init__(self, dev_id: list[int]) -> None:
         """Initialize the device."""
         self.dev_id = dev_id
-        self.dev_name = dev_name
 
     async def async_added_to_hass(self):
         """Register callbacks."""

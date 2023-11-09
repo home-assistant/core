@@ -8,7 +8,7 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -72,12 +72,13 @@ class AgentCamera(MjpegCamera):
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
         self.device = device
         self._removed = False
-        self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
         super().__init__(
             name=device.name,
@@ -88,7 +89,7 @@ class AgentCamera(MjpegCamera):
             identifiers={(AGENT_DOMAIN, self.unique_id)},
             manufacturer="Agent",
             model="Camera",
-            name=self.name,
+            name=f"{device.client.name} {device.name}",
             sw_version=device.client.version,
         )
 

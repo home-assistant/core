@@ -2,10 +2,14 @@
 from abc import abstractmethod
 
 from yalexs.doorbell import Doorbell
-from yalexs.lock import Lock
+from yalexs.lock import Lock, LockDetail
+from yalexs.util import get_configuration_url
 
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, AugustData
 from .const import MANUFACTURER
@@ -17,21 +21,25 @@ class AugustEntityMixin(Entity):
     """Base implementation for August device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, data: AugustData, device: Doorbell | Lock) -> None:
         """Initialize an August device."""
         super().__init__()
         self._data = data
         self._device = device
+        detail = self._detail
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer=MANUFACTURER,
-            model=self._detail.model,
+            model=detail.model,
             name=device.device_name,
-            sw_version=self._detail.firmware_version,
+            sw_version=detail.firmware_version,
             suggested_area=_remove_device_types(device.device_name, DEVICE_TYPES),
-            configuration_url="https://account.august.com",
+            configuration_url=get_configuration_url(data.brand),
         )
+        if isinstance(detail, LockDetail) and (mac := detail.mac_address):
+            self._attr_device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_BLUETOOTH, mac)}
 
     @property
     def _device_id(self):

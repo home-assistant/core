@@ -2,92 +2,22 @@
 
 from __future__ import annotations
 
-from functools import partial
-from itertools import chain
 import logging
-from typing import Any, cast
+from typing import cast
 
 from pyunifiprotect import ProtectApiClient
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.automation import (
-    EVENT_AUTOMATION_RELOADED,
-    automations_with_entity,
-)
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_get as async_get_issue_registry,
-)
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 
-from .const import CONF_ALLOW_EA, DOMAIN
+from .const import CONF_ALLOW_EA
 from .utils import async_create_api_client
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_create_repairs(
-    hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
-) -> None:
-    """Create any additional repairs for deprecations."""
-
-    await _deprecate_smart_sensor(hass, entry, protect)
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            EVENT_AUTOMATION_RELOADED,
-            partial(_deprecate_smart_sensor, hass, entry, protect),
-        )
-    )
-
-
-async def _deprecate_smart_sensor(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    protect: ProtectApiClient,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    entity_registry = er.async_get(hass)
-    automations: dict[str, list[str]] = {}
-    scripts: dict[str, list[str]] = {}
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        if (
-            entity.domain == Platform.SENSOR
-            and entity.disabled_by is None
-            and "detected_object" in entity.unique_id
-        ):
-            entity_automations = automations_with_entity(hass, entity.entity_id)
-            entity_scripts = scripts_with_entity(hass, entity.entity_id)
-            if entity_automations:
-                automations[entity.entity_id] = entity_automations
-            if entity_scripts:
-                scripts[entity.entity_id] = entity_scripts
-
-    if automations or scripts:
-        items = sorted(
-            set(
-                chain.from_iterable(list(automations.values()) + list(scripts.values()))
-            )
-        )
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecate_smart_sensor",
-            is_fixable=False,
-            breaks_in_ha_version="2023.3.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecate_smart_sensor",
-            translation_placeholders={"items": "* `" + "`\n* `".join(items) + "`\n"},
-        )
-    else:
-        _LOGGER.debug("No found usages of Detected Object sensor")
-        ir.async_delete_issue(hass, DOMAIN, "deprecate_smart_sensor")
 
 
 class EAConfirm(RepairsFlow):

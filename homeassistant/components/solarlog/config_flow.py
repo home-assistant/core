@@ -68,9 +68,8 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self._host_in_configuration_exists(host):
                 self._errors[CONF_HOST] = "already_configured"
-            else:
-                if await self._test_connection(host):
-                    return self.async_create_entry(title=name, data={CONF_HOST: host})
+            elif await self._test_connection(host):
+                return self.async_create_entry(title=name, data={CONF_HOST: host})
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME

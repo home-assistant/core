@@ -16,6 +16,7 @@ from homeassistant.components.http.ban import (
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     IpBanManager,
+    process_success_login,
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
@@ -25,6 +26,7 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
+from tests.common import async_get_persistent_notifications
 from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
@@ -307,11 +309,10 @@ async def test_ip_bans_file_creation(
         assert resp.status == HTTPStatus.FORBIDDEN
         assert m_open.call_count == 1
 
+        notifications = async_get_persistent_notifications(hass)
+        assert len(notifications) == 2
         assert (
-            len(notifications := hass.states.async_all("persistent_notification")) == 2
-        )
-        assert (
-            notifications[0].attributes["message"]
+            notifications["http-login"]["message"]
             == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
         )
 
@@ -332,14 +333,21 @@ async def test_failed_login_attempts_counter(
         """Return 200 status code."""
         return None, 200
 
+    async def auth_true_handler(request):
+        """Return 200 status code."""
+        process_success_login(request)
+        return None, 200
+
     app.router.add_get(
-        "/auth_true", request_handler_factory(Mock(requires_auth=True), auth_handler)
+        "/auth_true",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_true_handler),
     )
     app.router.add_get(
-        "/auth_false", request_handler_factory(Mock(requires_auth=True), auth_handler)
+        "/auth_false",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
     )
     app.router.add_get(
-        "/", request_handler_factory(Mock(requires_auth=False), auth_handler)
+        "/", request_handler_factory(hass, Mock(requires_auth=False), auth_handler)
     )
 
     setup_bans(hass, app, 5)
@@ -375,4 +383,12 @@ async def test_failed_login_attempts_counter(
     # We no longer support trusted networks.
     resp = await client.get("/auth_true")
     assert resp.status == HTTPStatus.OK
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 0
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2

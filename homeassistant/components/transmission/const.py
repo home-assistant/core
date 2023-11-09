@@ -1,18 +1,22 @@
 """Constants for the Transmission Bittorent Client component."""
-DOMAIN = "transmission"
+from __future__ import annotations
 
-SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
+from collections.abc import Callable
+
+from transmission_rpc import Torrent
+
+DOMAIN = "transmission"
 
 ORDER_NEWEST_FIRST = "newest_first"
 ORDER_OLDEST_FIRST = "oldest_first"
 ORDER_BEST_RATIO_FIRST = "best_ratio_first"
 ORDER_WORST_RATIO_FIRST = "worst_ratio_first"
 
-SUPPORTED_ORDER_MODES = {
+SUPPORTED_ORDER_MODES: dict[str, Callable[[list[Torrent]], list[Torrent]]] = {
     ORDER_NEWEST_FIRST: lambda torrents: sorted(
-        torrents, key=lambda t: t.addedDate, reverse=True
+        torrents, key=lambda t: t.added_date, reverse=True
     ),
-    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.addedDate),
+    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.added_date),
     ORDER_WORST_RATIO_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.ratio),
     ORDER_BEST_RATIO_FIRST: lambda torrents: sorted(
         torrents, key=lambda t: t.ratio, reverse=True
@@ -39,8 +43,10 @@ SERVICE_REMOVE_TORRENT = "remove_torrent"
 SERVICE_START_TORRENT = "start_torrent"
 SERVICE_STOP_TORRENT = "stop_torrent"
 
-DATA_UPDATED = "transmission_data_updated"
-
 EVENT_STARTED_TORRENT = "transmission_started_torrent"
 EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
 EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
+
+STATE_UP_DOWN = "up_down"
+STATE_SEEDING = "seeding"
+STATE_DOWNLOADING = "downloading"

@@ -1,6 +1,7 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
 import logging
 import math
+from typing import Any
 
 from miio.integrations.humidifier.deerma.airhumidifier_mjjsq import (
     OperationMode as AirhumidifierMjjsqOperationMode,
@@ -13,6 +14,7 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 )
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -45,6 +47,7 @@ ATTR_TARGET_HUMIDITY = "target_humidity"
 AVAILABLE_ATTRIBUTES = {
     ATTR_MODE: "mode",
     ATTR_TARGET_HUMIDITY: "target_humidity",
+    ATTR_HUMIDITY: "humidity",
 }
 
 AVAILABLE_MODES_CA1_CB1 = [
@@ -115,6 +118,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _attr_supported_features = HumidifierEntityFeature.MODES
+    _attr_name = None
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -136,10 +140,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         """Get the current mode."""
         return self._mode
 
-    async def async_turn_on(
-        self,
-        **kwargs,
-    ) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
@@ -148,7 +149,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.off
@@ -201,6 +202,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             }
         )
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
+        self._attr_current_humidity = self._attributes[ATTR_HUMIDITY]
         self._mode = self._attributes[ATTR_MODE]
 
     @property
@@ -219,6 +221,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             }
         )
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
+        self._attr_current_humidity = self._attributes[ATTR_HUMIDITY]
         self._mode = self._attributes[ATTR_MODE]
         self.async_write_ha_state()
 

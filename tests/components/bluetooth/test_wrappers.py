@@ -10,6 +10,7 @@ from bleak.backends.scanner import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
@@ -21,7 +22,7 @@ from homeassistant.components.bluetooth.usage import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import _get_manager, generate_advertisement_data
+from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
 class FakeScanner(BaseHaRemoteScanner):
@@ -59,6 +60,7 @@ class FakeScanner(BaseHaRemoteScanner):
             advertisement_data.manufacturer_data,
             advertisement_data.tx_power,
             device.details | {"scanner_specific_data": "test"},
+            MONOTONIC_TIME(),
         )
 
 
@@ -108,7 +110,7 @@ def _generate_ble_device_and_adv_data(
 ) -> tuple[BLEDevice, AdvertisementData]:
     """Generate a BLE device with adv data."""
     return (
-        BLEDevice(
+        generate_ble_device(
             mac,
             "any",
             delegate="",

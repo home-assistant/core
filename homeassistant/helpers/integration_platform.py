@@ -8,15 +8,15 @@ import logging
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.setup import ATTR_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS = "integration_platforms"
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class IntegrationPlatform:
     """An integration platform."""
 
@@ -26,14 +26,24 @@ class IntegrationPlatform:
 
 
 async def _async_process_single_integration_platform_component(
-    hass: HomeAssistant, component_name: str, integration_platform: IntegrationPlatform
+    hass: HomeAssistant,
+    component_name: str,
+    integration: Integration | Exception,
+    integration_platform: IntegrationPlatform,
 ) -> None:
     """Process a single integration platform."""
     if component_name in integration_platform.seen_components:
         return
     integration_platform.seen_components.add(component_name)
 
-    integration = await async_get_integration(hass, component_name)
+    if isinstance(integration, Exception):
+        _LOGGER.exception(
+            "Error importing integration %s for %s",
+            component_name,
+            integration_platform.platform_name,
+        )
+        return
+
     platform_name = integration_platform.platform_name
 
     try:
@@ -55,34 +65,29 @@ async def _async_process_single_integration_platform_component(
         )
 
 
-async def async_process_integration_platform_for_component(
+async def _async_process_integration_platform_for_component(
     hass: HomeAssistant, component_name: str
 ) -> None:
-    """Process integration platforms on demand for a component.
-
-    This function will load the integration platforms
-    for an integration instead of waiting for the EVENT_COMPONENT_LOADED
-    event to be fired for the integration.
-
-    When the integration will create entities before
-    it has finished setting up; call this function to ensure
-    that the integration platforms are loaded before the entities
-    are created.
-    """
-    if DATA_INTEGRATION_PLATFORMS not in hass.data:
-        # There are no integration platforms loaded yet
-        return
+    """Process integration platforms for a component."""
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
-    await asyncio.gather(
-        *[
+    integrations = await async_get_integrations(hass, (component_name,))
+    tasks = [
+        asyncio.create_task(
             _async_process_single_integration_platform_component(
-                hass, component_name, integration_platform
-            )
-            for integration_platform in integration_platforms
-        ]
-    )
+                hass,
+                component_name,
+                integrations[component_name],
+                integration_platform,
+            ),
+            name=f"process integration platform {integration_platform.platform_name} for {component_name}",
+        )
+        for integration_platform in integration_platforms
+        if component_name not in integration_platform.seen_components
+    ]
+    if tasks:
+        await asyncio.gather(*tasks)
 
 
 @bind_hass
@@ -98,25 +103,39 @@ async def async_process_integration_platforms(
 
         async def _async_component_loaded(event: Event) -> None:
             """Handle a new component loaded."""
-            comp = event.data[ATTR_COMPONENT]
-            if "." not in comp:
-                await async_process_integration_platform_for_component(hass, comp)
+            await _async_process_integration_platform_for_component(
+                hass, event.data[ATTR_COMPONENT]
+            )
 
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
+        @callback
+        def _async_component_loaded_filter(event: Event) -> bool:
+            """Handle integration platforms loaded."""
+            return "." not in event.data[ATTR_COMPONENT]
+
+        hass.bus.async_listen(
+            EVENT_COMPONENT_LOADED,
+            _async_component_loaded,
+            event_filter=_async_component_loaded_filter,
+        )
 
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
     integration_platform = IntegrationPlatform(platform_name, process_platform, set())
     integration_platforms.append(integration_platform)
-    if top_level_components := (
+    if top_level_components := [
         comp for comp in hass.config.components if "." not in comp
-    ):
-        await asyncio.gather(
-            *[
+    ]:
+        integrations = await async_get_integrations(hass, top_level_components)
+        tasks = [
+            asyncio.create_task(
                 _async_process_single_integration_platform_component(
-                    hass, comp, integration_platform
-                )
-                for comp in top_level_components
-            ]
-        )
+                    hass, comp, integrations[comp], integration_platform
+                ),
+                name=f"process integration platform {platform_name} for {comp}",
+            )
+            for comp in top_level_components
+            if comp not in integration_platform.seen_components
+        ]
+        if tasks:
+            await asyncio.gather(*tasks)

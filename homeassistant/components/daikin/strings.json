@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Configure Daikin AC",
-        "description": "Enter [%key:common::config_flow::data::ip%] of your Daikin AC.\n\nNote that [%key:common::config_flow::data::api_key%] and [%key:common::config_flow::data::password%] only are used by BRP072Cxx and SKYFi devices respectively.",
+        "description": "Enter the IP address of your Daikin AC.\n\nNote that API key and password are only used by BRP072Cxx and SKYFi devices respectively.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -18,8 +18,39 @@
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "api_password": "[%key:common::config_flow::error::invalid_auth%], use either API Key or Password.",
+      "api_password": "Invalid authentication, use either API Key or Password.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "compressor_estimated_power_consumption": {
+        "name": "Compressor estimated power consumption"
+      },
+      "cool_energy_consumption": {
+        "name": "Cool energy consumption"
+      },
+      "heat_energy_consumption": {
+        "name": "Heat energy consumption"
+      },
+      "energy_consumption": {
+        "name": "Energy consumption"
+      },
+      "compressor_frequency": {
+        "name": "Compressor frequency"
+      },
+      "compressor_energy_consumption": {
+        "name": "Compressor energy consumption"
+      }
     }
   }
 }

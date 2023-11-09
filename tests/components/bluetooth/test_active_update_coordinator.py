@@ -19,7 +19,7 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
     _T,
     ActiveBluetoothDataUpdateCoordinator,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
@@ -392,6 +392,61 @@ async def test_polling_rejecting_the_first_time(
     assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
     # Data is different again so poll is done
     assert coordinator.data == {"fake": "data"}
+
+    cancel()
+    unregister_listener()
+
+
+async def test_no_polling_after_stop_event(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
+    """Test we do not poll after the stop event."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    needs_poll_calls = 0
+
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
+        nonlocal needs_poll_calls
+        needs_poll_calls += 1
+        return True
+
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        return {"fake": "data"}
+
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
+    )
+    assert coordinator.available is False  # no data yet
+
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
+
+    cancel = coordinator.async_start()
+    assert needs_poll_calls == 0
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    assert coordinator.data == {"fake": "data"}
+
+    assert needs_poll_calls == 1
+
+    hass.state = CoreState.stopping
+    await hass.async_block_till_done()
+    assert needs_poll_calls == 1
+
+    # Should not generate a poll now
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+    await hass.async_block_till_done()
+    assert needs_poll_calls == 1
 
     cancel()
     unregister_listener()

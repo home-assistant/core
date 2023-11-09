@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from functools import wraps
+from functools import lru_cache, wraps
 from http import HTTPStatus
 import logging
 import secrets
@@ -142,6 +142,16 @@ WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
             vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
         }
     ),
+)
+
+SENSOR_SCHEMA_FULL = vol.Schema(
+    {
+        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(None, cv.icon),
+        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
+        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+    }
 )
 
 
@@ -365,6 +375,12 @@ async def webhook_stream_camera(
     return webhook_response(resp, registration=config_entry.data)
 
 
+@lru_cache
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
+
+
 @WEBHOOK_COMMANDS.register("render_template")
 @validate_schema(
     {
@@ -381,7 +397,7 @@ async def webhook_render_template(
     resp = {}
     for key, item in data.items():
         try:
-            tpl = template.Template(item[ATTR_TEMPLATE], hass)
+            tpl = _cached_template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
         except TemplateError as ex:
             resp[key] = {"error": str(ex)}
@@ -591,7 +607,7 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, unique_store_key, data)
+        async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
         data[
@@ -630,18 +646,6 @@ async def webhook_update_sensor_states(
     hass: HomeAssistant, config_entry: ConfigEntry, data: list[dict[str, Any]]
 ) -> Response:
     """Handle an update sensor states webhook."""
-    sensor_schema_full = vol.Schema(
-        {
-            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
-                None, cv.icon
-            ),
-            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
-            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-        }
-    )
-
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
     resp: dict[str, Any] = {}
     entity_registry = er.async_get(hass)
@@ -671,7 +675,7 @@ async def webhook_update_sensor_states(
             continue
 
         try:
-            sensor = sensor_schema_full(sensor)
+            sensor = SENSOR_SCHEMA_FULL(sensor)
         except vol.Invalid as err:
             err_msg = vol.humanize.humanize_error(sensor, err)
             _LOGGER.error(
@@ -689,8 +693,7 @@ async def webhook_update_sensor_states(
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
         async_dispatcher_send(
             hass,
-            SIGNAL_SENSOR_UPDATE,
-            unique_store_key,
+            f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
             sensor,
         )
 
