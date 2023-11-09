@@ -55,10 +55,11 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 
-async def test_weather_without_forecast(hass: HomeAssistant) -> None:
+async def test_weather_without_forecast(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the weather without forecast."""
     await init_integration(hass)
-    registry = er.async_get(hass)
 
     state = hass.states.get("weather.home")
     assert state
@@ -78,15 +79,16 @@ async def test_weather_without_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert ATTR_SUPPORTED_FEATURES not in state.attributes
 
-    entry = registry.async_get("weather.home")
+    entry = entity_registry.async_get("weather.home")
     assert entry
     assert entry.unique_id == "0123456"
 
 
-async def test_weather_with_forecast(hass: HomeAssistant) -> None:
+async def test_weather_with_forecast(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the weather with forecast."""
     await init_integration(hass, forecast=True)
-    registry = er.async_get(hass)
 
     state = hass.states.get("weather.home")
     assert state
@@ -120,7 +122,7 @@ async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     assert forecast.get(ATTR_FORECAST_WIND_GUST_SPEED) == 29.6
     assert forecast.get(ATTR_WEATHER_UV_INDEX) == 5
 
-    entry = registry.async_get("weather.home")
+    entry = entity_registry.async_get("weather.home")
     assert entry
     assert entry.unique_id == "0123456"
 
