@@ -1,6 +1,8 @@
 """The Vogel's MotionMount integration."""
 from __future__ import annotations
 
+import socket
+
 import motionmount
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,11 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Validate the API connection
     try:
         await mm.connect()
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as ex:
+    except (ConnectionError, TimeoutError, socket.gaierror) as ex:
         raise ConfigEntryNotReady(
             f"Failed to connect to {entry.data[CONF_HOST]}"
         ) from ex
+    await coordinator.async_config_entry_first_refresh()
 
     # Store an API object for your platforms to access
     hass.data[DOMAIN][entry.entry_id] = coordinator
