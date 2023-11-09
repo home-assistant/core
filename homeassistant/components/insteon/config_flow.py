@@ -47,6 +47,7 @@ from .schemas import (
 from .utils import async_get_usb_ports
 
 STEP_PLM = "plm"
+STEP_PLM_MANUALLY = "plm_manually"
 STEP_HUB_V1 = "hubv1"
 STEP_HUB_V2 = "hubv2"
 STEP_CHANGE_HUB_CONFIG = "change_hub_config"
@@ -156,7 +157,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema_defaults = user_input if user_input is not None else {}
         data_schema = build_plm_manual_schema(**schema_defaults)
         return self.async_show_form(
-            step_id=STEP_PLM, data_schema=data_schema, errors=errors
+            step_id=STEP_PLM_MANUALLY, data_schema=data_schema, errors=errors
         )
 
     async def async_step_hubv1(self, user_input=None):
