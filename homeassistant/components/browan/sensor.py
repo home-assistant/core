@@ -7,7 +7,7 @@ import json
 import logging
 
 from pyliblorawan.models import Uplink
-from pyliblorawan.network_servers.ttn import TTN
+from pyliblorawan.network_servers.helpers import normalize_unknown_uplink
 
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import (
@@ -138,7 +138,7 @@ class LorawanSensorCoordinator(DataUpdateCoordinator):
     async def _message_received(self, msg: ReceiveMessage) -> None:
         """Handle uplink, parse and normalize it."""
         uplink = json.loads(msg.payload)
-        uplink = TTN.normalize_uplink(uplink)
+        uplink = normalize_unknown_uplink(uplink)
         await self._uplink_parser(uplink)
 
         self.async_set_updated_data(uplink)
