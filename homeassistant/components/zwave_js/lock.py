@@ -194,18 +194,18 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     async def async_set_lock_configuration(
         self,
         operation_type: OperationType,
-        lock_timeout: int | None,
-        outside_handles_can_open_door_configuration: list[bool] | None,
-        inside_handles_can_open_door_configuration: list[bool] | None,
-        auto_relock_time: int | None,
-        hold_and_release_time: int | None,
-        twist_assist: bool | None,
-        block_to_block: bool | None,
+        lock_timeout: int | None = None,
+        outside_handles_can_open_door_configuration: list[bool] | None = None,
+        inside_handles_can_open_door_configuration: list[bool] | None = None,
+        auto_relock_time: int | None = None,
+        hold_and_release_time: int | None = None,
+        twist_assist: bool | None = None,
+        block_to_block: bool | None = None,
     ) -> None:
         """Set the lock configuration."""
         params: dict[str, Any] = {"operation_type": operation_type}
         for attr, val in (
-            ("lock_timeout", lock_timeout),
+            ("lock_timeout_configuration", lock_timeout),
             (
                 "outside_handles_can_open_door_configuration",
                 outside_handles_can_open_door_configuration,
