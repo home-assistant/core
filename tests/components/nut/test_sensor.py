@@ -20,28 +20,35 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "model",
+    ("model", "unique_id"),
     [
-        "PR3000RT2U",
-        "CP1350C",
-        "5E850I",
-        "5E650I",
-        "BACKUPSES600M1",
-        "CP1500PFCLCD",
-        "DL650ELCD",
-        "EATON5P1550",
-        "blazer_usb",
+        ("PR3000RT2U", "CPS_PR3000RT2U_PYVJO2000034_battery.charge"),
+        ("CP1350C", ""),
+        ("5E850I", ""),
+        ("5E650I", ""),
+        (
+            "BACKUPSES600M1",
+            "American Power Conversion_Back-UPS ES 600M1_4B1713P32195 _battery.charge",
+        ),
+        ("CP1500PFCLCD", ""),
+        ("DL650ELCD", ""),
+        ("EATON5P1550", ""),
+        ("blazer_usb", ""),
     ],
 )
 async def test_devices(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, model: str
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, model: str, unique_id: str
 ) -> None:
     """Test creation of device sensors."""
 
     config_entry = await async_init_integration(hass, model)
     entry = entity_registry.async_get("sensor.ups1_battery_charge")
     assert entry
-    assert entry.config_entry_id == config_entry.entry_id
+
+    if unique_id:
+        assert entry.unique_id == unique_id
+    else:
+        assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
 
     state = hass.states.get("sensor.ups1_battery_charge")
     assert state.state == "100"
