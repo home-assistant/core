@@ -87,5 +87,4 @@ async def test_options(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {}
     assert result2["data"] == config_entry.options

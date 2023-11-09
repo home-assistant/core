@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant import config_entries
 from homeassistant.components.light import ATTR_TRANSITION
@@ -26,7 +25,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     ColorTempSelector,
-    ColorTempSelectorConfig,
     DurationSelector,
     EntitySelector,
     EntitySelectorConfig,
@@ -72,13 +70,6 @@ MINIMAL_FLUX_SCHEMA = vol.Schema(
         vol.Required(CONF_LIGHTS): EntitySelector(
             EntitySelectorConfig(domain=Platform.LIGHT, multiple=True)
         ),
-    }
-)
-
-allowed_colortemp_range = ColorTempSelectorConfig(
-    {
-        "min_mireds": color_temperature_kelvin_to_mired(40000),
-        "max_mireds": color_temperature_kelvin_to_mired(1000),
     }
 )
 
@@ -174,20 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class FluxOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle flux options."""
 
-    def reset_values_to_default(self, user_input):
-        """Hacky method to reset saved values and use the default again."""
-        time_that_signals_to_reset_to_defeault = "13:37:00"
-        values_that_signal_to_reset_to_default = [
-            time_that_signals_to_reset_to_defeault,
-        ]
-
-        return {
-            key: value
-            for key, value in user_input.items()
-            if value not in values_that_signal_to_reset_to_default
-        }
-
-    def convert_mired_stuff_to_kelvin(self, user_input):
+    def convert_mired_to_kelvin(self, user_input):
         """Convert between mireds and kelvins because I can't find the kelvin option for ColorTempSelector."""
         user_input[CONF_START_CT] = color_temperature_mired_to_kelvin(
             user_input[CONF_START_CT]
@@ -201,16 +179,10 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
 
         return user_input
 
-    def remove_undefined(self, user_input):
-        """Remove keys with values that are UNDEFINED."""
-        return {key: value for key, value in user_input.items() if value != UNDEFINED}
-
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Configure the options."""
         if user_input is not None:
-            user_input = self.reset_values_to_default(user_input)
-            user_input = self.convert_mired_stuff_to_kelvin(user_input)
-            user_input = self.remove_undefined(user_input)
+            user_input = self.convert_mired_to_kelvin(user_input)
 
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
@@ -229,10 +201,11 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
                     # times
                     vol.Optional(
                         CONF_START_TIME,
-                        default=settings.get(CONF_START_TIME, UNDEFINED),
+                        description={"suggested_value": settings.get(CONF_START_TIME)},
                     ): TimeSelector(),
                     vol.Optional(
-                        CONF_STOP_TIME, default=settings.get(CONF_STOP_TIME, UNDEFINED)
+                        CONF_STOP_TIME,
+                        description={"suggested_value": settings.get(CONF_STOP_TIME)},
                     ): TimeSelector(),
                     # colors
                     vol.Optional(
@@ -240,19 +213,19 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
                         default=color_temperature_kelvin_to_mired(
                             float(settings.get(CONF_START_CT))  # type: ignore[arg-type]
                         ),
-                    ): ColorTempSelector(allowed_colortemp_range),
+                    ): ColorTempSelector(),
                     vol.Optional(
                         CONF_SUNSET_CT,
                         default=color_temperature_kelvin_to_mired(
                             float(settings.get(CONF_SUNSET_CT))  # type: ignore[arg-type]
                         ),
-                    ): ColorTempSelector(allowed_colortemp_range),
+                    ): ColorTempSelector(),
                     vol.Optional(
                         CONF_STOP_CT,
                         default=color_temperature_kelvin_to_mired(
                             float(settings.get(CONF_STOP_CT))  # type: ignore[arg-type]
                         ),
-                    ): ColorTempSelector(allowed_colortemp_range),
+                    ): ColorTempSelector(),
                     # adjust_brightness
                     vol.Optional(
                         CONF_ADJUST_BRIGHTNESS,
