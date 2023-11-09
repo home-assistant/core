@@ -47,6 +47,23 @@ class FakeStore(LocalCalendarStore):
         self._mock_path.read_text.return_value = content
 
 
+class FakeStore2(LocalCalendarStore):
+    """Mock storage implementation."""
+
+    def __init__(self, hass: HomeAssistant, path: Path, ics_content: str) -> None:
+        """Initialize FakeStore."""
+        super().__init__(hass, path)
+        self._content = ics_content
+
+    def _load(self) -> str:
+        """Read from calendar storage."""
+        return self._content
+
+    def _store(self, ics_content: str) -> None:
+        """Persist the calendar storage."""
+        self._content = ics_content
+
+
 @pytest.fixture(name="ics_content", autouse=True)
 def mock_ics_content() -> str:
     """Fixture to allow tests to set initial ics content for the calendar store."""
@@ -69,7 +86,9 @@ def mock_store(
 
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
         if path not in stores:
-            stores[path] = FakeStore(hass, path, ics_content, store_read_side_effect)
+            stores[path] = FakeStore2(
+                hass, path, ics_content
+            )  # , store_read_side_effect)
         return stores[path]
 
     with patch(
