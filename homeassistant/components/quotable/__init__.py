@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .services import register_services
 from .const import (
     CONF_SELECTED_AUTHORS,
     CONF_SELECTED_TAGS,
@@ -41,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Quotable integration."""
 
-    # conf = config[DOMAIN]
+    register_services(hass)
 
     hass.states.set(f"{DOMAIN}.testing", "It Works!")
 
