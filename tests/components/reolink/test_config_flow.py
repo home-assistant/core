@@ -12,6 +12,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.exceptions import ReolinkWebhookException
+from homeassistant.components.reolink.host import DEFAULT_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -410,13 +411,16 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
 )
 async def test_dhcp_ip_update(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_connect_class: tuple[MagicMock, MagicMock],
     last_update_success: bool,
     attr: str,
     value: Any,
     expected: str,
 ) -> None:
     """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
+    reolink_connect = reolink_connect_class[0]
+    reolink_class_mock = reolink_connect_class[1]
+
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -438,6 +442,16 @@ async def test_dhcp_ip_update(
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
+    reolink_class_mock.assert_called_with(
+        TEST_HOST,
+        TEST_USERNAME,
+        TEST_PASSWORD,
+        port=TEST_PORT,
+        use_https=TEST_USE_HTTPS,
+        protocol=DEFAULT_PROTOCOL,
+        timeout=DEFAULT_TIMEOUT,
+    )
+
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
         reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
@@ -458,6 +472,17 @@ async def test_dhcp_ip_update(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
+
+    if not last_update_success:
+        reolink_class_mock.assert_called_with(
+            TEST_HOST2,
+            TEST_USERNAME,
+            TEST_PASSWORD,
+            port=TEST_PORT,
+            use_https=TEST_USE_HTTPS,
+            protocol=DEFAULT_PROTOCOL,
+            timeout=DEFAULT_TIMEOUT,
+        )
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
