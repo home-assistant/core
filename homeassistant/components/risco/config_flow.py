@@ -80,31 +80,31 @@ async def validate_cloud_input(hass: core.HomeAssistant, data) -> dict[str, str]
 
 async def validate_local_input(
     hass: core.HomeAssistant, data: Mapping[str, str]
-) -> dict[str, str]:
+) -> dict[str, object]:
     """Validate the user input allows us to connect to a local panel.
 
     Data has the keys from LOCAL_SCHEMA with values provided by the user.
     """
-    attempts = 0
-
+    comm_delay = 0
     while True:
+        risco = RiscoLocal(
+            data[CONF_HOST],
+            data[CONF_PORT],
+            data[CONF_PIN],
+            communication_delay=comm_delay,
+        )
         try:
-            risco = RiscoLocal(
-                data[CONF_HOST],
-                data[CONF_PORT],
-                data[CONF_PIN],
-                **{CONF_COMMUNICATION_DELAY: attempts},
-            )
             await risco.connect()
-            break
         except CannotConnectError as e:
-            if attempts >= MAX_COMMUNICATION_DELAY:
+            if comm_delay >= MAX_COMMUNICATION_DELAY:
                 raise e
-            attempts += 1
+            comm_delay += 1
+        else:
+            break
 
     site_id = risco.id
     await risco.disconnect()
-    return {"title": site_id, "attempts": str(attempts)}
+    return {"title": site_id, "comm_delay": comm_delay}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -191,7 +191,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         **{CONF_TYPE: TYPE_LOCAL},
-                        **{CONF_COMMUNICATION_DELAY: int(info["attempts"])},
+                        **{CONF_COMMUNICATION_DELAY: info["comm_delay"]},
                     },
                 )
 

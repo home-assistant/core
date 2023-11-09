@@ -86,15 +86,14 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     comm_delay = initial_delay = data.get(CONF_COMMUNICATION_DELAY, 0)
 
     while True:
+        risco = RiscoLocal(
+            data[CONF_HOST],
+            data[CONF_PORT],
+            data[CONF_PIN],
+            communication_delay=comm_delay,
+        )
         try:
-            risco = RiscoLocal(
-                data[CONF_HOST],
-                data[CONF_PORT],
-                data[CONF_PIN],
-                **{CONF_COMMUNICATION_DELAY: comm_delay},
-            )
             await risco.connect()
-            break
         except CannotConnectError as error:
             if comm_delay >= MAX_COMMUNICATION_DELAY:
                 raise ConfigEntryNotReady() from error
@@ -102,6 +101,8 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         except UnauthorizedError:
             _LOGGER.exception("Failed to login to Risco cloud")
             return False
+        else:
+            break
 
     if comm_delay > initial_delay:
         new_data = data.copy()
