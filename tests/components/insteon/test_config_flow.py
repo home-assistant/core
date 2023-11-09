@@ -45,6 +45,7 @@ from .const import (
     MOCK_USER_INPUT_HUB_V1,
     MOCK_USER_INPUT_HUB_V2,
     MOCK_USER_INPUT_PLM,
+    MOCK_USER_INPUT_PLM_MANUAL,
     PATCH_ASYNC_SETUP,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
@@ -150,6 +151,26 @@ async def test_form_select_plm(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == "create_entry"
     assert result2["data"] == MOCK_USER_INPUT_PLM
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_select_plm_manual(hass: HomeAssistant) -> None:
+    """Test we set up the PLM correctly."""
+
+    result = await _init_form(hass, STEP_PLM)
+
+    result2, mock_setup, mock_setup_entry = await _device_form(
+        hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM_MANUAL
+    )
+
+    result3, mock_setup, mock_setup_entry = await _device_form(
+        hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result2["type"] == "form"
+    assert result3["type"] == "create_entry"
+    assert result3["data"] == MOCK_USER_INPUT_PLM
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
