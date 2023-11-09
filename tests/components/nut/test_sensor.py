@@ -27,6 +27,7 @@ from tests.common import MockConfigEntry
         "5E850I",
         "5E650I",
         "BACKUPSES600M1",
+        "CP1500PFCLCD",
         "DL650ELCD",
         "EATON5P1550",
         "blazer_usb",
