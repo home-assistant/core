@@ -1,6 +1,6 @@
 """Test the cloud.iot module."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from aiohttp import web
@@ -357,7 +357,10 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
-    with patch("hass_nabucasa.Cloud.initialize"):
+    with patch("hass_nabucasa.Cloud.initialize"), patch(
+        "uuid.UUID.hex", new_callable=PropertyMock
+    ) as hexmock:
+        hexmock.return_value = "12345678901234567890"
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
     cloud = hass.data["cloud"]
@@ -372,4 +375,5 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
             "alias": None,
         },
         "version": HA_VERSION,
+        "instance_id": "12345678901234567890",
     }
