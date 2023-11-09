@@ -16,9 +16,12 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+]
 
-@pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("device_fixture", ["device-HWE-SKT.json"])
+
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
 async def test_number_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -86,3 +89,9 @@ async def test_number_entities(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-WTR"])
+async def test_entities_not_created_for_device(hass: HomeAssistant) -> None:
+    """Does not load button when device has no support for it."""
+    assert not hass.states.get("number.device_status_light_brightness")

@@ -26,7 +26,7 @@ from .entity import ReolinkChannelCoordinatorEntity
 class ReolinkNumberEntityDescriptionMixin:
     """Mixin values for Reolink number entities."""
 
-    value: Callable[[Host, int], float]
+    value: Callable[[Host, int], float | None]
     method: Callable[[Host, int, float], Any]
 
 
@@ -354,7 +354,7 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         )
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """State of the number entity."""
         return self.entity_description.value(self._host.api, self._channel)
 
