@@ -13,8 +13,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_PICOCURIES_PER_LITER,
     LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
@@ -41,7 +43,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,25 +51,29 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_1day_avg": SensorEntityDescription(
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
         icon="mdi:radioactive",
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
         icon="mdi:radioactive",
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
         translation_key="radon_1day_level",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
         icon="mdi:radioactive",
     ),
     "radon_longterm_level": SensorEntityDescription(
         key="radon_longterm_level",
         translation_key="radon_longterm_level",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
         icon="mdi:radioactive",
     ),
     "temperature": SensorEntityDescription(
@@ -168,9 +174,12 @@ async def async_setup_entry(
     sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
     if not is_metric:
         for val in sensors_mapping.values():
-            if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
+            if (
+                val.native_unit_of_measurement
+                is not CONCENTRATION_BECQUEREL_PER_CUBIC_METER
+            ):
                 continue
-            val.native_unit_of_measurement = VOLUME_PICOCURIE
+            val.native_unit_of_measurement = CONCENTRATION_PICOCURIES_PER_LITER
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)

@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -28,11 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQCoordinator
-from .const import (
-    ACTIVITY_BECQUEREL_PER_CUBIC_METER,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    DOMAIN,
-)
+from .const import CONCENTRATION_GRAMS_PER_CUBIC_METER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -373,8 +370,8 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="radon",
         translation_key="radon",
-        native_unit_of_measurement=ACTIVITY_BECQUEREL_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
         value=lambda data: data.get("radon"),
         icon="mdi:radioactive",
     ),

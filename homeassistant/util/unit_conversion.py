@@ -5,8 +5,10 @@ from collections.abc import Callable
 from functools import lru_cache
 
 from homeassistant.const import (
+    CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_PICOCURIES_PER_LITER,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfDataRate,
@@ -312,6 +314,21 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.INHG,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
+    }
+
+
+class RadonConverter(BaseUnitConverter):
+    """Unit to convert measurements of radon."""
+
+    UNIT_CLASS = "radon"
+    NORMALIZED_UNIT = CONCENTRATION_BECQUEREL_PER_CUBIC_METER
+    VALID_UNITS = {
+        CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
+        CONCENTRATION_PICOCURIES_PER_LITER,
+    }
+    _UNIT_CONVERSION = {
+        CONCENTRATION_BECQUEREL_PER_CUBIC_METER: 37.0,
+        CONCENTRATION_PICOCURIES_PER_LITER: 1.0,
     }
 
 

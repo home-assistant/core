@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -34,7 +35,8 @@ from .const import DOMAIN
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
         key="radonShortTermAvg",
-        native_unit_of_measurement="Bq/m³",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
         translation_key="radon",
     ),
     "temp": SensorEntityDescription(

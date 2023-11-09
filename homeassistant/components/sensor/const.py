@@ -7,9 +7,11 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_PICOCURIES_PER_LITER,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE_REACTIVE,
@@ -46,6 +48,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     PowerConverter,
     PressureConverter,
+    RadonConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -309,6 +312,14 @@ class SensorDeviceClass(StrEnum):
     - `psi`
     """
 
+    RADON = "radon"
+    """Radon Radioactivity.
+
+    Unit of measurement:
+    - `Bq/m³`
+    - `pCi/L`
+    """
+
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
@@ -470,6 +481,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.RADON: RadonConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: UnitlessRatioConverter,
@@ -524,6 +536,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.RADON: {
+        CONCENTRATION_BECQUEREL_PER_CUBIC_METER,
+        CONCENTRATION_PICOCURIES_PER_LITER,
+    },
     SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
@@ -593,6 +609,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.RADON: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SIGNAL_STRENGTH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SOUND_PRESSURE: {SensorStateClass.MEASUREMENT},
