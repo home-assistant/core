@@ -1,4 +1,4 @@
-"""Number platform for Enphase Envoy solar energy monitor."""
+"""Number platform for V2C settings."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -16,9 +16,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, MAX_INTENSITY, MIN_INTENSITY
+from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
+
+MIN_INTENSITY = 6
+MAX_INTENSITY = 32
 
 
 @dataclass
@@ -41,6 +44,8 @@ TRYDAN_NUMBER_SETTINGS = (
         key="intensity",
         translation_key="intensity",
         device_class=NumberDeviceClass.CURRENT,
+        native_min_value=MIN_INTENSITY,
+        native_max_value=MAX_INTENSITY,
         value_fn=lambda evse_data: evse_data.intensity,
         update_fn=lambda evse, value: evse.intensity(value),
     ),
@@ -76,8 +81,6 @@ class V2CSettingsNumberEntity(V2CBaseEntity, NumberEntity):
         """Initialize the V2C number entity."""
         super().__init__(coordinator, description)
         self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_native_min_value = MIN_INTENSITY
-        self._attr_native_max_value = MAX_INTENSITY
 
     @property
     def native_value(self) -> float:
