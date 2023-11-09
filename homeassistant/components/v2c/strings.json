@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charge_power": {
+        "name": "Charge power"
+      },
+      "charge_energy": {
+        "name": "Charge energy"
+      },
+      "charge_time": {
+        "name": "Charge time"
+      },
+      "house_power": {
+        "name": "House power"
+      },
+      "fv_power": {
+        "name": "Photovoltaic power"
+      }
+    },
+    "switch": {
+      "paused": {
+        "name": "Pause session"
+      }
+    }
+  }
+}

@@ -216,11 +216,19 @@
         },
         "bitmask": {
           "name": "Bitmask",
-          "description": "Target a specific bitmask (see the documentation for more information)."
+          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with value_size or value_format."
         },
         "value": {
           "name": "Value",
           "description": "The new value to set for this configuration parameter."
+        },
+        "value_size": {
+          "name": "Value size",
+          "description": "Size of the value, either 1, 2, or 4. Used in combination with value_format when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask."
+        },
+        "value_format": {
+          "name": "Value format",
+          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with value_size when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask."
         }
       }
     },
@@ -361,6 +369,20 @@
         "parameters": {
           "name": "Parameters",
           "description": "A list of parameters to pass to the API method. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters."
+        }
+      }
+    },
+    "refresh_notifications": {
+      "name": "Refresh notifications on a node (advanced)",
+      "description": "Refreshes notifications on a node based on notification type and optionally notification event.",
+      "fields": {
+        "notification_type": {
+          "name": "Notification Type",
+          "description": "The Notification Type number as defined in the Z-Wave specs."
+        },
+        "notification_event": {
+          "name": "Notification Event",
+          "description": "The Notification Event number as defined in the Z-Wave specs."
         }
       }
     }

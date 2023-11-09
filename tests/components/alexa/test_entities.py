@@ -25,9 +25,10 @@ async def test_unsupported_domain(hass: HomeAssistant) -> None:
     assert not msg["payload"]["endpoints"]
 
 
-async def test_categorized_hidden_entities(hass: HomeAssistant) -> None:
+async def test_categorized_hidden_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Discovery ignores hidden and categorized entities."""
-    entity_registry = er.async_get(hass)
     request = get_new_request("Alexa.Discovery", "Discover")
 
     entity_entry1 = entity_registry.async_get_or_create(

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/transmission",
   "iot_class": "local_polling",
   "loggers": ["transmissionrpc"],
-  "requirements": ["transmission-rpc==4.1.5"]
+  "requirements": ["transmission-rpc==7.0.3"]
 }
