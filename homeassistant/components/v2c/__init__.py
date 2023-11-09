@@ -11,7 +11,12 @@ from homeassistant.helpers.httpx_client import get_async_client
 from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
