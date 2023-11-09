@@ -18,7 +18,7 @@
   "entity": {
     "switch": {
       "paused": {
-        "name": "Pause Session"
+        "name": "Pause session"
       }
     },
     "sensor": {

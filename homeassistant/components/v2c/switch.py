@@ -1,4 +1,4 @@
-"""Switch platform for Enphase Envoy solar energy monitor."""
+"""Switch platform for V2C EVSE."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -32,7 +32,7 @@ class V2CRequiredKeysMixin:
 
 @dataclass
 class V2CSwitchEntityDescription(SwitchEntityDescription, V2CRequiredKeysMixin):
-    """Describes an V2C EVSE switch entity."""
+    """Describes a V2C EVSE switch entity."""
 
 
 TRYDAN_SWITCHES = (
@@ -79,7 +79,7 @@ class V2CSwitchEntity(V2CBaseEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return the state of the Enpower switch."""
+        """Return the state of the EVSE switch."""
         return self.entity_description.value_fn(self.data)
 
     async def async_turn_on(self):
