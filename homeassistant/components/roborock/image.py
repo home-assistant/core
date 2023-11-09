@@ -120,7 +120,7 @@ async def create_coordinator_maps(
         )
         for roborock_map in maps_info:
             # Load the map - so we can access it with get_map_v1
-            if len(maps.map_info) != 1 or roborock_map.mapFlag != cur_map:
+            if roborock_map.mapFlag != cur_map:
                 # Only change the map and sleep if we have multiple maps.
                 await coord.api.send_command(
                     RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
