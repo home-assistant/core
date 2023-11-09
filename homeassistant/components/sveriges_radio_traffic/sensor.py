@@ -19,7 +19,7 @@ async def async_setup_entry(
 
 
 class TrafficSensor(SensorEntity):
-    """A class for the Steam account."""
+    """A class for the Sveriges Radio traffic sensor."""
 
     _attr_has_entity_name = True
     _attr_name = "Sveriges Radio Traffic"
