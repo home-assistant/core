@@ -166,12 +166,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
 
+    refresh_lock = asyncio.Lock()
+
     async def _refresh_token() -> str:
-        await oauth_session.async_ensure_token_valid()
-        token = oauth_session.token[CONF_ACCESS_TOKEN]
-        if TYPE_CHECKING:
-            assert isinstance(token, str)
-        return token
+        async with refresh_lock:
+            await oauth_session.async_ensure_token_valid()
+            token = oauth_session.token[CONF_ACCESS_TOKEN]
+            if TYPE_CHECKING:
+                assert isinstance(token, str)
+            return token
 
     client.refresh_token_function = _refresh_token
     withings_data = WithingsData(
