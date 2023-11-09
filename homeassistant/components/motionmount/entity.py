@@ -20,7 +20,7 @@ class MotionMountEntity(CoordinatorEntity[MotionMountCoordinator], Entity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=self.coordinator.mm.name,
+            name=coordinator.mm.name,
             manufacturer="Vogel's",
             model="TVM 7675",
         )
