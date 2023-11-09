@@ -286,10 +286,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "too_many_requests"
             except BadCredentialsException:
                 errors["base"] = "invalid_auth"
-            except ClientConnectorCertificateError:
+            except ClientConnectorCertificateError as exception:
                 errors["base"] = "certificate_verify_failed"
-            except (TimeoutError, ClientError):
+                LOGGER.debug(exception)
+            except (TimeoutError, ClientError) as exception:
                 errors["base"] = "cannot_connect"
+                LOGGER.debug(exception)
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
