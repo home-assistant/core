@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.2.4
+aioesphomeapi==18.2.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
