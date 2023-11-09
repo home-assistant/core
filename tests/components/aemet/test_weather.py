@@ -81,11 +81,11 @@ async def test_aemet_weather(
 async def test_aemet_weather_legacy(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test states of legacy weather."""
 
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "None hourly",
