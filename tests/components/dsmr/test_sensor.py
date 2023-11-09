@@ -8,20 +8,7 @@ import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
-from typing import Literal
 from unittest.mock import DEFAULT, MagicMock
-
-from dsmr_parser.obis_references import (
-    BELGIUM_MBUS1_METER_READING1,
-    BELGIUM_MBUS1_METER_READING2,
-    BELGIUM_MBUS2_METER_READING1,
-    BELGIUM_MBUS2_METER_READING2,
-    BELGIUM_MBUS3_METER_READING1,
-    BELGIUM_MBUS3_METER_READING2,
-    BELGIUM_MBUS4_METER_READING1,
-    BELGIUM_MBUS4_METER_READING2,
-)
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -973,115 +960,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
     # check if gas consumption mbus4 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus4")
     assert gas_consumption is None
-
-
-@pytest.mark.parametrize(
-    ("key1", "key2", "key3", "gas_value"),
-    [
-        (
-            BELGIUM_MBUS1_METER_READING1,
-            BELGIUM_MBUS2_METER_READING2,
-            BELGIUM_MBUS3_METER_READING1,
-            "745.696",
-        ),
-        (
-            BELGIUM_MBUS1_METER_READING2,
-            BELGIUM_MBUS2_METER_READING1,
-            BELGIUM_MBUS3_METER_READING2,
-            "745.695",
-        ),
-        (
-            BELGIUM_MBUS4_METER_READING2,
-            BELGIUM_MBUS2_METER_READING1,
-            BELGIUM_MBUS3_METER_READING1,
-            "745.695",
-        ),
-        (
-            BELGIUM_MBUS4_METER_READING1,
-            BELGIUM_MBUS2_METER_READING1,
-            BELGIUM_MBUS3_METER_READING2,
-            "745.697",
-        ),
-    ],
-)
-async def test_belgian_meter_mbus_gas(
-    hass: HomeAssistant,
-    dsmr_connection_fixture,
-    key1: Literal,
-    key2: Literal,
-    key3: Literal,
-    gas_value: str,
-) -> None:
-    """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.objects import MBusObject
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "5B",
-        "precision": 4,
-        "reconnect_interval": 30,
-        "serial_id": "1234",
-        "serial_id_gas": "5678",
-    }
-    entry_options = {
-        "time_between_update": 0,
-    }
-
-    telegram = {
-        key1: MBusObject(
-            key1,
-            [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
-            ],
-        ),
-        key2: MBusObject(
-            key2,
-            [
-                {"value": datetime.datetime.fromtimestamp(1551642214)},
-                {"value": Decimal(745.696), "unit": "m3"},
-            ],
-        ),
-        key3: MBusObject(
-            key3,
-            [
-                {"value": datetime.datetime.fromtimestamp(1551642215)},
-                {"value": Decimal(745.697), "unit": "m3"},
-            ],
-        ),
-    }
-
-    mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
-    )
-
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    telegram_callback = connection_factory.call_args_list[0][0][2]
-
-    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
-    telegram_callback(telegram)
-
-    # after receiving telegram entities need to have the chance to be created
-    await hass.async_block_till_done()
-
-    # check if gas consumption is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
-    assert gas_consumption.state == gas_value
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-    assert (
-        gas_consumption.attributes.get(ATTR_STATE_CLASS)
-        == SensorStateClass.TOTAL_INCREASING
-    )
-    assert (
-        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == UnitOfVolume.CUBIC_METERS
-    )
 
 
 async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -> None:

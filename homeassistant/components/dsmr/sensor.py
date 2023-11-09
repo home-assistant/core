@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -376,30 +377,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 )
 
 
-def add_gas_sensor_5B(telegram: dict[str, DSMRObject]) -> DSMRSensorEntityDescription:
-    """Return correct entity for 5B Gas meter."""
-    ref = None
-    if obis_references.BELGIUM_MBUS1_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS1_METER_READING2
-    elif obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS2_METER_READING2
-    elif obis_references.BELGIUM_MBUS3_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS3_METER_READING2
-    elif obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS4_METER_READING2
-    elif ref is None:
-        ref = obis_references.BELGIUM_MBUS1_METER_READING2
-    return DSMRSensorEntityDescription(
-        key="belgium_5min_gas_meter_reading",
-        translation_key="gas_meter_reading",
-        obis_reference=ref,
-        dsmr_versions={"5B"},
-        is_gas=True,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    )
-
-
 def create_mbus_entity(
     mbus: int, mtype: int, telegram: dict[str, DSMRObject]
 ) -> DSMRSensorEntityDescription | None:
@@ -460,8 +437,42 @@ def device_class_and_uom(
     return (entity_description.device_class, uom)
 
 
+def rename_old_gas_to_mbus(
+    hass: HomeAssistant, entry: ConfigEntry, mbus_device_id: str
+) -> None:
+    """Rename old gas sensor to mbus variant."""
+    dev_reg = dr.async_get(hass)
+    device_entry_v1 = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+    )
+    device_id = device_entry_v1.id
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_device(ent_reg, device_id)
+
+    for entity in entries:
+        if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
+            try:
+                ent_reg.async_update_entity(
+                    entity.entity_id, new_unique_id=mbus_device_id
+                )
+            except ValueError:
+                LOGGER.warning(
+                    "Skip migration of %s because it already exists",
+                    entity.entity_id,
+                )
+            else:
+                LOGGER.info(
+                    "Migrated entity %s from unique id %s to %s",
+                    entity.entity_id,
+                    entity.unique_id,
+                    mbus_device_id,
+                )
+
+
 def create_mbus_entities(
-    telegram: dict[str, DSMRObject] | None, entry: ConfigEntry
+    hass: HomeAssistant, telegram: dict[str, DSMRObject] | None, entry: ConfigEntry
 ) -> list[DSMREntity]:
     """Create MBUS Entities."""
     entities = []
@@ -481,6 +492,7 @@ def create_mbus_entities(
             )
         ) in telegram:
             serial_ = telegram[identifier].value
+            rename_old_gas_to_mbus(hass, entry, serial_)
         else:
             serial_ = ""
         if description := create_mbus_entity(idx, type_, telegram):
@@ -515,13 +527,10 @@ async def async_setup_entry(
         add_entities_handler()
         add_entities_handler = None
 
-        mbus_entities = create_mbus_entities(telegram, entry)
-        for mbus_entity in mbus_entities:
-            entities.append(mbus_entity)
-
-        all_sensors = SENSORS
         if dsmr_version == "5B":
-            all_sensors += (add_gas_sensor_5B(telegram),)
+            mbus_entities = create_mbus_entities(hass, telegram, entry)
+            for mbus_entity in mbus_entities:
+                entities.append(mbus_entity)
 
         entities.extend(
             [
@@ -531,7 +540,7 @@ async def async_setup_entry(
                     telegram,
                     *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
                 )
-                for description in all_sensors
+                for description in SENSORS
                 if (
                     description.dsmr_versions is None
                     or dsmr_version in description.dsmr_versions
