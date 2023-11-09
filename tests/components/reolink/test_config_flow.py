@@ -411,16 +411,14 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
 )
 async def test_dhcp_ip_update(
     hass: HomeAssistant,
-    reolink_connect_class: tuple[MagicMock, MagicMock],
+    reolink_connect_class: MagicMock,
+    reolink_connect: MagicMock,
     last_update_success: bool,
     attr: str,
     value: Any,
     expected: str,
 ) -> None:
     """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
-    reolink_connect = reolink_connect_class[0]
-    reolink_class_mock = reolink_connect_class[1]
-
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -442,7 +440,7 @@ async def test_dhcp_ip_update(
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    reolink_class_mock.assert_called_with(
+    reolink_connect_class.assert_called_with(
         TEST_HOST,
         TEST_USERNAME,
         TEST_PASSWORD,
@@ -474,7 +472,7 @@ async def test_dhcp_ip_update(
     )
 
     if not last_update_success:
-        reolink_class_mock.assert_called_with(
+        reolink_connect_class.assert_called_with(
             TEST_HOST2,
             TEST_USERNAME,
             TEST_PASSWORD,
