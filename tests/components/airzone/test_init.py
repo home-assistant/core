@@ -14,10 +14,10 @@ from .util import CONFIG, HVAC_MOCK, HVAC_VERSION_MOCK, HVAC_WEBSERVER_MOCK
 from tests.common import MockConfigEntry
 
 
-async def test_unique_id_migrate(hass: HomeAssistant) -> None:
+async def test_unique_id_migrate(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique id migration."""
-
-    entity_registry = er.async_get(hass)
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
     config_entry.add_to_hass(hass)
