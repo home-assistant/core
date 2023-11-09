@@ -85,13 +85,13 @@ async def _async_get_component_icons(
 class _IconsCache:
     """Cache for flattened icons."""
 
-    __slots__ = ("_hass", "loaded", "cache")
+    __slots__ = ("_hass", "_loaded", "_cache")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self._hass = hass
-        self.loaded: set[str] = set()
-        self.cache: dict[str, dict[str, Any]] = {}
+        self._loaded: set[str] = set()
+        self._cache: dict[str, dict[str, Any]] = {}
 
     async def async_fetch(
         self,
@@ -99,11 +99,11 @@ class _IconsCache:
         components: set[str],
     ) -> list[dict[str, dict[str, Any]]]:
         """Load resources into the cache."""
-        if components_to_load := components - self.loaded:
+        if components_to_load := components - self._loaded:
             await self._async_load(components_to_load)
 
         return [
-            self.cache.get(component, {}).get(category, {}) for component in components
+            self._cache.get(component, {}).get(category, {}) for component in components
         ]
 
     async def _async_load(self, components: set[str]) -> None:
@@ -125,7 +125,7 @@ class _IconsCache:
 
         self._build_category_cache(components, icons)
 
-        self.loaded.update(components)
+        self._loaded.update(components)
 
     @callback
     def _build_category_cache(
@@ -142,7 +142,7 @@ class _IconsCache:
         for category in categories:
             new_resources = build_resources(icons, components, category)
             for component, resource in new_resources.items():
-                category_cache: dict[str, Any] = self.cache.setdefault(
+                category_cache: dict[str, Any] = self._cache.setdefault(
                     component, {}
                 ).setdefault(category, {})
 
