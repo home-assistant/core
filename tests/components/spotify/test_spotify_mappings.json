@@ -1,0 +1,62 @@
+{
+  "clear-night": {
+    "warm": "0JQ5DAqbMKFzHmL4tf05da",
+    "cold": "0JQ5DAqbMKFAJ5xb0fwo9m"
+  },
+  "cloudy": {
+    "warm": "0JQ5DAqbMKFCWjUTdzaG0e",
+    "cold": "0JQ5DAqbMKFQiK2EHwyjcU"
+  },
+  "fog": {
+    "warm": "0JQ5DAqbMKFFzDl7qN9Apr",
+    "cold": "0JQ5DAqbMKFLjmiZRss79w"
+  },
+  "hail": {
+    "warm": "0JQ5DAqbMKFDXXwE9BDJAr",
+    "cold": "0JQ5DAqbMKFDkd668ypn6O"
+  },
+  "lightning": {
+    "warm": "0JQ5DAqbMKFA6SOHvT3gck",
+    "cold": "0JQ5DAqbMKFPrEiAOxgac3"
+  },
+  "lightning-rainy": {
+    "warm": "0JQ5DAqbMKFHOzuVTgTizF",
+    "cold": "0JQ5DAqbMKFRieVZLLoo9m"
+  },
+  "partlycloudy": {
+    "warm": "0JQ5DAqbMKFAQy4HL4XU2D",
+    "cold": "0JQ5DAqbMKFy78wprEpAjl"
+  },
+  "pouring": {
+    "warm": "0JQ5DAqbMKFAXlCG6QvYQ4",
+    "cold": "0JQ5DAqbMKFCuoRTxhYWow"
+  },
+  "rainy": {
+    "warm": "0JQ5DAqbMKFAJ5xb0fwo9m",
+    "cold": "0JQ5DAqbMKFRieVZLLoo9m"
+  },
+  "snowy": {
+    "warm": "0JQ5DAqbMKFFoimhOqWzLB",
+    "cold": "0JQ5DAqbMKFLb2EqgLtpjC"
+  },
+  "snowy-rainy": {
+    "warm": "0JQ5DAqbMKFCWjUTdzaG0e",
+    "cold": "0JQ5DAqbMKFPrEiAOxgac3"
+  },
+  "sunny": {
+    "warm": "0JQ5DAqbMKFEC4WFtoNRpw",
+    "cold": "0JQ5DAqbMKFAUsdyVjCQuL"
+  },
+  "windy": {
+    "warm": "0JQ5DAqbMKFAQy4HL4XU2D",
+    "cold": "0JQ5DAqbMKFLjmiZRss79w"
+  },
+  "windy-variant": {
+    "warm": "0JQ5DAqbMKFAQy4HL4XU2D",
+    "cold": "0JQ5DAqbMKFLjmiZRss79w"
+  },
+  "exceptional": {
+    "warm": "0JQ5DAqbMKFPw634sFwguI",
+    "cold": "0JQ5DAqbMKFPw634sFwguI"
+  }
+}
