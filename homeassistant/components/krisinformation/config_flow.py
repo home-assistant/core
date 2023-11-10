@@ -7,19 +7,31 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+)
 
-from .const import DOMAIN
+from .const import CONF_COUNTY, COUNTY_CODES, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        vol.Required(CONF_COUNTY): SelectSelector(
+            SelectSelectorConfig(
+                options=sorted(COUNTY_CODES.values()),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_COUNTY,
+            )
+        ),
     }
 )
 
@@ -41,24 +53,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
 
-    hub = PlaceholderHub(data["host"])
-
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
+    if not data[CONF_COUNTY]:
+        raise InvalidCounty
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": data[CONF_NAME]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,10 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
+            except InvalidCounty:
+                errors["base"] = "invalid_county"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -93,5 +91,5 @@ class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+class InvalidCounty(HomeAssistantError):
+    """Error to indicate there is invalid county."""
