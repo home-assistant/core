@@ -14,7 +14,7 @@ from homeassistant.components.spotify.search_string_generator import (
 def spotify_mapping_data():
     """Fixture for creating a WeatherPlaylistMapper instance with a valid mapping file."""
     with open(
-        "tests/components/spotify/test_spotify_mappings.json", encoding="utf-8"
+        "homeassistant/components/spotify/spotify_mappings.json", encoding="utf-8"
     ) as file:
         return json.load(file)
 
@@ -23,9 +23,9 @@ def spotify_mapping_data():
 @pytest.fixture
 def mapper(spotify_mapping_data):
     """Fixture for initializing the WeatherPlaylistMapper with test data."""
-    # Ensure the file has the latest test data.
+    # Write the test data to a test file
     with open(
-        "homeassistant/components/spotify/test_spotify_mappings.json",
+        "tests/components/spotify/test_spotify_mappings.json",
         "w",
         encoding="utf-8",
     ) as file:
