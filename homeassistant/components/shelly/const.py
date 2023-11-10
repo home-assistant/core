@@ -186,3 +186,6 @@ OTA_BEGIN = "ota_begin"
 OTA_ERROR = "ota_error"
 OTA_PROGRESS = "ota_progress"
 OTA_SUCCESS = "ota_success"
+
+GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
+GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"

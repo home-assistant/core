@@ -23,7 +23,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
+from .const import (
+    CONF_SLEEP_PERIOD,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -82,7 +90,7 @@ REST_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        release_url="https://shelly-api-docs.shelly.cloud/gen1/#changelog",
+        release_url=GEN1_RELEASE_URL,
     ),
     "fwupdate_beta": RestUpdateDescription(
         name="Beta firmware update",
@@ -104,7 +112,7 @@ RPC_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        release_url="https://shelly-api-docs.shelly.cloud/gen2/changelog/",
+        release_url=GEN2_RELEASE_URL,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta firmware update",

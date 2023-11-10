@@ -5,7 +5,11 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
+)
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -76,10 +80,7 @@ async def test_block_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is True
-    assert (
-        state.attributes[ATTR_RELEASE_URL]
-        == "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
-    )
+    assert state.attributes[ATTR_RELEASE_URL] == GEN1_RELEASE_URL
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2")
     await mock_rest_update(hass, freezer)
@@ -276,10 +277,7 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] == 0
-    assert (
-        state.attributes[ATTR_RELEASE_URL]
-        == "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
-    )
+    assert state.attributes[ATTR_RELEASE_URL] == GEN2_RELEASE_URL
 
     inject_rpc_device_event(
         monkeypatch,
@@ -351,10 +349,7 @@ async def test_rpc_sleeping_update(
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
-    assert (
-        state.attributes[ATTR_RELEASE_URL]
-        == "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
-    )
+    assert state.attributes[ATTR_RELEASE_URL] == GEN2_RELEASE_URL
 
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2")
     mock_rpc_device.mock_update()
