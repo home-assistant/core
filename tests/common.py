@@ -67,7 +67,10 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
@@ -1443,3 +1446,17 @@ def async_get_persistent_notifications(
 ) -> dict[str, pn.Notification]:
     """Get the current persistent notifications."""
     return pn._async_get_or_create_notifications(hass)
+
+
+def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
+    """Mock a signal the cloud disconnected."""
+    from homeassistant.components.cloud import (
+        SIGNAL_CLOUD_CONNECTION_STATE,
+        CloudConnectionState,
+    )
+
+    if connected:
+        state = CloudConnectionState.CLOUD_CONNECTED
+    else:
+        state = CloudConnectionState.CLOUD_DISCONNECTED
+    async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)

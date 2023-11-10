@@ -19,7 +19,7 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
@@ -343,6 +343,13 @@ async def test_call_service_not_found(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["message"] == "Service domain_test.test_service not found."
+    assert msg["error"]["translation_placeholders"] == {
+        "domain": "domain_test",
+        "service": "test_service",
+    }
+    assert msg["error"]["translation_key"] == "service_not_found"
+    assert msg["error"]["translation_domain"] == "homeassistant"
 
 
 async def test_call_service_child_not_found(
@@ -370,6 +377,18 @@ async def test_call_service_child_not_found(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_HOME_ASSISTANT_ERROR
+    assert (
+        msg["error"]["message"] == "Service non.existing called service "
+        "domain_test.test_service which was not found."
+    )
+    assert msg["error"]["translation_placeholders"] == {
+        "domain": "non",
+        "service": "existing",
+        "child_domain": "domain_test",
+        "child_service": "test_service",
+    }
+    assert msg["error"]["translation_key"] == "child_service_not_found"
+    assert msg["error"]["translation_domain"] == "websocket_api"
 
 
 async def test_call_service_schema_validation_error(
@@ -450,9 +469,25 @@ async def test_call_service_error(
 
     @callback
     def ha_error_call(_):
-        raise HomeAssistantError("error_message")
+        raise HomeAssistantError(
+            "error_message",
+            translation_domain="test",
+            translation_key="custom_error",
+            translation_placeholders={"option": "bla"},
+        )
 
     hass.services.async_register("domain_test", "ha_error", ha_error_call)
+
+    @callback
+    def service_error_call(_):
+        raise ServiceValidationError(
+            "error_message",
+            translation_domain="test",
+            translation_key="custom_error",
+            translation_placeholders={"option": "bla"},
+        )
+
+    hass.services.async_register("domain_test", "service_error", service_error_call)
 
     async def unknown_error_call(_):
         raise ValueError("value_error")
@@ -474,10 +509,32 @@ async def test_call_service_error(
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == "error_message"
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
+    assert msg["error"]["translation_key"] == "custom_error"
+    assert msg["error"]["translation_domain"] == "test"
 
     await websocket_client.send_json(
         {
             "id": 6,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "service_error",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
+    assert msg["error"]["code"] == "service_validation_error"
+    assert msg["error"]["message"] == "Validation error: error_message"
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
+    assert msg["error"]["translation_key"] == "custom_error"
+    assert msg["error"]["translation_domain"] == "test"
+
+    await websocket_client.send_json(
+        {
+            "id": 7,
             "type": "call_service",
             "domain": "domain_test",
             "service": "unknown_error",
@@ -485,7 +542,7 @@ async def test_call_service_error(
     )
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 6
+    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"

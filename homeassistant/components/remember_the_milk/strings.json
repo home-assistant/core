@@ -16,7 +16,7 @@
     },
     "complete_task": {
       "name": "Complete task",
-      "description": "Completes a tasks that was privously created.",
+      "description": "Completes a task that was previously created.",
       "fields": {
         "id": {
           "name": "ID",

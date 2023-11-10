@@ -31,10 +31,12 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
+DATA_OLD_SERVER_LOG_LEVEL = "old_server_log_level"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
 LOGGER = logging.getLogger(__package__)
+LIB_LOGGER = logging.getLogger("zwave_js_server")
 
 # constants extra state attributes
 ATTR_RESERVED_VALUES = "reserved_values"  # ConfigurationValue number entities
@@ -70,6 +72,8 @@ ATTR_STATUS = "status"
 ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
 ATTR_EVENT_TYPE_LABEL = "event_type_label"
 ATTR_DATA_TYPE_LABEL = "data_type_label"
+ATTR_NOTIFICATION_TYPE = "notification_type"
+ATTR_NOTIFICATION_EVENT = "notification_event"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
@@ -90,6 +94,7 @@ SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 SERVICE_INVOKE_CC_API = "invoke_cc_api"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"
+SERVICE_REFRESH_NOTIFICATIONS = "refresh_notifications"
 SERVICE_REFRESH_VALUE = "refresh_value"
 SERVICE_RESET_METER = "reset_meter"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
@@ -101,6 +106,8 @@ ATTR_NODES = "nodes"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
+ATTR_VALUE_SIZE = "value_size"
+ATTR_VALUE_FORMAT = "value_format"
 # refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 # multicast

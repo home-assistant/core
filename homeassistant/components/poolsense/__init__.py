@@ -7,10 +7,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 from .coordinator import PoolSenseDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -51,16 +49,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-class PoolSenseEntity(CoordinatorEntity):
-    """Implements a common class elements representing the PoolSense component."""
-
-    _attr_attribution = ATTRIBUTION
-
-    def __init__(self, coordinator, email, description: EntityDescription) -> None:
-        """Initialize poolsense sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_name = f"PoolSense {description.name}"
-        self._attr_unique_id = f"{email}-{description.key}"

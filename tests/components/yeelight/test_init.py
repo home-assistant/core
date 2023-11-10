@@ -641,5 +641,5 @@ async def test_async_setup_retries_with_wrong_device(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert (
         "Unexpected device found at 192.168.1.239; expected 0x0000000000999999, "
-        "found 0x000000000015243f; Retrying in background"
+        "found 0x000000000015243f; Retrying in"
     ) in caplog.text

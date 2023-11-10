@@ -1,8 +1,9 @@
 """Template platform that aggregates meteorological data."""
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass
 from functools import partial
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 import voluptuous as vol
 
@@ -22,18 +23,27 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
+    DOMAIN as WEATHER_DOMAIN,
     ENTITY_ID_FORMAT,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_TEMPERATURE_UNIT,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
@@ -42,7 +52,9 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
+from .coordinator import TriggerUpdateCoordinator
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
+from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
     set().union(Forecast.__annotations__.keys())
@@ -92,40 +104,38 @@ CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
 CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 
+WEATHER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.template,
+        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
+        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
+        vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
+    }
+)
+
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_FORECAST_TEMPLATE),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
-            vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
-            vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
-            vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
-            vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
-            vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
-            vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
-            vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
-            vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
-            vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
-            vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
-            vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(
-                TemperatureConverter.VALID_UNITS
-            ),
-            vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
-            vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
-            vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-            vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(
-                DistanceConverter.VALID_UNITS
-            ),
-            vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
-            vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
-            vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
-        }
-    ),
+    PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
 )
 
 
@@ -136,6 +146,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template weather."""
+    if discovery_info and "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerWeatherEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
 
     config = rewrite_common_legacy_to_modern_conf(config)
     unique_id = config.get(CONF_UNIQUE_ID)
@@ -452,3 +468,248 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 )
             continue
         return result
+
+
+@dataclass(kw_only=True)
+class WeatherExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    last_apparent_temperature: float | None
+    last_cloud_coverage: int | None
+    last_dew_point: float | None
+    last_humidity: float | None
+    last_ozone: float | None
+    last_pressure: float | None
+    last_temperature: float | None
+    last_visibility: float | None
+    last_wind_bearing: float | str | None
+    last_wind_gust_speed: float | None
+    last_wind_speed: float | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the event data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored event state from a dict."""
+        try:
+            return cls(
+                last_apparent_temperature=restored["last_apparent_temperature"],
+                last_cloud_coverage=restored["last_cloud_coverage"],
+                last_dew_point=restored["last_dew_point"],
+                last_humidity=restored["last_humidity"],
+                last_ozone=restored["last_ozone"],
+                last_pressure=restored["last_pressure"],
+                last_temperature=restored["last_temperature"],
+                last_visibility=restored["last_visibility"],
+                last_wind_bearing=restored["last_wind_bearing"],
+                last_wind_gust_speed=restored["last_wind_gust_speed"],
+                last_wind_speed=restored["last_wind_speed"],
+            )
+        except KeyError:
+            return None
+
+
+class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
+    """Sensor entity based on trigger data."""
+
+    domain = WEATHER_DOMAIN
+    extra_template_keys = (
+        CONF_CONDITION_TEMPLATE,
+        CONF_TEMPERATURE_TEMPLATE,
+        CONF_HUMIDITY_TEMPLATE,
+    )
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, coordinator, config)
+        self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
+        self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
+        self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
+        self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
+        self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
+
+        self._attr_supported_features = 0
+        if config.get(CONF_FORECAST_DAILY_TEMPLATE):
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY
+        if config.get(CONF_FORECAST_HOURLY_TEMPLATE):
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
+        if config.get(CONF_FORECAST_TWICE_DAILY_TEMPLATE):
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
+
+        for key in (
+            CONF_APPARENT_TEMPERATURE_TEMPLATE,
+            CONF_CLOUD_COVERAGE_TEMPLATE,
+            CONF_DEW_POINT_TEMPLATE,
+            CONF_FORECAST_DAILY_TEMPLATE,
+            CONF_FORECAST_HOURLY_TEMPLATE,
+            CONF_FORECAST_TWICE_DAILY_TEMPLATE,
+            CONF_OZONE_TEMPLATE,
+            CONF_PRESSURE_TEMPLATE,
+            CONF_VISIBILITY_TEMPLATE,
+            CONF_WIND_BEARING_TEMPLATE,
+            CONF_WIND_GUST_SPEED_TEMPLATE,
+            CONF_WIND_SPEED_TEMPLATE,
+        ):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        if (
+            (state := await self.async_get_last_state())
+            and state.state is not None
+            and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and (weather_data := await self.async_get_last_weather_data())
+        ):
+            self._rendered[
+                CONF_APPARENT_TEMPERATURE_TEMPLATE
+            ] = weather_data.last_apparent_temperature
+            self._rendered[
+                CONF_CLOUD_COVERAGE_TEMPLATE
+            ] = weather_data.last_cloud_coverage
+            self._rendered[CONF_CONDITION_TEMPLATE] = state.state
+            self._rendered[CONF_DEW_POINT_TEMPLATE] = weather_data.last_dew_point
+            self._rendered[CONF_HUMIDITY_TEMPLATE] = weather_data.last_humidity
+            self._rendered[CONF_OZONE_TEMPLATE] = weather_data.last_ozone
+            self._rendered[CONF_PRESSURE_TEMPLATE] = weather_data.last_pressure
+            self._rendered[CONF_TEMPERATURE_TEMPLATE] = weather_data.last_temperature
+            self._rendered[CONF_VISIBILITY_TEMPLATE] = weather_data.last_visibility
+            self._rendered[CONF_WIND_BEARING_TEMPLATE] = weather_data.last_wind_bearing
+            self._rendered[
+                CONF_WIND_GUST_SPEED_TEMPLATE
+            ] = weather_data.last_wind_gust_speed
+            self._rendered[CONF_WIND_SPEED_TEMPLATE] = weather_data.last_wind_speed
+
+    @property
+    def condition(self) -> str | None:
+        """Return the current condition."""
+        return self._rendered.get(CONF_CONDITION_TEMPLATE)
+
+    @property
+    def native_temperature(self) -> float | None:
+        """Return the temperature."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_TEMPERATURE_TEMPLATE)
+        )
+
+    @property
+    def humidity(self) -> float | None:
+        """Return the humidity."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_HUMIDITY_TEMPLATE)
+        )
+
+    @property
+    def native_wind_speed(self) -> float | None:
+        """Return the wind speed."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_WIND_SPEED_TEMPLATE)
+        )
+
+    @property
+    def wind_bearing(self) -> float | str | None:
+        """Return the wind bearing."""
+        return vol.Any(vol.Coerce(float), vol.Coerce(str), None)(
+            self._rendered.get(CONF_WIND_BEARING_TEMPLATE)
+        )
+
+    @property
+    def ozone(self) -> float | None:
+        """Return the ozone level."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_OZONE_TEMPLATE),
+        )
+
+    @property
+    def native_visibility(self) -> float | None:
+        """Return the visibility."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_VISIBILITY_TEMPLATE)
+        )
+
+    @property
+    def native_pressure(self) -> float | None:
+        """Return the air pressure."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_PRESSURE_TEMPLATE)
+        )
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_WIND_GUST_SPEED_TEMPLATE)
+        )
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_CLOUD_COVERAGE_TEMPLATE)
+        )
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_DEW_POINT_TEMPLATE)
+        )
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_APPARENT_TEMPERATURE_TEMPLATE)
+        )
+
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return vol.Any(vol.Coerce(list), None)(
+            self._rendered.get(CONF_FORECAST_DAILY_TEMPLATE)
+        )
+
+    async def async_forecast_hourly(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return vol.Any(vol.Coerce(list), None)(
+            self._rendered.get(CONF_FORECAST_HOURLY_TEMPLATE)
+        )
+
+    async def async_forecast_twice_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return vol.Any(vol.Coerce(list), None)(
+            self._rendered.get(CONF_FORECAST_TWICE_DAILY_TEMPLATE)
+        )
+
+    @property
+    def extra_restore_state_data(self) -> WeatherExtraStoredData:
+        """Return weather specific state data to be restored."""
+        return WeatherExtraStoredData(
+            last_apparent_temperature=self._rendered.get(
+                CONF_APPARENT_TEMPERATURE_TEMPLATE
+            ),
+            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE_TEMPLATE),
+            last_dew_point=self._rendered.get(CONF_DEW_POINT_TEMPLATE),
+            last_humidity=self._rendered.get(CONF_HUMIDITY_TEMPLATE),
+            last_ozone=self._rendered.get(CONF_OZONE_TEMPLATE),
+            last_pressure=self._rendered.get(CONF_PRESSURE_TEMPLATE),
+            last_temperature=self._rendered.get(CONF_TEMPERATURE_TEMPLATE),
+            last_visibility=self._rendered.get(CONF_VISIBILITY_TEMPLATE),
+            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING_TEMPLATE),
+            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED_TEMPLATE),
+            last_wind_speed=self._rendered.get(CONF_WIND_SPEED_TEMPLATE),
+        )
+
+    async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:
+        """Restore weather specific state data."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return WeatherExtraStoredData.from_dict(restored_last_extra_data.as_dict())

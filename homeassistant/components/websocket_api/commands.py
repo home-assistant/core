@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
@@ -21,6 +22,7 @@ from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
@@ -52,9 +54,11 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .messages import construct_event_message, construct_result_message
+from .messages import construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -91,6 +95,7 @@ def pong_message(iden: int) -> dict[str, Any]:
     return {"id": iden, "type": "pong"}
 
 
+@callback
 def _forward_events_check_permissions(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     user: User,
@@ -108,6 +113,7 @@ def _forward_events_check_permissions(
     send_message(messages.cached_event_message(msg_id, event))
 
 
+@callback
 def _forward_events_unconditional(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     msg_id: int,
@@ -128,27 +134,26 @@ def handle_subscribe_events(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe events command."""
-    # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from .permissions import SUBSCRIBE_ALLOWLIST
-
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
+        _LOGGER.error(
+            "Refusing to allow %s to subscribe to event %s",
+            connection.user.name,
+            event_type,
+        )
+        raise Unauthorized(user_id=connection.user.id)
 
     if event_type == EVENT_STATE_CHANGED:
-        forward_events = callback(
-            partial(
-                _forward_events_check_permissions,
-                connection.send_message,
-                connection.user,
-                msg["id"],
-            )
+        forward_events = partial(
+            _forward_events_check_permissions,
+            connection.send_message,
+            connection.user,
+            msg["id"],
         )
     else:
-        forward_events = callback(
-            partial(_forward_events_unconditional, connection.send_message, msg["id"])
+        forward_events = partial(
+            _forward_events_unconditional, connection.send_message, msg["id"]
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
@@ -234,14 +239,53 @@ async def handle_call_service(
         connection.send_result(msg["id"], {"context": context})
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
-            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
+            connection.send_error(
+                msg["id"],
+                const.ERR_NOT_FOUND,
+                f"Service {err.domain}.{err.service} not found.",
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            )
         else:
-            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+            # The called service called another service which does not exist
+            connection.send_error(
+                msg["id"],
+                const.ERR_HOME_ASSISTANT_ERROR,
+                f"Service {err.domain}.{err.service} called service "
+                f"{msg['domain']}.{msg['service']} which was not found.",
+                translation_domain=const.DOMAIN,
+                translation_key="child_service_not_found",
+                translation_placeholders={
+                    "domain": err.domain,
+                    "service": err.service,
+                    "child_domain": msg["domain"],
+                    "child_service": msg["service"],
+                },
+            )
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            f"Validation error: {err}",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
-        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
@@ -297,10 +341,12 @@ def _send_handle_get_states_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
-    joined_states = ",".join(serialized_states)
-    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
+    connection.send_message(
+        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+    )
 
 
+@callback
 def _forward_entity_changes(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
@@ -340,14 +386,12 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
-        callback(
-            partial(
-                _forward_entity_changes,
-                connection.send_message,
-                entity_ids,
-                connection.user,
-                msg["id"],
-            )
+        partial(
+            _forward_entity_changes,
+            connection.send_message,
+            entity_ids,
+            connection.user,
+            msg["id"],
         ),
         run_immediately=True,
     )
@@ -387,9 +431,8 @@ def _send_handle_entities_init_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle entities init response."""
-    joined_states = ",".join(serialized_states)
     connection.send_message(
-        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
+        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
     )
 
 

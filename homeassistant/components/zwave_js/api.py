@@ -82,7 +82,6 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
-    async_update_data_collection_preference,
     get_device_id,
 )
 
@@ -448,6 +447,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
+    websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -490,6 +490,7 @@ async def websocket_network_status(
             "state": "connected" if client.connected else "disconnected",
             "driver_version": client_version_info.driver_version,
             "server_version": client_version_info.server_version,
+            "server_logging_enabled": client.server_logging_enabled,
         },
         "controller": {
             "home_id": controller.home_id,
@@ -1875,7 +1876,10 @@ async def websocket_update_data_collection_preference(
 ) -> None:
     """Update preference for data collection and enable/disable collection."""
     opted_in = msg[OPTED_IN]
-    async_update_data_collection_preference(hass, entry, opted_in)
+    if entry.data.get(CONF_DATA_COLLECTION_OPTED_IN) != opted_in:
+        new_data = entry.data.copy()
+        new_data[CONF_DATA_COLLECTION_OPTED_IN] = opted_in
+        hass.config_entries.async_update_entry(entry, data=new_data)
 
     if opted_in:
         await async_enable_statistics(driver)
@@ -2438,3 +2442,45 @@ async def websocket_subscribe_node_statistics(
             },
         )
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/hard_reset_controller",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_hard_reset_controller(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Hard reset controller."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+        unsubs.clear()
+
+    @callback
+    def _handle_device_added(device: dr.DeviceEntry) -> None:
+        """Handle device is added."""
+        if entry.entry_id in device.config_entries:
+            connection.send_result(msg[ID], device.id)
+            async_cleanup()
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        async_dispatcher_connect(
+            hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
+        )
+    ]
+    await driver.async_hard_reset()
