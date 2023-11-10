@@ -74,8 +74,14 @@ class CrisisAlerterSensor(SensorEntity):
         """Get the latest alerts."""
         try:
             response = self._crisis_alerter.news()
-            if len(response) > 0:
+            if len(response) > 0 and response[0]["PushMessage"]:
                 self._state = response[0]["PushMessage"]
+            else:
+                self._state = (
+                    "No alerts"
+                    if self._crisis_alerter.language == "en"
+                    else "Inga larm"
+                )
         except Error as error:
             _LOGGER.error("Error fetching data: %s", error)
             self._state = "Unavailable"
