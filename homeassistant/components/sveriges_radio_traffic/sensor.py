@@ -23,24 +23,21 @@ class TrafficSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = "Sveriges Radio Traffic"
-    # _attr_unique_id = format_mac
+    _attr_state_class = None
 
     def __init__(self) -> None:
         """Initialize the sensor."""
         # do stuff
+        self._attr_native_value = "Allt är kanon!"
+        self._attr_auto_update = True
+        self._attr_should_poll = True
 
-        def update(self) -> None:
-            """Fetch new state data for the sensor.
+    def update(self) -> None:
+        """Fetch new state data for the sensor.
 
-            This is the only method that should fetch new data for Home Assistant.
-            """
-            self._attr_native_value = 29
-
-        # @property
-        # def native_value(self) -> StateType:
-        #    """Does stuff."""
-        #    return 24
-        #    # return "stuff is cool :^)"
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        self._attr_native_value = "Stockholm-Västerås. Risk för förseningar. Reducerad spårkapacitet vid Bålsta."
 
 
 # def setup_platform(
