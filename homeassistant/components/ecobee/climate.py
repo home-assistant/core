@@ -349,7 +349,9 @@ class Thermostat(ClimateEntity):
         if len(self._attr_hvac_modes) == 2:
             self._attr_hvac_modes.insert(0, HVACMode.HEAT_COOL)
         self._attr_hvac_modes.append(HVACMode.OFF)
-        self._sensors = [d.get("name", None) for d in thermostat.get("remoteSensors")]
+        self._sensors = [
+            d.get("name", None) for d in thermostat.get("remoteSensors", [])
+        ]
         self._preset_modes = {
             comfort["climateRef"]: comfort["name"]
             for comfort in self.thermostat["program"]["climates"]
@@ -756,8 +758,9 @@ class Thermostat(ClimateEntity):
         device_registry = dr.async_get(self.hass)
         sensor_names: list[str] = []
         for sensor in sensors:
-            sensor_name = device_registry.async_get(sensor).name
-            sensor_names.append(sensor_name)
+            sensor_registry = device_registry.async_get(sensor)
+            if sensor_registry and sensor_registry.name:
+                sensor_names.append(sensor_registry.name)
 
         # Ensure sensors provided are available for thermostat.
         if not set(sensor_names).issubset(set(self._sensors)):
