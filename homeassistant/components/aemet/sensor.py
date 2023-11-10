@@ -1,7 +1,11 @@
 """Support for the AEMET OpenData service."""
+# pylint: disable=unnecessary-lambda
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Final
 
 from aemet_opendata.const import (
@@ -97,6 +101,7 @@ class AemetSensorEntityDescription(SensorEntityDescription):
     """A class that describes AEMET OpenData sensor entities."""
 
     keys: list[str] | None = None
+    value_fn: Callable[[str], datetime | float | int | str | None] = lambda value: value
 
 
 FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
@@ -104,12 +109,14 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         key=f"forecast-daily-{ATTR_API_FORECAST_CONDITION}",
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_CONDITION],
         name="Daily Forecast Condition",
+        value_fn=lambda value: CONDITIONS_MAP.get(value),
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_CONDITION}",
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_CONDITION],
         name="Hourly Forecast Condition",
+        value_fn=lambda value: CONDITIONS_MAP.get(value),
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -169,6 +176,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
         name="Daily Forecast Time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda value: dt_util.parse_datetime(value),
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -176,6 +184,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
         name="Hourly Forecast Time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda value: dt_util.parse_datetime(value),
     ),
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_WIND_BEARING}",
@@ -221,6 +230,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         key=ATTR_API_CONDITION,
         keys=[AOD_WEATHER, AOD_CONDITION],
         name="Condition",
+        value_fn=lambda value: CONDITIONS_MAP.get(value),
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_HUMIDITY,
@@ -281,6 +291,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_STATION, AOD_TIMESTAMP],
         name="Station timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda value: dt_util.parse_datetime(value),
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_STORM_PROB,
@@ -320,6 +331,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP],
         name="Town timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda value: dt_util.parse_datetime(value),
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_WIND_BEARING,
@@ -396,8 +408,4 @@ class AemetSensor(AemetEntity, SensorEntity):
     def native_value(self):
         """Return the state of the device."""
         value = self.get_aemet_value(self.entity_description.keys)
-        if self.entity_description.keys[-1] == AOD_CONDITION:
-            value = CONDITIONS_MAP.get(value)
-        elif self.entity_description.keys[-1] == AOD_TIMESTAMP:
-            value = dt_util.parse_datetime(value)
-        return value
+        return self.entity_description.value_fn(value)
