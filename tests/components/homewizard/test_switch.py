@@ -26,6 +26,28 @@ pytestmark = [
 ]
 
 
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_ids"),
+    [
+        (
+            "HWE-WTR",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+                "switch.device_cloud_connection",
+            ],
+        ),
+    ],
+)
+async def test_entities_not_created_for_device(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+) -> None:
+    """Ensures entities for a specific device are not created."""
+    for entity_id in entity_ids:
+        assert not hass.states.get(entity_id)
+
+
 @pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
 @pytest.mark.parametrize(
     ("entity_id", "method", "parameter"),

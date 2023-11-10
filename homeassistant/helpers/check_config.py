@@ -151,7 +151,9 @@ async def async_check_ha_config_file(  # noqa: C901
         core_config = CORE_CONFIG_SCHEMA(core_config)
         result[CONF_CORE] = core_config
     except vol.Invalid as err:
-        result.add_error(err, CONF_CORE, core_config)
+        result.add_error(
+            _format_config_error(err, CONF_CORE, core_config)[0], CONF_CORE, core_config
+        )
         core_config = {}
 
     # Merge packages
@@ -241,7 +243,7 @@ async def async_check_ha_config_file(  # noqa: C901
             try:
                 p_validated = component_platform_schema(p_config)
             except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, p_config)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -277,7 +279,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 try:
                     p_validated = platform_schema(p_validated)
                 except vol.Invalid as ex:
-                    _comp_error(ex, f"{domain}.{p_name}", p_validated)
+                    _comp_error(ex, f"{domain}.{p_name}", p_config)
                     continue
 
             platforms.append(p_validated)

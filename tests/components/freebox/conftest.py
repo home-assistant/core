@@ -58,7 +58,9 @@ def init_mock_router(service_mock, bridge_mode):
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
-    with patch("homeassistant.components.freebox.router.Path"):
+    with patch("homeassistant.components.freebox.router.Path"), patch(
+        "homeassistant.components.freebox.router.os.makedirs"
+    ):
         yield
 
 

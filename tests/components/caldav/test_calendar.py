@@ -365,7 +365,7 @@ def _mock_calendar(name: str, supported_components: list[str] | None = None) -> 
     calendar = Mock()
     events = []
     for idx, event in enumerate(EVENTS):
-        events.append(Event(None, "%d.ics" % idx, event, calendar, str(idx)))
+        events.append(Event(None, f"{idx}.ics", event, calendar, str(idx)))
     if supported_components is None:
         supported_components = ["VEVENT"]
     calendar.search = MagicMock(return_value=events)
