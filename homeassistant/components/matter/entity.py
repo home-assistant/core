@@ -38,7 +38,6 @@ class MatterEntityDescription(EntityDescription):
 class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -70,6 +69,7 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
+        self._attr_should_poll = entity_info.should_poll
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -112,10 +112,28 @@ class MatterEntity(Entity):
         for unsub in self._unsubscribes:
             unsub()
 
+    async def async_update(self) -> None:
+        """Call when the entity needs to be updated."""
+        if not self._attr_should_poll:
+            return
+        # manually poll/refresh the primary value
+        await self.matter_client.refresh_attribute(
+            self._endpoint.node.node_id,
+            self.get_matter_attribute_path(self._entity_info.primary_attribute),
+        )
+        self._update_from_device()
+        self.async_write_ha_state()
+
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
-        """Call on update."""
+        """Call on update from the device."""
         self._attr_available = self._endpoint.node.available
+        if self._attr_should_poll:
+            # secondary attribute updated of a polled primary value
+            # enforce poll of the primary value
+            # debounce it a bit by calling it 2 seconds later
+            self.hass.loop.call_later(2, self.async_schedule_update_ha_state, True)
+            return
         self._update_from_device()
         self.async_write_ha_state()
 

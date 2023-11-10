@@ -35,6 +35,9 @@ class MatterEntityInfo:
     # entity class to use to instantiate the entity
     entity_class: type
 
+    # [optional] bool to specify if this primary value should be polled
+    should_poll: bool
+
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
         """Return Primary Attribute belonging to the entity."""
@@ -91,3 +94,6 @@ class MatterDiscoverySchema:
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
+
+    # [optional] bool to specify if this primary value should be polled
+    should_poll: bool = False

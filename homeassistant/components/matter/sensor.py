@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
+from matter_server.client.models.clusters import EveEnergyCluster
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,6 +22,10 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
+    UnitOfPower,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -134,5 +139,63 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorWatt",
+            device_class=SensorDeviceClass.POWER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.Watt,),
+        # Add OnOff Attribute as optional attribute to poll
+        # the primary value when the relay is toggled
+        optional_attributes=(clusters.OnOff.Attributes.OnOff,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorVoltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            suggested_display_precision=0,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.Voltage,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorWattAccumulated",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.WattAccumulated,),
+        should_poll=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveEnergySensorWattCurrent",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveEnergyCluster.Attributes.Current,),
+        # Add OnOff Attribute as optional attribute to poll
+        # the primary value when the relay is toggled
+        optional_attributes=(clusters.OnOff.Attributes.OnOff,),
+        should_poll=True,
     ),
 ]
