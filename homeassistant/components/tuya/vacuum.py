@@ -8,6 +8,7 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
+    STATE_ERROR,
     STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
@@ -149,6 +150,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self.device.status.get(DPCode.STATUS)
         ):
             return STATE_PAUSED
+        if (self.device.status.get(DPCode.FAULT) == True):
+            return STATE_ERROR
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
         return TUYA_STATUS_TO_HA.get(status)
