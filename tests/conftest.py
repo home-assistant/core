@@ -28,7 +28,6 @@ from aiohttp.web import Application
 import freezegun
 import multidict
 import pytest
-import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
@@ -126,21 +125,11 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_runtest_setup() -> None:
-    """Prepare pytest_socket and freezegun.
-
-    pytest_socket:
-    Throw if tests attempt to open sockets.
-
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
+    """Prepare freezegun.
 
     freezegun:
     Modified to include https://github.com/spulec/freezegun/pull/424
     """
-    pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    pytest_socket.disable_socket(allow_unix_socket=True)
-
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = HAFakeDatetime  # type: ignore[attr-defined]
 

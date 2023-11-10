@@ -423,6 +423,8 @@ norecursedirs = [
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
+# Options for pytest-socket allow_unix_socket is set to True because it's needed by asyncio.
+addopts = "--disable-socket --allow-unix-socket --allow-hosts=127.0.0.1"
 filterwarnings = [
     "error::sqlalchemy.exc.SAWarning",
 
