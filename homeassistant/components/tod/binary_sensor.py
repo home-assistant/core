@@ -234,13 +234,12 @@ class TodSensor(BinarySensorEntity):
             hour=target_time.hour, minute=target_time.minute
         )
         # The following call addresses missing time during DST jumps
-        a_date = dt_util.find_next_time_expression_time(
+        return dt_util.find_next_time_expression_time(
             tentative_new_date,
             dt_util.parse_time_expression("*", 0, 59),
             dt_util.parse_time_expression("*", 0, 59),
             dt_util.parse_time_expression("*", 0, 23),
         )
-        return a_date
 
     def _turn_to_next_day(self) -> None:
         """Turn to to the next day."""
