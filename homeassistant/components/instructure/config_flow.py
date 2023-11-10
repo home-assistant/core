@@ -11,16 +11,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from .api_wrapper import ApiWrapper
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+HOST_PREFIX = "host_prefix"
+ACCESS_TOKEN = "access_token"
 
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(HOST_PREFIX): str,
+        vol.Required(ACCESS_TOKEN): str,
     }
 )
 
@@ -31,13 +33,13 @@ class PlaceholderHub:
     TODO Remove this placeholder class and replace with things from your PyPI package.
     """
 
-    def __init__(self, host: str) -> None:
+    def __init__(self, host_prefix: str) -> None:
         """Initialize."""
-        self.host = host
+        self.host = f"https://{host_prefix}.instructure.com/api/v1"
 
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
+    async def authenticate(self, access_token: str) -> bool:
+        api = ApiWrapper(self.host, access_token)
+        return await api.async_test_authentication()
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -53,9 +55,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    hub = PlaceholderHub(data[HOST_PREFIX])
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data[ACCESS_TOKEN]):
         raise InvalidAuth
 
     # If you cannot connect:
@@ -64,7 +66,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": "Canvas"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

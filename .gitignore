@@ -1,3 +1,6 @@
+# Commented during development, should not be ignored
+.devcontainer/devcontainer.json
+
 /config
 config2/*
 
