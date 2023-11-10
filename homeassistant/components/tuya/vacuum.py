@@ -150,7 +150,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self.device.status.get(DPCode.STATUS)
         ):
             return STATE_PAUSED
-        if (self.device.status.get(DPCode.FAULT) == True):
+        if self.device.status.get(DPCode.FAULT):
             return STATE_ERROR
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
