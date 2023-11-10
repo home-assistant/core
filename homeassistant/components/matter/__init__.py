@@ -11,7 +11,6 @@ from matter_server.common.errors import MatterError, NodeCommissionFailed, NodeN
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.components.matter.models import MatterDeviceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
@@ -36,9 +35,27 @@ from .helpers import (
     get_node_from_device_entry,
     node_id_from_ha_device_id,
 )
+from .models import MatterDeviceInfo
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+
+@callback
+@cache
+def get_matter_device_info(
+    hass: HomeAssistant, device_id: str
+) -> MatterDeviceInfo | None:
+    """Return Matter device info or None if device does not exist."""
+    matter_client = get_matter(hass).matter_client
+    if node_id := node_id_from_ha_device_id(hass, device_id):
+        if node := matter_client.get_node(node_id):
+            return MatterDeviceInfo(
+                unique_id=node.device_info.uniqueID,
+                vendor_id=hex(node.device_info.vendorID),
+                product_id=hex(node.device_info.productID),
+            )
+    return None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -197,7 +214,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    node = await get_node_from_device_entry(hass, device_entry)
+    node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:
         return True
@@ -222,29 +239,12 @@ async def async_remove_config_entry_device(
 
 
 @callback
-@cache
-def get_matter_device_info(
-    hass: HomeAssistant, device_id: str
-) -> MatterDeviceInfo | None:
-    """Return Matter device info or None if device does not exist."""
-    matter_client = get_matter(hass).matter_client
-    if node_id := node_id_from_ha_device_id(hass, device_id):
-        if node := matter_client.get_node(node_id):
-            return MatterDeviceInfo(
-                unique_id=node.device_info.uniqueID,
-                vendor_id=hex(node.device_info.vendorID),
-                product_id=hex(node.device_info.productID),
-            )
-    return None
-
-
-@callback
 def _async_init_services(hass: HomeAssistant) -> None:
     """Init services."""
 
     async def open_commissioning_window(call: ServiceCall) -> None:
         """Open commissioning window on specific node."""
-        node_id = await node_id_from_ha_device_id(hass, call.data["device_id"])
+        node_id = node_id_from_ha_device_id(hass, call.data["device_id"])
 
         if node_id is None:
             raise HomeAssistantError("This is not a Matter device")

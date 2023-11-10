@@ -66,20 +66,20 @@ def get_device_id(
     return f"{operational_instance_id}-{postfix}"
 
 
-async def node_id_from_ha_device_id(
-    hass: HomeAssistant, ha_device_id: str
-) -> int | None:
+@callback
+def node_id_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> int | None:
     """Get node id from ha device id."""
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(ha_device_id)
     if device is None:
         return None
-    if node := await get_node_from_device_entry(hass, device):
+    if node := get_node_from_device_entry(hass, device):
         return node.node_id
     return None
 
 
-async def get_node_from_device_entry(
+@callback
+def get_node_from_device_entry(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> MatterNode | None:
     """Return MatterNode from device entry."""
