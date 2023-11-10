@@ -49,8 +49,8 @@ class InvalidCredential(OAuthError):
     """Error with an invalid credential that does not support device auth."""
 
 
-class DeviceAuth(AuthImplementation):
-    """OAuth implementation for Device Auth with callback to Web Auth."""
+class GoogleHybridAuth(AuthImplementation):
+    """OAuth implementation that supports both Web Auth (base class) and Device Auth."""
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""

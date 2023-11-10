@@ -18,8 +18,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import (
     DEVICE_AUTH_CREDS,
     AccessTokenAuthImpl,
-    DeviceAuth,
     DeviceFlow,
+    GoogleHybridAuth,
     InvalidCredential,
     OAuthError,
     async_create_device_flow,
@@ -40,7 +40,31 @@ _LOGGER = logging.getLogger(__name__)
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Google Calendars OAuth2 authentication."""
+    """Config flow to handle Google Calendars OAuth2 authentication.
+
+    Historically, the Google Calendar integration instructed users to use
+    Device Auth. Device Auth was considered easier to use since it did not
+    require users to configure a redirect URL. Device Auth is meant for
+    devices with limited input, such as a television.
+    https://developers.google.com/identity/protocols/oauth2/limited-input-device
+
+    Device Auth is limited to a small set of Google APIs (calendar is allowed)
+    and is considered less secure than Web Auth. It is not generally preferred
+    and may be limited/deprecated in the future similar to App/OOB Auth
+    https://developers.googleblog.com/2022/02/making-oauth-flows-safer.html
+
+    Web Auth is the preferred method by Home Assistant and Google, and a benefit
+    is that the same credentials may be used across many Google integrations in
+    Home Assistant. Web Auth is now easier for user to setup using my.home-assistant.io
+    redirect urls.
+
+    The Application Credentials integration does not currently record which type
+    of credentail the user entered (and if we ask the user, they may not know or may
+    make a mistake) so we try to determine the credential type automatically. This
+    implementation first attempts Device Auth by talking to the token API in the first
+    step of the device flow, then if that fails it will redirect using Web Auth.
+    There is not another explicit known way to check.
+    """
 
     DOMAIN = DOMAIN
 
@@ -49,9 +73,7 @@ class OAuth2FlowHandler(
         super().__init__()
         self._reauth_config_entry: config_entries.ConfigEntry | None = None
         self._device_flow: DeviceFlow | None = None
-        # We first attempt using device auth (which was recommended) with a
-        # fallback to web auth. We now prefer web auth since the credentials
-        # can be shared across Google integrations.
+        # First attempt is device auth, then fallback to web auth
         self._web_auth = False
 
     @property
@@ -97,8 +119,8 @@ class OAuth2FlowHandler(
             return self.async_show_progress_done(next_step_id="creation")
 
         if not self._device_flow:
-            _LOGGER.debug("Creating DeviceAuth flow")
-            if not isinstance(self.flow_impl, DeviceAuth):
+            _LOGGER.debug("Creating GoogleHybridAuth flow")
+            if not isinstance(self.flow_impl, GoogleHybridAuth):
                 _LOGGER.error(
                     "Unexpected OAuth implementation does not support device auth: %s",
                     self.flow_impl,
