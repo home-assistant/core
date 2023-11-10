@@ -61,12 +61,16 @@ class RpcUpdateDescription(
 ):
     """Class to describe a RPC update."""
 
+    release_url: str | None = None
+
 
 @dataclass
 class RestUpdateDescription(
     RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin
 ):
     """Class to describe a REST update."""
+
+    release_url: str | None = None
 
 
 REST_UPDATES: Final = {
@@ -78,6 +82,7 @@ REST_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+        release_url="https://shelly-api-docs.shelly.cloud/gen1/#changelog",
     ),
     "fwupdate_beta": RestUpdateDescription(
         name="Beta firmware update",
@@ -99,6 +104,7 @@ RPC_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
+        release_url="https://shelly-api-docs.shelly.cloud/gen2/changelog/",
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta firmware update",
@@ -156,11 +162,12 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self,
         block_coordinator: ShellyBlockCoordinator,
         attribute: str,
-        description: RestEntityDescription,
+        description: RestUpdateDescription,
     ) -> None:
         """Initialize update entity."""
         super().__init__(block_coordinator, attribute, description)
         self._in_progress_old_version: str | None = None
+        self._attr_release_url = description.release_url
 
     @property
     def installed_version(self) -> str | None:
@@ -225,11 +232,12 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcUpdateDescription,
     ) -> None:
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
         self._ota_in_progress: bool = False
+        self._attr_release_url = description.release_url
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -336,3 +344,8 @@ class RpcSleepingUpdateEntity(
             return None
 
         return self.last_state.attributes.get(ATTR_LATEST_VERSION)
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes."""
+        return self.entity_description.release_url
