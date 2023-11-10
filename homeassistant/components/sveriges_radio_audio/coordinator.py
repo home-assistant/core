@@ -5,24 +5,20 @@ import mimetypes
 from const import DOMAIN
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
-    BrowseMediaSource,
-    MediaSource,
-    MediaSourceItem,
-    PlayMedia,
-)
+from homeassistant.components.media_source.models import PlayMedia
 
 import xml.etree.ElementTree as ET
+import requests
 
-async def async_get_media_source(hass: HomeAssistant) -> Coordinator:
-    """Set up Coordinator."""
-    # Radio browser supports only a single config entry
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    return Coordinator(hass, entry)
+#async def async_get_media_source(hass: HomeAssistant) -> Coordinator:
+#    """Set up Coordinator."""
+#    # Radio browser supports only a single config entry
+#    entry = hass.config_entries.async_entries(DOMAIN)[0]
+#
+#    return Coordinator(hass, entry)
 
 class Coordinator():
     """Coordinator for Sveriges Radio."""
@@ -33,15 +29,32 @@ class Coordinator():
         self.hass = hass
         self.entry = entry
 
-    async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
+    async def async_resolve_media(self) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
-        url = 'http://api.sr.se/api/v2/'
+
+        #Code below gets all the channels and puts all the IDs in a list
+        url = 'http://api.sr.se/api/v2/channels'
         #https://http-live.sr.se/p1-mp3-128
-        response = ET.parse(requests.get(url)).getroot()
-        channelIds = list()
+        response = requests.get(url)
 
-        for channel in response.find('channels').iter():
-            channelIds.apppend(channel.tag)
+        if response.status_code != 200:
+            raise Unresolvable("API is broken, help!")
 
-        return PlayMedia(url, mimetypes.guess_type(url))
+        #channelIds = list()
+
+        response_xml = ET.fromstring(response.text)
+
+        #Use something like this to go through channels
+#        for channel in response_xml.find('channels'):
+#            channelIds.apppend(channel.attrib)
+
+        #Code below selects a specific channel
+
+        url_audio = response_xml.find('channels').find('channel').find('liveaudio').find('url').text
+
+        print(url_audio)
+
+
+
+        return PlayMedia(url_audio, mimetypes.guess_type(url_audio))
 
