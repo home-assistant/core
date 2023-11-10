@@ -151,9 +151,13 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             return STATE_PAUSED
         if self.device.status.get(DPCode.FAULT):
             return STATE_ERROR
-        if not (status := self.device.status.get(DPCode.STATUS)):
-            return None
-        return TUYA_STATUS_TO_HA.get(status)
+        if tuya_status := self.device.status.get(DPCode.STATUS):
+            if ha_status := TUYA_STATUS_TO_HA.get(tuya_status):
+                return ha_status
+        if tuya_mode := self.device.status.get(DPCode.MODE):
+            if ha_status := TUYA_STATUS_TO_HA.get(tuya_mode):
+                return ha_status
+        return None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
