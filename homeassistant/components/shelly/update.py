@@ -175,7 +175,6 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         """Initialize update entity."""
         super().__init__(block_coordinator, attribute, description)
         self._in_progress_old_version: str | None = None
-        self._attr_release_url = description.release_url
 
     @property
     def installed_version(self) -> str | None:
@@ -225,6 +224,14 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             self.coordinator.entry.async_start_reauth(self.hass)
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes."""
+        if self.coordinator.model in ("SHMOS-01", "SHMOS-02", "SHTRV-01"):
+            return None
+
+        return self.entity_description.release_url
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
