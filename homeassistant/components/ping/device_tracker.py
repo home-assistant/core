@@ -157,7 +157,7 @@ async def async_setup_entry(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingDeviceTracker(name, ping_cls(hass, host, count, privileged))], True
+        [PingDeviceTracker(name, ping_cls(hass, host, count, privileged))]
     )
 
 

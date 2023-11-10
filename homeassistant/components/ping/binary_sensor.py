@@ -90,7 +90,6 @@ def setup_sensor(
 
     async_add_entities(
         [PingBinarySensor(name, ping_cls(hass, host, count, privileged), config_entry)],
-        True,
     )
 
 
