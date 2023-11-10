@@ -23,12 +23,14 @@ def spotify_mapping_data():
 @pytest.fixture
 def mapper(spotify_mapping_data):
     """Fixture for initializing the WeatherPlaylistMapper with test data."""
-    # Write the test data to a temporary file
+    # Ensure the file has the latest test data.
     with open(
-        "tests/components/spotify/test_spotify_mappings.json", "w", encoding="utf-8"
+        "homeassistant/components/spotify/test_spotify_mappings.json",
+        "w",
+        encoding="utf-8",
     ) as file:
         json.dump(spotify_mapping_data, file)
-    # Initialize the mapper with the path to the temporary test file
+    # Initialize the mapper with the path to the test file
     return WeatherPlaylistMapper("tests/components/spotify/test_spotify_mappings.json")
 
 
