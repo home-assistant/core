@@ -30,6 +30,7 @@ TUYA_STATUS_TO_HA = {
     "chargego": STATE_DOCKED,
     "charging": STATE_DOCKED,
     "cleaning": STATE_CLEANING,
+    "cleanning": STATE_CLEANING,
     "docking": STATE_RETURNING,
     "goto_charge": STATE_RETURNING,
     "goto_pos": STATE_CLEANING,
