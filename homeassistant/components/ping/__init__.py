@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from time import sleep
 
 from icmplib import SocketPermissionError, async_ping
 
@@ -34,8 +33,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = PingDomainData(
         privileged=await _can_use_icmp_lib_with_privilege(),
     )
-
-    sleep(5)
 
     return True
 
