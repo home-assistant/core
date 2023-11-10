@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -64,11 +63,12 @@ async def async_setup_entry(
     """Set up V2C binary sensor platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[Entity] = [
-        V2CBinarySensorBaseEntity(coordinator, description, config_entry.entry_id)
-        for description in TRYDAN_SENSORS
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            V2CBinarySensorBaseEntity(coordinator, description, config_entry.entry_id)
+            for description in TRYDAN_SENSORS
+        ]
+    )
 
 
 class V2CBinarySensorBaseEntity(V2CBaseEntity, BinarySensorEntity):
