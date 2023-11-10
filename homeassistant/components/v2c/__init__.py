@@ -13,6 +13,7 @@ from .coordinator import V2CUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up V2C from a config entry."""
 
