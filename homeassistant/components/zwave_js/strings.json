@@ -400,11 +400,11 @@
         },
         "outside_handles_can_open_door_configuration": {
           "name": "Outside handles can open door configuration",
-          "description": "Which outside handles can open the door."
+          "description": "A list of four booleans which indicate which outside handles can open the door."
         },
         "inside_handles_can_open_door_configuration": {
           "name": "Inside handles can open door configuration",
-          "description": "Which inside handles can open the door."
+          "description": "A list of four booleans which indicate which inside handles can open the door."
         },
         "auto_relock_time": {
           "name": "Auto relock time",
