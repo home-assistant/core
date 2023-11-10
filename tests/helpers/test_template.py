@@ -4080,9 +4080,10 @@ def test_state_with_unit(hass: HomeAssistant) -> None:
     assert tpl.async_render() == ""
 
 
-def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
+def test_state_with_unit_and_rounding(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test formatting the state rounded and with unit."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", suggested_object_id="test"
     )
@@ -4153,6 +4154,7 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
 )
 def test_state_with_unit_and_rounding_options(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     rounded: str,
     with_unit: str,
     output1_1,
@@ -4161,7 +4163,6 @@ def test_state_with_unit_and_rounding_options(
     output2_2,
 ) -> None:
     """Test formatting the state rounded and with unit."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", suggested_object_id="test"
     )

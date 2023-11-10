@@ -36,7 +36,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
@@ -81,7 +80,11 @@ async def turn_fan_on(
     await hass.async_block_till_done()
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -91,11 +94,9 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["fan.name_1"]
+    entity = entity_registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entity.device_id)
     assert device.configuration_url == "http://some host"
 
@@ -476,7 +477,11 @@ async def test_fan_available(hass: HomeAssistant) -> None:
     )
 
 
-async def test_setup_smart_by_bond_fan(hass: HomeAssistant) -> None:
+async def test_setup_smart_by_bond_fan(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test setting up a fan without a hub."""
     config_entry = await setup_platform(
         hass,
@@ -491,10 +496,8 @@ async def test_setup_smart_by_bond_fan(hass: HomeAssistant) -> None:
         },
     )
     assert hass.states.get("fan.name_1") is not None
-    registry = er.async_get(hass)
-    entry = registry.async_get("fan.name_1")
+    entry = entity_registry.async_get("fan.name_1")
     assert entry.device_id is not None
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.sw_version == "test-version"
@@ -505,7 +508,11 @@ async def test_setup_smart_by_bond_fan(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_setup_hub_template_fan(hass: HomeAssistant) -> None:
+async def test_setup_hub_template_fan(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test setting up a fan on a hub created from a template."""
     config_entry = await setup_platform(
         hass,
@@ -521,10 +528,8 @@ async def test_setup_hub_template_fan(hass: HomeAssistant) -> None:
         },
     )
     assert hass.states.get("fan.name_1") is not None
-    registry = er.async_get(hass)
-    entry = registry.async_get("fan.name_1")
+    entry = entity_registry.async_get("fan.name_1")
     assert entry.device_id is not None
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.sw_version is None
