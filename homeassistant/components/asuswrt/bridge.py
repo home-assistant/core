@@ -73,8 +73,13 @@ def handle_errors_and_zip(
                 raise UpdateFailed(exc) from exc
 
             if keys is None:
-                return cast(dict[str, Any], data)
-            return _get_dict(keys, cast(list[Any], data))
+                if not isinstance(data, dict):
+                    raise UpdateFailed("Received invalid data type")
+                return data
+
+            if not isinstance(data, list):
+                raise UpdateFailed("Received invalid data type")
+            return _get_dict(keys, data)
 
         return _wrapper
 
