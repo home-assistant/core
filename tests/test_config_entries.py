@@ -269,7 +269,9 @@ async def test_call_async_migrate_entry_failure_not_supported(
 
 
 async def test_remove_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we can remove an entry."""
 
@@ -335,9 +337,8 @@ async def test_remove_entry(
     assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
-    entity_entry = list(ent_reg.entities.values())[0]
+    assert len(entity_registry.entities) == 1
+    entity_entry = list(entity_registry.entities.values())[0]
     assert entity_entry.config_entry_id == entry.entry_id
 
     # Remove entry
@@ -358,7 +359,7 @@ async def test_remove_entry(
     assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
-    entity_entry_list = list(ent_reg.entities.values())
+    entity_entry_list = list(entity_registry.entities.values())
     assert not entity_entry_list
 
 
@@ -3790,6 +3791,20 @@ async def test_reauth(hass: HomeAssistant) -> None:
     entry2.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 2
+
+    # Abort all existing flows
+    for flow in hass.config_entries.flow.async_progress():
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+    await hass.async_block_till_done()
+
+    # Check that we can't start duplicate reauth flows
+    # without blocking between flows
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_get_active_flows(hass: HomeAssistant) -> None:

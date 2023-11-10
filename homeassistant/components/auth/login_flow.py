@@ -235,7 +235,7 @@ class LoginFlowBaseView(HomeAssistantView):
                 f"Login blocked: {user_access_error}", HTTPStatus.FORBIDDEN
             )
 
-        await process_success_login(request)
+        process_success_login(request)
         result["result"] = self._store_result(client_id, result_obj)
 
         return self.json(result)
