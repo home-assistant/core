@@ -13,6 +13,7 @@ import ring_doorbell
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, __version__
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -58,20 +59,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await hass.async_add_executor_job(ring.update_data)
-    except ring_doorbell.AuthenticationError:
-        _LOGGER.error("Access token is no longer valid. Please set up Ring again")
-        return False
+    except ring_doorbell.AuthenticationError as err:
+        _LOGGER.warning("Ring access token is no longer valid, need to re-authenticate")
+        raise ConfigEntryAuthFailed(err) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": ring,
         "devices": ring.devices(),
         "device_data": GlobalDataUpdater(
-            hass, "device", entry.entry_id, ring, "update_devices", timedelta(minutes=1)
+            hass, "device", entry, ring, "update_devices", timedelta(minutes=1)
         ),
         "dings_data": GlobalDataUpdater(
             hass,
             "active dings",
-            entry.entry_id,
+            entry,
             ring,
             "update_dings",
             timedelta(seconds=5),
@@ -79,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "history_data": DeviceDataUpdater(
             hass,
             "history",
-            entry.entry_id,
+            entry,
             ring,
             lambda device: device.history(limit=10),
             timedelta(minutes=1),
@@ -87,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "health_data": DeviceDataUpdater(
             hass,
             "health",
-            entry.entry_id,
+            entry,
             ring,
             lambda device: device.update_health_data(),
             timedelta(minutes=1),
@@ -143,7 +144,7 @@ class GlobalDataUpdater:
         self,
         hass: HomeAssistant,
         data_type: str,
-        config_entry_id: str,
+        config_entry: ConfigEntry,
         ring: ring_doorbell.Ring,
         update_method: str,
         update_interval: timedelta,
@@ -151,7 +152,7 @@ class GlobalDataUpdater:
         """Initialize global data updater."""
         self.hass = hass
         self.data_type = data_type
-        self.config_entry_id = config_entry_id
+        self.config_entry = config_entry
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
@@ -188,8 +189,10 @@ class GlobalDataUpdater:
                 getattr(self.ring, self.update_method)
             )
         except ring_doorbell.AuthenticationError:
-            _LOGGER.error("Ring access token is no longer valid. Set up Ring again")
-            await self.hass.config_entries.async_unload(self.config_entry_id)
+            _LOGGER.warning(
+                "Ring access token is no longer valid, need to re-authenticate"
+            )
+            self.config_entry.async_start_reauth(self.hass)
             return
         except ring_doorbell.RingTimeout:
             _LOGGER.warning(
@@ -216,7 +219,7 @@ class DeviceDataUpdater:
         self,
         hass: HomeAssistant,
         data_type: str,
-        config_entry_id: str,
+        config_entry: ConfigEntry,
         ring: ring_doorbell.Ring,
         update_method: Callable[[ring_doorbell.Ring], Any],
         update_interval: timedelta,
@@ -224,7 +227,7 @@ class DeviceDataUpdater:
         """Initialize device data updater."""
         self.data_type = data_type
         self.hass = hass
-        self.config_entry_id = config_entry_id
+        self.config_entry = config_entry
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
@@ -277,10 +280,10 @@ class DeviceDataUpdater:
             try:
                 data = info["data"] = self.update_method(info["device"])
             except ring_doorbell.AuthenticationError:
-                _LOGGER.error("Ring access token is no longer valid. Set up Ring again")
-                self.hass.add_job(
-                    self.hass.config_entries.async_unload(self.config_entry_id)
+                _LOGGER.warning(
+                    "Ring access token is no longer valid, need to re-authenticate"
                 )
+                self.config_entry.async_start_reauth(self.hass)
                 return
             except ring_doorbell.RingTimeout:
                 _LOGGER.warning(
