@@ -17,8 +17,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, LOGGER, Coordinator
-from .const import VALUES_TEMPORARY_LUX_INACTIVE, VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
+from .const import (
+    DOMAIN,
+    LOGGER,
+    VALUES_TEMPORARY_LUX_INACTIVE,
+    VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE,
+)
+from .coordinator import Coordinator
 
 
 async def async_setup_entry(

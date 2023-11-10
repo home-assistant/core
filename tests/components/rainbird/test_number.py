@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import number
 from homeassistant.components.rainbird import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -17,11 +17,11 @@ from .conftest import (
     RAIN_DELAY,
     RAIN_DELAY_OFF,
     SERIAL_NUMBER,
-    ComponentSetup,
     mock_response,
     mock_response_error,
 )
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -31,19 +31,25 @@ def platforms() -> list[str]:
     return [Platform.NUMBER]
 
 
+@pytest.fixture(autouse=True)
+async def setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> list[Platform]:
+    """Fixture to setup the config entry."""
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("rain_delay_response", "expected_state"),
     [(RAIN_DELAY, "16"), (RAIN_DELAY_OFF, "0")],
 )
 async def test_number_values(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     expected_state: str,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number platform."""
-
-    assert await setup_integration()
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None
@@ -74,13 +80,10 @@ async def test_number_values(
 )
 async def test_unique_id(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     entity_registry: er.EntityRegistry,
     entity_unique_id: str,
 ) -> None:
     """Test number platform."""
-
-    assert await setup_integration()
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None
@@ -95,14 +98,11 @@ async def test_unique_id(
 
 async def test_set_value(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
     config_entry: ConfigEntry,
 ) -> None:
     """Test setting the rain delay number."""
-
-    assert await setup_integration()
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL_NUMBER)})
@@ -136,7 +136,6 @@ async def test_set_value(
 )
 async def test_set_value_error(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
     config_entry: ConfigEntry,
@@ -144,8 +143,6 @@ async def test_set_value_error(
     expected_msg: str,
 ) -> None:
     """Test an error while talking to the device."""
-
-    assert await setup_integration()
 
     aioclient_mock.mock_calls.clear()
     responses.append(mock_response_error(status=status))
@@ -172,12 +169,9 @@ async def test_set_value_error(
 )
 async def test_no_unique_id(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number platform with no unique id."""
-
-    assert await setup_integration()
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None

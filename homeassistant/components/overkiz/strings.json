@@ -64,6 +64,13 @@
           "closed": "[%key:common::state::closed%]"
         }
       },
+      "open_closed_partial": {
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "partial": "Partial",
+          "closed": "[%key:common::state::closed%]"
+        }
+      },
       "memorized_simple_volume": {
         "state": {
           "highest": "Highest",

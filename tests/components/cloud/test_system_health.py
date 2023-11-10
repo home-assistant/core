@@ -46,6 +46,7 @@ async def test_cloud_system_health(
                 remote_enabled=True,
                 alexa_enabled=True,
                 google_enabled=False,
+                instance_id="12345678901234567890",
             ),
         ),
     )
@@ -70,4 +71,5 @@ async def test_cloud_system_health(
         "can_reach_cert_server": "ok",
         "can_reach_cloud_auth": {"type": "failed", "error": "unreachable"},
         "can_reach_cloud": "ok",
+        "instance_id": "12345678901234567890",
     }

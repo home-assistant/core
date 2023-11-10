@@ -20,8 +20,10 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
+    SupportsResponse,
     callback,
     split_entity_id,
     valid_entity_id,
@@ -814,6 +816,7 @@ class EntityPlatform:
         schema: dict[str, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service.
 
@@ -825,9 +828,9 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> None:
+        async def handle_service(call: ServiceCall) -> EntityServiceResponse | None:
             """Handle the service."""
-            await service.entity_service_call(
+            return await service.entity_service_call(
                 self.hass,
                 [
                     plf
@@ -840,7 +843,7 @@ class EntityPlatform:
             )
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema
+            self.platform_name, name, handle_service, schema, supports_response
         )
 
     async def _update_entity_states(self, now: datetime) -> None:
