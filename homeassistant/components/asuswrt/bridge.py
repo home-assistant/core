@@ -49,11 +49,6 @@ WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_dict(keys: list, values: list) -> dict[str, Any]:
-    """Create a dict from a list of keys and values."""
-    return dict(zip(keys, values))
-
-
 def handle_errors_and_zip(
     exceptions: Union[type[Exception], tuple[type[Exception], ...]],
     keys: list[str] | None,
@@ -79,7 +74,7 @@ def handle_errors_and_zip(
 
             if not isinstance(data, list):
                 raise UpdateFailed("Received invalid data type")
-            return _get_dict(keys, data)
+            return dict(zip(keys, data))
 
         return _wrapper
 
