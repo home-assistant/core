@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_number_entities[device-HWE-SKT.json]
+# name: test_number_entities[HWE-SKT]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Status light brightness',
@@ -17,7 +17,7 @@
     'state': '100',
   })
 # ---
-# name: test_number_entities[device-HWE-SKT.json].1
+# name: test_number_entities[HWE-SKT].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -53,7 +53,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_number_entities[device-HWE-SKT.json].2
+# name: test_number_entities[HWE-SKT].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,

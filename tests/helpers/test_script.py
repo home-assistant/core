@@ -1788,11 +1788,12 @@ async def test_shorthand_template_condition(
 
 
 async def test_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions which validate late in a script."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2385,11 +2386,12 @@ async def test_repeat_conditional(
 
 
 async def test_repeat_until_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in repeat until conditions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2447,11 +2449,12 @@ async def test_repeat_until_condition_validation(
 
 
 async def test_repeat_while_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in repeat while conditions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2868,11 +2871,12 @@ async def test_choose(
 
 
 async def test_choose_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in choose actions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -3112,11 +3116,12 @@ async def test_if_disabled(
 
 
 async def test_if_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in if actions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"

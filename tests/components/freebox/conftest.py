@@ -24,7 +24,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
-    with patch("homeassistant.components.freebox.router.Path"):
+    with patch("homeassistant.components.freebox.router.Path"), patch(
+        "homeassistant.components.freebox.router.os.makedirs"
+    ):
         yield
 
 
