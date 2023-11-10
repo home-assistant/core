@@ -89,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self.entry is not None
 
-        if user_input is not None:
+        if user_input:
             data = {
                 **self.entry.data,
                 **user_input,
@@ -102,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={**self.entry.data, **user_input},
+                    data=data,
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
