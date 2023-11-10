@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import voluptuous as vol
 from zwave_js_server.exceptions import FailedZWaveCommand
+from zwave_js_server.model.value import SetConfigParameterResult
 
 from homeassistant.components.group import Group
 from homeassistant.components.zwave_js.const import (
@@ -22,6 +23,8 @@ from homeassistant.components.zwave_js.const import (
     ATTR_PROPERTY_KEY,
     ATTR_REFRESH_ALL_VALUES,
     ATTR_VALUE,
+    ATTR_VALUE_FORMAT,
+    ATTR_VALUE_SIZE,
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
     SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -56,7 +59,12 @@ from tests.common import MockConfigEntry
 
 
 async def test_set_config_parameter(
-    hass: HomeAssistant, client, multisensor_6, integration
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    aeotec_zw164_siren,
+    integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the set_config_parameter service."""
     dev_reg = async_get_dev_reg(hass)
@@ -225,6 +233,63 @@ async def test_set_config_parameter(
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test setting parameter by value_size
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 2,
+            ATTR_VALUE_SIZE: 2,
+            ATTR_VALUE_FORMAT: 1,
+            ATTR_CONFIG_VALUE: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.set_raw_config_parameter_value"
+    assert args["nodeId"] == 52
+    assert args["endpoint"] == 0
+    options = args["options"]
+    assert options["parameter"] == 2
+    assert options["value"] == 1
+    assert options["valueSize"] == 2
+    assert options["valueFormat"] == 1
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test setting parameter when one node has endpoint and other doesn't
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_ENTITY_ID: [AIR_TEMPERATURE_SENSOR, "siren.indoor_siren_6_tone_id"],
+            ATTR_ENDPOINT: 1,
+            ATTR_CONFIG_PARAMETER: 32,
+            ATTR_VALUE_SIZE: 2,
+            ATTR_VALUE_FORMAT: 1,
+            ATTR_CONFIG_VALUE: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "endpoint.set_raw_config_parameter_value"
+    assert args["nodeId"] == 2
+    assert args["endpoint"] == 1
+    options = args["options"]
+    assert options["parameter"] == 32
+    assert options["value"] == 1
+    assert options["valueSize"] == 2
+    assert options["valueFormat"] == 1
+
+    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
+
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
     await Group.async_create_group(
@@ -295,6 +360,54 @@ async def test_set_config_parameter(
         suggested_object_id="test_sensor",
         config_entry=non_zwave_js_config_entry,
     )
+
+    # Test unknown endpoint throws error when None are remaining
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+                ATTR_ENDPOINT: 5,
+                ATTR_CONFIG_PARAMETER: 2,
+                ATTR_VALUE_SIZE: 2,
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+
+    # Test that we can't include bitmask and value size and value format
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: "Fahrenheit",
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_VALUE_SIZE: 2,
+            },
+            blocking=True,
+        )
+
+    # Test that value size must be 1, 2, or 4 (not 3)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: "Fahrenheit",
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_VALUE_SIZE: 3,
+            },
+            blocking=True,
+        )
 
     # Test that a Z-Wave JS device with an invalid node ID, non Z-Wave JS entity,
     # non Z-Wave JS device, invalid device_id, and invalid node_id gets filtered out.
@@ -375,6 +488,75 @@ async def test_set_config_parameter(
             },
             blocking=True,
         )
+
+    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
+
+    caplog.clear()
+
+    config_value = aeotec_zw164_siren.values["2-112-0-32"]
+    cmd_result = SetConfigParameterResult("accepted", {"status": 255})
+
+    # Test accepted return
+    with patch(
+        "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
+        return_value=(config_value, cmd_result),
+    ) as mock_set_raw_config_parameter_value:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
+                ATTR_ENDPOINT: 0,
+                ATTR_CONFIG_PARAMETER: 32,
+                ATTR_VALUE_SIZE: 2,
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+        assert len(mock_set_raw_config_parameter_value.call_args_list) == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][0] == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][1] == 32
+        assert mock_set_raw_config_parameter_value.call_args[1] == {
+            "property_key": None,
+            "value_size": 2,
+            "value_format": 1,
+        }
+
+    assert "Set configuration parameter" in caplog.text
+    caplog.clear()
+
+    # Test queued return
+    cmd_result.status = "queued"
+    with patch(
+        "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
+        return_value=(config_value, cmd_result),
+    ) as mock_set_raw_config_parameter_value:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_ENTITY_ID: ["siren.indoor_siren_6_tone_id"],
+                ATTR_ENDPOINT: 0,
+                ATTR_CONFIG_PARAMETER: 32,
+                ATTR_VALUE_SIZE: 2,
+                ATTR_VALUE_FORMAT: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+        assert len(mock_set_raw_config_parameter_value.call_args_list) == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][0] == 1
+        assert mock_set_raw_config_parameter_value.call_args[0][1] == 32
+        assert mock_set_raw_config_parameter_value.call_args[1] == {
+            "property_key": None,
+            "value_size": 2,
+            "value_format": 1,
+        }
+
+    assert "Added command to queue" in caplog.text
+    caplog.clear()
 
 
 async def test_set_config_parameter_gather(

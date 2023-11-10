@@ -36,7 +36,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import MetDataUpdateCoordinator
 from .const import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -46,6 +45,7 @@ from .const import (
     DOMAIN,
     FORECAST_MAP,
 )
+from .coordinator import MetDataUpdateCoordinator
 
 DEFAULT_NAME = "Met.no"
 

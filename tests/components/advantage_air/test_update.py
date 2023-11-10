@@ -10,7 +10,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_update_platform(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test update platform."""
 
@@ -20,13 +22,11 @@ async def test_update_platform(
     )
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     entity_id = "update.testname_app"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid"

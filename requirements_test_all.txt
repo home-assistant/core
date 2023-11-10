@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.2.4
+aioesphomeapi==18.2.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -234,6 +234,9 @@ aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.0.9
+
+# homeassistant.components.http
+aiohttp-fast-url-dispatcher==0.1.0
 
 # homeassistant.components.http
 aiohttp-zlib-ng==0.1.1
@@ -1190,7 +1193,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2023.10.1
+pyDuotecno==2023.11.1
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -1628,7 +1631,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.35.0
+python-roborock==0.36.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.35
@@ -1661,7 +1664,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.8
 
 # homeassistant.components.v2c
-pytrydan==0.1.2
+pytrydan==0.3.0
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2091,7 +2094,7 @@ yt-dlp==2023.10.13
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.120.0
+zeroconf==0.122.3
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

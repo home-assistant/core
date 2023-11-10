@@ -819,7 +819,6 @@ omit =
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
-    homeassistant/components/nibe_heatpump/climate.py
     homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
@@ -1437,6 +1436,7 @@ omit =
     homeassistant/components/v2c/coordinator.py
     homeassistant/components/v2c/entity.py
     homeassistant/components/v2c/sensor.py
+    homeassistant/components/v2c/switch.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
     homeassistant/components/velbus/button.py

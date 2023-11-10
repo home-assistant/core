@@ -32,6 +32,11 @@
       "fv_power": {
         "name": "Photovoltaic power"
       }
+    },
+    "switch": {
+      "paused": {
+        "name": "Pause session"
+      }
     }
   }
 }
