@@ -48,7 +48,7 @@ def test_map_weather_to_playlists_valid_conditions(
 ) -> None:
     """Test mapping weather conditions to search string with valid conditions."""
     search_string = mapper.map_weather_to_playlists(20, "sunny")
-    # Expected search string for 'warm' 'sunny
+    # Expected for 'warm' 'sunny
     assert search_string == "Sunny Day Play"
 
 
@@ -60,10 +60,19 @@ def test_map_weather_to_playlists_invalid_condition(
         mapper.map_weather_to_playlists(20, "sleepy")
 
 
-def test_map_weather_to_playlists_boundary_temperature(
+def test_map_weather_to_playlists_boundary_temperature_1(
     mapper: WeatherPlaylistMapper,
 ) -> None:
     """Test mapping weather conditions to search string at the boundary temperature."""
     search_string = mapper.map_weather_to_playlists(15, "cloudy")
-    # Expected search string for 'warm' 'cloudy
+    # Expected for 'warm' 'cloudy
     assert search_string == "Overcast Moods"
+
+
+def test_map_weather_to_playlists_boundary_temperature_2(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping at boundary temperature values."""
+    search_string = mapper.map_weather_to_playlists(0, "fog")
+    # Expected for 'cold' 'fog'
+    assert search_string == "Foggy Night Chill"
