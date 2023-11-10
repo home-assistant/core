@@ -102,10 +102,14 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the Ping Binary sensor."""
         self._attr_name = name
-        self._attr_unique_id = f"{config_entry.entry_id}_binary_sensor"
+        self._attr_unique_id = f"{config_entry.entry_id}"
+
+        if CONF_IMPORTED_BY in config_entry.options:
+            self._attr_entity_registry_enabled_default = bool(
+                config_entry.options[CONF_IMPORTED_BY] == "binary_sensor"
+            )
 
         self._ping = ping
-        self.config_entry = config_entry
 
     @property
     def is_on(self) -> bool:
@@ -123,13 +127,6 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
             ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
             ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
         }
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default."""
-        if CONF_IMPORTED_BY in self.config_entry.options:
-            return bool(self.config_entry.options[CONF_IMPORTED_BY] == "binary_sensor")
-        return True
 
     async def async_update(self) -> None:
         """Get the latest data."""

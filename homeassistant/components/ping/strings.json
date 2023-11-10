@@ -25,5 +25,11 @@
         }
       }
     }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads ping sensors from the YAML-configuration."
+    }
   }
 }

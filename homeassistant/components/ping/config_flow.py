@@ -67,5 +67,9 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
             CONF_IMPORTED_BY: import_info[CONF_IMPORTED_BY],
         }
 
-        self._async_abort_entries_match({CONF_HOST: to_import[CONF_HOST]})
+        # remove existing entry when user updated it in configuration.yaml
+        if existing_entry := await self.async_set_unique_id(to_import[CONF_HOST]):
+            if existing_entry.options != to_import:
+                await self.hass.config_entries.async_remove(existing_entry.entry_id)
+
         return self.async_create_entry(data=to_import)

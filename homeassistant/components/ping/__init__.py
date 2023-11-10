@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -29,6 +30,7 @@ class PingDomainData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ping integration."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     hass.data[DOMAIN] = PingDomainData(
         privileged=await _can_use_icmp_lib_with_privilege(),

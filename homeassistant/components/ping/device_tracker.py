@@ -86,7 +86,6 @@ async def async_setup_entry(
 class PingDeviceTracker(ScannerEntity):
     """Representation of a Ping device tracker."""
 
-    config_entry: ConfigEntry
     ping: PingDataSubProcess | PingDataICMPLib
 
     def __init__(
@@ -99,14 +98,14 @@ class PingDeviceTracker(ScannerEntity):
         super().__init__()
 
         self._attr_name = name
-        self._unique_id = f"{config_entry.entry_id}_device_tracker"
-        self.config_entry = config_entry
         self.ping = ping_cls
 
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of the entity."""
-        return self._unique_id
+        self._attr_unique_id = f"{config_entry.entry_id}"
+
+        if CONF_IMPORTED_BY in config_entry.options:
+            self._attr_entity_registry_enabled_default = bool(
+                config_entry.options[CONF_IMPORTED_BY] == "device_tracker"
+            )
 
     @property
     def source_type(self) -> SourceType:
@@ -117,13 +116,6 @@ class PingDeviceTracker(ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if ping returns is_alive."""
         return self.ping.is_alive
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default."""
-        if CONF_IMPORTED_BY in self.config_entry.options:
-            return bool(self.config_entry.options[CONF_IMPORTED_BY] == "device_tracker")
-        return False
 
     async def async_update(self) -> None:
         """Update the sensor."""
