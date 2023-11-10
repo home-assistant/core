@@ -122,7 +122,7 @@ async def test_get_hosts_list(
     freezer: FrozenDateTimeFactory,
     router_bridge_mode: Mock,
 ) -> None:
-    """Test battery sensor."""
+    """Test get_hosts_list invoqued once if freebox into bridge mode."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
     # Simulate an update
