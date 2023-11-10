@@ -4,6 +4,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 from typing import Literal
+from urllib.parse import unquote
 
 import openai
 from openai import error
@@ -62,7 +63,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except error.OpenAIError as err:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
-        return response["data"][0]
+        image_data = response["data"][0]
+        image_data.url = unquote(image_data.url)
+        return image_data
 
     hass.services.async_register(
         DOMAIN,
