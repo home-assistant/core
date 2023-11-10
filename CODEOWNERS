@@ -1059,6 +1059,8 @@ build.json @home-assistant/supervisor
 /tests/components/rhasspy/ @balloob @synesthesiam
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
+/homeassistant/components/ring/ @sdb9696
+/tests/components/ring/ @sdb9696
 /homeassistant/components/risco/ @OnFreund
 /tests/components/risco/ @OnFreund
 /homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck
