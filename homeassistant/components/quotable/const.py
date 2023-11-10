@@ -9,6 +9,8 @@ GET_TAGS_URL: Final = f"{BASE_URL}/tags"
 SEARCH_AUTHORS_URL: Final = f"{BASE_URL}/search/authors"
 FETCH_A_QUOTE_URL: Final = f"{BASE_URL}/quotes/random"
 
+HTTP_CLIENT_TIMEOUT: Final = 10
+
 SERVICE_GET_TAGS: Final = "get_tags"
 SERVICE_SEARCH_AUTHORS: Final = "search_authors"
 SERVICE_FETCH_A_QUOTE: Final = "fetch_a_quote"
