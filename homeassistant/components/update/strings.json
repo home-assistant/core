@@ -39,7 +39,7 @@
           "name": "Release URL"
         },
         "release_summary": {
-          "name": "Release Summary"
+          "name": "Release summary"
         },
         "installed_version": {
           "name": "Installed version"
