@@ -29,7 +29,7 @@ def mapper(spotify_mapping_data):
         "w",
         encoding="utf-8",
     ) as file:
-        json.dump(spotify_mapping_data, file)
+        json.dump(spotify_mapping_data, file, indent=2)
     # Initialize the mapper with the path to the test file
     return WeatherPlaylistMapper("tests/components/spotify/test_spotify_mappings.json")
 
