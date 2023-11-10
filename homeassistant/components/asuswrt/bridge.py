@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, Union, cast
+from typing import Any, TypeVar, cast
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 
@@ -49,19 +49,21 @@ WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])
 _LOGGER = logging.getLogger(__name__)
 
 
+_AsusWrtBridgeT = TypeVar("_AsusWrtBridgeT", bound="AsusWrtBridge")
+_FuncType = Callable[[_AsusWrtBridgeT], Awaitable[list[Any] | dict[str, Any]]]
+_ReturnFuncType = Callable[[_AsusWrtBridgeT], Coroutine[Any, Any, dict[str, Any]]]
+
+
 def handle_errors_and_zip(
-    exceptions: Union[type[Exception], tuple[type[Exception], ...]],
-    keys: list[str] | None,
-) -> Callable[[Any], Callable[[AsusWrtBridge], Awaitable[dict[str, Any]]]]:
+    exceptions: type[Exception] | tuple[type[Exception], ...], keys: list[str] | None
+) -> Callable[[_FuncType], _ReturnFuncType]:
     """Run library methods and zip results or manage exceptions."""
 
-    def _handle_errors_and_zip(
-        func: Callable[[AsusWrtBridge], Awaitable[list[Any] | dict[str, Any]]],
-    ) -> Callable[[AsusWrtBridge], Awaitable[dict[str, Any]]]:
+    def _handle_errors_and_zip(func: _FuncType) -> _ReturnFuncType:
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
-        async def _wrapper(self: AsusWrtBridge) -> dict[str, Any]:
+        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
             try:
                 data = await func(self)
             except exceptions as exc:
