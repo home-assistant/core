@@ -31,13 +31,11 @@ TUYA_STATUS_TO_HA = {
     "chargego": STATE_DOCKED,
     "charging": STATE_DOCKED,
     "cleaning": STATE_CLEANING,
-    "cleanning": STATE_CLEANING,
     "docking": STATE_RETURNING,
     "goto_charge": STATE_RETURNING,
     "goto_pos": STATE_CLEANING,
     "mop_clean": STATE_CLEANING,
     "part_clean": STATE_CLEANING,
-    "pause": STATE_PAUSED,
     "paused": STATE_PAUSED,
     "pick_zone_clean": STATE_CLEANING,
     "pos_arrived": STATE_CLEANING,
@@ -154,7 +152,13 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             return STATE_ERROR
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
-        return TUYA_STATUS_TO_HA.get(status)
+        if ha_status := TUYA_STATUS_TO_HA.get(status):
+            return ha_status
+        if "clean" in status:
+            return STATE_CLEANING
+        if "pause" in status:
+            return STATE_PAUSED
+        return None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
