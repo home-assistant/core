@@ -1664,7 +1664,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.8
 
 # homeassistant.components.v2c
-pytrydan==0.1.2
+pytrydan==0.3.0
 
 # homeassistant.components.usb
 pyudev==0.23.2
