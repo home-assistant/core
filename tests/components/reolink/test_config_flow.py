@@ -2,7 +2,7 @@
 from datetime import timedelta
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
@@ -381,31 +381,35 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
 
 
 @pytest.mark.parametrize(
-    ("last_update_success", "attr", "value", "expected"),
+    ("last_update_success", "attr", "value", "expected", "host_call_list"),
     [
         (
             False,
             None,
             None,
             TEST_HOST2,
+            [TEST_HOST, TEST_HOST2],
         ),
         (
             True,
             None,
             None,
             TEST_HOST,
+            [TEST_HOST],
         ),
         (
             False,
             "get_state",
             AsyncMock(side_effect=ReolinkError("Test error")),
             TEST_HOST,
+            [TEST_HOST, TEST_HOST2],
         ),
         (
             False,
             "mac_address",
             "aa:aa:aa:aa:aa:aa",
             TEST_HOST,
+            [TEST_HOST, TEST_HOST2],
         ),
     ],
 )
@@ -417,6 +421,7 @@ async def test_dhcp_ip_update(
     attr: str,
     value: Any,
     expected: str,
+    host_call_list: list[str],
 ) -> None:
     """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
     config_entry = MockConfigEntry(
@@ -471,16 +476,21 @@ async def test_dhcp_ip_update(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    if not last_update_success:
-        reolink_connect_class.assert_called_with(
-            TEST_HOST2,
-            TEST_USERNAME,
-            TEST_PASSWORD,
-            port=TEST_PORT,
-            use_https=TEST_USE_HTTPS,
-            protocol=DEFAULT_PROTOCOL,
-            timeout=DEFAULT_TIMEOUT,
+    expected_calls = []
+    for host in host_call_list:
+        expected_calls.append(
+            call(
+                host,
+                TEST_USERNAME,
+                TEST_PASSWORD,
+                port=TEST_PORT,
+                use_https=TEST_USE_HTTPS,
+                protocol=DEFAULT_PROTOCOL,
+                timeout=DEFAULT_TIMEOUT,
+            )
         )
+
+    assert reolink_connect_class.call_args_list == expected_calls
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
