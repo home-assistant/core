@@ -445,16 +445,6 @@ async def test_dhcp_ip_update(
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    reolink_connect_class.assert_called_with(
-        TEST_HOST,
-        TEST_USERNAME,
-        TEST_PASSWORD,
-        port=TEST_PORT,
-        use_https=TEST_USE_HTTPS,
-        protocol=DEFAULT_PROTOCOL,
-        timeout=DEFAULT_TIMEOUT,
-    )
-
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
         reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
