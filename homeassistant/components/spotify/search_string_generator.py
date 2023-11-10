@@ -1,57 +1,71 @@
-"""blah blah."""
+"""Contains the WeatherPlaylistMapper class, which provides functionality to map weather conditions and temperature ranges to corresponding Spotify playlist IDs."""
+
+import json
 
 
 class WeatherPlaylistMapper:
-    """test."""
+    """A class to map weather conditions and temperatures to Spotify playlist categories."""
 
-    # Dictionary storing the various combinations of weather conditions and temperatures with
-    # corresponding category of playlists.
-    spotify_category_mapping = {
-        "sunny": {"warm": "summer", "cold": "Romance"},
-        "rainy": {"warm": "Jazz", "cold": "Instrumental"},
-    }
+    # Constant for the temperature threshold
+    TEMPERATURE_THRESHOLD_CELSIUS = 15
 
-    # FIX: Is this correct?
-    def __init__(self) -> None:
-        """Initialize."""
-        self.spotify_category_mapping = WeatherPlaylistMapper.spotify_category_mapping
+    def __init__(self, mapping_file="spotify_mappings.json") -> None:
+        """Initialize the WeatherPlaylistMapper with mappings from a file.
 
-    @staticmethod
-    def map_weather_to_playlists(temperature, condition):
-        """Test."""
+        Args:
+            mapping_file (str): The path to the JSON file containing playlist mappings.
+
+        Raises:
+            FileNotFoundError: If the mapping file is not found.
+        """
+        try:
+            with open(mapping_file, encoding="utf-8") as file:
+                self.spotify_category_mapping = json.load(file)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(
+                f"The mapping file {mapping_file} was not found."
+            ) from e
+
+    def map_weather_to_playlists(self, temperature: float, condition: str) -> str:
+        """Map the given weather condition and temperature to a Spotify playlist category ID.
+
+        Args:
+            temperature (float): The current temperature.
+            condition (str): The current weather condition.
+
+        Returns:
+            str: The Spotify playlist ID corresponding to the given weather condition
+                 and temperature.
+
+        Raises:
+            ValueError: If the condition is not recognized or no mapping exists for the
+                        given temperature category.
+        """
+
         # Normalize the condition to lower case for reliable matching
-        condition.lower()
+        condition = condition.lower()
 
-        # Classification of if given temperature is more so warm or cold
-        # FIX: Need to consider the unit, F or C, and handle it. Now it's based on celsius.
-        if temperature < 5:
-            temperature_category = "cold"
-        else:
-            temperature_category = "warm"
+        # Determine if the temperature is warm or cold
+        # FIX: Consider the unit of temperature (Fahrenheit or Celsius) and handle accordingly.
+        temperature_category = (
+            "cold" if temperature < self.TEMPERATURE_THRESHOLD_CELSIUS else "warm"
+        )
 
-        # Retrieval of the suitable spotify category.
-        # FIX: Do we need to do error handling here? If the condition/temperature is not accurate?
-        spotify_category = WeatherPlaylistMapper.spotify_category_mapping.get(
-            condition
-        ).get(temperature_category)
+        # Retrieve the suitable Spotify category ID from the mapping
+        # Handle cases where the condition is not in the mapping
+        # FIX: Handle the ValueError in the code that calls this method,
+        condition_mapping = self.spotify_category_mapping.get(condition)
+        if not condition_mapping:
+            raise ValueError(
+                f"No playlist category mapping for weather condition: {condition}"
+            )
 
+        spotify_category_id = condition_mapping.get(temperature_category)
+        if not spotify_category_id:
+            raise ValueError(
+                f"No playlist category mapping for temperature category: {temperature_category}"
+            )
+
+        # Return the Spotify playlist ID
         # FIX: Check what exactly is expected to be returned
-        return spotify_category
-
-        # OLD CODE
-        # Select a category based on weather condition
-        # rainy, sunny, cloudy, windy, snowy
-        # chill, summer, party, Netflix, Instrumental, Folk & Acoustic, pop, Romance, Jazz
-
-        # if condition_key == "rainy" and temperature > 30:
-        #     ret = "Rainy Day"
-        # elif condition_key == "rainy" and temperature > 0:
-        #     ret = "Summer Hits"
-        # elif condition_key == "rainy" and temperature < 0:
-        #     ret = "Winter Chill"
-        # elif condition_key == "rainy" and temperature < 0:
-        #     ret = "Winter Chill"
-        # else:
-        #     ret = "Daily Mix"
-
-        # return ret
+        return spotify_category_id
