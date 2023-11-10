@@ -10,6 +10,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_RELEASE_URL,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
@@ -75,6 +76,10 @@ async def test_block_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert (
+        state.attributes[ATTR_RELEASE_URL]
+        == "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
+    )
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2")
     await mock_rest_update(hass, freezer)
@@ -117,6 +122,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_RELEASE_URL] is None
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -270,6 +276,10 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] == 0
+    assert (
+        state.attributes[ATTR_RELEASE_URL]
+        == "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
+    )
 
     inject_rpc_device_event(
         monkeypatch,
@@ -341,6 +351,10 @@ async def test_rpc_sleeping_update(
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
+    assert (
+        state.attributes[ATTR_RELEASE_URL]
+        == "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
+    )
 
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2")
     mock_rpc_device.mock_update()
@@ -467,6 +481,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "1"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_RELEASE_URL] is None
 
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
