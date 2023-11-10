@@ -113,7 +113,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 raise AbortFlow("already_configured")
 
             # check if the camera is reachable at the new IP
-            host = ReolinkHost(self.hass, existing_entry.data, existing_entry.options)
+            new_config = dict(existing_entry.data)
+            new_config[CONF_HOST] = discovery_info.ip
+            host = ReolinkHost(self.hass, new_config, existing_entry.options)
             try:
                 await host.api.get_state("GetLocalLink")
                 await host.api.logout()

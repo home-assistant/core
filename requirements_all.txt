@@ -192,7 +192,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.1
+aioairzone-cloud==0.3.5
 
 # homeassistant.components.airzone
 aioairzone==0.6.9
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.1.0
+aioesphomeapi==18.2.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -539,7 +539,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.2
+blinkpy==0.22.3
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -562,7 +562,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.13.0
+bluetooth-data-tools==1.14.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -701,7 +701,7 @@ dovado==0.4.1
 dremel3dpy==2.1.1
 
 # homeassistant.components.dsmr
-dsmr-parser==1.3.0
+dsmr-parser==1.3.1
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.6
@@ -1007,7 +1007,7 @@ hole==0.8.0
 holidays==0.35
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231030.1
+home-assistant-frontend==20231030.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -1093,6 +1093,9 @@ janus==1.0.0
 
 # homeassistant.components.abode
 jaraco.abode==3.3.0
+
+# homeassistant.components.abode
+jaraco.functools==3.9.0
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -1597,7 +1600,7 @@ pyairvisual==2023.08.1
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.5.0
+pyatmo==7.6.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -1693,7 +1696,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.1
+pyenphase==1.14.2
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2184,7 +2187,7 @@ python-ripple-api==0.0.3
 python-roborock==0.35.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.33
+python-smarttub==0.0.35
 
 # homeassistant.components.songpal
 python-songpal==0.15.2
@@ -2533,7 +2536,7 @@ synology-srm==0.2.0
 systembridgeconnector==3.8.4
 
 # homeassistant.components.tailscale
-tailscale==0.2.0
+tailscale==0.6.0
 
 # homeassistant.components.tank_utility
 tank-utility==1.5.0
@@ -2779,7 +2782,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.9.24
+yt-dlp==2023.10.13
 
 # homeassistant.components.zamg
 zamg==0.3.0
