@@ -59,7 +59,7 @@ class OAuth2FlowHandler(
     redirect urls.
 
     The Application Credentials integration does not currently record which type
-    of credentail the user entered (and if we ask the user, they may not know or may
+    of credential the user entered (and if we ask the user, they may not know or may
     make a mistake) so we try to determine the credential type automatically. This
     implementation first attempts Device Auth by talking to the token API in the first
     step of the device flow, then if that fails it will redirect using Web Auth.
