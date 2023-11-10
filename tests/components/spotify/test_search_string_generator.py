@@ -76,3 +76,65 @@ def test_map_weather_to_playlists_boundary_temperature_2(
     search_string = mapper.map_weather_to_playlists(0, "fog")
     # Expected for 'cold' 'fog'
     assert search_string == "Foggy Night Chill"
+
+
+def test_map_weather_to_playlists_negative_temperature(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping with negative temperature."""
+    search_string = mapper.map_weather_to_playlists(-5, "snowy")
+    # Expected for 'cold' 'snowy'
+    assert search_string == "Blizzard Ballads"
+
+
+def test_map_weather_to_playlists_high_temperature(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping with high temperature."""
+    search_string = mapper.map_weather_to_playlists(35, "sunny")
+    # Expected for 'warm' 'sunny'
+    assert search_string == "Sunny Day Play"
+
+
+def test_map_weather_to_playlists_unusual_condition(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping with unusual weather condition."""
+    search_string = mapper.map_weather_to_playlists(20, "exceptional")
+    # Expected for 'warm' 'exceptional'
+    assert search_string == "Extraordinary Sounds"
+
+
+def test_map_weather_to_playlists_non_standard_condition_string(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping with non-standard condition strings."""
+    search_string = mapper.map_weather_to_playlists(20, "   SUNNY   ")
+    # Expected for 'warm' 'sunny'
+    assert search_string == "Sunny Day Play"
+
+
+def test_map_weather_to_playlists_large_temperature(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping with large temperature values."""
+    search_string = mapper.map_weather_to_playlists(100, "sunny")
+    # Expected for 'warm' 'sunny'
+    assert search_string == "Sunny Day Play"
+
+
+def test_upper_case_input(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test condition input with only upper case letters."""
+    search_string = mapper.map_weather_to_playlists(20, "RAINY")
+    # Expected for 'warm' 'rainy'
+    assert search_string == "Raindrops and Beats"
+
+
+def test_map_weather_to_playlists_null_parameters(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping with null or missing parameters."""
+    with pytest.raises(TypeError):
+        mapper.map_weather_to_playlists(None, "sunny")
