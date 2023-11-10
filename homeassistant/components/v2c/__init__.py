@@ -12,10 +12,10 @@ from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
-    Platform.NUMBER,
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
 ]
 
 
