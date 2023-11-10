@@ -47,8 +47,8 @@ def test_map_weather_to_playlists_valid_conditions(
     mapper: WeatherPlaylistMapper,
 ) -> None:
     """Test mapping weather conditions to playlist IDs with valid conditions."""
-    playlist_id = mapper.map_weather_to_playlists(20, "sunny")
-    assert playlist_id == "0JQ5DAqbMKFEC4WFtoNRpw"  # Expected valid ID from JSON
+    search_string = mapper.map_weather_to_playlists(20, "sunny")
+    assert search_string == "Sunny Day Play"
 
 
 def test_map_weather_to_playlists_invalid_condition(
