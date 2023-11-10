@@ -56,16 +56,12 @@ class WeatherPlaylistMapper:
         # FIX: Handle the ValueError in the code that calls this method,
         condition_mapping = self.spotify_category_mapping.get(condition)
         if not condition_mapping:
+            raise ValueError(f"Weather condition {condition} does not exist")
+
+        spotify_search_string = condition_mapping.get(temperature_category)
+        if not spotify_search_string:
             raise ValueError(
-                f"No playlist category mapping for weather condition: {condition}"
+                f"No playlist search string mapping for temperature category: {temperature_category}"
             )
 
-        spotify_category_id = condition_mapping.get(temperature_category)
-        if not spotify_category_id:
-            raise ValueError(
-                f"No playlist category mapping for temperature category: {temperature_category}"
-            )
-
-        # Return the Spotify playlist ID
-        # FIX: Check what exactly is expected to be returned
-        return spotify_category_id
+        return spotify_search_string
