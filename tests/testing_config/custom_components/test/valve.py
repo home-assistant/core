@@ -34,16 +34,6 @@ def init(empty=False):
                 | ValveEntityFeature.STOP
                 | ValveEntityFeature.SET_POSITION,
             ),
-            MockValve(
-                name="All functions valve",
-                is_on=True,
-                unique_id="unique_all_functions_valve",
-                current_valve_position=50,
-                supported_features=ValveEntityFeature.OPEN
-                | ValveEntityFeature.CLOSE
-                | ValveEntityFeature.STOP
-                | ValveEntityFeature.SET_POSITION,
-            ),
         ]
     )
 
