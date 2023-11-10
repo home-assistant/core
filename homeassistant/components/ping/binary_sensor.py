@@ -55,7 +55,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Legacy init: Trigger import."""
+    """Init Ping sensor from YAML."""
 
     setup_sensor(hass, config, async_add_entities)
 
