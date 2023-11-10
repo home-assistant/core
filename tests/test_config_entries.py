@@ -269,7 +269,9 @@ async def test_call_async_migrate_entry_failure_not_supported(
 
 
 async def test_remove_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we can remove an entry."""
 
@@ -335,9 +337,8 @@ async def test_remove_entry(
     assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
-    entity_entry = list(ent_reg.entities.values())[0]
+    assert len(entity_registry.entities) == 1
+    entity_entry = list(entity_registry.entities.values())[0]
     assert entity_entry.config_entry_id == entry.entry_id
 
     # Remove entry
@@ -358,7 +359,7 @@ async def test_remove_entry(
     assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
-    entity_entry_list = list(ent_reg.entities.values())
+    entity_entry_list = list(entity_registry.entities.values())
     assert not entity_entry_list
 
 
