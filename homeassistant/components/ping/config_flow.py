@@ -8,14 +8,13 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
 
-from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,20 +55,3 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
-
-    async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
-        """Import an entry."""
-
-        to_import = {
-            CONF_NAME: import_info[CONF_NAME],
-            CONF_HOST: import_info[CONF_HOST],
-            CONF_PING_COUNT: import_info[CONF_PING_COUNT],
-            CONF_IMPORTED_BY: import_info[CONF_IMPORTED_BY],
-        }
-
-        # remove existing entry when user updated it in configuration.yaml
-        if existing_entry := await self.async_set_unique_id(to_import[CONF_HOST]):
-            if existing_entry.options != to_import:
-                await self.hass.config_entries.async_remove(existing_entry.entry_id)
-
-        return self.async_create_entry(data=to_import)

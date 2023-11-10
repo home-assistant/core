@@ -17,5 +17,3 @@ DOMAIN = "ping"
 
 CONF_PING_COUNT = "count"
 DEFAULT_PING_COUNT = 5
-
-CONF_IMPORTED_BY = "imported_by"

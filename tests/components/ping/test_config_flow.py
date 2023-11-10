@@ -7,12 +7,10 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ping import DOMAIN, async_setup_entry
-from homeassistant.components.ping.const import CONF_IMPORTED_BY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-from tests.components.ping.const import BINARY_SENSOR_IMPORT_DATA
 
 
 @pytest.mark.parametrize(
@@ -72,26 +70,3 @@ async def test_options(hass: HomeAssistant, platform, extra_options) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
-
-
-async def test_step_import(hass: HomeAssistant) -> None:
-    """Test for import step."""
-
-    with patch("homeassistant.components.ping.async_setup", return_value=True), patch(
-        "homeassistant.components.ping.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_IMPORTED_BY: "binary_sensor", **BINARY_SENSOR_IMPORT_DATA},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "test2"
-        assert result["options"] == {
-            "imported_by": "binary_sensor",
-            "name": "test2",
-            "host": "127.0.0.1",
-            "count": 1,
-        }
