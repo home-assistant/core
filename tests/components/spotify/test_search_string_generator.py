@@ -42,7 +42,9 @@ def test_init_valid_file(mapper: WeatherPlaylistMapper) -> None:
 def test_init_invalid_file() -> None:
     """Test initializing WeatherPlaylistMapper with an invalid mapping file."""
     with pytest.raises(FileNotFoundError):
-        WeatherPlaylistMapper("path/to/invalid/spotify_mappings.json")
+        WeatherPlaylistMapper(
+            "homeassistant/components/spotify/test_spotify_mappings.json"
+        )
 
 
 def test_map_weather_to_playlists_valid_conditions(
