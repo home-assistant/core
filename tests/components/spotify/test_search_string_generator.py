@@ -46,14 +46,24 @@ def test_init_invalid_file() -> None:
 def test_map_weather_to_playlists_valid_conditions(
     mapper: WeatherPlaylistMapper,
 ) -> None:
-    """Test mapping weather conditions to playlist IDs with valid conditions."""
+    """Test mapping weather conditions to search string with valid conditions."""
     search_string = mapper.map_weather_to_playlists(20, "sunny")
+    # Expected search string for 'warm' 'sunny
     assert search_string == "Sunny Day Play"
 
 
 def test_map_weather_to_playlists_invalid_condition(
     mapper: WeatherPlaylistMapper,
 ) -> None:
-    """Test mapping weather conditions to playlist IDs with an invalid condition."""
+    """Test mapping weather conditions to search string with an invalid condition."""
     with pytest.raises(ValueError):
-        mapper.map_weather_to_playlists(20, "invalid_condition")
+        mapper.map_weather_to_playlists(20, "sleepy")
+
+
+def test_map_weather_to_playlists_boundary_temperature(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test mapping weather conditions to search string at the boundary temperature."""
+    search_string = mapper.map_weather_to_playlists(15, "cloudy")
+    # Expected search string for 'warm' 'cloudy
+    assert search_string == "Overcast Moods"
