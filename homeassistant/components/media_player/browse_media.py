@@ -94,6 +94,7 @@ def async_process_play_media_url(
 
     return media_content_id
 
+
 class BrowseMedia:
     """Represent a browsable media file."""
 

@@ -102,7 +102,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        version = await migrate_from_version1_to_version2(hass, config_entries, entry, data)
+        version = await migrate_from_version1_to_version2(
+            hass, config_entries, entry, data
+        )
 
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
@@ -121,6 +123,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     return False
 
+
 async def migrate_from_version1_to_version2(hass, config_entries, entry, data):
     loc = await location.async_detect_location_info(async_get_clientsession(hass))
     if loc:
@@ -135,6 +138,7 @@ async def migrate_from_version1_to_version2(hass, config_entries, entry, data):
                 country,
             )
     return version
+
 
 def migrate_from_version2_to_version3(hass, entry, config_entries):
     registry = er.async_get(hass)
@@ -166,6 +170,7 @@ def migrate_from_version2_to_version3(hass, entry, config_entries):
             )
             config_entries.async_update_entry(entry)
             return True
+
 
 def format_unique_id(creds, mac_address):
     """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""

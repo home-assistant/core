@@ -56,7 +56,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     def set_settings(_settings, call):
         if contacts := call.data.get(ATTR_RESTRICT_CONTACTS):
-                _settings["restrictToContacts"] = contacts
+            _settings["restrictToContacts"] = contacts
         if domain := call.data.get(ATTR_RESTRICT_DOMAIN):
             _settings["restrictToDomain"] = domain
         if _date := call.data.get(ATTR_START):

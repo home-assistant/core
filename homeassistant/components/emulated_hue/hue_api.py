@@ -71,10 +71,7 @@ from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
 from .config import Config
-from .const import (
-    ONLY_LOCAL_IPS_ALLOWED,
-    ENTITY_NOT_FOUND,
-    BAD_REQUEST)
+from .const import BAD_REQUEST, ENTITY_NOT_FOUND, ONLY_LOCAL_IPS_ALLOWED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -317,7 +314,7 @@ class HueOneLightStateView(HomeAssistantView):
             return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
         if (state := hass.states.get(hass_entity_id)) is None:
-            _LOGGER.error(ENTITY_NOT_FOUND+": %s", hass_entity_id)
+            _LOGGER.error(ENTITY_NOT_FOUND + ": %s", hass_entity_id)
             return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
         if not self.config.is_state_exposed(state):
@@ -348,7 +345,7 @@ class HueOneLightChangeView(HomeAssistantView):
             _LOGGER.error("Unknown entity number: %s", entity_number)
             return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
         if (entity := hass.states.get(entity_id)) is None:
-            _LOGGER.error(ENTITY_NOT_FOUND+": %s", entity_id)
+            _LOGGER.error(ENTITY_NOT_FOUND + ": %s", entity_id)
             return self.json_message(ENTITY_NOT_FOUND, HTTPStatus.NOT_FOUND)
         if not config.is_state_exposed(entity):
             _LOGGER.error("Entity not exposed: %s", entity_id)
@@ -368,7 +365,7 @@ class HueOneLightChangeView(HomeAssistantView):
         entity_id = config.number_to_entity_id(entity_number)
 
         json_message = self.is_valid_request(config, hass, entity_id, entity_number)
-        if json_message != True:
+        if json_message is not True:
             return json_message
 
         try:
