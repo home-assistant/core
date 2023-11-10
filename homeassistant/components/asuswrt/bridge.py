@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import functools
 import logging
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 
@@ -54,22 +54,27 @@ def _get_dict(keys: list, values: list) -> dict[str, Any]:
     return dict(zip(keys, values))
 
 
-def handle_errors_and_zip(exceptions: Any, keys: list | None) -> Callable:
+def handle_errors_and_zip(
+    exceptions: Union[type[Exception], tuple[type[Exception], ...]],
+    keys: list[str] | None,
+) -> Callable[[Any], Callable[[AsusWrtBridge], Awaitable[dict[str, Any]]]]:
     """Run library methods and zip results or manage exceptions."""
 
-    def _handle_errors_and_zip(func: Callable) -> Callable:
+    def _handle_errors_and_zip(
+        func: Callable[[AsusWrtBridge], Awaitable[list[Any] | dict[str, Any]]],
+    ) -> Callable[[AsusWrtBridge], Awaitable[dict[str, Any]]]:
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
-        async def _wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        async def _wrapper(self: AsusWrtBridge) -> dict[str, Any]:
             try:
-                data = await func(self, *args, **kwargs)
+                data = await func(self)
             except exceptions as exc:
                 raise UpdateFailed(exc) from exc
 
             if keys is None:
                 return cast(dict[str, Any], data)
-            return _get_dict(keys, data)
+            return _get_dict(keys, cast(list[Any], data))
 
         return _wrapper
 
