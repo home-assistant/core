@@ -809,3 +809,12 @@ async def test_add_item_intent(
     assert len(entity1.items) == 0
     assert len(entity2.items) == 2
     assert entity2.items[1].summary == "wine"
+
+    # Missing list
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
+        )
