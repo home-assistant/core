@@ -1,62 +1,62 @@
 {
   "clear-night": {
-    "warm": "0JQ5DAqbMKFzHmL4tf05da",
-    "cold": "0JQ5DAqbMKFAJ5xb0fwo9m"
+    "warm": "Starry Night Vibes",
+    "cold": "Winter Star-gazing"
   },
   "cloudy": {
-    "warm": "0JQ5DAqbMKFCWjUTdzaG0e",
-    "cold": "0JQ5DAqbMKFQiK2EHwyjcU"
+    "warm": "Overcast Moods",
+    "cold": "Chilly Cloud Cover"
   },
   "fog": {
-    "warm": "0JQ5DAqbMKFFzDl7qN9Apr",
-    "cold": "0JQ5DAqbMKFLjmiZRss79w"
+    "warm": "Misty Morning Mix",
+    "cold": "Foggy Night Chill"
   },
   "hail": {
-    "warm": "0JQ5DAqbMKFDXXwE9BDJAr",
-    "cold": "0JQ5DAqbMKFDkd668ypn6O"
+    "warm": "Hailstorm Hits",
+    "cold": "Icy Beats"
   },
   "lightning": {
-    "warm": "0JQ5DAqbMKFA6SOHvT3gck",
-    "cold": "0JQ5DAqbMKFPrEiAOxgac3"
+    "warm": "Electric Summer",
+    "cold": "Thunderous Tunes"
   },
   "lightning-rainy": {
-    "warm": "0JQ5DAqbMKFHOzuVTgTizF",
-    "cold": "0JQ5DAqbMKFRieVZLLoo9m"
+    "warm": "Stormy Weather Jams",
+    "cold": "Rain and Thunder Relaxation"
   },
   "partlycloudy": {
-    "warm": "0JQ5DAqbMKFAQy4HL4XU2D",
-    "cold": "0JQ5DAqbMKFy78wprEpAjl"
+    "warm": "Partly Sunny Sounds",
+    "cold": "Cool Breeze Melodies"
   },
   "pouring": {
-    "warm": "0JQ5DAqbMKFAXlCG6QvYQ4",
-    "cold": "0JQ5DAqbMKFCuoRTxhYWow"
+    "warm": "Rainy Day Rhythms",
+    "cold": "Downpour Blues"
   },
   "rainy": {
-    "warm": "0JQ5DAqbMKFAJ5xb0fwo9m",
-    "cold": "0JQ5DAqbMKFRieVZLLoo9m"
+    "warm": "Raindrops and Beats",
+    "cold": "Melancholic Rain"
   },
   "snowy": {
-    "warm": "0JQ5DAqbMKFFoimhOqWzLB",
-    "cold": "0JQ5DAqbMKFLb2EqgLtpjC"
+    "warm": "Snowfall Serenades",
+    "cold": "Blizzard Ballads"
   },
   "snowy-rainy": {
-    "warm": "0JQ5DAqbMKFCWjUTdzaG0e",
-    "cold": "0JQ5DAqbMKFPrEiAOxgac3"
+    "warm": "Sleet Soundtrack",
+    "cold": "Freezing Rain Tunes"
   },
   "sunny": {
-    "warm": "0JQ5DAqbMKFEC4WFtoNRpw",
-    "cold": "0JQ5DAqbMKFAUsdyVjCQuL"
+    "warm": "Sunny Day Play",
+    "cold": "Crisp Sunshine Melodies"
   },
   "windy": {
-    "warm": "0JQ5DAqbMKFAQy4HL4XU2D",
-    "cold": "0JQ5DAqbMKFLjmiZRss79w"
+    "warm": "Windy Day Whistles",
+    "cold": "Gusty Echoes"
   },
   "windy-variant": {
-    "warm": "0JQ5DAqbMKFAQy4HL4XU2D",
-    "cold": "0JQ5DAqbMKFLjmiZRss79w"
+    "warm": "Breezy Afternoon",
+    "cold": "Brisk Wind Ballads"
   },
   "exceptional": {
-    "warm": "0JQ5DAqbMKFPw634sFwguI",
-    "cold": "0JQ5DAqbMKFPw634sFwguI"
+    "warm": "Extraordinary Sounds",
+    "cold": "Unique Beats for Unusual Weather"
   }
 }
