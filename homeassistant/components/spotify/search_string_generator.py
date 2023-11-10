@@ -43,7 +43,7 @@ class WeatherPlaylistMapper:
         """
 
         # Normalize the condition to lower case for reliable matching
-        condition = condition.lower()
+        condition = condition.strip().lower()
 
         # Determine if the temperature is warm or cold
         # FIX: Consider the unit of temperature (Fahrenheit or Celsius) and handle accordingly.
