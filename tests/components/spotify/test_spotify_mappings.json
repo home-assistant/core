@@ -1,24 +1,9 @@
 {
-  "clear-night": {
-    "warm": "Starry Night Vibes",
-    "cold": "Winter Star-gazing"
-  },
-  "cloudy": {
-    "warm": "Overcast Moods",
-    "cold": "Chilly Cloud Cover"
-  },
-  "fog": {
-    "warm": "Misty Morning Mix",
-    "cold": "Foggy Night Chill"
-  },
-  "hail": {
-    "warm": "Hailstorm Hits",
-    "cold": "Icy Beats"
-  },
-  "lightning": {
-    "warm": "Electric Summer",
-    "cold": "Thunderous Tunes"
-  },
+  "clear-night": { "warm": "Starry Night Vibes", "cold": "Winter Star-gazing" },
+  "cloudy": { "warm": "Overcast Moods", "cold": "Chilly Cloud Cover" },
+  "fog": { "warm": "Misty Morning Mix", "cold": "Foggy Night Chill" },
+  "hail": { "warm": "Hailstorm Hits", "cold": "Icy Beats" },
+  "lightning": { "warm": "Electric Summer", "cold": "Thunderous Tunes" },
   "lightning-rainy": {
     "warm": "Stormy Weather Jams",
     "cold": "Rain and Thunder Relaxation"
@@ -27,34 +12,13 @@
     "warm": "Partly Sunny Sounds",
     "cold": "Cool Breeze Melodies"
   },
-  "pouring": {
-    "warm": "Rainy Day Rhythms",
-    "cold": "Downpour Blues"
-  },
-  "rainy": {
-    "warm": "Raindrops and Beats",
-    "cold": "Melancholic Rain"
-  },
-  "snowy": {
-    "warm": "Snowfall Serenades",
-    "cold": "Blizzard Ballads"
-  },
-  "snowy-rainy": {
-    "warm": "Sleet Soundtrack",
-    "cold": "Freezing Rain Tunes"
-  },
-  "sunny": {
-    "warm": "Sunny Day Play",
-    "cold": "Crisp Sunshine Melodies"
-  },
-  "windy": {
-    "warm": "Windy Day Whistles",
-    "cold": "Gusty Echoes"
-  },
-  "windy-variant": {
-    "warm": "Breezy Afternoon",
-    "cold": "Brisk Wind Ballads"
-  },
+  "pouring": { "warm": "Rainy Day Rhythms", "cold": "Downpour Blues" },
+  "rainy": { "warm": "Raindrops and Beats", "cold": "Melancholic Rain" },
+  "snowy": { "warm": "Snowfall Serenades", "cold": "Blizzard Ballads" },
+  "snowy-rainy": { "warm": "Sleet Soundtrack", "cold": "Freezing Rain Tunes" },
+  "sunny": { "warm": "Sunny Day Play", "cold": "Crisp Sunshine Melodies" },
+  "windy": { "warm": "Windy Day Whistles", "cold": "Gusty Echoes" },
+  "windy-variant": { "warm": "Breezy Afternoon", "cold": "Brisk Wind Ballads" },
   "exceptional": {
     "warm": "Extraordinary Sounds",
     "cold": "Unique Beats for Unusual Weather"

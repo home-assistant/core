@@ -138,3 +138,11 @@ def test_map_weather_to_playlists_null_parameters(
     """Test mapping with null or missing parameters."""
     with pytest.raises(TypeError):
         mapper.map_weather_to_playlists(None, "sunny")
+
+
+def test_condtion_including_special_characters(
+    mapper: WeatherPlaylistMapper,
+) -> None:
+    """Test failing when provided condition with special characters in it."""
+    with pytest.raises(ValueError):
+        mapper.map_weather_to_playlists(20, "windy?")
