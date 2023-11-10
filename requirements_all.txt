@@ -660,7 +660,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.13.1
+dbus-fast==2.14.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
