@@ -359,18 +359,7 @@ async def async_setup_entry(
 
     entities: list[AemetSensor] = []
 
-    for description in FORECAST_SENSORS:
-        if dict_nested_value(coordinator.data["lib"], description.keys) is not None:
-            entities.append(
-                AemetSensor(
-                    name,
-                    coordinator,
-                    description,
-                    config_entry,
-                )
-            )
-
-    for description in WEATHER_SENSORS:
+    for description in FORECAST_SENSORS + WEATHER_SENSORS:
         if dict_nested_value(coordinator.data["lib"], description.keys) is not None:
             entities.append(
                 AemetSensor(
