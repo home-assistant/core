@@ -236,11 +236,11 @@ async def handle_call_service(
     try:
         context = connection.context(msg)
         response = await hass.services.async_call(
-            msg["domain"],
-            msg["service"],
-            msg.get("service_data"),
-            True,
-            context,
+            domain=msg["domain"],
+            service=msg["service"],
+            service_data=msg.get("service_data"),
+            blocking=True,
+            context=context,
             target=target,
             return_response=msg["return_response"],
         )
