@@ -27,7 +27,7 @@ def setup_platform(
 
     data = hass.data[LUPUSEC_DOMAIN]
 
-    device_types = [CONST.TYPE_OPENING]
+    device_types = CONST.TYPE_OPENING
 
     devices = []
     for device in data.lupusec.get_devices(generic_type=device_types):
