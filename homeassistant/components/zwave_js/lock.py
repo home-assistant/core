@@ -58,6 +58,7 @@ STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
         STATE_LOCKED: True,
     },
 }
+UNIT16_SCHEMA = vol.All(vol.Coerce(int), vol.Range(min=0, max=65535))
 
 
 async def async_setup_entry(
@@ -112,15 +113,15 @@ async def async_setup_entry(
                 vol.In(["TIMED", "CONSTANT"]),
                 lambda x: OperationType[x],
             ),
-            vol.Optional(ATTR_LOCK_TIMEOUT): vol.Coerce(int),
+            vol.Optional(ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
             vol.Optional(ATTR_OUTSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION): vol.All(
                 [cv.boolean], vol.Length(4, 4)
             ),
             vol.Optional(ATTR_INSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION): vol.All(
                 [cv.boolean], vol.Length(4, 4)
             ),
-            vol.Optional(ATTR_AUTO_RELOCK_TIME): vol.Coerce(int),
-            vol.Optional(ATTR_HOLD_AND_RELEASE_TIME): vol.Coerce(int),
+            vol.Optional(ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
+            vol.Optional(ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
             vol.Optional(ATTR_TWIST_ASSIST): vol.Coerce(bool),
             vol.Optional(ATTR_BLOCK_TO_BLOCK): vol.Coerce(bool),
         },
