@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.airtouch5.config_flow import CannotConnect
 from homeassistant.components.airtouch5.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,8 +20,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.airtouch5.config_flow.validate_input",
-        return_value={"title": "1.1.1.1"},
+        "airtouch5py.airtouch5_simple_client.Airtouch5SimpleClient.test_connection",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -47,8 +46,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.airtouch5.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "airtouch5py.airtouch5_simple_client.Airtouch5SimpleClient.test_connection",
+        side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
