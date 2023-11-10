@@ -41,6 +41,18 @@ class CrisisAlerterSensor(SensorEntity):
         self._crisis_alerter = crisis_alerter
         self._name = name
         self._state: str | None = None
+        self._web: str | None = None
+        self._published: str | None = None
+        self._area: str | None = None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            "Länk": self._web,
+            "Publicerad": self._published,
+            "Område": self._area,
+        }
 
     @property
     def name(self):
@@ -57,14 +69,16 @@ class CrisisAlerterSensor(SensorEntity):
         """Get the latest alerts."""
         try:
             response = self._crisis_alerter.news()
-            if len(response) > 0 and response[0]["PushMessage"]:
-                self._state = response[0]["PushMessage"]
-            else:
-                self._state = (
-                    "No alerts"
-                    if self._crisis_alerter.language == "en"
-                    else "Inga larm"
+            if len(response) > 0:
+                news = response[0]
+                self._state = news["PushMessage"]
+                self._web = news["Web"]
+                self._published = news["Published"]
+                self._area = (
+                    news["Area"][0]["Description"] if len(news["Area"]) > 0 else None
                 )
+            else:
+                self._state = "Inga larm"
         except Error as error:
             _LOGGER.error("Error fetching data: %s", error)
             self._state = "Unavailable"
