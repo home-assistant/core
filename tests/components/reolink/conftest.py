@@ -34,8 +34,10 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None]:
-    """Mock reolink connection."""
+def reolink_connect_class(
+    mock_get_source_ip: None,
+) -> Generator[MagicMock, None, None]:
+    """Mock reolink connection and return both the host_mock and host_mock_class."""
     with patch(
         "homeassistant.components.reolink.host.webhook.async_register",
         return_value=True,
@@ -65,7 +67,15 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
-        yield host_mock
+        yield host_mock_class
+
+
+@pytest.fixture
+def reolink_connect(
+    reolink_connect_class: MagicMock,
+) -> Generator[MagicMock, None, None]:
+    """Mock reolink connection."""
+    return reolink_connect_class.return_value
 
 
 @pytest.fixture
