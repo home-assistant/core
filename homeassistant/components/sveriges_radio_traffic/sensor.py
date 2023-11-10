@@ -37,7 +37,16 @@ class TrafficSensor(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self._attr_native_value = "Stockholm-Västerås. Risk för förseningar. Reducerad spårkapacitet vid Bålsta."
+        self._attr_native_value = self._api_caller()
+        # self._attr_native_value = "Stockholm-Västerås. Risk för förseningar. Reducerad spårkapacitet vid Bålsta."
+
+    def _api_caller(self) -> str:
+        return "It totally worked"
+        # root = ET.fromstring(
+        #    requests.get("http://api.sr.se/api/v2/traffic/areas", timeout=10).text
+        # )
+        # areas = [child.attrib["name"] for child in root[2]]
+        # return ", ".join(areas)
 
 
 # def setup_platform(
