@@ -33,7 +33,7 @@ from .helpers import (
     MatterEntryData,
     get_matter,
     get_node_from_device_entry,
-    node_id_from_ha_device_id,
+    node_from_ha_device_id,
 )
 from .models import MatterDeviceInfo
 
@@ -47,10 +47,7 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not (node_id := node_id_from_ha_device_id(hass, device_id)):
-        return None
-
-    if not (node := get_matter(hass).matter_client.get_node(node_id)):
+    if not (node := node_from_ha_device_id(hass, device_id)):
         return None
 
     return MatterDeviceInfo(
@@ -246,9 +243,9 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def open_commissioning_window(call: ServiceCall) -> None:
         """Open commissioning window on specific node."""
-        node_id = node_id_from_ha_device_id(hass, call.data["device_id"])
+        node = node_from_ha_device_id(hass, call.data["device_id"])
 
-        if node_id is None:
+        if node is None:
             raise HomeAssistantError("This is not a Matter device")
 
         matter_client = get_matter(hass).matter_client
@@ -256,7 +253,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         # We are sending device ID .
 
         try:
-            await matter_client.open_commissioning_window(node_id)
+            await matter_client.open_commissioning_window(node.node_id)
         except NodeCommissionFailed as err:
             raise HomeAssistantError(str(err)) from err
 
