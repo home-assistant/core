@@ -117,6 +117,7 @@ class SsdpServiceInfo(BaseServiceInfo):
     ssdp_ext: str | None = None
     ssdp_server: str | None = None
     ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
+    ssdp_all_locations: set[str] = field(default_factory=set)
     x_homeassistant_matching_domains: set[str] = field(default_factory=set)
 
 
@@ -293,16 +294,6 @@ class Scanner:
         """Get all seen devices."""
         return list(self._device_tracker.devices.values())
 
-    @property
-    def _all_headers_from_ssdp_devices(
-        self,
-    ) -> dict[tuple[str, str], CaseInsensitiveDict]:
-        return {
-            (ssdp_device.udn, dst): headers
-            for ssdp_device in self._ssdp_devices
-            for dst, headers in ssdp_device.all_combined_headers.items()
-        }
-
     async def async_register_callback(
         self, callback: SsdpCallback, match_dict: None | dict[str, str] = None
     ) -> Callable[[], None]:
@@ -314,13 +305,16 @@ class Scanner:
 
         # Make sure any entries that happened
         # before the callback was registered are fired
-        for headers in self._all_headers_from_ssdp_devices.values():
-            if _async_headers_match(headers, lower_match_dict):
-                await _async_process_callbacks(
-                    [callback],
-                    await self._async_headers_to_discovery_info(headers),
-                    SsdpChange.ALIVE,
-                )
+        for ssdp_device in self._ssdp_devices:
+            for headers in ssdp_device.all_combined_headers.values():
+                if _async_headers_match(headers, lower_match_dict):
+                    await _async_process_callbacks(
+                        [callback],
+                        await self._async_headers_to_discovery_info(
+                            ssdp_device, headers
+                        ),
+                        SsdpChange.ALIVE,
+                    )
 
         callback_entry = (callback, lower_match_dict)
         self._callbacks.append(callback_entry)
@@ -500,7 +494,7 @@ class Scanner:
             return
 
         discovery_info = discovery_info_from_headers_and_description(
-            combined_headers, info_desc
+            ssdp_device, combined_headers, info_desc
         )
         discovery_info.x_homeassistant_matching_domains = matching_domains
 
@@ -555,7 +549,7 @@ class Scanner:
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
-        self, headers: CaseInsensitiveDict
+        self, ssdp_device: SsdpDevice, headers: CaseInsensitiveDict
     ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
@@ -565,34 +559,46 @@ class Scanner:
 
         location = headers["location"]
         info_desc = await self._async_get_description_dict(location)
-        return discovery_info_from_headers_and_description(headers, info_desc)
+        return discovery_info_from_headers_and_description(
+            ssdp_device, headers, info_desc
+        )
 
     async def async_get_discovery_info_by_udn_st(
-        self, udn: str, st: str
+        self, udn: str, st: DeviceOrServiceType
     ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
-        if headers := self._all_headers_from_ssdp_devices.get((udn, st)):
-            return await self._async_headers_to_discovery_info(headers)
+        for ssdp_device in self._ssdp_devices:
+            if ssdp_device.udn == udn:
+                if headers := ssdp_device.combined_headers(st):
+                    return await self._async_headers_to_discovery_info(
+                        ssdp_device, headers
+                    )
         return None
 
-    async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_st(
+        self, st: DeviceOrServiceType
+    ) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
-            await self._async_headers_to_discovery_info(headers)
-            for udn_st, headers in self._all_headers_from_ssdp_devices.items()
-            if udn_st[1] == st
+            await self._async_headers_to_discovery_info(
+                ssdp_device, ssdp_device.combined_headers(st)
+            )
+            for ssdp_device in self._ssdp_devices
+            if ssdp_device.combined_headers(st)
         ]
 
     async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
-            await self._async_headers_to_discovery_info(headers)
-            for udn_st, headers in self._all_headers_from_ssdp_devices.items()
-            if udn_st[0] == udn
+            await self._async_headers_to_discovery_info(ssdp_device, headers)
+            for ssdp_device in self._ssdp_devices
+            for headers in ssdp_device.all_combined_headers.values()
+            if ssdp_device.udn == udn
         ]
 
 
 def discovery_info_from_headers_and_description(
+    ssdp_device: SsdpDevice,
     combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
@@ -625,6 +631,7 @@ def discovery_info_from_headers_and_description(
         ssdp_nt=combined_headers.get_lower("nt"),
         ssdp_headers=combined_headers,
         upnp=upnp_info,
+        ssdp_all_locations=set(ssdp_device.locations),
     )
 
 
