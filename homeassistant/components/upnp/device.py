@@ -33,7 +33,7 @@ from .const import (
 )
 
 
-def get_preffered_location(locations: set[str]) -> str:
+def get_preferred_location(locations: set[str]) -> str:
     """Get the preferred location (an IPv4 location) from a set of locations."""
     # Prefer IPv4 over IPv6.
     for location in locations:

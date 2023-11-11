@@ -578,11 +578,9 @@ class Scanner:
     async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
-            await self._async_headers_to_discovery_info(
-                ssdp_device, ssdp_device.combined_headers(st)
-            )
+            await self._async_headers_to_discovery_info(ssdp_device, headers)
             for ssdp_device in self._ssdp_devices
-            if ssdp_device.combined_headers(st)
+            if (headers := ssdp_device.combined_headers(st))
         ]
 
     async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:

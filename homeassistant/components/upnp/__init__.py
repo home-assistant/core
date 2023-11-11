@@ -26,7 +26,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import UpnpDataUpdateCoordinator
-from .device import async_create_device, get_preffered_location
+from .device import async_create_device, get_preferred_location
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create device.
     assert discovery_info is not None
     assert discovery_info.ssdp_all_locations
-    location = get_preffered_location(discovery_info.ssdp_all_locations)
+    location = get_preferred_location(discovery_info.ssdp_all_locations)
     try:
         device = await async_create_device(hass, location)
     except UpnpConnectionError as err:
