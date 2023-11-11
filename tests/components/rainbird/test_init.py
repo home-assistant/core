@@ -207,11 +207,13 @@ async def test_fix_unique_id_duplicate(
     assert config_entry.unique_id == MAC_ADDRESS_UNIQUE_ID
 
     await other_entry.async_setup(hass)
-    assert other_entry.state == ConfigEntryState.LOADED
     # Config entry unique id could not be updated since it already exists
-    assert other_entry.unique_id is None
+    assert other_entry.state == ConfigEntryState.SETUP_ERROR
 
     assert "Unable to fix missing unique id (already exists)" in caplog.text
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.parametrize(
