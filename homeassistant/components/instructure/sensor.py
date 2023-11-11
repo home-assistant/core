@@ -48,54 +48,82 @@ assignment_info = [
     }
 ]
 
-ASSIGNMENT_ID = "id"
-ASSIGNMENT_NAME = "name"
-COURSE_ID = "course_id"
-ASSIGNMENT_DUE = "due_at"
-ASSIGNMENT_LINK = "html_url"
+# ASSIGNMENT_ID = "id"
+# ASSIGNMENT_NAME = "name"
+# COURSE_ID = "course_id"
+# ASSIGNMENT_DUE = "due_at"
+# ASSIGNMENT_LINK = "html_url"
+
+@dataclass
+class BaseEntityDescriptionMixin:
+    """Mixin for required Canvas base description keys."""
+    value_fn: Callable[[dict[str, Any]], StateType]
+    name_fn: Callable[[dict[str, Any]], StateType]
+
+@dataclass
+class BaseEntityDescription(SensorEntityDescription):
+    """Describe Canvas sensor entity default overrides"""
+    attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
+
+
+@dataclass
+class CanvasSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
+    """Describe Canvas resource sensor entity"""
+    icon: str = "mdi:note-outline"
+
+
+assignment_sensor_entity_description = CanvasSensorEntityDescription(
+    key="upcoming_assignments",
+    translation_key="upcoming_assignments",
+    #device_class=SensorDeviceClass.ENUM，
+    #options=["Assignment"]
+    #native_unit_of_measurement="Assignment",
+    #entity_category=EntityCategory.DIAGNOSTIC,
+    #state_class=SensorStateClass.MEASUREMENT,
+    name_fn=lambda data: str(data["course_id"]) + "-" + data["name"],
+    value_fn=lambda data: data["due_at"],
+    attr_fn=lambda data: {
+        "Link": data["html_url"]
+    }
+)
 
 
 def create_assignment_sensors(assignment_info):
     sensors = []
     for assignment in assignment_info:
         sensors.append(
-            AssignmentSensorEntity(
-                assignment[ASSIGNMENT_ID],
-                assignment[ASSIGNMENT_NAME],
-                assignment[COURSE_ID],
-                assignment[ASSIGNMENT_DUE],
-                assignment[ASSIGNMENT_LINK],
-            )
+            AssignmentSensorEntity(assignment_sensor_entity_description, assignment)
         )
     return sensors
 
 class AssignmentSensorEntity(SensorEntity):
     """Defines an assignment sensor entity."""
     _attr_attribution = "Data provided by Canvas API"
-    _attr_icon = "mdi:note-outline"
-
-    def __init__(self, id, name, course_id, due, link) -> None:
-        """Initialize the sensor."""
-        self._id = id
-        self._name = name
-        self._course_id = course_id
-        self._due = due
-        self._link = link
+    entity_description: CanvasSensorEntityDescription
+    
+    def __init__(
+        self,
+        entity_description: CanvasSensorEntityDescription,
+        assignment_info
+    ) -> None:
+        """Initialize the assignment sensor."""
+        self.entity_description = entity_description
+        self.assignment_info = assignment_info
     
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self.entity_description.name_fn(self.assignment_info)
 
     @property
     def native_value(self):
         """Return the due time."""
-        return self._due
+        return self.entity_description.value_fn(self.assignment_info)
     
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the state attributes."""
-    #     return self._link
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return self.entity_description.attr_fn(self.assignment_info)
     
 async def async_setup_entry(
     hass: HomeAssistant,
