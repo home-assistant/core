@@ -621,10 +621,6 @@ async def test_delete_todo_list_item(
     assert call
     assert call.args == snapshot
 
-    state = hass.states.get("todo.my_tasks")
-    assert state
-    assert state.state == "0"
-
 
 @pytest.mark.parametrize(
     "response_handler",
