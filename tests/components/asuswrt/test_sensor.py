@@ -47,12 +47,12 @@ def create_device_registry_devices_fixture(
 
 def _setup_entry(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     config,
     sensors,
     unique_id=None,
 ):
     """Create mock config entry with enabled sensors."""
+    entity_reg = er.async_get(hass)
 
     # init config entry
     config_entry = MockConfigEntry(
@@ -70,7 +70,7 @@ def _setup_entry(
     # Pre-enable the status sensor
     for sensor_key in sensors:
         sensor_id = slugify(sensor_key)
-        entity_registry.async_get_or_create(
+        entity_reg.async_get_or_create(
             sensor.DOMAIN,
             DOMAIN,
             f"{unique_id_prefix}_{sensor_id}",
@@ -84,7 +84,6 @@ def _setup_entry(
 
 async def _test_sensors(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_devices,
     config,
     entry_unique_id,
@@ -95,12 +94,13 @@ async def _test_sensors(
     )
 
     # Create the first device tracker to test mac conversion
+    entity_reg = er.async_get(hass)
     for mac, name in {
         MOCK_MACS[0]: "test",
         dr.format_mac(MOCK_MACS[1]): "testtwo",
         MOCK_MACS[1]: "testremove",
     }.items():
-        entity_registry.async_get_or_create(
+        entity_reg.async_get_or_create(
             device_tracker.DOMAIN,
             DOMAIN,
             mac,
