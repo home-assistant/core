@@ -31,7 +31,7 @@ from .helpers import add_channel_from_thread, create_gateway, setup_hausbus_inte
 
 async def test_init(hass: HomeAssistant) -> None:
     """Test initialization of the hausbus gateway."""
-    config_entry = setup_hausbus_integration(hass)
+    config_entry = await setup_hausbus_integration(hass)
 
     # Create a mock HomeServer
     mock_home_server = Mock(Spec=HomeServer)
@@ -201,7 +201,7 @@ async def test_module_id_received(hass: HomeAssistant) -> None:
     # after receiving a module id a device is added
     assert gateway.get_device(ObjectId(sender)) is not None
     # controller should call getConfiguration next
-    assert mock_controller.mock_calls[0][0] == "getConfiguration"
+    mock_controller.getConfiguration.assert_called_once()
 
 
 async def test_configuration_received(hass: HomeAssistant) -> None:
@@ -247,7 +247,7 @@ async def test_configuration_received(hass: HomeAssistant) -> None:
     # after receiving a configuration a devices model_id is set
     assert gateway.get_device(ObjectId(sender)).model_id == "8-fach Dimmer"
     # controller should call getRemoteObjects next
-    assert mock_controller.mock_calls[0][0] == "getRemoteObjects"
+    mock_controller.getRemoteObjects.assert_called_once()
 
 
 async def test_remote_objects_received(hass: HomeAssistant) -> None:
