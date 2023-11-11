@@ -22,6 +22,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.const import UnitOfTemperature
 
+from .const import DOMAIN
+
 # Assignment info should be fetched via API
 assignment_info = [
     {
@@ -109,7 +111,15 @@ class AssignmentSensorEntity(SensorEntity):
         """Initialize the assignment sensor."""
         self.entity_description = entity_description
         self.assignment_info = assignment_info
-    
+        self._attr_unique_id = f"{self.entity_description.key}_{self.assignment_info['course_id']}_{self.assignment_info['id']}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "Upcoming Assignments")},
+            name="Upcoming Assignments",
+            manufacturer="Canvas",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
     @property
     def name(self):
         """Return the name of the sensor."""
