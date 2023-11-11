@@ -70,7 +70,7 @@ async def create_gateway(hass: HomeAssistant):
     # add gateway to hass
     hass.data[HAUSBUS_DOMAIN][config_entry.entry_id] = gateway
 
-    return gateway
+    return gateway, mock_home_server
 
 
 async def add_channel_from_thread(

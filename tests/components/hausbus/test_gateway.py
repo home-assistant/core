@@ -3,9 +3,16 @@
 from typing import cast
 from unittest.mock import Mock, patch
 
+from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.BusDataMessage import BusDataMessage
 from pyhausbus.de.hausbus.homeassistant.proxy.Controller import Controller
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.Configuration import (
+    Configuration,
+)
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.RemoteObjects import (
+    RemoteObjects,
+)
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
     EFirmwareId,
 )
@@ -49,7 +56,7 @@ async def test_init(hass: HomeAssistant) -> None:
 
 async def test_add_device(hass: HomeAssistant) -> None:
     """Test adding a device to the hausbus gateway."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     # Add a new device
     device_id = "device_1"
@@ -63,7 +70,7 @@ async def test_add_device(hass: HomeAssistant) -> None:
 
 async def test_get_device(hass: HomeAssistant) -> None:
     """Test getting a device from to the hausbus gateway."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -80,7 +87,7 @@ async def test_get_device(hass: HomeAssistant) -> None:
 
 async def test_get_channel_list(hass: HomeAssistant) -> None:
     """Test getting a channel list."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -97,7 +104,7 @@ async def test_get_channel_list(hass: HomeAssistant) -> None:
 
 async def test_get_channel_id(hass: HomeAssistant) -> None:
     """Test getting a channel id."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     # Get the device by ObjectId
     object_id = ObjectId(
@@ -111,7 +118,7 @@ async def test_get_channel_id(hass: HomeAssistant) -> None:
 
 async def test_get_channel(hass: HomeAssistant) -> None:
     """Test adding and getting a Dimmer channel."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     # get mock config entry with id "1"
     config_entry = hass.config_entries.async_get_entry("1")
@@ -142,7 +149,7 @@ async def test_get_channel(hass: HomeAssistant) -> None:
 
 async def test_get_unknown_channel(hass: HomeAssistant) -> None:
     """Test getting a channel that is not defined."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     # Get the device by ObjectId
     object_id = ObjectId(
@@ -155,12 +162,12 @@ async def test_get_unknown_channel(hass: HomeAssistant) -> None:
 
 async def test_own_bus_data_received(hass: HomeAssistant) -> None:
     """Test handling of own bus data."""
-    gateway = await create_gateway(hass)
+    gateway, _ = await create_gateway(hass)
 
     mock_controller = Mock(Spec=Controller)
 
-    sender = 0x270E0000  # = 0x27 0E 00 00, with class_id = 0x02 and instance_id = 0x03
-    receiver = 0x270E0000
+    sender = 0x270E0000  # own object id
+    receiver = 0x270E0000  # own object id
     data = {}
     busDataMessage = BusDataMessage(sender, receiver, data)
     with patch(
@@ -173,4 +180,98 @@ async def test_own_bus_data_received(hass: HomeAssistant) -> None:
     assert len(mock_controller.mock_calls) == 0
 
 
-# TODO: Add more test cases for other methods and functionality
+async def test_module_id_received(hass: HomeAssistant) -> None:
+    """Test handling of own bus data."""
+    gateway, _ = await create_gateway(hass)
+
+    mock_controller = Mock(Spec=Controller)
+
+    module = ModuleId("module", 0, 1, 0, EFirmwareId.ESP32)
+
+    sender = 66051  # = 0x00 01 02 03, with class_id = 0x02 and instance_id = 0x03
+    receiver = 0x270E0000  # own object id
+    data = module
+    busDataMessage = BusDataMessage(sender, receiver, data)
+    with patch(
+        "homeassistant.components.hausbus.gateway.Controller",
+        return_value=mock_controller,
+    ):
+        gateway.busDataReceived(busDataMessage)
+
+    # after receiving a module id a device is added
+    assert gateway.get_device(ObjectId(sender)) is not None
+    # controller should call getConfiguration next
+    assert mock_controller.mock_calls[0][0] == "getConfiguration"
+
+
+async def test_configuration_received(hass: HomeAssistant) -> None:
+    """Test handling of own bus data."""
+    gateway, _ = await create_gateway(hass)
+
+    # Add a new device
+    device_id = "1"
+    module = ModuleId("module", 0, 1, 0, EFirmwareId.ESP32)
+    gateway.add_device(device_id, module)
+
+    mock_controller = Mock(Spec=Controller)
+
+    config = Configuration(
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        0x28,
+    )
+
+    sender = 66051  # = 0x00 01 02 03, with class_id = 0x02 and instance_id = 0x03
+    receiver = 0x270E0000  # own object id
+    data = config
+    busDataMessage = BusDataMessage(sender, receiver, data)
+    with patch(
+        "homeassistant.components.hausbus.gateway.Controller",
+        return_value=mock_controller,
+    ):
+        gateway.busDataReceived(busDataMessage)
+
+    # after receiving a configuration a devices model_id is set
+    assert gateway.get_device(ObjectId(sender)).model_id == "8-fach Dimmer"
+    # controller should call getRemoteObjects next
+    assert mock_controller.mock_calls[0][0] == "getRemoteObjects"
+
+
+async def test_remote_objects_received(hass: HomeAssistant) -> None:
+    """Test handling of own bus data."""
+    gateway, mock_home_server = await create_gateway(hass)
+    mock_controller = Mock(Spec=Controller)
+
+    sender = 66051  # = 0x00 01 02 03, with class_id = 0x02 and instance_id = 0x03
+    receiver = 0x270E0000  # own object id
+    data = RemoteObjects(
+        [0x02, 0x03]
+    )  # list of class_id and instance_id per channel of the device
+    busDataMessage = BusDataMessage(sender, receiver, data)
+
+    feature = ABusFeature(sender)
+    attrs = {"getDeviceInstances.return_value": [feature]}
+    mock_home_server.configure_mock(**attrs)
+
+    with patch(
+        "homeassistant.components.hausbus.gateway.Controller",
+        return_value=mock_controller,
+    ):
+        gateway.busDataReceived(busDataMessage)
+
+    # controller should not be called
+    assert len(mock_controller.mock_calls) == 0
+    mock_home_server.getDeviceInstances.assert_called_with(sender, data)
