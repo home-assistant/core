@@ -430,7 +430,7 @@ class ColorTempSelectorConfig(TypedDict, total=False):
 
 
 class ColorTempSelectorUnit(StrEnum):
-    """Possible modes for a number selector."""
+    """Possible units for a color temperature selector."""
 
     KELVIN = "kelvin"
     MIRED = "mired"
