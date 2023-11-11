@@ -454,14 +454,16 @@ class Scanner:
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
             self.hass.async_create_task(
-                self._ssdp_listener_process_with_lookup(ssdp_device, dst, source)
+                self._ssdp_listener_process_callback_with_lookup(
+                    ssdp_device, dst, source
+                )
             )
             return
 
         # Info desc known, process directly.
-        self._ssdp_listener_process(ssdp_device, dst, source, info_desc)
+        self._ssdp_listener_process_callback(ssdp_device, dst, source, info_desc)
 
-    async def _ssdp_listener_process_with_lookup(
+    async def _ssdp_listener_process_callback_with_lookup(
         self,
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
@@ -469,14 +471,14 @@ class Scanner:
     ) -> None:
         """Handle a device/service change."""
         location = ssdp_device.location
-        self._ssdp_listener_process(
+        self._ssdp_listener_process_callback(
             ssdp_device,
             dst,
             source,
             await self._async_get_description_dict(location),
         )
 
-    def _ssdp_listener_process(
+    def _ssdp_listener_process_callback(
         self,
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
