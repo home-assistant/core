@@ -24,7 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import PROJECT_ID, SUMMARY
+from .conftest import PROJECT_ID, SUMMARY, make_api_task
 
 from tests.typing import ClientSessionGenerator
 
@@ -157,6 +157,47 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
         "%Y-%m-%d 00:00:00"
     )
     assert state.attributes["end_time"] == expected_end_time
+
+
+@pytest.mark.parametrize(
+    "tasks",
+    [
+        [
+            make_api_task(
+                content="Parent",
+                due=Due(
+                    # Note: This runs before the test fixture that sets the timezone
+                    date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime(
+                        "%Y-%m-%d"
+                    ),
+                    is_recurring=False,
+                    string="3 days from today",
+                ),
+            ),
+            make_api_task(
+                content="Sub task",
+                due=Due(
+                    # Note: This runs before the test fixture that sets the timezone
+                    date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime(
+                        "%Y-%m-%d"
+                    ),
+                    is_recurring=False,
+                    string="3 days from today",
+                ),
+                parent_id="1",
+            ),
+        ]
+    ],
+)
+async def test_update_entity_for_calendar_with_subtask_excludes_it(
+    hass: HomeAssistant,
+    api: AsyncMock,
+) -> None:
+    """Test that coordinator updates exclude sub-tasks."""
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
+    assert state.state == "on"
+    assert state.attributes["all_tasks"] == ["Parent"]
 
 
 @pytest.mark.parametrize("setup_platform", [None])

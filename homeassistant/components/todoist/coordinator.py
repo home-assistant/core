@@ -30,7 +30,9 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
     async def _async_update_data(self) -> list[Task]:
         """Fetch tasks from the Todoist API."""
         try:
-            return await self.api.get_tasks()
+            tasks = await self.api.get_tasks()
+            # Filter out sub-tasks.
+            return [task for task in tasks if task.parent_id is None]
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
