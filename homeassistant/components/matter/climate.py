@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from .discovery import MatterEntityInfo
 
 TEMPERATURE_SCALING_FACTOR = 100
+SIGNED_TEMPERATURE_SCALING_FACTOR = 10
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
     HVACMode.HEAT_COOL: 1,
@@ -78,6 +79,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
     _attr_hvac_mode: HVACMode = HVACMode.OFF
+    _attr_min_setpoint_deadband: float | None = 2.5
 
     def __init__(
         self,
@@ -87,6 +89,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
     ) -> None:
         """Initialize the Matter climate entity."""
         super().__init__(matter_client, endpoint, entity_info)
+
+        # set the minimum setpoint deadband
+        min_setpoint_deadband = self._get_signed_temperature_in_degrees(
+            clusters.Thermostat.Attributes.MinSetpointDeadBand
+        )
+        if min_setpoint_deadband:
+            self._attr_min_setpoint_deadband = min_setpoint_deadband
 
         # set hvac_modes based on feature map
         self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
@@ -136,6 +145,15 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 raise ValueError(
                     "current target_temperature_low and target_temperature_high should not be None"
                 )
+            # Ensure the incoming high and low temperatures have a difference that is the same as or greater than the minimum setpoint deadband
+            if self._attr_min_setpoint_deadband:
+                if (
+                    temperature_high - temperature_low
+                ) < self._attr_min_setpoint_deadband:
+                    raise ValueError(
+                        "The difference between the high temperature and low temperature is too small."
+                    )
+
             # due to ha send both high and low temperature, we need to check which one is changed
             command = self._create_optional_setpoint_command(
                 clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
@@ -180,6 +198,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Update from device."""
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
+        )
+        self._attr_min_setpoint_deadband = self._get_signed_temperature_in_degrees(
+            clusters.Thermostat.Attributes.MinSetpointDeadBand
         )
         # update hvac_mode from SystemMode
         system_mode_value = int(
@@ -258,6 +279,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_max_temp = DEFAULT_MAX_TEMP
 
+    def _get_signed_temperature_in_degrees(
+        self, attribute: type[clusters.ClusterAttributeDescriptor]
+    ) -> float | None:
+        """Return the scaled signed temperature value for the given attribute."""
+        if value := self.get_matter_attribute_value(attribute):
+            return float(value) / SIGNED_TEMPERATURE_SCALING_FACTOR
+        return None
+
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
     ) -> float | None:
@@ -307,6 +336,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.Thermostat.Attributes.MinSetpointDeadBand,
         ),
         device_type=(device_types.Thermostat,),
     ),
