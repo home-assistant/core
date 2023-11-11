@@ -3,6 +3,7 @@ import logging
 from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,13 @@ from homeassistant.helpers.check_config import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.requirements import RequirementsNotFound
 
-from tests.common import MockModule, mock_integration, mock_platform, patch_yaml_files
+from tests.common import (
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+    patch_yaml_files,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +80,11 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
         log_ha_config(res)
 
         error = CheckConfigError(
-            "not a valid value for dictionary value @ data['unit_system']",
+            (
+                "Invalid config for [homeassistant]: not a valid value for dictionary "
+                "value @ data['unit_system']. Got 'bad'. (See "
+                f"{hass.config.path(YAML_CONFIG_FILE)}, line 2). "
+            ),
             "homeassistant",
             {"unit_system": "bad"},
         )
@@ -249,6 +260,72 @@ async def test_platform_not_found_safe_mode(hass: HomeAssistant) -> None:
         assert res["light"] == []
 
         _assert_warnings_errors(res, [], [])
+
+
+@pytest.mark.parametrize(
+    ("extra_config", "warnings", "message", "config"),
+    [
+        (
+            "blah:\n  - platform: test\n    option1: abc",
+            0,
+            None,
+            None,
+        ),
+        (
+            "blah:\n  - platform: test\n    option1: 123",
+            1,
+            "Invalid config for [blah.test]: expected str for dictionary value",
+            {"option1": 123, "platform": "test"},
+        ),
+        # Test the attached config is unvalidated (key old is removed by validator)
+        (
+            "blah:\n  - platform: test\n    old: blah\n    option1: 123",
+            1,
+            "Invalid config for [blah.test]: expected str for dictionary value",
+            {"old": "blah", "option1": 123, "platform": "test"},
+        ),
+        # Test base platform configuration error
+        (
+            "blah:\n  - paltfrom: test\n",
+            1,
+            "Invalid config for [blah]: required key not provided",
+            {"paltfrom": "test"},
+        ),
+    ],
+)
+async def test_component_platform_schema_error(
+    hass: HomeAssistant,
+    extra_config: str,
+    warnings: int,
+    message: str | None,
+    config: dict | None,
+) -> None:
+    """Test schema error in component."""
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+    mock_integration(
+        hass,
+        MockModule("blah", platform_schema_base=comp_platform_schema_base),
+    )
+    test_platform_schema = comp_platform_schema.extend({"option1": str})
+    mock_platform(
+        hass,
+        "test.blah",
+        MockPlatform(platform_schema=test_platform_schema),
+    )
+
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + extra_config}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert len(res.errors) == 0
+        assert len(res.warnings) == warnings
+
+        for warn in res.warnings:
+            assert message in warn.message
+            assert warn.config == config
 
 
 async def test_component_config_platform_import_error(hass: HomeAssistant) -> None:
