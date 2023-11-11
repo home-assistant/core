@@ -357,7 +357,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
         if self._device.get_capability(Capability.fan_oscillation_mode):
             features |= ClimateEntityFeature.SWING_MODE
-        if len(self._determine_preset_modes()) > 0:
+        if (self._attr_preset_modes is not None) and len(self._attr_preset_modes) > 0:
             features |= ClimateEntityFeature.PRESET_MODE
         return features
 
@@ -524,14 +524,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             self._device.status.fan_oscillation_mode, SWING_OFF
         )
 
-    def _determine_preset_modes(self) -> list[str]:
+    def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         supported_modes = self._device.status.attributes[
             "supportedAcOptionalMode"
         ].value
         if WINDFREE in supported_modes:
             return [WINDFREE]
-        return []
+        return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set special modes (currently only windFree is supported)."""
