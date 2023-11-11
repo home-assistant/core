@@ -1,8 +1,9 @@
 """Google Tasks todo platform."""
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -96,7 +97,7 @@ class GoogleTaskTodoListEntity(
                     item.get("status"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
                 ),
             )
-            for item in self.coordinator.data
+            for item in _order_tasks(self.coordinator.data)
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -121,3 +122,33 @@ class GoogleTaskTodoListEntity(
         """Delete To-do items."""
         await self.coordinator.api.delete(self._task_list_id, uids)
         await self.coordinator.async_refresh()
+
+
+def _order_tasks(tasks: list[dict[str, Any]]) -> Iterator[dict[str, Any]]:
+    """Order the task items response.
+
+    Home Assistant To-do items do not support the Google Task parent/sibbling relationships
+    so we preserve them as a pre-order traversal where children come after
+    their parents. All tasks have an order amongst their sibblings based on
+    position.
+    """
+    # Build a dict of parent task id to child tasks, a tree with "" as the root.
+    # The siblings at each level are sorted by position.
+    children: dict[str, list[dict[str, Any]]] = {}
+    for task in tasks:
+        parent = task.get("parent", "")
+        if child_list := children.get(parent):
+            child_list.append(task)
+        else:
+            children[parent] = [task]
+    for subtasks in children.values():
+        subtasks.sort(key=lambda task: task["position"])
+
+    # Pre-order traversal of the root tasks down to their children. Anytime
+    # child tasks are found, they are inserted at the front of the queue.
+    queue = [*children.get("", ())]
+    while queue and (task := queue.pop(0)):
+        yield task
+
+        if child_tasks := children.get(task["id"]):
+            queue = [*child_tasks, *queue]
