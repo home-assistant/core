@@ -75,7 +75,7 @@ def feature_fixture(request):
     return request.getfixturevalue(request.param)
 
 
-async def async_setup_entities(hass, entity_ids):
+async def async_setup_entities(hass, entity_ids, entity_registry: er.EntityRegistry):
     """Return configured entries with the given entity ids."""
 
     config_entry = mock_config()
@@ -84,7 +84,6 @@ async def async_setup_entities(hass, entity_ids):
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
 
