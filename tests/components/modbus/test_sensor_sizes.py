@@ -332,6 +332,34 @@ async def test_count_is_correct_when_register_bytes_is_not_set(
             },
             "test entity: `register_size_bytes:10` is not valid, only 2, 4 or 8 are valid.",
         ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_DATA_TYPE: DataType.STRING,
+                        CONF_REGISTER_SIZE_BYTES: 4,
+                        CONF_COUNT: 2,
+                    },
+                ]
+            },
+            "test entity: `register_size_bytes: 4` cannot be specified with `data_type: DataType.STRING`",
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_DATA_TYPE: DataType.STRING,
+                        CONF_REGISTER_SIZE_BYTES: 8,
+                        CONF_COUNT: 2,
+                    },
+                ]
+            },
+            "test entity: `register_size_bytes: 8` cannot be specified with `data_type: DataType.STRING`",
+        ),
     ],
 )
 async def test_register_bytes_incorrectly_set(

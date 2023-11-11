@@ -49,13 +49,21 @@ ENTRY = namedtuple(
     "ENTRY",
     [
         "struct_id",
-        "register_count",
         "validate_parm",
     ],
 )
 PARM_IS_LEGAL = namedtuple(
     "PARM_IS_LEGAL",
-    ["count", "structure", "slave_count", "swap_byte", "swap_word"],
+    [
+        "count",
+        "structure",
+        "slave_count",
+        "swap_byte",
+        "swap_word",
+        "register_size_2",
+        "register_size_4",
+        "register_size_8",
+    ],
 )
 # PARM_IS_LEGAL defines if the keywords:
 #    count:
@@ -63,83 +71,81 @@ PARM_IS_LEGAL = namedtuple(
 #    swap: byte
 #    swap: word
 #    swap: word_byte (identical to swap: word)
+#    register_size_2: register size of 2 bytes
+#    register_size_4: register size of 4 bytes
+#    register_size_8: register size of 8 bytes
 # are legal to use.
 # These keywords are only legal with some datatype: ...
 # As expressed in DEFAULT_STRUCT_FORMAT
 
-REGISTER_COUNT_ENTRY = namedtuple("REGISTER_COUNT_ENTRY", ["count_for_register_size"])
-# REGISTER_COUNT_ENTRY defines the record count for each data type for a given register size in bytes:
-#   2: register count when size is 2 bytes
-#   4: register count when size is 4 bytes
-#   8: register count when size is 8 bytes
-# -1 when register size is not valid for that data_type
-
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT8: ENTRY(
-        "b",
-        REGISTER_COUNT_ENTRY({"2": -1, "4": -1, "8": -1}),
-        PARM_IS_LEGAL(False, False, False, False, False),
-    ),
-    DataType.UINT8: ENTRY(
-        "c",
-        REGISTER_COUNT_ENTRY({"2": -1, "4": -1, "8": -1}),
-        PARM_IS_LEGAL(False, False, False, False, False),
-    ),
     DataType.INT16: ENTRY(
         "h",
-        REGISTER_COUNT_ENTRY({"2": 1, "4": -1, "8": -1}),
-        PARM_IS_LEGAL(False, False, True, True, False),
+        PARM_IS_LEGAL(False, False, True, True, False, True, False, False),
     ),
     DataType.UINT16: ENTRY(
         "H",
-        REGISTER_COUNT_ENTRY({"2": 1, "4": -1, "8": -1}),
-        PARM_IS_LEGAL(False, False, True, True, False),
+        PARM_IS_LEGAL(False, False, True, True, False, True, False, False),
     ),
     DataType.FLOAT16: ENTRY(
         "e",
-        REGISTER_COUNT_ENTRY({"2": 1, "4": -1, "8": -1}),
-        PARM_IS_LEGAL(False, False, True, True, False),
+        PARM_IS_LEGAL(False, False, True, True, False, True, False, False),
     ),
     DataType.INT32: ENTRY(
         "i",
-        REGISTER_COUNT_ENTRY({"2": 2, "4": 1, "8": -1}),
-        PARM_IS_LEGAL(False, False, True, True, True),
+        PARM_IS_LEGAL(False, False, True, True, True, True, True, False),
     ),
     DataType.UINT32: ENTRY(
         "I",
-        REGISTER_COUNT_ENTRY({"2": 2, "4": 1, "8": -1}),
-        PARM_IS_LEGAL(False, False, True, True, True),
+        PARM_IS_LEGAL(False, False, True, True, True, True, True, False),
     ),
     DataType.FLOAT32: ENTRY(
         "f",
-        REGISTER_COUNT_ENTRY({"2": 2, "4": 1, "8": -1}),
-        PARM_IS_LEGAL(False, False, True, True, True),
+        PARM_IS_LEGAL(False, False, True, True, True, True, True, False),
     ),
     DataType.INT64: ENTRY(
         "q",
-        REGISTER_COUNT_ENTRY({"2": 4, "4": 2, "8": 1}),
-        PARM_IS_LEGAL(False, False, True, True, True),
+        PARM_IS_LEGAL(False, False, True, True, True, True, True, True),
     ),
     DataType.UINT64: ENTRY(
         "Q",
-        REGISTER_COUNT_ENTRY({"2": 4, "4": 2, "8": 1}),
-        PARM_IS_LEGAL(False, False, True, True, True),
+        PARM_IS_LEGAL(False, False, True, True, True, True, True, True),
     ),
     DataType.FLOAT64: ENTRY(
         "d",
-        REGISTER_COUNT_ENTRY({"2": 4, "4": 2, "8": 1}),
-        PARM_IS_LEGAL(False, False, True, True, True),
+        PARM_IS_LEGAL(False, False, True, True, True, True, True, True),
     ),
     DataType.STRING: ENTRY(
         "s",
-        REGISTER_COUNT_ENTRY({"2": 0, "4": 0, "8": 0}),
-        PARM_IS_LEGAL(True, False, False, False, False),
+        PARM_IS_LEGAL(True, False, False, True, False, True, False, False),
     ),
     DataType.CUSTOM: ENTRY(
         "?",
-        REGISTER_COUNT_ENTRY({"2": 0, "4": 0, "8": 0}),
-        PARM_IS_LEGAL(True, True, False, False, False),
+        PARM_IS_LEGAL(True, True, False, False, False, True, True, True),
     ),
+}
+
+REGISTER_COUNT_ENTRY = namedtuple(
+    "REGISTER_COUNT_ENTRY", ["count_size_2", "count_size_4", "count_size_8"]
+)
+# REGISTER_COUNT_ENTRY defines the record count for each register size in bytes:
+#   count_size_2: count for register size 2 bytes
+#   count_size_4: count for register size 4 bytes
+#   count_size_8: count for register size 8 bytes
+# -1 when register size is not valid for that data_type
+
+STRUCT_REGISTER_COUNT = {
+    DataType.INT16: REGISTER_COUNT_ENTRY(1, -1, -1),
+    DataType.UINT16: REGISTER_COUNT_ENTRY(1, -1, -1),
+    DataType.FLOAT16: REGISTER_COUNT_ENTRY(1, -1, -1),
+    DataType.INT32: REGISTER_COUNT_ENTRY(2, 1, -1),
+    DataType.UINT32: REGISTER_COUNT_ENTRY(2, 1, -1),
+    DataType.FLOAT32: REGISTER_COUNT_ENTRY(2, 1, -1),
+    DataType.INT64: REGISTER_COUNT_ENTRY(4, 2, 1),
+    DataType.UINT64: REGISTER_COUNT_ENTRY(4, 2, 1),
+    DataType.FLOAT64: REGISTER_COUNT_ENTRY(4, 2, 1),
+    DataType.STRING: REGISTER_COUNT_ENTRY(-1, -1, -1),
+    DataType.CUSTOM: REGISTER_COUNT_ENTRY(0, 0, 0),
 }
 
 
@@ -186,7 +192,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     if register_size_bytes not in (2, 4, 8):
         error = f"{name}: `{CONF_REGISTER_SIZE_BYTES}:{register_size_bytes}` is not valid, only 2, 4 or 8 are valid."
         raise vol.Invalid(error)
-    if register_size_validator.count_for_register_size[str(register_size_bytes)] < 0:
+    if not getattr(validator, f"register_size_{register_size_bytes}"):
         error = f"{name}: `{CONF_REGISTER_SIZE_BYTES}: {register_size_bytes}` cannot be specified with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
@@ -203,9 +209,9 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             )
     else:
         if data_type != DataType.STRING:
-            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[
-                data_type
-            ].register_count.count_for_register_size[str(register_size_bytes)]
+            config[CONF_COUNT] = getattr(
+                STRUCT_REGISTER_COUNT[data_type], f"count_size_{register_size_bytes}"
+            )
         if slave_count:
             structure = (
                 f">{slave_count + 1}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
