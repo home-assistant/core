@@ -341,7 +341,7 @@ async def async_initialize_triggers(
         elif isinstance(result, BaseException):
             raise result from None
         elif result is None:
-            log_cb(
+            log_cb(  # type: ignore[unreachable]
                 logging.ERROR, "Unknown error while setting up trigger (empty result)"
             )
         else:
