@@ -416,6 +416,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             token=token,
             session=session,
             server=generate_local_server(host=host),
+            verify_ssl=verify_ssl,
         )
 
         await local_client.login()

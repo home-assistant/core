@@ -56,9 +56,7 @@ class HomeAssistantOverkizData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
-
     client: OverkizClient | None = None
-
     api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
 
     # Local API
@@ -246,6 +244,7 @@ def create_local_client(
         token=token,
         session=session,
         server=generate_local_server(host=host),
+        verify_ssl=verify_ssl,
     )
 
 
