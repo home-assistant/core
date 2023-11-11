@@ -2608,7 +2608,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
-    def compile(  # type: ignore[misc]
+    def compile(  # type: ignore[overload-overlap]
         self,
         source: str | jinja2.nodes.Template,
         name: str | None = None,
