@@ -164,8 +164,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         )
         self._attr_min_temp = static_info.visual_min_temperature
         self._attr_max_temp = static_info.visual_max_temperature
-        self._attr_min_humidity = static_info.visual_min_humidity
-        self._attr_max_humidity = static_info.visual_max_humidity
+        self._attr_min_humidity = round(static_info.visual_min_humidity)
+        self._attr_max_humidity = round(static_info.visual_max_humidity)
         features = ClimateEntityFeature(0)
         if self._static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
