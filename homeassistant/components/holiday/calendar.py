@@ -66,6 +66,7 @@ class HolidayCalendarEntity(CalendarEntity):
                 self._country,
                 subdiv=self._province,
                 years=date.today().year,
+                language=self.hass.config.language,
             )
 
             next_holiday = min(
@@ -95,6 +96,7 @@ class HolidayCalendarEntity(CalendarEntity):
                 self._country,
                 subdiv=self._province,
                 years=list({start_date.year, end_date.year}),
+                language=hass.config.language,
             )
 
             event_list: list[CalendarEvent] = []
