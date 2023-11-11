@@ -283,6 +283,7 @@ class Scanner:
         self.hass = hass
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SsdpListener] = []
+        self._device_tracker = SsdpDeviceTracker()
         self._callbacks: list[tuple[SsdpCallback, dict[str, str]]] = []
         self._description_cache: DescriptionCache | None = None
         self.integration_matchers = integration_matchers
@@ -290,11 +291,7 @@ class Scanner:
     @property
     def _ssdp_devices(self) -> list[SsdpDevice]:
         """Get all seen devices."""
-        return [
-            ssdp_device
-            for ssdp_listener in self._ssdp_listeners
-            for ssdp_device in ssdp_listener.devices.values()
-        ]
+        return list(self._device_tracker.devices.values())
 
     @property
     def _all_headers_from_ssdp_devices(
@@ -386,7 +383,6 @@ class Scanner:
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
         # Devices are shared between all sources.
-        device_tracker = SsdpDeviceTracker()
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
@@ -405,7 +401,7 @@ class Scanner:
                     callback=self._ssdp_listener_callback,
                     source=source,
                     target=target,
-                    device_tracker=device_tracker,
+                    device_tracker=self._device_tracker,
                 )
             )
         results = await asyncio.gather(
