@@ -4,7 +4,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TOGGLE,
-    STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
@@ -81,7 +80,7 @@ def is_opening(hass, ent):
 
 def is_closed(hass, ent):
     """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_CLOSED)
+    return valve.is_closed(hass, ent.entity_id)
 
 
 def is_closing(hass, ent):

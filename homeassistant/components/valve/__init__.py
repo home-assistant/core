@@ -31,7 +31,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +75,6 @@ ATTR_CURRENT_POSITION = "current_position"
 ATTR_POSITION = "position"
 
 
-@bind_hass
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the valve is closed based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_CLOSED)
