@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await api.get_tasks()
             except HTTPError as err:
                 if err.response.status_code == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_access_token"
+                    errors["base"] = "invalid_api_key"
                 else:
                     errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except

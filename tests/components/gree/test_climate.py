@@ -34,7 +34,11 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.gree.climate import FAN_MODES_REVERSE, HVAC_MODES_REVERSE
+from homeassistant.components.gree.climate import (
+    FAN_MODES_REVERSE,
+    HVAC_MODES,
+    HVAC_MODES_REVERSE,
+)
 from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -384,6 +388,9 @@ async def test_send_target_temperature(
     """Test for sending target temperature command to the device."""
     hass.config.units.temperature_unit = units
 
+    device().power = True
+    device().mode = HVAC_MODES_REVERSE.get(HVACMode.AUTO)
+
     fake_device = device()
     if units == UnitOfTemperature.FAHRENHEIT:
         fake_device.temperature_units = 1
@@ -407,10 +414,45 @@ async def test_send_target_temperature(
         state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         == fake_device.current_temperature
     )
+    assert state.state == HVAC_MODES.get(fake_device.mode)
 
     # Reset config temperature_unit back to CELSIUS, required for
     # additional tests outside this component.
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+
+
+@pytest.mark.parametrize(
+    ("temperature", "hvac_mode"),
+    [
+        (26, HVACMode.OFF),
+        (26, HVACMode.HEAT),
+        (26, HVACMode.COOL),
+        (26, HVACMode.AUTO),
+        (26, HVACMode.DRY),
+        (26, HVACMode.FAN_ONLY),
+    ],
+)
+async def test_send_target_temperature_with_hvac_mode(
+    hass: HomeAssistant, discovery, device, temperature, hvac_mode
+) -> None:
+    """Test for sending target temperature command to the device alongside hvac mode."""
+    await async_setup_gree(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: temperature,
+            ATTR_HVAC_MODE: hvac_mode,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+    assert state.state == hvac_mode
 
 
 @pytest.mark.parametrize(

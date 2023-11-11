@@ -101,48 +101,11 @@ class Secrets:
         return secrets
 
 
-class SafeLoader(FastestAvailableSafeLoader):
-    """The fastest available safe loader."""
+class _LoaderMixin:
+    """Mixin class with extensions for YAML loader."""
 
-    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
-        """Initialize a safe line loader."""
-        self.stream = stream
-        if isinstance(stream, str):
-            self.name = "<unicode string>"
-        elif isinstance(stream, bytes):
-            self.name = "<byte string>"
-        else:
-            self.name = getattr(stream, "name", "<file>")
-        super().__init__(stream)
-        self.secrets = secrets
-
-    def get_name(self) -> str:
-        """Get the name of the loader."""
-        return self.name
-
-    def get_stream_name(self) -> str:
-        """Get the name of the stream."""
-        return self.stream.name or ""
-
-
-class SafeLineLoader(yaml.SafeLoader):
-    """Loader class that keeps track of line numbers."""
-
-    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
-        """Initialize a safe line loader."""
-        super().__init__(stream)
-        self.secrets = secrets
-
-    def compose_node(  # type: ignore[override]
-        self, parent: yaml.nodes.Node, index: int
-    ) -> yaml.nodes.Node:
-        """Annotate a node with the first line it was seen."""
-        last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(  # type: ignore[assignment]
-            parent, index
-        )
-        node.__line__ = last_line + 1  # type: ignore[attr-defined]
-        return node
+    name: str
+    stream: Any
 
     def get_name(self) -> str:
         """Get the name of the loader."""
@@ -153,7 +116,35 @@ class SafeLineLoader(yaml.SafeLoader):
         return getattr(self.stream, "name", "")
 
 
-LoaderType = SafeLineLoader | SafeLoader
+class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
+    """The fastest available safe loader, either C or Python."""
+
+    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
+        """Initialize a safe line loader."""
+        self.stream = stream
+
+        # Set name in same way as the Python loader does in yaml.reader.__init__
+        if isinstance(stream, str):
+            self.name = "<unicode string>"
+        elif isinstance(stream, bytes):
+            self.name = "<byte string>"
+        else:
+            self.name = getattr(stream, "name", "<file>")
+
+        super().__init__(stream)
+        self.secrets = secrets
+
+
+class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
+    """Python safe loader."""
+
+    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
+        """Initialize a safe line loader."""
+        super().__init__(stream)
+        self.secrets = secrets
+
+
+LoaderType = FastSafeLoader | PythonSafeLoader
 
 
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
@@ -171,31 +162,31 @@ def parse_yaml(
 ) -> JSON_TYPE:
     """Parse YAML with the fastest available loader."""
     if not HAS_C_LOADER:
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_python(content, secrets)
     try:
-        return _parse_yaml(SafeLoader, content, secrets)
+        return _parse_yaml(FastSafeLoader, content, secrets)
     except yaml.YAMLError:
-        # Loading failed, so we now load with the slow line loader
-        # since the C one will not give us line numbers
+        # Loading failed, so we now load with the Python loader which has more
+        # readable exceptions
         if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_python(content, secrets)
 
 
-def _parse_yaml_pure_python(
+def _parse_yaml_python(
     content: str | TextIO | StringIO, secrets: Secrets | None = None
 ) -> JSON_TYPE:
-    """Parse YAML with the pure python loader (this is very slow)."""
+    """Parse YAML with the python loader (this is very slow)."""
     try:
-        return _parse_yaml(SafeLineLoader, content, secrets)
+        return _parse_yaml(PythonSafeLoader, content, secrets)
     except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc) from exc
 
 
 def _parse_yaml(
-    loader: type[SafeLoader] | type[SafeLineLoader],
+    loader: type[FastSafeLoader] | type[PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
@@ -240,7 +231,7 @@ def _add_reference(  # type: ignore[no-untyped-def]
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
     setattr(obj, "__config_file__", loader.get_name())
-    setattr(obj, "__line__", node.start_mark.line)
+    setattr(obj, "__line__", node.start_mark.line + 1)
     return obj
 
 
@@ -371,6 +362,16 @@ def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     return _add_reference(obj, loader, node)
 
 
+def _handle_scalar_tag(
+    loader: LoaderType, node: yaml.nodes.ScalarNode
+) -> str | int | float | None:
+    """Add line number and file name to Load YAML sequence."""
+    obj = loader.construct_scalar(node)
+    if not isinstance(obj, str):
+        return obj
+    return _add_reference(obj, loader, node)
+
+
 def _env_var_yaml(loader: LoaderType, node: yaml.nodes.Node) -> str:
     """Load environment variables and embed it into the configuration YAML."""
     args = node.value.split()
@@ -394,12 +395,13 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
 
 def add_constructor(tag: Any, constructor: Any) -> None:
     """Add to constructor to all loaders."""
-    for yaml_loader in (SafeLoader, SafeLineLoader):
+    for yaml_loader in (FastSafeLoader, PythonSafeLoader):
         yaml_loader.add_constructor(tag, constructor)
 
 
 add_constructor("!include", _include_yaml)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _handle_mapping_tag)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG, _handle_scalar_tag)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 add_constructor("!env_var", _env_var_yaml)
 add_constructor("!secret", secret_yaml)

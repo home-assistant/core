@@ -18,6 +18,7 @@ APP_DESC = {
 API_VERSION = "v6"
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
@@ -84,6 +85,7 @@ CATEGORY_TO_MODEL = {
 }
 
 HOME_COMPATIBLE_CATEGORIES = [
+    FreeboxHomeCategory.ALARM,
     FreeboxHomeCategory.CAMERA,
     FreeboxHomeCategory.DWS,
     FreeboxHomeCategory.IOHOME,

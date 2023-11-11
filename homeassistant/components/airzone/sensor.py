@@ -6,7 +6,6 @@ from typing import Any, Final
 from aioairzone.const import (
     AZD_HOT_WATER,
     AZD_HUMIDITY,
-    AZD_NAME,
     AZD_TEMP,
     AZD_TEMP_UNIT,
     AZD_WEBSERVER,
@@ -54,7 +53,7 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         key=AZD_WIFI_RSSI,
-        name="RSSI",
+        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -64,14 +63,12 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key=AZD_TEMP,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         key=AZD_HUMIDITY,
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -144,8 +141,6 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
 class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
     """Define an Airzone Hot Water sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -176,7 +171,6 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"WebServer {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_ws_{description.key}"
         self.entity_description = description
         self._async_update_attrs()
@@ -196,7 +190,6 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )

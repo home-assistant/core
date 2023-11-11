@@ -33,6 +33,9 @@ def mock_pydrawise(
         mock_pydrawise.return_value.current_controller = mock_controller
         mock_pydrawise.return_value.controller_status = {"relays": mock_zones}
         mock_pydrawise.return_value.relays = mock_zones
+        mock_pydrawise.return_value.relays_by_zone_number = {
+            r["relay"]: r for r in mock_zones
+        }
         yield mock_pydrawise.return_value
 
 

@@ -242,7 +242,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
-    assert "color_temp" not in lamp_1.attributes
+    assert lamp_1.attributes["color_temp"] is None
     assert lamp_1.attributes["color_mode"] == ColorMode.HS
     assert lamp_1.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,

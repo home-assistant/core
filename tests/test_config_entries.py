@@ -269,7 +269,9 @@ async def test_call_async_migrate_entry_failure_not_supported(
 
 
 async def test_remove_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we can remove an entry."""
 
@@ -335,9 +337,8 @@ async def test_remove_entry(
     assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
-    entity_entry = list(ent_reg.entities.values())[0]
+    assert len(entity_registry.entities) == 1
+    entity_entry = list(entity_registry.entities.values())[0]
     assert entity_entry.config_entry_id == entry.entry_id
 
     # Remove entry
@@ -358,7 +359,7 @@ async def test_remove_entry(
     assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
-    entity_entry_list = list(ent_reg.entities.values())
+    entity_entry_list = list(entity_registry.entities.values())
     assert not entity_entry_list
 
 
@@ -2171,6 +2172,9 @@ async def test_manual_add_overrides_ignored_entry(
             )
             return self.async_show_form(step_id="step2")
 
+        async def async_step_step2(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
@@ -2500,6 +2504,9 @@ async def test_partial_flows_hidden(
             await pause_discovery.wait()
             return self.async_show_form(step_id="someform")
 
+        async def async_step_someform(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # Start a config entry flow and wait for it to be blocked
         init_task = asyncio.ensure_future(
@@ -2788,6 +2795,9 @@ async def test_flow_with_default_discovery_with_unique_id(
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
 
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}
@@ -2841,6 +2851,9 @@ async def test_default_discovery_in_progress(
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
 
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
+
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         result = await manager.flow.async_init(
             "comp",
@@ -2877,6 +2890,9 @@ async def test_default_discovery_abort_on_new_unique_flow(
             await self.async_set_unique_id(discovery_info.get("unique_id"))
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
+
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # First discovery with default, no unique ID
@@ -2921,6 +2937,9 @@ async def test_default_discovery_abort_on_user_flow_complete(
             """Test discovery step."""
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
+
+        async def async_step_mock(self, user_input=None):
+            raise NotImplementedError
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # First discovery with default, no unique ID
@@ -3773,6 +3792,20 @@ async def test_reauth(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 2
 
+    # Abort all existing flows
+    for flow in hass.config_entries.flow.async_progress():
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+    await hass.async_block_till_done()
+
+    # Check that we can't start duplicate reauth flows
+    # without blocking between flows
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
 
 async def test_get_active_flows(hass: HomeAssistant) -> None:
     """Test the async_get_active_flows helper."""
@@ -3968,6 +4001,9 @@ async def test_preview_supported(
             """Mock Reauth."""
             return self.async_show_form(step_id="next", preview="test")
 
+        async def async_step_next(self, user_input=None):
+            raise NotImplementedError
+
         @staticmethod
         async def async_setup_preview(hass: HomeAssistant) -> None:
             """Set up preview."""
@@ -4005,6 +4041,9 @@ async def test_preview_not_supported(
         async def async_step_user(self, data):
             """Mock Reauth."""
             return self.async_show_form(step_id="user_confirm")
+
+        async def async_step_user_confirm(self, user_input=None):
+            raise NotImplementedError
 
     mock_integration(hass, MockModule("test"))
     mock_entity_platform(hass, "config_flow.test", None)

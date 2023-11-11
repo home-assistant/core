@@ -2,7 +2,9 @@
 from collections.abc import Callable, Generator
 import itertools
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
+import warnings
 
 import pytest
 import zigpy
@@ -14,6 +16,7 @@ import zigpy.device
 import zigpy.group
 import zigpy.profiles
 import zigpy.quirks
+import zigpy.state
 import zigpy.types
 import zigpy.util
 from zigpy.zcl.clusters.general import Basic, Groups
@@ -92,7 +95,9 @@ class _FakeApp(ControllerApplication):
     async def start_network(self):
         pass
 
-    async def write_network_info(self):
+    async def write_network_info(
+        self, *, network_info: zigpy.state.NetworkInfo, node_info: zigpy.state.NodeInfo
+    ) -> None:
         pass
 
     async def request(
@@ -111,9 +116,33 @@ class _FakeApp(ControllerApplication):
     ):
         pass
 
+    async def move_network_to_channel(
+        self, new_channel: int, *, num_broadcasts: int = 5
+    ) -> None:
+        pass
+
+
+def _wrap_mock_instance(obj: Any) -> MagicMock:
+    """Auto-mock every attribute and method in an object."""
+    mock = create_autospec(obj, spec_set=True, instance=True)
+
+    for attr_name in dir(obj):
+        if attr_name.startswith("__") and attr_name not in {"__getitem__"}:
+            continue
+
+        real_attr = getattr(obj, attr_name)
+        mock_attr = getattr(mock, attr_name)
+
+        if callable(real_attr):
+            mock_attr.side_effect = real_attr
+        else:
+            setattr(mock, attr_name, real_attr)
+
+    return mock
+
 
 @pytest.fixture
-def zigpy_app_controller():
+async def zigpy_app_controller():
     """Zigpy ApplicationController fixture."""
     app = _FakeApp(
         {
@@ -145,14 +174,14 @@ def zigpy_app_controller():
     ep.add_input_cluster(Basic.cluster_id)
     ep.add_input_cluster(Groups.cluster_id)
 
-    with patch(
-        "zigpy.device.Device.request", return_value=[Status.SUCCESS]
-    ), patch.object(app, "permit", autospec=True), patch.object(
-        app, "startup", wraps=app.startup
-    ), patch.object(
-        app, "permit_with_key", autospec=True
-    ):
-        yield app
+    with patch("zigpy.device.Device.request", return_value=[Status.SUCCESS]):
+        # The mock wrapping accesses deprecated attributes, so we suppress the warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            mock_app = _wrap_mock_instance(app)
+            mock_app.backups = _wrap_mock_instance(app.backups)
+
+        yield mock_app
 
 
 @pytest.fixture(name="config_entry")
@@ -189,12 +218,17 @@ def mock_zigpy_connect(
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
         return_value=zigpy_app_controller,
-    ) as mock_app:
-        yield mock_app
+    ), patch(
+        "bellows.zigbee.application.ControllerApplication",
+        return_value=zigpy_app_controller,
+    ):
+        yield zigpy_app_controller
 
 
 @pytest.fixture
-def setup_zha(hass, config_entry: MockConfigEntry, mock_zigpy_connect):
+def setup_zha(
+    hass, config_entry: MockConfigEntry, mock_zigpy_connect: ControllerApplication
+):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
@@ -202,12 +236,11 @@ def setup_zha(hass, config_entry: MockConfigEntry, mock_zigpy_connect):
         config_entry.add_to_hass(hass)
         config = config or {}
 
-        with mock_zigpy_connect:
-            status = await async_setup_component(
-                hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
-            )
-            assert status is True
-            await hass.async_block_till_done()
+        status = await async_setup_component(
+            hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
+        )
+        assert status is True
+        await hass.async_block_till_done()
 
     return _setup
 
@@ -394,3 +427,74 @@ def speed_up_radio_mgr():
     """Speed up the radio manager connection time by removing delays."""
     with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.00001):
         yield
+
+
+@pytest.fixture
+def network_backup() -> zigpy.backups.NetworkBackup:
+    """Real ZHA network backup taken from an active instance."""
+    return zigpy.backups.NetworkBackup.from_dict(
+        {
+            "backup_time": "2022-11-16T03:16:49.427675+00:00",
+            "network_info": {
+                "extended_pan_id": "2f:73:58:bd:fe:78:91:11",
+                "pan_id": "2DB4",
+                "nwk_update_id": 0,
+                "nwk_manager_id": "0000",
+                "channel": 15,
+                "channel_mask": [
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                    21,
+                    22,
+                    23,
+                    24,
+                    25,
+                    26,
+                ],
+                "security_level": 5,
+                "network_key": {
+                    "key": "4a:c7:9d:50:51:09:16:37:2e:34:66:c6:ed:9b:23:85",
+                    "tx_counter": 14131,
+                    "rx_counter": 0,
+                    "seq": 0,
+                    "partner_ieee": "ff:ff:ff:ff:ff:ff:ff:ff",
+                },
+                "tc_link_key": {
+                    "key": "5a:69:67:42:65:65:41:6c:6c:69:61:6e:63:65:30:39",
+                    "tx_counter": 0,
+                    "rx_counter": 0,
+                    "seq": 0,
+                    "partner_ieee": "84:ba:20:ff:fe:59:f5:ff",
+                },
+                "key_table": [],
+                "children": [],
+                "nwk_addresses": {"cc:cc:cc:ff:fe:e6:8e:ca": "1431"},
+                "stack_specific": {
+                    "ezsp": {"hashed_tclk": "e9bd3ac165233d95923613c608beb147"}
+                },
+                "metadata": {
+                    "ezsp": {
+                        "manufacturer": "",
+                        "board": "",
+                        "version": "7.1.3.0 build 0",
+                        "stack_version": 9,
+                        "can_write_custom_eui64": False,
+                    }
+                },
+                "source": "bellows@0.34.2",
+            },
+            "node_info": {
+                "nwk": "0000",
+                "ieee": "84:ba:20:ff:fe:59:f5:ff",
+                "logical_type": "coordinator",
+            },
+        }
+    )

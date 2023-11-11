@@ -16,7 +16,6 @@ from homeassistant.components.recorder import (
     get_instance,
     history,
     statistics,
-    util as recorder_util,
 )
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -33,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
@@ -257,20 +257,10 @@ def _normalize_states(
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     """Suggest to report an issue."""
     entity_info = entity_sources(hass).get(entity_id)
-    domain = entity_info["domain"] if entity_info else None
-    custom_component = entity_info["custom_component"] if entity_info else None
-    report_issue = ""
-    if custom_component:
-        report_issue = "report it to the custom integration author."
-    else:
-        report_issue = (
-            "create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-        )
-        if domain:
-            report_issue += f"+label%3A%22integration%3A+{domain}%22"
 
-    return report_issue
+    return async_suggest_report_issue(
+        hass, integration_domain=entity_info["domain"] if entity_info else None
+    )
 
 
 def warn_dip(
@@ -383,27 +373,7 @@ def _timestamp_to_isoformat_or_none(timestamp: float | None) -> str | None:
     return dt_util.utc_from_timestamp(timestamp).isoformat()
 
 
-def compile_statistics(
-    hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> statistics.PlatformCompiledStatistics:
-    """Compile statistics for all entities during start-end.
-
-    Note: This will query the database and must not be run in the event loop
-    """
-    # There is already an active session when this code is called since
-    # it is called from the recorder statistics. We need to make sure
-    # this session never gets committed since it would be out of sync
-    # with the recorder statistics session so we mark it as read only.
-    #
-    # If we ever need to write to the database from this function we
-    # will need to refactor the recorder statistics to use a single
-    # session.
-    with recorder_util.session_scope(hass=hass, read_only=True) as session:
-        compiled = _compile_statistics(hass, session, start, end)
-    return compiled
-
-
-def _compile_statistics(  # noqa: C901
+def compile_statistics(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
     start: datetime.datetime,
@@ -480,8 +450,8 @@ def _compile_statistics(  # noqa: C901
         if "sum" in wanted_statistics[entity_id]:
             to_query.add(entity_id)
 
-    last_stats = statistics.get_latest_short_term_statistics(
-        hass, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
+    last_stats = statistics.get_latest_short_term_statistics_with_session(
+        hass, session, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
     )
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,

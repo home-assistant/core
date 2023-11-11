@@ -12,12 +12,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
@@ -57,7 +57,7 @@ def setup_platform(
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
     # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return
+    return  # pragma: no cover
 
 
 async def async_setup_entry(
@@ -95,13 +95,10 @@ async def async_setup_entry(
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and updates the state."""
-        LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
         if self.entity_description.key == "status":
             self._attr_is_on = self.coordinator.last_update_success
         elif self.entity_description.key == "is_watering":
             relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
             self._attr_is_on = relay_data["timestr"] == "Now"
-        super()._handle_coordinator_update()

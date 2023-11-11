@@ -9,7 +9,8 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "auth_failed": "Unable to authenticate with the desk. This is usually solved by using an ESPHome Bluetooth Proxy. Please check the integration documentation for alternative workarounds.",
+      "cannot_connect": "Cannot connect. Make sure that the desk is in Bluetooth pairing mode. If not already, you can also use an ESPHome Bluetooth Proxy, as it provides a better connection.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

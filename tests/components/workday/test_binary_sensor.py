@@ -1,12 +1,12 @@
 """Tests the Home Assistant workday binary sensor."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import voluptuous as vol
 
-from homeassistant.components.workday import binary_sensor
+from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
+from homeassistant.components.workday.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC
@@ -36,21 +36,6 @@ from . import (
     TEST_CONFIG_YESTERDAY,
     init_integration,
 )
-
-
-async def test_valid_country_yaml() -> None:
-    """Test valid country from yaml."""
-    # Invalid UTF-8, must not contain U+D800 to U+DFFF
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("\ud800")
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("\udfff")
-    # Country MUST NOT be empty
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("")
-    # Country must be supported by holidays
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("HomeAssistantLand")
 
 
 @pytest.mark.parametrize(
@@ -86,35 +71,6 @@ async def test_setup(
         "workdays": config["workdays"],
         "excludes": config["excludes"],
         "days_offset": config["days_offset"],
-    }
-
-
-async def test_setup_from_import(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test setup from various configs."""
-    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Monday
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "workday",
-                "country": "DE",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.workday_sensor")
-    assert state is not None
-    assert state.state == "off"
-    assert state.attributes == {
-        "friendly_name": "Workday Sensor",
-        "workdays": ["mon", "tue", "wed", "thu", "fri"],
-        "excludes": ["sat", "sun", "holiday"],
-        "days_offset": 0,
     }
 
 
@@ -319,3 +275,39 @@ async def test_setup_date_range(
 
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state.state == "on"
+
+
+async def test_check_date_service(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test check date service with response data."""
+
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
+
+    hass.states.get("binary_sensor.workday_sensor")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 25),  # Christmas Day
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 23),  # Normal Friday
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": True}}

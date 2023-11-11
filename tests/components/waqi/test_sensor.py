@@ -3,10 +3,12 @@ import json
 from unittest.mock import patch
 
 from aiowaqi import WAQIAirQuality, WAQIError, WAQISearchResult
+import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
-from homeassistant.components.waqi.sensor import CONF_LOCATIONS, CONF_STATIONS
+from homeassistant.components.waqi.sensor import CONF_LOCATIONS, CONF_STATIONS, SENSORS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -72,7 +74,7 @@ async def test_legacy_migration_already_imported(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.waqi_de_jongweg_utrecht")
+    state = hass.states.get("sensor.de_jongweg_utrecht_air_quality_index")
     assert state.state == "29"
 
     hass.async_create_task(
@@ -114,13 +116,16 @@ async def test_sensor_id_migration(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 1
+    assert len(entities) == 12
     assert hass.states.get("sensor.waqi_4584")
-    assert hass.states.get("sensor.waqi_de_jongweg_utrecht") is None
+    assert hass.states.get("sensor.de_jongweg_utrecht_air_quality_index") is None
     assert entities[0].unique_id == "4584_air_quality"
 
 
-async def test_sensor(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, snapshot: SnapshotAssertion
+) -> None:
     """Test failed update."""
     mock_config_entry.add_to_hass(hass)
     with patch(
@@ -131,9 +136,12 @@ async def test_sensor(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.waqi_de_jongweg_utrecht")
-    assert state.state == "29"
+    entity_registry = er.async_get(hass)
+    for sensor in SENSORS:
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"4584_{sensor.key}"
+        )
+        assert hass.states.get(entity_id) == snapshot
 
 
 async def test_updating_failed(

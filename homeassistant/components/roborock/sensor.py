@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import datetime
 
 from roborock.containers import (
     RoborockDockErrorCode,
@@ -38,7 +39,7 @@ from .device import RoborockCoordinatedEntity
 class RoborockSensorDescriptionMixin:
     """A class that describes sensor entities."""
 
-    value_fn: Callable[[DeviceProp], int]
+    value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
 
 
 @dataclass
@@ -46,6 +47,15 @@ class RoborockSensorDescription(
     SensorEntityDescription, RoborockSensorDescriptionMixin
 ):
     """A class that describes Roborock sensors."""
+
+
+def _dock_error_value_fn(properties: DeviceProp) -> str | None:
+    if (
+        status := properties.status.dock_error_status
+    ) is not None and properties.status.dock_type != RoborockDockTypeCode.no_dock:
+        return status.name
+
+    return None
 
 
 SENSOR_DESCRIPTIONS = [
@@ -107,7 +117,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:information-outline",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
-        value_fn=lambda data: data.status.state.name,
+        value_fn=lambda data: data.status.state_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockStateCode.keys(),
     ),
@@ -132,7 +142,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:alert-circle",
         translation_key="vacuum_error",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda data: data.status.error_code.name,
+        value_fn=lambda data: data.status.error_code_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockErrorCode.keys(),
     ),
@@ -147,7 +157,9 @@ SENSOR_DESCRIPTIONS = [
         key="last_clean_start",
         translation_key="last_clean_start",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.begin_datetime,
+        value_fn=lambda data: data.last_clean_record.begin_datetime
+        if data.last_clean_record is not None
+        else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -155,7 +167,9 @@ SENSOR_DESCRIPTIONS = [
         key="last_clean_end",
         translation_key="last_clean_end",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.end_datetime,
+        value_fn=lambda data: data.last_clean_record.end_datetime
+        if data.last_clean_record is not None
+        else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -173,9 +187,7 @@ SENSOR_DESCRIPTIONS = [
         key="dock_error",
         icon="mdi:garage-open",
         translation_key="dock_error",
-        value_fn=lambda data: data.status.dock_error_status.name
-        if data.status.dock_type != RoborockDockTypeCode.no_dock
-        else None,
+        value_fn=_dock_error_value_fn,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
@@ -228,7 +240,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime.datetime:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.roborock_device_info.props

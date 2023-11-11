@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Context,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -790,7 +791,7 @@ async def entity_service_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> ServiceResponse | None:
+) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -870,10 +871,9 @@ async def entity_service_call(
         return None
 
     if len(entities) == 1:
-        # Single entity case avoids creating tasks and allows returning
-        # ServiceResponse
+        # Single entity case avoids creating task
         entity = entities[0]
-        response_data = await _handle_entity_call(
+        single_response = await _handle_entity_call(
             hass, entity, func, data, call.context
         )
         if entity.should_poll:
@@ -881,27 +881,25 @@ async def entity_service_call(
             # Set context again so it's there when we update
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
-        return response_data if return_response else None
+        return {entity.entity_id: single_response} if return_response else None
 
-    if return_response:
-        raise HomeAssistantError(
-            "Service call requested response data but matched more than one entity"
-        )
-
-    done, pending = await asyncio.wait(
-        [
-            asyncio.create_task(
-                entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
-                )
+    # Use asyncio.gather here to ensure the returned results
+    # are in the same order as the entities list
+    results: list[ServiceResponse] = await asyncio.gather(
+        *[
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
-        ]
+        ],
+        return_exceptions=True,
     )
-    assert not pending
 
-    for task in done:
-        task.result()  # pop exception if have
+    response_data: EntityServiceResponse = {}
+    for entity, result in zip(entities, results):
+        if isinstance(result, Exception):
+            raise result
+        response_data[entity.entity_id] = result
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -920,7 +918,7 @@ async def entity_service_call(
         for future in done:
             future.result()  # pop exception if have
 
-    return None
+    return response_data if return_response and response_data else None
 
 
 async def _handle_entity_call(
@@ -943,7 +941,7 @@ async def _handle_entity_call(
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    result: ServiceResponse | None = None
+    result: ServiceResponse = None
     if task is not None:
         result = await task
 

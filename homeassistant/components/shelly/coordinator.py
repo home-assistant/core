@@ -58,7 +58,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import device_update_info, get_rpc_device_wakeup_period
+from .utils import get_rpc_device_wakeup_period, update_device_fw_info
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -295,8 +295,6 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
-        else:
-            device_update_info(self.hass, self.device, self.entry)
 
     @callback
     def _async_handle_update(
@@ -376,16 +374,13 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
                 return
-            old_firmware = self.device.firmware_version
             await self.device.update_shelly()
-            if self.device.firmware_version == old_firmware:
-                return
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
 
 
 class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
@@ -533,7 +528,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
         try:
             await self.device.initialize()
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
@@ -619,6 +614,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
+            if self.sleep_period:
+                update_device_fw_info(self.hass, self.device, self.entry)
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
