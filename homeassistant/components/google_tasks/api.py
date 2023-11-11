@@ -1,7 +1,6 @@
 """API for Google Tasks bound to Home Assistant OAuth."""
 
 import json
-import logging
 from typing import Any
 
 from google.oauth2.credentials import Credentials
@@ -14,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .exceptions import GoogleTasksApiError
-
-_LOGGER = logging.getLogger(__name__)
 
 MAX_TASK_RESULTS = 100
 
@@ -125,6 +122,21 @@ class AsyncConfigEntryAuth:
                 callback=response_handler,
             )
         await self._execute(batch)
+
+    async def move(
+        self,
+        task_list_id: str,
+        task_id: str,
+        previous: str | None,
+    ) -> None:
+        """Update a task resource."""
+        service = await self._get_service()
+        cmd: HttpRequest = service.tasks().move(
+            tasklist=task_list_id,
+            task=task_id,
+            previous=previous,
+        )
+        await self._execute(cmd)
 
     async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
         try:

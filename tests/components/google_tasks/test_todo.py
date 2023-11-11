@@ -74,6 +74,29 @@ LIST_TASKS_RESPONSE_MULTIPLE = {
         },
     ],
 }
+LIST_TASKS_RESPONSE_REORDER = {
+    "items": [
+        {
+            "id": "some-task-id-2",
+            "title": "Milk",
+            "status": "needsAction",
+            "position": "00000000000000000002",
+        },
+        {
+            "id": "some-task-id-1",
+            "title": "Water",
+            "status": "needsAction",
+            "position": "00000000000000000001",
+        },
+        # Task 3 moved after task 1
+        {
+            "id": "some-task-id-3",
+            "title": "Cheese",
+            "status": "needsAction",
+            "position": "000000000000000000011",
+        },
+    ],
+}
 
 # API responses when testing update methods
 UPDATE_API_RESPONSES = [
@@ -599,6 +622,10 @@ async def test_delete_todo_list_item(
     assert call
     assert call.args == snapshot
 
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "0"
+
 
 @pytest.mark.parametrize(
     "response_handler",
@@ -729,65 +756,57 @@ async def test_delete_server_error(
     [
         [
             LIST_TASK_LIST_RESPONSE,
-            {
-                "items": [
-                    {
-                        "id": "task-3-2",
-                        "title": "Child 2",
-                        "status": "needsAction",
-                        "parent": "task-3",
-                        "position": "0000000000000002",
-                    },
-                    {
-                        "id": "task-3",
-                        "title": "Task 3 (Parent)",
-                        "status": "needsAction",
-                        "position": "0000000000000003",
-                    },
-                    {
-                        "id": "task-2",
-                        "title": "Task 2",
-                        "status": "needsAction",
-                        "position": "0000000000000002",
-                    },
-                    {
-                        "id": "task-1",
-                        "title": "Task 1",
-                        "status": "needsAction",
-                        "position": "0000000000000001",
-                    },
-                    {
-                        "id": "task-3-1",
-                        "title": "Child 1",
-                        "status": "needsAction",
-                        "parent": "task-3",
-                        "position": "0000000000000001",
-                    },
-                    {
-                        "id": "task-4",
-                        "title": "Task 4",
-                        "status": "needsAction",
-                        "position": "0000000000000004",
-                    },
-                ],
-            },
+            LIST_TASKS_RESPONSE_MULTIPLE,
+            EMPTY_RESPONSE,  # move
+            LIST_TASKS_RESPONSE_REORDER,  # refresh after move
         ]
     ],
 )
-async def test_parent_child_ordering(
+async def test_move_todo_item(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    hass_ws_client: WebSocketGenerator,
+    ws_req_id: Callable[[], int],
+    mock_http_response: Any,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test getting todo list items."""
+    """Test for re-ordering a To-do Item."""
 
     assert await integration_setup()
 
-    state = hass.states.get("todo.my_tasks")
+    state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.state == "4"
+    assert state.state == "3"
+
+    items = await ws_get_items()
+    assert items == snapshot
+
+    # Move to second in the list
+    client = await hass_ws_client()
+    id = ws_req_id()
+    data = {
+        "id": id,
+        "type": "todo/item/move",
+        "entity_id": ENTITY_ID,
+        "uid": "some-task-id-3",
+        "previous_uid": "some-task-id-1",
+    }
+    await client.send_json(data)
+    resp = await client.receive_json()
+    assert resp.get("id") == id
+    assert resp.get("success")
+
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "3"
 
     items = await ws_get_items()
     assert items == snapshot

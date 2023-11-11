@@ -32,6 +32,56 @@
     'POST',
   )
 # ---
+# name: test_move_todo_item[api_responses0]
+  list([
+    dict({
+      'status': 'needs_action',
+      'summary': 'Water',
+      'uid': 'some-task-id-1',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Milk',
+      'uid': 'some-task-id-2',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Cheese',
+      'uid': 'some-task-id-3',
+    }),
+  ])
+# ---
+# name: test_move_todo_item[api_responses0].1
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id-3/move?previous=some-task-id-1&alt=json',
+    'POST',
+  )
+# ---
+# name: test_move_todo_item[api_responses0].2
+  None
+# ---
+# name: test_move_todo_item[api_responses0].3
+  list([
+    dict({
+      'status': 'needs_action',
+      'summary': 'Water',
+      'uid': 'some-task-id-1',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Cheese',
+      'uid': 'some-task-id-3',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Milk',
+      'uid': 'some-task-id-2',
+    }),
+  ])
+# ---
+# name: test_move_todo_item[api_responses0].4
+  None
+# ---
 # name: test_parent_child_ordering[api_responses0]
   list([
     dict({
