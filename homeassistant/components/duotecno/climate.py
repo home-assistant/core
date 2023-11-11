@@ -23,12 +23,7 @@ HVACMODE: Final = {
 }
 HVACMODE_REVERSE: Final = {value: key for key, value in HVACMODE.items()}
 
-PRESETMODES: Final = {
-    "sun": 0,
-    "half_sun": 1,
-    "moon": 2,
-    "half_moon": 3,
-}
+PRESETMODES: Final = {"sun": 0, "half_sun": 1, "moon": 2, "half_moon": 3}
 PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 
 
@@ -88,5 +83,10 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
         """Set the preset mode."""
         await self._unit.set_preset(PRESETMODES[preset_mode])
 
+    @api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Duotecno does not support setting this, we can only display it."""
+        if hvac_mode == HVACMode.OFF:
+            await self._unit.turn_off()
+        else:
+            await self._unit.turn_on()
