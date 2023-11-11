@@ -45,12 +45,7 @@ def create_device_registry_devices_fixture(
         )
 
 
-def _setup_entry(
-    hass: HomeAssistant,
-    config,
-    sensors,
-    unique_id=None,
-):
+def _setup_entry(hass: HomeAssistant, config, sensors, unique_id=None):
     """Create mock config entry with enabled sensors."""
     entity_reg = er.async_get(hass)
 
