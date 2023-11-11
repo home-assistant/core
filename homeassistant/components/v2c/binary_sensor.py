@@ -64,10 +64,8 @@ async def async_setup_entry(
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            V2CBinarySensorBaseEntity(coordinator, description, config_entry.entry_id)
-            for description in TRYDAN_SENSORS
-        ]
+        V2CBinarySensorBaseEntity(coordinator, description, config_entry.entry_id)
+        for description in TRYDAN_SENSORS
     )
 
 
