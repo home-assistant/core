@@ -425,6 +425,9 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 class ColorTempSelectorConfig(TypedDict, total=False):
     """Class to represent a color temp selector config."""
 
+    unit: ColorTempSelectorUnit
+    min: int
+    max: int
     max_mireds: int
     min_mireds: int
 
@@ -460,11 +463,20 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     def __call__(self, data: Any) -> int:
         """Validate the passed selection."""
+        range_min = self.config.get("min")
+        range_max = self.config.get("max")
+
+        if not range_min:
+            range_min = self.config.get("min_mireds")
+
+        if not range_max:
+            range_max = self.config.get("max_mireds")
+
         value: int = vol.All(
             vol.Coerce(float),
             vol.Range(
-                min=self.config.get("min_mireds"),
-                max=self.config.get("max_mireds"),
+                min=range_min,
+                max=range_max,
             ),
         )(data)
         return value
