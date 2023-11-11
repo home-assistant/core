@@ -657,9 +657,14 @@ class TodoistProjectData:
                 for task in tasks
                 if not self._project_id_whitelist
                 or task.project_id in self._project_id_whitelist
+                and task.parent_id is None
             ]
         else:
-            project_task_data = [task for task in tasks if task.project_id == self._id]
+            project_task_data = [
+                task
+                for task in tasks
+                if task.project_id == self._id and task.parent_id is None
+            ]
 
         # If we have no data, we can just return right away.
         if not project_task_data:
