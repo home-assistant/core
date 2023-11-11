@@ -73,16 +73,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password=user_input[CONF_PASSWORD],
             server=SUPPORTED_SERVERS[user_input[CONF_HUB]],
         )
+        await client.login(register_event_listener=False)
 
-        # Local API
+        #  For Local API, we create and activate a local token
         if self._api_type == APIType.LOCAL:
             user_input[CONF_TOKEN] = await self._create_local_api_token(
                 cloud_client=client,
                 host=user_input[CONF_HOST],
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
-        else:
-            await client.login(register_event_listener=False)
 
         # Set main gateway id as unique id
         if gateways := await client.get_gateways():
@@ -387,7 +386,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> str:
         """Create local API token."""
         # Create session on Somfy cloud server to generate an access token for local API
-        await cloud_client.login(register_event_listener=False)
         gateways = await cloud_client.get_gateways()
 
         gateway_id = ""
