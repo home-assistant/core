@@ -106,6 +106,8 @@ ATTR_NODES = "nodes"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
+ATTR_VALUE_SIZE = "value_size"
+ATTR_VALUE_FORMAT = "value_format"
 # refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 # multicast

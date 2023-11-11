@@ -202,7 +202,7 @@ def _patch_discovery(device=None, no_device=False):
 
 
 def _patch_single_discovery(device=None, no_device=False):
-    async def _discover_single(*_):
+    async def _discover_single(*args, **kwargs):
         if no_device:
             raise SmartDeviceException
         return device if device else _mocked_bulb()
