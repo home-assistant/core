@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_states
+  set({
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can do all',
+        'supported_features': <LawnMowerEntityFeature: 7>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_do_all',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can dock',
+        'supported_features': <LawnMowerEntityFeature: 5>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_dock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'mowing',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can mow',
+        'supported_features': <LawnMowerEntityFeature: 1>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_mow',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can pause',
+        'supported_features': <LawnMowerEntityFeature: 3>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_pause',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'docked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower is paused',
+        'supported_features': <LawnMowerEntityFeature: 7>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_is_paused',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'paused',
+    }),
+  })
+# ---

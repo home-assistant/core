@@ -5,6 +5,7 @@ import urllib.parse
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,12 +39,12 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         self._reverse = reverse
 
         hostname = urllib.parse.urlsplit(hub.host).hostname
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, config_entry_id)},
-            "name": f"Controller {hostname}",
-            "manufacturer": MANUFACTURER,
-            "configuration_url": hub.host,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry_id)},
+            name=f"Controller {hostname}",
+            manufacturer=MANUFACTURER,
+            configuration_url=hub.host,
+        )
 
         self._attr_name = f"Relay{relay.id}"
         self._attr_unique_id = f"{config_entry_id}_relay{relay.id}"

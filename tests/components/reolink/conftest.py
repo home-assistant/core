@@ -34,8 +34,10 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None]:
-    """Mock reolink connection."""
+def reolink_connect_class(
+    mock_get_source_ip: None,
+) -> Generator[MagicMock, None, None]:
+    """Mock reolink connection and return both the host_mock and host_mock_class."""
     with patch(
         "homeassistant.components.reolink.host.webhook.async_register",
         return_value=True,
@@ -58,16 +60,22 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
         host_mock.is_admin = True
         host_mock.user_level = "admin"
         host_mock.sw_version_update_required = False
+        host_mock.hardware_version = "IPC_00000"
+        host_mock.sw_version = "v1.0.0.0.0.0000"
+        host_mock.manufacturer = "Reolink"
+        host_mock.model = "RLC-123"
+        host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
-        yield host_mock
+        yield host_mock_class
 
 
 @pytest.fixture
-def reolink_ONVIF_wait() -> Generator[None, None, None]:
+def reolink_connect(
+    reolink_connect_class: MagicMock,
+) -> Generator[MagicMock, None, None]:
     """Mock reolink connection."""
-    with patch("homeassistant.components.reolink.host.asyncio.Event.wait", AsyncMock()):
-        yield
+    return reolink_connect_class.return_value
 
 
 @pytest.fixture

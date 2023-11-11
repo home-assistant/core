@@ -8,7 +8,11 @@ from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -94,7 +98,7 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
-    _attr_name = "Firmware update"
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     def __init__(
         self,

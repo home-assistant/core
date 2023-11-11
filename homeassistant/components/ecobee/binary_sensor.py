@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -43,7 +43,6 @@ class EcobeeBinarySensor(BinarySensorEntity):
         self.data = data
         self.sensor_name = sensor_name.rstrip()
         self.index = sensor_index
-        self._state = None
 
     @property
     def unique_id(self):
@@ -93,11 +92,6 @@ class EcobeeBinarySensor(BinarySensorEntity):
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
 
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state == "true"
-
     async def async_update(self) -> None:
         """Get the latest state of the sensor."""
         await self.data.update()
@@ -107,5 +101,5 @@ class EcobeeBinarySensor(BinarySensorEntity):
             for item in sensor["capability"]:
                 if item["type"] != "occupancy":
                     continue
-                self._state = item["value"]
+                self._attr_is_on = item["value"] == "true"
                 break

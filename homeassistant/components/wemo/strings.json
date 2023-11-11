@@ -28,5 +28,21 @@
     "trigger_type": {
       "long_press": "Wemo button was pressed for 2 seconds"
     }
+  },
+  "services": {
+    "set_humidity": {
+      "name": "Set humidity",
+      "description": "Sets the target humidity of WeMo humidifier devices.",
+      "fields": {
+        "target_humidity": {
+          "name": "Target humidity",
+          "description": "Target humidity."
+        }
+      }
+    },
+    "reset_filter_life": {
+      "name": "Reset filter lifetime",
+      "description": "Resets the WeMo Humidifier's filter lifetime to 100%."
+    }
   }
 }

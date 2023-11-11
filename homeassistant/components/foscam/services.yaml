@@ -1,13 +1,10 @@
 ptz:
-  name: PTZ
-  description: Pan/Tilt service for Foscam camera.
   target:
     entity:
       integration: foscam
       domain: camera
   fields:
     movement:
-      description: "Direction of the movement."
       required: true
       selector:
         select:
@@ -21,7 +18,6 @@ ptz:
             - "top_right"
             - "up"
     travel_time:
-      description: "Travel time in seconds."
       default: 0.125
       selector:
         number:
@@ -31,15 +27,12 @@ ptz:
           unit_of_measurement: seconds
 
 ptz_preset:
-  name: PTZ preset
-  description: PTZ Preset service for Foscam camera.
   target:
     entity:
       integration: foscam
       domain: camera
   fields:
     preset_name:
-      description: "The name of the preset to move to. Presets can be created from within the official Foscam apps."
       required: true
       example: "TopMost"
       selector:

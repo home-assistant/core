@@ -1,15 +1,11 @@
 # Describes the format for available remote services
 
 turn_on:
-  name: Turn On
-  description: Sends the Power On Command.
   target:
     entity:
       domain: remote
   fields:
     activity:
-      name: Activity
-      description: Activity ID or Activity Name to start.
       example: "BedroomTV"
       filter:
         supported_features:
@@ -18,50 +14,36 @@ turn_on:
         text:
 
 toggle:
-  name: Toggle
-  description: Toggles a device.
   target:
     entity:
       domain: remote
 
 turn_off:
-  name: Turn Off
-  description: Sends the Power Off Command.
   target:
     entity:
       domain: remote
 
 send_command:
-  name: Send Command
-  description: Sends a command or a list of commands to a device.
   target:
     entity:
       domain: remote
   fields:
     device:
-      name: Device
-      description: Device ID to send command to.
       example: "32756745"
       selector:
         text:
     command:
-      name: Command
-      description: A single command or a list of commands to send.
       required: true
       example: "Play"
       selector:
         object:
     num_repeats:
-      name: Repeats
-      description: The number of times you want to repeat the command(s).
       default: 1
       selector:
         number:
           min: 0
           max: 255
     delay_secs:
-      name: Delay Seconds
-      description: The time you want to wait in between repeated commands.
       default: 0.4
       selector:
         number:
@@ -70,8 +52,6 @@ send_command:
           step: 0.1
           unit_of_measurement: seconds
     hold_secs:
-      name: Hold Seconds
-      description: The time you want to have it held before the release is send.
       default: 0
       selector:
         number:
@@ -81,27 +61,19 @@ send_command:
           unit_of_measurement: seconds
 
 learn_command:
-  name: Learn Command
-  description: Learns a command or a list of commands from a device.
   target:
     entity:
       domain: remote
   fields:
     device:
-      name: Device
-      description: Device ID to learn command from.
       example: "television"
       selector:
         text:
     command:
-      name: Command
-      description: A single command or a list of commands to learn.
       example: "Turn on"
       selector:
         object:
     command_type:
-      name: Command Type
-      description: The type of command to be learned.
       default: "ir"
       selector:
         select:
@@ -109,13 +81,9 @@ learn_command:
             - "ir"
             - "rf"
     alternative:
-      name: Alternative
-      description: If code must be stored as alternative (useful for discrete remotes).
       selector:
         boolean:
     timeout:
-      name: Timeout
-      description: Timeout for the command to be learned.
       selector:
         number:
           min: 0
@@ -124,21 +92,15 @@ learn_command:
           unit_of_measurement: seconds
 
 delete_command:
-  name: Delete Command
-  description: Deletes a command or a list of commands from the database.
   target:
     entity:
       domain: remote
   fields:
     device:
-      name: Device
-      description: Name of the device from which commands will be deleted.
       example: "television"
       selector:
         text:
     command:
-      name: Command
-      description: A single command or a list of commands to delete.
       required: true
       example: "Mute"
       selector:

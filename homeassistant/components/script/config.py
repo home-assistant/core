@@ -23,6 +23,10 @@ from homeassistant.const import (
     CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -57,6 +61,23 @@ _MINIMAL_SCRIPT_ENTITY_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_INVALID_OBJECT_IDS = {
+    SERVICE_RELOAD,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_TOGGLE,
+}
+
+_SCRIPT_OBJECT_ID_SCHEMA = vol.All(
+    cv.slug,
+    vol.NotIn(
+        _INVALID_OBJECT_IDS,
+        (
+            "A script's object_id must not be one of "
+            f"{', '.join(sorted(_INVALID_OBJECT_IDS))}"
+        ),
+    ),
+)
 
 SCRIPT_ENTITY_SCHEMA = make_script_schema(
     {
@@ -170,7 +191,7 @@ async def _async_validate_config_item(
             script_name = f"Script with alias '{config[CONF_ALIAS]}'"
 
     try:
-        cv.slug(object_id)
+        _SCRIPT_OBJECT_ID_SCHEMA(object_id)
     except vol.Invalid as err:
         _log_invalid_script(err, script_name, "has invalid object id", object_id)
         raise

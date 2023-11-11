@@ -24,7 +24,7 @@ async def test_diagnostics(
     """Test Fully Kiosk diagnostics."""
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, "abcdef-123456")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "abcdef-123456")})
 
     diagnostics = await get_diagnostics_for_device(
         hass, hass_client, init_integration, device

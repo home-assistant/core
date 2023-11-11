@@ -1,16 +1,24 @@
 """Tests for the wemo component."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import create_autospec, patch
 
 import pywemo
 
-from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, WemoDiscovery
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.wemo import (
+    CONF_DISCOVERY,
+    CONF_STATIC,
+    WemoDiscovery,
+    async_wemo_dispatcher_connect,
+)
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from . import entity_test_helpers
 from .conftest import (
     MOCK_FIRMWARE_VERSION,
     MOCK_HOST,
@@ -92,6 +100,54 @@ async def test_static_config_without_port(hass: HomeAssistant, pywemo_device) ->
     assert len(entity_entries) == 1
 
 
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    pywemo_device: pywemo.WeMoDevice,
+    pywemo_registry: pywemo.SubscriptionRegistry,
+) -> None:
+    """Config entry can be reloaded without errors."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_STATIC: [MOCK_HOST],
+            },
+        },
+    )
+
+    async def _async_test_entry_and_entity() -> tuple[str, str]:
+        await hass.async_block_till_done()
+
+        pywemo_device.get_state.assert_called()
+        pywemo_device.get_state.reset_mock()
+
+        pywemo_registry.register.assert_called_once_with(pywemo_device)
+        pywemo_registry.register.reset_mock()
+
+        entity_registry = er.async_get(hass)
+        entity_entries = list(entity_registry.entities.values())
+        assert len(entity_entries) == 1
+        await entity_test_helpers.test_turn_off_state(
+            hass, entity_entries[0], SWITCH_DOMAIN
+        )
+
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+
+        return entries[0].entry_id, entity_entries[0].entity_id
+
+    entry_id, entity_id = await _async_test_entry_and_entity()
+    pywemo_registry.unregister.assert_not_called()
+
+    assert await hass.config_entries.async_reload(entry_id)
+
+    ids = await _async_test_entry_and_entity()
+    pywemo_registry.unregister.assert_called_once_with(pywemo_device)
+    assert ids == (entry_id, entity_id)
+
+
 async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
     """Component setup fails if a static host is invalid."""
     setup_success = await async_setup_component(
@@ -146,17 +202,26 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
         device.supports_long_press.return_value = False
         return device
 
+    semaphore = asyncio.Semaphore(value=0)
+
+    async def async_connect(*args):
+        await async_wemo_dispatcher_connect(*args)
+        semaphore.release()
+
     pywemo_devices = [create_device(0), create_device(1)]
     # Setup the component and start discovery.
     with patch(
         "pywemo.discover_devices", return_value=pywemo_devices
     ) as mock_discovery, patch(
         "homeassistant.components.wemo.WemoDiscovery.discover_statics"
-    ) as mock_discover_statics:
+    ) as mock_discover_statics, patch(
+        "homeassistant.components.wemo.binary_sensor.async_wemo_dispatcher_connect",
+        side_effect=async_connect,
+    ):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}
         )
-        await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
+        await semaphore.acquire()  # Returns after platform setup.
         mock_discovery.assert_called()
         mock_discover_statics.assert_called()
         pywemo_devices.append(create_device(2))

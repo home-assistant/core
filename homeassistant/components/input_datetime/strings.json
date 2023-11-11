@@ -34,5 +34,33 @@
         }
       }
     }
+  },
+  "services": {
+    "set_datetime": {
+      "name": "Set",
+      "description": "Sets the date and/or time.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The target date."
+        },
+        "time": {
+          "name": "Time",
+          "description": "The target time."
+        },
+        "datetime": {
+          "name": "Date & time",
+          "description": "The target date & time."
+        },
+        "timestamp": {
+          "name": "Timestamp",
+          "description": "The target date & time, expressed by a UNIX timestamp."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
   }
 }

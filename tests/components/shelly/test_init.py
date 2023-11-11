@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+)
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -80,6 +84,22 @@ async def test_device_connection_error(
     )
     monkeypatch.setattr(
         mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    entry = await init_integration(hass, gen)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [1, 2])
+async def test_mac_mismatch_error(
+    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+) -> None:
+    """Test device MAC address mismatch error."""
+    monkeypatch.setattr(
+        mock_block_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
     )
 
     entry = await init_integration(hass, gen)

@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -133,6 +133,10 @@ class HumidifierEntityDescription(ToggleEntityDescription):
 
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_AVAILABLE_MODES}
+    )
 
     entity_description: HumidifierEntityDescription
     _attr_action: HumidifierAction | None = None

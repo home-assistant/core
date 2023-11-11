@@ -75,12 +75,12 @@ async def test_entry_diagnostics(
     )
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -109,13 +109,13 @@ async def test_entry_diagnostics(
                 "disabled": False,
                 "disabled_by": None,
                 "entity_category": None,
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "icon": None,
                 "original_device_class": None,
                 "original_icon": None,
                 "state": {
                     "attributes": {"friendly_name": "MQTT Sensor"},
-                    "entity_id": "sensor.mqtt_sensor",
+                    "entity_id": "sensor.none_mqtt_sensor",
                     "last_changed": ANY,
                     "last_updated": ANY,
                     "state": "unknown",
@@ -190,7 +190,7 @@ async def test_redact_diagnostics(
     async_fire_mqtt_message(hass, "attributes-topic", location_data)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [

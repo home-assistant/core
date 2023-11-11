@@ -2,17 +2,16 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from functools import cache
-from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
+from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
 from uuid import UUID
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
@@ -94,14 +93,17 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.cover import CoverEntityFeature
     from homeassistant.components.fan import FanEntityFeature
     from homeassistant.components.humidifier import HumidifierEntityFeature
+    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
     from homeassistant.components.light import LightEntityFeature
     from homeassistant.components.lock import LockEntityFeature
     from homeassistant.components.media_player import MediaPlayerEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
+    from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
+    from homeassistant.components.weather import WeatherEntityFeature
 
     return {
         "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
@@ -111,14 +113,17 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "CoverEntityFeature": CoverEntityFeature,
         "FanEntityFeature": FanEntityFeature,
         "HumidifierEntityFeature": HumidifierEntityFeature,
+        "LawnMowerEntityFeature": LawnMowerEntityFeature,
         "LightEntityFeature": LightEntityFeature,
         "LockEntityFeature": LockEntityFeature,
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
         "RemoteEntityFeature": RemoteEntityFeature,
         "SirenEntityFeature": SirenEntityFeature,
+        "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+        "WeatherEntityFeature": WeatherEntityFeature,
     }
 
 
@@ -453,6 +458,27 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         return value
 
 
+class ConditionSelectorConfig(TypedDict):
+    """Class to represent an condition selector config."""
+
+
+@SELECTORS.register("condition")
+class ConditionSelector(Selector[ConditionSelectorConfig]):
+    """Selector of an condition sequence (script syntax)."""
+
+    selector_type = "condition"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ConditionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
+
+
 class ConfigEntrySelectorConfig(TypedDict, total=False):
     """Class to represent a config entry selector config."""
 
@@ -520,7 +546,7 @@ class ConversationAgentSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("conversation_agent")
-class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
     """Selector for a conversation agent."""
 
     selector_type = "conversation_agent"
@@ -539,6 +565,40 @@ class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         """Validate the passed selection."""
         agent: str = vol.Schema(str)(data)
         return agent
+
+
+class CountrySelectorConfig(TypedDict, total=False):
+    """Class to represent a country selector config."""
+
+    countries: list[str]
+    no_sort: bool
+
+
+@SELECTORS.register("country")
+class CountrySelector(Selector[CountrySelectorConfig]):
+    """Selector for a single-choice country select."""
+
+    selector_type = "country"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("countries"): [str],
+            vol.Optional("no_sort", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: CountrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        country: str = vol.Schema(str)(data)
+        if "countries" in self.config and (
+            country not in self.config["countries"] or country not in COUNTRIES
+        ):
+            raise vol.Invalid(f"Value {country} is not a valid option")
+        return country
 
 
 class DateSelectorConfig(TypedDict):
@@ -969,6 +1029,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    sort: bool
 
 
 @SELECTORS.register("select")
@@ -986,6 +1047,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("sort", default=False): cv.boolean,
         }
     )
 
@@ -1116,6 +1178,7 @@ class TextSelectorConfig(TypedDict, total=False):
     """Class to represent a text selector config."""
 
     multiline: bool
+    prefix: str
     suffix: str
     type: TextSelectorType
     autocomplete: str
@@ -1148,6 +1211,7 @@ class TextSelector(Selector[TextSelectorConfig]):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("multiline", default=False): bool,
+            vol.Optional("prefix"): str,
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
@@ -1178,7 +1242,11 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     selector_type = "theme"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("include_default", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: ThemeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1210,6 +1278,27 @@ class TimeSelector(Selector[TimeSelectorConfig]):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+class TriggerSelectorConfig(TypedDict):
+    """Class to represent an trigger selector config."""
+
+
+@SELECTORS.register("trigger")
+class TriggerSelector(Selector[TriggerSelectorConfig]):
+    """Selector of a trigger sequence (script syntax)."""
+
+    selector_type = "trigger"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
 class FileSelectorConfig(TypedDict):

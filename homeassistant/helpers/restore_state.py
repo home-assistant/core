@@ -4,9 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
-
-from typing_extensions import Self
+from typing import Any, Self, cast
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id

@@ -86,11 +86,7 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        HomeWizardSwitchEntity(
-            coordinator=coordinator,
-            description=description,
-            entry=entry,
-        )
+        HomeWizardSwitchEntity(coordinator, description)
         for description in SWITCHES
         if description.create_fn(coordinator)
     )
@@ -105,12 +101,11 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         description: HomeWizardSwitchEntityDescription,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def icon(self) -> str | None:

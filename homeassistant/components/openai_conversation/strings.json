@@ -25,5 +25,26 @@
         }
       }
     }
+  },
+  "services": {
+    "generate_image": {
+      "name": "Generate image",
+      "description": "Turn a prompt into an image",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service"
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "The text to turn into an image",
+          "example": "A photo of a dog"
+        },
+        "size": {
+          "name": "Size",
+          "description": "The size of the image to generate"
+        }
+      }
+    }
   }
 }

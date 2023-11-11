@@ -60,7 +60,7 @@ CAMERA_API_DATA = {
     "type": "sdm.devices.types.CAMERA",
     "traits": {
         "sdm.devices.traits.CameraLiveStream": {
-            "videoCodecs": "H264",
+            "videoCodecs": ["H264"],
             "supportedProtocols": ["RTSP"],
         },
     },
@@ -71,7 +71,7 @@ CAMERA_DIAGNOSTIC_DATA = {
         "name": "**REDACTED**",
         "traits": {
             "sdm.devices.traits.CameraLiveStream": {
-                "videoCodecs": "H264",
+                "videoCodecs": ["H264"],
                 "supportedProtocols": ["RTSP"],
             },
         },
@@ -117,7 +117,7 @@ async def test_device_diagnostics(
     assert config_entry.state is ConfigEntryState.LOADED
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, NEST_DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, NEST_DEVICE_ID)})
     assert device is not None
 
     assert (

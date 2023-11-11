@@ -13,6 +13,7 @@
       "alexa_enabled": "Alexa Enabled",
       "google_enabled": "Google Enabled",
       "logged_in": "Logged In",
+      "instance_id": "Instance ID",
       "subscription_expiration": "Subscription Expiration"
     }
   },
@@ -29,6 +30,16 @@
           "operation_took_too_long": "The operation took too long. Please try again later."
         }
       }
+    }
+  },
+  "services": {
+    "remote_connect": {
+      "name": "Remote connect",
+      "description": "Makes the instance UI accessible from outside of the local network by using Home Assistant Cloud."
+    },
+    "remote_disconnect": {
+      "name": "Remote disconnect",
+      "description": "Disconnects the Home Assistant UI from the Home Assistant Cloud. You will no longer be able to access your Home Assistant instance from outside your local network."
     }
   }
 }

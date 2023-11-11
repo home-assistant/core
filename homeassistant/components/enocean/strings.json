@@ -10,7 +10,7 @@
       "manual": {
         "title": "Enter the path to your ENOcean dongle",
         "data": {
-          "path": "USB dongle path"
+          "path": "[%key:component::enocean::config::step::detect::data::path%]"
         }
       }
     },

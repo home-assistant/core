@@ -50,3 +50,8 @@ CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_SUNNY: [1, 2, 5],
     ATTR_CONDITION_WINDY: [32],
 }
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}

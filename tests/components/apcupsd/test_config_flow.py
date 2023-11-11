@@ -124,7 +124,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == MOCK_STATUS["MODEL"]
+        assert result["title"] == MOCK_STATUS["UPSNAME"]
         assert result["data"] == CONF_DATA
 
         mock_setup.assert_called_once()

@@ -73,7 +73,6 @@ async def test_lock_default(hass: HomeAssistant) -> None:
 
 async def test_lock_states(hass: HomeAssistant) -> None:
     """Test lock entity states."""
-    # pylint: disable=protected-access
 
     lock = MockLockEntity()
     lock.hass = hass

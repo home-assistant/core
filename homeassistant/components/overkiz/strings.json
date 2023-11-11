@@ -47,7 +47,7 @@
           },
           "fan_mode": {
             "state": {
-              "away": "Away",
+              "away": "[%key:common::state::not_home%]",
               "bypass_boost": "Bypass boost",
               "home_boost": "Home boost",
               "kitchen_boost": "Kitchen boost"
@@ -64,6 +64,13 @@
           "closed": "[%key:common::state::closed%]"
         }
       },
+      "open_closed_partial": {
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "partial": "Partial",
+          "closed": "[%key:common::state::closed%]"
+        }
+      },
       "memorized_simple_volume": {
         "state": {
           "highest": "Highest",
@@ -77,6 +84,7 @@
           "full": "Full",
           "low": "Low",
           "normal": "Normal",
+          "medium": "Medium",
           "verylow": "Very low"
         }
       },

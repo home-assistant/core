@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,

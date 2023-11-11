@@ -143,6 +143,7 @@ async def test_device_registry_config_entry_1(
     entity_registry = er.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -170,7 +171,6 @@ async def test_device_registry_config_entry_1(
         },
         title="ABC",
     )
-
     switch_as_x_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
@@ -202,6 +202,7 @@ async def test_device_registry_config_entry_2(
     entity_registry = er.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -313,6 +314,7 @@ async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
     entity_registry = er.async_get(hass)
 
     test_config_entry = MockConfigEntry()
+    test_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=test_config_entry.entry_id,
@@ -504,6 +506,7 @@ async def test_entity_name(
     device_registry = dr.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -559,6 +562,7 @@ async def test_custom_name_1(
     device_registry = dr.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,
@@ -622,6 +626,7 @@ async def test_custom_name_2(
     device_registry = dr.async_get(hass)
 
     switch_config_entry = MockConfigEntry()
+    switch_config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=switch_config_entry.entry_id,

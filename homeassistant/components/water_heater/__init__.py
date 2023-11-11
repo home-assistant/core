@@ -61,6 +61,7 @@ class WaterHeaterEntityFeature(IntFlag):
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
     AWAY_MODE = 4
+    ON_OFF = 8
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -117,6 +118,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
+        SERVICE_TURN_ON, {}, "async_turn_on", [WaterHeaterEntityFeature.ON_OFF]
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, {}, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
+    )
+    component.async_register_entity_service(
         SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
     )
     component.async_register_entity_service(
@@ -156,6 +163,10 @@ class WaterHeaterEntityEntityDescription(EntityDescription):
 
 class WaterHeaterEntity(Entity):
     """Base class for water heater entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
+    )
 
     entity_description: WaterHeaterEntityEntityDescription
     _attr_current_operation: str | None = None
@@ -293,6 +304,22 @@ class WaterHeaterEntity(Entity):
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
         )
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        raise NotImplementedError()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        raise NotImplementedError()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""

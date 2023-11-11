@@ -1,10 +1,12 @@
 """Translation utils."""
 import argparse
+import json
 import os
 import pathlib
 import subprocess
+from typing import Any
 
-from .error import ExitApp
+from .error import ExitApp, JSONDecodeErrorWithPath
 
 
 def get_base_arg_parser() -> argparse.ArgumentParser:
@@ -13,7 +15,15 @@ def get_base_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "action",
         type=str,
-        choices=["clean", "develop", "download", "frontend", "migrate", "upload"],
+        choices=[
+            "clean",
+            "deduplicate",
+            "develop",
+            "download",
+            "frontend",
+            "migrate",
+            "upload",
+        ],
     )
     parser.add_argument("--debug", action="store_true", help="Enable log output")
     return parser
@@ -40,8 +50,18 @@ def get_current_branch():
     """Get current branch."""
     return (
         subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            stdout=subprocess.PIPE,
+            check=True,
         )
         .stdout.decode()
         .strip()
     )
+
+
+def load_json_from_path(path: pathlib.Path) -> Any:
+    """Load JSON from path."""
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError as err:
+        raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err

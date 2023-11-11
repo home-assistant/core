@@ -1,0 +1,18 @@
+{
+  "services": {
+    "dismiss": {
+      "name": "Dismiss",
+      "description": "Dismisses a html5 notification.",
+      "fields": {
+        "target": {
+          "name": "Target",
+          "description": "An array of targets."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports tag."
+        }
+      }
+    }
+  }
+}

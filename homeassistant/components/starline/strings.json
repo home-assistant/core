@@ -37,5 +37,100 @@
       "error_auth_user": "Incorrect username or password",
       "error_auth_mfa": "Incorrect code"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hand_brake": {
+        "name": "Hand brake"
+      },
+      "hood": {
+        "name": "Hood"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "alarm": {
+        "name": "Alarm"
+      },
+      "doors": {
+        "name": "Doors"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
+    "lock": {
+      "security": {
+        "name": "Security"
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "balance": {
+        "name": "Balance"
+      },
+      "interior_temperature": {
+        "name": "Interior temperature"
+      },
+      "engine_temperature": {
+        "name": "Engine temperature"
+      },
+      "gsm_signal": {
+        "name": "GSM signal"
+      },
+      "fuel": {
+        "name": "Fuel volume"
+      },
+      "errors": {
+        "name": "OBD errors"
+      },
+      "mileage": {
+        "name": "Mileage"
+      }
+    },
+    "switch": {
+      "engine": {
+        "name": "Engine"
+      },
+      "webasto": {
+        "name": "Webasto"
+      },
+      "additional_channel": {
+        "name": "Additional channel"
+      },
+      "horn": {
+        "name": "Horn"
+      }
+    }
+  },
+  "services": {
+    "update_state": {
+      "name": "Update state",
+      "description": "Fetches the last state of the devices from the StarLine server.\n."
+    },
+    "set_scan_interval": {
+      "name": "Set scan interval",
+      "description": "Sets update frequency.",
+      "fields": {
+        "scan_interval": {
+          "name": "Scan interval",
+          "description": "Update frequency."
+        }
+      }
+    },
+    "set_scan_obd_interval": {
+      "name": "Set scan OBD interval",
+      "description": "Sets OBD info update frequency.",
+      "fields": {
+        "scan_interval": {
+          "name": "Scan interval",
+          "description": "[%key:component::starline::services::set_scan_interval::fields::scan_interval::description%]"
+        }
+      }
+    }
   }
 }

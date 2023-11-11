@@ -60,7 +60,7 @@
         "name": "Wi-Fi SSID"
       },
       "ip_address": {
-        "name": "IP Address"
+        "name": "[%key:common::config_flow::data::ip%]"
       }
     },
     "switch": {

@@ -372,3 +372,35 @@ async def test_delete_automation(
     assert hass_config_store["automations.yaml"] == [{"id": "moon"}]
 
     assert len(ent_reg.entities) == 1
+
+
+@pytest.mark.parametrize("automation_config", ({},))
+async def test_api_calls_require_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    hass_config_store,
+    setup_automation,
+) -> None:
+    """Test cloud APIs endpoints do not work as a normal user."""
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    hass_config_store["automations.yaml"] = [{"id": "sun"}, {"id": "moon"}]
+
+    client = await hass_client(hass_read_only_access_token)
+
+    # Get
+    resp = await client.get("/api/config/automation/config/moon")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Update
+    resp = await client.post(
+        "/api/config/automation/config/moon",
+        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Delete
+    resp = await client.delete("/api/config/automation/config/sun")
+    assert resp.status == HTTPStatus.UNAUTHORIZED

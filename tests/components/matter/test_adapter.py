@@ -41,7 +41,9 @@ async def test_device_registry_single_node_device(
 
     dev_reg = dr.async_get(hass)
     entry = dev_reg.async_get_device(
-        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
     )
     assert entry is not None
 
@@ -70,7 +72,9 @@ async def test_device_registry_single_node_device_alt(
 
     dev_reg = dr.async_get(hass)
     entry = dev_reg.async_get_device(
-        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
     )
     assert entry is not None
 
@@ -96,7 +100,7 @@ async def test_device_registry_bridge(
     dev_reg = dr.async_get(hass)
 
     # Validate bridge
-    bridge_entry = dev_reg.async_get_device({(DOMAIN, "mock-hub-id")})
+    bridge_entry = dev_reg.async_get_device(identifiers={(DOMAIN, "mock-hub-id")})
     assert bridge_entry is not None
 
     assert bridge_entry.name == "My Mock Bridge"
@@ -106,7 +110,9 @@ async def test_device_registry_bridge(
     assert bridge_entry.sw_version == "123.4.5"
 
     # Device 1
-    device1_entry = dev_reg.async_get_device({(DOMAIN, "mock-id-kitchen-ceiling")})
+    device1_entry = dev_reg.async_get_device(
+        identifiers={(DOMAIN, "mock-id-kitchen-ceiling")}
+    )
     assert device1_entry is not None
 
     assert device1_entry.via_device_id == bridge_entry.id
@@ -117,7 +123,9 @@ async def test_device_registry_bridge(
     assert device1_entry.sw_version == "67.8.9"
 
     # Device 2
-    device2_entry = dev_reg.async_get_device({(DOMAIN, "mock-id-living-room-ceiling")})
+    device2_entry = dev_reg.async_get_device(
+        identifiers={(DOMAIN, "mock-id-living-room-ceiling")}
+    )
     assert device2_entry is not None
 
     assert device2_entry.via_device_id == bridge_entry.id

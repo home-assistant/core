@@ -34,8 +34,12 @@ class Discovery:
 
 
 def get_name(device: AirthingsDevice) -> str:
-    """Generate name with identifier for device."""
-    return f"{device.name} ({device.identifier})"
+    """Generate name with model and identifier for device."""
+
+    name = device.friendly_name()
+    if identifier := device.identifier:
+        name += f" ({identifier})"
+    return name
 
 
 class AirthingsDeviceUpdateError(Exception):
@@ -156,7 +160,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         titles = {
-            address: get_name(discovery.device)
+            address: discovery.device.name
             for (address, discovery) in self._discovered_devices.items()
         }
         return self.async_show_form(

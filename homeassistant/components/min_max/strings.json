@@ -3,11 +3,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Combine the state of several sensors",
+        "title": "[%key:component::min_max::title%]",
         "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
         "data": {
           "entity_ids": "Input entities",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "round_digits": "Precision",
           "type": "Statistic characteristic"
         },
@@ -42,6 +42,12 @@
         "range": "Statistical range",
         "sum": "Sum"
       }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads min/max sensors from the YAML-configuration."
     }
   }
 }

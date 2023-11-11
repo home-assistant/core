@@ -1,65 +1,42 @@
 add_doorbell_text:
-  name: Add Custom Doorbell Text
-  description: Adds a new custom message for Doorbells.
   fields:
     device_id:
-      name: UniFi Protect NVR
-      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     message:
-      name: Custom Message
-      description: New custom message to add for Doorbells. Must be less than 30 characters.
       example: Come In
       required: true
       selector:
         text:
 remove_doorbell_text:
-  name: Remove Custom Doorbell Text
-  description: Removes an existing message for Doorbells.
   fields:
     device_id:
-      name: UniFi Protect NVR
-      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     message:
-      name: Custom Message
-      description: Existing custom message to remove for Doorbells.
       example: Go Away!
       required: true
       selector:
         text:
 set_default_doorbell_text:
-  name: Set Default Doorbell Text
-  description: Sets the default doorbell message. This will be the message that is automatically selected when a message "expires".
   fields:
     device_id:
-      name: UniFi Protect NVR
-      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
       required: true
       selector:
         device:
           integration: unifiprotect
     message:
-      name: Default Message
-      description: The default message for your Doorbell. Must be less than 30 characters.
       example: Welcome!
       required: true
       selector:
         text:
 set_chime_paired_doorbells:
-  name: Set Chime Paired Doorbells
-  description: >
-    Use to set the paired doorbell(s) with a smart chime.
   fields:
     device_id:
-      name: Chime
-      description: The Chimes to link to the doorbells to
       required: true
       selector:
         device:
@@ -67,8 +44,6 @@ set_chime_paired_doorbells:
           entity:
             device_class: unifiprotect__chime_button
     doorbells:
-      name: Doorbells
-      description: The Doorbells to link to the chime
       example: "binary_sensor.front_doorbell_doorbell"
       required: false
       selector:

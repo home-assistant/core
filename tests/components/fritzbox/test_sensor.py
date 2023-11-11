@@ -11,9 +11,11 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from . import FritzDeviceSensorMock, setup_config_entry
@@ -32,26 +34,44 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{ENTITY_ID}_temperature")
-    assert state
-    assert state.state == "1.23"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    sensors = (
+        [
+            f"{ENTITY_ID}_temperature",
+            "1.23",
+            f"{CONF_FAKE_NAME} Temperature",
+            UnitOfTemperature.CELSIUS,
+            SensorStateClass.MEASUREMENT,
+            None,
+        ],
+        [
+            f"{ENTITY_ID}_humidity",
+            "42",
+            f"{CONF_FAKE_NAME} Humidity",
+            PERCENTAGE,
+            SensorStateClass.MEASUREMENT,
+            None,
+        ],
+        [
+            f"{ENTITY_ID}_battery",
+            "23",
+            f"{CONF_FAKE_NAME} Battery",
+            PERCENTAGE,
+            None,
+            EntityCategory.DIAGNOSTIC,
+        ],
+    )
 
-    state = hass.states.get(f"{ENTITY_ID}_humidity")
-    assert state
-    assert state.state == "42"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Humidity"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-
-    state = hass.states.get(f"{ENTITY_ID}_battery")
-    assert state
-    assert state.state == "23"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    assert ATTR_STATE_CLASS not in state.attributes
+    entity_registry = er.async_get(hass)
+    for sensor in sensors:
+        state = hass.states.get(sensor[0])
+        assert state
+        assert state.state == sensor[1]
+        assert state.attributes[ATTR_FRIENDLY_NAME] == sensor[2]
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == sensor[3]
+        assert state.attributes.get(ATTR_STATE_CLASS) == sensor[4]
+        entry = entity_registry.async_get(sensor[0])
+        assert entry
+        assert entry.entity_category is sensor[5]
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock) -> None:

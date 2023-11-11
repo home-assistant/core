@@ -106,6 +106,10 @@ class BSBLANClimate(
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if self.coordinator.data.current_temperature.value == "---":
+            # device returns no current temperature
+            return None
+
         return float(self.coordinator.data.current_temperature.value)
 
     @property

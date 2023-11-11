@@ -105,5 +105,41 @@
         "name": "Screen"
       }
     }
+  },
+  "services": {
+    "load_url": {
+      "name": "Load URL",
+      "description": "Loads a URL on Fully Kiosk Browser.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL to load."
+        }
+      }
+    },
+    "set_config": {
+      "name": "Set Configuration",
+      "description": "Sets a configuration parameter on Fully Kiosk Browser.",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "Configuration parameter to set."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value for the configuration parameter."
+        }
+      }
+    },
+    "start_application": {
+      "name": "Start Application",
+      "description": "Starts an application on the device running Fully Kiosk Browser.",
+      "fields": {
+        "application": {
+          "name": "Application",
+          "description": "Package name of the application to start."
+        }
+      }
+    }
   }
 }

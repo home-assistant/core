@@ -29,7 +29,7 @@
         "data": {
           "device": "Serial port",
           "baud_rate": "baud rate",
-          "version": "MySensors version",
+          "version": "[%key:component::mysensors::config::step::gw_tcp::data::version%]",
           "persistence_file": "Persistence file (leave empty to auto-generate)"
         }
       },
@@ -39,8 +39,8 @@
           "retain": "MQTT retain",
           "topic_in_prefix": "Prefix for input topics (topic_in_prefix)",
           "topic_out_prefix": "Prefix for output topics (topic_out_prefix)",
-          "version": "MySensors version",
-          "persistence_file": "Persistence file (leave empty to auto-generate)"
+          "version": "[%key:component::mysensors::config::step::gw_tcp::data::version%]",
+          "persistence_file": "[%key:component::mysensors::config::step::gw_serial::data::persistence_file%]"
         }
       }
     },
@@ -67,20 +67,20 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_subscribe_topic": "Invalid subscribe topic",
-      "invalid_publish_topic": "Invalid publish topic",
-      "duplicate_topic": "Topic already in use",
-      "same_topic": "Subscribe and publish topics are the same",
-      "invalid_port": "Invalid port number",
-      "invalid_persistence_file": "Invalid persistence file",
-      "duplicate_persistence_file": "Persistence file already in use",
+      "invalid_subscribe_topic": "[%key:component::mysensors::config::error::invalid_subscribe_topic%]",
+      "invalid_publish_topic": "[%key:component::mysensors::config::error::invalid_publish_topic%]",
+      "duplicate_topic": "[%key:component::mysensors::config::error::duplicate_topic%]",
+      "same_topic": "[%key:component::mysensors::config::error::same_topic%]",
+      "invalid_port": "[%key:component::mysensors::config::error::invalid_port%]",
+      "invalid_persistence_file": "[%key:component::mysensors::config::error::invalid_persistence_file%]",
+      "duplicate_persistence_file": "[%key:component::mysensors::config::error::duplicate_persistence_file%]",
       "invalid_ip": "Invalid IP address",
-      "invalid_serial": "Invalid serial port",
-      "invalid_device": "Invalid device",
-      "invalid_version": "Invalid MySensors version",
+      "invalid_serial": "[%key:component::mysensors::config::error::invalid_serial%]",
+      "invalid_device": "[%key:component::mysensors::config::error::invalid_device%]",
+      "invalid_version": "[%key:component::mysensors::config::error::invalid_version%]",
       "mqtt_required": "The MQTT integration is not set up",
-      "not_a_number": "Please enter a number",
-      "port_out_of_range": "Port number must be at least 1 and at most 65535",
+      "not_a_number": "[%key:component::mysensors::config::error::not_a_number%]",
+      "port_out_of_range": "[%key:component::mysensors::config::error::port_out_of_range%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }

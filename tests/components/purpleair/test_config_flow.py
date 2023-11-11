@@ -288,7 +288,9 @@ async def test_options_remove_sensor(
     assert result["step_id"] == "remove_sensor"
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({(DOMAIN, str(TEST_SENSOR_INDEX1))})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
+    )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},

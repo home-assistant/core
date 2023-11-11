@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 
 import voluptuous as vol
 

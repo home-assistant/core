@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import StrEnum
 import logging
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

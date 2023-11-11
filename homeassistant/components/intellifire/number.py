@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     description = NumberEntityDescription(
         key="flame_control",
-        name="Flame control",
+        translation_key="flame_control",
         icon="mdi:arrow-expand-vertical",
     )
 
@@ -54,7 +54,7 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
         coordinator: IntellifireDataUpdateCoordinator,
         description: NumberEntityDescription,
     ) -> None:
-        """Initilaize Flame height Sensor."""
+        """Initialize Flame height Sensor."""
         super().__init__(coordinator, description)
 
     @property

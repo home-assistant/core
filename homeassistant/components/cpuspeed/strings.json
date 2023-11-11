@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "CPU Speed",
+        "title": "[%key:component::cpuspeed::title%]",
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
