@@ -564,7 +564,7 @@ class Scanner:
         )
 
     async def async_get_discovery_info_by_udn_st(
-        self, udn: str, st: DeviceOrServiceType
+        self, udn: str, st: str
     ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
         for ssdp_device in self._ssdp_devices:
@@ -575,9 +575,7 @@ class Scanner:
                     )
         return None
 
-    async def async_get_discovery_info_by_st(
-        self, st: DeviceOrServiceType
-    ) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(
