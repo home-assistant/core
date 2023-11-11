@@ -80,7 +80,7 @@ class V2CBinarySensorBaseEntity(V2CBaseEntity, BinarySensorEntity):
         description: V2CBinarySensorEntityDescription,
         entry_id: str,
     ) -> None:
-        """Init the Encharge base entity."""
+        """Init the V2C base entity."""
         super().__init__(coordinator, description)
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
