@@ -250,7 +250,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client_v1 = evohomeasync.EvohomeClient(
         client_v2.username,
         client_v2.password,
-        user_data=user_data,
+        session_id=user_data.get("sessionId") if user_data else None,
         session=async_get_clientsession(hass),
     )
 
@@ -438,14 +438,12 @@ class EvoBroker:
             ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
         }
 
-        if self.client_v1 and self.client_v1.user_data:
-            user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index]
+        if self.client_v1:
             app_storage[USER_DATA] = {  # type: ignore[assignment]
-                "userInfo": {"userID": user_id},
-                "sessionId": self.client_v1.user_data["sessionId"],
+                "sessionId": self.client_v1.broker.session_id,
             }
         else:
-            app_storage[USER_DATA] = None
+            app_storage[USER_DATA] = {}  # type: ignore[assignment]
 
         await self._store.async_save(app_storage)
 
@@ -475,7 +473,7 @@ class EvoBroker:
 
         self.temps = {}  # these are now stale, will fall back to v2 temps
         try:
-            temps = list(await self.client_v1.temperatures(force_refresh=True))
+            temps = await self.client_v1.get_temperatures()
 
         except evohomeasync.InvalidSchema as exc:
             _LOGGER.warning(
