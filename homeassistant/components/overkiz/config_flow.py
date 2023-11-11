@@ -66,62 +66,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-
         user_input[CONF_API_TYPE] = self._api_type
+
+        client = self._create_cloud_client(
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            server=SUPPORTED_SERVERS[user_input[CONF_HUB]],
+        )
 
         # Local API
         if self._api_type == APIType.LOCAL:
-            # Create session on Somfy cloud server to generate an access token for local API
-            session = async_create_clientsession(self.hass)
-            server = SUPPORTED_SERVERS[self._server]
-            client = self._create_cloud_client(
-                username=username, password=password, server=server
+            user_input[CONF_TOKEN] = await self._create_local_api_token(
+                cloud_client=client,
+                host=user_input[CONF_HOST],
+                verify_ssl=user_input[CONF_VERIFY_SSL],
             )
-            verify_ssl = user_input[CONF_VERIFY_SSL]
-
-            await client.login(register_event_listener=False)
-            gateways = await client.get_gateways()
-
-            gateway_id = ""
-            for gateway in gateways:
-                # Overkiz can return multiple gateways, but we only can generate a token
-                # for the main gateway.
-                if is_overkiz_gateway(gateway.id):
-                    gateway_id = gateway.id
-
-            developer_mode = await client.get_setup_option(
-                f"developerMode-{gateway_id}"
-            )
-
-            if developer_mode is None:
-                raise DeveloperModeDisabled
-
-            token = await client.generate_local_token(gateway_id)
-            await client.activate_local_token(
-                gateway_id=gateway_id, token=token, label="Home Assistant/local"
-            )
-            session = async_create_clientsession(self.hass, verify_ssl=verify_ssl)
-
-            # Local API
-            local_client = OverkizClient(
-                username="",
-                password="",
-                token=token,
-                session=session,
-                server=generate_local_server(host=user_input[CONF_HOST]),
-            )
-
-            await local_client.login()
-
-            user_input[CONF_TOKEN] = token
         else:
-            server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
-            client = self._create_cloud_client(
-                username=username, password=password, server=server
-            )
-
             await client.login(register_event_listener=False)
 
         # Set main gateway id as unique id
@@ -407,6 +367,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._server = self._config_entry.data[CONF_HUB]
         self._api_type = self._config_entry.data[CONF_API_TYPE]
 
+        if self._config_entry.data[CONF_API_TYPE] == APIType.LOCAL:
+            self._host = self._config_entry.data[CONF_HOST]
+
         return await self.async_step_user(dict(entry_data))
 
     def _create_cloud_client(
@@ -418,3 +381,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return client
+
+    async def _create_local_api_token(
+        self, cloud_client: OverkizClient, host: str, verify_ssl: bool
+    ) -> str:
+        """Create local API token."""
+        # Create session on Somfy cloud server to generate an access token for local API
+        await cloud_client.login(register_event_listener=False)
+        gateways = await cloud_client.get_gateways()
+
+        gateway_id = ""
+        for gateway in gateways:
+            # Overkiz can return multiple gateways, but we only can generate a token
+            # for the main gateway.
+            if is_overkiz_gateway(gateway.id):
+                gateway_id = gateway.id
+
+        developer_mode = await cloud_client.get_setup_option(
+            f"developerMode-{gateway_id}"
+        )
+
+        if developer_mode is None:
+            raise DeveloperModeDisabled
+
+        token = await cloud_client.generate_local_token(gateway_id)
+        await cloud_client.activate_local_token(
+            gateway_id=gateway_id, token=token, label="Home Assistant/local"
+        )
+
+        session = async_create_clientsession(self.hass, verify_ssl=verify_ssl)
+
+        # Local API
+        local_client = OverkizClient(
+            username="",
+            password="",
+            token=token,
+            session=session,
+            server=generate_local_server(host=host),
+        )
+
+        await local_client.login()
+
+        return token

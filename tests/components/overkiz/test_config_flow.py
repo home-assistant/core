@@ -245,7 +245,10 @@ async def test_form_invalid_auth_cloud(
     [
         (BadCredentialsException, "invalid_auth"),
         (TooManyRequestsException, "too_many_requests"),
-        (ClientConnectorCertificateError("", ""), "certificate_verify_failed"),
+        (
+            ClientConnectorCertificateError(Mock(host=TEST_HOST), Exception),
+            "certificate_verify_failed",
+        ),
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),
@@ -284,7 +287,12 @@ async def test_form_invalid_auth_local(
     with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "username": TEST_EMAIL, "password": TEST_PASSWORD},
+            {
+                "host": TEST_HOST,
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD,
+                "verify_ssl": True,
+            },
         )
 
     await hass.async_block_till_done()
@@ -638,6 +646,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
             "hub": TEST_SERVER,
+            "host": TEST_HOST,
             "api_type": "local",
         },
     )
@@ -696,6 +705,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
             "hub": TEST_SERVER,
+            "host": TEST_HOST,
             "api_type": "local",
         },
     )
