@@ -154,7 +154,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         return self._state.preset_mode
 
     @property
-    def preset_modes(self) -> str | None:
+    def preset_modes(self) -> list[str] | None:
         """Return the supported fan preset modes."""
         return self._static_info.supported_preset_modes
 
