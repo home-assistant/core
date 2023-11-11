@@ -592,8 +592,8 @@ build.json @home-assistant/supervisor
 /tests/components/input_text/ @home-assistant/core
 /homeassistant/components/insteon/ @teharris1
 /tests/components/insteon/ @teharris1
-/homeassistant/components/instructure/ @theowiik
-/tests/components/instructure/ @theowiik
+/homeassistant/components/instructure/ @theowiik @elias-carlson @erikwessman @Caodongying @F-MertGultekin @Lemi007
+/tests/components/instructure/ @theowiik @elias-carlson @erikwessman @Caodongying @F-MertGultekin @Lemi007
 /homeassistant/components/integration/ @dgomes
 /tests/components/integration/ @dgomes
 /homeassistant/components/intellifire/ @jeeftor

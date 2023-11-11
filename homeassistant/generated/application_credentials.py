@@ -11,7 +11,6 @@ APPLICATION_CREDENTIALS = [
     "google_mail",
     "google_sheets",
     "home_connect",
-    "instructure",
     "lametric",
     "lyric",
     "neato",
