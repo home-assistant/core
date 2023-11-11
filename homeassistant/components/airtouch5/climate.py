@@ -207,6 +207,25 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         await super().async_will_remove_from_hass()
         self._client.ac_status_callbacks.remove(self._async_update_attrs)
 
+    async def _control(
+        *,
+        power: SetPowerSetting = SetPowerSetting.KEEP_POWER_SETTING,
+        ac_mode: SetAcMode = SetAcMode.KEEP_AC_MODE,
+        fan: SetAcFanSpeed = SetAcFanSpeed.KEEP_AC_FAN_SPEED,
+        setpoint: SetPointControl = SetpointControl.KEEP_SETPOINT_VALUE,
+        temp: int = 0,
+        )->None:
+        control = AcControl(
+            power,
+            self._ability.ac_number,
+            ac_mode,
+            fan,
+            setpoint,
+            temp,
+        )
+        packet = self._client.data_packet_factory.ac_control([control])
+        await self._client.send_packet(packet)
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         set_power_setting: SetPowerSetting
@@ -221,32 +240,14 @@ class Airtouch5AC(Airtouch5ClimateEntity):
                 raise ValueError(f"Unsupported hvac mode: {hvac_mode}")
             set_ac_mode = HVAC_MODE_TO_SET_AC_MODE[hvac_mode]
 
-        control = AcControl(
-            set_power_setting,
-            self._ability.ac_number,
-            set_ac_mode,
-            SetAcFanSpeed.KEEP_AC_FAN_SPEED,
-            SetpointControl.KEEP_SETPOINT_VALUE,
-            0,
-        )
-        packet = self._client.data_packet_factory.ac_control([control])
-        await self._client.send_packet(packet)
+        self._control(power=set_power_setting, ac_mode=set_ac_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in FAN_MODE_TO_SET_AC_FAN_SPEED:
             raise ValueError(f"Unsupported fan mode: {fan_mode}")
         fan_speed = FAN_MODE_TO_SET_AC_FAN_SPEED[fan_mode]
-        control = AcControl(
-            SetPowerSetting.KEEP_POWER_SETTING,
-            self._ability.ac_number,
-            SetAcMode.KEEP_AC_MODE,
-            fan_speed,
-            SetpointControl.KEEP_SETPOINT_VALUE,
-            0,
-        )
-        packet = self._client.data_packet_factory.ac_control([control])
-        await self._client.send_packet(packet)
+        self._control(fan=fan_speed)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
