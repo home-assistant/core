@@ -56,7 +56,7 @@ async def test_get_node_from_device_entry(
         device_registry, config_entry.entry_id
     )[0]
     assert device_entry
-    node_from_device_entry = await get_node_from_device_entry(hass, device_entry)
+    node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert node_from_device_entry is node
 

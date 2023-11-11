@@ -642,6 +642,72 @@ async def test_setup_hass_recovery_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+async def test_setup_hass_safe_mode(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test it works."""
+    with patch("homeassistant.components.browser.setup"), patch(
+        "homeassistant.config_entries.ConfigEntries.async_domains",
+        return_value=["browser"],
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=False,
+                safe_mode=True,
+            ),
+        )
+
+    assert "recovery_mode" not in hass.config.components
+    assert "Starting in recovery mode" not in caplog.text
+    assert "Starting in safe mode" in caplog.text
+
+
+async def test_setup_hass_recovery_mode_and_safe_mode(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test it works."""
+    with patch("homeassistant.components.browser.setup"), patch(
+        "homeassistant.config_entries.ConfigEntries.async_domains",
+        return_value=["browser"],
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=True,
+                safe_mode=True,
+            ),
+        )
+
+    assert "recovery_mode" in hass.config.components
+    assert "Starting in recovery mode" in caplog.text
+    assert "Starting in safe mode" not in caplog.text
+
+
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 async def test_setup_hass_invalid_core_config(
     mock_hass_config: None,

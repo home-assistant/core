@@ -41,10 +41,11 @@ TIMESERIES_API_URL_FORMAT = (
 
 # These constants differ from values in the config entry or fitbit.conf
 SERVER_ACCESS_TOKEN = {
-    "refresh_token": "server-access-token",
-    "access_token": "server-refresh-token",
+    "refresh_token": "server-refresh-token",
+    "access_token": "server-access-token",
     "type": "Bearer",
     "expires_in": 60,
+    "scope": " ".join(OAUTH_SCOPES),
 }
 
 

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
     ATTR_NAME,
     CONF_ENTITY_CATEGORY,
@@ -16,7 +17,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.event import async_track_time_interval
@@ -644,6 +645,8 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
+        if device_id is None:
+            self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_BLUETOOTH, address)}
         self._attr_name = processor.entity_names.get(entity_key)
 
     @property

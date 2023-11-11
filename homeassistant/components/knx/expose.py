@@ -122,12 +122,12 @@ class KNXExposeSensor:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             value = self.expose_default
+        elif self.expose_attribute is not None:
+            _attr = state.attributes.get(self.expose_attribute)
+            value = _attr if _attr is not None else self.expose_default
         else:
-            value = (
-                state.state
-                if self.expose_attribute is None
-                else state.attributes.get(self.expose_attribute, self.expose_default)
-            )
+            value = state.state
+
         if self.expose_type == "binary":
             if value in (1, STATE_ON, "True"):
                 return True

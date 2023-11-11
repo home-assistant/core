@@ -54,7 +54,7 @@ def add_province_to_schema(
     if not country:
         return schema
 
-    all_countries = list_supported_countries()
+    all_countries = list_supported_countries(include_aliases=False)
     if not all_countries.get(country):
         return schema
 
@@ -117,7 +117,7 @@ DATA_SCHEMA_SETUP = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Optional(CONF_COUNTRY): CountrySelector(
             CountrySelectorConfig(
-                countries=list(list_supported_countries()),
+                countries=list(list_supported_countries(include_aliases=False)),
             )
         ),
     }

@@ -49,6 +49,7 @@ VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
+SAFE_MODE_PATH = os.path.join(CONFIG_DIR, config_util.SAFE_MODE_FILENAME)
 
 
 def create_file(path):
@@ -79,6 +80,9 @@ def teardown():
 
     if os.path.isfile(SCENES_PATH):
         os.remove(SCENES_PATH)
+
+    if os.path.isfile(SAFE_MODE_PATH):
+        os.remove(SAFE_MODE_PATH)
 
 
 async def test_create_default_config(hass: HomeAssistant) -> None:
@@ -1386,3 +1390,12 @@ async def test_core_store_no_country(
     await hass.config.async_update(**{"country": "SE"})
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
+
+
+async def test_safe_mode(hass: HomeAssistant) -> None:
+    """Test safe mode."""
+    assert config_util.safe_mode_enabled(hass.config.config_dir) is False
+    assert config_util.safe_mode_enabled(hass.config.config_dir) is False
+    await config_util.async_enable_safe_mode(hass)
+    assert config_util.safe_mode_enabled(hass.config.config_dir) is True
+    assert config_util.safe_mode_enabled(hass.config.config_dir) is False

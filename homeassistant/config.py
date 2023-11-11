@@ -88,6 +88,8 @@ INTEGRATION_LOAD_EXCEPTIONS = (
     *LOAD_EXCEPTIONS,
 )
 
+SAFE_MODE_FILENAME = "safe-mode"
+
 DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
 default_config:
@@ -1007,3 +1009,24 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
+
+
+def safe_mode_enabled(config_dir: str) -> bool:
+    """Return if safe mode is enabled.
+
+    If safe mode is enabled, the safe mode file will be removed.
+    """
+    safe_mode_path = os.path.join(config_dir, SAFE_MODE_FILENAME)
+    safe_mode = os.path.exists(safe_mode_path)
+    if safe_mode:
+        os.remove(safe_mode_path)
+    return safe_mode
+
+
+async def async_enable_safe_mode(hass: HomeAssistant) -> None:
+    """Enable safe mode."""
+
+    def _enable_safe_mode() -> None:
+        Path(hass.config.path(SAFE_MODE_FILENAME)).touch()
+
+    await hass.async_add_executor_job(_enable_safe_mode)

@@ -120,6 +120,7 @@ async def async_setup_hass(
         runtime_config.log_no_color,
     )
 
+    hass.config.safe_mode = runtime_config.safe_mode
     hass.config.skip_pip = runtime_config.skip_pip
     hass.config.skip_pip_packages = runtime_config.skip_pip_packages
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
@@ -197,6 +198,8 @@ async def async_setup_hass(
             {"recovery_mode": {}, "http": http_conf},
             hass,
         )
+    elif hass.config.safe_mode:
+        _LOGGER.info("Starting in safe mode")
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)

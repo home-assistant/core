@@ -1831,7 +1831,7 @@ DEVICES = [
             },
             ("fan", "00:11:22:33:44:55:66:77-1-514"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["fan"],
-                DEV_SIG_ENT_MAP_CLASS: "ZhaFan",
+                DEV_SIG_ENT_MAP_CLASS: "KofFan",
                 DEV_SIG_ENT_MAP_ID: "fan.king_of_fans_inc_hbuniversalcfremote_fan",
             },
         },
