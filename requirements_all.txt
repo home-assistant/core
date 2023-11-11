@@ -147,7 +147,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.0.1
+accuweather==2.1.0
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -748,6 +748,9 @@ elkm1-lib==2.2.6
 # homeassistant.components.elmax
 elmax-api==0.0.4
 
+# homeassistant.components.xmpp
+emoji==2.8.0
+
 # homeassistant.components.emulated_roku
 emulated-roku==0.2.1
 
@@ -1053,7 +1056,7 @@ ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.0.0
+ical==6.1.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1126,6 +1129,9 @@ kiwiki-client==0.1.1
 
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
+
+# homeassistant.components.komfovent
+komfovent-api==0.0.3
 
 # homeassistant.components.konnected
 konnected==1.2.0

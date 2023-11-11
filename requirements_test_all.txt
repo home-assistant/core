@@ -128,7 +128,7 @@ Tami4EdgeAPI==2.1
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.0.1
+accuweather==2.1.0
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -833,7 +833,7 @@ ibeacon-ble==1.0.1
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.0.0
+ical==6.1.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -885,6 +885,9 @@ kegtron-ble==0.4.0
 
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
+
+# homeassistant.components.komfovent
+komfovent-api==0.0.3
 
 # homeassistant.components.konnected
 konnected==1.2.0
