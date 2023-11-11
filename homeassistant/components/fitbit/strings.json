@@ -16,15 +16,26 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "The user credentials provided do not match this Fitbit account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      }
     }
   },
   "issues": {

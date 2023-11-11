@@ -29,6 +29,11 @@
         "name": "In bed"
       }
     },
+    "calendar": {
+      "workout": {
+        "name": "Workouts"
+      }
+    },
     "sensor": {
       "fat_mass": {
         "name": "Fat mass"
@@ -71,6 +76,18 @@
       },
       "pulse_wave_velocity": {
         "name": "Pulse wave velocity"
+      },
+      "vo2_max": {
+        "name": "VO2 max"
+      },
+      "extracellular_water": {
+        "name": "Extracellular water"
+      },
+      "intracellular_water": {
+        "name": "Intracellular water"
+      },
+      "vascular_age": {
+        "name": "Vascular age"
       },
       "breathing_disturbances_intensity": {
         "name": "Breathing disturbances intensity"
@@ -122,6 +139,114 @@
       },
       "wakeup_time": {
         "name": "Wakeup time"
+      },
+      "step_goal": {
+        "name": "Step goal"
+      },
+      "sleep_goal": {
+        "name": "Sleep goal"
+      },
+      "weight_goal": {
+        "name": "Weight goal"
+      },
+      "activity_steps_today": {
+        "name": "Steps today"
+      },
+      "activity_distance_today": {
+        "name": "Distance travelled today"
+      },
+      "activity_floors_climbed_today": {
+        "name": "Floors climbed today"
+      },
+      "activity_soft_duration_today": {
+        "name": "Soft activity today"
+      },
+      "activity_moderate_duration_today": {
+        "name": "Moderate activity today"
+      },
+      "activity_intense_duration_today": {
+        "name": "Intense activity today"
+      },
+      "activity_active_duration_today": {
+        "name": "Active time today"
+      },
+      "activity_active_calories_burnt_today": {
+        "name": "Active calories burnt today"
+      },
+      "activity_total_calories_burnt_today": {
+        "name": "Total calories burnt today"
+      },
+      "workout_type": {
+        "name": "Last workout type",
+        "state": {
+          "walk": "Walking",
+          "run": "Running",
+          "hiking": "Hiking",
+          "skating": "Skating",
+          "bmx": "BMX",
+          "bicycling": "Bicycling",
+          "swimming": "Swimming",
+          "surfing": "Surfing",
+          "kitesurfing": "Kitesurfing",
+          "windsurfing": "Windsurfing",
+          "bodyboard": "Bodyboard",
+          "tennis": "Tennis",
+          "table_tennis": "Table tennis",
+          "squash": "Squash",
+          "badminton": "Badminton",
+          "lift_weights": "Lift weights",
+          "calisthenics": "Calisthenics",
+          "elliptical": "Elliptical",
+          "pilates": "Pilates",
+          "basket_ball": "Basket ball",
+          "soccer": "Soccer",
+          "football": "Football",
+          "rugby": "Rugby",
+          "volley_ball": "Volley ball",
+          "waterpolo": "Waterpolo",
+          "horse_riding": "Horse riding",
+          "golf": "Golf",
+          "yoga": "Yoga",
+          "dancing": "Dancing",
+          "boxing": "Boxing",
+          "fencing": "Fencing",
+          "wrestling": "Wrestling",
+          "martial_arts": "Martial arts",
+          "skiing": "Skiing",
+          "snowboarding": "Snowboarding",
+          "other": "Other",
+          "no_activity": "No activity",
+          "rowing": "Rowing",
+          "zumba": "Zumba",
+          "baseball": "Baseball",
+          "handball": "Handball",
+          "hockey": "Hockey",
+          "ice_hockey": "Ice hockey",
+          "climbing": "Climbing",
+          "ice_skating": "Ice skating",
+          "multi_sport": "Multi sport",
+          "indoor_walk": "Indoor walking",
+          "indoor_running": "Indoor running",
+          "indoor_cycling": "Indoor cycling"
+        }
+      },
+      "workout_active_calories_burnt": {
+        "name": "Calories burnt last workout"
+      },
+      "workout_distance": {
+        "name": "Distance travelled last workout"
+      },
+      "workout_floors_climbed": {
+        "name": "Floors climbed last workout"
+      },
+      "workout_intensity": {
+        "name": "Last workout intensity"
+      },
+      "workout_pause_duration": {
+        "name": "Pause during last workout"
+      },
+      "workout_duration": {
+        "name": "Last workout duration"
       }
     }
   }

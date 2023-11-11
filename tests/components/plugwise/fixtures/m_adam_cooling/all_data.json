@@ -53,9 +53,7 @@
       "active_preset": "asleep",
       "available": true,
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
-      "control_state": "cooling",
       "dev_class": "thermostat",
-      "last_used": "Weekschema",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
       "mode": "heat_cool",
       "model": "ThermoTouch",
@@ -88,7 +86,6 @@
       "mac_address": "012345670001",
       "model": "Gateway",
       "name": "Adam",
-      "regulation_mode": "cooling",
       "regulation_modes": [
         "heating",
         "off",
@@ -96,7 +93,7 @@
         "bleeding_hot",
         "cooling"
       ],
-      "select_regulation_mode": "heating",
+      "select_regulation_mode": "cooling",
       "sensors": {
         "outdoor_temperature": 29.65
       },
@@ -107,11 +104,9 @@
       "active_preset": "home",
       "available": true,
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
-      "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-10T02:00:00+02:00",
       "hardware": "255",
-      "last_used": "Badkamer",
       "location": "f871b8c4d63549319221e294e4f88074",
       "mode": "auto",
       "model": "Lisa",

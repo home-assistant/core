@@ -8,9 +8,11 @@ import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SCAN_INTERVAL,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -354,16 +356,28 @@ async def test_bandwidth_sensors(
 
     assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
-    assert hass.states.get("sensor.wired_client_rx").state == "1234.0"
-    assert hass.states.get("sensor.wired_client_tx").state == "5678.0"
-    assert hass.states.get("sensor.wireless_client_rx").state == "2345.0"
-    assert hass.states.get("sensor.wireless_client_tx").state == "6789.0"
 
-    ent_reg = er.async_get(hass)
-    assert (
-        ent_reg.async_get("sensor.wired_client_rx").entity_category
-        is EntityCategory.DIAGNOSTIC
-    )
+    # Verify sensor attributes and state
+
+    wrx_sensor = hass.states.get("sensor.wired_client_rx")
+    assert wrx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wrx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wrx_sensor.state == "1234.0"
+
+    wtx_sensor = hass.states.get("sensor.wired_client_tx")
+    assert wtx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wtx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wtx_sensor.state == "5678.0"
+
+    wlrx_sensor = hass.states.get("sensor.wireless_client_rx")
+    assert wlrx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wlrx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wlrx_sensor.state == "2345.0"
+
+    wltx_sensor = hass.states.get("sensor.wireless_client_tx")
+    assert wltx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wltx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wltx_sensor.state == "6789.0"
 
     # Verify state update
 

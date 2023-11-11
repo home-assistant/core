@@ -32,7 +32,9 @@ def homewizard_exception_handler(
         except RequestError as ex:
             raise HomeAssistantError from ex
         except DisabledError as ex:
-            await self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
+            await self.hass.config_entries.async_reload(
+                self.coordinator.config_entry.entry_id
+            )
             raise HomeAssistantError from ex
 
     return handler

@@ -158,15 +158,7 @@ homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*
 homeassistant.components.homeassistant_yellow.*
-homeassistant.components.homekit
-homeassistant.components.homekit.accessories
-homeassistant.components.homekit.aidmanager
-homeassistant.components.homekit.config_flow
-homeassistant.components.homekit.diagnostics
-homeassistant.components.homekit.logbook
-homeassistant.components.homekit.type_locks
-homeassistant.components.homekit.type_triggers
-homeassistant.components.homekit.util
+homeassistant.components.homekit.*
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
 homeassistant.components.homekit_controller.button
@@ -189,6 +181,7 @@ homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
+homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
@@ -213,6 +206,7 @@ homeassistant.components.light.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
+homeassistant.components.local_todo.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
 homeassistant.components.logger.*
@@ -370,6 +364,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.worldclock.*
