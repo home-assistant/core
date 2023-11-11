@@ -187,14 +187,14 @@ def _handle_exception(err) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell TCC system."""
 
-    async def load_auth_tokens(store) -> tuple[dict, dict | None]:
+    async def load_auth_tokens(store) -> tuple[dict[str, str | dt], dict[str, str]]:
         app_storage = await store.async_load()
         tokens = dict(app_storage or {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
             # any tokens won't be valid, and store might be corrupt
             await store.async_save({})
-            return ({}, None)
+            return ({}, {})
 
         # evohomeasync2 requires naive/local datetimes as strings
         if tokens.get(ACCESS_TOKEN_EXPIRES) is not None and (
@@ -202,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ):
             tokens[ACCESS_TOKEN_EXPIRES] = _dt_aware_to_naive(expires)
 
-        user_data = tokens.pop(USER_DATA, None)
+        user_data = tokens.pop(USER_DATA, {})
         return (tokens, user_data)
 
     store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
@@ -211,7 +211,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client_v2 = evohomeasync2.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
         config[DOMAIN][CONF_PASSWORD],
-        **tokens,
+        **tokens,  # type: ignore[arg-type]
         session=async_get_clientsession(hass),
     )
 
@@ -250,7 +250,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client_v1 = evohomeasync.EvohomeClient(
         client_v2.username,
         client_v2.password,
-        session_id=user_data.get("sessionId") if user_data else None,
+        session_id=user_data.get("sessionId") if user_data else None,  # STORAGE_VER 1
         session=async_get_clientsession(hass),
     )
 
@@ -441,7 +441,7 @@ class EvoBroker:
         if self.client_v1:
             app_storage[USER_DATA] = {  # type: ignore[assignment]
                 "sessionId": self.client_v1.broker.session_id,
-            }
+            }  # this is the schema for STORAGE_VER == 1
         else:
             app_storage[USER_DATA] = {}  # type: ignore[assignment]
 
@@ -463,13 +463,9 @@ class EvoBroker:
     async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
-        assert self.client_v1
+        assert self.client_v1  # mypy check
 
-        def get_session_id(client_v1) -> str | None:
-            user_data = client_v1.user_data if client_v1 else None
-            return user_data.get("sessionId") if user_data else None
-
-        session_id = get_session_id(self.client_v1)
+        session_id = self.client_v1.broker.session_id  # maybe receive a new session_id?
 
         self.temps = {}  # these are now stale, will fall back to v2 temps
         try:
@@ -513,14 +509,16 @@ class EvoBroker:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
         finally:
-            if session_id != get_session_id(self.client_v1):
+            assert self.client_v1 and self.client_v1.broker  # mypy check
+            if session_id != self.client_v1.broker.session_id:
                 await self.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
     async def _update_v2_api_state(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
-        access_token = self.client.access_token
+
+        access_token = self.client.access_token  # maybe receive a new token?
 
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
@@ -531,9 +529,9 @@ class EvoBroker:
             async_dispatcher_send(self.hass, DOMAIN)
 
             _LOGGER.debug("Status = %s", status)
-
-        if access_token != self.client.access_token:
-            await self.save_auth_tokens()
+        finally:
+            if access_token != self.client.access_token:
+                await self.save_auth_tokens()
 
     async def async_update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.
@@ -668,7 +666,7 @@ class EvoChild(EvoDevice):
                 switchpoint_time_of_day = dt_util.parse_datetime(
                     f"{sp_date}T{switchpoint['TimeOfDay']}"
                 )
-                assert switchpoint_time_of_day
+                assert switchpoint_time_of_day  # mypy check
                 dt_aware = _dt_evo_to_aware(
                     switchpoint_time_of_day, self._evo_broker.tcs_utc_offset
                 )
