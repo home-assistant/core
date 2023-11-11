@@ -2397,6 +2397,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "holiday": {
+      "name": "Holiday",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "home_connect": {
       "name": "Home Connect",
       "integration_type": "hub",

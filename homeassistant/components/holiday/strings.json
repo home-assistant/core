@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "Name",
+          "country": "Country"
+        }
+      },
+      "province": {
+        "data": {
+          "province": "Province"
+        }
+      }
+    }
+  }
+}
