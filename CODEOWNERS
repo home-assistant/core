@@ -1059,6 +1059,8 @@ build.json @home-assistant/supervisor
 /tests/components/rhasspy/ @balloob @synesthesiam
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
+/homeassistant/components/ring/ @sdb9696
+/tests/components/ring/ @sdb9696
 /homeassistant/components/risco/ @OnFreund
 /tests/components/risco/ @OnFreund
 /homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck
@@ -1389,6 +1391,8 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
+/homeassistant/components/vicare/ @CFenner
+/tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel

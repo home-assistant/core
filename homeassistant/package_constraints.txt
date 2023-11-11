@@ -1,4 +1,5 @@
 aiodiscover==1.5.1
+aiohttp-fast-url-dispatcher==0.1.0
 aiohttp-zlib-ng==0.1.1
 aiohttp==3.8.5;python_version<'3.12'
 aiohttp==3.9.0b0;python_version>='3.12'
@@ -17,14 +18,14 @@ bluetooth-data-tools==1.14.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.5
-dbus-fast==2.13.1
+dbus-fast==2.14.0
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.1.0
 hass-nabucasa==0.74.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.4
-home-assistant-frontend==20231030.1
+home-assistant-frontend==20231030.2
 home-assistant-intents==2023.10.16
 httpx==0.25.0
 ifaddr==0.2.0
@@ -55,7 +56,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
 yarl==1.9.2
-zeroconf==0.120.0
+zeroconf==0.122.3
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
