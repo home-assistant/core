@@ -2,7 +2,6 @@
 
 
 from pydrawise import legacy
-from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -13,11 +12,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
@@ -53,24 +51,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hydrawise from a config entry."""
     access_token = config_entry.data[CONF_API_KEY]
-    try:
-        hydrawise = await hass.async_add_executor_job(
-            legacy.LegacyHydrawise, access_token
-        )
-    except (ConnectTimeout, HTTPError) as ex:
-        LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
-        raise ConfigEntryNotReady(
-            f"Unable to connect to Hydrawise cloud service: {ex}"
-        ) from ex
-
-    hass.data.setdefault(DOMAIN, {})[
-        config_entry.entry_id
-    ] = HydrawiseDataUpdateCoordinator(hass, hydrawise, SCAN_INTERVAL)
-    if not hydrawise.controller_info or not hydrawise.controller_status:
-        raise ConfigEntryNotReady("Hydrawise data not loaded")
-
-    # NOTE: We don't need to call async_config_entry_first_refresh() because
-    # data is fetched when the Hydrawiser object is instantiated.
+    hydrawise = legacy.LegacyHydrawise(access_token, load_on_init=False)
+    coordinator = HydrawiseDataUpdateCoordinator(hass, hydrawise, SCAN_INTERVAL)
+    await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 

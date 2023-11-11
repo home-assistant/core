@@ -3,11 +3,11 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
+        "description": "Set up ViCare integration. To generate client ID go to https://app.developer.viessmann.com",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "[%key:common::config_flow::data::api_key%]",
+          "client_id": "Client ID",
           "heating_type": "Heating type"
         }
       }

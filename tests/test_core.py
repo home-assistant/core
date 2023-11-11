@@ -816,6 +816,16 @@ async def test_eventbus_run_immediately(hass: HomeAssistant) -> None:
     unsub()
 
 
+async def test_eventbus_run_immediately_not_callback(hass: HomeAssistant) -> None:
+    """Test we raise when passing a non-callback with run_immediately."""
+
+    def listener(event):
+        """Mock listener."""
+
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen("test", listener, run_immediately=True)
+
+
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
     """Test unsubscribe listener from returned function."""
     calls = []
@@ -2533,4 +2543,26 @@ def test_is_callback_check_partial():
     )
     assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type == (
         ha.HassJobType.Executor
+    )
+
+
+def test_hassjob_passing_job_type():
+    """Test passing the job type to HassJob when we already know it."""
+
+    @ha.callback
+    def callback_func():
+        pass
+
+    def not_callback_func():
+        pass
+
+    assert (
+        HassJob(callback_func, job_type=ha.HassJobType.Callback).job_type
+        == ha.HassJobType.Callback
+    )
+
+    # We should trust the job_type passed in
+    assert (
+        HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
+        == ha.HassJobType.Callback
     )

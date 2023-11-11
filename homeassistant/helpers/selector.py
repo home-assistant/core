@@ -459,7 +459,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
 
 class ConditionSelectorConfig(TypedDict):
-    """Class to represent an action selector config."""
+    """Class to represent an condition selector config."""
 
 
 @SELECTORS.register("condition")
@@ -1278,6 +1278,27 @@ class TimeSelector(Selector[TimeSelectorConfig]):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+class TriggerSelectorConfig(TypedDict):
+    """Class to represent an trigger selector config."""
+
+
+@SELECTORS.register("trigger")
+class TriggerSelector(Selector[TriggerSelectorConfig]):
+    """Selector of a trigger sequence (script syntax)."""
+
+    selector_type = "trigger"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
 class FileSelectorConfig(TypedDict):

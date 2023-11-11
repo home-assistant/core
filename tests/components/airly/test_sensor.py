@@ -33,10 +33,13 @@ from tests.common import async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_sensor(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test states of the sensor."""
     await init_integration(hass, aioclient_mock)
-    registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_common_air_quality_index")
     assert state
@@ -45,7 +48,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
-    entry = registry.async_get("sensor.home_common_air_quality_index")
+    entry = entity_registry.async_get("sensor.home_common_air_quality_index")
     assert entry
     assert entry.unique_id == "123-456-caqi"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -58,7 +61,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_humidity")
+    entry = entity_registry.async_get("sensor.home_humidity")
     assert entry
     assert entry.unique_id == "123-456-humidity"
     assert entry.options["sensor"] == {"suggested_display_precision": 1}
@@ -74,7 +77,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm1")
+    entry = entity_registry.async_get("sensor.home_pm1")
     assert entry
     assert entry.unique_id == "123-456-pm1"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -90,7 +93,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm2_5")
+    entry = entity_registry.async_get("sensor.home_pm2_5")
     assert entry
     assert entry.unique_id == "123-456-pm25"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -106,7 +109,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm10")
+    entry = entity_registry.async_get("sensor.home_pm10")
     assert entry
     assert entry.unique_id == "123-456-pm10"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -122,7 +125,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
-    entry = registry.async_get("sensor.home_carbon_monoxide")
+    entry = entity_registry.async_get("sensor.home_carbon_monoxide")
     assert entry
     assert entry.unique_id == "123-456-co"
 
@@ -137,7 +140,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.NITROGEN_DIOXIDE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_nitrogen_dioxide")
+    entry = entity_registry.async_get("sensor.home_nitrogen_dioxide")
     assert entry
     assert entry.unique_id == "123-456-no2"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -153,7 +156,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.OZONE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_ozone")
+    entry = entity_registry.async_get("sensor.home_ozone")
     assert entry
     assert entry.unique_id == "123-456-o3"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -169,7 +172,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SULPHUR_DIOXIDE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_sulphur_dioxide")
+    entry = entity_registry.async_get("sensor.home_sulphur_dioxide")
     assert entry
     assert entry.unique_id == "123-456-so2"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -182,7 +185,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pressure")
+    entry = entity_registry.async_get("sensor.home_pressure")
     assert entry
     assert entry.unique_id == "123-456-pressure"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -195,7 +198,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_temperature")
+    entry = entity_registry.async_get("sensor.home_temperature")
     assert entry
     assert entry.unique_id == "123-456-temperature"
     assert entry.options["sensor"] == {"suggested_display_precision": 1}

@@ -73,8 +73,13 @@ async def test_expired_token_refresh_success(
             http.HTTPStatus.INTERNAL_SERVER_ERROR,
             ConfigEntryState.SETUP_RETRY,
         ),
+        (
+            time.time() - 3600,
+            http.HTTPStatus.BAD_REQUEST,
+            ConfigEntryState.SETUP_ERROR,
+        ),
     ],
-    ids=["failure_requires_reauth", "transient_failure"],
+    ids=["failure_requires_reauth", "transient_failure", "revoked_auth"],
 )
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,

@@ -6,7 +6,7 @@ import asyncio
 import base64
 import collections.abc
 from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
-from contextlib import contextmanager, suppress
+from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -20,7 +20,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType
+from types import CodeType, TracebackType
 from typing import (
     Any,
     Concatenate,
@@ -504,7 +504,8 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        with set_template(self.template, "compiling"):
+        with _template_context_manager as cm:
+            cm.set_template(self.template, "compiling")
             if self.is_static or self._compiled_code is not None:
                 return
 
@@ -2213,21 +2214,32 @@ def iif(
     return if_false
 
 
-@contextmanager
-def set_template(template_str: str, action: str) -> Generator:
-    """Store template being parsed or rendered in a Contextvar to aid error handling."""
-    template_cv.set((template_str, action))
-    try:
-        yield
-    finally:
+class TemplateContextManager(AbstractContextManager):
+    """Context manager to store template being parsed or rendered in a ContextVar."""
+
+    def set_template(self, template_str: str, action: str) -> None:
+        """Store template being parsed or rendered in a Contextvar to aid error handling."""
+        template_cv.set((template_str, action))
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Raise any exception triggered within the runtime context."""
         template_cv.set(None)
+
+
+_template_context_manager = TemplateContextManager()
 
 
 def _render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
-    with set_template(template_str, "rendering"):
+    with _template_context_manager as cm:
+        cm.set_template(template_str, "rendering")
         return template.render(**kwargs)
 
 
