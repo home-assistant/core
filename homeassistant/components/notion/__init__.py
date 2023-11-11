@@ -192,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if isinstance(result, BaseException):
                 raise result from None
 
-            data.update_data_from_response(result)
+            data.update_data_from_response(result)  # type: ignore[arg-type]
 
         return data
 
