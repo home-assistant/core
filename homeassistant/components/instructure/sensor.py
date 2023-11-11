@@ -4,23 +4,19 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
+from datetime import datetime
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorStateClass,
     SensorEntity,
     SensorEntityDescription,
 )
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.const import UnitOfTemperature
+
 
 from .const import DOMAIN
 
@@ -77,13 +73,8 @@ class CanvasSensorEntityDescription(BaseEntityDescription, BaseEntityDescription
 assignment_sensor_entity_description = CanvasSensorEntityDescription(
     key="upcoming_assignments",
     translation_key="upcoming_assignments",
-    #device_class=SensorDeviceClass.ENUM，
-    #options=["Assignment"]
-    #native_unit_of_measurement="Assignment",
-    #entity_category=EntityCategory.DIAGNOSTIC,
-    #state_class=SensorStateClass.MEASUREMENT,
     name_fn=lambda data: str(data["course_id"]) + "-" + data["name"],
-    value_fn=lambda data: data["due_at"],
+    value_fn=lambda data: datetime_process(data["due_at"]),
     attr_fn=lambda data: {
         "Link": data["html_url"]
     }
@@ -97,6 +88,11 @@ def create_assignment_sensors(assignment_info):
             AssignmentSensorEntity(assignment_sensor_entity_description, assignment)
         )
     return sensors
+
+def datetime_process(date_time):
+    standard_timestamp = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
+    pretty_time = standard_timestamp.strftime("%d %b %H:%M")
+    return pretty_time
 
 class AssignmentSensorEntity(SensorEntity):
     """Defines an assignment sensor entity."""
@@ -132,7 +128,7 @@ class AssignmentSensorEntity(SensorEntity):
     
     @property
     def extra_state_attributes(self):
-        """Return the state attributes."""
+        """Return the state attributes like assignment links."""
         return self.entity_description.attr_fn(self.assignment_info)
     
 async def async_setup_entry(
@@ -143,3 +139,4 @@ async def async_setup_entry(
     """Set up Canvas sensor based on a config entry"""
     assignment_sensors = create_assignment_sensors(assignment_info)
     async_add_entities(assignment_sensors)
+
