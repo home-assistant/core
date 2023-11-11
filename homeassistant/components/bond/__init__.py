@@ -129,7 +129,7 @@ async def async_remove_config_entry_device(
         bond_id: str = identifier[1]
         # Bond still uses the 3 arg tuple before
         # the identifiers were typed
-        device_id: str = identifier[2]  # type: ignore[misc]
+        device_id: str = identifier[2]
         # If device_id is no longer present on
         # the hub, we allow removal.
         if hub.bond_id != bond_id or not any(
