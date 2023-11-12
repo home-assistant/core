@@ -249,12 +249,12 @@ async def test_reboot_system(hass: HomeAssistant) -> None:
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.octoprint_restart_octoprint",
+                ATTR_ENTITY_ID: "button.octoprint_reboot_system",
             },
             blocking=True,
         )
 
-        assert len(reboot_command.mock_calls) == 0
+        assert len(reboot_command.mock_calls) == 1
 
 
 async def test_restart_octoprint(hass: HomeAssistant) -> None:
@@ -279,4 +279,4 @@ async def test_restart_octoprint(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        assert len(restart_command.mock_calls) == 0
+        assert len(restart_command.mock_calls) == 1
