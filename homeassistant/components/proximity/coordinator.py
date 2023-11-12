@@ -165,7 +165,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
 
             # Add the device and distance to a dictionary.
-            if not proximity:
+            if proximity is None:
                 continue
             distances_to_zone[device] = round(
                 DistanceConverter.convert(
