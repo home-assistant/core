@@ -56,7 +56,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for friendly_name, proximity_config in config[DOMAIN].items():
         _LOGGER.debug("setup %s with config:%s", friendly_name, proximity_config)
 
-        coordinator = ProximityDataUpdateCoordinator(hass, friendly_name, proximity_config)
+        coordinator = ProximityDataUpdateCoordinator(
+            hass, friendly_name, proximity_config
+        )
 
         async_track_state_change(
             hass,
