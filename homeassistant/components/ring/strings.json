@@ -8,7 +8,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "2fa_user": {
+      "2fa": {
         "title": "Two-factor authentication",
         "data": {
           "2fa": "Two-factor code"
@@ -19,12 +19,6 @@
         "description": "The Ring integration needs to re-authenticate your account {username}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "2fa_reauth": {
-        "title": "Two-factor authentication",
-        "data": {
-          "2fa": "Two-factor code"
         }
       }
     },

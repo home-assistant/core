@@ -165,7 +165,8 @@ async def test_error_on_global_update(
     ],
     ids=["timeout-error", "other-error"],
 )
-async def test_error_on_device_update(hass: HomeAssistant,
+async def test_error_on_device_update(
+    hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
     caplog,
@@ -188,4 +189,3 @@ async def test_error_on_device_update(hass: HomeAssistant,
             record.message for record in caplog.records if record.levelname == "WARNING"
         ]
         assert mock_config_entry.entry_id in hass.data[DOMAIN]
-
