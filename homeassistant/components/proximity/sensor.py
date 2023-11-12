@@ -67,7 +67,7 @@ class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordin
         )
 
     @property
-    def native_value(self) -> str | int | float | None:
+    def native_value(self) -> str | float | None:
         """Return native sensor value."""
         if (value := self.coordinator.data[self.entity_description.key]) == "not set":
             return None

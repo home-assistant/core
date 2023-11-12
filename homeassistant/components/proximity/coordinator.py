@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TypedDict
 
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -42,16 +41,7 @@ class StateChangedData:
     new_state: State | None
 
 
-class ProximityData(TypedDict):
-    """ProximityData type class."""
-
-    dist_to_zone: str | float
-    dist_to_zone_converted: str | float
-    dir_of_travel: str | float
-    nearest: str | float
-
-
-class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
+class ProximityDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float]]):
     """Proximity data update coordinator."""
 
     def __init__(
@@ -104,7 +94,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
         )
 
-    async def _async_update_data(self) -> ProximityData:
+    async def _async_update_data(self) -> dict[str, str | float]:
         """Calculate Proximity data."""
         if (
             state_change_data := self.state_change_data
