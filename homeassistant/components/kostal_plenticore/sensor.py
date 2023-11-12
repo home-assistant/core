@@ -652,7 +652,7 @@ SENSOR_PROCESS_DATA = [
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischarge:Day",
-        name="Battery DC Discharge Day",
+        name="Battery Discharge Day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         formatter="format_energy",
@@ -660,7 +660,7 @@ SENSOR_PROCESS_DATA = [
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischarge:Month",
-        name="Battery DC Discharge Month",
+        name="Battery Discharge Month",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         formatter="format_energy",
@@ -668,7 +668,7 @@ SENSOR_PROCESS_DATA = [
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischarge:Year",
-        name="Battery DC Discharge Year",
+        name="Battery Discharge Year",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         formatter="format_energy",
@@ -676,7 +676,7 @@ SENSOR_PROCESS_DATA = [
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischarge:Total",
-        name="Battery DC Discharge Total",
+        name="Battery Discharge Total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
