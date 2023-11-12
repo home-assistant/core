@@ -1468,8 +1468,9 @@ async def test_component_config_validation_error(
             MockModule(domain, config_schema=adr_0007_config_schema),
         )
 
+    base_path = os.path.dirname(__file__)
     hass.config.config_dir = os.path.join(
-        ".", "tests", "fixtures", "core", "config", config_dir
+        base_path, "fixtures", "core", "config", config_dir
     )
     config = await config_util.async_hass_config_yaml(hass)
 
@@ -1482,7 +1483,7 @@ async def test_component_config_validation_error(
         )
 
     error_records = [
-        record.message
+        record.message.replace(base_path, "<BASE_PATH>")
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
