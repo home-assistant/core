@@ -1827,7 +1827,7 @@ pykmtronic==0.3.0
 pykodi==0.2.7
 
 # homeassistant.components.kostal_plenticore
-pykoplenti==1.2.1
+pykoplenti==1.2.2
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
