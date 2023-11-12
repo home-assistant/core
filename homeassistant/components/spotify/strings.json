@@ -16,7 +16,7 @@
       "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication.",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed]"
     },
     "create_entry": {

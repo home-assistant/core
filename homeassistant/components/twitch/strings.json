@@ -13,7 +13,7 @@
       "wrong_account": "Wrong account: Please authenticate with {username}.",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed]"
     }
   },

@@ -187,7 +187,7 @@ def _custom_tasks(template, info: Info) -> None:
                     "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
                     "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed]",
                     "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-                    "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized]",
+                    "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
                     "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
                     "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
                     "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
