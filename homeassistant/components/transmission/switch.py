@@ -22,8 +22,8 @@ class TransmissionSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
     is_on_func: Callable[[TransmissionDataUpdateCoordinator], bool | None]
-    on_func: Callable[[TransmissionDataUpdateCoordinator], Any]
-    off_func: Callable[[TransmissionDataUpdateCoordinator], Any]
+    on_func: Callable[[TransmissionDataUpdateCoordinator], None]
+    off_func: Callable[[TransmissionDataUpdateCoordinator], None]
 
 
 @dataclass
@@ -38,8 +38,8 @@ SWITCH_TYPES: tuple[TransmissionSwitchEntityDescription, ...] = (
         key="on_off",
         translation_key="on_off",
         is_on_func=lambda coordinator: coordinator.data.active_torrent_count > 0,
-        on_func=lambda coordinator: coordinator.start_torrents,
-        off_func=lambda coordinator: coordinator.stop_torrents,
+        on_func=lambda coordinator: coordinator.start_torrents(),
+        off_func=lambda coordinator: coordinator.stop_torrents(),
     ),
     TransmissionSwitchEntityDescription(
         key="turtle_mode",
