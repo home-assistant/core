@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 
+DOCUMENTATION_URL = "https://skyconnect.home-assistant.io/documentation/"
 DONGLE_NAME = "Home Assistant SkyConnect"
 
 
@@ -26,7 +27,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 description=entry.data["description"],
             ),
             name=DONGLE_NAME,
-            url=None,
+            url=DOCUMENTATION_URL,
         )
         for entry in entries
     ]

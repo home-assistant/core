@@ -21,6 +21,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
@@ -29,6 +30,17 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+@pytest.fixture
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup application credentials component."""
+    await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
 
 
 async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
@@ -45,12 +57,12 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
-    setup_credentials,
+    setup_credentials: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Check full flow."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -103,7 +115,7 @@ async def test_existing_entry(
     config_entry: MockConfigEntry,
 ) -> None:
     """Check existing entry."""
-
+    config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(

@@ -426,6 +426,7 @@ async def test_get_action_capabilities_arm_code_legacy(
 
 async def test_action(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
 ) -> None:
@@ -433,10 +434,17 @@ async def test_action(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["no_arm_code"].unique_id,
+        device_id=device_entry.id,
     )
 
     assert await async_setup_component(
@@ -451,7 +459,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": "arm_away",
                     },
@@ -463,7 +471,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": "arm_home",
                     },
@@ -475,7 +483,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": "arm_night",
                     },
@@ -487,7 +495,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": "arm_vacation",
                     },
@@ -496,7 +504,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_event_disarm"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": "disarm",
                         "code": "1234",
@@ -509,7 +517,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": "trigger",
                     },
@@ -549,6 +557,7 @@ async def test_action(
 
 async def test_action_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
 ) -> None:
@@ -556,10 +565,17 @@ async def test_action_legacy(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["no_arm_code"].unique_id,
+        device_id=device_entry.id,
     )
 
     assert await async_setup_component(
@@ -574,7 +590,7 @@ async def test_action_legacy(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entity_entry.entity_id,
                         "type": "arm_away",
                     },

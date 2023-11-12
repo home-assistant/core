@@ -14,8 +14,8 @@ from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AmbientWeatherEntity
 from .const import ATTR_LAST_DATA, DOMAIN
+from .entity import AmbientWeatherEntity
 
 TYPE_BATT1 = "batt1"
 TYPE_BATT10 = "batt10"

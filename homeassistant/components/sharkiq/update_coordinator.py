@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 
-from async_timeout import timeout
 from sharkiq import (
     AylaApi,
     SharkIqAuthError,
@@ -55,7 +54,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         """Asynchronously update the data for a single vacuum."""
         dsn = sharkiq.serial_number
         LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
-        async with timeout(API_TIMEOUT):
+        async with asyncio.timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
     async def _async_update_data(self) -> bool:

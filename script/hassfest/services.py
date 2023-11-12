@@ -25,10 +25,8 @@ def exists(value: Any) -> Any:
     return value
 
 
-FIELD_SCHEMA = vol.Schema(
+CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
@@ -46,7 +44,26 @@ FIELD_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_SCHEMA = vol.Any(
+CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
+    {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
+    }
+)
+
+CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Optional("target"): vol.Any(
+                selector.TargetSelector.CONFIG_SCHEMA, None
+            ),
+            vol.Optional("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+        }
+    ),
+    None,
+)
+
+CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
             vol.Optional("description"): str,
@@ -54,13 +71,23 @@ SERVICE_SCHEMA = vol.Any(
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
+            vol.Optional("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
         }
     ),
     None,
 )
 
-SERVICES_SCHEMA = vol.Schema({cv.slug: SERVICE_SCHEMA})
+CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
+    {cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA}
+)
+CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
+    {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
+)
+
+VALIDATE_AS_CUSTOM_INTEGRATION = {
+    # Adding translations would be a breaking change
+    "foursquare",
+}
 
 
 def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool:
@@ -99,7 +126,13 @@ def validate_services(config: Config, integration: Integration) -> None:
         return
 
     try:
-        services = SERVICES_SCHEMA(data)
+        if (
+            integration.core
+            and integration.domain not in VALIDATE_AS_CUSTOM_INTEGRATION
+        ):
+            services = CORE_INTEGRATION_SERVICES_SCHEMA(data)
+        else:
+            services = CUSTOM_INTEGRATION_SERVICES_SCHEMA(data)
     except vol.Invalid as err:
         integration.add_error(
             "services", f"Invalid services.yaml: {humanize_error(data, err)}"
@@ -118,6 +151,10 @@ def validate_services(config: Config, integration: Integration) -> None:
         with contextlib.suppress(ValueError):
             strings = json.loads(strings_file.read_text())
 
+    error_msg_suffix = "in the translations file"
+    if not integration.core:
+        error_msg_suffix = f"and is not {error_msg_suffix}"
+
     # For each service in the integration, check if the description if set,
     # if not, check if it's in the strings file. If not, add an error.
     for service_name, service_schema in services.items():
@@ -129,7 +166,7 @@ def validate_services(config: Config, integration: Integration) -> None:
             except KeyError:
                 integration.add_error(
                     "services",
-                    f"Service {service_name} has no name and is not in the translations file",
+                    f"Service {service_name} has no name {error_msg_suffix}",
                 )
 
         if "description" not in service_schema:
@@ -138,12 +175,21 @@ def validate_services(config: Config, integration: Integration) -> None:
             except KeyError:
                 integration.add_error(
                     "services",
-                    f"Service {service_name} has no description and is not in the translations file",
+                    f"Service {service_name} has no description {error_msg_suffix}",
                 )
 
         # The same check is done for the description in each of the fields of the
         # service schema.
         for field_name, field_schema in service_schema.get("fields", {}).items():
+            if "name" not in field_schema:
+                try:
+                    strings["services"][service_name]["fields"][field_name]["name"]
+                except KeyError:
+                    integration.add_error(
+                        "services",
+                        f"Service {service_name} has a field {field_name} with no name {error_msg_suffix}",
+                    )
+
             if "description" not in field_schema:
                 try:
                     strings["services"][service_name]["fields"][field_name][
@@ -152,7 +198,7 @@ def validate_services(config: Config, integration: Integration) -> None:
                 except KeyError:
                     integration.add_error(
                         "services",
-                        f"Service {service_name} has a field {field_name} with no description and is not in the translations file",
+                        f"Service {service_name} has a field {field_name} with no description {error_msg_suffix}",
                     )
 
             if "selector" in field_schema:

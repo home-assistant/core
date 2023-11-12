@@ -14,7 +14,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_AZIMUTH,
-    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
@@ -27,7 +28,7 @@ RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Forecast.Solar."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -127,8 +128,16 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                         default=self.config_entry.options[CONF_MODULES_POWER],
                     ): vol.Coerce(int),
                     vol.Optional(
-                        CONF_DAMPING,
-                        default=self.config_entry.options.get(CONF_DAMPING, 0.0),
+                        CONF_DAMPING_MORNING,
+                        default=self.config_entry.options.get(
+                            CONF_DAMPING_MORNING, 0.0
+                        ),
+                    ): vol.Coerce(float),
+                    vol.Optional(
+                        CONF_DAMPING_EVENING,
+                        default=self.config_entry.options.get(
+                            CONF_DAMPING_EVENING, 0.0
+                        ),
                     ): vol.Coerce(float),
                     vol.Optional(
                         CONF_INVERTER_SIZE,

@@ -60,12 +60,9 @@ async def async_setup_entry(
 class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     """Elmax Sensor entity implementation."""
 
+    _attr_device_class = BinarySensorDeviceClass.DOOR
+
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.get_zone_state(self._device.endpoint_id).opened
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.DOOR

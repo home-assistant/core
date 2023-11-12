@@ -129,8 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             user_input[CONF_REGION] = user_input[CONF_REGION].upper()
-            if await self.hass.async_add_executor_job(
-                is_valid_config_entry,
+            if await is_valid_config_entry(
                 self.hass,
                 user_input[CONF_ORIGIN],
                 user_input[CONF_DESTINATION],

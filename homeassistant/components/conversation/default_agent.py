@@ -54,9 +54,7 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[  # pylint: disable=invalid-name
-    [str, RecognizeResult], Awaitable[str | None]
-]
+TRIGGER_CALLBACK_TYPE = Callable[[str, RecognizeResult], Awaitable[str | None]]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -370,10 +368,11 @@ class DefaultAgent(AbstractConversationAgent):
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
         if language is None:
-            language = self.hass.config.language
-
-        self._lang_intents.pop(language, None)
-        _LOGGER.debug("Cleared intents for language: %s", language)
+            self._lang_intents.clear()
+            _LOGGER.debug("Cleared intents for all languages")
+        else:
+            self._lang_intents.pop(language, None)
+            _LOGGER.debug("Cleared intents for language: %s", language)
 
     async def async_prepare(self, language: str | None = None):
         """Load intents for a language."""

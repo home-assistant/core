@@ -54,6 +54,18 @@ set_config_parameter:
       required: true
       selector:
         text:
+    value_size:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 4
+    value_format:
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 3
 
 bulk_set_partial_config_parameters:
   target:
@@ -223,3 +235,25 @@ invoke_cc_api:
       required: true
       selector:
         object:
+
+refresh_notifications:
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    notification_type:
+      example: 1
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 22
+          mode: box
+    notification_event:
+      example: 1
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
+          mode: box

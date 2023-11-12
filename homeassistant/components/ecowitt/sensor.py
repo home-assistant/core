@@ -21,6 +21,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfIrradiance,
     UnitOfLength,
@@ -94,12 +95,14 @@ ECOWITT_SENSORS_MAPPING: Final = {
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcoWittSensorTypes.BATTERY_VOLTAGE: SensorEntityDescription(
         key="BATTERY_VOLTAGE",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
         key="CO2_PPM",

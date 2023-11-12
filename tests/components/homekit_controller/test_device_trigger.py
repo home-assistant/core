@@ -14,10 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_test_component
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")

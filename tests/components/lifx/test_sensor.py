@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
-    MAC_ADDRESS,
+    SERIAL,
     _mocked_bulb,
     _mocked_bulb_old_firmware,
     _patch_config_flow_try_connect,
@@ -38,7 +38,7 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -89,7 +89,7 @@ async def test_rssi_sensor_old_firmware(hass: HomeAssistant) -> None:
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb_old_firmware()

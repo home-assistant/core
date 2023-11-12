@@ -40,7 +40,7 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable-next=import-error,import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0
@@ -173,8 +173,7 @@ async def main():
         )
         return
 
-    pyfile = re.compile(r".+\.py$")
-    pyfiles = [file for file in files if pyfile.match(file)]
+    pyfiles = [file for file in files if file.endswith(".py")]
 
     print("=============================")
     printc("bold", "CHANGED FILES:\n", "\n ".join(pyfiles))
@@ -224,7 +223,14 @@ async def main():
         return
 
     code, _ = await async_exec(
-        "pytest", "-vv", "--force-sugar", "--", *test_files, display=True
+        "python3",
+        "-m",
+        "pytest",
+        "-vv",
+        "--force-sugar",
+        "--",
+        *test_files,
+        display=True,
     )
     print("=============================")
 

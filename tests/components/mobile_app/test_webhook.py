@@ -196,9 +196,9 @@ async def test_webhook_handle_fire_event(
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_update_registration(webhook_client, authed_api_client) -> None:
+async def test_webhook_update_registration(webhook_client) -> None:
     """Test that a we can update an existing registration via webhook."""
-    register_resp = await authed_api_client.post(
+    register_resp = await webhook_client.post(
         "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
     )
 

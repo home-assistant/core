@@ -1,8 +1,8 @@
 """Control binary sensor instances."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from ProgettiHWSW.input import Input
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from API endpoint of board."""
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             return await board_api.get_inputs()
 
     coordinator = DataUpdateCoordinator(
@@ -62,13 +62,8 @@ class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, name, sensor: Input) -> None:
         """Set initializing values."""
         super().__init__(coordinator)
-        self._name = name
+        self._attr_name = name
         self._sensor = sensor
-
-    @property
-    def name(self):
-        """Return the sensor name."""
-        return self._name
 
     @property
     def is_on(self):

@@ -35,10 +35,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await data.update()
 
-            except faadelays.InvalidAirport:
-                _LOGGER.error("Airport code %s is invalid", user_input[CONF_ID])
-                errors[CONF_ID] = "invalid_airport"
-
             except ClientConnectionError:
                 _LOGGER.error("Error connecting to FAA API")
                 errors["base"] = "cannot_connect"
@@ -49,11 +45,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 _LOGGER.debug(
-                    "Creating entry with id: %s, name: %s",
+                    "Creating entry with id: %s",
                     user_input[CONF_ID],
-                    data.name,
                 )
-                return self.async_create_entry(title=data.name, data=user_input)
+                return self.async_create_entry(title=data.code, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

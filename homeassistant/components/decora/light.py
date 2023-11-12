@@ -8,8 +8,8 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error
-import decora  # pylint: disable=import-error
+from bluepy.btle import BTLEException
+import decora
 import voluptuous as vol
 
 from homeassistant import util

@@ -43,6 +43,7 @@ async def test_get_node_from_device_entry(
     device_registry = dr.async_get(hass)
     other_domain = "other_domain"
     other_config_entry = MockConfigEntry(domain=other_domain)
+    other_config_entry.add_to_hass(hass)
     other_device_entry = device_registry.async_get_or_create(
         config_entry_id=other_config_entry.entry_id,
         identifiers={(other_domain, "1234")},
@@ -55,7 +56,7 @@ async def test_get_node_from_device_entry(
         device_registry, config_entry.entry_id
     )[0]
     assert device_entry
-    node_from_device_entry = await get_node_from_device_entry(hass, device_entry)
+    node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert node_from_device_entry is node
 

@@ -17,6 +17,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "keypad_disabled": {
+        "name": "Keypad disabled"
+      }
+    },
     "switch": {
       "beeper": {
         "name": "Keypress Beep"

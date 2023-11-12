@@ -4,7 +4,7 @@ from typing import Any
 import switchbot
 from switchbot.const import LockStatus
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,6 +34,8 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._async_update_attrs()
+        if self._device.is_night_latch_enabled():
+            self._attr_supported_features = LockEntityFeature.OPEN
 
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
@@ -53,5 +55,13 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
+        if self._device.is_night_latch_enabled():
+            self._last_run_success = await self._device.unlock_without_unlatch()
+        else:
+            self._last_run_success = await self._device.unlock()
+        self.async_write_ha_state()
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open the lock."""
         self._last_run_success = await self._device.unlock()
         self.async_write_ha_state()

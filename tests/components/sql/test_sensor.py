@@ -502,6 +502,9 @@ async def test_multiple_sensors_using_same_db(
     assert state.state == "5"
     assert state.attributes["value"] == 5
 
+    with patch("sqlalchemy.engine.base.Engine.dispose"):
+        await hass.async_stop()
+
 
 async def test_engine_is_disposed_at_stop(
     recorder_mock: Recorder, hass: HomeAssistant

@@ -9,11 +9,11 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_VIA_DEVICE,
-    DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import SIGNAL_UPDATE_ENTITY
 
@@ -26,12 +26,12 @@ class TelldusLiveEntity(Entity):
     """Base class for all Telldus Live entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, client, device_id):
         """Initialize the entity."""
         self._id = device_id
         self._client = client
-        self._name = self.device.name
         self._async_unsub_dispatcher_connect = None
 
     async def async_added_to_hass(self):
@@ -49,8 +49,6 @@ class TelldusLiveEntity(Entity):
     @callback
     def _update_callback(self):
         """Return the property of the device might have changed."""
-        if self.device.name:
-            self._name = self.device.name
         self.async_write_ha_state()
 
     @property
@@ -72,11 +70,6 @@ class TelldusLiveEntity(Entity):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
-
-    @property
-    def name(self):
-        """Return name of device."""
-        return self._name or DEVICE_DEFAULT_NAME
 
     @property
     def available(self):

@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_device_info
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
@@ -221,11 +221,7 @@ class MetOfficeCurrentSensor(
         elif self.entity_description.key == "weather" and hasattr(
             self.coordinator.data.now, self.entity_description.key
         ):
-            value = [
-                k
-                for k, v in CONDITION_CLASSES.items()
-                if self.coordinator.data.now.weather.value in v
-            ][0]
+            value = CONDITION_MAP.get(self.coordinator.data.now.weather.value)
 
         elif hasattr(self.coordinator.data.now, self.entity_description.key):
             value = getattr(self.coordinator.data.now, self.entity_description.key)

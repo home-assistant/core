@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -29,6 +30,31 @@ async def setup_config_entry(hass: HomeAssistant) -> ConfigEntry:
     await hass.config_entries.async_setup(mock_data.entry_id)
     await hass.async_block_till_done()
     return mock_data
+
+
+async def test_new_config_entry(hass: HomeAssistant, mock_weather) -> None:
+    """Test the expected entities are created."""
+    registry = er.async_get(hass)
+    await setup_config_entry(hass)
+    assert len(hass.states.async_entity_ids("weather")) == 1
+
+    entry = hass.config_entries.async_entries()[0]
+    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 1
+
+
+async def test_legacy_config_entry(hass: HomeAssistant, mock_weather) -> None:
+    """Test the expected entities are created."""
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        "10-20-hourly",
+    )
+    await setup_config_entry(hass)
+    assert len(hass.states.async_entity_ids("weather")) == 2
+
+    entry = hass.config_entries.async_entries()[0]
+    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 2
 
 
 async def test_weather(hass: HomeAssistant, mock_weather) -> None:
