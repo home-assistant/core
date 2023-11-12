@@ -219,7 +219,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if mac := mac_from_device_info(info):
-            self._mac = mac
+            # Samsung sometimes returns a value of "none" for the mac address
+            # this should be ignored - but also shouldn't trigger getmac
+            if mac != "none":
+                self._mac = mac
         elif mac := await self.hass.async_add_executor_job(
             partial(getmac.get_mac_address, ip=self._host)
         ):

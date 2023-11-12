@@ -24,7 +24,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, event as ev, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -246,7 +251,14 @@ async def async_check_config_schema(
                     message, _ = conf_util._format_config_error(
                         ex, domain, config, integration.documentation
                     )
-                    raise HomeAssistantError(message) from ex
+                    raise ServiceValidationError(
+                        message,
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_platform_config",
+                        translation_placeholders={
+                            "domain": domain,
+                        },
+                    ) from ex
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
