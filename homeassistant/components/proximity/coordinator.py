@@ -85,16 +85,21 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
         """Fetch and process state change event."""
+        if new_state is None:
+            _LOGGER.debug("no new_state -> abort")
+            return
+
+        # We can't check proximity because latitude and longitude don't exist.
+        if "latitude" not in new_state.attributes:
+            _LOGGER.debug("no latitude and longitude -> abort")
+            return
+
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
 
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
-        if self.state_change_data is None:
-            return self.data
-
-        if self.state_change_data.new_state is None:
-            _LOGGER.debug("no new_state -> abort")
+        if self.state_change_data is None or self.state_change_data.new_state is None:
             return self.data
 
         entity_name = self.state_change_data.new_state.name
@@ -142,11 +147,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 "dir_of_travel": "arrived",
                 "nearest": devices_in_zone,
             }
-
-        # We can't check proximity because latitude and longitude don't exist.
-        if "latitude" not in self.state_change_data.new_state.attributes:
-            _LOGGER.debug("no latitude and longitude -> abort")
-            return self.data  # don't change data
 
         # Collect distances to the zone for all devices.
         distances_to_zone: dict[str, float] = {}
