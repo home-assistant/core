@@ -4,7 +4,7 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
-from homeassistant.components.risco.const import DOMAIN
+from homeassistant.components.risco.const import CONF_COMMUNICATION_DELAY, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -90,6 +90,21 @@ async def test_error_on_connect(
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
     assert not registry.async_is_registered(FIRST_ALARMED_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ALARMED_ENTITY_ID)
+
+
+@pytest.mark.parametrize("exception", [CannotConnectError])
+async def test_single_error_on_connect(
+    hass: HomeAssistant, connect_with_single_error, local_config_entry
+) -> None:
+    """Test single error on connect to validate communication delay update."""
+    expected_data = {
+        **local_config_entry.data,
+        **{"type": "local", CONF_COMMUNICATION_DELAY: 1},
+    }
+
+    await hass.config_entries.async_setup(local_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert local_config_entry.data == expected_data
 
 
 async def test_local_setup(
