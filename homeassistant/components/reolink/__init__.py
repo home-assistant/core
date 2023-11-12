@@ -16,8 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .exceptions import ReolinkException, UserNotAdmin
@@ -149,17 +149,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         firmware_coordinator=firmware_coordinator,
     )
 
-    # Clean-up disconnected camera channels or channels where a diffrent model camera is connected.
-    if host.api.is_nvr:
-        device_reg = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)
-        for device in devices:
-            if device.via_device_id is None:
-                # Do not consider the NVR itself
-                continue
+    cleanup_disconnected_cams(hass, config_entry.entry_id, host)
 
-            print(device.identifiers)
-    
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(
@@ -187,3 +178,56 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+def cleanup_disconnected_cams(
+    hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
+) -> None:
+    """Clean-up disconnected camera channels or channels where a different model camera is connected."""
+    if not host.api.is_nvr:
+        return
+
+    device_reg = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
+    for device in devices:
+        device_id = [
+            dev_id[1].split("_ch")
+            for dev_id in device.identifiers
+            if dev_id[0] == DOMAIN
+        ][0]
+
+        if len(device_id) < 2:
+            # Do not consider the NVR itself
+            continue
+
+        ch = int(device_id[1])
+        ch_model = host.api.camera_model(ch)
+        remove = False
+        if ch not in host.api.channels:
+            remove = True
+            _LOGGER.info(
+                "Removing Reolink device %s, since no camera is connected to NVR channel %s anymore",
+                device.name,
+                ch,
+            )
+        if ch_model not in [device.model, "Unknown"]:
+            remove = True
+            _LOGGER.info(
+                "Removing Reolink device %s, since the camera model connected to channel %s changed from %s to %s",
+                device.name,
+                ch,
+                device.model,
+                ch_model,
+            )
+        if not remove:
+            continue
+
+        # clean entity and device registry
+        entity_reg = er.async_get(hass)
+        entities = er.async_entries_for_device(
+            entity_reg, device.id, include_disabled_entities=True
+        )
+        for entity in entities:
+            entity_reg.async_remove(entity.entity_id)
+
+        device_reg.async_remove_device(device.id)
