@@ -152,8 +152,6 @@ class OctoprintShutdownSystemButton(OctoprintButton):
 class OctoprintRebootSystemButton(OctoprintButton):
     """Reboot the system."""
 
-    _attr_entity_registry_enabled_default = False
-
     def __init__(
         self,
         coordinator: OctoprintDataUpdateCoordinator,
@@ -175,8 +173,6 @@ class OctoprintRebootSystemButton(OctoprintButton):
 
 class OctoprintRestartOctoprintButton(OctoprintButton):
     """Restart Octoprint."""
-
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
