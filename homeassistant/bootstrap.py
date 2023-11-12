@@ -398,7 +398,7 @@ def async_enable_logging(
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
-        "Uncaught exception", exc_info=args  # type: ignore[arg-type]
+        "Uncaught exception", exc_info=args
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",

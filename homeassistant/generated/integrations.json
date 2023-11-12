@@ -765,7 +765,7 @@
     "caldav": {
       "name": "CalDAV",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "canary": {
@@ -1270,7 +1270,7 @@
     },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2881,6 +2881,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "komfovent": {
+      "name": "Komfovent",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "konnected": {
       "name": "Konnected.io",
       "integration_type": "hub",
@@ -3624,12 +3630,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
-    },
-    "myq": {
-      "name": "MyQ",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "mysensors": {
       "name": "MySensors",
@@ -6153,6 +6153,12 @@
       "name": "Ubiquiti UniFi Video",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "v2c": {
+      "name": "V2C",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "vallox": {
