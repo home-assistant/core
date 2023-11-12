@@ -23,6 +23,7 @@ from .const import (
     FETCH_A_QUOTE_URL,
     GET_TAGS_URL,
     HTTP_CLIENT_TIMEOUT,
+    SEARCH_AUTHORS_URL,
     SERVICE_FETCH_A_QUOTE,
     SERVICE_FETCH_ALL_TAGS,
     SERVICE_SEARCH_AUTHORS,
@@ -79,8 +80,19 @@ async def _fetch_all_tags_service(
 
 async def _search_authors_service(
     session: aiohttp.ClientSession, service: ServiceCall
-) -> None:
-    pass
+) -> ServiceResponse:
+    response = await session.get(SEARCH_AUTHORS_URL, timeout=HTTP_CLIENT_TIMEOUT)
+    if response.status == HTTPStatus.OK:
+        data = await response.json()
+        if data:
+            authors = {
+                item["id"]: item["name"]
+                for item in data
+                if item.get("quotecount", 0) > 0
+            }
+            return authors
+
+    return None
 
 
 async def _fetch_a_quote_service(
