@@ -5,15 +5,17 @@ import pytest
 
 from homeassistant.components.valve import (
     DOMAIN,
+    ValveDeviceClass,
     ValveEntity,
+    ValveEntityDescription,
     ValveEntityFeature,
-    is_closed as valve_is_closed,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TOGGLE,
+    STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
@@ -48,12 +50,15 @@ class MockValveEntity(ValveEntity):
         unique_id: str = "mock_valve",
         name: str = "Valve",
         features: ValveEntityFeature = ValveEntityFeature(0),
+        device_class: ValveDeviceClass = None,
     ) -> None:
         """Initialize the valve."""
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
-        self._attr_is_closed = None
+        self._attr_is_closed = False
+        if device_class is not None:
+            self._attr_device_class = device_class
 
 
 @pytest.fixture(autouse=True)
@@ -172,6 +177,34 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     assert is_opening(hass, ent2)
 
 
+async def test_valve_device_class(hass: HomeAssistant) -> None:
+    """Test valve entity with defaults."""
+    default_valve = MockValveEntity()
+    default_valve.hass = hass
+
+    assert default_valve.device_class is None
+
+    entity_description = ValveEntityDescription("test")
+    entity_description.device_class = ValveDeviceClass.GAS
+    default_valve.entity_description = entity_description
+    assert default_valve.device_class is ValveDeviceClass.GAS
+
+    water_valve = MockValveEntity(device_class=ValveDeviceClass.WATER)
+    water_valve.hass = hass
+
+    assert water_valve.device_class is ValveDeviceClass.WATER
+
+
+async def test_supported_features(hass: HomeAssistant) -> None:
+    """Test lawn mower entity with defaults."""
+    valve = MockValveEntity(features=None)
+    valve.hass = hass
+
+    assert valve.supported_features is (
+        ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
+    )
+
+
 def call_service(hass, service, ent):
     """Call any service on entity."""
     return hass.services.async_call(
@@ -196,7 +229,7 @@ def is_opening(hass, ent):
 
 def is_closed(hass, ent):
     """Return if the valve is closed based on the statemachine."""
-    return valve_is_closed(hass, ent.entity_id)
+    return hass.states.is_state(ent.entity_id, STATE_CLOSED)
 
 
 def is_closing(hass, ent):

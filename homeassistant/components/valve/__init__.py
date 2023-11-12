@@ -75,11 +75,6 @@ ATTR_CURRENT_POSITION = "current_position"
 ATTR_POSITION = "position"
 
 
-def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_CLOSED)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for valves."""
     component = hass.data[DOMAIN] = EntityComponent[ValveEntity](
