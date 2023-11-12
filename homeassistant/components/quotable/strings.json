@@ -1,11 +1,15 @@
 {
   "services": {
-    "get_tags": {
-      "name": "Get Tags",
-      "description": "Gets a list of available tags."
+    "fetch_all_tags": {
+      "name": "Fetch all tags",
+      "description": "Fetches a list of all the available tags."
+    },
+    "fetch_a_quote": {
+      "name": "Fetch a quote",
+      "description": "Fetches a random quote and persists it in state."
     },
     "search_authors": {
-      "name": "Search Authors",
+      "name": "Search authors",
       "description": "Searches authors based on specified free-text query.",
       "fields": {
         "query": {
@@ -14,17 +18,21 @@
         }
       }
     },
-    "fetch_a_quote": {
-      "name": "Fetch a Quote",
-      "description": "Fetches a random quote based on specified parameters.",
+    "update_configuration": {
+      "name": "Update configuration",
+      "description": "Updates the Quotable configuration.",
       "fields": {
-        "tags": {
-          "name": "Tags",
-          "description": "A list of tags separated by a pipe (|) symbol."
+        "selected_tags": {
+          "name": "Selected tags",
+          "description": "A list of selected tags (tag slugs)."
         },
-        "authors": {
-          "name": "Authors",
-          "description": "A list of author slugs separated by a pipe (|) symbol."
+        "selected_authors": {
+          "name": "Selected authors",
+          "description": "A list of selected authors (author slugs)."
+        },
+        "update_frequency": {
+          "name": "Update frequency",
+          "description": "The frequency of fetching new quotes (in seconds)."
         }
       }
     }
