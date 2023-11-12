@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TypedDict
 
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -20,9 +20,6 @@ from homeassistant.util.location import distance
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
-    ATTR_DIR_OF_TRAVEL,
-    ATTR_DIST_TO,
-    ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
     DEFAULT_DIR_OF_TRAVEL,
@@ -42,9 +39,15 @@ class StateChangedData:
     new_state: State | None
 
 
-class ProximityDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, str | int | float]]
-):
+class ProximityData(TypedDict):
+    """ProximityData type class."""
+
+    dist_to_zone: str | float
+    dir_of_travel: str | float
+    nearest: str | float
+
+
+class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     """Proximity data update coordinator."""
 
     def __init__(
@@ -68,9 +71,9 @@ class ProximityDataUpdateCoordinator(
         )
 
         self.data = {
-            ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
-            ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
-            ATTR_NEAREST: DEFAULT_NEAREST,
+            "dist_to_zone": DEFAULT_DIST_TO_ZONE,
+            "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
+            "nearest": DEFAULT_NEAREST,
         }
 
         self.state_change_data: StateChangedData | None = None
@@ -85,7 +88,7 @@ class ProximityDataUpdateCoordinator(
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
         if self.state_change_data is None:
             return self.data
@@ -126,18 +129,18 @@ class ProximityDataUpdateCoordinator(
         if not devices_to_calculate:
             _LOGGER.debug("no devices_to_calculate -> abort")
             return {
-                ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
-                ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
-                ATTR_NEAREST: DEFAULT_NEAREST,
+                "dist_to_zone": DEFAULT_DIST_TO_ZONE,
+                "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
+                "nearest": DEFAULT_NEAREST,
             }
 
         # At least one device is in the monitored zone so update the entity.
         if devices_in_zone != "":
             _LOGGER.debug("at least on device is in zone -> arrived")
             return {
-                ATTR_DIST_TO: 0,
-                ATTR_DIR_OF_TRAVEL: "arrived",
-                ATTR_NEAREST: devices_in_zone,
+                "dist_to_zone": 0,
+                "dir_of_travel": "arrived",
+                "nearest": devices_in_zone,
             }
 
         # We can't check proximity because latitude and longitude don't exist.
@@ -194,9 +197,9 @@ class ProximityDataUpdateCoordinator(
             device_state = self.hass.states.get(closest_device)
             assert device_state
             return {
-                ATTR_DIST_TO: round(distances_to_zone[closest_device]),
-                ATTR_DIR_OF_TRAVEL: "unknown",
-                ATTR_NEAREST: device_state.name,
+                "dist_to_zone": round(distances_to_zone[closest_device]),
+                "dir_of_travel": "unknown",
+                "nearest": device_state.name,
             }
 
         # Stop if we cannot calculate the direction of travel (i.e. we don't
@@ -207,11 +210,11 @@ class ProximityDataUpdateCoordinator(
         ):
             _LOGGER.debug("no lat and lon in old_state -> unknown")
             return {
-                ATTR_DIST_TO: round(
+                "dist_to_zone": round(
                     distances_to_zone[self.state_change_data.entity_id]
                 ),
-                ATTR_DIR_OF_TRAVEL: "unknown",
-                ATTR_NEAREST: entity_name,
+                "dir_of_travel": "unknown",
+                "nearest": entity_name,
             }
 
         # Reset the variables
@@ -259,7 +262,7 @@ class ProximityDataUpdateCoordinator(
         _LOGGER.info("%s: proximity calculation complete", entity_name)
 
         return {
-            ATTR_DIST_TO: dist_to,
-            ATTR_DIR_OF_TRAVEL: direction_of_travel,
-            ATTR_NEAREST: entity_name,
+            "dist_to_zone": dist_to,
+            "dir_of_travel": direction_of_travel,
+            "nearest": entity_name,
         }
