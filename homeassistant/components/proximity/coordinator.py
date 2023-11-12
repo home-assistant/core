@@ -90,10 +90,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
-        if self.state_change_data is None or self.state_change_data.new_state is None:
+        if (
+            state_change_data := self.state_change_data
+        ) is None or state_change_data.new_state is None:
             return self.data
 
-        entity_name = self.state_change_data.new_state.name
+        entity_name = state_change_data.new_state.name
         devices_to_calculate = False
         devices_in_zone = ""
 
@@ -140,7 +142,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             }
 
         # We can't check proximity because latitude and longitude don't exist.
-        if "latitude" not in self.state_change_data.new_state.attributes:
+        if "latitude" not in state_change_data.new_state.attributes:
             _LOGGER.debug("no latitude and longitude -> reset")
             return self.data
 
@@ -185,10 +187,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 dist_to_zone = zone
 
         # If the closest device is one of the other devices.
-        if (
-            closest_device is not None
-            and closest_device != self.state_change_data.entity_id
-        ):
+        if closest_device is not None and closest_device != state_change_data.entity_id:
             _LOGGER.debug("closest device is one of the other devices -> unknown")
             device_state = self.hass.states.get(closest_device)
             assert device_state
@@ -201,14 +200,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         # Stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG).
         if (
-            self.state_change_data.old_state is None
-            or "latitude" not in self.state_change_data.old_state.attributes
+            state_change_data.old_state is None
+            or "latitude" not in state_change_data.old_state.attributes
         ):
             _LOGGER.debug("no lat and lon in old_state -> unknown")
             return {
-                "dist_to_zone": round(
-                    distances_to_zone[self.state_change_data.entity_id]
-                ),
+                "dist_to_zone": round(distances_to_zone[state_change_data.entity_id]),
                 "dir_of_travel": "unknown",
                 "nearest": entity_name,
             }
@@ -220,14 +217,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         old_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            self.state_change_data.old_state.attributes[ATTR_LATITUDE],
-            self.state_change_data.old_state.attributes[ATTR_LONGITUDE],
+            state_change_data.old_state.attributes[ATTR_LATITUDE],
+            state_change_data.old_state.attributes[ATTR_LONGITUDE],
         )
         new_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            self.state_change_data.new_state.attributes[ATTR_LATITUDE],
-            self.state_change_data.new_state.attributes[ATTR_LONGITUDE],
+            state_change_data.new_state.attributes[ATTR_LATITUDE],
+            state_change_data.new_state.attributes[ATTR_LONGITUDE],
         )
         assert new_distance is not None and old_distance is not None
         distance_travelled = round(new_distance - old_distance, 1)
