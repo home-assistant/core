@@ -124,9 +124,10 @@ async def test_switch_read_alarm_state(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "triggered"
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a alarm_control_panel unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     alarm_control_panel_entry = entity_registry.async_get_or_create(
         "alarm_control_panel",
