@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import cast
 
 from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
@@ -15,7 +16,7 @@ from pyoverkiz.exceptions import (
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, OverkizServer, Setup, Scenario
+from pyoverkiz.models import Device, OverkizServer, Scenario, Setup
 from pyoverkiz.utils import generate_local_server
 
 from homeassistant.config_entries import ConfigEntry
