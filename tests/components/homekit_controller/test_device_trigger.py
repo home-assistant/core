@@ -83,11 +83,12 @@ def create_doorbell(accessory):
     battery.add_char(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
+async def test_enumerate_remote(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test that remote is correctly enumerated."""
     await setup_test_component(hass, create_remote)
 
-    entity_registry = er.async_get(hass)
     bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
     identify_button = entity_registry.async_get("button.testdevice_identify")
 
@@ -132,11 +133,12 @@ async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
     assert triggers == unordered(expected)
 
 
-async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
+async def test_enumerate_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_button)
 
-    entity_registry = er.async_get(hass)
     bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
     identify_button = entity_registry.async_get("button.testdevice_identify")
 
@@ -180,11 +182,12 @@ async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
     assert triggers == unordered(expected)
 
 
-async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
+async def test_enumerate_doorbell(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_doorbell)
 
-    entity_registry = er.async_get(hass)
     bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
     identify_button = entity_registry.async_get("button.testdevice_identify")
 
@@ -228,11 +231,12 @@ async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
     assert triggers == unordered(expected)
 
 
-async def test_handle_events(hass: HomeAssistant, utcnow, calls) -> None:
+async def test_handle_events(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow, calls
+) -> None:
     """Test that events are handled."""
     helper = await setup_test_component(hass, create_remote)
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
     device_registry = dr.async_get(hass)
@@ -345,11 +349,12 @@ async def test_handle_events(hass: HomeAssistant, utcnow, calls) -> None:
     assert len(calls) == 2
 
 
-async def test_handle_events_late_setup(hass: HomeAssistant, utcnow, calls) -> None:
+async def test_handle_events_late_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow, calls
+) -> None:
     """Test that events are handled when setup happens after startup."""
     helper = await setup_test_component(hass, create_remote)
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
     device_registry = dr.async_get(hass)
