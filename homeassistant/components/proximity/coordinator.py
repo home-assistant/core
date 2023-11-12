@@ -3,11 +3,11 @@
 from dataclasses import dataclass
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
-    CONF_DEVICES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
     UnitOfLength,
@@ -25,6 +25,7 @@ from .const import (
     ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
+    CONF_TRACKED_ENTITIES,
     DEFAULT_DIR_OF_TRAVEL,
     DEFAULT_DIST_TO_ZONE,
     DEFAULT_NEAREST,
@@ -63,12 +64,14 @@ DEFAULT_DATA = ProximityData(
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     """Proximity data update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, friendly_name: str, config: ConfigType
     ) -> None:
         """Initialize the Proximity coordinator."""
         self.ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
-        self.tracked_entities: list[str] = config[CONF_DEVICES]
+        self.tracked_entities: list[str] = config[CONF_TRACKED_ENTITIES]
         self.tolerance: int = config[CONF_TOLERANCE]
         self.proximity_zone: str = config[CONF_ZONE]
         self.unit_of_measurement: str = config.get(

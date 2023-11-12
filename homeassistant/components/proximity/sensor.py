@@ -7,10 +7,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, UnitOfLength
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
@@ -48,19 +49,20 @@ SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
 ]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Proximity sensor platform."""
-    if discovery_info is None:
-        return
+def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name=coordinator.config_entry.title,
+        entry_type=DeviceEntryType.SERVICE,
+    )
 
-    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][
-        discovery_info[CONF_NAME]
-    ]
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the proximity sensors."""
+
+    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
 
     entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
         ProximitySensor(description, coordinator)
@@ -91,9 +93,8 @@ class ProximitySensor(CoordinatorEntity[ProximityDataUpdateCoordinator], SensorE
 
         self.entity_description = description
 
-        # entity name will be removed as soon as we have a config entry
-        # and can follow the entity naming guidelines
-        self._attr_name = f"{coordinator.friendly_name} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+        self._attr_device_info = _device_info(coordinator)
 
     @property
     def native_value(self) -> str | float | None:
@@ -124,11 +125,9 @@ class ProximityTrackedEntitySensor(
         self.entity_description = description
         self.tracked_entity_id = tracked_entity_id
 
-        # entity name will be removed as soon as we have a config entry
-        # and can follow the entity naming guidelines
-        self._attr_name = (
-            f"{coordinator.friendly_name} {tracked_entity_id} {description.name}"
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{tracked_entity_id}_{description.key}"
+        self._attr_name = f"{tracked_entity_id.split('.')[-1]} {description.name}"
+        self._attr_device_info = _device_info(coordinator)
 
     @property
     def native_value(self) -> str | float | None:
