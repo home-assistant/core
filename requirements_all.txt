@@ -2241,7 +2241,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.20.0
+pyunifiprotect==4.21.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2803,7 +2803,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.122.3
+zeroconf==0.123.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
