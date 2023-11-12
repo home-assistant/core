@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 
 class PicnicCart(TodoListEntity, CoordinatorEntity):
-    """A Picnic Shopping Card TodoListEntity."""
+    """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "shopping_cart"
