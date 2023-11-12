@@ -140,11 +140,9 @@ tests: &tests
   - tests/util/**
 
 other: &other
-  - .github/workflows/**
   - homeassistant/scripts/**
 
 requirements: &requirements
-  - .github/workflows/**
   - homeassistant/package_constraints.txt
   - requirements*.txt
   - pyproject.toml
