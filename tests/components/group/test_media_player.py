@@ -58,7 +58,9 @@ def media_player_media_seek_fixture():
         yield seek
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test media group default state."""
     hass.states.async_set("media_player.player_1", "on")
     await async_setup_component(
@@ -86,7 +88,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
         "media_player.player_2",
     ]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("media_player.media_group")
     assert entry
     assert entry.unique_id == "unique_identifier"

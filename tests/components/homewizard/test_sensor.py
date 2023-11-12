@@ -78,6 +78,19 @@ pytestmark = [
                 "sensor.device_total_water_usage",
             ],
         ),
+        (
+            "SDM230",
+            [
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_active_power",
+                "sensor.device_active_power_phase_1",
+            ],
+        ),
     ],
 )
 async def test_sensors(
@@ -117,7 +130,23 @@ async def test_sensors(
             ],
         ),
         (
+            "HWE-P1-unused-exports",
+            [
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+            ],
+        ),
+        (
             "HWE-WTR",
+            [
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "SDM230",
             [
                 "sensor.device_wi_fi_strength",
             ],
@@ -134,30 +163,6 @@ async def test_disabled_by_default_sensors(
         assert (entry := entity_registry.async_get(entity_id))
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.parametrize("device_fixture", ["HWE-P1-unused-exports"])
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "sensor.device_total_energy_export",
-        "sensor.device_total_energy_export_tariff_1",
-        "sensor.device_total_energy_export_tariff_2",
-        "sensor.device_total_energy_export_tariff_3",
-        "sensor.device_total_energy_export_tariff_4",
-    ],
-)
-async def test_disabled_by_default_sensors_when_unused(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_id: str,
-) -> None:
-    """Test the disabled by default unused sensors."""
-    assert not hass.states.get(entity_id)
-
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize("exception", [RequestError, DisabledError])
@@ -221,6 +226,44 @@ async def test_sensors_unreachable(
                 "sensor.device_peak_demand_current_month",
                 "sensor.device_total_gas",
                 "sensor.device_gas_meter_identifier",
+            ],
+        ),
+        (
+            "SDM230",
+            [
+                "sensor.device_active_average_demand",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+                "sensor.device_active_power_phase_2",
+                "sensor.device_active_power_phase_3",
+                "sensor.device_active_tariff",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_water_usage",
+                "sensor.device_dsmr_version",
+                "sensor.device_gas_meter_identifier",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_failures_detected",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_gas",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
             ],
         ),
     ],

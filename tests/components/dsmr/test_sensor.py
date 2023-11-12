@@ -45,7 +45,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, patch
 
 
-async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_default_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -102,13 +104,11 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     # after receiving telegram entities need to have the chance to be created
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get("sensor.electricity_meter_power_consumption")
+    entry = entity_registry.async_get("sensor.electricity_meter_power_consumption")
     assert entry
     assert entry.unique_id == "1234_current_electricity_usage"
 
-    entry = registry.async_get("sensor.gas_meter_gas_consumption")
+    entry = entity_registry.async_get("sensor.gas_meter_gas_consumption")
     assert entry
     assert entry.unique_id == "5678_gas_meter_reading"
 
@@ -184,7 +184,9 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
 
-async def test_setup_only_energy(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_setup_only_energy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -232,13 +234,11 @@ async def test_setup_only_energy(hass: HomeAssistant, dsmr_connection_fixture) -
     # after receiving telegram entities need to have the chance to be created
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get("sensor.electricity_meter_power_consumption")
+    entry = entity_registry.async_get("sensor.electricity_meter_power_consumption")
     assert entry
     assert entry.unique_id == "1234_current_electricity_usage"
 
-    entry = registry.async_get("sensor.gas_meter_gas_consumption")
+    entry = entity_registry.async_get("sensor.gas_meter_gas_consumption")
     assert not entry
 
 

@@ -218,7 +218,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.3.0
+aioesphomeapi==18.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -685,7 +685,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==5.0.0
+gcal-sync==6.0.1
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -833,7 +833,7 @@ ibeacon-ble==1.0.1
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.0.0
+ical==6.1.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -885,6 +885,9 @@ kegtron-ble==0.4.0
 
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
+
+# homeassistant.components.komfovent
+komfovent-api==0.0.3
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1022,7 +1025,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.4.0
+nibe==2.5.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1670,7 +1673,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.20.0
+pyunifiprotect==4.21.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1754,7 +1757,7 @@ rokuecp==0.18.1
 roombapy==1.6.8
 
 # homeassistant.components.roon
-roonapi==0.1.4
+roonapi==0.1.5
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
@@ -2091,7 +2094,7 @@ yt-dlp==2023.10.13
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.122.3
+zeroconf==0.125.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
