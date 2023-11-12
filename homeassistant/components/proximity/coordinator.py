@@ -1,5 +1,6 @@
 """Data update coordinator for the Proximity integration."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -30,6 +31,15 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class StateChangedData:
+    """StateChangedData class."""
+
+    entity_id: str
+    old_state: State | None
+    new_state: State | None
 
 
 class ProximityDataUpdateCoordinator(
@@ -63,9 +73,7 @@ class ProximityDataUpdateCoordinator(
             ATTR_NEAREST: DEFAULT_NEAREST,
         }
 
-        self.old_state: State | None = None
-        self.new_state: State | None = None
-        self.entity: str
+        self.state_change_data: StateChangedData | None = None
         async_track_state_change(
             hass, self.proximity_devices, self.async_check_proximity_state_change
         )
@@ -74,18 +82,19 @@ class ProximityDataUpdateCoordinator(
         self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
         """Fetch and process state change event."""
-        self.old_state = old_state
-        self.new_state = new_state
-        self.entity = entity
+        self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Calculate Proximity data."""
-        if self.new_state is None:
+        if self.state_change_data is None:
+            return self.data
+
+        if self.state_change_data.new_state is None:
             _LOGGER.debug("no new_state -> abort")
             return self.data
 
-        entity_name = self.new_state.name
+        entity_name = self.state_change_data.new_state.name
         devices_to_calculate = False
         devices_in_zone = ""
 
@@ -132,7 +141,7 @@ class ProximityDataUpdateCoordinator(
             }
 
         # We can't check proximity because latitude and longitude don't exist.
-        if "latitude" not in self.new_state.attributes:
+        if "latitude" not in self.state_change_data.new_state.attributes:
             _LOGGER.debug("no latitude and longitude -> abort")
             return self.data  # don't change data
 
@@ -177,7 +186,10 @@ class ProximityDataUpdateCoordinator(
                 dist_to_zone = zone
 
         # If the closest device is one of the other devices.
-        if closest_device is not None and closest_device != self.entity:
+        if (
+            closest_device is not None
+            and closest_device != self.state_change_data.entity_id
+        ):
             _LOGGER.debug("closest device is one of the other devices -> unknown")
             device_state = self.hass.states.get(closest_device)
             assert device_state
@@ -189,10 +201,15 @@ class ProximityDataUpdateCoordinator(
 
         # Stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG).
-        if self.old_state is None or "latitude" not in self.old_state.attributes:
+        if (
+            self.state_change_data.old_state is None
+            or "latitude" not in self.state_change_data.old_state.attributes
+        ):
             _LOGGER.debug("no lat and lon in old_state -> unknown")
             return {
-                ATTR_DIST_TO: round(distances_to_zone[self.entity]),
+                ATTR_DIST_TO: round(
+                    distances_to_zone[self.state_change_data.entity_id]
+                ),
                 ATTR_DIR_OF_TRAVEL: "unknown",
                 ATTR_NEAREST: entity_name,
             }
@@ -204,14 +221,14 @@ class ProximityDataUpdateCoordinator(
         old_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            self.old_state.attributes[ATTR_LATITUDE],
-            self.old_state.attributes[ATTR_LONGITUDE],
+            self.state_change_data.old_state.attributes[ATTR_LATITUDE],
+            self.state_change_data.old_state.attributes[ATTR_LONGITUDE],
         )
         new_distance = distance(
             proximity_latitude,
             proximity_longitude,
-            self.new_state.attributes[ATTR_LATITUDE],
-            self.new_state.attributes[ATTR_LONGITUDE],
+            self.state_change_data.new_state.attributes[ATTR_LATITUDE],
+            self.state_change_data.new_state.attributes[ATTR_LONGITUDE],
         )
         assert new_distance is not None and old_distance is not None
         distance_travelled = round(new_distance - old_distance, 1)
