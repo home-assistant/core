@@ -19,6 +19,10 @@ from homeassistant.util.location import distance
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
+    ATTR_DIR_OF_TRAVEL,
+    ATTR_DIST_TO,
+    ATTR_DIST_TO_CONVERTED,
+    ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
     DEFAULT_DIR_OF_TRAVEL,
@@ -71,10 +75,10 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         )
 
         self.data = {
-            "dist_to_zone": DEFAULT_DIST_TO_ZONE,
-            "dist_to_zone_converted": DEFAULT_DIST_TO_ZONE,
-            "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
-            "nearest": DEFAULT_NEAREST,
+            ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+            ATTR_DIST_TO_CONVERTED: DEFAULT_DIST_TO_ZONE,
+            ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+            ATTR_NEAREST: DEFAULT_NEAREST,
         }
 
         self.state_change_data: StateChangedData | None = None
@@ -137,20 +141,20 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if not devices_to_calculate:
             _LOGGER.debug("no devices_to_calculate -> abort")
             return {
-                "dist_to_zone": DEFAULT_DIST_TO_ZONE,
-                "dist_to_zone_converted": DEFAULT_DIST_TO_ZONE,
-                "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
-                "nearest": DEFAULT_NEAREST,
+                ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+                ATTR_DIST_TO_CONVERTED: DEFAULT_DIST_TO_ZONE,
+                ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+                ATTR_NEAREST: DEFAULT_NEAREST,
             }
 
         # At least one device is in the monitored zone so update the entity.
         if devices_in_zone:
             _LOGGER.debug("at least one device is in zone -> arrived")
             return {
-                "dist_to_zone": 0,
-                "dist_to_zone_converted": 0,
-                "dir_of_travel": "arrived",
-                "nearest": ", ".join(devices_in_zone),
+                ATTR_DIST_TO: 0,
+                ATTR_DIST_TO_CONVERTED: 0,
+                ATTR_DIR_OF_TRAVEL: "arrived",
+                ATTR_NEAREST: ", ".join(devices_in_zone),
             }
 
         # We can't check proximity because latitude and longitude don't exist.
@@ -199,12 +203,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             device_state = self.hass.states.get(closest_device)
             assert device_state
             return {
-                "dist_to_zone": round(distances_to_zone[closest_device]),
-                "dist_to_zone_converted": self._convert(
+                ATTR_DIST_TO: round(distances_to_zone[closest_device]),
+                ATTR_DIST_TO_CONVERTED: self._convert(
                     distances_to_zone[closest_device]
                 ),
-                "dir_of_travel": "unknown",
-                "nearest": device_state.name,
+                ATTR_DIR_OF_TRAVEL: "unknown",
+                ATTR_NEAREST: device_state.name,
             }
 
         # Stop if we cannot calculate the direction of travel (i.e. we don't
@@ -215,12 +219,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         ):
             _LOGGER.debug("no lat and lon in old_state -> unknown")
             return {
-                "dist_to_zone": round(distances_to_zone[state_change_data.entity_id]),
-                "dist_to_zone_converted": self._convert(
+                ATTR_DIST_TO: round(distances_to_zone[state_change_data.entity_id]),
+                ATTR_DIST_TO_CONVERTED: self._convert(
                     distances_to_zone[state_change_data.entity_id]
                 ),
-                "dir_of_travel": "unknown",
-                "nearest": entity_name,
+                ATTR_DIR_OF_TRAVEL: "unknown",
+                ATTR_NEAREST: entity_name,
             }
 
         # Reset the variables
@@ -268,8 +272,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         )
 
         return {
-            "dist_to_zone": dist_to,
-            "dist_to_zone_converted": dist_to_converted,
-            "dir_of_travel": direction_of_travel,
-            "nearest": entity_name,
+            ATTR_DIST_TO: dist_to,
+            ATTR_DIST_TO_CONVERTED: dist_to_converted,
+            ATTR_DIR_OF_TRAVEL: direction_of_travel,
+            ATTR_NEAREST: entity_name,
         }
