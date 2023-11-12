@@ -85,6 +85,7 @@ def create_alive_service(accessory):
 
 async def test_device_remove_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -95,7 +96,6 @@ async def test_device_remove_devices(
     entry_id = config_entry.entry_id
 
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
-    device_registry = dr.async_get(hass)
 
     live_device_entry = device_registry.async_get(entity.device_id)
     assert (
