@@ -7,7 +7,7 @@ homeassistant:
           option1: abc
     pack_2:
       iot_domain:
-        # This violates the non_adr_0007.iot_domain platform schem
+        # This violates the non_adr_0007.iot_domain platform schema
         - platform: non_adr_0007
           option1: 123
     pack_3:

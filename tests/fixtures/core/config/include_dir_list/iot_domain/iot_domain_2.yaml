@@ -1,3 +1,3 @@
-# This violates the non_adr_0007.iot_domain platform schem
+# This violates the non_adr_0007.iot_domain platform schema
 platform: non_adr_0007
 option1: 123
