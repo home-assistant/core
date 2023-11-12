@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,12 +48,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     for zone, proximity_config in config[DOMAIN].items():
         _LOGGER.debug("setup %s with config:%s", zone, proximity_config)
+
         coordinator = ProximityDataUpdateCoordinator(hass, zone, proximity_config)
         await coordinator.async_refresh()
         hass.data[DOMAIN][zone] = coordinator
+
         proximity = Proximity(hass, zone, coordinator)
         await proximity.async_added_to_hass()
         proximity.async_write_ha_state()
+
+        async_track_state_change(
+            hass,
+            proximity_config[CONF_DEVICES],
+            coordinator.async_check_proximity_state_change,
+        )
 
     return True
 

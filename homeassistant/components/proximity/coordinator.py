@@ -13,7 +13,6 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
@@ -77,9 +76,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         }
 
         self.state_change_data: StateChangedData | None = None
-        async_track_state_change(
-            hass, self.proximity_devices, self.async_check_proximity_state_change
-        )
 
     async def async_check_proximity_state_change(
         self, entity: str, old_state: State | None, new_state: State | None
