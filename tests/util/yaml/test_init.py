@@ -70,7 +70,7 @@ def test_simple_dict(try_both_loaders) -> None:
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["message:\n  {{ states.state }}"])
-def test_unhashable_key(mock_hass_config_yaml: None) -> None:
+def test_unhashable_key(try_both_loaders, mock_hass_config_yaml: None) -> None:
     """Test an unhashable key."""
     with pytest.raises(HomeAssistantError):
         load_yaml_config_file(YAML_CONFIG_FILE)
@@ -538,7 +538,7 @@ def test_c_loader_is_available_in_ci() -> None:
     assert yaml.loader.HAS_C_LOADER is True
 
 
-async def test_loading_actual_file_with_syntax(
+async def test_loading_actual_file_with_syntax_error(
     hass: HomeAssistant, try_both_loaders
 ) -> None:
     """Test loading a real file with syntax errors."""
