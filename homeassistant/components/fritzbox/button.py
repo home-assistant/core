@@ -3,21 +3,33 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR, CONF_EVENT_LISTENER, DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome template from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        CONF_COORDINATOR
+    ]
+
+    def _add_new_templates(event: Event) -> None:
+        """Add newly discovered template."""
+        async_add_entities(
+            [FritzBoxTemplate(coordinator, ain) for ain in event.data.get("ains", [])]
+        )
+
+    hass.data[DOMAIN][entry.entry_id][CONF_EVENT_LISTENER].append(
+        hass.bus.async_listen(
+            f"{DOMAIN}_{entry.entry_id}_new_templates", _add_new_templates
+        )
+    )
 
     async_add_entities(
         [FritzBoxTemplate(coordinator, ain) for ain in coordinator.data.templates]
@@ -37,7 +49,7 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
         """Return device specific attributes."""
         return DeviceInfo(
             name=self.data.name,
-            identifiers={(FRITZBOX_DOMAIN, self.ain)},
+            identifiers={(DOMAIN, self.ain)},
             configuration_url=self.coordinator.configuration_url,
             manufacturer="AVM",
             model="SmartHome Template",

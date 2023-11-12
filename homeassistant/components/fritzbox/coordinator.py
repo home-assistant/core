@@ -87,6 +87,22 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             for template in templates:
                 template_data[template.ain] = template
 
+        if self.data:
+            new_devices = [ain for ain in device_data if ain not in self.data.devices]
+            if new_devices:
+                self.hass.bus.fire(
+                    f"{DOMAIN}_{self.entry.entry_id}_new_devices", {"ains": new_devices}
+                )
+
+            new_templates = [
+                ain for ain in template_data if ain not in self.data.templates
+            ]
+            if new_templates:
+                self.hass.bus.fire(
+                    f"{DOMAIN}_{self.entry.entry_id}_new_templates",
+                    {"ains": new_templates},
+                )
+
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 
     async def _async_update_data(self) -> FritzboxCoordinatorData:

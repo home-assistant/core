@@ -14,11 +14,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR, CONF_EVENT_LISTENER, DOMAIN
 from .coordinator import FritzboxDataUpdateCoordinator
 from .model import FritzEntityDescriptionMixinBase
 
@@ -68,9 +68,27 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        CONF_COORDINATOR
+    ]
+
+    async def _add_new_devices(event: Event) -> None:
+        """Add newly discovered devices."""
+        async_add_entities(
+            [
+                FritzboxBinarySensor(coordinator, ain, description)
+                for ain, device in coordinator.data.devices.items()
+                if ain in event.data.get("ains", [])
+                for description in BINARY_SENSOR_TYPES
+                if description.suitable(device)
+            ]
+        )
+
+    hass.data[DOMAIN][entry.entry_id][CONF_EVENT_LISTENER].append(
+        hass.bus.async_listen(
+            f"{DOMAIN}_{entry.entry_id}_new_devices", _add_new_devices
+        )
+    )
 
     async_add_entities(
         [
