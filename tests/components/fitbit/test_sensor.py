@@ -279,7 +279,6 @@ async def test_device_battery(
         "type": "scale",
     }
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.aria_air_battery")
     assert entry
     assert entry.unique_id == f"{PROFILE_USER_ID}_devices/battery_016713257"
