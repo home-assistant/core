@@ -73,8 +73,6 @@ PARM_IS_LEGAL = namedtuple(
 # As expressed in DEFAULT_STRUCT_FORMAT
 
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT8: ENTRY("b", 1, PARM_IS_LEGAL(False, False, False, False, False)),
-    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(False, False, False, False, False)),
     DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
     DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
     DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
@@ -98,27 +96,22 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         data_type = config[CONF_DATA_TYPE] = DataType.INT16
     count = config.get(CONF_COUNT, None)
     structure = config.get(CONF_STRUCTURE, None)
-    slave_count = config.get(CONF_SLAVE_COUNT, None)
-    slave_name = CONF_SLAVE_COUNT
-    if not slave_count:
-        slave_count = config.get(CONF_VIRTUAL_COUNT, 0)
-        slave_name = CONF_VIRTUAL_COUNT
+    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, 0))
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
-    if count and not validator.count:
-        error = f"{name}: `{CONF_COUNT}: {count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
-    if not count and validator.count:
-        error = f"{name}: `{CONF_COUNT}:` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
-    if structure and not validator.structure:
-        error = f"{name}: `{CONF_STRUCTURE}: {structure}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
-    if not structure and validator.structure:
-        error = f"{name}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
+    for entry in (
+        (count, validator.count, CONF_COUNT),
+        (structure, validator.structure, CONF_STRUCTURE),
+    ):
+        if bool(entry[0]) != entry[1]:
+            error = "cannot be combined" if not entry[1] else "missing, demanded"
+            error = (
+                f"{name}: `{entry[2]}:` {error} with `{CONF_DATA_TYPE}: {data_type}`"
+            )
+            raise vol.Invalid(error)
+
     if slave_count and not validator.slave_count:
-        error = f"{name}: `{slave_name}: {slave_count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        error = f"{name}: `{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}:` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
     if swap_type != CONF_SWAP_NONE:
         swap_type_validator = {

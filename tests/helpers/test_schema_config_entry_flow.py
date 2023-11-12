@@ -78,9 +78,8 @@ def manager_fixture():
     return mgr
 
 
-async def test_name(hass: HomeAssistant) -> None:
+async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the config flow name is copied from registry entry, with fallback to state."""
-    registry = er.async_get(hass)
     entity_id = "switch.ceiling"
 
     # No entry or state, use Object ID
@@ -92,7 +91,7 @@ async def test_name(hass: HomeAssistant) -> None:
 
     # Entity registered, use original name from registry entry
     hass.states.async_remove(entity_id)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -105,7 +104,7 @@ async def test_name(hass: HomeAssistant) -> None:
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Original Name"
 
     # Entity has customized name
-    registry.async_update_entity("switch.ceiling", name="Custom Name")
+    entity_registry.async_update_entity("switch.ceiling", name="Custom Name")
     assert wrapped_entity_config_entry_title(hass, entity_id) == "Custom Name"
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Custom Name"
 
