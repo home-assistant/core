@@ -117,6 +117,16 @@ async def test_sensors(
             ],
         ),
         (
+            "HWE-P1-unused-exports",
+            [
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+            ],
+        ),
+        (
             "HWE-WTR",
             [
                 "sensor.device_wi_fi_strength",
@@ -134,30 +144,6 @@ async def test_disabled_by_default_sensors(
         assert (entry := entity_registry.async_get(entity_id))
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.parametrize("device_fixture", ["HWE-P1-unused-exports"])
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "sensor.device_total_energy_export",
-        "sensor.device_total_energy_export_tariff_1",
-        "sensor.device_total_energy_export_tariff_2",
-        "sensor.device_total_energy_export_tariff_3",
-        "sensor.device_total_energy_export_tariff_4",
-    ],
-)
-async def test_disabled_by_default_sensors_when_unused(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_id: str,
-) -> None:
-    """Test the disabled by default unused sensors."""
-    assert not hass.states.get(entity_id)
-
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize("exception", [RequestError, DisabledError])
