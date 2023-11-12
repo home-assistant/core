@@ -175,6 +175,7 @@ class GenericCamera(Camera):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
+            manufacturer="Generic",
         )
 
     @property
