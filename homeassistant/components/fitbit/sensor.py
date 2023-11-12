@@ -139,7 +139,7 @@ def _int_value_or_none(field: str) -> Callable[[dict[str, Any]], int | None]:
     """Value function that will parse the specified field if present."""
 
     def convert(result: dict[str, Any]) -> int | None:
-        if value := result["value"].get(field):
+        if (value := result["value"].get(field)) is not None:
             return int(value)
         return None
 
