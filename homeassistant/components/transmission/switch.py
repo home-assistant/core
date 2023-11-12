@@ -1,4 +1,6 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -14,9 +16,38 @@ from .coordinator import TransmissionDataUpdateCoordinator
 
 _LOGGING = logging.getLogger(__name__)
 
-SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
-    SwitchEntityDescription(key="on_off", translation_key="on_off"),
-    SwitchEntityDescription(key="turtle_mode", translation_key="turtle_mode"),
+
+@dataclass
+class TransmissionSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    is_on_func: Callable[[TransmissionDataUpdateCoordinator], bool | None]
+    on_func: Callable[[TransmissionDataUpdateCoordinator], None]
+    off_func: Callable[[TransmissionDataUpdateCoordinator], None]
+
+
+@dataclass
+class TransmissionSwitchEntityDescription(
+    SwitchEntityDescription, TransmissionSwitchEntityDescriptionMixin
+):
+    """Entity description class for Transmission switches."""
+
+
+SWITCH_TYPES: tuple[TransmissionSwitchEntityDescription, ...] = (
+    TransmissionSwitchEntityDescription(
+        key="on_off",
+        translation_key="on_off",
+        is_on_func=lambda coordinator: coordinator.data.active_torrent_count > 0,
+        on_func=lambda coordinator: coordinator.start_torrents(),
+        off_func=lambda coordinator: coordinator.stop_torrents(),
+    ),
+    TransmissionSwitchEntityDescription(
+        key="turtle_mode",
+        translation_key="turtle_mode",
+        is_on_func=lambda coordinator: coordinator.get_alt_speed_enabled(),
+        on_func=lambda coordinator: coordinator.set_alt_speed_enabled(True),
+        off_func=lambda coordinator: coordinator.set_alt_speed_enabled(False),
+    ),
 )
 
 
@@ -41,12 +72,13 @@ class TransmissionSwitch(
 ):
     """Representation of a Transmission switch."""
 
+    entity_description: TransmissionSwitchEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: TransmissionDataUpdateCoordinator,
-        entity_description: SwitchEntityDescription,
+        entity_description: TransmissionSwitchEntityDescription,
     ) -> None:
         """Initialize the Transmission switch."""
         super().__init__(coordinator)
@@ -63,34 +95,18 @@ class TransmissionSwitch(
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        active = None
-        if self.entity_description.key == "on_off":
-            active = self.coordinator.data.active_torrent_count > 0
-        elif self.entity_description.key == "turtle_mode":
-            active = self.coordinator.get_alt_speed_enabled()
-
-        return bool(active)
+        return bool(self.entity_description.is_on_func(self.coordinator))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self.entity_description.key == "on_off":
-            _LOGGING.debug("Starting all torrents")
-            await self.hass.async_add_executor_job(self.coordinator.start_torrents)
-        elif self.entity_description.key == "turtle_mode":
-            _LOGGING.debug("Turning Turtle Mode of Transmission on")
-            await self.hass.async_add_executor_job(
-                self.coordinator.set_alt_speed_enabled, True
-            )
+        await self.hass.async_add_executor_job(
+            self.entity_description.on_func, self.coordinator
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.entity_description.key == "on_off":
-            _LOGGING.debug("Stopping all torrents")
-            await self.hass.async_add_executor_job(self.coordinator.stop_torrents)
-        if self.entity_description.key == "turtle_mode":
-            _LOGGING.debug("Turning Turtle Mode of Transmission off")
-            await self.hass.async_add_executor_job(
-                self.coordinator.set_alt_speed_enabled, False
-            )
+        await self.hass.async_add_executor_job(
+            self.entity_description.off_func, self.coordinator
+        )
         await self.coordinator.async_request_refresh()
