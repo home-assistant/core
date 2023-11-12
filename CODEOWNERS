@@ -664,6 +664,8 @@ build.json @home-assistant/supervisor
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
 /tests/components/kodi/ @OnFreund
+/homeassistant/components/komfovent/ @ProstoSanja
+/tests/components/komfovent/ @ProstoSanja
 /homeassistant/components/konnected/ @heythisisnate
 /tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm
@@ -1059,6 +1061,8 @@ build.json @home-assistant/supervisor
 /tests/components/rhasspy/ @balloob @synesthesiam
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
+/homeassistant/components/ring/ @sdb9696
+/tests/components/ring/ @sdb9696
 /homeassistant/components/risco/ @OnFreund
 /tests/components/risco/ @OnFreund
 /homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck
@@ -1389,6 +1393,8 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
+/homeassistant/components/vicare/ @CFenner
+/tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
