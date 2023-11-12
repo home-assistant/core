@@ -81,12 +81,6 @@ class ProximityDataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Calculate Proximity data."""
-        data: dict[str, str | int | float] = {
-            ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
-            ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
-            ATTR_NEAREST: DEFAULT_NEAREST,
-        }
-
         if self.new_state is None:
             _LOGGER.debug("no new_state -> abort")
             return self.data
@@ -122,15 +116,20 @@ class ProximityDataUpdateCoordinator(
         # No-one to track so reset the entity.
         if not devices_to_calculate:
             _LOGGER.debug("no devices_to_calculate -> abort")
-            return data
+            return {
+                ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+                ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+                ATTR_NEAREST: DEFAULT_NEAREST,
+            }
 
         # At least one device is in the monitored zone so update the entity.
         if devices_in_zone != "":
             _LOGGER.debug("at least on device is in zone -> arrived")
-            data[ATTR_DIST_TO] = 0
-            data[ATTR_DIR_OF_TRAVEL] = "arrived"
-            data[ATTR_NEAREST] = devices_in_zone
-            return data
+            return {
+                ATTR_DIST_TO: 0,
+                ATTR_DIR_OF_TRAVEL: "arrived",
+                ATTR_NEAREST: devices_in_zone,
+            }
 
         # We can't check proximity because latitude and longitude don't exist.
         if "latitude" not in self.new_state.attributes:
@@ -182,19 +181,21 @@ class ProximityDataUpdateCoordinator(
             _LOGGER.debug("closest device is one of the other devices -> unknown")
             device_state = self.hass.states.get(closest_device)
             assert device_state
-            data[ATTR_DIST_TO] = round(distances_to_zone[closest_device])
-            data[ATTR_DIR_OF_TRAVEL] = "unknown"
-            data[ATTR_NEAREST] = device_state.name
-            return data
+            return {
+                ATTR_DIST_TO: round(distances_to_zone[closest_device]),
+                ATTR_DIR_OF_TRAVEL: "unknown",
+                ATTR_NEAREST: device_state.name,
+            }
 
         # Stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG).
         if self.old_state is None or "latitude" not in self.old_state.attributes:
             _LOGGER.debug("no lat and lon in old_state -> unknown")
-            data[ATTR_DIST_TO] = round(distances_to_zone[self.entity])
-            data[ATTR_DIR_OF_TRAVEL] = "unknown"
-            data[ATTR_NEAREST] = entity_name
-            return data
+            return {
+                ATTR_DIST_TO: round(distances_to_zone[self.entity]),
+                ATTR_DIR_OF_TRAVEL: "unknown",
+                ATTR_NEAREST: entity_name,
+            }
 
         # Reset the variables
         distance_travelled: float = 0
@@ -240,7 +241,8 @@ class ProximityDataUpdateCoordinator(
 
         _LOGGER.info("%s: proximity calculation complete", entity_name)
 
-        data[ATTR_DIST_TO] = dist_to
-        data[ATTR_DIR_OF_TRAVEL] = direction_of_travel
-        data[ATTR_NEAREST] = entity_name
-        return data
+        return {
+            ATTR_DIST_TO: dist_to,
+            ATTR_DIR_OF_TRAVEL: direction_of_travel,
+            ATTR_NEAREST: entity_name,
+        }
