@@ -2,14 +2,20 @@
 from collections.abc import Callable
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import CONF_UNIQUE_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ACTION,
+    CONF_TRIGGER,
+    DOMAIN,
+    EVENT_TEMPLATE_TRIGGERED,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +94,14 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         # Create a new context referring to the old context.
         parent_id = None if context is None else context.id
         trigger_context = Context(parent_id=parent_id)
+
+        self.hass.bus.async_fire(
+            EVENT_TEMPLATE_TRIGGERED,
+            {
+                CONF_UNIQUE_ID: self.unique_id,
+            },
+            context=trigger_context,
+        )
 
         if self._script:
             script_result = await self._script.async_run(run_variables, trigger_context)
