@@ -808,3 +808,61 @@ async def test_device_battery_level_reauth_required(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("scopes"),
+    [(["heartrate"])],
+)
+async def test_resting_heart_rate_not_available(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+) -> None:
+    """Test resting heart rate sensor missing from response."""
+
+    register_timeseries(
+        "activities/heart",
+        timeseries_response(
+            "activities-heart",
+            {
+                "customHeartRateZones": [],
+                "heartRateZones": [
+                    {
+                        "caloriesOut": 579.4603999999999,
+                        "max": 108,
+                        "min": 30,
+                        "minutes": 1440,
+                        "name": "Out of Range",
+                    },
+                    {
+                        "caloriesOut": 0,
+                        "max": 130,
+                        "min": 108,
+                        "minutes": 0,
+                        "name": "Fat Burn",
+                    },
+                    {
+                        "caloriesOut": 0,
+                        "max": 159,
+                        "min": 130,
+                        "minutes": 0,
+                        "name": "Cardio",
+                    },
+                    {
+                        "caloriesOut": 0,
+                        "max": 220,
+                        "min": 159,
+                        "minutes": 0,
+                        "name": "Peak",
+                    },
+                ],
+            },
+        ),
+    )
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.resting_heart_rate")
+    assert state
+    assert state.state == "unknown"
