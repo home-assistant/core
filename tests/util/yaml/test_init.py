@@ -55,6 +55,26 @@ def try_both_dumpers(request):
     importlib.reload(yaml_loader)
 
 
+@pytest.mark.parametrize(
+    ("yaml_content", "expected_output"),
+    [
+        ("", {}),
+        ("~", {}),
+        ("off", False),
+        ("False", False),
+        ("[]", []),
+    ],
+)
+def test_none_to_dict(try_both_loaders, yaml_content, expected_output) -> None:
+    """Test None is converted to an empty dict.
+
+    Also test other falsy values are not created to empty dict.
+    """
+    with io.StringIO(yaml_content) as file:
+        doc = yaml_loader.parse_yaml(file)
+    assert doc == expected_output
+
+
 def test_simple_list(try_both_loaders) -> None:
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"

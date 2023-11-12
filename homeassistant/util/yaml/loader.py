@@ -205,10 +205,10 @@ def _parse_yaml(
     """Load a YAML file."""
     # If configuration file is empty YAML returns None
     # We convert that to an empty dict
-    return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
-        or NodeDictClass()
-    )
+    result = yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
+    if result is None:
+        return NodeDictClass()
+    return result
 
 
 @overload
