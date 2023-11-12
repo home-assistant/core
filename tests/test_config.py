@@ -2,12 +2,14 @@
 from collections import OrderedDict
 import contextlib
 import copy
+import logging
 import os
 from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
@@ -40,7 +42,14 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from .common import MockUser, get_test_config_dir
+from .common import (
+    MockModule,
+    MockPlatform,
+    MockUser,
+    get_test_config_dir,
+    mock_integration,
+    mock_platform,
+)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -1399,3 +1408,82 @@ async def test_safe_mode(hass: HomeAssistant) -> None:
     await config_util.async_enable_safe_mode(hass)
     assert config_util.safe_mode_enabled(hass.config.config_dir) is True
     assert config_util.safe_mode_enabled(hass.config.config_dir) is False
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "basic",
+        "basic_include",
+        "include_dir_list",
+        "include_dir_merge_list",
+        "packages",
+        "packages_include_dir_named",
+    ],
+)
+async def test_component_config_validation_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test schema error in component."""
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+
+    # Mock an integration which provides an IoT domain
+    mock_integration(
+        hass,
+        MockModule(
+            "iot_domain",
+            platform_schema_base=comp_platform_schema_base,
+            platform_schema=comp_platform_schema,
+        ),
+    )
+
+    # Mock a non-ADR-0007 compliant integration which allows setting up
+    # iot_domain entities under the iot_domain's configuration key
+    test_platform_schema = comp_platform_schema.extend({"option1": str})
+    mock_platform(
+        hass,
+        "non_adr_0007.iot_domain",
+        MockPlatform(platform_schema=test_platform_schema),
+    )
+
+    # Mock an ADR-0007 compliant integration
+    for domain in ["adr_0007_1", "adr_0007_2", "adr_0007_3"]:
+        adr_0007_config_schema = vol.Schema(
+            {
+                domain: vol.Schema(
+                    {
+                        vol.Required("host"): str,
+                        vol.Required("port", default=8080): int,
+                    }
+                )
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+        mock_integration(
+            hass,
+            MockModule(domain, config_schema=adr_0007_config_schema),
+        )
+
+    hass.config.config_dir = os.path.join(
+        ".", "tests", "fixtures", "core", "config", config_dir
+    )
+    config = await config_util.async_hass_config_yaml(hass)
+
+    for domain in ["iot_domain", "adr_0007_1", "adr_0007_2", "adr_0007_3"]:
+        integration = await async_get_integration(hass, domain)
+        await config_util.async_process_component_config(
+            hass,
+            config,
+            integration=integration,
+        )
+
+    error_records = [
+        record.message
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
