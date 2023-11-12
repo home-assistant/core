@@ -18,7 +18,14 @@ from homeassistant.const import (
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
-from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceResponse,
+    State,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -212,6 +219,7 @@ def handle_unsubscribe_events(
         vol.Required("service"): str,
         vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
+        vol.Optional("return_response", default=False): bool,
     }
 )
 @decorators.async_response
@@ -219,7 +227,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    blocking = True
     # We do not support templates.
     target = msg.get("target")
     if template.is_complex(target):
@@ -227,15 +234,19 @@ async def handle_call_service(
 
     try:
         context = connection.context(msg)
-        await hass.services.async_call(
+        response = await hass.services.async_call(
             msg["domain"],
             msg["service"],
             msg.get("service_data"),
-            blocking,
+            True,
             context,
             target=target,
+            return_response=msg["return_response"],
         )
-        connection.send_result(msg["id"], {"context": context})
+        result: dict[str, Context | ServiceResponse] = {"context": context}
+        if msg["return_response"]:
+            result["response"] = response
+        connection.send_result(msg["id"], result)
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
