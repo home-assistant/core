@@ -137,7 +137,12 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # in the future.
         # Either way, also prevent configuring the same host twice.
         await self.async_set_unique_id(format_mac(data[CONF_MAC]))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: data[CONF_HOST],
+                CONF_PASSWORD: data[CONF_PASSWORD],
+            }
+        )
         self._async_abort_entries_match(
             {
                 CONF_HOST: data[CONF_HOST],

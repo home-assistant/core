@@ -19,7 +19,6 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from .conftest import (
     CONFIG_ENTRY_DATA,
     HOST,
-    MAC_ADDRESS,
     MAC_ADDRESS_UNIQUE_ID,
     PASSWORD,
     SERIAL_NUMBER,
@@ -179,22 +178,25 @@ async def test_multiple_config_entries(
         "config_entry_unique_id",
         "config_entry_data",
         "config_flow_responses",
+        "expected_config_entry_data",
     ),
     [
         # Config entry is a pure duplicate with the same mac address unique id
         (
-            MAC_ADDRESS,
+            MAC_ADDRESS_UNIQUE_ID,
             CONFIG_ENTRY_DATA,
             [
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
+            CONFIG_ENTRY_DATA,
         ),
         # Old unique id with serial, but same host
         (
             SERIAL_NUMBER,
             CONFIG_ENTRY_DATA,
             [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            CONFIG_ENTRY_DATA,
         ),
         # Old unique id with no serial, but same host
         (
@@ -204,12 +206,24 @@ async def test_multiple_config_entries(
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
+            {**CONFIG_ENTRY_DATA, "serial_number": 0},
+        ),
+        # Enters a different hostname that points to the same mac address
+        (
+            MAC_ADDRESS_UNIQUE_ID,
+            {
+                **CONFIG_ENTRY_DATA,
+                "host": f"other-{HOST}",
+            },
+            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            CONFIG_ENTRY_DATA,  # Updated the host
         ),
     ],
     ids=[
         "duplicate-mac-unique-id",
         "duplicate-host-legacy-serial-number",
         "duplicate-host-port-no-serial",
+        "duplicate-duplicate-hostname",
     ],
 )
 async def test_duplicate_config_entries(
@@ -217,6 +231,7 @@ async def test_duplicate_config_entries(
     config_entry: MockConfigEntry,
     responses: list[AiohttpClientMockResponse],
     config_flow_responses: list[AiohttpClientMockResponse],
+    expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Test that a device can not be registered twice."""
     await config_entry.async_setup(hass)
@@ -226,8 +241,10 @@ async def test_duplicate_config_entries(
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+    assert dict(config_entry.data) == expected_config_entry_data
 
 
 async def test_controller_cannot_connect(
