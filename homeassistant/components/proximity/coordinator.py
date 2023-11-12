@@ -89,11 +89,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug("no new_state -> abort")
             return
 
-        # We can't check proximity because latitude and longitude don't exist.
-        if "latitude" not in new_state.attributes:
-            _LOGGER.debug("no latitude and longitude -> abort")
-            return
-
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
 
@@ -147,6 +142,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 "dir_of_travel": "arrived",
                 "nearest": devices_in_zone,
             }
+
+        # We can't check proximity because latitude and longitude don't exist.
+        if "latitude" not in self.state_change_data.new_state.attributes:
+            _LOGGER.debug("no latitude and longitude -> reset")
+            return self.data
 
         # Collect distances to the zone for all devices.
         distances_to_zone: dict[str, float] = {}
