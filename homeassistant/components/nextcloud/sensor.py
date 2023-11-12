@@ -310,7 +310,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
     NextcloudSensorEntityDescription(
         key="opcache_statistics_opcache_hit_rate",
         translation_key="nextcloud_opcache_statistics_opcache_hit_rate",
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
