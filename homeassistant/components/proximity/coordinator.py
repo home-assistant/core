@@ -97,7 +97,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         entity_name = state_change_data.new_state.name
         devices_to_calculate = False
-        devices_in_zone = ""
+        devices_in_zone = []
 
         zone_state = self.hass.states.get(f"zone.{self.proximity_zone}")
         proximity_latitude = (
@@ -119,9 +119,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             # Check the location of all devices.
             if (device_state.state).lower() == (self.proximity_zone).lower():
                 device_friendly = device_state.name
-                if devices_in_zone != "":
-                    devices_in_zone = f"{devices_in_zone}, "
-                devices_in_zone = devices_in_zone + device_friendly
+                devices_in_zone.append(device_friendly)
 
         # No-one to track so reset the entity.
         if not devices_to_calculate:
@@ -133,12 +131,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             }
 
         # At least one device is in the monitored zone so update the entity.
-        if devices_in_zone != "":
+        if devices_in_zone:
             _LOGGER.debug("at least on device is in zone -> arrived")
             return {
                 "dist_to_zone": 0,
                 "dir_of_travel": "arrived",
-                "nearest": devices_in_zone,
+                "nearest": ", ".join(devices_in_zone),
             }
 
         # We can't check proximity because latitude and longitude don't exist.
