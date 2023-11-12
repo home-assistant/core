@@ -18,8 +18,12 @@ from homeassistant.util.package import install_package, is_installed, is_virtual
 # mypy: allow-untyped-defs, disallow-any-generics, no-warn-return-any
 
 
-def run(args: list[str]) -> int:
-    """Run a script."""
+def get_scripts() -> list[str]:
+    """Get all scripts.
+
+    Returns a list of str containing all scripts.
+    **kwargs is to us this method as a completer with argcomplete.
+    """
     scripts = []
     path = os.path.dirname(__file__)
     for fil in os.listdir(path):
@@ -30,6 +34,12 @@ def run(args: list[str]) -> int:
             scripts.append(fil)
         elif fil != "__init__.py" and fil.endswith(".py"):
             scripts.append(fil[:-3])
+    return scripts
+
+
+def run(args: list[str]) -> int:
+    """Run a script."""
+    scripts = get_scripts()
 
     if not args:
         print("Please specify a script to run.")

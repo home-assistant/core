@@ -1,4 +1,5 @@
 """Start Home Assistant."""
+# PYTHON_ARGCOMPLETE_OK
 from __future__ import annotations
 
 import argparse
@@ -7,7 +8,10 @@ import os
 import sys
 import threading
 
+import argcomplete
+
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+from .scripts import get_scripts
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
@@ -138,12 +142,14 @@ def get_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
-    )
+    ).completer = lambda **kwargs: get_scripts()  # type: ignore[attr-defined]
     parser.add_argument(
         "--ignore-os-check",
         action="store_true",
         help="Skips validation of operating system",
     )
+
+    argcomplete.autocomplete(parser)
 
     arguments = parser.parse_args()
 
