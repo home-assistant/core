@@ -13,7 +13,6 @@ from tests.common import MockConfigEntry
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
-SUPPORTED_FEATURES = 7
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -140,7 +139,6 @@ async def test_todo_list_state(
     assert state.state == expected_state
     assert dict(state.attributes) == {
         "friendly_name": ENTITY_NAME,
-        "supported_features": SUPPORTED_FEATURES,
     }
 
 
