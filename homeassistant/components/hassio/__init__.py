@@ -13,25 +13,18 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import panel_custom, persistent_notification
-from homeassistant.components.homeassistant import (
-    SERVICE_CHECK_CONFIG,
-    SHUTDOWN_SERVICES,
-)
-import homeassistant.config as conf_util
+from homeassistant.components import panel_custom
+from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     HASSIO_USER_NAME,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    DOMAIN as HASS_DOMAIN,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -39,12 +32,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    recorder,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
@@ -57,9 +47,6 @@ from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # no
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .const import (
-    ADDON_UPDATE_CHANGELOG,
-    ADDON_UPDATE_INFO,
-    ADDON_UPDATE_STATS,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
@@ -67,6 +54,7 @@ from .const import (
     ATTR_COMPRESSED,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
+    ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
     ATTR_LOCATION,
     ATTR_PASSWORD,
@@ -76,6 +64,10 @@ from .const import (
     ATTR_STATE,
     ATTR_URL,
     ATTR_VERSION,
+    CONTAINER_CHANGELOG,
+    CONTAINER_INFO,
+    CONTAINER_STATS,
+    CORE_CONTAINER,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
@@ -83,6 +75,8 @@ from .const import (
     DATA_KEY_SUPERVISOR,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    REQUEST_REFRESH_DELAY,
+    SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
 from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
@@ -191,6 +185,7 @@ SCHEMA_BACKUP_FULL = vol.Schema(
         vol.Optional(ATTR_LOCATION): vol.All(
             cv.string, lambda v: None if v == "/backup" else v
         ),
+        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
     }
 )
 
@@ -341,7 +336,7 @@ def get_addons_stats(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_ADDONS_STATS)
+    return hass.data.get(DATA_ADDONS_STATS) or {}
 
 
 @callback
@@ -351,7 +346,7 @@ def get_core_stats(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_CORE_STATS)
+    return hass.data.get(DATA_CORE_STATS) or {}
 
 
 @callback
@@ -361,7 +356,7 @@ def get_supervisor_stats(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_SUPERVISOR_STATS)
+    return hass.data.get(DATA_SUPERVISOR_STATS) or {}
 
 
 @callback
@@ -569,53 +564,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Fetch data
     await update_info_data()
 
-    async def async_handle_core_service(call: ServiceCall) -> None:
-        """Service handler for handling core services."""
-        if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
-            hass
-        ):
-            _LOGGER.error(
-                "The system cannot %s while a database upgrade is in progress",
-                call.service,
-            )
-            raise HomeAssistantError(
-                f"The system cannot {call.service} "
-                "while a database upgrade is in progress."
-            )
-
-        if call.service == SERVICE_HOMEASSISTANT_STOP:
-            await hassio.stop_homeassistant()
-            return
-
-        errors = await conf_util.async_check_ha_config_file(hass)
-
-        if errors:
-            _LOGGER.error(
-                "The system cannot %s because the configuration is not valid: %s",
-                call.service,
-                errors,
-            )
-            persistent_notification.async_create(
-                hass,
-                "Config error. See [the logs](/config/logs) for details.",
-                "Config validating",
-                f"{HASS_DOMAIN}.check_config",
-            )
-            raise HomeAssistantError(
-                f"The system cannot {call.service} "
-                f"because the configuration is not valid: {errors}"
-            )
-
-        if call.service == SERVICE_HOMEASSISTANT_RESTART:
+    async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
+        """Stop or restart home assistant."""
+        if restart:
             await hassio.restart_homeassistant()
+        else:
+            await hassio.stop_homeassistant()
 
-    # Mock core services
-    for service in (
-        SERVICE_HOMEASSISTANT_STOP,
-        SERVICE_HOMEASSISTANT_RESTART,
-        SERVICE_CHECK_CONFIG,
-    ):
-        hass.services.async_register(HASS_DOMAIN, service, async_handle_core_service)
+    # Set a custom handler for the homeassistant.restart and homeassistant.stop services
+    async_set_stop_handler(hass, _async_stop)
 
     # Init discovery Hass.io feature
     async_setup_discovery_view(hass, hassio)
@@ -799,15 +756,21 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=HASSIO_UPDATE_INTERVAL,
+            # We don't want an immediate refresh since we want to avoid
+            # fetching the container stats right away and avoid hammering
+            # the Supervisor API on startup
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
         self.hassio: HassIO = hass.data[DOMAIN]
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
-        self._enabled_updates_by_addon: defaultdict[
-            str, dict[str, set[str]]
-        ] = defaultdict(lambda: defaultdict(set))
+        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -910,23 +873,24 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self, first_update: bool) -> None:
         """Force update of the addon info."""
+        container_updates = self._container_updates
+
         data = self.hass.data
         hassio = self.hassio
-        (
-            data[DATA_INFO],
-            data[DATA_CORE_INFO],
-            data[DATA_CORE_STATS],
-            data[DATA_SUPERVISOR_INFO],
-            data[DATA_SUPERVISOR_STATS],
-            data[DATA_OS_INFO],
-        ) = await asyncio.gather(
-            hassio.get_info(),
-            hassio.get_core_info(),
-            hassio.get_core_stats(),
-            hassio.get_supervisor_info(),
-            hassio.get_supervisor_stats(),
-            hassio.get_os_info(),
-        )
+        updates = {
+            DATA_INFO: hassio.get_info(),
+            DATA_CORE_INFO: hassio.get_core_info(),
+            DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
+            DATA_OS_INFO: hassio.get_os_info(),
+        }
+        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
+            updates[DATA_CORE_STATS] = hassio.get_core_stats()
+        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
+            updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
+
+        results = await asyncio.gather(*updates.values())
+        for key, result in zip(updates, results):
+            data[key] = result
 
         _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
         all_addons: list[str] = []
@@ -940,37 +904,45 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # Update add-on info if its the first update or
         # there is at least one entity that needs the data.
         #
-        # When entities are added they call async_enable_addon_updates
+        # When entities are added they call async_enable_container_updates
         # to enable updates for the endpoints they need via
         # async_added_to_hass. This ensures that we only update
         # the data for the endpoints that are needed to avoid unnecessary
-        # API calls since otherwise we would fetch stats for all add-ons
+        # API calls since otherwise we would fetch stats for all containers
         # and throw them away.
         #
-        enabled_updates_by_addon = self._enabled_updates_by_addon
-        for data_key, update_func, enabled_key, wanted_addons in (
+        for data_key, update_func, enabled_key, wanted_addons, needs_first_update in (
             (
                 DATA_ADDONS_STATS,
                 self._update_addon_stats,
-                ADDON_UPDATE_STATS,
+                CONTAINER_STATS,
                 started_addons,
+                False,
             ),
             (
                 DATA_ADDONS_CHANGELOGS,
                 self._update_addon_changelog,
-                ADDON_UPDATE_CHANGELOG,
+                CONTAINER_CHANGELOG,
                 all_addons,
+                True,
             ),
-            (DATA_ADDONS_INFO, self._update_addon_info, ADDON_UPDATE_INFO, all_addons),
+            (
+                DATA_ADDONS_INFO,
+                self._update_addon_info,
+                CONTAINER_INFO,
+                all_addons,
+                True,
+            ),
         ):
-            data.setdefault(data_key, {}).update(
+            container_data: dict[str, Any] = data.setdefault(data_key, {})
+            container_data.update(
                 dict(
                     await asyncio.gather(
                         *[
                             update_func(slug)
                             for slug in wanted_addons
-                            if first_update
-                            or enabled_key in enabled_updates_by_addon[slug]
+                            if (first_update and needs_first_update)
+                            or enabled_key in container_updates[slug]
                         ]
                     )
                 )
@@ -1004,11 +976,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         return (slug, None)
 
     @callback
-    def async_enable_addon_updates(
+    def async_enable_container_updates(
         self, slug: str, entity_id: str, types: set[str]
     ) -> CALLBACK_TYPE:
         """Enable updates for an add-on."""
-        enabled_updates = self._enabled_updates_by_addon[slug]
+        enabled_updates = self._container_updates[slug]
         for key in types:
             enabled_updates[key].add(entity_id)
 

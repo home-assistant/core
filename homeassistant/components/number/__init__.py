@@ -218,8 +218,13 @@ class NumberEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        min_value = self.min_value
-        max_value = self.max_value
+        device_class = self.device_class
+        min_value = self._convert_to_state_value(
+            self.native_min_value, floor_decimal, device_class
+        )
+        max_value = self._convert_to_state_value(
+            self.native_max_value, ceil_decimal, device_class
+        )
         return {
             ATTR_MIN: min_value,
             ATTR_MAX: max_value,
@@ -259,7 +264,9 @@ class NumberEntity(Entity):
     @final
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._convert_to_state_value(self.native_min_value, floor_decimal)
+        return self._convert_to_state_value(
+            self.native_min_value, floor_decimal, self.device_class
+        )
 
     @property
     def native_max_value(self) -> float:
@@ -277,7 +284,9 @@ class NumberEntity(Entity):
     @final
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._convert_to_state_value(self.native_max_value, ceil_decimal)
+        return self._convert_to_state_value(
+            self.native_max_value, ceil_decimal, self.device_class
+        )
 
     @property
     def native_step(self) -> float | None:
@@ -365,7 +374,7 @@ class NumberEntity(Entity):
         """Return the entity value to represent the entity state."""
         if (native_value := self.native_value) is None:
             return native_value
-        return self._convert_to_state_value(native_value, round)
+        return self._convert_to_state_value(native_value, round, self.device_class)
 
     def set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -386,12 +395,15 @@ class NumberEntity(Entity):
         await self.hass.async_add_executor_job(self.set_value, value)
 
     def _convert_to_state_value(
-        self, value: float, method: Callable[[float, int], float]
+        self,
+        value: float,
+        method: Callable[[float, int], float],
+        device_class: NumberDeviceClass | None,
     ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
         # device_class is checked first since most of the time we can avoid
         # the unit conversion
-        if (device_class := self.device_class) not in UNIT_CONVERTERS:
+        if device_class not in UNIT_CONVERTERS:
             return value
 
         native_unit_of_measurement = self.native_unit_of_measurement

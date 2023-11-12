@@ -247,7 +247,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}:` missing, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
         (
             {
@@ -510,6 +510,20 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+            False,
+            "07-05-2020 14:35",
+        ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DataType.STRING,
+                CONF_SWAP: CONF_SWAP_BYTE,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x3730, 0x302D, 0x2D35, 0x3032, 0x3032, 0x3120, 0x3A34, 0x3533],
             False,
             "07-05-2020 14:35",
         ),

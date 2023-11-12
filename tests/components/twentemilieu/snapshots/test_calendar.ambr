@@ -97,6 +97,7 @@
     'model': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,

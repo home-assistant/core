@@ -717,3 +717,173 @@
     'message': '',
   })
 # ---
+# name: test_wake_word_cooldown_different_entities
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.2
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.3
+  dict({
+    'entity_id': 'wake_word.test2',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.4
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.5
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.2
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.3
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.4
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.5
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww_2',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.1
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.2
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.3
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---

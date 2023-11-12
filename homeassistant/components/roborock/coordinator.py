@@ -10,7 +10,9 @@ from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
 
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -31,7 +33,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
-        cloud_api: RoborockMqttClient | None = None,
+        cloud_api: RoborockMqttClient,
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
@@ -42,7 +44,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             DeviceProp(),
         )
         device_data = DeviceData(device, product_info.model, device_networking.ip)
-        self.api = RoborockLocalClient(device_data)
+        self.api: RoborockLocalClient | RoborockMqttClient = RoborockLocalClient(
+            device_data
+        )
         self.cloud_api = cloud_api
         self.device_info = DeviceInfo(
             name=self.roborock_device_info.device.name,
@@ -52,20 +56,23 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
+        if mac := self.roborock_device_info.network_info.mac:
+            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
-        try:
-            await self.api.ping()
-        except RoborockException:
-            if isinstance(self.api, RoborockLocalClient):
+        if isinstance(self.api, RoborockLocalClient):
+            try:
+                await self.api.ping()
+            except RoborockException:
                 _LOGGER.warning(
                     "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
                     self.roborock_device_info.device.duid,
                 )
                 # We use the cloud api if the local api fails to connect.
                 self.api = self.cloud_api
-            # Right now this should never be called if the cloud api is the primary api,
-            # but in the future if it is, a new else should be added.
+                # Right now this should never be called if the cloud api is the primary api,
+                # but in the future if it is, a new else should be added.
 
     async def release(self) -> None:
         """Disconnect from API."""

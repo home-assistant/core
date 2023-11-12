@@ -10,3 +10,4 @@ DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 CONF_DEV_ID = "thermostat"
 CONF_LOC_ID = "location"
 _LOGGER = logging.getLogger(__name__)
+RETRY = 3
