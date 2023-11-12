@@ -50,18 +50,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("setup %s with config:%s", zone, proximity_config)
 
         coordinator = ProximityDataUpdateCoordinator(hass, zone, proximity_config)
-        await coordinator.async_refresh()
-        hass.data[DOMAIN][zone] = coordinator
-
-        proximity = Proximity(hass, zone, coordinator)
-        await proximity.async_added_to_hass()
-        proximity.async_write_ha_state()
 
         async_track_state_change(
             hass,
             proximity_config[CONF_DEVICES],
             coordinator.async_check_proximity_state_change,
         )
+
+        await coordinator.async_refresh()
+        hass.data[DOMAIN][zone] = coordinator
+
+        proximity = Proximity(hass, zone, coordinator)
+        await proximity.async_added_to_hass()
+        proximity.async_write_ha_state()
 
     return True
 
