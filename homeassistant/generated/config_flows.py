@@ -244,6 +244,7 @@ FLOWS = {
         "kmtronic",
         "knx",
         "kodi",
+        "komfovent",
         "konnected",
         "kostal_plenticore",
         "kraken",

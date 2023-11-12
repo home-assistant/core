@@ -81,11 +81,10 @@ async def _load_config(
 
 async def test_multiple_kiosk_with_empty_mac(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that multiple kiosk devices with empty MAC don't get merged."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     config_entry1 = MockConfigEntry(
         title="Test device 1",
         domain=DOMAIN,

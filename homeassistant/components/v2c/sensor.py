@@ -14,9 +14,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -27,27 +26,57 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class V2CPowerRequiredKeysMixin:
+class V2CRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[TrydanData], float]
 
 
 @dataclass
-class V2CPowerSensorEntityDescription(
-    SensorEntityDescription, V2CPowerRequiredKeysMixin
-):
+class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
     """Describes an EVSE Power sensor entity."""
 
 
-POWER_SENSORS = (
-    V2CPowerSensorEntityDescription(
+TRYDAN_SENSORS = (
+    V2CSensorEntityDescription(
         key="charge_power",
         translation_key="charge_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.charge_power,
+    ),
+    V2CSensorEntityDescription(
+        key="charge_energy",
+        translation_key="charge_energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda evse_data: evse_data.charge_energy,
+    ),
+    V2CSensorEntityDescription(
+        key="charge_time",
+        translation_key="charge_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda evse_data: evse_data.charge_time,
+    ),
+    V2CSensorEntityDescription(
+        key="house_power",
+        translation_key="house_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda evse_data: evse_data.house_power,
+    ),
+    V2CSensorEntityDescription(
+        key="fv_power",
+        translation_key="fv_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda evse_data: evse_data.fv_power,
     ),
 )
 
@@ -60,21 +89,16 @@ async def async_setup_entry(
     """Set up V2C sensor platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[Entity] = [
-        V2CPowerSensorEntity(coordinator, description, config_entry.entry_id)
-        for description in POWER_SENSORS
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
+        for description in TRYDAN_SENSORS
+    )
 
 
 class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
     """Defines a base v2c sensor entity."""
 
-
-class V2CPowerSensorEntity(V2CSensorBaseEntity):
-    """V2C Power sensor entity."""
-
-    entity_description: V2CPowerSensorEntityDescription
+    entity_description: V2CSensorEntityDescription
     _attr_icon = "mdi:ev-station"
 
     def __init__(

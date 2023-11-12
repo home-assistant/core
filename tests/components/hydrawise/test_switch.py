@@ -53,6 +53,10 @@ async def test_manual_watering_services(
     mock_pydrawise.start_zone.assert_called_once_with(
         zones[0], custom_run_duration=DEFAULT_WATERING_TIME
     )
+    state = hass.states.get("switch.zone_one_manual_watering")
+    assert state is not None
+    assert state.state == "on"
+    mock_pydrawise.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -61,6 +65,9 @@ async def test_manual_watering_services(
         blocking=True,
     )
     mock_pydrawise.stop_zone.assert_called_once_with(zones[0])
+    state = hass.states.get("switch.zone_one_manual_watering")
+    assert state is not None
+    assert state.state == "off"
 
 
 @pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
@@ -80,6 +87,9 @@ async def test_auto_watering_services(
     mock_pydrawise.suspend_zone.assert_called_once_with(
         zones[0], dt_util.now() + timedelta(days=365)
     )
+    state = hass.states.get("switch.zone_one_automatic_watering")
+    assert state is not None
+    assert state.state == "off"
     mock_pydrawise.reset_mock()
 
     await hass.services.async_call(
@@ -89,3 +99,6 @@ async def test_auto_watering_services(
         blocking=True,
     )
     mock_pydrawise.resume_zone.assert_called_once_with(zones[0])
+    state = hass.states.get("switch.zone_one_automatic_watering")
+    assert state is not None
+    assert state.state == "on"

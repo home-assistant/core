@@ -724,15 +724,15 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
     return None
 
 
-def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | str:
+def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | None:
     """Merge package into conf, recursively."""
-    error: bool | str = False
+    duplicate_key: str | None = None
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
                 continue
             conf[key] = conf.get(key, OrderedDict())
-            error = _recursive_merge(conf=conf[key], package=pack_conf)
+            duplicate_key = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
@@ -743,7 +743,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | st
             if conf.get(key) is not None:
                 return key
             conf[key] = pack_conf
-    return error
+    return duplicate_key
 
 
 async def merge_packages_config(
@@ -818,10 +818,10 @@ async def merge_packages_config(
                 )
                 continue
 
-            error = _recursive_merge(conf=config[comp_name], package=comp_conf)
-            if error:
+            duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
+            if duplicate_key:
                 _log_pkg_error(
-                    pack_name, comp_name, config, f"has duplicate key '{error}'"
+                    pack_name, comp_name, config, f"has duplicate key '{duplicate_key}'"
                 )
 
     return config
