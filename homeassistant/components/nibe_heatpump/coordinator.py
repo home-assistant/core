@@ -132,10 +132,7 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
     def get_coil_float(self, coil: Coil) -> float | None:
         """Return a coil with float and check for validity."""
         if value := self.get_coil_value(coil):
-            try:
-                return float(value)  # type: ignore[arg-type]
-            except ValueError:
-                return None
+            return float(value)  # type: ignore[arg-type]
         return None
 
     async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
