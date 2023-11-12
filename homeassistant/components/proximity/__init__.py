@@ -51,8 +51,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await coordinator.async_refresh()
         hass.data[DOMAIN][zone] = coordinator
         proximity = Proximity(hass, zone, coordinator)
-        proximity.async_write_ha_state()
         await proximity.async_added_to_hass()
+        proximity.async_write_ha_state()
 
     return True
 
