@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
@@ -21,10 +23,10 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.hass_dict import HassEntryKey
 
 from .const import (
     CONF_FORCE,
-    DATA_ADGUARD_CLIENT,
     DOMAIN,
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
@@ -42,6 +44,15 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+ADGUARD_HASS_KEY = HassEntryKey["AdGuardData"]()
+
+
+@dataclass
+class AdGuardData:
+    """Define a data class."""
+
+    client: AdGuardHome
+    version: str | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_ADGUARD_CLIENT: adguard}
+    hass.data.setdefault(ADGUARD_HASS_KEY, {})[entry.entry_id] = AdGuardData(adguard)
 
     try:
         await adguard.version()
