@@ -128,6 +128,7 @@ ATTR_SWING_MODE = "swing_mode"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
+ATTR_TARGET_TEMP_RANGE = "target_temp_range"
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35

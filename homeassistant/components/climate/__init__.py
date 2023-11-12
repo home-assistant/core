@@ -53,6 +53,7 @@ from .const import (  # noqa: F401
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_RANGE,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN,
     FAN_AUTO,
@@ -102,6 +103,7 @@ from .const import (  # noqa: F401
     HVACMode,
 )
 
+DEFAULT_TEMP_RANGE = -16
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
@@ -110,14 +112,20 @@ DEFAULT_MAX_HUMIDITY = 99
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
-CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
+CONVERTIBLE_ATTRIBUTE = [
+    ATTR_TEMPERATURE,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_HIGH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
-        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
+        ATTR_TEMPERATURE,
+        ATTR_TARGET_TEMP_HIGH,
+        ATTR_TARGET_TEMP_LOW,
     ),
     make_entity_service_schema(
         {
@@ -247,6 +255,7 @@ class ClimateEntity(Entity):
     _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
+    _attr_target_temperature_range: float | None = None
     _attr_temperature_unit: str
 
     @final
@@ -332,6 +341,9 @@ class ClimateEntity(Entity):
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
+            data[ATTR_TARGET_TEMP_RANGE] = show_temp(
+                hass, self.target_temperature_range, temperature_unit, precision
+            )
 
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -416,6 +428,14 @@ class ClimateEntity(Entity):
         Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
         return self._attr_target_temperature_low
+
+    @property
+    def target_temperature_range(self) -> float | None:
+        """Return the minimum range between target_temperature_low and target_temperature_high.
+
+        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        """
+        return self._attr_target_temperature_range
 
     @property
     def preset_mode(self) -> str | None:
