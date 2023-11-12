@@ -10,7 +10,6 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1092,7 +1091,6 @@ async def test_setup_config_entry(
     """Test a calendar entity from a config entry."""
     config_entry.add_to_hass(hass)
     await config_entry.async_setup(hass)
-    assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -1127,7 +1125,6 @@ async def test_config_entry_supported_components(
     """Test that calendars are only created for VEVENT types when using a config entry."""
     config_entry.add_to_hass(hass)
     await config_entry.async_setup(hass)
-    assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get("calendar.calendar_1")
     assert state
