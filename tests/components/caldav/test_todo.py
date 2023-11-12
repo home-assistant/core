@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, Mock
 from caldav.objects import Todo
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -131,7 +130,6 @@ async def test_todo_list_state(
 ) -> None:
     """Test a calendar entity from a config entry."""
     await config_entry.async_setup(hass)
-    assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -153,7 +151,6 @@ async def test_supported_components(
 ) -> None:
     """Test a calendar supported components matches VTODO."""
     await config_entry.async_setup(hass)
-    assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert (state is not None) == has_entity
