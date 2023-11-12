@@ -132,7 +132,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         # At least one device is in the monitored zone so update the entity.
         if devices_in_zone:
-            _LOGGER.debug("at least on device is in zone -> arrived")
+            _LOGGER.debug("at least one device is in zone -> arrived")
             return {
                 "dist_to_zone": 0,
                 "dir_of_travel": "arrived",
@@ -243,14 +243,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             dist_to = DEFAULT_DIST_TO_ZONE
 
         _LOGGER.debug(
-            "proximity.%s update entity: distance=%s: direction=%s: device=%s",
+            "%s updated: distance=%s: direction=%s: device=%s",
             self.friendly_name,
             dist_to,
             direction_of_travel,
             entity_name,
         )
-
-        _LOGGER.info("%s: proximity calculation complete", entity_name)
 
         return {
             "dist_to_zone": dist_to,
