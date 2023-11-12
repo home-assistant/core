@@ -17,6 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .exceptions import ReolinkException, UserNotAdmin
@@ -148,6 +149,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         firmware_coordinator=firmware_coordinator,
     )
 
+    # Clean-up disconnected camera channels or channels where a diffrent model camera is connected.
+    if host.api.is_nvr:
+        device_reg = dr.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)
+        for device in devices:
+            if device.via_device_id is None:
+                # Do not consider the NVR itself
+                continue
+
+            print(device.identifiers)
+    
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(
