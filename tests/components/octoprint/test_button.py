@@ -9,9 +9,22 @@ from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_registry import async_get
 
 from . import init_integration
+
+
+@callback
+def _enable_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Enable disabled entity."""
+    ent_reg = async_get(hass)
+    entry = ent_reg.async_get(entity_id)
+    updated_entry = ent_reg.async_update_entity(
+        entry.entity_id, **{"disabled_by": None}
+    )
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
 
 
 async def test_pause_job(hass: HomeAssistant) -> None:
@@ -192,3 +205,78 @@ async def test_stop_job(hass: HomeAssistant) -> None:
         )
 
         assert len(stop_command.mock_calls) == 0
+
+
+async def test_shutdown_system(hass: HomeAssistant) -> None:
+    """Test the shutdown system button."""
+    await init_integration(hass, BUTTON_DOMAIN)
+
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
+        "coordinator"
+    ]
+
+    # Test shutting down the system
+    with patch("pyoctoprintapi.OctoprintClient.shutdown") as shutdown_command:
+        coordinator.data["printer"] = OctoprintPrinterInfo(
+            {"state": {"flags": {}}, "temperature": []}
+        )
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.octoprint_shutdown_system",
+            },
+            blocking=True,
+        )
+
+        assert len(shutdown_command.mock_calls) == 1
+
+
+async def test_reboot_system(hass: HomeAssistant) -> None:
+    """Test the reboot system button."""
+    await init_integration(hass, BUTTON_DOMAIN)
+
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
+        "coordinator"
+    ]
+
+    # Test rebooting the system
+    with patch("pyoctoprintapi.OctoprintClient.reboot_system") as reboot_command:
+        coordinator.data["printer"] = OctoprintPrinterInfo(
+            {"state": {"flags": {}}, "temperature": []}
+        )
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.octoprint_restart_octoprint",
+            },
+            blocking=True,
+        )
+
+        assert len(reboot_command.mock_calls) == 0
+
+
+async def test_restart_octoprint(hass: HomeAssistant) -> None:
+    """Test the restart octoprint button."""
+    await init_integration(hass, BUTTON_DOMAIN)
+
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
+        "coordinator"
+    ]
+
+    # Test restarting octoprint
+    with patch("pyoctoprintapi.OctoprintClient.restart") as restart_command:
+        coordinator.data["printer"] = OctoprintPrinterInfo(
+            {"state": {"flags": {}}, "temperature": []}
+        )
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.octoprint_restart_octoprint",
+            },
+            blocking=True,
+        )
+
+        assert len(restart_command.mock_calls) == 0
