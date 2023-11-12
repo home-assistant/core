@@ -18,14 +18,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
-from .const import (
-    COLOR_MODE,
-    COLOR_TEMP_MODE,
-    CONF_COORDINATOR,
-    CONF_EVENT_LISTENER,
-    DOMAIN,
-    LOGGER,
-)
+from .const import COLOR_MODE, COLOR_TEMP_MODE, CONF_COORDINATOR, DOMAIN, LOGGER
 
 SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
@@ -62,7 +55,7 @@ async def async_setup_entry(
             ]
         )
 
-    hass.data[DOMAIN][entry.entry_id][CONF_EVENT_LISTENER].append(
+    entry.async_on_unload(
         hass.bus.async_listen(
             f"{DOMAIN}_{entry.entry_id}_new_devices", _add_new_devices
         )

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
@@ -24,14 +23,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_CONNECTIONS,
-    CONF_COORDINATOR,
-    CONF_EVENT_LISTENER,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-)
+from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxDataUpdateCoordinator
 
 
@@ -53,7 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_CONNECTIONS: fritz,
-        CONF_EVENT_LISTENER: [],
     }
 
     has_templates = await hass.async_add_executor_job(fritz.has_templates)
@@ -104,12 +95,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the AVM FRITZ!SmartHome platforms."""
     fritz = hass.data[DOMAIN][entry.entry_id][CONF_CONNECTIONS]
     await hass.async_add_executor_job(fritz.logout)
-
-    event_listeners: list[Callable] = hass.data[DOMAIN][entry.entry_id][
-        CONF_EVENT_LISTENER
-    ]
-    for event_listener in event_listeners:
-        event_listener()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

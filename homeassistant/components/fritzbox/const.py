@@ -16,7 +16,6 @@ COLOR_TEMP_MODE: Final = "4"
 
 CONF_CONNECTIONS: Final = "connections"
 CONF_COORDINATOR: Final = "coordinator"
-CONF_EVENT_LISTENER: Final = "event_listener"
 
 DEFAULT_HOST: Final = "fritz.box"
 DEFAULT_USERNAME: Final = "admin"

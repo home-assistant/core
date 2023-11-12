@@ -28,7 +28,6 @@ from .const import (
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
     CONF_COORDINATOR,
-    CONF_EVENT_LISTENER,
     DOMAIN,
 )
 from .model import ClimateExtraAttributes
@@ -65,7 +64,7 @@ async def async_setup_entry(
             ]
         )
 
-    hass.data[DOMAIN][entry.entry_id][CONF_EVENT_LISTENER].append(
+    entry.async_on_unload(
         hass.bus.async_listen(
             f"{DOMAIN}_{entry.entry_id}_new_devices", _add_new_devices
         )

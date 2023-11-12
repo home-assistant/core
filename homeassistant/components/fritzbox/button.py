@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxEntity
-from .const import CONF_COORDINATOR, CONF_EVENT_LISTENER, DOMAIN
+from .const import CONF_COORDINATOR, DOMAIN
 
 
 async def async_setup_entry(
@@ -25,7 +25,7 @@ async def async_setup_entry(
             [FritzBoxTemplate(coordinator, ain) for ain in event.data.get("ains", [])]
         )
 
-    hass.data[DOMAIN][entry.entry_id][CONF_EVENT_LISTENER].append(
+    entry.async_on_unload(
         hass.bus.async_listen(
             f"{DOMAIN}_{entry.entry_id}_new_templates", _add_new_templates
         )
