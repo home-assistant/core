@@ -21,7 +21,7 @@ class CrisisAlerter:
     def news(
         self,
         counties: str | None = None,
-        all_counties: bool | None = None,
+        all_counties: bool = False,
         days: int | None = None,
         number_of_news_articles: int | None = None,
         use_centralized_no_of_articles: bool = False,
@@ -32,7 +32,7 @@ class CrisisAlerter:
             "news",
             language=self.language,
             counties=counties,
-            allCounites=all_counties,
+            allCounties=all_counties,
             days=days,
             numberOfNewsArticles=number_of_news_articles,
             useCentralizedNoOfArticles=use_centralized_no_of_articles,
