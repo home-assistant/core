@@ -45,6 +45,9 @@ async def test_manual_watering_services(
         blocking=True,
     )
     mock_pydrawise.run_zone.assert_called_once_with(15, 1)
+    state = hass.states.get("switch.zone_one_manual_watering")
+    assert state is not None
+    assert state.state == "on"
     mock_pydrawise.reset_mock()
 
     await hass.services.async_call(
@@ -54,6 +57,9 @@ async def test_manual_watering_services(
         blocking=True,
     )
     mock_pydrawise.run_zone.assert_called_once_with(0, 1)
+    state = hass.states.get("switch.zone_one_manual_watering")
+    assert state is not None
+    assert state.state == "off"
 
 
 async def test_auto_watering_services(
@@ -67,6 +73,9 @@ async def test_auto_watering_services(
         blocking=True,
     )
     mock_pydrawise.suspend_zone.assert_called_once_with(365, 1)
+    state = hass.states.get("switch.zone_one_automatic_watering")
+    assert state is not None
+    assert state.state == "off"
     mock_pydrawise.reset_mock()
 
     await hass.services.async_call(
@@ -76,3 +85,6 @@ async def test_auto_watering_services(
         blocking=True,
     )
     mock_pydrawise.suspend_zone.assert_called_once_with(0, 1)
+    state = hass.states.get("switch.zone_one_automatic_watering")
+    assert state is not None
+    assert state.state == "on"

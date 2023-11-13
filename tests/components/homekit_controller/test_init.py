@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -85,7 +84,10 @@ def create_alive_service(accessory):
 
 
 async def test_device_remove_devices(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
@@ -93,9 +95,7 @@ async def test_device_remove_devices(
     config_entry = helper.config_entry
     entry_id = config_entry.entry_id
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities[ALIVE_DEVICE_ENTITY_ID]
-    device_registry = dr.async_get(hass)
+    entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
     assert (
@@ -231,14 +231,15 @@ async def test_ble_device_only_checks_is_available(
 
 @pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
 async def test_snapshots(
-    hass: HomeAssistant, snapshot: SnapshotAssertion, example: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    example: str,
 ) -> None:
     """Detect regressions in enumerating a homekit accessory database and building entities."""
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     registry_devices = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id

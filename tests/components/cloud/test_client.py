@@ -248,10 +248,12 @@ async def test_webhook_msg(
 
 
 async def test_google_config_expose_entity(
-    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_cloud_setup,
+    mock_cloud_login,
 ) -> None:
     """Test Google config exposing entity method uses latest config."""
-    entity_registry = er.async_get(hass)
 
     # Enable exposing new entities to Google
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
@@ -274,10 +276,12 @@ async def test_google_config_expose_entity(
 
 
 async def test_google_config_should_2fa(
-    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_cloud_setup,
+    mock_cloud_login,
 ) -> None:
     """Test Google config disabling 2FA method uses latest config."""
-    entity_registry = er.async_get(hass)
 
     # Register a light entity
     entity_entry = entity_registry.async_get_or_create(

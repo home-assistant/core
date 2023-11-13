@@ -1,0 +1,4 @@
+iot_domain: !include integrations/iot_domain.yaml
+adr_0007_1: !include integrations/adr_0007_1.yaml
+adr_0007_2: !include integrations/adr_0007_2.yaml
+adr_0007_3: !include integrations/adr_0007_3.yaml
