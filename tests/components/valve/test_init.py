@@ -209,9 +209,7 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     valve = MockValveEntity(features=None)
     valve.hass = hass
 
-    assert valve.supported_features is (
-        ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
-    )
+    assert valve.supported_features == ()
 
 
 async def test_toggle(hass: HomeAssistant) -> None:

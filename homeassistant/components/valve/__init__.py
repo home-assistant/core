@@ -51,17 +51,7 @@ class ValveDeviceClass(StrEnum):
     GAS = "gas"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ValveDeviceClass))
-
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the ValveDeviceClass enum instead.
-DEVICE_CLASSES = [cls.value for cls in ValveDeviceClass]
-DEVICE_CLASS_WATER = ValveDeviceClass.WATER.value
-DEVICE_CLASS_GAS = ValveDeviceClass.GAS.value
-
 # mypy: disallow-any-generics
-
-
 class ValveEntityFeature(IntFlag):
     """Supported features of the valve entity."""
 
@@ -144,8 +134,7 @@ class ValveEntity(Entity):
     _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
-    _attr_state: None = None
-    _attr_supported_features: ValveEntityFeature | None
+    _attr_supported_features: ValveEntityFeature = ValveEntityFeature(0)
 
     _valve_is_last_toggle_direction_open = True
 
@@ -186,27 +175,13 @@ class ValveEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        data = {}
 
-        if (current := self.current_valve_position) is not None:
-            data[ATTR_CURRENT_POSITION] = current
-
-        return data
+        return {ATTR_CURRENT_POSITION: self.current_valve_position}
 
     @property
     def supported_features(self) -> ValveEntityFeature:
         """Flag supported features."""
-        if self._attr_supported_features is not None:
-            return self._attr_supported_features
-
-        supported_features = (
-            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
-        )
-
-        if self.current_valve_position is not None:
-            supported_features |= ValveEntityFeature.SET_POSITION
-
-        return supported_features
+        return self._attr_supported_features
 
     @property
     def is_opening(self) -> bool | None:
@@ -223,23 +198,23 @@ class ValveEntity(Entity):
         """Return if the valve is closed or not."""
         return self._attr_is_closed
 
-    def open_valve(self, **kwargs: Any) -> None:
+    def open_valve(self) -> None:
         """Open the valve."""
         raise NotImplementedError()
 
-    async def async_open_valve(self, **kwargs: Any) -> None:
+    async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self.hass.async_add_executor_job(ft.partial(self.open_valve, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.open_valve))
 
-    def close_valve(self, **kwargs: Any) -> None:
+    def close_valve(self) -> None:
         """Close valve."""
         raise NotImplementedError()
 
-    async def async_close_valve(self, **kwargs: Any) -> None:
+    async def async_close_valve(self) -> None:
         """Close valve."""
-        await self.hass.async_add_executor_job(ft.partial(self.close_valve, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.close_valve))
 
-    def toggle(self, **kwargs: Any) -> None:
+    def toggle(self) -> None:
         """Toggle the entity."""
         fns = {
             "open": self.open_valve,
@@ -247,9 +222,9 @@ class ValveEntity(Entity):
             "stop": self.stop_valve,
         }
         function = self._get_toggle_function(fns)
-        function(**kwargs)
+        function()
 
-    async def async_toggle(self, **kwargs: Any) -> None:
+    async def async_toggle(self) -> None:
         """Toggle the entity."""
         fns = {
             "open": self.async_open_valve,
@@ -257,23 +232,23 @@ class ValveEntity(Entity):
             "stop": self.async_stop_valve,
         }
         function = self._get_toggle_function(fns)
-        await function(**kwargs)
+        await function()
 
-    def set_valve_position(self, **kwargs: Any) -> None:
+    def set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
 
-    async def async_set_valve_position(self, **kwargs: Any) -> None:
+    async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self.hass.async_add_executor_job(
-            ft.partial(self.set_valve_position, **kwargs)
+            ft.partial(self.set_valve_position, position)
         )
 
-    def stop_valve(self, **kwargs: Any) -> None:
+    def stop_valve(self) -> None:
         """Stop the valve."""
 
-    async def async_stop_valve(self, **kwargs: Any) -> None:
+    async def async_stop_valve(self) -> None:
         """Stop the valve."""
-        await self.hass.async_add_executor_job(ft.partial(self.stop_valve, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.stop_valve))
 
     def _get_toggle_function(
         self, fns: dict[str, Callable[_P, _R]]
