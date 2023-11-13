@@ -5,7 +5,6 @@
         "title": "Add Ping",
         "description": "Ping allows you to check the availability of a host.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "count": "Ping count"
         }
@@ -19,7 +18,6 @@
     "step": {
       "init": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "count": "[%key:component::ping::config::step::user::data::count%]"
         }
