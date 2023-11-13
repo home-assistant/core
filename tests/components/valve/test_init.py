@@ -51,20 +51,20 @@ class MockValveEntity(ValveEntity):
         unique_id: str = "mock_valve",
         name: str = "Valve",
         features: ValveEntityFeature = ValveEntityFeature(0),
-        is_closed: bool = None,
+        current_position: int = None,
         device_class: ValveDeviceClass = None,
     ) -> None:
         """Initialize the valve."""
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
-        self._attr_is_closed = is_closed
+        self._attr_current_valve_position = current_position
         if device_class is not None:
             self._attr_device_class = device_class
 
     def close_valve(self) -> None:
         """Mock implementantion for sync close function."""
-        self._attr_is_closed = True
+        self._attr_current_valve_position = 0
 
 
 @pytest.fixture(autouse=True)
@@ -215,7 +215,7 @@ async def test_supported_features(hass: HomeAssistant) -> None:
 async def test_toggle(hass: HomeAssistant) -> None:
     """Test valve entity toggling."""
 
-    valve = MockValveEntity(is_closed=False)
+    valve = MockValveEntity(current_position=100)
     valve.hass = hass
 
     assert valve.is_closed is False
