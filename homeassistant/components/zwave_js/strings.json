@@ -216,11 +216,19 @@
         },
         "bitmask": {
           "name": "Bitmask",
-          "description": "Target a specific bitmask (see the documentation for more information)."
+          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with value_size or value_format."
         },
         "value": {
           "name": "Value",
           "description": "The new value to set for this configuration parameter."
+        },
+        "value_size": {
+          "name": "Value size",
+          "description": "Size of the value, either 1, 2, or 4. Used in combination with value_format when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask."
+        },
+        "value_format": {
+          "name": "Value format",
+          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with value_size when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask."
         }
       }
     },
