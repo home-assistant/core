@@ -1,4 +1,6 @@
 """Define constants for OpenAQ integration"""
 
 
-DOMAIN = "OpenAQ"
+DOMAIN = "openAQ"
+SENSOR_ID = "sensorid"
+DEFAULT_SENSOR_ID = "1234"

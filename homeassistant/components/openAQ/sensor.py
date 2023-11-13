@@ -36,6 +36,7 @@ class OpenAQSensorDescription(SensorEntityDescription):
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Configure the sensor platform."""
+    print("We are here 3")
     entities = []
     for sensor in list(OpenAQDeviceSensors):
         entities.append(

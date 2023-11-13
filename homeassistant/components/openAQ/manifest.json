@@ -1,5 +1,5 @@
 {
-  "domain": "OpenAQ",
+  "domain": "openAQ",
   "name": "OpenAQ",
   "codeowners": ["@TODO"],
   "config_flow": true,

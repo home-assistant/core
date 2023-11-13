@@ -13,6 +13,7 @@ from .const import (
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    print("We are here 1")
     """Set up this integration from config entry."""
     dr = device_registry.async_get(hass)
 
