@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
-    """Describes ViCare sensor entity."""
+    """Describes ViCare number entity."""
 
     value_setter: Callable[[PyViCareDevice, float], str | None] | None = None
 
@@ -42,7 +42,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
-        name="Heating Curve Shift",
+        name="Heating curve shift",
         icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveShift(),
@@ -55,7 +55,7 @@ CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
     ),
     ViCareNumberEntityDescription(
         key="heating curve slope",
-        name="Heating Curve Slope",
+        name="Heating curve slope",
         icon="mdi:slope-uphill",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveSlope(),
@@ -128,7 +128,7 @@ async def async_setup_entry(
             hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
         )
     except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No circuits found")
+        _LOGGER.debug("No circuits found")
 
     async_add_entities(entities)
 
