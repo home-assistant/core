@@ -23,15 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    CONF_SLEEP_PERIOD,
-    GEN1_RELEASE_URL,
-    GEN2_RELEASE_URL,
-    OTA_BEGIN,
-    OTA_ERROR,
-    OTA_PROGRESS,
-    OTA_SUCCESS,
-)
+from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -42,7 +34,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen
+from .utils import get_device_entry_gen, get_release_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -69,16 +61,12 @@ class RpcUpdateDescription(
 ):
     """Class to describe a RPC update."""
 
-    release_url: str | None = None
-
 
 @dataclass
 class RestUpdateDescription(
     RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin
 ):
     """Class to describe a REST update."""
-
-    release_url: str | None = None
 
 
 REST_UPDATES: Final = {
@@ -90,7 +78,6 @@ REST_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        release_url=GEN1_RELEASE_URL,
     ),
     "fwupdate_beta": RestUpdateDescription(
         name="Beta firmware update",
@@ -112,7 +99,6 @@ RPC_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        release_url=GEN2_RELEASE_URL,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta firmware update",
@@ -174,6 +160,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     ) -> None:
         """Initialize update entity."""
         super().__init__(block_coordinator, attribute, description)
+        self._attr_release_url = get_release_url(
+            block_coordinator.device.gen,
+            block_coordinator.device.model,
+            description.beta,
+        )
         self._in_progress_old_version: str | None = None
 
     @property
@@ -225,14 +216,6 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
 
-    @property
-    def release_url(self) -> str | None:
-        """URL to the full release notes."""
-        if self.coordinator.model in ("SHMOS-01", "SHMOS-02", "SHTRV-01"):
-            return None
-
-        return self.entity_description.release_url
-
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     """Represent a RPC update entity."""
@@ -252,7 +235,9 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
         self._ota_in_progress: bool = False
-        self._attr_release_url = description.release_url
+        self._attr_release_url = get_release_url(
+            coordinator.device.gen, coordinator.device.model, description.beta
+        )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -363,4 +348,11 @@ class RpcSleepingUpdateEntity(
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes."""
-        return self.entity_description.release_url
+        if not self.coordinator.device.initialized:
+            return None
+
+        return get_release_url(
+            self.coordinator.device.gen,
+            self.coordinator.device.model,
+            self.entity_description.beta,
+        )

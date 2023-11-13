@@ -27,6 +27,8 @@ from .const import (
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -408,3 +410,14 @@ def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
     return mac.upper() if len(mac) == 12 else None
+
+
+def get_release_url(gen: int, model: str, beta: bool) -> str | None:
+    """Return release URL or None."""
+    if model in ("SAWD-0A1XX10EU1", "SHMOS-01", "SHMOS-02", "SHTRV-01"):
+        return None
+
+    if beta:
+        return None
+
+    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
