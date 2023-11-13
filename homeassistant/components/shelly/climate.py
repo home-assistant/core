@@ -413,7 +413,7 @@ class BlockSleepingClimate(
 class RpcClimate(ShellyRpcEntity, ClimateEntity):
     """Entity that controls a relay on RPC based Shelly devices."""
 
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.OFF]
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
     _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
@@ -425,6 +425,11 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         """Initialize relay switch."""
         super().__init__(coordinator, f"thermostat:{id_}")
         self._id = id_
+        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"]["type"]
+        if self._thermostat_type == "cooling":
+            self._attr_hvac_modes.append(HVACMode.COOL)
+        else:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
 
     @property
     def target_temperature(self) -> float | None:
@@ -439,11 +444,17 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
+        if self._thermostat_type == "cooling":
+            return HVACMode.COOL if self.status["enable"] else HVACMode.OFF
+
         return HVACMode.HEAT if self.status["enable"] else HVACMode.OFF
 
     @property
     def hvac_action(self) -> HVACAction:
         """HVAC current action."""
+        if self._thermostat_type == "cooling":
+            return HVACAction.COOLING if self.status["output"] else HVACAction.IDLE
+
         return HVACAction.HEATING if self.status["output"] else HVACAction.IDLE
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -458,7 +469,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        mode = bool(hvac_mode == HVACMode.HEAT)
+        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
         await self.call_rpc(
             "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
         )
