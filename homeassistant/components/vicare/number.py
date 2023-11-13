@@ -16,7 +16,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -119,7 +119,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Create the ViCare sensor devices."""
+    """Create the ViCare number devices."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     entities: list[ViCareNumber] = []
@@ -134,7 +134,7 @@ async def async_setup_entry(
 
 
 class ViCareNumber(ViCareEntity, NumberEntity):
-    """Representation of a ViCare sensor."""
+    """Representation of a ViCare number."""
 
     entity_description: ViCareNumberEntityDescription
 
@@ -146,7 +146,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         description: ViCareNumberEntityDescription,
         hass: HomeAssistant,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the number."""
         super().__init__(device_config)
         self.entity_description = description
         self._attr_name = name
@@ -178,13 +178,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         self.async_write_ha_state()
 
     def update(self) -> None:
-        """Update state of sensor."""
+        """Update state of number."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_native_value = self.entity_description.value_getter(
                     self._api
                 )
-        except ConnectionError:
+        except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
