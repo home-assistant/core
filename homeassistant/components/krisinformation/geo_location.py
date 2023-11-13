@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from collections.abc import Callable
 
+
+from krisinformation import KrisinformationFeedEntry, KrisinformationFeedManager
 import voluptuous as vol
-
-from krisinformation import KrisinformationFeedManager, KrisinformationFeedEntry
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
@@ -17,16 +18,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
-
-from homeassistant.core import HomeAssistant, callback, Event
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +31,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_RADIUS_IN_KM = 50.0
 SOURCE = "krisinformation"
 
-#Set of rules that define what configuration options are
-#required or allowed for a particular platform within Home Assistant
+# Set of rules that define what configuration options are
+# required or allowed for a particular platform within Home Assistant
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LATITUDE): cv.latitude,
@@ -44,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
     }
 )
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -85,7 +83,7 @@ class KrisinformationFeedEntityManager:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._feed_manager = KrisinformationFeedManager(
-            #Byta ut mot Crisisalerter?
+            # Byta ut mot Crisisalerter?
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
@@ -96,7 +94,7 @@ class KrisinformationFeedEntityManager:
         self._scan_interval = scan_interval
         self._coordinates = coordinates
         self._radius_in_km = radius_in_km
-        #self._entities: list[KrisinformationFeedEntity] = []
+        # self._entities: list[KrisinformationFeedEntity] = []
 
     def startup(self) -> None:
         """Start up this manager."""
@@ -119,6 +117,7 @@ class KrisinformationFeedEntityManager:
     def _remove_entity(self, unique_id: str) -> None:
         """Remove entity."""
 
+
 class KrisinformationLocationEvent(GeolocationEvent):
     """Representation of a Krisinformation.se location event."""
 
@@ -127,19 +126,44 @@ class KrisinformationLocationEvent(GeolocationEvent):
     _attr_source = SOURCE
     _attr_unit_of_measurement = UnitOfLength.KILOMETERS
 
-    def __init__(self, feed_manager: KrisinformationFeedEntityManager, external_id: str) -> None:
+    def __init__(
+        self, feed_manager: KrisinformationFeedEntityManager, external_id: str
+    ) -> None:
         """Initialize entity with data from feed entry"""
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._remove_signal_delete: Callable[[], None]
+        self._remove_signal_update: Callable[[], None]
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        self._remove_signal_delete = async_dispatcher_connect(
+            self.hass,
+            #SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
+        )
+        self._remove_signal_update = async_dispatcher_connect(
+            self.hass,
+            #SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     @callback
     def _delete_callback(self) -> None:
         """Remove this entity."""
+        self._remove_signal_delete()
+        self._remove_signal_update()
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self) -> None:
         """Update entity."""
+        self.async_schedule_update_ha_state(True)
 
     @callback
     def _generate_callback(self) -> None:
         """Generate entity."""
+        _LOGGER.debug("Updating %s", self._external_id)
+        feed_entry = self._feed_manager.get_entry(self._external_id)
+        if feed_entry:
+            self._update_from_feed(feed_entry)

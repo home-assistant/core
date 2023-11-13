@@ -35,12 +35,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 # GEO-LOCATION
-from aio_geojson_client.feed_manager import FeedManagerBase
-from aio_geojson_client.status_update import StatusUpdate
-from aiohttp import ClientSession
-from geojson import FeatureCollection
 from aio_geojson_client.feed import GeoJsonFeed
 from aio_geojson_client.feed_entry import FeedEntry
+from aio_geojson_client.feed_manager import FeedManagerBase
+
 
 class KrisinformationFeedManager(FeedManagerBase):
     """Feed Manager for Krisinformation.se feed."""
@@ -53,7 +51,7 @@ class KrisinformationFeedManager(FeedManagerBase):
         coordinates,
         filter_radius=None,
         filter_categories=None,
-    ):
+    )-> None:
         """Initialize the Krisinformation.se Feed Manager."""
         feed = KrisinformationFeed(
             coordinates,
@@ -61,6 +59,7 @@ class KrisinformationFeedManager(FeedManagerBase):
             filter_categories=filter_categories,
         )
         super().__init__(feed, generate_callback, update_callback, remove_callback)
+
 
 class KrisinformationFeed(GeoJsonFeed):
     """Krisinformation.se feed."""
@@ -70,7 +69,7 @@ class KrisinformationFeed(GeoJsonFeed):
         home_coordinates,
         filter_radius=None,
         filter_categories=None,
-    ):
+    )-> None:
         """Initialise this service."""
         super().__init__(
             home_coordinates,
@@ -82,6 +81,7 @@ class KrisinformationFeed(GeoJsonFeed):
     def _new_entry(self, home_coordinates, feature, global_data):
         """Generate a new entry."""
         return KrisinformationFeedEntry(home_coordinates, feature, global_data)
+
 
 class KrisinformationFeedEntry(FeedEntry):
     """Krisinformation.se feed entry."""
