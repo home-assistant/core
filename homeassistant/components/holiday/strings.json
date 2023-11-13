@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "Name",
           "country": "Country"
         }
       },

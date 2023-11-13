@@ -508,6 +508,9 @@ azure-eventhub==5.11.1
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
 
+# homeassistant.components.holiday
+babel==2.13.1
+
 # homeassistant.components.baidu
 baidu-aip==1.6.6
 

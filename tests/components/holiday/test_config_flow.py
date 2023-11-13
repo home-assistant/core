@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_NAME
+from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,7 +22,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "German holidays",
             CONF_COUNTRY: "DE",
         },
     )
@@ -39,9 +38,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "German holidays"
+    assert result3["title"] == "Germany, BW"
     assert result3["data"] == {
-        "name": "German holidays",
         "country": "DE",
         "province": "BW",
     }
@@ -58,15 +56,13 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Swedish holidays",
             CONF_COUNTRY: "SE",
         },
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Swedish holidays"
+    assert result2["title"] == "Sweden"
     assert result2["data"] == {
-        "name": "Swedish holidays",
         "country": "SE",
     }

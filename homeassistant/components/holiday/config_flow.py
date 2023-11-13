@@ -4,11 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from holidays import country_holidays, list_supported_countries
+from babel import Locale
+from holidays import list_supported_countries
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_COUNTRY, CONF_NAME
+from homeassistant.const import CONF_COUNTRY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     CountrySelector,
@@ -16,19 +17,19 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 
 from .const import CONF_PROVINCE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): TextSelector(),
         vol.Required(CONF_COUNTRY): CountrySelector(
             CountrySelectorConfig(
-                countries=list(list_supported_countries(include_aliases=False)),
+                countries=list(SUPPORTED_COUNTRIES),
             )
         ),
     }
@@ -50,13 +51,14 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data = user_input
 
-            if self.data[CONF_COUNTRY]:
-                obj_holidays = country_holidays(self.data[CONF_COUNTRY])
+            selected_country = self.data[CONF_COUNTRY]
 
-                if obj_holidays.subdivisions:
-                    return await self.async_step_province()
+            if SUPPORTED_COUNTRIES[selected_country]:
+                return await self.async_step_province()
 
-            return self.async_create_entry(title=self.data[CONF_NAME], data=self.data)
+            locale = Locale(self.hass.config.language)
+            title = locale.territories[selected_country]
+            return self.async_create_entry(title=title, data=self.data)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -66,17 +68,17 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the province step."""
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
-            return self.async_create_entry(
-                title=self.data[CONF_NAME], data=combined_input
-            )
 
-        all_countries = list_supported_countries(include_aliases=False)
+            locale = Locale(self.hass.config.language)
+            name = f"{locale.territories[combined_input[CONF_COUNTRY]]}, {combined_input[CONF_PROVINCE]}"
+
+            return self.async_create_entry(title=name, data=combined_input)
 
         province_schema = vol.Schema(
             {
                 vol.Optional(CONF_PROVINCE): SelectSelector(
                     SelectSelectorConfig(
-                        options=all_countries[self.data[CONF_COUNTRY]],
+                        options=SUPPORTED_COUNTRIES[self.data[CONF_COUNTRY]],
                         mode=SelectSelectorMode.DROPDOWN,
                         translation_key=CONF_PROVINCE,
                     )

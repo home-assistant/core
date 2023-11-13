@@ -444,6 +444,9 @@ axis==48
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
 
+# homeassistant.components.holiday
+babel==2.13.1
+
 # homeassistant.components.homekit
 base36==0.1.1
 
