@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFl
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
+    SERVICE_SET_VALVE_POSITION,
     SERVICE_TOGGLE,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -181,6 +182,9 @@ async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -
     assert is_closed(hass, ent1)
     assert is_opening(hass, ent2)
 
+    await call_service(hass, SERVICE_SET_VALVE_POSITION, ent2, 50)
+    assert is_opening(hass, ent2)
+
 
 async def test_valve_device_class(hass: HomeAssistant) -> None:
     """Test valve entity with defaults."""
@@ -222,11 +226,12 @@ async def test_toggle(hass: HomeAssistant) -> None:
     assert valve.is_closed is True
 
 
-def call_service(hass, service, ent):
+def call_service(hass, service, ent, position=None):
     """Call any service on entity."""
-    return hass.services.async_call(
-        DOMAIN, service, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
-    )
+    params = {ATTR_ENTITY_ID: ent.entity_id}
+    if position is not None:
+        params["position"] = position
+    return hass.services.async_call(DOMAIN, service, params, blocking=True)
 
 
 def set_valve_position(ent, position) -> None:
