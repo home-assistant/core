@@ -14,7 +14,7 @@ from tests.common import get_fixture_path
 @pytest.fixture
 def mock_ping() -> None:
     """Mock icmplib.ping."""
-    with patch("homeassistant.components.ping.icmp_ping"):
+    with patch("homeassistant.components.ping.async_ping"):
         yield
 
 

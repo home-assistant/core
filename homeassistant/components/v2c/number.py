@@ -60,11 +60,10 @@ async def async_setup_entry(
     """Set up V2C Trydan number platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[NumberEntity] = [
+    async_add_entities(
         V2CSettingsNumberEntity(coordinator, description, config_entry.entry_id)
         for description in TRYDAN_NUMBER_SETTINGS
-    ]
-    async_add_entities(entities)
+    )
 
 
 class V2CSettingsNumberEntity(V2CBaseEntity, NumberEntity):

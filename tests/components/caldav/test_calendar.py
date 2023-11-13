@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 EVENTS = [
@@ -1085,10 +1086,11 @@ async def test_calendar_components(hass: HomeAssistant) -> None:
 @freeze_time(_local_datetime(17, 30))
 async def test_setup_config_entry(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test a calendar entity from a config entry."""
-    assert await setup_integration()
+    config_entry.add_to_hass(hass)
+    await config_entry.async_setup(hass)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -1118,10 +1120,11 @@ async def test_setup_config_entry(
 )
 async def test_config_entry_supported_components(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that calendars are only created for VEVENT types when using a config entry."""
-    assert await setup_integration()
+    config_entry.add_to_hass(hass)
+    await config_entry.async_setup(hass)
 
     state = hass.states.get("calendar.calendar_1")
     assert state

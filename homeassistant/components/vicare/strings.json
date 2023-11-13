@@ -10,6 +10,13 @@
           "client_id": "Client ID",
           "heating_type": "Heating type"
         }
+      },
+      "reauth_confirm": {
+        "description": "Please verify credentials.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "client_id": "[%key:component::vicare::config::step::user::data::client_id%]"
+        }
       }
     },
     "error": {
@@ -17,6 +24,7 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },

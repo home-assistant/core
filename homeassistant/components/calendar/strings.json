@@ -24,7 +24,7 @@
         "location": {
           "name": "Location"
         },
-        "messages": {
+        "message": {
           "name": "Message"
         },
         "start_time": {

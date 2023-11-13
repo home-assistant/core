@@ -100,16 +100,13 @@ async def async_check_ha_config_file(  # noqa: C901
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
 
-    def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
+    def _comp_error(ex: Exception, domain: str, component_config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
+        message = _format_config_error(ex, domain, component_config)[0]
         if domain in frontend_dependencies:
-            result.add_error(
-                _format_config_error(ex, domain, config)[0], domain, config
-            )
+            result.add_error(message, domain, component_config)
         else:
-            result.add_warning(
-                _format_config_error(ex, domain, config)[0], domain, config
-            )
+            result.add_warning(message, domain, component_config)
 
     async def _get_integration(
         hass: HomeAssistant, domain: str
