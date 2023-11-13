@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -57,7 +57,7 @@ async def async_setup_platform(
 ) -> None:
     """Init Ping sensor from YAML."""
 
-    setup_sensor(hass, config, async_add_entities)
+    async_setup_sensor(hass, config, async_add_entities)
 
 
 async def async_setup_entry(
@@ -65,10 +65,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ping config entry."""
 
-    setup_sensor(hass, entry.options, async_add_entities, entry, entry.title)
+    async_setup_sensor(hass, entry.options, async_add_entities, entry, entry.title)
 
 
-def setup_sensor(
+@callback
+def async_setup_sensor(
     hass: HomeAssistant,
     config: MappingProxyType[str, Any] | dict[str, Any],
     async_add_entities: AddEntitiesCallback,
