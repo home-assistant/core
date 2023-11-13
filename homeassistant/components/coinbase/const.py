@@ -21,6 +21,7 @@ API_RATES = "rates"
 API_RESOURCE_PATH = "resource_path"
 API_RESOURCE_TYPE = "type"
 API_TYPE_VAULT = "vault"
+API_USD = "USD"
 
 WALLETS = {
     "1INCH": "1INCH",
