@@ -174,7 +174,6 @@ class GenericCamera(Camera):
         self._last_image = None
 
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, identifier)},
             manufacturer="Generic",
         )
