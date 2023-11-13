@@ -14,6 +14,7 @@ from .const import (
     API_ACCOUNT_AMOUNT,
     API_ACCOUNT_BALANCE,
     API_ACCOUNT_CURRENCY,
+    API_ACCOUNT_CURRENCY_CODE,
     API_ACCOUNT_ID,
     API_ACCOUNT_NAME,
     API_ACCOUNT_NATIVE_BALANCE,
@@ -55,7 +56,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     provided_currencies: list[str] = [
-        account[API_ACCOUNT_CURRENCY]
+        account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]
         for account in instance.accounts
         if account[API_RESOURCE_TYPE] != API_TYPE_VAULT
     ]
@@ -106,19 +107,22 @@ class AccountSensor(SensorEntity):
         self._currency = currency
         for account in coinbase_data.accounts:
             if (
-                account[API_ACCOUNT_CURRENCY] != currency
+                account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE] != currency
                 or account[API_RESOURCE_TYPE] == API_TYPE_VAULT
             ):
                 continue
             self._attr_name = f"Coinbase {account[API_ACCOUNT_NAME]}"
             self._attr_unique_id = (
                 f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
-                f"{account[API_ACCOUNT_CURRENCY]}"
+                f"{account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]}"
             )
             self._attr_native_value = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-            self._attr_native_unit_of_measurement = account[API_ACCOUNT_CURRENCY]
+            self._attr_native_unit_of_measurement = account[API_ACCOUNT_CURRENCY][
+                API_ACCOUNT_CURRENCY_CODE
+            ]
             self._attr_icon = CURRENCY_ICONS.get(
-                account[API_ACCOUNT_CURRENCY], DEFAULT_COIN_ICON
+                account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE],
+                DEFAULT_COIN_ICON,
             )
             self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
                 API_ACCOUNT_AMOUNT
@@ -149,7 +153,8 @@ class AccountSensor(SensorEntity):
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
             if (
-                account[API_ACCOUNT_CURRENCY] != self._currency
+                account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]
+                != self._currency
                 or account[API_RESOURCE_TYPE] == API_TYPE_VAULT
             ):
                 continue
