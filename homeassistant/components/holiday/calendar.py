@@ -9,10 +9,11 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_PROVINCE
+from .const import CONF_PROVINCE, DOMAIN
 
 
 async def async_setup_entry(
@@ -48,6 +49,10 @@ class HolidayCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._attr_name,
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
