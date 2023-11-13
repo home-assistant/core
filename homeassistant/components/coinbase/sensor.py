@@ -20,7 +20,6 @@ from .const import (
     API_RATES,
     API_RESOURCE_TYPE,
     API_TYPE_VAULT,
-    API_USD,
     CONF_CURRENCIES,
     CONF_EXCHANGE_PRECISION,
     CONF_EXCHANGE_PRECISION_DEFAULT,
@@ -124,12 +123,10 @@ class AccountSensor(SensorEntity):
                 account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE],
                 DEFAULT_COIN_ICON,
             )
-            self._native_balance = (
-                account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-                * float(
-                    coinbase_data.exchange_rates[API_RATES][coinbase_data.exchange_base]
-                )
-                * float(coinbase_data.exchange_rates[API_RATES][API_USD])
+            self._native_balance = round(
+                float(account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT])
+                / float(coinbase_data.exchange_rates[API_RATES][currency]),
+                2,
             )
             break
 
@@ -160,14 +157,10 @@ class AccountSensor(SensorEntity):
             ):
                 continue
             self._attr_native_value = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-            self._native_balance = (
-                account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-                * float(
-                    self._coinbase_data.exchange_rates[API_RATES][
-                        self._coinbase_data.exchange_base
-                    ]
-                )
-                * float(self._coinbase_data.exchange_rates[API_RATES][API_USD])
+            self._native_balance = round(
+                float(account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT])
+                / float(self._coinbase_data.exchange_rates[API_RATES][self._currency]),
+                2,
             )
             break
 
