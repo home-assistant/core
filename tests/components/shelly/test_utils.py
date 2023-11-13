@@ -7,6 +7,7 @@ from homeassistant.components.shelly.utils import (
     get_block_input_triggers,
     get_device_uptime,
     get_number_of_channels,
+    get_release_url,
     get_rpc_channel_name,
     get_rpc_input_triggers,
     is_block_momentary_input,
@@ -224,3 +225,10 @@ async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:
 
     monkeypatch.setattr(mock_rpc_device, "config", {"input:0": {"type": "switch"}})
     assert not get_rpc_input_triggers(mock_rpc_device)
+
+
+def test_get_release_url() -> None:
+    """Test get_release_url() with a device without a release note URL."""
+    result = get_release_url(1, "SHMOS-01", False)
+
+    assert result is None
