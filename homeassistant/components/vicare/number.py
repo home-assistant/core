@@ -16,7 +16,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
-import requests
+from requests.exceptions import ConnectionError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -184,7 +184,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                 self._attr_native_value = self.entity_description.value_getter(
                     self._api
                 )
-        except requests.exceptions.ConnectionError:
+        except ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
