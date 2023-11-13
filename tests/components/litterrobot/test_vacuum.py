@@ -32,21 +32,22 @@ COMPONENT_SERVICE_DOMAIN = {
 }
 
 
-async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
+async def test_vacuum(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_account: MagicMock
+) -> None:
     """Tests the vacuum entity was set up."""
-    ent_reg = er.async_get(hass)
 
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         PLATFORM_DOMAIN,
         DOMAIN,
         VACUUM_UNIQUE_ID,
         suggested_object_id=VACUUM_ENTITY_ID.replace(PLATFORM_DOMAIN, ""),
     )
-    ent_reg_entry = ent_reg.async_get(VACUUM_ENTITY_ID)
+    ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
     assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
@@ -54,7 +55,7 @@ async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
 
-    ent_reg_entry = ent_reg.async_get(VACUUM_ENTITY_ID)
+    ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
 
@@ -70,15 +71,16 @@ async def test_vacuum_status_when_sleeping(
 
 
 async def test_no_robots(
-    hass: HomeAssistant, mock_account_with_no_robots: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_account_with_no_robots: MagicMock,
 ) -> None:
     """Tests the vacuum entity was set up."""
     entry = await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
 
     assert not hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 0
+    assert len(entity_registry.entities) == 0
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
