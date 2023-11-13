@@ -610,7 +610,7 @@ class ListPersonsView(HomeAssistantView):
 
         return self.json(
             {
-                person.get(ATTR_USER_ID): {
+                person[ATTR_USER_ID]: {
                     ATTR_NAME: person[ATTR_NAME],
                     CONF_PICTURE: person.get(CONF_PICTURE),
                 }

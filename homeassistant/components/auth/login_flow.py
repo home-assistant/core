@@ -96,6 +96,10 @@ from homeassistant.util.network import is_local
 from . import indieauth
 
 if TYPE_CHECKING:
+    from homeassistant.auth.providers.trusted_networks import (
+        TrustedNetworksAuthProvider,
+    )
+
     from . import StoreResultType
 
 
@@ -166,10 +170,6 @@ class AuthProvidersView(HomeAssistantView):
                 if cloud_connection:
                     # Skip quickly as trusted networks are not available on cloud
                     continue
-
-                from homeassistant.auth.providers.trusted_networks import (  # pylint: disable=import-outside-toplevel
-                    TrustedNetworksAuthProvider,
-                )
 
                 try:
                     cast(TrustedNetworksAuthProvider, provider).async_validate_access(
