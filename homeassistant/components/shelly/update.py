@@ -162,7 +162,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         super().__init__(block_coordinator, attribute, description)
         self._attr_release_url = get_release_url(
             block_coordinator.device.gen,
-            block_coordinator.device.model,
+            block_coordinator.model,
             description.beta,
         )
         self._in_progress_old_version: str | None = None
@@ -236,7 +236,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         super().__init__(coordinator, key, attribute, description)
         self._ota_in_progress: bool = False
         self._attr_release_url = get_release_url(
-            coordinator.device.gen, coordinator.device.model, description.beta
+            coordinator.device.gen, coordinator.model, description.beta
         )
 
     async def async_added_to_hass(self) -> None:
@@ -353,6 +353,6 @@ class RpcSleepingUpdateEntity(
 
         return get_release_url(
             self.coordinator.device.gen,
-            self.coordinator.device.model,
+            self.coordinator.model,
             self.entity_description.beta,
         )
