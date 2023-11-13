@@ -2,7 +2,7 @@
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -67,10 +67,6 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
     def native_value(self) -> float:
         """Get native value."""
         return float(self.coordinator.data["turn"]) * -1
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
