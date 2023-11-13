@@ -52,9 +52,6 @@ CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
         native_min_value=-13,
         native_max_value=40,
         native_step=1,
-        # min_getter=lambda api: api.getHeatingCurveShiftMin(),
-        # max_getter=lambda api: api.getHeatingCurveShiftMax(),
-        # step_getter=lambda api: api.getHeatingCurveShiftStepping(),
     ),
     ViCareNumberEntityDescription(
         key="heating curve slope",
@@ -68,9 +65,6 @@ CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
         native_min_value=0.2,
         native_max_value=3.5,
         native_step=0.1,
-        # min_getter=lambda api: api.getHeatingCurveSlopeMin(),
-        # max_getter=lambda api: api.getHeatingCurveSlopeMax(),
-        # step_getter=lambda api: api.getHeatingCurveSlopeStepping(),
     ),
 )
 
@@ -80,6 +74,7 @@ def _build_entity(
     vicare_api,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
+    hass: HomeAssistant,
 ):
     """Create a ViCare number entity."""
     _LOGGER.debug("Found device %s", name)
@@ -89,6 +84,7 @@ def _build_entity(
             vicare_api,
             device_config,
             entity_description,
+            hass,
         )
     return None
 
@@ -112,6 +108,7 @@ async def _entities_from_descriptions(
                 current,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
+                hass,
             )
             if entity is not None:
                 entities.append(entity)
@@ -142,7 +139,12 @@ class ViCareNumber(ViCareEntity, NumberEntity):
     entity_description: ViCareNumberEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareNumberEntityDescription
+        self,
+        name,
+        api,
+        device_config,
+        description: ViCareNumberEntityDescription,
+        hass: HomeAssistant,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device_config)
@@ -150,11 +152,29 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         self._attr_name = name
         self._api = api
         self._device_config = device_config
+        self._hass = hass
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_native_value is not None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for this device."""
+        tmp_id = (
+            f"{self._device_config.getConfig().serial}-{self.entity_description.key}"
+        )
+        if hasattr(self._api, "id"):
+            return f"{tmp_id}-{self._api.id}"
+        return tmp_id
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.value_setter:
-            self.entity_description.value_setter(self._api, value)
+            await self._hass.async_add_executor_job(
+                self.entity_description.value_setter, self._api, value
+            )
         self.async_write_ha_state()
 
     def update(self):
@@ -164,22 +184,6 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                 self._attr_native_value = self.entity_description.value_getter(
                     self._api
                 )
-
-                # if self.entity_description.min_getter:
-                #     min_value = self.entity_description.min_getter(self._api)
-                #     if min_value is not None:
-                #         self._attr_native_min_value = min_value
-
-                # if self.entity_description.max_getter:
-                #     max_value = self.entity_description.max_getter(self._api)
-                #     if max_value is not None:
-                #         self._attr_native_max_value = max_value
-
-                # if self.entity_description.step_getter:
-                #     step_value = self.entity_description.step_getter(self._api)
-                #     if step_value is not None:
-                #         self._attr_native_step = step_value
-
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
