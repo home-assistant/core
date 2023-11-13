@@ -140,7 +140,7 @@ class WebDavTodoListEntity(TodoListEntity):
             raise HomeAssistantError(f"Could not find To-do item {uid}: {err}") from err
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
-        vtodo = cast(caldav.Todo, todo).icalendar_component  # type: ignore[attr-defined]
+        vtodo = todo.icalendar_component  # type: ignore[attr-defined]
         if item.summary:
             vtodo["summary"] = item.summary
         if item.status:
