@@ -283,7 +283,9 @@ class DeviceDataUpdater:
                 _LOGGER.warning(
                     "Ring access token is no longer valid, need to re-authenticate"
                 )
-                self.config_entry.async_start_reauth(self.hass)
+                self.hass.loop.call_soon_threadsafe(
+                    self.config_entry.async_start_reauth, self.hass
+                )
                 return
             except ring_doorbell.RingTimeout:
                 _LOGGER.warning(
