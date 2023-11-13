@@ -1,5 +1,6 @@
 """The tests for the Ring component."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -11,8 +12,9 @@ from homeassistant.components.ring import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -78,9 +80,7 @@ async def test_auth_failure_on_global_update(
         "ring_doorbell.Ring.update_devices",
         side_effect=AuthenticationError,
     ):
-        await hass.data[DOMAIN][mock_config_entry.entry_id][
-            "device_data"
-        ].async_refresh_all()
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
         assert "Ring access token is no longer valid. Set up Ring again" in [
@@ -105,7 +105,7 @@ async def test_auth_failure_on_device_update(
         "ring_doorbell.RingDoorBell.history",
         side_effect=AuthenticationError,
     ):
-        hass.data[DOMAIN][mock_config_entry.entry_id]["history_data"].refresh_all()
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
         assert "Ring access token is no longer valid. Set up Ring again" in [
@@ -146,9 +146,7 @@ async def test_error_on_global_update(
         "ring_doorbell.Ring.update_devices",
         side_effect=error_type,
     ):
-        await hass.data[DOMAIN][mock_config_entry.entry_id][
-            "device_data"
-        ].async_refresh_all()
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
         assert log_msg in [
@@ -189,7 +187,7 @@ async def test_error_on_device_update(
         "ring_doorbell.RingDoorBell.history",
         side_effect=error_type,
     ):
-        hass.data[DOMAIN][mock_config_entry.entry_id]["history_data"].refresh_all()
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
         assert log_msg in [
