@@ -26,5 +26,11 @@
         "name": "Total energy today"
       }
     }
+  },
+  "issues": {
+    "integration_removed": {
+      "title": "The Itho Daalderop Spider integration will be removed soon.",
+      "description": "The Itho Daalderop Spider integration will be removed soon from Home Assistant.\n\nItho Daalderop is phasing out Spider. Read about it [here]({website}).\n\nTo resolve this issue, please remove the integration entries from your Home Assistant setup. [Click here to see your existing Itho Daalderop Spider integration entries]({entries})."
+    }
   }
 }
