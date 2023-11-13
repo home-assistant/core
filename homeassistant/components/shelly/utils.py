@@ -26,6 +26,7 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
+    DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     GEN1_RELEASE_URL,
     GEN2_RELEASE_URL,
@@ -414,7 +415,7 @@ def mac_address_from_name(name: str) -> str | None:
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
-    if model in ("SAWD-0A1XX10EU1", "SHMOS-01", "SHMOS-02", "SHTRV-01"):
+    if model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
     if beta:

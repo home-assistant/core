@@ -189,3 +189,9 @@ OTA_SUCCESS = "ota_success"
 
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
+DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
+    "SAWD-0A1XX10EU1",
+    "SHMOS-01",
+    "SHMOS-02",
+    "SHTRV-01",
+)
