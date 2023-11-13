@@ -6,7 +6,7 @@ from typing import Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -55,6 +55,7 @@ class Platform(StrEnum):
     SWITCH = "switch"
     TEXT = "text"
     TIME = "time"
+    TODO = "todo"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"

@@ -37,6 +37,7 @@ ALLOW_NAME_TRANSLATION = {
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
@@ -325,6 +326,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     },
                     slug_validator=translation_key_validator,
                 ),
+                slug_validator=cv.slug,
+            ),
+            vol.Optional("exceptions"): cv.schema_with_slug_keys(
+                {vol.Optional("message"): translation_value_validator},
                 slug_validator=cv.slug,
             ),
             vol.Optional("services"): cv.schema_with_slug_keys(

@@ -188,7 +188,7 @@ async def _async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return list of custom integrations."""
-    if hass.config.recovery_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
 
     try:
@@ -776,11 +776,9 @@ class Integration:
         if self._all_dependencies_resolved is not None:
             return self._all_dependencies_resolved
 
+        self._all_dependencies_resolved = False
         try:
             dependencies = await _async_component_dependencies(self.hass, self)
-            dependencies.discard(self.domain)
-            self._all_dependencies = dependencies
-            self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
@@ -790,7 +788,6 @@ class Integration:
                 self.domain,
                 err.domain,
             )
-            self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
                 (
@@ -801,7 +798,10 @@ class Integration:
                 err.from_domain,
                 err.to_domain,
             )
-            self._all_dependencies_resolved = False
+        else:
+            dependencies.discard(self.domain)
+            self._all_dependencies = dependencies
+            self._all_dependencies_resolved = True
 
         return self._all_dependencies_resolved
 
@@ -1179,7 +1179,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
     """Return the lookup paths for legacy lookups."""
-    if hass.config.recovery_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 

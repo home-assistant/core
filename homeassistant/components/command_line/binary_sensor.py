@@ -3,13 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-
-import voluptuous as vol
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -25,16 +21,14 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, LOGGER
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -42,20 +36,6 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 
 SCAN_INTERVAL = timedelta(seconds=60)
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
-)
 
 
 async def async_setup_platform(
@@ -66,19 +46,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command line Binary Sensor."""
 
-    if binary_sensor_config := config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_binary_sensor",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": BINARY_SENSOR_DOMAIN},
-        )
-    if discovery_info:
-        binary_sensor_config = discovery_info
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    binary_sensor_config = discovery_info
 
     name: str = binary_sensor_config.get(CONF_NAME, DEFAULT_NAME)
     command: str = binary_sensor_config[CONF_COMMAND]

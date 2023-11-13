@@ -60,7 +60,9 @@ async def test_inverter_error(
 
 
 async def test_inverter_night_rescan(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test dynamic adding of an inverter discovered automatically after a Home Assistant reboot during the night."""
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=True)
@@ -79,7 +81,6 @@ async def test_inverter_night_rescan(
     await hass.async_block_till_done()
 
     # We expect our inverter to be present now
-    device_registry = dr.async_get(hass)
     inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "203200")})
     assert inverter_1.manufacturer == "Fronius"
 
@@ -93,13 +94,14 @@ async def test_inverter_night_rescan(
 
 
 async def test_inverter_rescan_interruption(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test interruption of re-scan during runtime to process further."""
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=True)
     config_entry = await setup_fronius_integration(hass, is_logger=True)
     assert config_entry.state is ConfigEntryState.LOADED
-    device_registry = dr.async_get(hass)
     # Expect 1 devices during the night, logger
     assert (
         len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))

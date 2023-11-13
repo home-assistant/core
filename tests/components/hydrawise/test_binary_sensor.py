@@ -17,11 +17,6 @@ async def test_states(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test binary_sensor states."""
-    # Make the coordinator refresh data.
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
     assert connectivity is not None
     assert connectivity.state == "on"
