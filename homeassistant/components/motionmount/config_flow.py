@@ -119,7 +119,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # We continue as we want to be able to connect with older FW that does not support MAC address
 
         # If the device supplied as with a valid MAC we use that
-        if (CONF_UUID in info) and info[CONF_UUID] != "00:00:00:00:00:00":
+        if info.get(CONF_UUID, EMPTY_MAC) != EMPTY_MAC:
             unique_id = info[CONF_UUID]
 
         if unique_id:
