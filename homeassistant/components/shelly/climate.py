@@ -37,6 +37,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
+    RPC_THERMOSTAT_SETTINGS,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
@@ -414,10 +415,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_icon = "mdi:thermostat"
-    _attr_max_temp = 35
-    _attr_min_temp = 5
+    _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
+    _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = 1
+    _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
