@@ -67,6 +67,27 @@ class MockValveEntity(ValveEntity):
         self._attr_current_valve_position = 0
 
 
+class MockValveWithIsClosedEntity(ValveEntity):
+    """Mock valve device to use in tests."""
+
+    def __init__(
+        self,
+        unique_id: str = "mock_valve",
+        name: str = "Valve",
+        features: ValveEntityFeature = ValveEntityFeature(0),
+        is_closed: bool = None,
+    ) -> None:
+        """Initialize the valve."""
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_supported_features = features
+        self._attr_is_closed = is_closed
+
+    def close_valve(self) -> None:
+        """Mock implementantion for sync close function."""
+        self._attr_is_closed = True
+
+
 @pytest.fixture(autouse=True)
 def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
     """Mock config flow."""
@@ -141,7 +162,7 @@ async def test_valve_setup(hass: HomeAssistant) -> None:
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_services(hass: HomeAssistant) -> None:
     """Test the provided services."""
     platform = getattr(hass.components, "test.valve")
 
@@ -202,6 +223,23 @@ async def test_valve_device_class(hass: HomeAssistant) -> None:
     water_valve.hass = hass
 
     assert water_valve.device_class is ValveDeviceClass.WATER
+
+
+async def test_is_closed(hass: HomeAssistant) -> None:
+    """Test different criteria for closeness."""
+    valve = MockValveEntity(current_position=0)
+    valve.hass = hass
+
+    assert valve.is_closed is True
+    valve._attr_current_valve_position = 100
+    assert valve.is_closed is False
+
+    valve_with_is_closed_attr = MockValveWithIsClosedEntity(is_closed=True)
+    valve_with_is_closed_attr.hass = hass
+
+    assert valve_with_is_closed_attr.is_closed is True
+    valve_with_is_closed_attr._attr_is_closed = False
+    assert valve_with_is_closed_attr.is_closed is False
 
 
 async def test_supported_features(hass: HomeAssistant) -> None:
