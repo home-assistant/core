@@ -1,12 +1,15 @@
 from enum import Enum
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
+    DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 
+import homeassistant
+from homeassistant.core import HomeAssistant
+from dataclasses import dataclass
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 class OpenAQDeviceSensors(str, Enum):
@@ -36,28 +39,30 @@ class OpenAQSensorDescription(SensorEntityDescription):
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Configure the sensor platform."""
-    print("We are here 3")
     entities = []
-    for sensor in list(OpenAQDeviceSensors):
-        entities.append(
+    hass.data[DOMAIN][entry.entry_id]
+
+    entities.append(
+        Station(
+            hass,
             OpenAQSensorDescription(
-                key="E pres",
+                key="E_pres",
                 name="Session Energy",
-                device_class=SensorDeviceClass.MEASUREMENT,
                 metric="CO2",
                 entity_category=EntityCategory.DIAGNOSTIC,
-            ))
-    async_add_devices(entities, False)
+            )
+        ))
+    async_add_devices(entities)
 
 class Station(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        description: SensorDescription,
+        description: OpenAQSensorDescription,
     ):
         self.entity_description = description
-        self._attr_unique_id = f"_{description}"
-        self._attributes: dict[str, str] = {}
+        # self._attr_unique_id = f"_{description}"
+        # self._attributes: dict[str, str] = {}
 
     @property
     def should_poll(self):
@@ -73,20 +78,16 @@ class Station(SensorEntity):
 
     @property
     def device_class(self):
-        device_class = SensorDeviceClass.MEASUREMENT
+        return SensorDeviceClass.CO2
 
     @property
     def native_value(self):
         """Return the state of the sensor, rounding if a number."""
-        pass
-
-    @property
-    def state_class(self):
-        SensorStateClass.MEASUREMENT
+        return 1
 
     @property
     def native_unit_of_measurement(self):
-        pass
+        return "ppm"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
