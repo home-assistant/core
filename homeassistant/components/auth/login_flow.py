@@ -164,8 +164,9 @@ class AuthProvidersView(HomeAssistantView):
         cloud_connection = is_cloud_connection(hass)
 
         providers = []
-        additonal_data = {}
         for provider in hass.auth.auth_providers:
+            additonal_data = {}
+
             if provider.type == "trusted_networks":
                 if cloud_connection:
                     # Skip quickly as trusted networks are not available on cloud
