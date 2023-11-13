@@ -1,17 +1,25 @@
 """The tests for the webdav todo component."""
+from typing import Any
 from unittest.mock import MagicMock, Mock
 
+from caldav.lib.error import DAVError, NotFoundError
 from caldav.objects import Todo
 import pytest
 
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+
+from tests.common import MockConfigEntry
 
 from tests.common import MockConfigEntry
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
+SUPPORTED_FEATURES = 7
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -75,9 +83,9 @@ def mock_supported_components() -> list[str]:
     return ["VTODO"]
 
 
-@pytest.fixture(name="calendars")
-def mock_calendars(todos: list[str], supported_components: list[str]) -> list[Mock]:
-    """Fixture to create calendars for the test."""
+@pytest.fixture(name="calendar")
+def mock_calendar(todos: list[str], supported_components: list[str]) -> Mock:
+    """Fixture to create the primary calendar for the test."""
     calendar = Mock()
     items = [
         Todo(None, f"{idx}.ics", item, calendar, str(idx))
@@ -86,6 +94,12 @@ def mock_calendars(todos: list[str], supported_components: list[str]) -> list[Mo
     calendar.search = MagicMock(return_value=items)
     calendar.name = CALENDAR_NAME
     calendar.get_supported_components = MagicMock(return_value=supported_components)
+    return calendar
+
+
+@pytest.fixture(name="calendars")
+def mock_calendars(calendar: Mock) -> list[Mock]:
+    """Fixture to create calendars for the test."""
     return [calendar]
 
 
@@ -137,6 +151,7 @@ async def test_todo_list_state(
     assert state.state == expected_state
     assert dict(state.attributes) == {
         "friendly_name": ENTITY_NAME,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -154,3 +169,297 @@ async def test_supported_components(
 
     state = hass.states.get(TEST_ENTITY)
     assert (state is not None) == has_entity
+
+
+async def test_add_item(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+) -> None:
+    """Test adding an item to the list."""
+    await config_entry.async_setup(hass)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "add_item",
+        {"item": "Cheese"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    assert calendar.save_todo.call_args
+    assert calendar.save_todo.call_args.kwargs == {
+        "status": "NEEDS-ACTION",
+        "summary": "Cheese",
+    }
+
+
+async def test_add_item_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+) -> None:
+    """Test failure when adding an item to the list."""
+    await config_entry.async_setup(hass)
+
+    calendar.save_todo.side_effect = DAVError()
+
+    with pytest.raises(HomeAssistantError, match="CalDAV save error"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "add_item",
+            {"item": "Cheese"},
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("update_data", "expected_ics"),
+    [
+        ({"rename": "Swiss Cheese"}, ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"]),
+        ({"status": "needs_action"}, ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"]),
+        ({"status": "completed"}, ["SUMMARY:Cheese", "STATUS:COMPLETED"]),
+        (
+            {"rename": "Swiss Cheese", "status": "needs_action"},
+            ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+        ),
+    ],
+)
+async def test_update_item(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    update_data: dict[str, Any],
+    expected_ics: list[str],
+) -> None:
+    """Test creating a an item on the list."""
+
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    calendar.todo_by_uid = MagicMock(return_value=item)
+
+    dav_client.put.return_value.status = 204
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {
+            "item": "Cheese",
+            **update_data,
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    assert dav_client.put.call_args
+    ics = dav_client.put.call_args.args[1]
+    for expected in expected_ics:
+        assert expected in ics
+
+
+async def test_update_item_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+) -> None:
+    """Test failure when updating an item on the list."""
+
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    calendar.todo_by_uid = MagicMock(return_value=item)
+    dav_client.put.side_effect = DAVError()
+
+    with pytest.raises(HomeAssistantError, match="CalDAV save error"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "update_item",
+            {
+                "item": "Cheese",
+                "status": "completed",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "match"),
+    [(DAVError, "CalDAV lookup error"), (NotFoundError, "Could not find")],
+)
+async def test_update_item_lookup_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    side_effect: Any,
+    match: str,
+) -> None:
+    """Test failure when looking up an item to update."""
+
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    calendar.todo_by_uid.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError, match=match):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "update_item",
+            {
+                "item": "Cheese",
+                "status": "completed",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("uids_to_delete", "expect_item1_delete_called", "expect_item2_delete_called"),
+    [
+        ([], False, False),
+        (["Cheese"], True, False),
+        (["Wine"], False, True),
+        (["Wine", "Cheese"], True, True),
+    ],
+    ids=("none", "item1-only", "item2-only", "both-items"),
+)
+async def test_remove_item(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    uids_to_delete: list[str],
+    expect_item1_delete_called: bool,
+    expect_item2_delete_called: bool,
+) -> None:
+    """Test removing an item on the list."""
+
+    item1 = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    item2 = Todo(dav_client, None, TODO_COMPLETED, calendar, "3")
+    calendar.search = MagicMock(return_value=[item1, item2])
+
+    await config_entry.async_setup(hass)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    def lookup(uid: str) -> Mock:
+        assert uid == "2" or uid == "3"
+        if uid == "2":
+            return item1
+        return item2
+
+    calendar.todo_by_uid = Mock(side_effect=lookup)
+    item1.delete = Mock()
+    item2.delete = Mock()
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "remove_item",
+        {"item": uids_to_delete},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    assert item1.delete.called == expect_item1_delete_called
+    assert item2.delete.called == expect_item2_delete_called
+
+
+@pytest.mark.parametrize(
+    ("todos", "side_effect", "match"),
+    [
+        ([TODO_NEEDS_ACTION], DAVError, "CalDAV lookup error"),
+        ([TODO_NEEDS_ACTION], NotFoundError, "Could not find"),
+    ],
+)
+async def test_remove_item_lookup_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    side_effect: Any,
+    match: str,
+) -> None:
+    """Test failure while removing an item from the list."""
+
+    await config_entry.async_setup(hass)
+
+    calendar.todo_by_uid.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError, match=match):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "remove_item",
+            {"item": "Cheese"},
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+
+async def test_remove_item_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+) -> None:
+    """Test removing an item on the list."""
+
+    item = Todo(dav_client, "2.ics", TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    def lookup(uid: str) -> Mock:
+        return item
+
+    calendar.todo_by_uid = Mock(side_effect=lookup)
+    dav_client.delete.return_value.status = 500
+
+    with pytest.raises(HomeAssistantError, match="CalDAV delete error"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "remove_item",
+            {"item": "Cheese"},
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+
+async def test_remove_item_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+) -> None:
+    """Test removing an item on the list."""
+
+    item = Todo(dav_client, "2.ics", TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    def lookup(uid: str) -> Mock:
+        return item
+
+    calendar.todo_by_uid.side_effect = NotFoundError()
+
+    with pytest.raises(HomeAssistantError, match="Could not find"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            "remove_item",
+            {"item": "Cheese"},
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
