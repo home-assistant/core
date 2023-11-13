@@ -1,0 +1,145 @@
+"""Support for Krisinformation.se Feeds."""
+from __future__ import annotations
+
+from datetime import timedelta
+import logging
+
+import voluptuous as vol
+
+from krisinformation import KrisinformationFeedManager, KrisinformationFeedEntry
+
+from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_START,
+    UnitOfLength,
+)
+
+from homeassistant.core import HomeAssistant, callback, Event
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_RADIUS_IN_KM = 50.0
+SOURCE = "krisinformation"
+
+#Set of rules that define what configuration options are
+#required or allowed for a particular platform within Home Assistant
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+    }
+)
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Krisinformation.se Feed platform."""
+    scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    coordinates: tuple[float, float] = (
+        config.get(CONF_LATITUDE, hass.config.latitude),
+        config.get(CONF_LONGITUDE, hass.config.longitude),
+    )
+    radius_in_km: float = config[CONF_RADIUS]
+
+    # Initialize the entity manager.
+    entity_manager = KrisinformationFeedEntityManager(
+        hass, add_entities, scan_interval, coordinates, radius_in_km
+    )
+
+    def start_feed_manager(event: Event) -> None:
+        """Start feed manager."""
+        entity_manager.startup()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+
+
+class KrisinformationFeedEntityManager:
+    """Feed Entity Manager for Krisinformation.se feed."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        add_entities: AddEntitiesCallback,
+        scan_interval: timedelta,
+        coordinates: tuple[float, float],
+        radius_in_km: float,
+    ) -> None:
+        """Initialize the Feed Entity Manager."""
+        self._hass = hass
+        self._feed_manager = KrisinformationFeedManager(
+            #Byta ut mot Crisisalerter?
+            self._generate_entity,
+            self._update_entity,
+            self._remove_entity,
+            coordinates,
+            radius_in_km,
+        )
+        self._add_entities = add_entities
+        self._scan_interval = scan_interval
+        self._coordinates = coordinates
+        self._radius_in_km = radius_in_km
+        #self._entities: list[KrisinformationFeedEntity] = []
+
+    def startup(self) -> None:
+        """Start up this manager."""
+        self._feed_manager.startup(self._scan_interval)
+
+    def get_entry(self, unique_id: str) -> KrisinformationFeedEntry | None:
+        """Get a feed entry."""
+        return self._feed_manager.get_entry(unique_id)
+
+    def _generate_entity(self, unique_id: str) -> None:
+        """Generate new entity."""
+        new_entity = KrisinformationLocationEvent(self, unique_id)
+        # Add new entities to HA
+        self._add_entities([new_entity], True)
+
+    def _update_entity(self, unique_id: str) -> None:
+        """Update entity."""
+        self._feed_manager.update()
+
+    def _remove_entity(self, unique_id: str) -> None:
+        """Remove entity."""
+
+class KrisinformationLocationEvent(GeolocationEvent):
+    """Representation of a Krisinformation.se location event."""
+
+    _attr_icon = "mdi:alert"
+    _attr_should_poll = False
+    _attr_source = SOURCE
+    _attr_unit_of_measurement = UnitOfLength.KILOMETERS
+
+    def __init__(self, feed_manager: KrisinformationFeedEntityManager, external_id: str) -> None:
+        """Initialize entity with data from feed entry"""
+        self._feed_manager = feed_manager
+        self._external_id = external_id
+
+    @callback
+    def _delete_callback(self) -> None:
+        """Remove this entity."""
+
+    @callback
+    def _update_callback(self) -> None:
+        """Update entity."""
+
+    @callback
+    def _generate_callback(self) -> None:
+        """Generate entity."""

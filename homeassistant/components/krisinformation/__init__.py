@@ -32,3 +32,56 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+# GEO-LOCATION
+from aio_geojson_client.feed_manager import FeedManagerBase
+from aio_geojson_client.status_update import StatusUpdate
+from aiohttp import ClientSession
+from geojson import FeatureCollection
+from aio_geojson_client.feed import GeoJsonFeed
+from aio_geojson_client.feed_entry import FeedEntry
+
+class KrisinformationFeedManager(FeedManagerBase):
+    """Feed Manager for Krisinformation.se feed."""
+
+    def __init__(
+        self,
+        generate_callback,
+        update_callback,
+        remove_callback,
+        coordinates,
+        filter_radius=None,
+        filter_categories=None,
+    ):
+        """Initialize the Krisinformation.se Feed Manager."""
+        feed = KrisinformationFeed(
+            coordinates,
+            filter_radius=filter_radius,
+            filter_categories=filter_categories,
+        )
+        super().__init__(feed, generate_callback, update_callback, remove_callback)
+
+class KrisinformationFeed(GeoJsonFeed):
+    """Krisinformation.se feed."""
+
+    def __init__(
+        self,
+        home_coordinates,
+        filter_radius=None,
+        filter_categories=None,
+    ):
+        """Initialise this service."""
+        super().__init__(
+            home_coordinates,
+            "https://api.krisinformation.se/v2/feed?format=geojson",
+            filter_radius=filter_radius,
+            filter_categories=filter_categories,
+        )
+
+    def _new_entry(self, home_coordinates, feature, global_data):
+        """Generate a new entry."""
+        return KrisinformationFeedEntry(home_coordinates, feature, global_data)
+
+class KrisinformationFeedEntry(FeedEntry):
+    """Krisinformation.se feed entry."""
