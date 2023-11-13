@@ -588,7 +588,6 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:information",
         value_getter=lambda api: api.getPhase(),
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.ENUM,
     ),
 )
 
