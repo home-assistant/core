@@ -148,6 +148,7 @@ FLOWS = {
         "ezviz",
         "faa_delays",
         "fastdotcom",
+        "fever_smart",
         "fibaro",
         "filesize",
         "fireservicerota",
