@@ -82,9 +82,8 @@ def async_setup_sensor(
 
     host: str = config[CONF_HOST]
     count: int = int(config[CONF_PING_COUNT])
-    privileged: bool | None = data.privileged
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
-    if privileged is None:
+    if data.privileged is None:
         ping_cls = PingDataSubProcess
     else:
         ping_cls = PingDataICMPLib
@@ -93,7 +92,7 @@ def async_setup_sensor(
         [
             PingBinarySensor(
                 name=name or str(config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")),
-                ping=ping_cls(hass, host, count, privileged),
+                ping=ping_cls(hass, host, count, data.privileged),
                 config_entry=config_entry,
             )
         ],

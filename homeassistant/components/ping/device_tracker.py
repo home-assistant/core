@@ -148,15 +148,14 @@ async def async_setup_entry(
 
     host: str = entry.options[CONF_HOST]
     count: int = int(entry.options[CONF_PING_COUNT])
-    privileged: bool | None = data.privileged
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
-    if privileged is None:
+    if data.privileged is None:
         ping_cls = PingDataSubProcess
     else:
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingDeviceTracker(entry.title, ping_cls(hass, host, count, privileged))]
+        [PingDeviceTracker(entry.title, ping_cls(hass, host, count, data.privileged))]
     )
 
 
