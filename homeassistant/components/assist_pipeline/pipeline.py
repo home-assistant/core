@@ -503,6 +503,9 @@ class PipelineRun:
     audio_processor_buffer: AudioBuffer = field(init=False, repr=False)
     """Buffer used when splitting audio into chunks for audio processing"""
 
+    _device_id: str | None = None
+    """Optional device id set during run start."""
+
     def __post_init__(self) -> None:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
@@ -554,7 +557,8 @@ class PipelineRun:
 
     def start(self, device_id: str | None) -> None:
         """Emit run start event."""
-        self._start_debug_recording_thread(device_id)
+        self._device_id = device_id
+        self._start_debug_recording_thread()
 
         data = {
             "pipeline": self.pipeline.id,
@@ -746,9 +750,7 @@ class PipelineRun:
             if self.abort_wake_word_detection:
                 raise WakeWordDetectionAborted
 
-            if self.debug_recording_queue is not None:
-                self.debug_recording_queue.put_nowait(chunk.audio)
-
+            self._capture_chunk(chunk.audio)
             yield chunk.audio, chunk.timestamp_ms
 
             # Wake-word-detection occurs *after* the wake word was actually
@@ -870,8 +872,7 @@ class PipelineRun:
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         sent_vad_start = False
         async for chunk in audio_stream:
-            if self.debug_recording_queue is not None:
-                self.debug_recording_queue.put_nowait(chunk.audio)
+            self._capture_chunk(chunk.audio)
 
             if stt_vad is not None:
                 if not stt_vad.process(chunk_seconds, chunk.is_speech):
@@ -1057,7 +1058,23 @@ class PipelineRun:
 
         return tts_media.url
 
-    def _start_debug_recording_thread(self, device_id: str | None) -> None:
+    def _capture_chunk(self, audio_bytes: bytes) -> None:
+        """Forward audio chunk to various capturing mechanisms."""
+        if self.debug_recording_queue is not None:
+            # Forward to debug WAV file recording
+            self.debug_recording_queue.put_nowait(audio_bytes)
+
+        if self._device_id is not None:
+            # Forward to device audio capture
+            pipeline_data: PipelineData = self.hass.data[DOMAIN]
+            audio_queue = pipeline_data.device_audio_queues.get(self._device_id)
+            if audio_queue is not None:
+                try:
+                    audio_queue.put_nowait(audio_bytes)
+                except asyncio.QueueFull:
+                    _LOGGER.warning("Audio queue full for device %s", self._device_id)
+
+    def _start_debug_recording_thread(self) -> None:
         """Start thread to record wake/stt audio if debug_recording_dir is set."""
         if self.debug_recording_thread is not None:
             # Already started
@@ -1068,7 +1085,7 @@ class PipelineRun:
         if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
             CONF_DEBUG_RECORDING_DIR
         ):
-            if device_id is None:
+            if self._device_id is None:
                 # <debug_recording_dir>/<pipeline.name>/<run.id>
                 run_recording_dir = (
                     Path(debug_recording_dir)
@@ -1079,7 +1096,7 @@ class PipelineRun:
                 # <debug_recording_dir>/<device_id>/<pipeline.name>/<run.id>
                 run_recording_dir = (
                     Path(debug_recording_dir)
-                    / device_id
+                    / self._device_id
                     / self.pipeline.name
                     / str(time.monotonic_ns())
                 )
@@ -1641,6 +1658,7 @@ class PipelineData:
         self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
         self.pipeline_devices: set[str] = set()
         self.pipeline_runs = PipelineRuns(pipeline_store)
+        self.device_audio_queues: dict[str, asyncio.Queue[bytes | None]] = {}
 
 
 @dataclass

@@ -3,9 +3,12 @@ import asyncio
 
 # Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
+import base64
 from collections.abc import AsyncGenerator, Callable
+import contextlib
 import logging
-from typing import Any
+import math
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -32,6 +35,11 @@ from .pipeline import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CAPTURE_RATE: Final = 16000
+CAPTURE_WIDTH: Final = 2
+CAPTURE_CHANNELS: Final = 1
+MAX_CAPTURE_TIMEOUT: Final = 60.0
+
 
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
@@ -40,6 +48,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_languages)
     websocket_api.async_register_command(hass, websocket_list_runs)
     websocket_api.async_register_command(hass, websocket_get_run)
+    websocket_api.async_register_command(hass, websocket_device_capture)
 
 
 @websocket_api.websocket_command(
@@ -371,3 +380,76 @@ async def websocket_list_languages(
             else pipeline_languages
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/device/capture",
+        vol.Required("device_id"): str,
+        vol.Required("timeout"): vol.All(
+            # timeout > 0
+            vol.Coerce(float),
+            vol.Range(min=0, min_included=False),
+        ),
+    }
+)
+@websocket_api.async_response
+async def websocket_device_capture(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Capture raw audio from a satellite device and forward to client."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    device_id = msg["device_id"]
+
+    # timeout <= MAX_CAPTURE_TIMEOUT
+    timeout_seconds = min(MAX_CAPTURE_TIMEOUT, msg["timeout"])
+
+    # We don't know the chunk size, so the upper bound is calculated assuming a
+    # single sample (16 bits) per queue item.
+    bytes_per_sample = CAPTURE_WIDTH * CAPTURE_CHANNELS
+    max_queue_items = int(math.ceil(timeout_seconds * CAPTURE_RATE * bytes_per_sample))
+
+    audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=max_queue_items)
+
+    # Running simultaneous captures for a single device will not work by design.
+    # The new capture will cause the old capture to stop.
+    if (
+        old_audio_queue := pipeline_data.device_audio_queues.pop(device_id, None)
+    ) is not None:
+        with contextlib.suppress(asyncio.QueueFull):
+            # Signal other websocket command that we're taking over
+            old_audio_queue.put_nowait(None)
+
+    # Only one client can be capturing audio at a time
+    pipeline_data.device_audio_queues[device_id] = audio_queue
+    stopped = False
+
+    try:
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with asyncio.timeout(timeout_seconds):
+                while True:
+                    # Send audio chunks encoded as base64
+                    audio_bytes = await audio_queue.get()
+                    if audio_bytes is None:
+                        # Signal to stop
+                        stopped = True
+                        break
+
+                    connection.send_event(
+                        msg["id"],
+                        {
+                            "rate": CAPTURE_RATE,  # hertz
+                            "width": CAPTURE_WIDTH,  # bytes
+                            "channels": CAPTURE_CHANNELS,
+                            "audio": base64.b64encode(audio_bytes).decode("ascii"),
+                        },
+                    )
+    finally:
+        if not stopped:
+            # Clean up audio queue if another capture didn't stop us
+            pipeline_data.device_audio_queues.pop(device_id, None)
+
+    connection.send_result(msg["id"])
