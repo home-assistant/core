@@ -1141,7 +1141,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.6
+prayer-times-calculator==0.0.10
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1508,7 +1508,7 @@ pyqwikswitch==0.93
 pyrainbird==4.0.0
 
 # homeassistant.components.risco
-pyrisco==0.5.7
+pyrisco==0.5.8
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1991,7 +1991,7 @@ vallox-websocket-api==4.0.2
 vehicle==2.2.0
 
 # homeassistant.components.velbus
-velbus-aio==2023.10.2
+velbus-aio==2023.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
