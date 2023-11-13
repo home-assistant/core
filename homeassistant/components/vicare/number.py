@@ -39,7 +39,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     value_setter: Callable[[PyViCareDevice, float], str | None] | None = None
 
 
-CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
+CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
         name="Heating curve shift",
@@ -92,12 +92,12 @@ def _build_entity(
 async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareNumber],
-    sensor_descriptions: tuple[ViCareNumberEntityDescription, ...],
+    entity_descriptions: tuple[ViCareNumberEntityDescription, ...],
     iterables: list[PyViCareHeatingDeviceWithComponent],
     config_entry: ConfigEntry,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""
-    for description in sensor_descriptions:
+    for description in entity_descriptions:
         for current in iterables:
             suffix = ""
             if len(iterables) > 1:
@@ -125,7 +125,7 @@ async def async_setup_entry(
     entities: list[ViCareNumber] = []
     try:
         await _entities_from_descriptions(
-            hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
+            hass, entities, CIRCUIT_ENTITY_DESCRIPTIONS, api.circuits, config_entry
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No circuits found")
