@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import suppress
 import fnmatch
 from io import StringIO, TextIOWrapper
 import logging
@@ -230,8 +231,9 @@ def _add_reference(  # type: ignore[no-untyped-def]
         obj = NodeListClass(obj)
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
-    setattr(obj, "__config_file__", loader.get_name())
-    setattr(obj, "__line__", node.start_mark.line + 1)
+    with suppress(AttributeError):
+        setattr(obj, "__config_file__", loader.get_name())
+        setattr(obj, "__line__", node.start_mark.line + 1)
     return obj
 
 

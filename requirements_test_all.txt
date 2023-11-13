@@ -197,7 +197,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.3.0
+aiocomelit==0.5.2
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -1141,7 +1141,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.6
+prayer-times-calculator==0.0.10
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1469,7 +1469,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.0
+pyoverkiz==1.13.2
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1991,7 +1991,7 @@ vallox-websocket-api==4.0.2
 vehicle==2.2.0
 
 # homeassistant.components.velbus
-velbus-aio==2023.10.2
+velbus-aio==2023.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
