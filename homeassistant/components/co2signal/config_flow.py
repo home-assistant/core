@@ -19,6 +19,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_COUNTRY_CODE, DOMAIN
+from .helpers import fetch_latest_carbon_intensity
 from .util import get_extra_name
 
 TYPE_USE_HOME = "use_home_location"
@@ -121,15 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         async with ElectricityMaps(token=data[CONF_API_KEY], session=session) as em:
             try:
-                if CONF_COUNTRY_CODE in data:
-                    await em.latest_carbon_intensity_by_country_code(
-                        code=data[CONF_COUNTRY_CODE]
-                    )
-                else:
-                    await em.latest_carbon_intensity_by_coordinates(
-                        lat=data.get(CONF_LATITUDE, self.hass.config.latitude),
-                        lon=data.get(CONF_LONGITUDE, self.hass.config.longitude),
-                    )
+                await fetch_latest_carbon_intensity(self.hass, em, data)
             except InvalidToken:
                 errors["base"] = "invalid_auth"
             except ElectricityMapsError:

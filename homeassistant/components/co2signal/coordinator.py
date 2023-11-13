@@ -9,12 +9,12 @@ from aioelectricitymaps.exceptions import ElectricityMapsError, InvalidToken
 from aioelectricitymaps.models import CarbonIntensityResponse
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_COUNTRY_CODE, DOMAIN
+from .const import DOMAIN
+from .helpers import fetch_latest_carbon_intensity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,18 +41,8 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
 
         async with self.client as em:
             try:
-                if CONF_COUNTRY_CODE in self.config_entry.data:
-                    return await em.latest_carbon_intensity_by_country_code(
-                        code=self.config_entry.data[CONF_COUNTRY_CODE]
-                    )
-
-                return await em.latest_carbon_intensity_by_coordinates(
-                    lat=self.config_entry.data.get(
-                        CONF_LATITUDE, self.hass.config.latitude
-                    ),
-                    lon=self.config_entry.data.get(
-                        CONF_LONGITUDE, self.hass.config.longitude
-                    ),
+                return await fetch_latest_carbon_intensity(
+                    self.hass, em, self.config_entry.data
                 )
             except InvalidToken as err:
                 raise ConfigEntryError from err
