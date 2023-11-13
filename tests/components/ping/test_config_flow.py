@@ -14,10 +14,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("platform", "extra_input"),
-    (("binary_sensor", {"host": "192.618.178.1", "count": 10}),),
+    ("host", "count", "expected_title"),
+    (("192.618.178.1", 10, "192.618.178.1"),),
 )
-async def test_form(hass: HomeAssistant, platform, extra_input) -> None:
+async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -32,38 +32,33 @@ async def test_form(hass: HomeAssistant, platform, extra_input) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "Router",
-                **extra_input,
+                "host": host,
+                "count": count,
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Router"
+    assert result["title"] == expected_title
     assert result["data"] == {}
     assert result["options"] == {
-        "name": "Router",
-        "count": 10.0,
-        "host": "192.618.178.1",
+        "count": count,
+        "host": host,
     }
 
 
 @pytest.mark.parametrize(
-    ("platform", "extra_options"),
-    (("binary_sensor", {"count": 10.0, "host": "192.618.178.1"}),),
+    ("host", "count", "expected_title"),
+    (("192.618.178.1", 10, "192.618.178.1"),),
 )
-async def test_options(hass: HomeAssistant, platform, extra_options) -> None:
+async def test_options(hass: HomeAssistant, host, count, expected_title) -> None:
     """Test options flow."""
 
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
-        options={
-            "imported_by": platform,
-            "name": "Router",
-            **extra_options,
-        },
-        title="Router",
+        options={"count": count, "host": host},
+        title=expected_title,
     )
     config_entry.add_to_hass(hass)
 

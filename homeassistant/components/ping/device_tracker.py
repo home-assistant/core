@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_HOSTS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -148,7 +148,6 @@ async def async_setup_entry(
 
     host: str = entry.options[CONF_HOST]
     count: int = int(entry.options[CONF_PING_COUNT])
-    name: str = entry.options[CONF_NAME]
     privileged: bool | None = data.privileged
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
@@ -157,7 +156,7 @@ async def async_setup_entry(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingDeviceTracker(name, ping_cls(hass, host, count, privileged))]
+        [PingDeviceTracker(entry.title, ping_cls(hass, host, count, privileged))]
     )
 
 

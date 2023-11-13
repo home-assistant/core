@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -18,8 +18,7 @@ from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-OPTIONS_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(
@@ -32,17 +31,10 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-    }
-).extend(OPTIONS_SCHEMA.schema)
-
 CONFIG_FLOW = {"user": SchemaFlowFormStep(CONFIG_SCHEMA)}
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+    "init": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
 
@@ -54,4 +46,4 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, options[CONF_NAME])
+        return cast(str, options[CONF_HOST])

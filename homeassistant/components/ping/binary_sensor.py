@@ -65,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ping config entry."""
 
-    setup_sensor(hass, entry.options, async_add_entities, entry)
+    setup_sensor(hass, entry.options, async_add_entities, entry, entry.title)
 
 
 def setup_sensor(
@@ -73,6 +73,7 @@ def setup_sensor(
     config: MappingProxyType[str, Any] | dict[str, Any],
     async_add_entities: AddEntitiesCallback,
     config_entry: ConfigEntry | None = None,
+    name: str | None = None,
 ) -> None:
     """Actually set up the sensor."""
 
@@ -80,7 +81,6 @@ def setup_sensor(
 
     host: str = config[CONF_HOST]
     count: int = int(config[CONF_PING_COUNT])
-    name: str = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
     privileged: bool | None = data.privileged
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
@@ -89,7 +89,13 @@ def setup_sensor(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingBinarySensor(name, ping_cls(hass, host, count, privileged), config_entry)],
+        [
+            PingBinarySensor(
+                name=name or str(config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")),
+                ping=ping_cls(hass, host, count, privileged),
+                config_entry=config_entry,
+            )
+        ],
     )
 
 
@@ -109,7 +115,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         self._attr_name = name
 
         if config_entry:
-            self._attr_unique_id = f"{config_entry.entry_id}"
+            self._attr_unique_id = config_entry.entry_id
 
         self._ping = ping
 
