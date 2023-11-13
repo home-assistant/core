@@ -51,6 +51,9 @@ class ValveDeviceClass(StrEnum):
     GAS = "gas"
 
 
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ValveDeviceClass))
+
+
 # mypy: disallow-any-generics
 class ValveEntityFeature(IntFlag):
     """Supported features of the valve entity."""
