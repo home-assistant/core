@@ -368,10 +368,11 @@ class DefaultAgent(AbstractConversationAgent):
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
         if language is None:
-            language = self.hass.config.language
-
-        self._lang_intents.pop(language, None)
-        _LOGGER.debug("Cleared intents for language: %s", language)
+            self._lang_intents.clear()
+            _LOGGER.debug("Cleared intents for all languages")
+        else:
+            self._lang_intents.pop(language, None)
+            _LOGGER.debug("Cleared intents for language: %s", language)
 
     async def async_prepare(self, language: str | None = None):
         """Load intents for a language."""
