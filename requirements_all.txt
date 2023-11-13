@@ -147,7 +147,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.0.1
+accuweather==2.1.0
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -237,7 +237,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.2.7
+aioesphomeapi==18.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -660,7 +660,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.13.1
+dbus-fast==2.14.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -747,6 +747,9 @@ elkm1-lib==2.2.6
 
 # homeassistant.components.elmax
 elmax-api==0.0.4
+
+# homeassistant.components.xmpp
+emoji==2.8.0
 
 # homeassistant.components.emulated_roku
 emulated-roku==0.2.1
@@ -860,7 +863,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==5.0.0
+gcal-sync==6.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1013,7 +1016,7 @@ hole==0.8.0
 holidays==0.35
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231030.1
+home-assistant-frontend==20231030.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.10.16
@@ -1053,7 +1056,7 @@ ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.0.0
+ical==6.1.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1126,6 +1129,9 @@ kiwiki-client==0.1.1
 
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
+
+# homeassistant.components.komfovent
+komfovent-api==0.0.3
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1305,7 +1311,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.4.0
+nibe==2.5.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2229,13 +2235,13 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.8
 
 # homeassistant.components.v2c
-pytrydan==0.3.0
+pytrydan==0.4.0
 
 # homeassistant.components.usb
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.20.0
+pyunifiprotect==4.21.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2355,7 +2361,7 @@ rokuecp==0.18.1
 roombapy==1.6.8
 
 # homeassistant.components.roon
-roonapi==0.1.4
+roonapi==0.1.5
 
 # homeassistant.components.rova
 rova==0.3.0
@@ -2524,7 +2530,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.8
+subarulink==0.7.9
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -2800,7 +2806,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.122.3
+zeroconf==0.125.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
