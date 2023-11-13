@@ -76,8 +76,9 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         )
 
     def _handle_coordinator_update(self):
-        # Bump last updated every third time the coordinator runs, so that async_image will be called and
-        # we will evaluate on the new coordinator data if we should update the cache.
+        # Bump last updated every third time the coordinator runs, so that async_image
+        # will be called and we will evaluate on the new coordinator data if we should
+        # update the cache.
         if (
             dt_util.utcnow() - self.image_last_updated
         ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
@@ -114,7 +115,8 @@ async def create_coordinator_maps(
         cur_map = coord.current_map
         # This won't be None at this point as the coordinator will have run first.
         assert cur_map is not None
-        # Sort the maps so that we start with the current map and we can skip the load_multi_map call.
+        # Sort the maps so that we start with the current map and we can skip the
+        # load_multi_map call.
         maps_info = sorted(
             maps.map_info, key=lambda data: data.mapFlag == cur_map, reverse=True
         )
@@ -125,7 +127,8 @@ async def create_coordinator_maps(
                 await coord.api.send_command(
                     RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
                 )
-                # We cannot get the map until the roborock servers fully process the map change.
+                # We cannot get the map until the roborock servers fully process the
+                # map change.
                 await asyncio.sleep(MAP_SLEEP)
             # Get the map data
             api_data: bytes = await coord.cloud_api.get_map_v1()
@@ -139,7 +142,8 @@ async def create_coordinator_maps(
                 )
             )
         if len(maps.map_info) != 1:
-            # Set the map back to the map the user previously had selected so that it does not change the end user's app
+            # Set the map back to the map the user previously had selected so that it
+            # does not change the end user's app.
             # Only needs to happen when we changed maps above.
             await coord.cloud_api.send_command(
                 RoborockCommand.LOAD_MULTI_MAP, [cur_map]
