@@ -103,10 +103,10 @@ async def test_lock_states(hass: HomeAssistant) -> None:
 
 async def test_set_default_code_option(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
 ) -> None:
     """Test default code stored in the registry."""
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get_or_create("lock", "test", "very_unique")
     await hass.async_block_till_done()
@@ -134,10 +134,10 @@ async def test_set_default_code_option(
 
 async def test_default_code_option_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     enable_custom_integrations: None,
 ) -> None:
     """Test default code stored in the registry is updated."""
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get_or_create("lock", "test", "very_unique")
     await hass.async_block_till_done()
