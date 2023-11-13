@@ -1,6 +1,7 @@
 """The Quotable integration."""
 
 import logging
+import time
 from typing import Any
 
 import voluptuous as vol
@@ -10,11 +11,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_QUOTES,
     ATTR_SELECTED_AUTHORS,
     ATTR_SELECTED_TAGS,
     ATTR_UPDATE_FREQUENCY,
     DEFAULT_UPDATE_FREQUENCY,
     DOMAIN,
+    ENTITY_ID,
 )
 from .services import register_services
 
@@ -46,13 +49,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     quotable = hass.data.get(DOMAIN)
 
     if not quotable:
-        static_config = config[DOMAIN]
-        quotable = Quotable(
-            static_config[ATTR_SELECTED_TAGS],
-            static_config[ATTR_SELECTED_AUTHORS],
-            static_config[ATTR_UPDATE_FREQUENCY],
-        )
-
+        quotable = Quotable(hass, config[DOMAIN])
         hass.data[DOMAIN] = quotable
 
     register_services(hass)
@@ -63,18 +60,24 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Quotable:
     """Quotable class."""
 
-    selected_tags = list[str]
-    selected_authors = list[str]
-    update_frequency = int
-    quotes = list[dict[str, Any]]
-
-    def __init__(self, selected_tags, selected_authors, update_frequency):
+    def __init__(self, hass, config):
         """Initialize Quotable."""
+        self.hass = hass
         self.quotes = []
-        self.update_configuration(selected_tags, selected_authors, update_frequency)
+        self.config = config
+        self._update_state()
 
     def update_configuration(self, selected_tags, selected_authors, update_frequency):
         """Update configuration."""
-        self.selected_tags = selected_tags
-        self.selected_authors = selected_authors
-        self.update_frequency = update_frequency
+        self.config[ATTR_SELECTED_TAGS] = selected_tags
+        self.config[ATTR_SELECTED_AUTHORS] = selected_authors
+        self.config[ATTR_UPDATE_FREQUENCY] = update_frequency
+        self._update_state()
+
+    @property
+    def attrs(self) -> dict[str, Any]:
+        """Attributes that are saved in state."""
+        return {**self.config, **{ATTR_QUOTES: self.quotes}}
+
+    def _update_state(self):
+        self.hass.states.set(ENTITY_ID, time.time(), self.attrs)

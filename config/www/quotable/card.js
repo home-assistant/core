@@ -38,6 +38,10 @@ class QuotableCard extends HTMLElement {
   getCardSize() {
     return 3;
   }
+
+  static getStubConfig() {
+    return { entity: "quotable.quotable" };
+  }
 }
 
 customElements.define("quotable-card", QuotableCard);
