@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_climate
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20,
+      'friendly_name': 'Test',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 24,
+      'min_temp': 4,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 0.5,
+      'temperature': 20,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climate.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 24,
+      'min_temp': 4,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'devolo_home_control',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'Test',
+    'unit_of_measurement': None,
+  })
+# ---

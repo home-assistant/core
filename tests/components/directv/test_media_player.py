@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from pytest import fixture
+import pytest
 
 from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
@@ -61,10 +61,8 @@ RESTRICTED_ENTITY_ID = f"{MP_DOMAIN}.restricted_client"
 STANDBY_ENTITY_ID = f"{MP_DOMAIN}.standby_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
-# pylint: disable=redefined-outer-name
 
-
-@fixture
+@pytest.fixture
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
@@ -144,12 +142,12 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
 
 async def test_unique_id(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test unique id."""
     await setup_integration(hass, aioclient_mock)
-
-    entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.original_device_class == MediaPlayerDeviceClass.RECEIVER
@@ -308,7 +306,7 @@ async def test_attributes_paused(
     hass: HomeAssistant,
     mock_now: dt_util.dt.datetime,
     aioclient_mock: AiohttpClientMocker,
-):
+) -> None:
     """Test attributes while paused."""
     await setup_integration(hass, aioclient_mock)
 

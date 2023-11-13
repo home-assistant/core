@@ -4,22 +4,25 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import cast
 
-from aiohttp import ClientError, ServerDisconnectedError
+from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
+from pyoverkiz.enums import OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, Scenario
+from pyoverkiz.models import Device, Scenario, Setup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
@@ -55,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username=username, password=password, session=session, server=server
     )
 
+    await _async_migrate_entries(hass, entry)
+
     try:
         await client.login()
 
@@ -64,14 +69,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 client.get_scenarios(),
             ]
         )
-    except BadCredentialsException as exception:
+    except (BadCredentialsException, NotSuchTokenException) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
-    except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
+    except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
+
+    setup = cast(Setup, setup)
+    scenarios = cast(list[Scenario], scenarios)
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -126,10 +134,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
             model=gateway.sub_type.beautify_name if gateway.sub_type else None,
-            manufacturer=server.manufacturer,
+            manufacturer=client.server.manufacturer,
             name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
-            configuration_url=server.configuration_url,
+            configuration_url=client.server.configuration_url,
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -144,3 +152,62 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Migrate old entries to new unique IDs."""
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        # Python 3.11 treats (str, Enum) and StrEnum in a different way
+        # Since pyOverkiz switched to StrEnum, we need to rewrite the unique ids once to the new style
+        #
+        # io://xxxx-xxxx-xxxx/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL -> io://xxxx-xxxx-xxxx/3541212-core:DiscreteRSSILevelState
+        # internal://xxxx-xxxx-xxxx/alarm/0-UIWidget.TSKALARM_CONTROLLER -> internal://xxxx-xxxx-xxxx/alarm/0-TSKAlarmController
+        # io://xxxx-xxxx-xxxx/xxxxxxx-UIClass.ON_OFF -> io://xxxx-xxxx-xxxx/xxxxxxx-OnOff
+        if (key := entry.unique_id.split("-")[-1]).startswith(
+            ("OverkizState", "UIWidget", "UIClass")
+        ):
+            state = key.split(".")[1]
+            new_key = ""
+
+            if key.startswith("UIClass"):
+                new_key = UIClass[state]
+            elif key.startswith("UIWidget"):
+                new_key = UIWidget[state]
+            else:
+                new_key = OverkizState[state]
+
+            new_unique_id = entry.unique_id.replace(key, new_key)
+
+            LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+
+            if existing_entity_id := entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            ):
+                LOGGER.debug(
+                    "Cannot migrate to unique_id '%s', already exists for '%s'. Entity will be removed",
+                    new_unique_id,
+                    existing_entity_id,
+                )
+                entity_registry.async_remove(entry.entity_id)
+
+                return None
+
+            return {
+                "new_unique_id": new_unique_id,
+            }
+
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    return True

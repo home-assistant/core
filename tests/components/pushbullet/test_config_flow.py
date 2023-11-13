@@ -4,10 +4,11 @@ from unittest.mock import patch
 from pushbullet import InvalidKeyError, PushbulletError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG
 
@@ -33,7 +34,7 @@ async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "pushbullet"
     assert result["data"] == MOCK_CONFIG
 
@@ -58,7 +59,7 @@ async def test_flow_user_already_configured(
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -83,7 +84,7 @@ async def test_flow_name_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=new_config,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -99,7 +100,7 @@ async def test_flow_invalid_key(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONFIG,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
@@ -116,19 +117,6 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONFIG,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_import(hass: HomeAssistant, requests_mock_fixture) -> None:
-    """Test user initialized flow with unreachable server."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "pushbullet"
-    assert result["data"] == MOCK_CONFIG

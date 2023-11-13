@@ -1,17 +1,17 @@
 """The tests for mobile_app logbook."""
-
 from homeassistant.components.mobile_app.logbook import (
     DOMAIN,
     IOS_EVENT_ZONE_ENTERED,
     IOS_EVENT_ZONE_EXITED,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_ios_events(hass):
+async def test_humanify_ios_events(hass: HomeAssistant) -> None:
     """Test humanifying ios events."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})

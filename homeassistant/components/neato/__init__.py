@@ -12,9 +12,10 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -39,7 +40,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.CAMERA, Platform.VACUUM, Platform.SWITCH, Platform.SENSOR]
+PLATFORMS = [
+    Platform.CAMERA,
+    Platform.VACUUM,
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.BUTTON,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -64,6 +71,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "Application Credentials have been imported into the UI "
         "automatically and can be safely removed from your "
         "configuration.yaml file"
+    )
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{NEATO_DOMAIN}",
+        breaks_in_ha_version="2024.2.0",
+        is_fixable=False,
+        issue_domain=NEATO_DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": NEATO_DOMAIN,
+            "integration_title": "Neato Botvac",
+        },
     )
 
     return True

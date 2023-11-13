@@ -6,6 +6,7 @@ from apyhiveapi.helper import hive_exceptions
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +23,7 @@ MFA_RESEND_CODE = "0000"
 MFA_INVALID_CODE = "HIVE"
 
 
-async def test_import_flow(hass):
+async def test_import_flow(hass: HomeAssistant) -> None:
     """Check import flow."""
 
     with patch(
@@ -64,7 +65,7 @@ async def test_import_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow(hass):
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -113,7 +114,7 @@ async def test_user_flow(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_user_flow_2fa(hass):
+async def test_user_flow_2fa(hass: HomeAssistant) -> None:
     """Test user flow with 2FA."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,7 +210,7 @@ async def test_user_flow_2fa(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_reauth_flow(hass):
+async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
 
     mock_config = MockConfigEntry(
@@ -268,7 +269,7 @@ async def test_reauth_flow(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_reauth_2fa_flow(hass):
+async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
 
     mock_config = MockConfigEntry(
@@ -344,7 +345,7 @@ async def test_reauth_2fa_flow(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
 
     entry = MockConfigEntry(
@@ -381,7 +382,7 @@ async def test_option_flow(hass):
     assert result["data"][CONF_SCAN_INTERVAL] == UPDATED_SCAN_INTERVAL
 
 
-async def test_user_flow_2fa_send_new_code(hass):
+async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
     """Resend a 2FA code if it didn't arrive."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -488,7 +489,7 @@ async def test_user_flow_2fa_send_new_code(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_abort_if_existing_entry(hass):
+async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -511,7 +512,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_invalid_username(hass):
+async def test_user_flow_invalid_username(hass: HomeAssistant) -> None:
     """Test user flow with invalid username."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -534,7 +535,7 @@ async def test_user_flow_invalid_username(hass):
     assert result2["errors"] == {"base": "invalid_username"}
 
 
-async def test_user_flow_invalid_password(hass):
+async def test_user_flow_invalid_password(hass: HomeAssistant) -> None:
     """Test user flow with invalid password."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -557,7 +558,7 @@ async def test_user_flow_invalid_password(hass):
     assert result2["errors"] == {"base": "invalid_password"}
 
 
-async def test_user_flow_no_internet_connection(hass):
+async def test_user_flow_no_internet_connection(hass: HomeAssistant) -> None:
     """Test user flow with no internet connection."""
 
     result = await hass.config_entries.flow.async_init(
@@ -581,7 +582,7 @@ async def test_user_flow_no_internet_connection(hass):
     assert result2["errors"] == {"base": "no_internet_available"}
 
 
-async def test_user_flow_2fa_no_internet_connection(hass):
+async def test_user_flow_2fa_no_internet_connection(hass: HomeAssistant) -> None:
     """Test user flow with no internet connection."""
 
     result = await hass.config_entries.flow.async_init(
@@ -620,7 +621,7 @@ async def test_user_flow_2fa_no_internet_connection(hass):
     assert result3["errors"] == {"base": "no_internet_available"}
 
 
-async def test_user_flow_2fa_invalid_code(hass):
+async def test_user_flow_2fa_invalid_code(hass: HomeAssistant) -> None:
     """Test user flow with 2FA."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -657,7 +658,7 @@ async def test_user_flow_2fa_invalid_code(hass):
     assert result3["errors"] == {"base": "invalid_code"}
 
 
-async def test_user_flow_unknown_error(hass):
+async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
     """Test user flow when unknown error occurs."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -680,7 +681,7 @@ async def test_user_flow_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_user_flow_2fa_unknown_error(hass):
+async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
     """Test 2fa flow when unknown error occurs."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

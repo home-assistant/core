@@ -61,21 +61,27 @@ SETTINGS = Settings(
     youtube_restricted_mode=False,
     block_9gag=True,
     block_amazon=True,
+    block_bereal=True,
     block_blizzard=True,
+    block_chatgpt=True,
     block_dailymotion=True,
     block_discord=True,
     block_disneyplus=True,
     block_ebay=True,
     block_facebook=True,
     block_fortnite=True,
+    block_google_chat=True,
+    block_hbomax=True,
     block_hulu=True,
     block_imgur=True,
     block_instagram=True,
     block_leagueoflegends=True,
+    block_mastodon=True,
     block_messenger=True,
     block_minecraft=True,
     block_netflix=True,
     block_pinterest=True,
+    block_playstation_network=True,
     block_primevideo=True,
     block_reddit=True,
     block_roblox=True,
@@ -98,9 +104,11 @@ SETTINGS = Settings(
     block_zoom=True,
     block_dating=True,
     block_gambling=True,
+    block_online_gaming=True,
     block_piracy=True,
     block_porn=True,
     block_social_networks=True,
+    block_video_streaming=True,
 )
 
 
@@ -111,6 +119,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
         title="Fake Profile",
         unique_id="xyz12",
         data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
+        entry_id="d9aa37407ddac7b964a99e86312288d6",
     )
 
     with patch(

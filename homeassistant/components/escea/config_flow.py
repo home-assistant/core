@@ -3,8 +3,6 @@ import asyncio
 from contextlib import suppress
 import logging
 
-from async_timeout import timeout
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
-
     controller_ready = asyncio.Event()
 
     @callback
@@ -35,7 +32,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     discovery_service = await async_start_discovery_service(hass)
 
     with suppress(asyncio.TimeoutError):
-        async with timeout(TIMEOUT_DISCOVERY):
+        async with asyncio.timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
 
     remove_handler()

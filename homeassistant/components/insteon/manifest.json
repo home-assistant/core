@@ -1,13 +1,10 @@
 {
   "domain": "insteon",
   "name": "Insteon",
-  "documentation": "https://www.home-assistant.io/integrations/insteon",
-  "dependencies": ["http", "websocket_api"],
-  "requirements": [
-    "pyinsteon==1.2.0",
-    "insteon-frontend-home-assistant==0.2.0"
-  ],
+  "after_dependencies": ["panel_custom", "usb"],
   "codeowners": ["@teharris1"],
+  "config_flow": true,
+  "dependencies": ["http", "websocket_api"],
   "dhcp": [
     {
       "macaddress": "000EF3*"
@@ -16,10 +13,13 @@
       "registered_devices": true
     }
   ],
-  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/insteon",
   "iot_class": "local_push",
   "loggers": ["pyinsteon", "pypubsub"],
-  "after_dependencies": ["panel_custom", "usb"],
+  "requirements": [
+    "pyinsteon==1.5.1",
+    "insteon-frontend-home-assistant==0.4.0"
+  ],
   "usb": [
     {
       "vid": "10BF"

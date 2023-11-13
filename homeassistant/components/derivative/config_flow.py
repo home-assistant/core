@@ -6,6 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME, CONF_SOURCE, UnitOfTime
 from homeassistant.helpers import selector
@@ -23,7 +24,6 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    selector.SelectOptionDict(value="none", label="none"),
     selector.SelectOptionDict(value="n", label="n (nano)"),
     selector.SelectOptionDict(value="µ", label="µ (micro)"),
     selector.SelectOptionDict(value="m", label="m (milli)"),
@@ -34,10 +34,10 @@ UNIT_PREFIXES = [
     selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
-    selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="Seconds"),
-    selector.SelectOptionDict(value=UnitOfTime.MINUTES, label="Minutes"),
-    selector.SelectOptionDict(value=UnitOfTime.HOURS, label="Hours"),
-    selector.SelectOptionDict(value=UnitOfTime.DAYS, label="Days"),
+    UnitOfTime.SECONDS,
+    UnitOfTime.MINUTES,
+    UnitOfTime.HOURS,
+    UnitOfTime.DAYS,
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -51,11 +51,13 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=TIME_UNITS),
+            selector.SelectSelectorConfig(
+                options=TIME_UNITS, translation_key="time_unit"
+            ),
         ),
     }
 )
@@ -64,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+            selector.EntitySelectorConfig(domain=[INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]),
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)

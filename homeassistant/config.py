@@ -61,7 +61,7 @@ from .helpers import (
 )
 from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
-from .loader import Integration, IntegrationNotFound
+from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
@@ -88,6 +88,8 @@ INTEGRATION_LOAD_EXCEPTIONS = (
     *LOAD_EXCEPTIONS,
 )
 
+SAFE_MODE_FILENAME = "safe-mode"
+
 DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
 default_config:
@@ -95,10 +97,6 @@ default_config:
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
-
-# Text to speech
-tts:
-  - platform: google_translate
 
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
@@ -261,10 +259,10 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
                 cv.ensure_list, [cv.url]
@@ -301,7 +299,6 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            # pylint: disable-next=no-value-for-parameter
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
@@ -330,7 +327,7 @@ async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
     if os.path.isfile(config_path):
         return True
 
-    print(
+    print(  # noqa: T201
         "Unable to find configuration. Creating default one in", hass.config.config_dir
     )
     return await async_create_default_config(hass)
@@ -341,7 +338,6 @@ async def async_create_default_config(hass: HomeAssistant) -> bool:
 
     Return if creation was successful.
     """
-    assert hass.config.config_dir
     return await hass.async_add_executor_job(
         _write_default_config, hass.config.config_dir
     )
@@ -384,20 +380,19 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)
+        print(  # noqa: T201
+            f"Unable to create default configuration file {config_path}"
+        )
         return False
 
 
 async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     """Load YAML from a Home Assistant configuration file.
 
-    This function allow a component inside the asyncio loop to reload its
+    This function allows a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
-    if hass.config.config_dir is None:
-        secrets = None
-    else:
-        secrets = Secrets(Path(hass.config.config_dir))
+    secrets = Secrets(Path(hass.config.config_dir))
 
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(
@@ -540,11 +535,11 @@ def _format_config_error(
 
     message += (
         f" (See {getattr(domain_config, '__config_file__', '?')}, "
-        f"line {getattr(domain_config, '__line__', '?')}). "
+        f"line {getattr(domain_config, '__line__', '?')})."
     )
 
     if domain != CONF_CORE and link:
-        message += f"Please check the docs at {link}"
+        message += f" Please check the docs at {link}"
 
     return message, is_friendly
 
@@ -675,13 +670,13 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += (
         f" (See {getattr(pack_config, '__config_file__', '?')}:"
-        f"{getattr(pack_config, '__line__', '?')}). "
+        f"{getattr(pack_config, '__line__', '?')})."
     )
 
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module: ModuleType) -> str | None:
+def _identify_config_schema(module: ComponentProtocol) -> str | None:
     """Extract the schema and identify list or dict based."""
     if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
         return None
@@ -729,15 +724,15 @@ def _identify_config_schema(module: ModuleType) -> str | None:
     return None
 
 
-def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | str:
+def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | None:
     """Merge package into conf, recursively."""
-    error: bool | str = False
+    duplicate_key: str | None = None
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
                 continue
             conf[key] = conf.get(key, OrderedDict())
-            error = _recursive_merge(conf=conf[key], package=pack_conf)
+            duplicate_key = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
@@ -748,7 +743,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | st
             if conf.get(key) is not None:
                 return key
             conf[key] = pack_conf
-    return error
+    return duplicate_key
 
 
 async def merge_packages_config(
@@ -823,10 +818,10 @@ async def merge_packages_config(
                 )
                 continue
 
-            error = _recursive_merge(conf=config[comp_name], package=comp_conf)
-            if error:
+            duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
+            if duplicate_key:
                 _log_pkg_error(
-                    pack_name, comp_name, config, f"has duplicate key '{error}'"
+                    pack_name, comp_name, config, f"has duplicate key '{duplicate_key}'"
                 )
 
     return config
@@ -864,8 +859,8 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
-                hass, config
+            return (  # type: ignore[no-any-return]
+                await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
@@ -976,7 +971,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
@@ -994,7 +989,7 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .components import persistent_notification
 
     if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:
@@ -1014,3 +1009,24 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
+
+
+def safe_mode_enabled(config_dir: str) -> bool:
+    """Return if safe mode is enabled.
+
+    If safe mode is enabled, the safe mode file will be removed.
+    """
+    safe_mode_path = os.path.join(config_dir, SAFE_MODE_FILENAME)
+    safe_mode = os.path.exists(safe_mode_path)
+    if safe_mode:
+        os.remove(safe_mode_path)
+    return safe_mode
+
+
+async def async_enable_safe_mode(hass: HomeAssistant) -> None:
+    """Enable safe mode."""
+
+    def _enable_safe_mode() -> None:
+        Path(hass.config.path(SAFE_MODE_FILENAME)).touch()
+
+    await hass.async_add_executor_job(_enable_safe_mode)

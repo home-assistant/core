@@ -1,12 +1,11 @@
 {
   "domain": "xiaomi_aqara",
   "name": "Xiaomi Gateway (Aqara)",
+  "codeowners": ["@danielhiversen", "@syssi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_aqara",
-  "requirements": ["PyXiaomiGateway==0.14.3"],
-  "after_dependencies": ["discovery"],
-  "codeowners": ["@danielhiversen", "@syssi"],
-  "zeroconf": ["_miio._udp.local."],
   "iot_class": "local_push",
-  "loggers": ["xiaomi_gateway"]
+  "loggers": ["xiaomi_gateway"],
+  "requirements": ["PyXiaomiGateway==0.14.3"],
+  "zeroconf": ["_miio._udp.local."]
 }

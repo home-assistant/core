@@ -5,7 +5,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 import serial
 from serial.tools import list_ports
 import ultraheat_api
@@ -105,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reader = ultraheat_api.UltraheatReader(port)
         heat_meter = ultraheat_api.HeatMeterService(reader)
         try:
-            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
+            async with asyncio.timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
 
@@ -122,7 +121,8 @@ async def get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     ports = await hass.async_add_executor_job(list_ports.comports)
     port_descriptions = {}
     for port in ports:
-        # this prevents an issue with usb_device_from_port not working for ports without vid on RPi
+        # this prevents an issue with usb_device_from_port
+        # not working for ports without vid on RPi
         if port.vid:
             usb_device = usb.usb_device_from_port(port)
             dev_path = usb.get_serial_by_id(usb_device.device)

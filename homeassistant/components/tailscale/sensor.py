@@ -13,8 +13,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TailscaleEntity
@@ -38,21 +38,21 @@ class TailscaleSensorEntityDescription(
 SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
     TailscaleSensorEntityDescription(
         key="expires",
-        name="Expires",
+        translation_key="expires",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.expires,
     ),
     TailscaleSensorEntityDescription(
         key="ip",
-        name="IP address",
+        translation_key="ip",
         icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.addresses[0] if device.addresses else None,
     ),
     TailscaleSensorEntityDescription(
         key="last_seen",
-        name="Last seen",
+        translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.last_seen,
     ),

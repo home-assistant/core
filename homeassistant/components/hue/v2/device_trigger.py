@@ -3,11 +3,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from aiohue.v2.models.button import ButtonEvent
-from aiohue.v2.models.relative_rotary import (
-    RelativeRotaryAction,
-    RelativeRotaryDirection,
-)
 from aiohue.v2.models.resource import ResourceTypes
 import voluptuous as vol
 
@@ -24,7 +19,15 @@ from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
-from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
+from ..const import (
+    ATTR_HUE_EVENT,
+    CONF_SUBTYPE,
+    DEFAULT_BUTTON_EVENT_TYPES,
+    DEFAULT_ROTARY_EVENT_SUBTYPES,
+    DEFAULT_ROTARY_EVENT_TYPES,
+    DEVICE_SPECIFIC_EVENT_TYPES,
+    DOMAIN,
+)
 
 if TYPE_CHECKING:
     from aiohue.v2 import HueBridgeV2
@@ -41,28 +44,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-DEFAULT_BUTTON_EVENT_TYPES = (
-    # all except `DOUBLE_SHORT_RELEASE`
-    ButtonEvent.INITIAL_PRESS,
-    ButtonEvent.REPEAT,
-    ButtonEvent.SHORT_RELEASE,
-    ButtonEvent.LONG_RELEASE,
-)
-
-DEFAULT_ROTARY_EVENT_TYPES = (RelativeRotaryAction.START, RelativeRotaryAction.REPEAT)
-DEFAULT_ROTARY_EVENT_SUBTYPES = (
-    RelativeRotaryDirection.CLOCK_WISE,
-    RelativeRotaryDirection.COUNTER_CLOCK_WISE,
-)
-
-DEVICE_SPECIFIC_EVENT_TYPES = {
-    # device specific overrides of specific supported button events
-    "Hue tap switch": (ButtonEvent.INITIAL_PRESS,),
-}
-
 
 async def async_validate_trigger_config(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
 ) -> ConfigType:
@@ -71,7 +55,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
     action: TriggerActionType,

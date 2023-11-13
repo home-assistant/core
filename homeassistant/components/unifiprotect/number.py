@@ -1,4 +1,4 @@
-"""This component provides number entities for UniFi Protect."""
+"""Component providing number entities for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,10 +14,9 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -269,3 +268,21 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the native value and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_value = self._attr_native_value
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_native_value != previous_value
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()

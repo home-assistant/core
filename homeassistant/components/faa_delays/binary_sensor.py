@@ -12,7 +12,35 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, FAA_BINARY_SENSORS
+from .const import DOMAIN
+
+FAA_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="GROUND_DELAY",
+        name="Ground Delay",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="GROUND_STOP",
+        name="Ground Stop",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="DEPART_DELAY",
+        name="Departure Delay",
+        icon="mdi:airplane-takeoff",
+    ),
+    BinarySensorEntityDescription(
+        key="ARRIVE_DELAY",
+        name="Arrival Delay",
+        icon="mdi:airplane-landing",
+    ),
+    BinarySensorEntityDescription(
+        key="CLOSURE",
+        name="Closure",
+        icon="mdi:airplane:off",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -34,7 +62,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     def __init__(
         self, coordinator, entry_id, description: BinarySensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -42,7 +70,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.coordinator = coordinator
         self._entry_id = entry_id
         self._attrs: dict[str, Any] = {}
-        _id = coordinator.data.iata
+        _id = coordinator.data.code
         self._attr_name = f"{_id} {description.name}"
         self._attr_unique_id = f"{_id}_{description.key}"
 
@@ -83,7 +111,6 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
             self._attrs["trend"] = self.coordinator.data.arrive_delay.trend
             self._attrs["reason"] = self.coordinator.data.arrive_delay.reason
         elif sensor_type == "CLOSURE":
-            self._attrs["begin"] = self.coordinator.data.closure.begin
+            self._attrs["begin"] = self.coordinator.data.closure.start
             self._attrs["end"] = self.coordinator.data.closure.end
-            self._attrs["reason"] = self.coordinator.data.closure.reason
         return self._attrs

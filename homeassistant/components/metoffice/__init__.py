@@ -4,9 +4,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+import sys
 from typing import Any
-
-import datapoint
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,11 +16,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -36,6 +34,9 @@ from .const import (
 from .data import MetOfficeData
 from .helpers import fetch_data, fetch_site
 
+if sys.version_info < (3, 12):
+    import datapoint
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
@@ -43,6 +44,10 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Met Office entry."""
+    if sys.version_info >= (3, 12):
+        raise HomeAssistantError(
+            "Met Office is not supported on Python 3.12. Please use Python 3.11."
+        )
 
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
@@ -53,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def update_unique_id(
-        entity_entry: entity_registry.RegistryEntry,
+        entity_entry: er.RegistryEntry,
     ) -> dict[str, Any] | None:
         """Update unique ID of entity entry."""
 
@@ -86,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         return None
 
-    await entity_registry.async_migrate_entries(hass, entry.entry_id, update_unique_id)
+    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     connection = datapoint.connection(api_key=api_key)
 
@@ -106,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             fetch_data, connection, site, MODE_DAILY
         )
 
-    metoffice_hourly_coordinator = DataUpdateCoordinator(
+    metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"MetOffice Hourly Coordinator for {site_name}",
@@ -114,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
-    metoffice_daily_coordinator = DataUpdateCoordinator(
+    metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"MetOffice Daily Coordinator for {site_name}",
@@ -154,7 +159,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_device_info(coordinates: str, name: str) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, coordinates)},
         manufacturer="Met Office",
         name=f"Met Office {name}",

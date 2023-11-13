@@ -5,19 +5,16 @@ from abc import abstractmethod
 import datetime
 import logging
 
-import soco.config as soco_config
 from soco.core import SoCo
 
-from homeassistant.components import persistent_notification
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DATA_SONOS, DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
 from .exception import SonosUpdateError
 from .speaker import SonosSpeaker
-
-SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,29 +54,6 @@ class SonosEntity(Entity):
     async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
-            if soco_config.EVENT_ADVERTISE_IP:
-                listener_msg = (
-                    f"{self.speaker.subscription_address}"
-                    f" (advertising as {soco_config.EVENT_ADVERTISE_IP})"
-                )
-            else:
-                listener_msg = self.speaker.subscription_address
-            message = (
-                f"{self.speaker.zone_name} cannot reach {listener_msg},"
-                " falling back to polling, functionality may be limited"
-            )
-            log_link_msg = f", see {SUB_FAIL_URL} for more details"
-            notification_link_msg = (
-                f'.\n\nSee <a href="{SUB_FAIL_URL}">Sonos documentation</a>'
-                " for more details."
-            )
-            _LOGGER.warning(message + log_link_msg)
-            persistent_notification.async_create(
-                self.hass,
-                message + notification_link_msg,
-                "Sonos networking issue",
-                "sonos_subscriptions_failed",
-            )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
         try:

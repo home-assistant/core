@@ -47,6 +47,7 @@ async def verify_redirect_uri(
     if client_id == "https://home-assistant.io/android" and redirect_uri in (
         "homeassistant://auth-callback",
         "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+        "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
     ):
         return True
 
@@ -91,14 +92,15 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     parser = LinkTagParser("redirect_uri")
     chunks = 0
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=5) as resp:
-                async for data in resp.content.iter_chunked(1024):
-                    parser.feed(data.decode())
-                    chunks += 1
+        async with aiohttp.ClientSession() as session, session.get(
+            url, timeout=5
+        ) as resp:
+            async for data in resp.content.iter_chunked(1024):
+                parser.feed(data.decode())
+                chunks += 1
 
-                    if chunks == 10:
-                        break
+                if chunks == 10:
+                    break
 
     except asyncio.TimeoutError:
         _LOGGER.error("Timeout while looking up redirect_uri %s", url)

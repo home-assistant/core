@@ -93,7 +93,6 @@ async def _async_create_entities(hass, config):
     fans = []
 
     for object_id, entity_config in config[CONF_FANS].items():
-
         entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
@@ -195,6 +194,8 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+
+        self._attr_assumed_state = self._template is None
 
     @property
     def speed_count(self) -> int:
@@ -352,8 +353,9 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._state = False
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._template:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
@@ -391,7 +393,7 @@ class TemplateFan(TemplateEntity, FanEntity):
                 self._update_direction,
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_percentage(self, percentage):
@@ -467,8 +469,3 @@ class TemplateFan(TemplateEntity, FanEntity):
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None
-
-    @property
-    def assumed_state(self) -> bool:
-        """State is assumed, if no template given."""
-        return self._template is None

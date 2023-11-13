@@ -1,8 +1,8 @@
 """Base classes for ONVIF entities."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .device import ONVIFDevice
@@ -26,7 +26,7 @@ class ONVIFBaseEntity(Entity):
 
         MAC address is not always available, and given the number
         of non-conformant ONVIF devices we have historically supported,
-        we can not guarantee serial number either.  Due to this, we have
+        we cannot guarantee serial number either.  Due to this, we have
         adopted an either/or approach in the config entry setup, and can
         guarantee that one or the other will be populated.
         See: https://github.com/home-assistant/core/issues/35883

@@ -11,11 +11,45 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SENSOR_TYPES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
+
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="movies",
+        name="Movie requests",
+        icon="mdi:movie",
+    ),
+    SensorEntityDescription(
+        key="tv",
+        name="TV show requests",
+        icon="mdi:television-classic",
+    ),
+    SensorEntityDescription(
+        key="music",
+        name="Music album requests",
+        icon="mdi:album",
+    ),
+    SensorEntityDescription(
+        key="pending",
+        name="Pending requests",
+        icon="mdi:clock-alert-outline",
+    ),
+    SensorEntityDescription(
+        key="approved",
+        name="Approved requests",
+        icon="mdi:check",
+    ),
+    SensorEntityDescription(
+        key="available",
+        name="Available requests",
+        icon="mdi:download",
+    ),
+)
 
 
 def setup_platform(
@@ -38,7 +72,7 @@ def setup_platform(
 class OmbiSensor(SensorEntity):
     """Representation of an Ombi sensor."""
 
-    def __init__(self, ombi, description: SensorEntityDescription):
+    def __init__(self, ombi, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._ombi = ombi

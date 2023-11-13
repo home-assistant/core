@@ -8,13 +8,16 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 
 from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
-async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth):
+async def test_camera_light_setup_and_services(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test camera ligiht setup and services."""
     with selected_platforms(["light"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -79,7 +82,7 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
         )
 
 
-async def test_setup_component_no_devices(hass, config_entry):
+async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> None:
     """Test setup with no devices."""
     fake_post_hits = 0
 
@@ -96,7 +99,7 @@ async def test_setup_component_no_devices(hass, config_entry):
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", ["light"]
+        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
@@ -117,13 +120,15 @@ async def test_setup_component_no_devices(hass, config_entry):
         )
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 4
+        assert fake_post_hits == 3
 
         assert hass.config_entries.async_entries(DOMAIN)
         assert len(hass.states.async_all()) == 0
 
 
-async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
+async def test_light_setup_and_services(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test setup and services."""
     with selected_platforms(["light"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

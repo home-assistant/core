@@ -1,7 +1,7 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 from __future__ import annotations
 
-import asyncio
+from datetime import datetime
 import json
 import logging
 from typing import Any
@@ -36,7 +36,7 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -170,7 +170,9 @@ async def async_setup_entry(
         ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    asyncio.create_task(_discovery())
+    config_entry.async_create_background_task(
+        hass, _discovery(), "squeezebox.media_player.discovery"
+    )
 
     # Register entity services
     platform = entity_platform.async_get_current_platform()
@@ -203,7 +205,7 @@ async def async_setup_entry(
 
     # Start server discovery task if not already running
     if hass.is_running:
-        asyncio.create_task(start_server_discovery(hass))
+        hass.async_create_task(start_server_discovery(hass))
     else:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
@@ -211,8 +213,7 @@ async def async_setup_entry(
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
-    """
-    Representation of a SqueezeBox device.
+    """Representation of a SqueezeBox device.
 
     Wraps a pysqueezebox.Player() object.
     """
@@ -234,15 +235,22 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _last_update: datetime | None = None
+    _attr_available = True
 
     def __init__(self, player):
         """Initialize the SqueezeBox device."""
         self._player = player
-        self._last_update = None
         self._query_result = {}
-        self._available = True
         self._remove_dispatcher = None
+        self._attr_unique_id = format_mac(player.player_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)}, name=player.name
+        )
 
     @property
     def extra_state_attributes(self):
@@ -255,26 +263,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
         return squeezebox_attr
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._player.name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return format_mac(self._player.player_id)
-
-    @property
-    def available(self):
-        """Return True if device connected to LMS server."""
-        return self._available
-
     @callback
     def rediscovered(self, unique_id, connected):
         """Make a player available again."""
         if unique_id == self.unique_id and connected:
-            self._available = True
+            self._attr_available = True
             _LOGGER.info("Player %s is available again", self.name)
             self._remove_dispatcher()
 
@@ -290,14 +283,14 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update the Player() object."""
         # only update available players, newly available players will be rediscovered and marked available
-        if self._available:
+        if self._attr_available:
             last_media_position = self.media_position
             await self._player.async_update()
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
                 _LOGGER.info("Player %s is not available", self.name)
-                self._available = False
+                self._attr_available = False
 
                 # start listening for restored players
                 self._remove_dispatcher = async_dispatcher_connect(
@@ -362,6 +355,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         return self._player.title
+
+    @property
+    def media_channel(self):
+        """Channel (e.g. webradio name) of current playing media."""
+        return self._player.remote_title
 
     @property
     def media_artist(self):
@@ -464,7 +462,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_set_power(True)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
@@ -542,8 +540,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_clear_playlist()
 
     async def async_call_method(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method.
+        """Call Squeezebox JSON/RPC method.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
@@ -555,8 +552,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_query(*all_params)
 
     async def async_call_query(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method where we care about the result.
+        """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
@@ -569,8 +565,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         _LOGGER.debug("call_query got result %s", self._query_result)
 
     async def async_join_players(self, group_members: list[str]) -> None:
-        """
-        Add other Squeezebox players to this player's sync group.
+        """Add other Squeezebox players to this player's sync group.
 
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
@@ -632,7 +627,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

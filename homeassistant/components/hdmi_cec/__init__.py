@@ -31,7 +31,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -123,11 +123,12 @@ SERVICE_SELECT_DEVICE = "select_device"
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
-# pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.All(cv.positive_int): vol.Any(
-            lambda devices: DEVICE_SCHEMA(devices), cv.string
+            # pylint: disable-next=unnecessary-lambda
+            lambda devices: DEVICE_SCHEMA(devices),
+            cv.string,
         )
     }
 )
@@ -208,16 +209,18 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
-        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
         if not adapter.initialized:
             _LOGGER.info("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 
+    _adapter_watchdog_job = HassJob(_adapter_watchdog, cancel_on_shutdown=True)
+
     @callback
     def _async_initialized_callback(*_: Any):
         """Add watchdog on initialization."""
-        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
 
     hdmi_network.set_initialized_callback(_async_initialized_callback)
 
@@ -261,14 +264,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         if ATTR_RAW in data:
             command = CecCommand(data[ATTR_RAW])
         else:
-            if ATTR_SRC in data:
-                src = data[ATTR_SRC]
-            else:
-                src = ADDR_UNREGISTERED
-            if ATTR_DST in data:
-                dst = data[ATTR_DST]
-            else:
-                dst = ADDR_BROADCAST
+            src = data.get(ATTR_SRC, ADDR_UNREGISTERED)
+            dst = data.get(ATTR_DST, ADDR_BROADCAST)
             if ATTR_CMD in data:
                 cmd = data[ATTR_CMD]
             else:
@@ -314,8 +311,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call: ServiceCall) -> None:
-        """
-        Update if device update is needed.
+        """Update if device update is needed.
 
         Called by service, requests CEC network to update data.
         """
@@ -374,10 +370,7 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
-        if self._device.type in ICONS_BY_TYPE:
-            self._attr_icon = ICONS_BY_TYPE[self._device.type]
-        else:
-            self._attr_icon = ICON_UNKNOWN
+        self._attr_icon = ICONS_BY_TYPE.get(self._device.type, ICON_UNKNOWN)
 
     def _set_attr_name(self):
         """Set name."""

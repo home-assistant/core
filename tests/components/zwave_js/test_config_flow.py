@@ -2,6 +2,7 @@
 import asyncio
 from collections.abc import Generator
 from copy import copy
+from ipaddress import ip_address
 from unittest.mock import DEFAULT, MagicMock, call, patch
 
 import aiohttp
@@ -16,6 +17,7 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -181,7 +183,7 @@ def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
         yield mock_usb_serial_by_id
 
 
-async def test_manual(hass):
+async def test_manual(hass: HomeAssistant) -> None:
     """Test we create an entry with manual step."""
 
     result = await hass.config_entries.flow.async_init(
@@ -226,7 +228,7 @@ async def slow_server_version(*args):
 
 
 @pytest.mark.parametrize(
-    "flow, flow_params",
+    ("flow", "flow_params"),
     [
         (
             "flow",
@@ -239,7 +241,7 @@ async def slow_server_version(*args):
     ],
 )
 @pytest.mark.parametrize(
-    "url, server_version_side_effect, server_version_timeout, error",
+    ("url", "server_version_side_effect", "server_version_timeout", "error"),
     [
         (
             "not-ws-url",
@@ -261,7 +263,9 @@ async def slow_server_version(*args):
         ),
     ],
 )
-async def test_manual_errors(hass, integration, url, error, flow, flow_params):
+async def test_manual_errors(
+    hass: HomeAssistant, integration, url, error, flow, flow_params
+) -> None:
     """Test all errors with a manual set up."""
     entry = integration
     result = await getattr(hass.config_entries, flow).async_init(**flow_params(entry))
@@ -281,7 +285,7 @@ async def test_manual_errors(hass, integration, url, error, flow, flow_params):
     assert result["errors"] == {"base": error}
 
 
-async def test_manual_already_configured(hass):
+async def test_manual_already_configured(hass: HomeAssistant) -> None:
     """Test that only one unique instance is allowed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -318,8 +322,12 @@ async def test_manual_already_configured(hass):
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_supervisor_discovery(
-    hass, supervisor, addon_running, addon_options, get_addon_discovery_info
-):
+    hass: HomeAssistant,
+    supervisor,
+    addon_running,
+    addon_options,
+    get_addon_discovery_info,
+) -> None:
     """Test flow started from Supervisor discovery."""
 
     addon_options["device"] = "/test"
@@ -335,6 +343,7 @@ async def test_supervisor_discovery(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -364,12 +373,12 @@ async def test_supervisor_discovery(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, server_version_side_effect",
+    ("discovery_info", "server_version_side_effect"),
     [({"config": ADDON_DISCOVERY_INFO}, asyncio.TimeoutError())],
 )
 async def test_supervisor_discovery_cannot_connect(
-    hass, supervisor, get_addon_discovery_info
-):
+    hass: HomeAssistant, supervisor, get_addon_discovery_info
+) -> None:
     """Test Supervisor discovery and cannot connect."""
 
     result = await hass.config_entries.flow.async_init(
@@ -379,6 +388,7 @@ async def test_supervisor_discovery_cannot_connect(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -388,8 +398,12 @@ async def test_supervisor_discovery_cannot_connect(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_clean_discovery_on_user_create(
-    hass, supervisor, addon_running, addon_options, get_addon_discovery_info
-):
+    hass: HomeAssistant,
+    supervisor,
+    addon_running,
+    addon_options,
+    get_addon_discovery_info,
+) -> None:
     """Test discovery flow is cleaned up when a user flow is finished."""
 
     addon_options["device"] = "/test"
@@ -405,6 +419,7 @@ async def test_clean_discovery_on_user_create(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -456,8 +471,8 @@ async def test_clean_discovery_on_user_create(
 
 
 async def test_abort_discovery_with_existing_entry(
-    hass, supervisor, addon_running, addon_options
-):
+    hass: HomeAssistant, supervisor, addon_running, addon_options
+) -> None:
     """Test discovery flow is aborted if an entry already exists."""
 
     entry = MockConfigEntry(
@@ -475,6 +490,7 @@ async def test_abort_discovery_with_existing_entry(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -485,8 +501,8 @@ async def test_abort_discovery_with_existing_entry(
 
 
 async def test_abort_hassio_discovery_with_existing_flow(
-    hass, supervisor, addon_installed, addon_options
-):
+    hass: HomeAssistant, supervisor, addon_installed, addon_options
+) -> None:
     """Test hassio discovery flow is aborted when another discovery has happened."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -503,6 +519,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -511,8 +528,8 @@ async def test_abort_hassio_discovery_with_existing_flow(
 
 
 async def test_abort_hassio_discovery_for_other_addon(
-    hass, supervisor, addon_installed, addon_options
-):
+    hass: HomeAssistant, supervisor, addon_installed, addon_options
+) -> None:
     """Test hassio discovery flow is aborted for a non official add-on discovery."""
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -525,6 +542,7 @@ async def test_abort_hassio_discovery_for_other_addon(
             },
             name="Other Z-Wave JS",
             slug="other_addon",
+            uuid="1234",
         ),
     )
 
@@ -534,7 +552,7 @@ async def test_abort_hassio_discovery_for_other_addon(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_usb_discovery(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_not_installed,
     install_addon,
@@ -542,7 +560,7 @@ async def test_usb_discovery(
     get_addon_discovery_info,
     set_addon_options,
     start_addon,
-):
+) -> None:
     """Test usb discovery success path."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -624,14 +642,14 @@ async def test_usb_discovery(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_usb_discovery_addon_not_running(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test usb discovery when add-on is installed but not running."""
     addon_options["device"] = "/dev/incorrect_device"
 
@@ -713,8 +731,13 @@ async def test_usb_discovery_addon_not_running(
 
 
 async def test_discovery_addon_not_running(
-    hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
-):
+    hass: HomeAssistant,
+    supervisor,
+    addon_installed,
+    addon_options,
+    set_addon_options,
+    start_addon,
+) -> None:
     """Test discovery with add-on already installed but not running."""
     addon_options["device"] = None
 
@@ -725,6 +748,7 @@ async def test_discovery_addon_not_running(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -793,14 +817,14 @@ async def test_discovery_addon_not_running(
 
 
 async def test_discovery_addon_not_installed(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_not_installed,
     install_addon,
     addon_options,
     set_addon_options,
     start_addon,
-):
+) -> None:
     """Test discovery with add-on not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -809,6 +833,7 @@ async def test_discovery_addon_not_installed(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -885,7 +910,9 @@ async def test_discovery_addon_not_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_options):
+async def test_abort_usb_discovery_with_existing_flow(
+    hass: HomeAssistant, supervisor, addon_options
+) -> None:
     """Test usb discovery flow is aborted when another discovery has happened."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -894,6 +921,7 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -909,7 +937,9 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
     assert result2["reason"] == "already_in_progress"
 
 
-async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_options):
+async def test_abort_usb_discovery_already_configured(
+    hass: HomeAssistant, supervisor, addon_options
+) -> None:
     """Test usb discovery flow is aborted when there is an existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -928,7 +958,7 @@ async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_op
     assert result["reason"] == "already_configured"
 
 
-async def test_usb_discovery_requires_supervisor(hass):
+async def test_usb_discovery_requires_supervisor(hass: HomeAssistant) -> None:
     """Test usb discovery flow is aborted when there is no supervisor."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -939,7 +969,9 @@ async def test_usb_discovery_requires_supervisor(hass):
     assert result["reason"] == "discovery_requires_supervisor"
 
 
-async def test_usb_discovery_already_running(hass, supervisor, addon_running):
+async def test_usb_discovery_already_running(
+    hass: HomeAssistant, supervisor, addon_running
+) -> None:
     """Test usb discovery flow is aborted when the addon is running."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -955,8 +987,8 @@ async def test_usb_discovery_already_running(hass, supervisor, addon_running):
     [CP2652_ZIGBEE_DISCOVERY_INFO],
 )
 async def test_abort_usb_discovery_aborts_specific_devices(
-    hass, supervisor, addon_options, discovery_info
-):
+    hass: HomeAssistant, supervisor, addon_options, discovery_info
+) -> None:
     """Test usb discovery flow is aborted on specific devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -967,7 +999,7 @@ async def test_abort_usb_discovery_aborts_specific_devices(
     assert result["reason"] == "not_zwave_device"
 
 
-async def test_not_addon(hass, supervisor):
+async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
     """Test opting out of add-on on Supervisor."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1016,12 +1048,12 @@ async def test_not_addon(hass, supervisor):
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_running,
     addon_options,
     get_addon_discovery_info,
-):
+) -> None:
     """Test add-on already running on Supervisor."""
     addon_options["device"] = "/test"
     addon_options["s0_legacy_key"] = "new123"
@@ -1064,8 +1096,13 @@ async def test_addon_running(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, discovery_info_side_effect, server_version_side_effect, "
-    "addon_info_side_effect, abort_reason",
+    (
+        "discovery_info",
+        "discovery_info_side_effect",
+        "server_version_side_effect",
+        "addon_info_side_effect",
+        "abort_reason",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1098,13 +1135,13 @@ async def test_addon_running(
     ],
 )
 async def test_addon_running_failures(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_running,
     addon_options,
     get_addon_discovery_info,
     abort_reason,
-):
+) -> None:
     """Test all failures when add-on is running."""
     addon_options["device"] = "/test"
     addon_options["network_key"] = "abc123"
@@ -1126,8 +1163,12 @@ async def test_addon_running_failures(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running_already_configured(
-    hass, supervisor, addon_running, addon_options, get_addon_discovery_info
-):
+    hass: HomeAssistant,
+    supervisor,
+    addon_running,
+    addon_options,
+    get_addon_discovery_info,
+) -> None:
     """Test that only one unique instance is allowed when add-on is running."""
     addon_options["device"] = "/test_new"
     addon_options["s0_legacy_key"] = "new123"
@@ -1174,14 +1215,14 @@ async def test_addon_running_already_configured(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_installed(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test add-on already installed but not running on Supervisor."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1255,18 +1296,18 @@ async def test_addon_installed(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, start_addon_side_effect",
+    ("discovery_info", "start_addon_side_effect"),
     [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
 )
 async def test_addon_installed_start_failure(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test add-on start failure when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1321,7 +1362,7 @@ async def test_addon_installed_start_failure(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, server_version_side_effect",
+    ("discovery_info", "server_version_side_effect"),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1334,14 +1375,14 @@ async def test_addon_installed_start_failure(
     ],
 )
 async def test_addon_installed_failures(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test all failures when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1396,18 +1437,18 @@ async def test_addon_installed_failures(
 
 
 @pytest.mark.parametrize(
-    "set_addon_options_side_effect, discovery_info",
+    ("set_addon_options_side_effect", "discovery_info"),
     [(HassioAPIError(), {"config": ADDON_DISCOVERY_INFO})],
 )
 async def test_addon_installed_set_options_failure(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test all failures when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1457,14 +1498,14 @@ async def test_addon_installed_set_options_failure(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_installed_already_configured(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test that only one unique instance is allowed when add-on is installed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1541,7 +1582,7 @@ async def test_addon_installed_already_configured(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_not_installed(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_not_installed,
     install_addon,
@@ -1549,7 +1590,7 @@ async def test_addon_not_installed(
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
-):
+) -> None:
     """Test add-on not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1632,8 +1673,8 @@ async def test_addon_not_installed(
 
 
 async def test_install_addon_failure(
-    hass, supervisor, addon_not_installed, install_addon
-):
+    hass: HomeAssistant, supervisor, addon_not_installed, install_addon
+) -> None:
     """Test add-on install failure."""
     install_addon.side_effect = HassioAPIError()
 
@@ -1661,7 +1702,7 @@ async def test_install_addon_failure(
     assert result["reason"] == "addon_install_failed"
 
 
-async def test_options_manual(hass, client, integration):
+async def test_options_manual(hass: HomeAssistant, client, integration) -> None:
     """Test manual settings in options flow."""
     entry = integration
     entry.unique_id = "1234"
@@ -1687,7 +1728,9 @@ async def test_options_manual(hass, client, integration):
     assert client.disconnect.call_count == 1
 
 
-async def test_options_manual_different_device(hass, integration):
+async def test_options_manual_different_device(
+    hass: HomeAssistant, integration
+) -> None:
     """Test options flow manual step connecting to different device."""
     entry = integration
     entry.unique_id = 5678
@@ -1706,7 +1749,9 @@ async def test_options_manual_different_device(hass, integration):
     assert result["reason"] == "different_device"
 
 
-async def test_options_not_addon(hass, client, supervisor, integration):
+async def test_options_not_addon(
+    hass: HomeAssistant, client, supervisor, integration
+) -> None:
     """Test options flow and opting out of add-on on Supervisor."""
     entry = integration
     entry.unique_id = "1234"
@@ -1743,7 +1788,13 @@ async def test_options_not_addon(hass, client, supervisor, integration):
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls",
+    (
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1792,7 +1843,7 @@ async def test_options_not_addon(hass, client, supervisor, integration):
     ],
 )
 async def test_options_addon_running(
-    hass,
+    hass: HomeAssistant,
     client,
     supervisor,
     integration,
@@ -1806,7 +1857,7 @@ async def test_options_addon_running(
     old_addon_options,
     new_addon_options,
     disconnect_calls,
-):
+) -> None:
     """Test options flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
@@ -1875,7 +1926,7 @@ async def test_options_addon_running(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options",
+    ("discovery_info", "entry_data", "old_addon_options", "new_addon_options"),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1903,7 +1954,7 @@ async def test_options_addon_running(
     ],
 )
 async def test_options_addon_running_no_changes(
-    hass,
+    hass: HomeAssistant,
     client,
     supervisor,
     integration,
@@ -1916,7 +1967,7 @@ async def test_options_addon_running_no_changes(
     entry_data,
     old_addon_options,
     new_addon_options,
-):
+) -> None:
     """Test options flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
@@ -1984,7 +2035,14 @@ async def different_device_server_version(*args):
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, server_version_side_effect",
+    (
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+        "server_version_side_effect",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2038,7 +2096,7 @@ async def different_device_server_version(*args):
     ],
 )
 async def test_options_different_device(
-    hass,
+    hass: HomeAssistant,
     client,
     supervisor,
     integration,
@@ -2053,7 +2111,7 @@ async def test_options_different_device(
     new_addon_options,
     disconnect_calls,
     server_version_side_effect,
-):
+) -> None:
     """Test options flow and configuring a different device."""
     addon_options.update(old_addon_options)
     entry = integration
@@ -2132,7 +2190,14 @@ async def test_options_different_device(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, restart_addon_side_effect",
+    (
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+        "restart_addon_side_effect",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2190,7 +2255,7 @@ async def test_options_different_device(
     ],
 )
 async def test_options_addon_restart_failed(
-    hass,
+    hass: HomeAssistant,
     client,
     supervisor,
     integration,
@@ -2205,7 +2270,7 @@ async def test_options_addon_restart_failed(
     new_addon_options,
     disconnect_calls,
     restart_addon_side_effect,
-):
+) -> None:
     """Test options flow and add-on restart failure."""
     addon_options.update(old_addon_options)
     entry = integration
@@ -2281,7 +2346,14 @@ async def test_options_addon_restart_failed(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, server_version_side_effect",
+    (
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+        "server_version_side_effect",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2311,7 +2383,7 @@ async def test_options_addon_restart_failed(
     ],
 )
 async def test_options_addon_running_server_info_failure(
-    hass,
+    hass: HomeAssistant,
     client,
     supervisor,
     integration,
@@ -2326,7 +2398,7 @@ async def test_options_addon_running_server_info_failure(
     new_addon_options,
     disconnect_calls,
     server_version_side_effect,
-):
+) -> None:
     """Test options flow and add-on already running with server info failure."""
     addon_options.update(old_addon_options)
     entry = integration
@@ -2365,7 +2437,13 @@ async def test_options_addon_running_server_info_failure(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls",
+    (
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2414,7 +2492,7 @@ async def test_options_addon_running_server_info_failure(
     ],
 )
 async def test_options_addon_not_installed(
-    hass,
+    hass: HomeAssistant,
     client,
     supervisor,
     addon_not_installed,
@@ -2429,7 +2507,7 @@ async def test_options_addon_not_installed(
     old_addon_options,
     new_addon_options,
     disconnect_calls,
-):
+) -> None:
     """Test options flow and add-on not installed on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
@@ -2501,7 +2579,7 @@ async def test_options_addon_not_installed(
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_import_addon_installed(
-    hass,
+    hass: HomeAssistant,
     supervisor,
     addon_installed,
     addon_options,
@@ -2509,7 +2587,7 @@ async def test_import_addon_installed(
     start_addon,
     get_addon_discovery_info,
     serial_port,
-):
+) -> None:
     """Test import step while add-on already installed on Supervisor."""
     serial_port.device = "/test/imported"
     result = await hass.config_entries.flow.async_init(
@@ -2588,15 +2666,15 @@ async def test_import_addon_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf(hass):
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test zeroconf discovery."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            host="localhost",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=3000,
@@ -2620,7 +2698,7 @@ async def test_zeroconf(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
     assert result["data"] == {
-        "url": "ws://localhost:3000",
+        "url": "ws://127.0.0.1:3000",
         "usb_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,

@@ -7,7 +7,8 @@ from typing import Any
 
 from pyownet import protocol
 
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 
 from .const import READ_MODE_BOOL, READ_MODE_INT
@@ -27,6 +28,7 @@ class OneWireEntity(Entity):
     """Implementation of a 1-Wire entity."""
 
     entity_description: OneWireEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -34,14 +36,13 @@ class OneWireEntity(Entity):
         device_id: str,
         device_info: DeviceInfo,
         device_file: str,
-        name: str,
         owproxy: protocol._Proxy,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
+        self._last_update_success = True
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
-        self._attr_name = name
         self._device_file = device_file
         self._state: StateType = None
         self._value_raw: float | None = None
@@ -69,9 +70,14 @@ class OneWireEntity(Entity):
         try:
             self._value_raw = float(self._read_value())
         except protocol.Error as exc:
-            _LOGGER.error("Failure to read server value, got: %s", exc)
+            if self._last_update_success:
+                _LOGGER.error("Error fetching %s data: %s", self.name, exc)
+                self._last_update_success = False
             self._state = None
         else:
+            if not self._last_update_success:
+                self._last_update_success = True
+                _LOGGER.info("Fetching %s data recovered", self.name)
             if self.entity_description.read_mode == READ_MODE_INT:
                 self._state = int(self._value_raw)
             elif self.entity_description.read_mode == READ_MODE_BOOL:

@@ -5,14 +5,17 @@ import contextlib
 import pathlib
 from unittest.mock import patch
 
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components import script
 from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(script.__file__).parent / "blueprints"
 
@@ -25,7 +28,7 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
     @callback
     def mock_load_blueprint(self, path: str) -> Blueprint:
         if path != blueprint_path:
-            assert False, f"Unexpected blueprint {path}"
+            pytest.fail(f"Unexpected blueprint {path}")
             return orig_load(self, path)
 
         return Blueprint(
@@ -39,8 +42,19 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
         yield
 
 
-async def test_confirmable_notification(hass: HomeAssistant) -> None:
+async def test_confirmable_notification(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test confirmable notification blueprint."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+
+    frodo = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
+    )
+
     with patch_blueprint(
         "confirmable_notification.yaml",
         BUILTIN_BLUEPRINT_FOLDER / "confirmable_notification.yaml",
@@ -54,7 +68,7 @@ async def test_confirmable_notification(hass: HomeAssistant) -> None:
                         "use_blueprint": {
                             "path": "confirmable_notification.yaml",
                             "input": {
-                                "notify_device": "frodo",
+                                "notify_device": frodo.id,
                                 "title": "Lord of the things",
                                 "message": "Throw ring in mountain?",
                                 "confirm_action": [
@@ -76,7 +90,6 @@ async def test_confirmable_notification(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
     ) as mock_call_action:
-
         # Trigger script
         await hass.services.async_call(script.DOMAIN, "confirm", context=context)
 
@@ -104,7 +117,7 @@ async def test_confirmable_notification(hass: HomeAssistant) -> None:
         "alias": "Send notification",
         "domain": "mobile_app",
         "type": "notify",
-        "device_id": "frodo",
+        "device_id": frodo.id,
         "data": {
             "actions": [
                 {"action": "CONFIRM_" + _context.id, "title": "Confirm"},

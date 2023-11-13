@@ -13,13 +13,13 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, DOMAIN, USER_APP_NAME
+from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
 from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinEntity
 from .models import JellyfinData
@@ -34,14 +34,23 @@ async def async_setup_entry(
     jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
     coordinator = jellyfin_data.coordinators["sessions"]
 
-    async_add_entities(
-        (
-            JellyfinMediaPlayer(coordinator, session_id, session_data)
-            for session_id, session_data in coordinator.data.items()
-            if session_data["DeviceId"] != jellyfin_data.client_device_id
-            and session_data["Client"] != USER_APP_NAME
-        ),
-    )
+    @callback
+    def handle_coordinator_update() -> None:
+        """Add media player per session."""
+        entities: list[MediaPlayerEntity] = []
+        for session_id, session_data in coordinator.data.items():
+            if session_id not in coordinator.session_ids:
+                entity: MediaPlayerEntity = JellyfinMediaPlayer(
+                    coordinator, session_id, session_data
+                )
+                LOGGER.debug("Creating media player for session: %s", session_id)
+                coordinator.session_ids.add(session_id)
+                entities.append(entity)
+        async_add_entities(entities)
+
+    handle_coordinator_update()
+
+    entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
 
 
 class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
@@ -81,6 +90,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
                 sw_version=self.app_version,
                 via_device=(DOMAIN, coordinator.server_id),
             )
+            self._attr_name = None
         else:
             self._attr_device_info = None
             self._attr_has_entity_name = False
@@ -253,7 +263,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.IDLE
 
     def play_media(
-        self, media_type: str, media_id: str, **kwargs: dict[str, Any]
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         self.coordinator.api_client.jellyfin.remote_play_media(
@@ -274,7 +284,9 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 

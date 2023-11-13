@@ -86,7 +86,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the netgear config flow."""
         self.placeholders = {
             CONF_HOST: DEFAULT_HOST,
@@ -134,6 +134,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_ipv4_address")
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
+
+        if ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp:
+            return self.async_abort(reason="no_serial")
 
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
@@ -187,8 +190,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except CannotLoginException:
             errors["base"] = "config"
-
-        if errors:
             return await self._show_setup_form(user_input, errors)
 
         config_data = {
@@ -201,6 +202,10 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         info = await self.hass.async_add_executor_job(api.get_info)
+        if info is None:
+            errors["base"] = "info"
+            return await self._show_setup_form(user_input, errors)
+
         await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=config_data)
 

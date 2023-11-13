@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import logging
 
-from nessclient import ArmingState, Client
+from nessclient import ArmingMode, ArmingState, Client
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
@@ -22,6 +25,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
+
+ARMING_MODE_TO_STATE = {
+    ArmingMode.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+    ArmingMode.ARMED_HOME: STATE_ALARM_ARMED_HOME,
+    ArmingMode.ARMED_DAY: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
+    ArmingMode.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
+    ArmingMode.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
+    ArmingMode.ARMED_HIGHEST: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
+}
 
 
 async def async_setup_platform(
@@ -79,7 +91,9 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         await self._client.panic(code)
 
     @callback
-    def _handle_arming_state_change(self, arming_state: ArmingState) -> None:
+    def _handle_arming_state_change(
+        self, arming_state: ArmingState, arming_mode: ArmingMode | None
+    ) -> None:
         """Handle arming state update."""
 
         if arming_state == ArmingState.UNKNOWN:
@@ -91,7 +105,9 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         elif arming_state == ArmingState.EXIT_DELAY:
             self._attr_state = STATE_ALARM_ARMING
         elif arming_state == ArmingState.ARMED:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = ARMING_MODE_TO_STATE.get(
+                arming_mode, STATE_ALARM_ARMED_AWAY
+            )
         elif arming_state == ArmingState.ENTRY_DELAY:
             self._attr_state = STATE_ALARM_PENDING
         elif arming_state == ArmingState.TRIGGERED:

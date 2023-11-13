@@ -1,4 +1,5 @@
-"""Test the Home Assistant Sky Connect config flow."""
+"""Test the Home Assistant SkyConnect config flow."""
+from collections.abc import Generator
 import copy
 from unittest.mock import Mock, patch
 
@@ -6,13 +7,14 @@ import pytest
 
 from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha import (
     CONF_DEVICE_PATH,
     DOMAIN as ZHA_DOMAIN,
     RadioType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
@@ -24,6 +26,15 @@ USB_DATA = usb.UsbServiceInfo(
     manufacturer="bla_manufacturer",
     description="bla_description",
 )
+
+
+@pytest.fixture(autouse=True)
+def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Fixture for a test config flow."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -46,7 +57,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant Sky Connect"
+    assert result["title"] == "Home Assistant SkyConnect"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -54,7 +65,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant Sky Connect"
+    assert config_entry.title == "Home Assistant SkyConnect"
     assert (
         config_entry.unique_id
         == f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}"
@@ -68,7 +79,7 @@ async def test_config_flow_unique_id(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
     )
     config_entry.add_to_hass(hass)
@@ -93,7 +104,7 @@ async def test_config_flow_multiple_entries(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
     )
     config_entry.add_to_hass(hass)
@@ -119,7 +130,7 @@ async def test_config_flow_update_device(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
     )
     config_entry.add_to_hass(hass)
@@ -152,7 +163,6 @@ async def test_config_flow_update_device(hass: HomeAssistant) -> None:
     assert len(mock_unload_entry.mock_calls) == 1
 
 
-@pytest.mark.skip(reason="Temporarily disabled")
 async def test_option_flow_install_multi_pan_addon(
     hass: HomeAssistant,
     addon_store_info,
@@ -162,6 +172,7 @@ async def test_option_flow_install_multi_pan_addon(
     start_addon,
 ) -> None:
     """Test installing the multi pan addon."""
+    assert await async_setup_component(hass, "usb", {})
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry
@@ -176,7 +187,7 @@ async def test_option_flow_install_multi_pan_addon(
         },
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
     )
     config_entry.add_to_hass(hass)
@@ -243,7 +254,6 @@ def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
     return detect
 
 
-@pytest.mark.skip(reason="Temporarily disabled")
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(),
@@ -257,6 +267,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     start_addon,
 ) -> None:
     """Test installing the multi pan addon when a zha config entry exists."""
+    assert await async_setup_component(hass, "usb", {})
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry
@@ -271,7 +282,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
         },
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
     )
     config_entry.add_to_hass(hass)

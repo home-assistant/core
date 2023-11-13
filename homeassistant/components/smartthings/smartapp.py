@@ -76,8 +76,7 @@ async def find_app(hass: HomeAssistant, api):
 
 
 async def validate_installed_app(api, installed_app_id: str):
-    """
-    Ensure the specified installed SmartApp is valid and functioning.
+    """Ensure the specified installed SmartApp is valid and functioning.
 
     Query the API for the installed SmartApp and validate that it is tied to
     the specified app_id and is in an authorized state.
@@ -104,8 +103,7 @@ def validate_webhook_requirements(hass: HomeAssistant) -> bool:
 
 
 def get_webhook_url(hass: HomeAssistant) -> str:
-    """
-    Get the URL of the webhook.
+    """Get the URL of the webhook.
 
     Return the cloudhook if available, otherwise local webhook.
     """
@@ -182,8 +180,7 @@ async def update_app(hass: HomeAssistant, app):
 
 
 def setup_smartapp(hass, app):
-    """
-    Configure an individual SmartApp in hass.
+    """Configure an individual SmartApp in hass.
 
     Register the SmartApp with the SmartAppManager so that hass will service
     lifecycle events (install, event, etc...).  A unique SmartApp is created
@@ -200,20 +197,24 @@ def setup_smartapp(hass, app):
     return smartapp
 
 
-async def setup_smartapp_endpoint(hass: HomeAssistant):
-    """
-    Configure the SmartApp webhook in hass.
+async def setup_smartapp_endpoint(hass: HomeAssistant, fresh_install: bool):
+    """Configure the SmartApp webhook in hass.
 
     SmartApps are an extension point within the SmartThings ecosystem and
     is used to receive push updates (i.e. device updates) from the cloud.
     """
     if hass.data.get(DOMAIN):
         # already setup
-        return
+        if not fresh_install:
+            return
+
+        # We're doing a fresh install, clean up
+        await unload_smartapp_endpoint(hass)
 
     # Get/create config to store a unique id for this hass instance.
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
-    if not (config := await store.async_load()):
+
+    if fresh_install or not (config := await store.async_load()):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
@@ -473,8 +474,7 @@ async def smartapp_update(hass: HomeAssistant, req, resp, app):
 
 
 async def smartapp_uninstall(hass: HomeAssistant, req, resp, app):
-    """
-    Handle when a SmartApp is removed from a location by the user.
+    """Handle when a SmartApp is removed from a location by the user.
 
     Find and delete the config entry representing the integration.
     """
@@ -499,8 +499,7 @@ async def smartapp_uninstall(hass: HomeAssistant, req, resp, app):
 
 
 async def smartapp_webhook(hass: HomeAssistant, webhook_id: str, request):
-    """
-    Handle a smartapp lifecycle event callback from SmartThings.
+    """Handle a smartapp lifecycle event callback from SmartThings.
 
     Requests from SmartThings are digitally signed and the SmartAppManager
     validates the signature for authenticity.

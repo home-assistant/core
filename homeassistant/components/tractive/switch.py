@@ -9,19 +9,17 @@ from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables
+from . import Trackables, TractiveClient
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     CLIENT,
     DOMAIN,
-    SERVER_UNAVAILABLE,
     TRACKABLES,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
@@ -47,21 +45,21 @@ class TractiveSwitchEntityDescription(
 SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
-        name="Tracker buzzer",
+        translation_key="tracker_buzzer",
         icon="mdi:volume-high",
         method="async_set_buzzer",
         entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LED,
-        name="Tracker LED",
+        translation_key="tracker_led",
         icon="mdi:led-on",
         method="async_set_led",
         entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LIVE_TRACKING,
-        name="Live tracking",
+        translation_key="live_tracking",
         icon="mdi:map-marker-path",
         method="async_set_live_tracking",
         entity_category=EntityCategory.CONFIG,
@@ -77,7 +75,7 @@ async def async_setup_entry(
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = [
-        TractiveSwitch(client.user_id, item, description)
+        TractiveSwitch(client, item, description)
         for description in SWITCH_TYPES
         for item in trackables
     ]
@@ -88,17 +86,21 @@ async def async_setup_entry(
 class TractiveSwitch(TractiveEntity, SwitchEntity):
     """Tractive switch."""
 
-    _attr_has_entity_name = True
     entity_description: TractiveSwitchEntityDescription
 
     def __init__(
         self,
-        user_id: str,
+        client: TractiveClient,
         item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
-        super().__init__(user_id, item.trackable, item.tracker_details)
+        super().__init__(
+            client,
+            item.trackable,
+            item.tracker_details,
+            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{item.tracker_details['_id']}",
+        )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._attr_available = False
@@ -107,38 +109,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self.entity_description = description
 
     @callback
-    def handle_server_unavailable(self) -> None:
-        """Handle server unavailable."""
-        self._attr_available = False
-        self.async_write_ha_state()
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle status update."""
+        self._attr_is_on = event[self.entity_description.key]
 
-    @callback
-    def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
-        """Handle hardware status update."""
-        if (state := event[self.entity_description.key]) is None:
-            return
-        self._attr_is_on = state
-        self._attr_available = True
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
-                self.handle_hardware_status_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
+        super().handle_status_update(event)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""

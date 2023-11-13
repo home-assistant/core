@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -69,41 +69,27 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, remote, name, device_info):
         """Initialize the entity."""
         self._remote = remote
-        self._name = name
-        self._device_info = device_info
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        if self._device_info is None:
-            return None
-        return self._device_info[ATTR_UDN]
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        if self._device_info is None:
-            return None
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
-            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
-            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
-            name=self._name,
-        )
+        if device_info is not None:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_info[ATTR_UDN])},
+                manufacturer=device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+                model=device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+                name=name,
+            )
+            self._attr_unique_id = device_info[ATTR_UDN]
+        else:
+            self._attr_name = name
 
     @property
     def device_class(self):
         """Return the device class of the device."""
         return MediaPlayerDeviceClass.TV
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def state(self):
@@ -185,7 +171,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         await self._remote.async_send_key(Keys.rewind)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):
@@ -203,7 +189,9 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         await self._remote.async_play_media(media_type, media_id)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)

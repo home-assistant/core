@@ -1,9 +1,7 @@
 {
   "domain": "nexia",
   "name": "Nexia/American Standard/Trane",
-  "requirements": ["nexia==2.0.6"],
   "codeowners": ["@bdraco"],
-  "documentation": "https://www.home-assistant.io/integrations/nexia",
   "config_flow": true,
   "dhcp": [
     {
@@ -11,6 +9,8 @@
       "macaddress": "000231*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/nexia",
   "iot_class": "cloud_polling",
-  "loggers": ["nexia"]
+  "loggers": ["nexia"],
+  "requirements": ["nexia==2.0.7"]
 }

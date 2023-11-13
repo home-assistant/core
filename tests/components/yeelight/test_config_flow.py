@@ -1,4 +1,5 @@
 """Test the Yeelight config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -59,7 +60,7 @@ SSDP_INFO = ssdp.SsdpServiceInfo(
 )
 
 
-async def test_discovery(hass: HomeAssistant):
+async def test_discovery(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     with _patch_discovery(), _patch_discovery_interval():
         result = await hass.config_entries.flow.async_init(
@@ -116,7 +117,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: "0x000000000099999", CONF_HOST: "4.4.4.4"}
@@ -194,7 +195,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_no_device(hass: HomeAssistant):
+async def test_discovery_no_device(hass: HomeAssistant) -> None:
     """Test discovery without device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,7 +210,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_import(hass: HomeAssistant):
+async def test_import(hass: HomeAssistant) -> None:
     """Test import from yaml."""
     config = {
         CONF_NAME: DEFAULT_NAME,
@@ -269,7 +270,7 @@ async def test_import(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual(hass: HomeAssistant) -> None:
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -339,7 +340,7 @@ async def test_manual(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_options(hass: HomeAssistant):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -382,7 +383,7 @@ async def test_options(hass: HomeAssistant):
     assert hass.states.get(f"light.{NAME}_nightlight") is not None
 
 
-async def test_options_unknown_model(hass: HomeAssistant):
+async def test_options_unknown_model(hass: HomeAssistant) -> None:
     """Test options flow with an unknown model."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -424,7 +425,7 @@ async def test_options_unknown_model(hass: HomeAssistant):
     assert hass.states.get(f"light.{NAME}_nightlight") is not None
 
 
-async def test_manual_no_capabilities(hass: HomeAssistant):
+async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     """Test manually setup without successful get_capabilities."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -454,7 +455,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_homekit_and_dhcp(hass):
+async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
 
     mocked_bulb = _mocked_bulb()
@@ -465,8 +466,8 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -524,7 +525,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -535,8 +536,8 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -546,7 +547,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_homekit(hass, source, data):
+async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) -> None:
     """Test we can setup when discovered from dhcp or homekit."""
 
     mocked_bulb = _mocked_bulb()
@@ -592,7 +593,7 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -603,8 +604,8 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -614,7 +615,9 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data):
+async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort if we cannot get the unique id when discovered from dhcp or homekit."""
 
     mocked_bulb = _mocked_bulb()
@@ -630,7 +633,7 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_ssdp(hass):
+async def test_discovered_ssdp(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from ssdp."""
 
     mocked_bulb = _mocked_bulb()
@@ -675,7 +678,7 @@ async def test_discovered_ssdp(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_discovered_zeroconf(hass):
+async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     mocked_bulb = _mocked_bulb()
@@ -738,7 +741,7 @@ async def test_discovered_zeroconf(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_discovery_updates_ip(hass: HomeAssistant):
+async def test_discovery_updates_ip(hass: HomeAssistant) -> None:
     """Test discovery updates ip."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.2.3"}, unique_id=ID
@@ -761,7 +764,9 @@ async def test_discovery_updates_ip(hass: HomeAssistant):
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
-async def test_discovery_updates_ip_no_reload_setup_in_progress(hass: HomeAssistant):
+async def test_discovery_updates_ip_no_reload_setup_in_progress(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery updates ip does not reload if setup is an an error state."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -790,7 +795,7 @@ async def test_discovery_updates_ip_no_reload_setup_in_progress(hass: HomeAssist
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
+async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant) -> None:
     """Test discovery adds missing ip."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_ID: ID})
     config_entry.add_to_hass(hass)
@@ -812,7 +817,7 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -823,8 +828,8 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -834,7 +839,7 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
         ),
     ],
 )
-async def test_discovered_during_onboarding(hass, source, data):
+async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -> None:
     """Test we create a config entry when discovered during onboarding."""
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -844,7 +849,6 @@ async def test_discovered_during_onboarding(hass, source, data):
     ) as mock_async_setup_entry, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ) as mock_is_onboarded:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )

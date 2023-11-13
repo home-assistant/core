@@ -1,57 +1,41 @@
-"""Base class for Balboa Spa Client integration."""
-import time
+"""Balboa entities."""
+from __future__ import annotations
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from pybalboa import EVENT_UPDATE, SpaClient
 
-from .const import SIGNAL_UPDATE
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
 
 
 class BalboaEntity(Entity):
-    """Abstract class for all Balboa platforms.
-
-    Once you connect to the spa's port, it continuously sends data (at a rate
-    of about 5 per second!).  The API updates the internal states of things
-    from this stream, and all we have to do is read the values out of the
-    accessors.
-    """
+    """Balboa base entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, entry, client, devtype, num=None):
-        """Initialize the spa entity."""
-        self._client = client
-        self._device_name = self._client.get_model_name()
-        self._type = devtype
-        self._num = num
-        self._entry = entry
-        self._attr_unique_id = f'{self._device_name}-{self._type}{self._num or ""}-{self._client.get_macaddr().replace(":","")[-6:]}'
-        self._attr_name = f'{self._device_name}: {self._type}{self._num or ""}'
+    def __init__(self, client: SpaClient, name: str | None = None) -> None:
+        """Initialize the control."""
+        mac = client.mac_address
+        model = client.model
+        self._attr_unique_id = f'{model}-{name}-{mac.replace(":","")[-6:]}'
+        self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            name=self._device_name,
+            identifiers={(DOMAIN, mac)},
+            name=model,
             manufacturer="Balboa Water Group",
-            model=self._client.get_model_name(),
-            sw_version=self._client.get_ssid(),
-            connections={(CONNECTION_NETWORK_MAC, self._client.get_macaddr())},
+            model=model,
+            sw_version=client.software_version,
+            connections={(CONNECTION_NETWORK_MAC, mac)},
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener for the entity."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_UPDATE.format(self._entry.entry_id),
-                self.async_write_ha_state,
-            )
-        )
+        self._client = client
 
     @property
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from device."""
-        return (self._client.lastupd + 5 * 60) < time.time()
+        return not self._client.available
 
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available or not."""
-        return self._client.connected
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.async_on_remove(self._client.on(EVENT_UPDATE, self.async_write_ha_state))

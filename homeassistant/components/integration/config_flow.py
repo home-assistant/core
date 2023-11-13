@@ -6,6 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_METHOD, CONF_NAME, UnitOfTime
 from homeassistant.helpers import selector
@@ -26,22 +27,21 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    selector.SelectOptionDict(value="none", label="none"),
     selector.SelectOptionDict(value="k", label="k (kilo)"),
     selector.SelectOptionDict(value="M", label="M (mega)"),
     selector.SelectOptionDict(value="G", label="G (giga)"),
     selector.SelectOptionDict(value="T", label="T (tera)"),
 ]
 TIME_UNITS = [
-    selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="s (seconds)"),
-    selector.SelectOptionDict(value=UnitOfTime.MINUTES, label="min (minutes)"),
-    selector.SelectOptionDict(value=UnitOfTime.HOURS, label="h (hours)"),
-    selector.SelectOptionDict(value=UnitOfTime.DAYS, label="d (days)"),
+    UnitOfTime.SECONDS,
+    UnitOfTime.MINUTES,
+    UnitOfTime.HOURS,
+    UnitOfTime.DAYS,
 ]
 INTEGRATION_METHODS = [
-    selector.SelectOptionDict(value=METHOD_TRAPEZOIDAL, label="Trapezoidal rule"),
-    selector.SelectOptionDict(value=METHOD_LEFT, label="Left Riemann sum"),
-    selector.SelectOptionDict(value=METHOD_RIGHT, label="Right Riemann sum"),
+    METHOD_TRAPEZOIDAL,
+    METHOD_LEFT,
+    METHOD_RIGHT,
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -58,10 +58,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+            selector.EntitySelectorConfig(domain=[INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN])
         ),
         vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=INTEGRATION_METHODS),
+            selector.SelectSelectorConfig(
+                options=INTEGRATION_METHODS, translation_key=CONF_METHOD
+            ),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -71,12 +73,14 @@ CONFIG_SCHEMA = vol.Schema(
                 unit_of_measurement="decimals",
             ),
         ),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=TIME_UNITS, mode=selector.SelectSelectorMode.DROPDOWN
+                options=TIME_UNITS,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_UNIT_TIME,
             ),
         ),
     }

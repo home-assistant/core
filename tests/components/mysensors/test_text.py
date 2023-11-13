@@ -12,7 +12,7 @@ from homeassistant.components.text import (
     DOMAIN as TEXT_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 
@@ -29,6 +29,7 @@ async def test_text_node(
 
     assert state
     assert state.state == "test"
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     await hass.services.async_call(
         TEXT_DOMAIN,
@@ -61,5 +62,5 @@ async def test_text_node(
         )
 
     assert str(err.value) == (
-        f"Value {value} for Text Node 1 1 is too long (maximum length 25)"
+        f"Value {value} for text.text_node_1_1 is too long (maximum length 25)"
     )

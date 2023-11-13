@@ -1,4 +1,4 @@
-"""This platform provides binary sensors for key RainMachine data."""
+"""Binary sensors for key RainMachine data."""
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity
@@ -44,14 +44,14 @@ class RainMachineBinarySensorDescription(
 BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_FLOW_SENSOR,
-        name="Flow sensor",
+        translation_key=TYPE_FLOW_SENSOR,
         icon="mdi:water-pump",
         api_category=DATA_PROVISION_SETTINGS,
         data_key="useFlowSensor",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE,
-        name="Freeze restrictions",
+        translation_key=TYPE_FREEZE,
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
@@ -59,7 +59,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOURLY,
-        name="Hourly restrictions",
+        translation_key=TYPE_HOURLY,
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
@@ -67,7 +67,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_MONTH,
-        name="Month restrictions",
+        translation_key=TYPE_MONTH,
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
@@ -75,7 +75,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_RAINDELAY,
-        name="Rain delay restrictions",
+        translation_key=TYPE_RAINDELAY,
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
@@ -83,7 +83,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_RAINSENSOR,
-        name="Rain sensor restrictions",
+        translation_key=TYPE_RAINSENSOR,
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -92,7 +92,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_WEEKDAY,
-        name="Weekday restrictions",
+        translation_key=TYPE_WEEKDAY,
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,

@@ -145,12 +145,11 @@ def validate_version_specific_config(conf: dict) -> dict:
                 f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
-    else:
-        if CONF_TOKEN in conf:
-            raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
-                f" {CONF_API_VERSION} is {API_VERSION_2}"
-            )
+    elif CONF_TOKEN in conf:
+        raise vol.Invalid(
+            f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
+            f" {CONF_API_VERSION} is {API_VERSION_2}"
+        )
 
     return conf
 
@@ -295,7 +294,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     key = f"{key}_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
-                # But if we can not do it we store the value
+                # But if we cannot do it we store the value
                 # as string add "_str" postfix to the field key
                 try:
                     json[INFLUX_CONF_FIELDS][key] = float(value)

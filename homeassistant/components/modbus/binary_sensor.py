@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +24,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CONF_SLAVE_COUNT
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
+)
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +51,9 @@ async def async_setup_platform(
     sensors: list[ModbusBinarySensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_BINARY_SENSORS]:
-        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
+        slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
         sensor = ModbusBinarySensor(hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
@@ -96,7 +104,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
         self._call_active = False
@@ -122,7 +130,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[list[int]]]],
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
     RestoreEntity,
     BinarySensorEntity,
 ):
@@ -138,6 +146,9 @@ class SlaveSensor(
         idx += 1
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        if self._attr_unique_id:
+            self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_available = False
         self._result_inx = idx
         super().__init__(coordinator)
@@ -153,6 +164,5 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        if result:
-            self._attr_is_on = bool(result[self._result_inx] & 1)
+        self._attr_is_on = bool(result[self._result_inx] & 1) if result else None
         super()._handle_coordinator_update()

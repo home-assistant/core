@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
 
 from homeassistant.core import HomeAssistant
 
-from . import debug_info
 from .. import mqtt
+from . import debug_info
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
@@ -31,7 +31,8 @@ class EntitySubscription:
     ) -> None:
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
-            assert other
+            if TYPE_CHECKING:
+                assert other
             self.unsubscribe_callback = other.unsubscribe_callback
             return
 
@@ -64,7 +65,11 @@ class EntitySubscription:
         if other is None:
             return True
 
-        return (self.topic, self.qos, self.encoding,) != (
+        return (
+            self.topic,
+            self.qos,
+            self.encoding,
+        ) != (
             other.topic,
             other.qos,
             other.encoding,
@@ -120,11 +125,9 @@ def async_prepare_subscribe_topics(
 
 async def async_subscribe_topics(
     hass: HomeAssistant,
-    sub_state: dict[str, EntitySubscription] | None,
+    sub_state: dict[str, EntitySubscription],
 ) -> None:
     """(Re)Subscribe to a set of MQTT topics."""
-    if sub_state is None:
-        return
     for sub in sub_state.values():
         await sub.subscribe()
 

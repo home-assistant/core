@@ -1,6 +1,7 @@
 """Support for Spotify media browsing."""
 from __future__ import annotations
 
+from enum import StrEnum
 from functools import partial
 import logging
 from typing import Any
@@ -8,7 +9,6 @@ from typing import Any
 from spotipy import Spotify
 import yarl
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
@@ -140,7 +140,7 @@ async def async_browse_media(
     # Check if caller is requesting the root nodes
     if media_content_type is None and media_content_id is None:
         children = []
-        for config_entry_id, info in hass.data[DOMAIN].items():
+        for config_entry_id in hass.data[DOMAIN]:
             config_entry = hass.config_entries.async_get_entry(config_entry_id)
             assert config_entry is not None
             children.append(
@@ -216,7 +216,7 @@ async def async_browse_media_internal(
 
     # Strip prefix
     if media_content_type:
-        media_content_type = media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+        media_content_type = media_content_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
     payload = {
         "media_content_type": media_content_type,
@@ -399,8 +399,7 @@ def build_item_response(  # noqa: C901
 
 
 def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -445,8 +444,7 @@ def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
 
 
 def library_payload(*, can_play_artist: bool) -> BrowseMedia:
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """

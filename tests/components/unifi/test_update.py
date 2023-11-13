@@ -2,7 +2,6 @@
 from copy import deepcopy
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketState
 from yarl import URL
 
 from homeassistant.components.unifi.const import CONF_SITE_ID
@@ -24,8 +23,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
-from .test_controller import DESCRIPTION, setup_unifi_integration
+from .test_controller import SITE, setup_unifi_integration
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_1 = {
     "board_rev": 3,
@@ -57,14 +59,18 @@ DEVICE_2 = {
 }
 
 
-async def test_no_entities(hass, aioclient_mock):
+async def test_no_entities(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 0
 
 
-async def test_device_updates(hass, aioclient_mock, mock_unifi_websocket):
+async def test_device_updates(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some devices."""
     device_1 = deepcopy(DEVICE_1)
     await setup_unifi_integration(
@@ -125,16 +131,15 @@ async def test_device_updates(hass, aioclient_mock, mock_unifi_websocket):
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_not_admin(hass, aioclient_mock):
+async def test_not_admin(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that the INSTALL feature is not available on a non-admin account."""
-    description = deepcopy(DESCRIPTION)
-    description[0]["site_role"] = "not admin"
+    site = deepcopy(SITE)
+    site[0]["role"] = "not admin"
 
     await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        site_description=description,
-        devices_response=[DEVICE_1],
+        hass, aioclient_mock, sites=site, devices_response=[DEVICE_1]
     )
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
@@ -145,7 +150,9 @@ async def test_not_admin(hass, aioclient_mock):
     )
 
 
-async def test_install(hass, aioclient_mock):
+async def test_install(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the device update install call."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
@@ -176,25 +183,19 @@ async def test_install(hass, aioclient_mock):
     )
 
 
-async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocket):
+async def test_controller_state_change(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        devices_response=[DEVICE_1],
-    )
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
     assert hass.states.get("update.device_1").state == STATE_ON
 
     # Controller unavailable
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
-
+    await websocket_mock.disconnect()
     assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
 
     # Controller available
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
-
+    await websocket_mock.reconnect()
     assert hass.states.get("update.device_1").state == STATE_ON

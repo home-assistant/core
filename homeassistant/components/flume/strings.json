@@ -28,5 +28,50 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "name": "Leak detected"
+      },
+      "flow": {
+        "name": "High flow"
+      }
+    },
+    "sensor": {
+      "current_interval": {
+        "name": "Current"
+      },
+      "month_to_date": {
+        "name": "Current month"
+      },
+      "week_to_date": {
+        "name": "Current week"
+      },
+      "today": {
+        "name": "Current day"
+      },
+      "last_60_min": {
+        "name": "60 minutes"
+      },
+      "last_24_hrs": {
+        "name": "24 hours"
+      },
+      "last_30_days": {
+        "name": "30 days"
+      }
+    }
+  },
+  "services": {
+    "list_notifications": {
+      "name": "List notifications",
+      "description": "Return user notifications.",
+      "fields": {
+        "config_entry": {
+          "name": "Flume",
+          "description": "The flume config entry for which to return notifications."
+        }
+      }
+    }
   }
 }

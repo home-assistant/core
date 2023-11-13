@@ -22,12 +22,15 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    if not (coordinator := hass.data[DOMAIN].get(entry.entry_id)):
-        coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
-        hass.data[DOMAIN][entry.entry_id] = coordinator
+    if (device_id := entry.unique_id) is None:
+        device_id = entry.entry_id
 
+    coordinator = RokuDataUpdateCoordinator(
+        hass, host=entry.data[CONF_HOST], device_id=device_id
+    )
     await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -36,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

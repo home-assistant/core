@@ -1,10 +1,11 @@
 {
   "domain": "ruckus_unleashed",
   "name": "Ruckus Unleashed",
+  "codeowners": ["@lanrat", "@ms264556", "@gabe565"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ruckus_unleashed",
-  "requirements": ["pyruckus==0.16"],
-  "codeowners": ["@gabe565"],
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pexpect", "pyruckus"]
+  "loggers": ["aioruckus", "xmltodict"],
+  "requirements": ["aioruckus==0.34"]
 }

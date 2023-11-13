@@ -24,7 +24,6 @@ SCAN_INTERVAL = timedelta(days=1)
 
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
-    name="Firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
 
@@ -36,10 +35,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot update platform."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    robots = hub.account.robots
     entities = [
         RobotUpdateEntity(robot=robot, hub=hub, description=FIRMWARE_UPDATE_ENTITY)
-        for robot in robots
+        for robot in hub.litter_robots()
         if isinstance(robot, LitterRobot4)
     ]
     async_add_entities(entities, True)

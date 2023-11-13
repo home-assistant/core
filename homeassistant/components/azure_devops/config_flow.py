@@ -19,7 +19,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self._organization: str | None = None
         self._project: str | None = None

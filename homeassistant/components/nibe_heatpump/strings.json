@@ -22,7 +22,7 @@
       "nibegw": {
         "description": "Before attempting to configure the integration, verify that:\n - The NibeGW unit is connected to a heat pump.\n - The MODBUS40 accessory has been enabled in the heat pump configuration.\n - The pump has not gone into an alarm state about missing MODBUS40 accessory.",
         "data": {
-          "model": "Model of Heat Pump",
+          "model": "[%key:component::nibe_heatpump::config::step::modbus::data::model%]",
           "ip_address": "Remote address",
           "remote_read_port": "Remote read port",
           "remote_write_port": "Remote write port",

@@ -45,7 +45,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._registered_view = False
         self._oauth = None
@@ -100,7 +100,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             token_info = await oauth.get_access_token(code)
         except ambiclimate.AmbiclimateOauthError:
-            _LOGGER.error("Failed to get access token", exc_info=True)
+            _LOGGER.exception("Failed to get access token")
             return None
 
         store = Store(self.hass, STORAGE_VERSION, STORAGE_KEY)

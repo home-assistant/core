@@ -4,12 +4,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kostal.plenticore import MeData, VersionData
+from pykoplenti import MeData, VersionData
 import pytest
 
 from homeassistant.components.kostal_plenticore.helper import Plenticore
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from tests.common import MockConfigEntry
 

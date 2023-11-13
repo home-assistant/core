@@ -98,21 +98,42 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_volume_level = float(self.device.speaker_settings.volume / 100)
+        updated_device = self.device
+        self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
 
         if (
-            self.device.talkback_stream is not None
-            and self.device.talkback_stream.is_running
+            updated_device.talkback_stream is not None
+            and updated_device.talkback_stream.is_running
         ):
             self._attr_state = MediaPlayerState.PLAYING
         else:
             self._attr_state = MediaPlayerState.IDLE
 
         is_connected = self.data.last_update_success and (
-            self.device.state == StateType.CONNECTED
-            or (not self.device.is_adopted_by_us and self.device.can_adopt)
+            updated_device.state == StateType.CONNECTED
+            or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
-        self._attr_available = is_connected and self.device.feature_flags.has_speaker
+        self._attr_available = is_connected and updated_device.feature_flags.has_speaker
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the state, volume, and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_state = self._attr_state
+        previous_available = self._attr_available
+        previous_volume_level = self._attr_volume_level
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_state != previous_state
+            or self._attr_volume_level != previous_volume_level
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -153,11 +174,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
             raise HomeAssistantError(err) from err
-        else:
-            # update state after starting player
-            self._async_updated_event(self.device)
-            # wait until player finishes to update state again
-            await self.device.wait_until_audio_completes()
+
+        # update state after starting player
+        self._async_updated_event(self.device)
+        # wait until player finishes to update state again
+        await self.device.wait_until_audio_completes()
 
         self._async_updated_event(self.device)
 

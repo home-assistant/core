@@ -41,6 +41,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> None:

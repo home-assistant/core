@@ -1,4 +1,6 @@
 """Mail (SMTP) notification service."""
+from __future__ import annotations
+
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -26,33 +28,35 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ssl import client_context
 
-from . import DOMAIN, PLATFORMS
+from .const import (
+    ATTR_HTML,
+    ATTR_IMAGES,
+    CONF_DEBUG,
+    CONF_ENCRYPTION,
+    CONF_SENDER_NAME,
+    CONF_SERVER,
+    DEFAULT_DEBUG,
+    DEFAULT_ENCRYPTION,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    ENCRYPTION_OPTIONS,
+)
+
+PLATFORMS = [Platform.NOTIFY]
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_IMAGES = "images"  # optional embedded image file attachments
-ATTR_HTML = "html"
-
-CONF_ENCRYPTION = "encryption"
-CONF_DEBUG = "debug"
-CONF_SERVER = "server"
-CONF_SENDER_NAME = "sender_name"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 587
-DEFAULT_TIMEOUT = 5
-DEFAULT_DEBUG = False
-DEFAULT_ENCRYPTION = "starttls"
-
-ENCRYPTION_OPTIONS = ["tls", "starttls", "none"]
-
-# pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
@@ -72,7 +76,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MailNotificationService | None:
     """Get the mail notification service."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
@@ -175,8 +183,7 @@ class MailNotificationService(BaseNotificationService):
         return True
 
     def send_message(self, message="", **kwargs):
-        """
-        Build and send a message to a user.
+        """Build and send a message to a user.
 
         Will send plain text normally, or will build a multipart HTML message
         with inline image attachments if images config is defined, or will

@@ -8,8 +8,8 @@ from rokuecp.models import Device as RokuDevice
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -34,14 +34,14 @@ class RokuSensorEntityDescription(
 SENSORS: tuple[RokuSensorEntityDescription, ...] = (
     RokuSensorEntityDescription(
         key="active_app",
-        name="Active App",
+        translation_key="active_app",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:application",
         value_fn=lambda device: device.app.name if device.app else None,
     ),
     RokuSensorEntityDescription(
         key="active_app_id",
-        name="Active App ID",
+        translation_key="active_app_id",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:application-cog",
         value_fn=lambda device: device.app.app_id if device.app else None,
@@ -56,10 +56,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roku sensor based on a config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = coordinator.data.info.serial_number
+
     async_add_entities(
         RokuSensorEntity(
-            device_id=unique_id,
             coordinator=coordinator,
             description=description,
         )

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from aiolookin import NoUsableService
@@ -24,7 +25,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_manual_setup(hass: HomeAssistant):
+async def test_manual_setup(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -47,7 +48,7 @@ async def test_manual_setup(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_setup_already_exists(hass: HomeAssistant):
+async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=DEVICE_ID
@@ -70,7 +71,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_setup_device_offline(hass: HomeAssistant):
+async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +90,7 @@ async def test_manual_setup_device_offline(hass: HomeAssistant):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_manual_setup_unknown_exception(hass: HomeAssistant):
+async def test_manual_setup_unknown_exception(hass: HomeAssistant) -> None:
     """Test manually setting up, unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -108,7 +109,7 @@ async def test_manual_setup_unknown_exception(hass: HomeAssistant):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_discovered_zeroconf(hass):
+async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     with _patch_get_info():
@@ -135,7 +136,7 @@ async def test_discovered_zeroconf(hass):
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     zc_data_new_ip = dataclasses.replace(ZEROCONF_DATA)
-    zc_data_new_ip.host = "127.0.0.2"
+    zc_data_new_ip.ip_address = ip_address("127.0.0.2")
 
     with _patch_get_info(), patch(
         f"{MODULE}.async_setup_entry", return_value=True
@@ -152,7 +153,7 @@ async def test_discovered_zeroconf(hass):
     assert entry.data[CONF_HOST] == "127.0.0.2"
 
 
-async def test_discovered_zeroconf_cannot_connect(hass):
+async def test_discovered_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test we abort if we cannot connect when discovered from zeroconf."""
 
     with _patch_get_info(exception=NoUsableService):
@@ -167,7 +168,7 @@ async def test_discovered_zeroconf_cannot_connect(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_zeroconf_unknown_exception(hass):
+async def test_discovered_zeroconf_unknown_exception(hass: HomeAssistant) -> None:
     """Test we abort if we get an unknown exception when discovered from zeroconf."""
 
     with _patch_get_info(exception=Exception):

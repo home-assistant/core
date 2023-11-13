@@ -96,3 +96,14 @@ TEST_NO_FIELD_SENSOR = Sensor(
     permissions={"read": True},
     model="Test",
 )
+TEST_MISSING_FIELD_DATA_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["Temperature"],
+    location=Location(id="1", name="Test"),
+    data={"Temperature": None},
+    permissions={"read": True},
+    model="Test",
+)

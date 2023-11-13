@@ -8,9 +8,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfPower
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -20,7 +23,6 @@ from .models import WizData
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rssi",
-        name="Signal strength",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -33,7 +35,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 POWER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power",
-        name="Current power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,

@@ -1,4 +1,4 @@
-"""This component provides Switches for UniFi Protect."""
+"""Component providing Switches for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,9 +15,9 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -139,6 +139,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:run-fast",
         entity_category=EntityCategory.CONFIG,
         ufp_value="recording_settings.enable_motion_detection",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_motion_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -149,6 +150,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_person",
         ufp_value="is_person_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_person_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -159,6 +161,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_vehicle_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -169,6 +172,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_face",
         ufp_value="is_face_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_face_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -179,6 +183,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_package",
         ufp_value="is_package_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_package_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -189,6 +194,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_license_plate",
         ufp_value="is_license_plate_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_license_plate_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -199,6 +205,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_smoke",
         ufp_value="is_smoke_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_smoke_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -413,20 +420,35 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
         self._switch_type = self.entity_description.key
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self.entity_description.get_ufp_value(self.device) is True
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-
         await self.entity_description.ufp_set(self.device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-
         await self.entity_description.ufp_set(self.device, False)
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the is_on and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_is_on = self._attr_is_on
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_is_on != previous_is_on
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()
 
 
 class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):

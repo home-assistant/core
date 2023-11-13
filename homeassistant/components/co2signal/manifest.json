@@ -1,10 +1,11 @@
 {
   "domain": "co2signal",
-  "name": "CO2 Signal",
-  "documentation": "https://www.home-assistant.io/integrations/co2signal",
-  "requirements": ["co2signal==0.4.2"],
-  "codeowners": [],
-  "iot_class": "cloud_polling",
+  "name": "Electricity Maps",
+  "codeowners": ["@jpbede"],
   "config_flow": true,
-  "loggers": ["CO2Signal"]
+  "documentation": "https://www.home-assistant.io/integrations/co2signal",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["CO2Signal"],
+  "requirements": ["CO2Signal==0.4.2"]
 }

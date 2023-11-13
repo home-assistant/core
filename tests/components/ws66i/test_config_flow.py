@@ -14,6 +14,7 @@ from homeassistant.components.ws66i.const import (
     INIT_OPTIONS_DEFAULT,
 )
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 
 from .test_media_player import AttrDict
 
@@ -22,7 +23,7 @@ from tests.common import MockConfigEntry
 CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,7 +37,6 @@ async def test_form(hass):
         "homeassistant.components.ws66i.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         ws66i_instance = mock_ws66i.return_value
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -54,7 +54,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +71,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_wrong_ip(hass):
+async def test_form_wrong_ip(hass: HomeAssistant) -> None:
     """Test cannot connect error with bad IP."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -88,7 +88,7 @@ async def test_form_wrong_ip(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_generic_exception(hass):
+async def test_generic_exception(hass: HomeAssistant) -> None:
     """Test generic exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,7 +105,7 @@ async def test_generic_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     conf = {CONF_IP_ADDRESS: "1.1.1.1", CONF_SOURCES: INIT_OPTIONS_DEFAULT}
 

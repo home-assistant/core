@@ -1,7 +1,6 @@
 """Native Home Assistant iOS app component."""
 import datetime
 from http import HTTPStatus
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -12,8 +11,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json_object
 
 from .const import (
     CONF_ACTION_BACKGROUND_COLOR,
@@ -251,22 +251,19 @@ def device_name_for_push_id(hass, push_id):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
-    conf = config.get(DOMAIN)
+    conf: ConfigType | None = config.get(DOMAIN)
 
     ios_config = await hass.async_add_executor_job(
-        load_json, hass.config.path(CONFIGURATION_FILE)
+        load_json_object, hass.config.path(CONFIGURATION_FILE)
     )
-
-    if TYPE_CHECKING:
-        assert isinstance(ios_config, dict)
 
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
 
-    ios_config[CONF_USER] = conf or {}
+    if CONF_PUSH not in (conf_user := conf or {}):
+        conf_user[CONF_PUSH] = {}
 
-    if CONF_PUSH not in ios_config[CONF_USER]:
-        ios_config[CONF_USER][CONF_PUSH] = {}
+    ios_config[CONF_USER] = conf_user
 
     hass.data[DOMAIN] = ios_config
 
@@ -296,7 +293,6 @@ async def async_setup_entry(
     return True
 
 
-# pylint: disable=invalid-name
 class iOSPushConfigView(HomeAssistantView):
     """A view that provides the push categories configuration."""
 

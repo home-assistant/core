@@ -21,7 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -180,7 +181,7 @@ def async_host_input_received(
         logical_address.is_group,
     )
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
-    device = device_registry.async_get_device(identifiers, set())
+    device = device_registry.async_get_device(identifiers=identifiers)
     if device is None:
         return
 
@@ -276,16 +277,16 @@ class LcnEntity(Entity):
             f" ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
         )
 
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": f"{address}.{self.config[CONF_RESOURCE]}",
-            "model": model,
-            "manufacturer": "Issendorff",
-            "via_device": (
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=f"{address}.{self.config[CONF_RESOURCE]}",
+            model=model,
+            manufacturer="Issendorff",
+            via_device=(
                 DOMAIN,
                 generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
             ),
-        }
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

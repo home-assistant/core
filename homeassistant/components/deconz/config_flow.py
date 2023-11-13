@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import logging
 from pprint import pformat
 from typing import Any, cast
 from urllib.parse import urlparse
 
-import async_timeout
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
 from pydeconz.gateway import DeconzSession
 from pydeconz.utils import (
@@ -87,8 +87,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         If no bridge is found allow user to manually input configuration.
         """
         if user_input is not None:
-
-            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+            if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_manual_input()
 
             for bridge in self.bridges:
@@ -101,13 +100,14 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 self.bridges = await deconz_discovery(session)
 
         except (asyncio.TimeoutError, ResponseError):
             self.bridges = []
 
-        LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
 
         if self.bridges:
             hosts = []
@@ -158,7 +158,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             deconz_session = DeconzSession(session, self.host, self.port)
 
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     api_key = await deconz_session.get_api_key()
 
             except LinkButtonNotPressed:
@@ -179,7 +179,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             session = aiohttp_client.async_get_clientsession(self.hass)
 
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     self.bridge_id = await deconz_get_bridge_id(
                         session, self.host, self.port, self.api_key
                     )
@@ -216,7 +216,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered deCONZ bridge."""
-        LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
 
         self.bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         parsed_url = urlparse(discovery_info.ssdp_location)
@@ -249,7 +250,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        LOGGER.debug("deCONZ HASSIO discovery %s", pformat(discovery_info.config))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("deCONZ HASSIO discovery %s", pformat(discovery_info.config))
 
         self.bridge_id = normalize_bridge_id(discovery_info.config[CONF_SERIAL])
         await self.async_set_unique_id(self.bridge_id)

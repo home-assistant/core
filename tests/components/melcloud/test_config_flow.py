@@ -7,8 +7,10 @@ from aiohttp import ClientError, ClientResponseError
 import pymelcloud
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.melcloud.const import DOMAIN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+import homeassistant.helpers.issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +46,7 @@ def mock_request_info():
         yield mock_ri
 
 
-async def test_form(hass, mock_login, mock_get_devices):
+async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,10 +76,12 @@ async def test_form(hass, mock_login, mock_get_devices):
 
 
 @pytest.mark.parametrize(
-    "error,reason",
+    ("error", "reason"),
     [(ClientError(), "cannot_connect"), (asyncio.TimeoutError(), "cannot_connect")],
 )
-async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
+async def test_form_errors(
+    hass: HomeAssistant, mock_login, mock_get_devices, error, reason
+) -> None:
     """Test we handle cannot connect error."""
     mock_login.side_effect = error
 
@@ -93,7 +97,7 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
 
 
 @pytest.mark.parametrize(
-    "error,message",
+    ("error", "message"),
     [
         (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
         (HTTPStatus.FORBIDDEN, "invalid_auth"),
@@ -101,8 +105,8 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
     ],
 )
 async def test_form_response_errors(
-    hass, mock_login, mock_get_devices, mock_request_info, error, message
-):
+    hass: HomeAssistant, mock_login, mock_get_devices, mock_request_info, error, message
+) -> None:
     """Test we handle response errors."""
     mock_login.side_effect = ClientResponseError(mock_request_info(), (), status=error)
 
@@ -116,7 +120,109 @@ async def test_form_response_errors(
     assert result["reason"] == message
 
 
-async def test_import_with_token(hass, mock_login, mock_get_devices):
+@pytest.mark.parametrize(
+    ("error", "message", "issue"),
+    [
+        (
+            HTTPStatus.UNAUTHORIZED,
+            "invalid_auth",
+            "deprecated_yaml_import_issue_invalid_auth",
+        ),
+        (
+            HTTPStatus.FORBIDDEN,
+            "invalid_auth",
+            "deprecated_yaml_import_issue_invalid_auth",
+        ),
+        (
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "cannot_connect",
+            "deprecated_yaml_import_issue_cannot_connect",
+        ),
+    ],
+)
+async def test_step_import_fails(
+    hass: HomeAssistant,
+    mock_login,
+    mock_get_devices,
+    mock_request_info,
+    error: Exception,
+    message: str,
+    issue: str,
+) -> None:
+    """Test raising issues on import."""
+    mock_get_devices.side_effect = ClientResponseError(
+        mock_request_info(), (), status=error
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"username": "test-email@test-domain.com", "token": "test-token"},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == message
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, issue)
+
+
+async def test_step_import_fails_ClientError(
+    hass: HomeAssistant,
+    mock_login,
+    mock_get_devices,
+    mock_request_info,
+) -> None:
+    """Test raising issues on import for ClientError."""
+    mock_get_devices.side_effect = ClientError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"username": "test-email@test-domain.com", "token": "test-token"},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+
+
+async def test_step_import_already_exist(
+    hass: HomeAssistant,
+    mock_login,
+    mock_get_devices,
+    mock_request_info,
+) -> None:
+    """Test that errors are shown when duplicates are added."""
+    conf = {"username": "test-email@test-domain.com", "token": "test-token"}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=conf,
+        title=conf["username"],
+        unique_id=conf["username"],
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_melcloud"
+    )
+    assert issue.translation_key == "deprecated_yaml"
+
+
+async def test_import_with_token(
+    hass: HomeAssistant, mock_login, mock_get_devices
+) -> None:
     """Test successful import."""
     with patch(
         "homeassistant.components.melcloud.async_setup", return_value=True
@@ -139,8 +245,14 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_melcloud"
+    )
+    assert issue.translation_key == "deprecated_yaml"
 
-async def test_token_refresh(hass, mock_login, mock_get_devices):
+
+async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     """Re-configuration with existing username should refresh token."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

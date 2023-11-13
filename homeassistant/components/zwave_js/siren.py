@@ -72,20 +72,14 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         if self._attr_available_tones:
             self._attr_supported_features |= SirenEntityFeature.TONES
 
+        self._attr_name = self.generate_name(include_value_name=True)
+
     @property
     def is_on(self) -> bool | None:
         """Return whether device is on."""
         if self.info.primary_value.value is None:
             return None
         return bool(self.info.primary_value.value)
-
-    async def async_set_value(
-        self, new_value: int, options: dict[str, Any] | None = None
-    ) -> None:
-        """Set a value on a siren node."""
-        await self.info.node.async_set_value(
-            self.info.primary_value, new_value, options=options
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -95,11 +89,13 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
             options["volume"] = round(volume * 100)
         # Play the default tone if a tone isn't provided
         if tone_id is None:
-            await self.async_set_value(ToneID.DEFAULT, options)
+            await self._async_set_value(
+                self.info.primary_value, ToneID.DEFAULT, options
+            )
             return
 
-        await self.async_set_value(tone_id, options)
+        await self._async_set_value(self.info.primary_value, tone_id, options)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.async_set_value(ToneID.OFF)
+        await self._async_set_value(self.info.primary_value, ToneID.OFF)

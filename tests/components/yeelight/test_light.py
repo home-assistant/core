@@ -138,7 +138,7 @@ SUPPORT_YEELIGHT = (
 )
 
 
-async def test_services(hass: HomeAssistant, caplog):
+async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Yeelight services."""
     assert await async_setup_component(hass, "homeassistant", {})
     config_entry = MockConfigEntry(
@@ -181,7 +181,7 @@ async def test_services(hass: HomeAssistant, caplog):
         await hass.services.async_call(domain, service, data, blocking=True)
         if payload is None:
             mocked_method.assert_called_once()
-        elif type(payload) == list:
+        elif isinstance(payload, list):
             mocked_method.assert_called_once_with(*payload)
         else:
             mocked_method.assert_called_once_with(**payload)
@@ -525,7 +525,9 @@ async def test_services(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
-async def test_update_errors(hass: HomeAssistant, caplog):
+async def test_update_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test update errors."""
     assert await async_setup_component(hass, "homeassistant", {})
     config_entry = MockConfigEntry(
@@ -575,7 +577,7 @@ async def test_update_errors(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
-async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
+async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     """Ensure we suppress state changes that will increase the rate limit when there is no change."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -645,7 +647,8 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     mocked_bulb.async_set_rgb.reset_mock()
     mocked_bulb.last_properties["flowing"] = "0"
 
-    mocked_bulb.model = "color"  # color model needs a workaround (see MODELS_WITH_DELAYED_ON_TRANSITION)
+    # color model needs a workaround (see MODELS_WITH_DELAYED_ON_TRANSITION)
+    mocked_bulb.model = "color"
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
@@ -766,7 +769,9 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     mocked_bulb.last_properties["flowing"] = "0"
 
 
-async def test_device_types(hass: HomeAssistant, caplog):
+async def test_device_types(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test different device types."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -884,6 +889,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "mono",
         {
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
             "color_mode": "brightness",
@@ -898,6 +904,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "effect": None,
             "brightness": bright,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],
@@ -912,6 +919,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -939,6 +947,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         },
         nightlight_mode_properties={
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "hs_color": (28.401, 100.0),
             "rgb_color": (255, 120, 0),
@@ -971,6 +980,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -986,6 +996,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "hs_color": hs_color,
             "rgb_color": color_hs_to_RGB(*hs_color),
             "xy_color": color_hs_to_xy(*hs_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1004,6 +1016,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1019,6 +1032,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "hs_color": color_RGB_to_hs(*rgb_color),
             "rgb_color": rgb_color,
             "xy_color": color_RGB_to_xy(*rgb_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1038,6 +1053,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1050,6 +1066,11 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1069,6 +1090,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1081,6 +1103,11 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1099,6 +1126,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "color",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1110,6 +1138,12 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
+            "brightness": None,
+            "hs_color": None,
+            "rgb_color": None,
+            "xy_color": None,
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "unknown",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1128,6 +1162,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "ceiling1",
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
@@ -1158,6 +1193,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         },
         nightlight_mode_properties={
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
                 color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
@@ -1196,6 +1232,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "friendly_name": NAME,
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
@@ -1229,6 +1266,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         nightlight_mode_properties={
             "friendly_name": NAME,
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "effect": None,
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
@@ -1265,6 +1303,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1292,6 +1331,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1303,6 +1343,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "hs_color": bg_hs_color,
             "rgb_color": color_hs_to_RGB(*bg_hs_color),
             "xy_color": color_hs_to_xy(*bg_hs_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1317,6 +1359,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         "ceiling4",
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
@@ -1328,6 +1371,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "hs_color": color_RGB_to_hs(*bg_rgb_color),
             "rgb_color": bg_rgb_color,
             "xy_color": color_RGB_to_xy(*bg_rgb_color),
+            "color_temp": None,
+            "color_temp_kelvin": None,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -1336,7 +1381,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
     )
 
 
-async def test_effects(hass: HomeAssistant):
+async def test_effects(hass: HomeAssistant) -> None:
     """Test effects."""
     assert await async_setup_component(
         hass,
@@ -1507,7 +1552,7 @@ async def test_effects(hass: HomeAssistant):
     await _async_test_effect("not_existed", called=False)
 
 
-async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
+async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
     """Test that main light on ambilights with the nightlight disabled shows the correct brightness."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -1541,7 +1586,7 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
     assert state.attributes[ATTR_BRIGHTNESS] == 128
 
 
-async def test_state_fails_to_update_triggers_update(hass: HomeAssistant):
+async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> None:
     """Ensure we call async_get_properties if the turn on/off fails to update the state."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}

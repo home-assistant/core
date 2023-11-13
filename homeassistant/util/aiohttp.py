@@ -10,7 +10,7 @@ from aiohttp import payload, web
 from aiohttp.typedefs import JSONDecoder
 from multidict import CIMultiDict, MultiDict
 
-from homeassistant.helpers.json import json_loads
+from .json import json_loads
 
 
 class MockStreamReader:
@@ -66,6 +66,11 @@ class MockRequest:
         """Return the body as text."""
         return MockStreamReader(self._content)
 
+    @property
+    def body_exists(self) -> bool:
+        """Return True if request has HTTP BODY, False otherwise."""
+        return bool(self._text)
+
     async def json(self, loads: JSONDecoder = json_loads) -> Any:
         """Return the body as JSON."""
         return loads(self._text)
@@ -84,12 +89,12 @@ def serialize_response(response: web.Response) -> dict[str, Any]:
     if (body := response.body) is None:
         body_decoded = None
     elif isinstance(body, payload.StringPayload):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         body_decoded = body._value.decode(body.encoding)
     elif isinstance(body, bytes):
         body_decoded = body.decode(response.charset or "utf-8")
     else:
-        raise ValueError("Unknown payload encoding")
+        raise TypeError("Unknown payload encoding")
 
     return {
         "status": response.status,

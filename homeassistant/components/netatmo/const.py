@@ -63,13 +63,13 @@ DATA_PERSONS = "netatmo_persons"
 DATA_SCHEDULES = "netatmo_schedules"
 
 NETATMO_EVENT = "netatmo_event"
-NETATMO_WEBHOOK_URL = None
 
 DEFAULT_DISCOVERY = True
 DEFAULT_PERSON = "unknown"
 DEFAULT_WEBHOOKS = False
 
 ATTR_CAMERA_LIGHT_MODE = "camera_light_mode"
+ATTR_END_DATETIME = "end_datetime"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_FACE_URL = "face_url"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
@@ -87,6 +87,7 @@ SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_SCHEDULE = "set_schedule"
+SERVICE_SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"

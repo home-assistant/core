@@ -1,8 +1,6 @@
 """Support for inkbird ble sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant import config_entries
@@ -115,9 +113,7 @@ async def async_setup_entry(
 
 
 class INKBIRDBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a inkbird ble sensor."""

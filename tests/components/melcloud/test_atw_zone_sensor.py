@@ -32,7 +32,7 @@ def mock_zone_2():
         yield mock
 
 
-def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2):
+def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2) -> None:
     """Test unique id generation correctness."""
     sensor_1 = AtwZoneSensor(
         mock_device,

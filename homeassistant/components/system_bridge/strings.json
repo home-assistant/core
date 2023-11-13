@@ -27,5 +27,134 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "media_player": {
+      "media": {
+        "name": "Media"
+      }
+    },
+    "sensor": {
+      "boot_time": {
+        "name": "Boot time"
+      },
+      "cpu_power_package": {
+        "name": "CPU package power"
+      },
+      "cpu_speed": {
+        "name": "CPU speed"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "cpu_voltage": {
+        "name": "CPU voltage"
+      },
+      "kernel": {
+        "name": "Kernel"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "amount_memory_used": {
+        "name": "Amount of memory used"
+      },
+      "os": {
+        "name": "Operating system"
+      },
+      "processes": {
+        "name": "Processes"
+      },
+      "load": {
+        "name": "Load"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "version_latest": {
+        "name": "Latest version"
+      },
+      "battery_time_remaining": {
+        "name": "Battery time remaining"
+      },
+      "displays_connected": {
+        "name": "Displays connected"
+      }
+    }
+  },
+  "services": {
+    "open_path": {
+      "name": "Open path",
+      "description": "Opens a file on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "name": "Bridge",
+          "description": "The server to talk to."
+        },
+        "path": {
+          "name": "[%key:common::config_flow::data::path%]",
+          "description": "Path to open."
+        }
+      }
+    },
+    "open_url": {
+      "name": "Open URL",
+      "description": "Opens a URL on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL to open."
+        }
+      }
+    },
+    "send_keypress": {
+      "name": "Send keyboard keypress",
+      "description": "Sends a keyboard keypress.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "The server to send the command to."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys."
+        }
+      }
+    },
+    "send_text": {
+      "name": "Send keyboard text",
+      "description": "Sends text for the server to type.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to type."
+        }
+      }
+    },
+    "power_command": {
+      "name": "Power command",
+      "description": "Sends a power command to the system.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Command to call."
+        }
+      }
+    }
   }
 }
