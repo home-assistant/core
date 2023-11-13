@@ -59,7 +59,7 @@ def bypass_api_fixture() -> None:
     ), patch(
         "roborock.api.AttributeCache.value"
     ), patch(
-        "homeassistant.components.roborock.image.asyncio.sleep"
+        "homeassistant.components.roborock.image.MAP_SLEEP", 0
     ):
         yield
 

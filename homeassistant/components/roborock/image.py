@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES
+from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
@@ -126,7 +126,7 @@ async def create_coordinator_maps(
                     RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
                 )
                 # We cannot get the map until the roborock servers fully process the map change.
-                await asyncio.sleep(3)
+                await asyncio.sleep(MAP_SLEEP)
             # Get the map data
             api_data: bytes = await coord.cloud_api.get_map_v1()
             entities.append(

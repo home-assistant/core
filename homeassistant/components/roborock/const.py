@@ -27,3 +27,5 @@ IMAGE_DRAWABLES: list[Drawable] = [
 ]
 
 IMAGE_CACHE_INTERVAL = 90
+
+MAP_SLEEP = 3
