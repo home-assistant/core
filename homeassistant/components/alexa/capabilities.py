@@ -630,12 +630,16 @@ class AlexaColorController(AlexaCapability):
         if name != "color":
             raise UnsupportedProperty(name)
 
-        hue, saturation = self.entity.attributes.get(light.ATTR_HS_COLOR, (0, 0))
+        hue_saturation: tuple[float, float] | None
+        if (hue_saturation := self.entity.attributes.get(light.ATTR_HS_COLOR)) is None:
+            hue_saturation = (0, 0)
+        if (brightness := self.entity.attributes.get(light.ATTR_BRIGHTNESS)) is None:
+            brightness = 0
 
         return {
-            "hue": hue,
-            "saturation": saturation / 100.0,
-            "brightness": self.entity.attributes.get(light.ATTR_BRIGHTNESS, 0) / 255.0,
+            "hue": hue_saturation[0],
+            "saturation": hue_saturation[1] / 100.0,
+            "brightness": brightness / 255.0,
         }
 
 

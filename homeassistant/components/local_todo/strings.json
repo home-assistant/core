@@ -1,0 +1,16 @@
+{
+  "title": "Local To-do",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please choose a name for your new To-do list",
+        "data": {
+          "todo_list_name": "To-do list name"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

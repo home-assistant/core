@@ -211,7 +211,7 @@ async def test_attribute_validation_max_greater_then_min(
 ) -> None:
     """Test the validation of min and max configuration attributes."""
     assert await mqtt_mock_entry()
-    assert "not a valid value" in caplog.text
+    assert "text length min must be >= max" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -236,7 +236,7 @@ async def test_attribute_validation_max_not_greater_then_max_state_length(
 ) -> None:
     """Test the max value of of max configuration attribute."""
     assert await mqtt_mock_entry()
-    assert "not a valid value" in caplog.text
+    assert "max text length must be <= 255" in caplog.text
 
 
 @pytest.mark.parametrize(

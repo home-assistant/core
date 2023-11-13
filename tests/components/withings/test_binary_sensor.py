@@ -59,8 +59,8 @@ async def test_binary_sensor(
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
     assert (
-        "Platform withings does not generate unique IDs. ID withings_12345_in_bed already exists - ignoring binary_sensor.henk_in_bed"
-        not in caplog.text
+        "Platform withings does not generate unique IDs. ID withings_12345_in_bed "
+        "already exists - ignoring binary_sensor.henk_in_bed" not in caplog.text
     )
 
 

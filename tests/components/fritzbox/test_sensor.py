@@ -26,7 +26,9 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
+async def test_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, fritz: Mock
+) -> None:
     """Test setup of platform."""
     device = FritzDeviceSensorMock()
     assert await setup_config_entry(
@@ -61,7 +63,6 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         ],
     )
 
-    entity_registry = er.async_get(hass)
     for sensor in sensors:
         state = hass.states.get(sensor[0])
         assert state

@@ -88,6 +88,8 @@ INTEGRATION_LOAD_EXCEPTIONS = (
     *LOAD_EXCEPTIONS,
 )
 
+SAFE_MODE_FILENAME = "safe-mode"
+
 DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
 default_config:
@@ -533,11 +535,11 @@ def _format_config_error(
 
     message += (
         f" (See {getattr(domain_config, '__config_file__', '?')}, "
-        f"line {getattr(domain_config, '__line__', '?')}). "
+        f"line {getattr(domain_config, '__line__', '?')})."
     )
 
     if domain != CONF_CORE and link:
-        message += f"Please check the docs at {link}"
+        message += f" Please check the docs at {link}"
 
     return message, is_friendly
 
@@ -668,7 +670,7 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += (
         f" (See {getattr(pack_config, '__config_file__', '?')}:"
-        f"{getattr(pack_config, '__line__', '?')}). "
+        f"{getattr(pack_config, '__line__', '?')})."
     )
 
     _LOGGER.error(message)
@@ -722,15 +724,15 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
     return None
 
 
-def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | str:
+def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | None:
     """Merge package into conf, recursively."""
-    error: bool | str = False
+    duplicate_key: str | None = None
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
                 continue
             conf[key] = conf.get(key, OrderedDict())
-            error = _recursive_merge(conf=conf[key], package=pack_conf)
+            duplicate_key = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
@@ -741,7 +743,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | st
             if conf.get(key) is not None:
                 return key
             conf[key] = pack_conf
-    return error
+    return duplicate_key
 
 
 async def merge_packages_config(
@@ -816,10 +818,10 @@ async def merge_packages_config(
                 )
                 continue
 
-            error = _recursive_merge(conf=config[comp_name], package=comp_conf)
-            if error:
+            duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
+            if duplicate_key:
                 _log_pkg_error(
-                    pack_name, comp_name, config, f"has duplicate key '{error}'"
+                    pack_name, comp_name, config, f"has duplicate key '{duplicate_key}'"
                 )
 
     return config
@@ -1007,3 +1009,24 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
+
+
+def safe_mode_enabled(config_dir: str) -> bool:
+    """Return if safe mode is enabled.
+
+    If safe mode is enabled, the safe mode file will be removed.
+    """
+    safe_mode_path = os.path.join(config_dir, SAFE_MODE_FILENAME)
+    safe_mode = os.path.exists(safe_mode_path)
+    if safe_mode:
+        os.remove(safe_mode_path)
+    return safe_mode
+
+
+async def async_enable_safe_mode(hass: HomeAssistant) -> None:
+    """Enable safe mode."""
+
+    def _enable_safe_mode() -> None:
+        Path(hass.config.path(SAFE_MODE_FILENAME)).touch()
+
+    await hass.async_add_executor_job(_enable_safe_mode)

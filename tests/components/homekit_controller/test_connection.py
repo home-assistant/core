@@ -90,7 +90,9 @@ DEVICE_MIGRATION_TESTS = [
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
 async def test_migrate_device_id_no_serial_skip_if_other_owner(
-    hass: HomeAssistant, variant: DeviceMigrationTest
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    variant: DeviceMigrationTest,
 ) -> None:
     """Don't migrate unrelated devices.
 
@@ -99,7 +101,6 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     """
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
-    device_registry = dr.async_get(hass)
 
     bridge = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -122,11 +123,11 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
 async def test_migrate_device_id_no_serial(
-    hass: HomeAssistant, variant: DeviceMigrationTest
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    variant: DeviceMigrationTest,
 ) -> None:
     """Test that a Ryse smart bridge with four shades can be migrated correctly in HA."""
-    device_registry = dr.async_get(hass)
-
     accessories = await setup_accessories_from_file(hass, variant.fixture)
 
     fake_controller = await setup_platform(hass)

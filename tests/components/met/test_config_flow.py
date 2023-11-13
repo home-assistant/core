@@ -156,7 +156,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     # Test Options flow updated config entry
-    with patch("homeassistant.components.met.metno.MetWeatherData") as weatherdatamock:
+    with patch(
+        "homeassistant.components.met.coordinator.metno.MetWeatherData"
+    ) as weatherdatamock:
         result = await hass.config_entries.options.async_init(
             entry.entry_id, data=update_data
         )

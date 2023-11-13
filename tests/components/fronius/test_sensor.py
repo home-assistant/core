@@ -302,6 +302,22 @@ async def test_gen24(
     assert_state("sensor.solarnet_relative_autonomy", 5.3592)
     assert_state("sensor.solarnet_total_energy", 1530193.42)
 
+    # Gen24 devices may report 0 for total energy while doing firmware updates.
+    # This should yield "unknown" state instead of 0.
+    mock_responses(
+        aioclient_mock,
+        fixture_set="gen24",
+        override_data={
+            "gen24/GetInverterRealtimeData_Device_1.json": [
+                (["Body", "Data", "TOTAL_ENERGY", "Value"], 0),
+            ],
+        },
+    )
+    freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert_state("sensor.inverter_name_total_energy", "unknown")
+
 
 async def test_gen24_storage(
     hass: HomeAssistant,
