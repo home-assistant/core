@@ -1,0 +1,129 @@
+# serializer version: 1
+# name: test_component_config_validation_error[basic]
+  list([
+    "Invalid config for [iot_domain.non_adr_0007]: expected str for dictionary value @ data['option1']. Got 123. (See <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 6).",
+    "Invalid config for [iot_domain]: required key not provided @ data['platform']. Got None. (See <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 9).",
+    "Invalid config for [adr_0007_2]: required key not provided @ data['adr_0007_2']['host']. Got None. (See ?, line ?).",
+    "Invalid config for [adr_0007_3]: expected int for dictionary value @ data['adr_0007_3']['port']. Got 'foo'. (See <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 20).",
+  ])
+# ---
+# name: test_component_config_validation_error[basic_include]
+  list([
+    "Invalid config for [iot_domain.non_adr_0007]: expected str for dictionary value @ data['option1']. Got 123. (See <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/iot_domain.yaml, line 5).",
+    "Invalid config for [iot_domain]: required key not provided @ data['platform']. Got None. (See <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/iot_domain.yaml, line 8).",
+    "Invalid config for [adr_0007_2]: required key not provided @ data['adr_0007_2']['host']. Got None. (See ?, line ?).",
+    "Invalid config for [adr_0007_3]: expected int for dictionary value @ data['adr_0007_3']['port']. Got 'foo'. (See <BASE_PATH>/fixtures/core/config/component_validation/basic_include/configuration.yaml, line 4).",
+  ])
+# ---
+# name: test_component_config_validation_error[include_dir_list]
+  list([
+    "Invalid config for [iot_domain.non_adr_0007]: expected str for dictionary value @ data['option1']. Got 123. (See <BASE_PATH>/fixtures/core/config/component_validation/include_dir_list/iot_domain/iot_domain_2.yaml, line 2).",
+    "Invalid config for [iot_domain]: required key not provided @ data['platform']. Got None. (See <BASE_PATH>/fixtures/core/config/component_validation/include_dir_list/iot_domain/iot_domain_3.yaml, line 2).",
+  ])
+# ---
+# name: test_component_config_validation_error[include_dir_merge_list]
+  list([
+    "Invalid config for [iot_domain.non_adr_0007]: expected str for dictionary value @ data['option1']. Got 123. (See <BASE_PATH>/fixtures/core/config/component_validation/include_dir_merge_list/iot_domain/iot_domain_2.yaml, line 2).",
+    "Invalid config for [iot_domain]: required key not provided @ data['platform']. Got None. (See <BASE_PATH>/fixtures/core/config/component_validation/include_dir_merge_list/iot_domain/iot_domain_2.yaml, line 5).",
+  ])
+# ---
+# name: test_component_config_validation_error[packages]
+  list([
+    "Invalid config for [iot_domain.non_adr_0007]: expected str for dictionary value @ data['option1']. Got 123. (See <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 11).",
+    "Invalid config for [iot_domain]: required key not provided @ data['platform']. Got None. (See <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 16).",
+    "Invalid config for [adr_0007_2]: required key not provided @ data['adr_0007_2']['host']. Got None. (See ?, line ?).",
+    "Invalid config for [adr_0007_3]: expected int for dictionary value @ data['adr_0007_3']['port']. Got 'foo'. (See ?, line ?).",
+  ])
+# ---
+# name: test_component_config_validation_error[packages_include_dir_named]
+  list([
+    "Invalid config for [iot_domain.non_adr_0007]: expected str for dictionary value @ data['option1']. Got 123. (See <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 6).",
+    "Invalid config for [iot_domain]: required key not provided @ data['platform']. Got None. (See <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 9).",
+    "Invalid config for [adr_0007_2]: required key not provided @ data['adr_0007_2']['host']. Got None. (See ?, line ?).",
+    "Invalid config for [adr_0007_3]: expected int for dictionary value @ data['adr_0007_3']['port']. Got 'foo'. (See ?, line ?).",
+  ])
+# ---
+# name: test_package_merge_error[packages]
+  list([
+    'Package pack_1 setup failed. Integration adr_0007_1 cannot be merged. Dict expected in main config. (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:9).',
+    'Package pack_2 setup failed. Integration adr_0007_2 cannot be merged. Expected a dict. (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:13).',
+    "Package pack_4 setup failed. Integration adr_0007_3 has duplicate key 'host' (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:20).",
+  ])
+# ---
+# name: test_package_merge_error[packages_include_dir_named]
+  list([
+    'Package adr_0007_1 setup failed. Integration adr_0007_1 cannot be merged. Dict expected in main config. (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_1.yaml:2).',
+    'Package adr_0007_2 setup failed. Integration adr_0007_2 cannot be merged. Expected a dict. (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_2.yaml:2).',
+    "Package adr_0007_3_2 setup failed. Integration adr_0007_3 has duplicate key 'host' (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_3_2.yaml:1).",
+  ])
+# ---
+# name: test_yaml_error[basic]
+  '''
+  mapping values are not allowed here
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic/configuration.yaml", line 4, column 14
+  '''
+# ---
+# name: test_yaml_error[basic].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic/configuration.yaml", line 4, column 14
+    ''',
+  ])
+# ---
+# name: test_yaml_error[basic_include]
+  '''
+  mapping values are not allowed here
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic_include/integrations/iot_domain.yaml", line 3, column 12
+  '''
+# ---
+# name: test_yaml_error[basic_include].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic_include/integrations/iot_domain.yaml", line 3, column 12
+    ''',
+  ])
+# ---
+# name: test_yaml_error[include_dir_list]
+  '''
+  mapping values are not allowed here
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_list/iot_domain/iot_domain_1.yaml", line 3, column 10
+  '''
+# ---
+# name: test_yaml_error[include_dir_list].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_list/iot_domain/iot_domain_1.yaml", line 3, column 10
+    ''',
+  ])
+# ---
+# name: test_yaml_error[include_dir_merge_list]
+  '''
+  mapping values are not allowed here
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_merge_list/iot_domain/iot_domain_1.yaml", line 3, column 12
+  '''
+# ---
+# name: test_yaml_error[include_dir_merge_list].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_merge_list/iot_domain/iot_domain_1.yaml", line 3, column 12
+    ''',
+  ])
+# ---
+# name: test_yaml_error[packages_include_dir_named]
+  '''
+  mapping values are not allowed here
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/packages_include_dir_named/integrations/adr_0007_1.yaml", line 4, column 9
+  '''
+# ---
+# name: test_yaml_error[packages_include_dir_named].1
+  list([
+    '''
+      mapping values are not allowed here
+        in "<BASE_PATH>/fixtures/core/config/yaml_errors/packages_include_dir_named/integrations/adr_0007_1.yaml", line 4, column 9
+    ''',
+  ])
+# ---
