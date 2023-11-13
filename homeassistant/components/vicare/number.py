@@ -20,7 +20,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -49,6 +49,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         value_setter=lambda api, shift: api.setHeatingCurve(
             shift, api.getHeatingCurveSlope()
         ),
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=-13,
         native_max_value=40,
         native_step=1,
