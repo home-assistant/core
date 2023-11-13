@@ -7,6 +7,7 @@ import logging
 from typing import Any, cast
 
 import CO2Signal
+from requests.exceptions import JSONDecodeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -67,6 +68,10 @@ def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalRespons
             longitude,
             wait=False,
         )
+
+    except JSONDecodeError as err:
+        # raise occasional occurring json decoding errors as CO2Error so the data update coordinator retries it
+        raise CO2Error from err
 
     except ValueError as err:
         err_str = str(err)

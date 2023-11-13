@@ -65,7 +65,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 11
+STORAGE_VERSION_MINOR = 12
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -156,6 +156,7 @@ class RegistryEntry:
     entity_id: str = attr.ib()
     unique_id: str = attr.ib()
     platform: str = attr.ib()
+    previous_unique_id: str | None = attr.ib(default=None)
     aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
@@ -246,7 +247,7 @@ class RegistryEntry:
 
         return None
 
-    @property
+    @cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         return {
@@ -266,6 +267,18 @@ class RegistryEntry:
             "platform": self.platform,
             "translation_key": self.translation_key,
             "unique_id": self.unique_id,
+        }
+
+    @cached_property
+    def extended_dict(self) -> dict[str, Any]:
+        """Return a extended dict representation of the entry."""
+        return {
+            **self.as_partial_dict,
+            "aliases": self.aliases,
+            "capabilities": self.capabilities,
+            "device_class": self.device_class,
+            "original_device_class": self.original_device_class,
+            "original_icon": self.original_icon,
         }
 
     @cached_property
@@ -409,6 +422,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         if old_major_version == 1 and old_minor_version < 11:
             # Version 1.11 adds deleted_entities
             data["deleted_entities"] = data.get("deleted_entities", [])
+
+        if old_major_version == 1 and old_minor_version < 12:
+            # Version 1.12 adds previous_unique_id
+            for entity in data["entities"]:
+                entity["previous_unique_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -893,6 +911,7 @@ class EntityRegistry:
                 )
             new_values["unique_id"] = new_unique_id
             old_values["unique_id"] = old.unique_id
+            new_values["previous_unique_id"] = old.unique_id
 
         if not new_values:
             return old
@@ -1060,6 +1079,7 @@ class EntityRegistry:
                     supported_features=entity["supported_features"],
                     translation_key=entity["translation_key"],
                     unique_id=entity["unique_id"],
+                    previous_unique_id=entity["previous_unique_id"],
                     unit_of_measurement=entity["unit_of_measurement"],
                 )
             for entity in data["deleted_entities"]:
@@ -1115,6 +1135,7 @@ class EntityRegistry:
                 "supported_features": entry.supported_features,
                 "translation_key": entry.translation_key,
                 "unique_id": entry.unique_id,
+                "previous_unique_id": entry.previous_unique_id,
                 "unit_of_measurement": entry.unit_of_measurement,
             }
             for entry in self.entities.values()
@@ -1323,11 +1344,17 @@ async def async_migrate_entries(
     config_entry_id: str,
     entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
-    """Migrator of unique IDs."""
+    """Migrate entity registry entries which belong to a config entry.
+
+    Can be used as a migrator of unique_ids or to update other entity registry data.
+    Can also be used to remove duplicated entity registry entries.
+    """
     ent_reg = async_get(hass)
 
-    for entry in ent_reg.entities.values():
+    for entry in list(ent_reg.entities.values()):
         if entry.config_entry_id != config_entry_id:
+            continue
+        if not ent_reg.entities.get_entry(entry.id):
             continue
 
         updates = entry_callback(entry)

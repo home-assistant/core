@@ -8,7 +8,6 @@ from homeassistant.components.shelly.utils import (
     get_device_uptime,
     get_number_of_channels,
     get_rpc_channel_name,
-    get_rpc_input_name,
     get_rpc_input_triggers,
     is_block_momentary_input,
 )
@@ -207,20 +206,8 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
 
 async def test_get_rpc_channel_name(mock_rpc_device) -> None:
     """Test get RPC channel name."""
-    assert get_rpc_channel_name(mock_rpc_device, "input:0") == "test switch_0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name switch_3"
-
-
-async def test_get_rpc_input_name(mock_rpc_device, monkeypatch) -> None:
-    """Test get RPC input name."""
-    assert get_rpc_input_name(mock_rpc_device, "input:0") == "Test name Input 0"
-
-    monkeypatch.setitem(
-        mock_rpc_device.config,
-        "input:0",
-        {"id": 0, "type": "button", "name": "Input name"},
-    )
-    assert get_rpc_input_name(mock_rpc_device, "input:0") == "Test name Input name"
+    assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test name input 0"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name input_3"
 
 
 async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:

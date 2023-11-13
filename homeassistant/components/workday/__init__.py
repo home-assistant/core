@@ -6,19 +6,43 @@ from holidays import list_supported_countries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import CONF_COUNTRY, CONF_PROVINCE, PLATFORMS
+from .const import CONF_COUNTRY, CONF_PROVINCE, DOMAIN, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Workday from a config entry."""
 
-    country: str = entry.options[CONF_COUNTRY]
+    country: str | None = entry.options.get(CONF_COUNTRY)
     province: str | None = entry.options.get(CONF_PROVINCE)
+
     if country and country not in list_supported_countries():
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "bad_country",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="bad_country",
+            translation_placeholders={"title": entry.title},
+            data={"entry_id": entry.entry_id, "country": None},
+        )
         raise ConfigEntryError(f"Selected country {country} is not valid")
 
-    if province and province not in list_supported_countries()[country]:
+    if country and province and province not in list_supported_countries()[country]:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "bad_province",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="bad_province",
+            translation_placeholders={CONF_COUNTRY: country, "title": entry.title},
+            data={"entry_id": entry.entry_id, "country": country},
+        )
         raise ConfigEntryError(
             f"Selected province {province} for country {country} is not valid"
         )

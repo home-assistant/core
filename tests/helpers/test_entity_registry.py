@@ -665,6 +665,7 @@ async def test_update_entity_unique_id(entity_registry: er.EntityRegistry) -> No
         )
     assert updated_entry != entry
     assert updated_entry.unique_id == new_unique_id
+    assert updated_entry.previous_unique_id == "5678"
     assert mock_schedule_save.call_count == 1
 
     assert entity_registry.async_get_entity_id("light", "hue", "5678") is None
@@ -1684,3 +1685,69 @@ async def test_restore_entity(hass, update_events, freezer):
     assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
     # Restore entities the 3rd time
     assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}
+
+
+async def test_async_migrate_entry_delete_self(hass):
+    """Test async_migrate_entry."""
+    registry = er.async_get(hass)
+    config_entry1 = MockConfigEntry(domain="test1")
+    config_entry2 = MockConfigEntry(domain="test2")
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry1, original_name="Entry 1"
+    )
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry1, original_name="Entry 2"
+    )
+    entry3 = registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=config_entry2, original_name="Entry 3"
+    )
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        entries.add(entity_entry.entity_id)
+        if entity_entry == entry1:
+            registry.async_remove(entry1.entity_id)
+            return None
+        if entity_entry == entry2:
+            return {"original_name": "Entry 2 renamed"}
+        return None
+
+    entries = set()
+    await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
+    assert entries == {entry1.entity_id, entry2.entity_id}
+    assert not registry.async_is_registered(entry1.entity_id)
+    entry2 = registry.async_get(entry2.entity_id)
+    assert entry2.original_name == "Entry 2 renamed"
+    assert registry.async_get(entry3.entity_id) is entry3
+
+
+async def test_async_migrate_entry_delete_other(hass):
+    """Test async_migrate_entry."""
+    registry = er.async_get(hass)
+    config_entry1 = MockConfigEntry(domain="test1")
+    config_entry2 = MockConfigEntry(domain="test2")
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry1, original_name="Entry 1"
+    )
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry1, original_name="Entry 2"
+    )
+    registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=config_entry2, original_name="Entry 3"
+    )
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        entries.add(entity_entry.entity_id)
+        if entity_entry == entry1:
+            registry.async_remove(entry2.entity_id)
+            return None
+        if entity_entry == entry2:
+            # We should not get here
+            pytest.fail()
+        return None
+
+    entries = set()
+    await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
+    assert entries == {entry1.entity_id}
+    assert not registry.async_is_registered(entry2.entity_id)

@@ -285,22 +285,10 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
-def get_rpc_input_name(device: RpcDevice, key: str) -> str:
-    """Get input name based from the device configuration."""
-    input_config = device.config[key]
-
-    if input_name := input_config.get("name"):
-        return f"{device.name} {input_name}"
-
-    return f"{device.name} {key.replace(':', ' ').capitalize()}"
-
-
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
     key = key.replace("em1data", "em1")
-    if device.config.get("switch:0"):
-        key = key.replace("input", "switch")
     device_name = device.name
     entity_name: str | None = None
     if key in device.config:
@@ -387,13 +375,10 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 
 @callback
-def device_update_info(
+def update_device_fw_info(
     hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
 ) -> None:
-    """Update device registry info."""
-
-    LOGGER.debug("Updating device registry info for %s", entry.title)
-
+    """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
     dev_reg = dr_async_get(hass)
@@ -401,6 +386,11 @@ def device_update_info(
         identifiers={(DOMAIN, entry.entry_id)},
         connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
+        if device.sw_version == shellydevice.firmware_version:
+            return
+
+        LOGGER.debug("Updating device registry info for %s", entry.title)
+
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 

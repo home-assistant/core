@@ -43,7 +43,7 @@ async def test_manual_flow_works(
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["title"] == "P1 meter"
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -68,8 +68,8 @@ async def test_discovery_flow_works(
         properties={
             "api_enabled": "1",
             "path": "/api/v1",
-            "product_name": "P1 meter",
-            "product_type": "HWE-P1",
+            "product_name": "Energy Socket",
+            "product_type": "HWE-SKT",
             "serial": "aabbccddeeff",
         },
     )
@@ -109,11 +109,11 @@ async def test_discovery_flow_works(
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["title"] == "Energy Socket"
     assert result["data"][CONF_IP_ADDRESS] == "192.168.43.183"
 
     assert result["result"]
-    assert result["result"].unique_id == "HWE-P1_aabbccddeeff"
+    assert result["result"].unique_id == "HWE-SKT_aabbccddeeff"
 
 
 async def test_discovery_flow_during_onboarding(
@@ -149,7 +149,7 @@ async def test_discovery_flow_during_onboarding(
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["title"] == "P1 meter"
     assert result["data"][CONF_IP_ADDRESS] == "192.168.43.183"
 
     assert result["result"]
@@ -214,7 +214,7 @@ async def test_discovery_flow_during_onboarding_disabled_api(
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["title"] == "P1 meter"
     assert result["data"][CONF_IP_ADDRESS] == "192.168.43.183"
 
     assert result["result"]

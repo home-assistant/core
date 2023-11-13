@@ -615,5 +615,5 @@ async def test_airzone_climate_set_temp_range(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.dkn_plus")
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 20.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 25.0

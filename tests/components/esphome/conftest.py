@@ -129,6 +129,7 @@ def mock_client(mock_device_info) -> APIClient:
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
     mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
 
     with patch("homeassistant.components.esphome.APIClient", mock_client), patch(

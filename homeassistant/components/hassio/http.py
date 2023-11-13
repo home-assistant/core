@@ -156,16 +156,15 @@ class HassIOView(HomeAssistantView):
                 # _stored_content_type is only computed once `content_type` is accessed
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
-                    headers[
-                        CONTENT_TYPE
-                    ] = request._stored_content_type  # pylint: disable=protected-access
+                    # pylint: disable-next=protected-access
+                    headers[CONTENT_TYPE] = request._stored_content_type
 
         try:
             client = await self._websession.request(
                 method=request.method,
                 url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
-                data=request.content,
+                data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
             )
@@ -179,7 +178,10 @@ class HassIOView(HomeAssistantView):
             if should_compress(response.content_type):
                 response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(8192):
+            # In testing iter_chunked, iter_any, and iter_chunks:
+            # iter_chunks was the best performing option since
+            # it does not have to do as much re-assembly
+            async for data, _ in client.content.iter_chunks():
                 await response.write(data)
 
             return response

@@ -167,6 +167,7 @@ async def test_abort_if_no_url_available(
     assert result["reason"] == "no_url_available"
 
 
+@pytest.mark.parametrize("expires_in_dict", [{}, {"expires_in": "badnumber"}])
 async def test_abort_if_oauth_error(
     hass: HomeAssistant,
     flow_handler,
@@ -174,6 +175,7 @@ async def test_abort_if_oauth_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
+    expires_in_dict: dict[str, str],
 ) -> None:
     """Check bad oauth token."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -219,8 +221,8 @@ async def test_abort_if_oauth_error(
             "refresh_token": REFRESH_TOKEN,
             "access_token": ACCESS_TOKEN_1,
             "type": "bearer",
-            "expires_in": "badnumber",
-        },
+        }
+        | expires_in_dict,
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])

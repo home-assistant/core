@@ -14,9 +14,12 @@ from homeassistant.components.recorder.db_schema import Statistics, StatisticsSh
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
@@ -301,6 +304,13 @@ async def test_statistic_during_period(
         StatisticsShortTerm,
     )
     await async_wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={"sensor.test"})
+    metadata_id = metadata["sensor.test"][0]
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Verify the import of the short term statistics
+    # also updates the run cache
+    assert run_cache.get_latest_ids({metadata_id}) is not None
 
     # No data for this period yet
     await client.send_json(
@@ -626,6 +636,26 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[:]) * 1000,
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         * 1000,
+    }
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+    start = imported_stats_5min[-1]["start"].timestamp()
+    end = start + (5 * 60)
+    assert stats == {
+        "sensor.test": [
+            {
+                "end": end,
+                "last_reset": None,
+                "start": start,
+                "state": None,
+                "sum": 38.0,
+            }
+        ]
     }
 
 

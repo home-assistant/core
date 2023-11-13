@@ -84,7 +84,7 @@ DEFAULT_STRUCT_FORMAT = {
     DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
     DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", 1, PARM_IS_LEGAL(True, False, False, False, False)),
+    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, False, False)),
     DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
 
@@ -143,7 +143,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
                 f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )
     else:
-        config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+        if data_type != DataType.STRING:
+            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
         if slave_count:
             structure = (
                 f">{slave_count + 1}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"

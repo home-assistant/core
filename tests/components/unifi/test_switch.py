@@ -3,7 +3,6 @@ from copy import deepcopy
 from datetime import timedelta
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketState
 import pytest
 
 from homeassistant.components.switch import (
@@ -772,7 +771,7 @@ async def test_no_clients(
         },
     )
 
-    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.call_count == 12
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -861,8 +860,8 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 12
-    assert aioclient_mock.mock_calls[11][2] == {
+    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.mock_calls[12][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "block-sta",
     }
@@ -870,8 +869,8 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 13
-    assert aioclient_mock.mock_calls[12][2] == {
+    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.mock_calls[13][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "unblock-sta",
     }
@@ -888,8 +887,8 @@ async def test_switches(
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert aioclient_mock.call_count == 14
-    assert aioclient_mock.mock_calls[13][2] == {"enabled": False}
+    assert aioclient_mock.call_count == 15
+    assert aioclient_mock.mock_calls[14][2] == {"enabled": False}
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -897,8 +896,8 @@ async def test_switches(
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert aioclient_mock.call_count == 15
-    assert aioclient_mock.mock_calls[14][2] == {"enabled": True}
+    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.mock_calls[15][2] == {"enabled": True}
 
 
 async def test_remove_switches(
@@ -984,8 +983,8 @@ async def test_block_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 12
-    assert aioclient_mock.mock_calls[11][2] == {
+    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.mock_calls[12][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "block-sta",
     }
@@ -993,15 +992,18 @@ async def test_block_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 13
-    assert aioclient_mock.mock_calls[12][2] == {
+    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.mock_calls[13][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "unblock-sta",
     }
 
 
 async def test_dpi_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
@@ -1026,13 +1028,11 @@ async def test_dpi_switches(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     # Remove app
@@ -1128,6 +1128,7 @@ async def test_outlet_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    websocket_mock,
     entity_id: str,
     test_data: any,
     outlet_index: int,
@@ -1192,13 +1193,11 @@ async def test_outlet_switches(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
     # Device gets disabled
@@ -1320,7 +1319,10 @@ async def test_option_remove_switches(
 
 
 async def test_poe_port_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
@@ -1408,13 +1410,11 @@ async def test_poe_port_switches(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
     # Device gets disabled
@@ -1431,7 +1431,10 @@ async def test_poe_port_switches(
 
 
 async def test_wlan_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    websocket_mock,
 ) -> None:
     """Test control of UniFi WLAN availability."""
     config_entry = await setup_unifi_integration(
@@ -1488,18 +1491,19 @@ async def test_wlan_switches(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.ssid_1").state == STATE_OFF
 
 
 async def test_port_forwarding_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    websocket_mock,
 ) -> None:
     """Test control of UniFi port forwarding."""
     _data = {
@@ -1570,13 +1574,11 @@ async def test_port_forwarding_switches(
     # Availability signalling
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
 
     # Remove entity on deleted message

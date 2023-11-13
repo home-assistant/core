@@ -4,13 +4,13 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
+from dataclasses import fields
 import datetime
 from io import SEEK_END, BytesIO
 import logging
 from threading import Event
 from typing import Any, Self, cast
 
-import attr
 import av
 
 from homeassistant.core import HomeAssistant
@@ -283,7 +283,7 @@ class StreamMuxer:
             init=read_init(self._memory_file),
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
-            stream_outputs=self._stream_state.outputs,
+            _stream_outputs=self._stream_state.outputs,
             start_time=self._start_time,
         )
         self._memory_file_pos = self._memory_file.tell()
@@ -537,7 +537,7 @@ def stream_worker(
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
-        for field in attr.fields(StreamSettings):
+        for field in fields(StreamSettings):
             setattr(
                 stream_settings,
                 field.name,

@@ -12,6 +12,7 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
 from homeassistant.config import async_log_exception, load_yaml_config_file
 from homeassistant.const import (
@@ -262,7 +263,7 @@ class DeviceTrackerPlatform:
     platform: ModuleType = attr.ib()
     config: dict = attr.ib()
 
-    @property
+    @cached_property
     def type(self) -> str | None:
         """Return platform type."""
         methods, platform_type = self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY

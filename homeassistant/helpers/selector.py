@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
@@ -98,6 +99,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.media_player import MediaPlayerEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
+    from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
@@ -117,6 +119,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
         "RemoteEntityFeature": RemoteEntityFeature,
         "SirenEntityFeature": SirenEntityFeature,
+        "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
@@ -562,6 +565,40 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         """Validate the passed selection."""
         agent: str = vol.Schema(str)(data)
         return agent
+
+
+class CountrySelectorConfig(TypedDict, total=False):
+    """Class to represent a country selector config."""
+
+    countries: list[str]
+    no_sort: bool
+
+
+@SELECTORS.register("country")
+class CountrySelector(Selector[CountrySelectorConfig]):
+    """Selector for a single-choice country select."""
+
+    selector_type = "country"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("countries"): [str],
+            vol.Optional("no_sort", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: CountrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        country: str = vol.Schema(str)(data)
+        if "countries" in self.config and (
+            country not in self.config["countries"] or country not in COUNTRIES
+        ):
+            raise vol.Invalid(f"Value {country} is not a valid option")
+        return country
 
 
 class DateSelectorConfig(TypedDict):

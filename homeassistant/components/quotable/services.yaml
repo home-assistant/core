@@ -1,0 +1,37 @@
+fetch_all_tags:
+
+fetch_a_quote:
+
+search_authors:
+  fields:
+    query:
+      required: true
+      example: albert
+      selector:
+        text:
+
+update_configuration:
+  fields:
+    selected_tags:
+      required: true
+      example:
+        - love
+        - peace
+      selector:
+        object:
+    selected_authors:
+      required: true
+      example:
+        - albert-einstein
+        - barack-obama
+      selector:
+        object:
+    update_frequency:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          step: 1
+          mode: box

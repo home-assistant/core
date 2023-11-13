@@ -24,7 +24,7 @@ async def async_setup_entry(
 class HomeWizardIdentifyButton(HomeWizardEntity, ButtonEntity):
     """Representation of a identify button."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = ButtonDeviceClass.IDENTIFY
 
     def __init__(

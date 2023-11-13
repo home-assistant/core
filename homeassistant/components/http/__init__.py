@@ -445,7 +445,7 @@ class HomeAssistantHTTP:
                 context = ssl_util.server_context_modern()
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
-            if not self.hass.config.safe_mode:
+            if not self.hass.config.recovery_mode:
                 raise HomeAssistantError(
                     f"Could not use SSL certificate from {self.ssl_certificate}:"
                     f" {error}"
@@ -465,7 +465,7 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self"
+                    "Home Assistant is running in recovery mode with an emergency self"
                     " signed ssl certificate because the configured SSL certificate was"
                     " not usable"
                 )
@@ -572,7 +572,7 @@ async def start_http_server_and_save_config(
     """Startup the http server and save the config."""
     await server.start()
 
-    # If we are set up successful, we store the HTTP settings for safe mode.
+    # If we are set up successful, we store the HTTP settings for recovery mode.
     store: storage.Store[dict[str, Any]] = storage.Store(
         hass, STORAGE_VERSION, STORAGE_KEY
     )

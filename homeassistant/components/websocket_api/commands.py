@@ -12,12 +12,20 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
-from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceResponse,
+    State,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -55,6 +63,8 @@ from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -128,14 +138,15 @@ def handle_subscribe_events(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe events command."""
-    # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from .permissions import SUBSCRIBE_ALLOWLIST
-
     event_type = msg["event_type"]
 
     if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
-        raise Unauthorized
+        _LOGGER.error(
+            "Refusing to allow %s to subscribe to event %s",
+            connection.user.name,
+            event_type,
+        )
+        raise Unauthorized(user_id=connection.user.id)
 
     if event_type == EVENT_STATE_CHANGED:
         forward_events = callback(
@@ -208,6 +219,7 @@ def handle_unsubscribe_events(
         vol.Required("service"): str,
         vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
+        vol.Optional("return_response", default=False): bool,
     }
 )
 @decorators.async_response
@@ -215,7 +227,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    blocking = True
     # We do not support templates.
     target = msg.get("target")
     if template.is_complex(target):
@@ -223,15 +234,19 @@ async def handle_call_service(
 
     try:
         context = connection.context(msg)
-        await hass.services.async_call(
+        response = await hass.services.async_call(
             msg["domain"],
             msg["service"],
             msg.get("service_data"),
-            blocking,
+            True,
             context,
             target=target,
+            return_response=msg["return_response"],
         )
-        connection.send_result(msg["id"], {"context": context})
+        result: dict[str, Context | ServiceResponse] = {"context": context}
+        if msg["return_response"]:
+            result["response"] = response
+        connection.send_result(msg["id"], result)
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")

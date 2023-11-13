@@ -1,0 +1,40 @@
+{
+  "services": {
+    "fetch_all_tags": {
+      "name": "Fetch all tags",
+      "description": "Fetches a list of all the available tags."
+    },
+    "fetch_a_quote": {
+      "name": "Fetch a quote",
+      "description": "Fetches a random quote and persists it in state."
+    },
+    "search_authors": {
+      "name": "Search authors",
+      "description": "Searches authors based on specified free-text query.",
+      "fields": {
+        "query": {
+          "name": "Query",
+          "description": "Query string to search for."
+        }
+      }
+    },
+    "update_configuration": {
+      "name": "Update configuration",
+      "description": "Updates the Quotable configuration.",
+      "fields": {
+        "selected_tags": {
+          "name": "Selected tags",
+          "description": "A list of selected tags (tag slugs)."
+        },
+        "selected_authors": {
+          "name": "Selected authors",
+          "description": "A list of selected authors (author slugs)."
+        },
+        "update_frequency": {
+          "name": "Update frequency",
+          "description": "The frequency of fetching new quotes (in seconds)."
+        }
+      }
+    }
+  }
+}

@@ -289,7 +289,7 @@ async def test_emergency_ssl_certificate_when_invalid(
         _setup_broken_ssl_pem_files, tmp_path
     )
 
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
     assert (
         await async_setup_component(
             hass,
@@ -304,17 +304,17 @@ async def test_emergency_ssl_certificate_when_invalid(
     await hass.async_start()
     await hass.async_block_till_done()
     assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+        "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
     assert hass.http.site is not None
 
 
-async def test_emergency_ssl_certificate_not_used_when_not_safe_mode(
+async def test_emergency_ssl_certificate_not_used_when_not_recovery_mode(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test an emergency cert is only used in safe mode."""
+    """Test an emergency cert is only used in recovery mode."""
 
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
@@ -338,7 +338,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
 
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
@@ -358,7 +358,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     assert len(mock_get_url.mock_calls) == 1
     assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+        "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
@@ -373,7 +373,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
@@ -410,7 +410,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError

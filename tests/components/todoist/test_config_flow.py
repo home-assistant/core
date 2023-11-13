@@ -69,7 +69,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("errors") == {"base": "invalid_access_token"}
+    assert result2.get("errors") == {"base": "invalid_api_key"}
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.INTERNAL_SERVER_ERROR])

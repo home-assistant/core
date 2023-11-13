@@ -11,7 +11,7 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
-import attr
+import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -44,26 +44,26 @@ ATTR_THIS = "this"
 PublishPayloadType = str | bytes | int | float | None
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass
 class PublishMessage:
-    """MQTT Message."""
+    """MQTT Message for publishing."""
 
-    topic: str = attr.ib()
-    payload: PublishPayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
+    topic: str
+    payload: PublishPayloadType
+    qos: int
+    retain: bool
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass
 class ReceiveMessage:
-    """MQTT Message."""
+    """MQTT Message received."""
 
-    topic: str = attr.ib()
-    payload: ReceivePayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
-    subscribed_topic: str = attr.ib(default=None)
-    timestamp: dt.datetime = attr.ib(default=None)
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
 
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
@@ -342,9 +342,8 @@ class MqttData:
     issues: dict[str, set[str]] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
-        default_factory=dict
-    )
+    reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
+    reload_schema: dict[str, vol.Schema] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)

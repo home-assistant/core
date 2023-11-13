@@ -339,7 +339,6 @@ async def test_setting_sensor_value_expires_availability_topic(
                     "state_topic": "test-topic",
                     "unit_of_measurement": "fav unit",
                     "expire_after": "4",
-                    "force_update": True,
                 }
             }
         }
@@ -412,6 +411,18 @@ async def expires_helper(hass: HomeAssistant) -> None:
         # Value is expired now
         state = hass.states.get("sensor.test")
         assert state.state == STATE_UNAVAILABLE
+
+        # Send the last message again
+        # Time jump 0.5s
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        async_fire_mqtt_message(hass, "test-topic", "101")
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("sensor.test")
+        assert state.state == "101"
 
 
 @pytest.mark.parametrize(
@@ -697,11 +708,13 @@ async def test_default_availability_list_payload_any(
 
 
 async def test_default_availability_list_single(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
-        hass, caplog, sensor.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -743,11 +756,8 @@ async def test_invalid_device_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: expected SensorDeviceClass or one of" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "expected SensorDeviceClass or one of" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -807,11 +817,8 @@ async def test_invalid_state_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test state_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: expected SensorStateClass or one of" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "expected SensorStateClass or one of" in caplog.text
 
 
 @pytest.mark.parametrize(

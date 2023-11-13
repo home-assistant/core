@@ -188,7 +188,7 @@ async def _async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return list of custom integrations."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
 
     try:
@@ -777,9 +777,7 @@ class Integration:
             return self._all_dependencies_resolved
 
         try:
-            dependencies = await _async_component_dependencies(
-                self.hass, self.domain, self, set(), set()
-            )
+            dependencies = await _async_component_dependencies(self.hass, self)
             dependencies.discard(self.domain)
             self._all_dependencies = dependencies
             self._all_dependencies_resolved = True
@@ -998,7 +996,7 @@ class IntegrationNotLoaded(LoaderError):
 class CircularDependency(LoaderError):
     """Raised when a circular dependency is found when resolving components."""
 
-    def __init__(self, from_domain: str, to_domain: str) -> None:
+    def __init__(self, from_domain: str | set[str], to_domain: str) -> None:
         """Initialize circular dependency error."""
         super().__init__(f"Circular dependency detected: {from_domain} -> {to_domain}.")
         self.from_domain = from_domain
@@ -1132,43 +1130,40 @@ def bind_hass(func: _CallableT) -> _CallableT:
 
 async def _async_component_dependencies(
     hass: HomeAssistant,
-    start_domain: str,
     integration: Integration,
-    loaded: set[str],
-    loading: set[str],
 ) -> set[str]:
-    """Recursive function to get component dependencies.
+    """Get component dependencies."""
+    loading = set()
+    loaded = set()
 
-    Async friendly.
-    """
-    domain = integration.domain
-    loading.add(domain)
+    async def component_dependencies_impl(integration: Integration) -> None:
+        """Recursively get component dependencies."""
+        domain = integration.domain
+        loading.add(domain)
 
-    for dependency_domain in integration.dependencies:
-        # Check not already loaded
-        if dependency_domain in loaded:
-            continue
+        for dependency_domain in integration.dependencies:
+            dep_integration = await async_get_integration(hass, dependency_domain)
 
-        # If we are already loading it, we have a circular dependency.
-        if dependency_domain in loading:
-            raise CircularDependency(domain, dependency_domain)
+            # If we are already loading it, we have a circular dependency.
+            # We have to check it here to make sure that every integration that
+            # depends on us, does not appear in our own after_dependencies.
+            if conflict := loading.intersection(dep_integration.after_dependencies):
+                raise CircularDependency(conflict, dependency_domain)
 
-        loaded.add(dependency_domain)
+            # If we have already loaded it, no point doing it again.
+            if dependency_domain in loaded:
+                continue
 
-        dep_integration = await async_get_integration(hass, dependency_domain)
+            # If we are already loading it, we have a circular dependency.
+            if dependency_domain in loading:
+                raise CircularDependency(dependency_domain, domain)
 
-        if start_domain in dep_integration.after_dependencies:
-            raise CircularDependency(start_domain, dependency_domain)
+            await component_dependencies_impl(dep_integration)
 
-        if dep_integration.dependencies:
-            dep_loaded = await _async_component_dependencies(
-                hass, start_domain, dep_integration, loaded, loading
-            )
+        loading.remove(domain)
+        loaded.add(domain)
 
-            loaded.update(dep_loaded)
-
-    loaded.add(domain)
-    loading.remove(domain)
+    await component_dependencies_impl(integration)
 
     return loaded
 
@@ -1184,7 +1179,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
     """Return the lookup paths for legacy lookups."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 
@@ -1192,3 +1187,55 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
 def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
     """Test if a component module is loaded."""
     return module in hass.data[DATA_COMPONENTS]
+
+
+@callback
+def async_get_issue_tracker(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str | None:
+    """Return a URL for an integration's issue tracker."""
+    issue_tracker = (
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+    )
+    if not integration_domain and not module:
+        # If we know nothing about the entity, suggest opening an issue on HA core
+        return issue_tracker
+
+    if hass and integration_domain:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+            if not integration.is_built_in:
+                return integration.issue_tracker
+
+    if module and "custom_components" in module:
+        return None
+
+    if integration_domain:
+        issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
+    return issue_tracker
+
+
+@callback
+def async_suggest_report_issue(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str:
+    """Generate a blurb asking the user to file a bug report."""
+    issue_tracker = async_get_issue_tracker(
+        hass, integration_domain=integration_domain, module=module
+    )
+
+    if not issue_tracker:
+        if not integration_domain:
+            return "report it to the custom integration author"
+        return (
+            f"report it to the author of the '{integration_domain}' "
+            "custom integration"
+        )
+
+    return f"create a bug report at {issue_tracker}"

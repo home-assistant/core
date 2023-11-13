@@ -526,12 +526,13 @@ class GroupEntity(Entity):
                 self.hass, self._entity_ids, async_state_changed_listener
             )
         )
+        self.async_on_remove(start.async_at_start(self.hass, self._update_at_start))
 
-        async def _update_at_start(_: HomeAssistant) -> None:
-            self.async_update_group_state()
-            self.async_write_ha_state()
-
-        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
+    @callback
+    def _update_at_start(self, _: HomeAssistant) -> None:
+        """Update the group state at start."""
+        self.async_update_group_state()
+        self.async_write_ha_state()
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:

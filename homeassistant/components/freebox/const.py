@@ -86,6 +86,8 @@ CATEGORY_TO_MODEL = {
 HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.CAMERA,
     FreeboxHomeCategory.DWS,
+    FreeboxHomeCategory.IOHOME,
     FreeboxHomeCategory.KFB,
     FreeboxHomeCategory.PIR,
+    FreeboxHomeCategory.RTS,
 ]

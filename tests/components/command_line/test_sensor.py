@@ -93,6 +93,7 @@ async def test_setup_integration_yaml(
                         "command": "echo 50",
                         "unit_of_measurement": "in",
                         "value_template": "{{ value | multiply(0.1) }}",
+                        "icon": "mdi:console",
                     }
                 }
             ]
@@ -105,6 +106,7 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert float(entity_state.state) == 5
+    assert entity_state.attributes.get("icon") == "mdi:console"
 
 
 @pytest.mark.parametrize(

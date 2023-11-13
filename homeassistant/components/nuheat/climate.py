@@ -251,6 +251,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         """Return the device_info of the device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.serial_number)},
+            serial_number=self._thermostat.serial_number,
             name=self._thermostat.room,
             model="nVent Signature",
             manufacturer=MANUFACTURER,

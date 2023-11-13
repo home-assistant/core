@@ -15,9 +15,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
-from .const import DOMAIN
+from .const import DEFAULT_PIPELINE_TIMEOUT, DEFAULT_WAKE_WORD_TIMEOUT, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
+    AudioSettings,
     PipelineData,
     PipelineError,
     PipelineEvent,
@@ -28,9 +29,6 @@ from .pipeline import (
     WakeWordSettings,
     async_get_pipeline,
 )
-
-DEFAULT_TIMEOUT = 30
-DEFAULT_WAKE_WORD_TIMEOUT = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +69,13 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("audio_seconds_to_buffer"): vol.Any(
                                 float, int
                             ),
+                            # Audio enhancement
+                            vol.Optional("noise_suppression_level"): int,
+                            vol.Optional("auto_gain_dbfs"): int,
+                            vol.Optional("volume_multiplier"): float,
+                            # Advanced use cases/testing
+                            vol.Optional("no_vad"): bool,
+                            vol.Optional("no_chunking"): bool,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -109,12 +114,13 @@ async def websocket_run(
         )
         return
 
-    timeout = msg.get("timeout", DEFAULT_TIMEOUT)
+    timeout = msg.get("timeout", DEFAULT_PIPELINE_TIMEOUT)
     start_stage = PipelineStage(msg["start_stage"])
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
     wake_word_settings: WakeWordSettings | None = None
+    audio_settings: AudioSettings | None = None
 
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
@@ -124,13 +130,14 @@ async def websocket_run(
 
     if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
+        msg_input = msg["input"]
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
-        incoming_sample_rate = msg["input"]["sample_rate"]
+        incoming_sample_rate = msg_input["sample_rate"]
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
                 timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
-                audio_seconds_to_buffer=msg["input"].get("audio_seconds_to_buffer", 0),
+                audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
@@ -166,6 +173,15 @@ async def websocket_run(
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
         input_args["stt_stream"] = stt_stream()
+
+        # Audio settings
+        audio_settings = AudioSettings(
+            noise_suppression_level=msg_input.get("noise_suppression_level", 0),
+            auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
+            volume_multiplier=msg_input.get("volume_multiplier", 1.0),
+            is_vad_enabled=not msg_input.get("no_vad", False),
+            is_chunking_enabled=not msg_input.get("no_chunking", False),
+        )
     elif start_stage == PipelineStage.INTENT:
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
@@ -185,6 +201,7 @@ async def websocket_run(
             "timeout": timeout,
         },
         wake_word_settings=wake_word_settings,
+        audio_settings=audio_settings or AudioSettings(),
     )
 
     pipeline_input = PipelineInput(**input_args)
@@ -238,18 +255,18 @@ def websocket_list_runs(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = msg["pipeline_id"]
 
-    if pipeline_id not in pipeline_data.pipeline_runs:
+    if pipeline_id not in pipeline_data.pipeline_debug:
         connection.send_result(msg["id"], {"pipeline_runs": []})
         return
 
-    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+    pipeline_debug = pipeline_data.pipeline_debug[pipeline_id]
 
     connection.send_result(
         msg["id"],
         {
             "pipeline_runs": [
                 {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
-                for id, pipeline_run in pipeline_runs.items()
+                for id, pipeline_run in pipeline_debug.items()
             ]
         },
     )
@@ -274,7 +291,7 @@ def websocket_get_run(
     pipeline_id = msg["pipeline_id"]
     pipeline_run_id = msg["pipeline_run_id"]
 
-    if pipeline_id not in pipeline_data.pipeline_runs:
+    if pipeline_id not in pipeline_data.pipeline_debug:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
@@ -282,9 +299,9 @@ def websocket_get_run(
         )
         return
 
-    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+    pipeline_debug = pipeline_data.pipeline_debug[pipeline_id]
 
-    if pipeline_run_id not in pipeline_runs:
+    if pipeline_run_id not in pipeline_debug:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
@@ -294,7 +311,7 @@ def websocket_get_run(
 
     connection.send_result(
         msg["id"],
-        {"events": pipeline_runs[pipeline_run_id].events},
+        {"events": pipeline_debug[pipeline_run_id].events},
     )
 
 
