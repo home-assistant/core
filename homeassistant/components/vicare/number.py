@@ -6,8 +6,11 @@ from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
-from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import (
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
+)
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -33,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare sensor entity."""
 
-    value_setter: Callable[[Device, float], str | None] | None = None
+    value_setter: Callable[[PyViCareDevice, float], str | None] | None = None
 
 
 CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
@@ -68,7 +71,7 @@ CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
 
 def _build_entity(
     name: str,
-    vicare_api,
+    vicare_api: PyViCareHeatingDeviceWithComponent,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
     hass: HomeAssistant,
@@ -90,7 +93,7 @@ async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareNumber],
     sensor_descriptions: tuple[ViCareNumberEntityDescription, ...],
-    iterables,
+    iterables: list[PyViCareHeatingDeviceWithComponent],
     config_entry: ConfigEntry,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""
@@ -137,9 +140,9 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        name,
-        api,
-        device_config,
+        name: str,
+        api: PyViCareHeatingDeviceWithComponent,
+        device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
         hass: HomeAssistant,
     ) -> None:
