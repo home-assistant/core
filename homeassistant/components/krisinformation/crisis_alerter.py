@@ -13,10 +13,10 @@ class Error(Exception):
 class CrisisAlerter:
     """Crisis Alerter from Krisinformation."""
 
-    def __init__(self, language: str = "sv", location: str | None = None) -> None:
+    def __init__(self, county: str | None = None, language: str = "sv") -> None:
         """Initialize the sensor."""
         self.language = language
-        self.location = location
+        self.county = county
 
     def news(
         self,

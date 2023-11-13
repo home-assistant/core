@@ -3,31 +3,33 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from .const import DEFAULT_NAME
+from .const import CONF_COUNTY, DEFAULT_NAME
 from .crisis_alerter import CrisisAlerter, Error
 
 _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the departure sensor."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    crisis_alerter = CrisisAlerter()
-    sensors = [CrisisAlerterSensor(crisis_alerter, name)]
+    name = config.data.get(CONF_NAME, DEFAULT_NAME)
+    county = config.data[CONF_COUNTY]
 
-    add_entities(sensors, True)
+    crisis_alerter = CrisisAlerter(county)
+
+    sensor = CrisisAlerterSensor(config.entry_id, name, crisis_alerter)
+
+    async_add_entities([sensor], False)
 
 
 class CrisisAlerterSensor(SensorEntity):
@@ -36,21 +38,36 @@ class CrisisAlerterSensor(SensorEntity):
     _attr_attribution = "Alerts provided by Krisinformation"
     _attr_icon = "mdi:alert"
 
-    def __init__(self, crisis_alerter: CrisisAlerter, name: str) -> None:
+    def __init__(
+        self, unique_id: str, name: str, crisis_alerter: CrisisAlerter
+    ) -> None:
         """Initialize the sensor."""
+        self._attr_unique_id = unique_id
+        self._attr_name = name
         self._crisis_alerter = crisis_alerter
-        self._name = name
         self._state: str | None = None
+
+    def added_to_hass(self) -> None:
+        """Handle when entity is added."""
+        if self.hass.state != CoreState.running:
+            self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, self.first_update)
+        else:
+            self.first_update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._attr_name
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    def first_update(self, _=None) -> None:
+        """Run first update and write state."""
+        self.update()
+        self.async_write_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
