@@ -58,6 +58,35 @@ async def test_proximities_setup(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, config)
 
 
+async def test_proximity_invalid_zone(hass: HomeAssistant) -> None:
+    """Test with invalid zone."""
+    config_zones(hass)
+    await hass.async_block_till_done()
+
+    config = {
+        "proximity": {
+            "invalid": {
+                "devices": ["device_tracker.test1"],
+                "tolerance": "1",
+                "zone": "invalid",
+            }
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "not_home",
+        {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("proximity.invalid")
+    assert state.state == "not set"
+    assert state.attributes.get("nearest") == "not set"
+    assert state.attributes.get("dir_of_travel") == "not set"
+
+
 async def test_proximity(hass: HomeAssistant) -> None:
     """Test the proximity."""
     config = {
