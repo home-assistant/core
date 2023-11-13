@@ -449,18 +449,22 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
-        if self._thermostat_type == "cooling":
-            return HVACMode.COOL if self.status["enable"] else HVACMode.OFF
+        if not self.status["enable"]:
+            return HVACMode.OFF
 
-        return HVACMode.HEAT if self.status["enable"] else HVACMode.OFF
+        return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
 
     @property
     def hvac_action(self) -> HVACAction:
         """HVAC current action."""
-        if self._thermostat_type == "cooling":
-            return HVACAction.COOLING if self.status["output"] else HVACAction.IDLE
+        if self.status["output"]:
+            return HVACAction.IDLE
 
-        return HVACAction.HEATING if self.status["output"] else HVACAction.IDLE
+        return (
+            HVACAction.COOLING
+            if self._thermostat_type == "cooling"
+            else HVACAction.HEATING
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
