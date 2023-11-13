@@ -1540,3 +1540,40 @@ async def test_package_merge_error(
         if record.levelno == logging.ERROR
     ]
     assert error_records == snapshot
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "basic",
+        "basic_include",
+        "include_dir_list",
+        "include_dir_merge_list",
+        "packages_include_dir_named",
+    ],
+)
+async def test_yaml_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    mock_iot_domain_integration: Integration,
+    mock_non_adr_0007_integration: None,
+    mock_adr_0007_integrations: list[Integration],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test schema error in component."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "yaml_errors", config_dir
+    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await config_util.async_hass_config_yaml(hass)
+    assert str(exc_info.value).replace(base_path, "<BASE_PATH>") == snapshot
+
+    error_records = [
+        record.message.replace(base_path, "<BASE_PATH>")
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
