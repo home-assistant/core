@@ -44,9 +44,17 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
         self.service = service
         asr_service = service.info.asr[0]
 
+        self._supported_models: list[stt.SpeechModel] = []
         model_languages: set[str] = set()
         for asr_model in asr_service.models:
             if asr_model.installed:
+                self._supported_models.append(
+                    stt.SpeechModel(
+                        model_id=asr_model.name,
+                        name=asr_model.description or asr_model.name,
+                        supported_languages=asr_model.languages,
+                    )
+                )
                 model_languages.update(asr_model.languages)
 
         self._supported_languages = list(model_languages)
@@ -82,6 +90,11 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
     def supported_channels(self) -> list[stt.AudioChannels]:
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO]
+
+    @property
+    def supported_models(self) -> list[stt.SpeechModel]:
+        """Return a list of supported models."""
+        return self._supported_models
 
     async def async_process_audio_stream(
         self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]

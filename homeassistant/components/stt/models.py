@@ -35,3 +35,12 @@ class SpeechResult:
 
     text: str | None
     result: SpeechResultState
+
+
+@dataclass(frozen=True)
+class SpeechModel:
+    """Speech-to-text model."""
+
+    model_id: str
+    name: str
+    supported_languages: list[str]

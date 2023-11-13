@@ -45,7 +45,7 @@ from .legacy import (
     async_get_provider,
     async_setup_legacy,
 )
-from .models import SpeechMetadata, SpeechResult
+from .models import SpeechMetadata, SpeechModel, SpeechResult
 
 __all__ = [
     "async_get_provider",
@@ -62,6 +62,7 @@ __all__ = [
     "SpeechMetadata",
     "SpeechResult",
     "SpeechResultState",
+    "SpeechModel",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -188,6 +189,11 @@ class SpeechToTextEntity(RestoreEntity):
     @abstractmethod
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
+
+    @property
+    def supported_models(self) -> list[SpeechModel]:
+        """Return a list of supported models."""
+        return []
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the provider entity is added to hass."""
@@ -424,16 +430,31 @@ def websocket_list_engines(
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
         }
+        supported_models = entity.supported_models
         if language:
             provider_info["supported_languages"] = language_util.matches(
                 language, entity.supported_languages, country
             )
+            supported_models = [
+                m
+                for m in entity.supported_models
+                if language_util.matches(language, m.supported_languages, country)
+            ]
+        provider_info["supported_models"] = [
+            {
+                "model_id": m.model_id,
+                "name": m.name,
+                "supported_languages": m.supported_languages,
+            }
+            for m in supported_models
+        ]
         providers.append(provider_info)
 
     for engine_id, provider in legacy_providers.items():
         provider_info = {
             "engine_id": engine_id,
             "supported_languages": provider.supported_languages,
+            "supported_models": [],
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(

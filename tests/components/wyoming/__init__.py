@@ -23,12 +23,19 @@ STT_INFO = Info(
             attribution=TEST_ATTR,
             models=[
                 AsrModel(
-                    name="Test Model",
+                    name="test_model",
                     description="Test Model",
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],
-                )
+                ),
+                AsrModel(
+                    name="test_model_2",
+                    description="Test Model 2",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US", "fr-FR"],
+                ),
             ],
         )
     ]

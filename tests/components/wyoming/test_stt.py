@@ -19,12 +19,16 @@ async def test_support(hass: HomeAssistant, init_wyoming_stt) -> None:
     entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
     assert entity is not None
 
-    assert entity.supported_languages == ["en-US"]
+    assert set(entity.supported_languages) == {"en-US", "fr-FR"}
     assert entity.supported_formats == [stt.AudioFormats.WAV]
     assert entity.supported_codecs == [stt.AudioCodecs.PCM]
     assert entity.supported_bit_rates == [stt.AudioBitRates.BITRATE_16]
     assert entity.supported_sample_rates == [stt.AudioSampleRates.SAMPLERATE_16000]
     assert entity.supported_channels == [stt.AudioChannels.CHANNEL_MONO]
+    assert entity.supported_models == [
+        stt.SpeechModel("test_model", "Test Model", ["en-US"]),
+        stt.SpeechModel("test_model_2", "Test Model 2", ["en-US", "fr-FR"]),
+    ]
 
 
 async def test_streaming_audio(

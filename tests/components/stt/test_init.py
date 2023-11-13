@@ -15,6 +15,7 @@ from homeassistant.components.stt import (
     AudioSampleRates,
     Provider,
     SpeechMetadata,
+    SpeechModel,
     SpeechResult,
     SpeechResultState,
     SpeechToTextEntity,
@@ -105,6 +106,31 @@ class MockProviderEntity(BaseProvider, SpeechToTextEntity):
     _attr_name = "test"
 
 
+class MockProviderEntityWithModels(MockProviderEntity):
+    """Mock provider entity with multiple models."""
+
+    url_path = "stt.test_2"
+    _attr_name = "test 2"
+
+    @property
+    def supported_models(self) -> list[SpeechModel]:
+        """Return a list of supported models."""
+        return [
+            SpeechModel("german", "German Model", ["de", "de-CH"]),
+            SpeechModel("english1", "English Model 1", ["en-US"]),
+            SpeechModel("english2", "English Model 2", ["en-GB"]),
+        ]
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        languages: set[str] = set()
+        for model in self.supported_models:
+            languages.update(model.supported_languages)
+
+        return sorted(languages)
+
+
 @pytest.fixture
 def mock_provider() -> MockProvider:
     """Test provider fixture."""
@@ -115,6 +141,12 @@ def mock_provider() -> MockProvider:
 def mock_provider_entity() -> MockProviderEntity:
     """Test provider entity fixture."""
     return MockProviderEntity()
+
+
+@pytest.fixture
+def mock_provider_entity_with_models() -> MockProviderEntityWithModels:
+    """Test provider entity fixture with supported_models."""
+    return MockProviderEntityWithModels()
 
 
 class STTFlow(ConfigFlow):
@@ -143,6 +175,9 @@ async def setup_fixture(
     elif request.param == "mock_config_entry_setup":
         provider = MockProviderEntity()
         await mock_config_entry_setup(hass, tmp_path, provider)
+    elif request.param == "mock_config_entry_with_models_setup":
+        provider = MockProviderEntityWithModels()
+        await mock_config_entry_with_models_setup(hass, tmp_path, provider)
     else:
         raise RuntimeError("Invalid setup fixture")
 
@@ -163,6 +198,54 @@ async def mock_setup(
     )
     assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
+
+
+async def mock_config_entry_with_models_setup(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity_with_models: MockProviderEntityWithModels,
+) -> MockConfigEntry:
+    """Set up a test provider with supported_models via config entry."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        return True
+
+    async def async_unload_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Unload up test config entry."""
+        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+            async_unload_entry=async_unload_entry_init,
+        ),
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test stt platform via config entry."""
+        async_add_entities([mock_provider_entity_with_models])
+
+    mock_stt_entity_platform(hass, tmp_path, TEST_DOMAIN, async_setup_entry_platform)
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
 
 
 async def mock_config_entry_setup(
@@ -401,7 +484,11 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [
-            {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en"]}
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["de", "de-CH", "en"],
+                "supported_models": [],
+            }
         ]
     }
 
@@ -410,7 +497,9 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": []}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": [], "supported_models": []}
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en"})
@@ -418,7 +507,13 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["en"],
+                "supported_models": [],
+            }
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
@@ -426,7 +521,13 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["en"],
+                "supported_models": [],
+            }
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
@@ -434,7 +535,13 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}]
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["de", "de-CH"],
+                "supported_models": [],
+            }
+        ]
     }
 
     await client.send_json_auto_id(
@@ -444,7 +551,162 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}]
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["de-CH", "de"],
+                "supported_models": [],
+            }
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_config_entry_with_models_setup"], indirect=True
+)
+async def test_ws_list_engines_with_models(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: MockProviderEntityWithModels,
+) -> None:
+    """Test listing speech-to-text engines."""
+    engine_id = "stt.test_2"
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "stt/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["de", "de-CH", "en-GB", "en-US"],
+                "supported_models": [
+                    {
+                        "model_id": "german",
+                        "name": "German Model",
+                        "supported_languages": ["de", "de-CH"],
+                    },
+                    {
+                        "model_id": "english1",
+                        "name": "English Model 1",
+                        "supported_languages": ["en-US"],
+                    },
+                    {
+                        "model_id": "english2",
+                        "name": "English Model 2",
+                        "supported_languages": ["en-GB"],
+                    },
+                ],
+            }
+        ]
+    }
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "smurfish"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": [], "supported_models": []}
+        ]
+    }
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "en"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": engine_id,
+                # U.S. is the default for English, so it comes first
+                "supported_languages": ["en-US", "en-GB"],
+                "supported_models": [
+                    {
+                        "model_id": "english1",
+                        "name": "English Model 1",
+                        "supported_languages": ["en-US"],
+                    },
+                    {
+                        "model_id": "english2",
+                        "name": "English Model 2",
+                        "supported_languages": ["en-GB"],
+                    },
+                ],
+            }
+        ]
+    }
+
+    await client.send_json_auto_id(
+        {"type": "stt/engine/list", "language": "en", "country": "gb"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": engine_id,
+                # Order has changed
+                "supported_languages": ["en-GB", "en-US"],
+                "supported_models": [
+                    {
+                        "model_id": "english1",
+                        "name": "English Model 1",
+                        "supported_languages": ["en-US"],
+                    },
+                    {
+                        "model_id": "english2",
+                        "name": "English Model 2",
+                        "supported_languages": ["en-GB"],
+                    },
+                ],
+            }
+        ]
+    }
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["de", "de-CH"],
+                "supported_models": [
+                    {
+                        "model_id": "german",
+                        "name": "German Model",
+                        "supported_languages": ["de", "de-CH"],
+                    },
+                ],
+            }
+        ]
+    }
+
+    await client.send_json_auto_id(
+        {"type": "stt/engine/list", "language": "de", "country": "ch"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": engine_id,
+                "supported_languages": ["de-CH", "de"],
+                "supported_models": [
+                    {
+                        "model_id": "german",
+                        "name": "German Model",
+                        "supported_languages": ["de", "de-CH"],
+                    },
+                ],
+            }
+        ]
     }
 
 
