@@ -1,5 +1,13 @@
 from enum import Enum
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 class OpenAQDeviceSensors(str, Enum):
     """Sensors to report in home assistant."""
@@ -19,19 +27,36 @@ class OpenAQDeviceSensors(str, Enum):
     Concentration_of_Carbon_Dioxide = "CO2"
     Concentration_of_Sulphure_Dioxide = "SULPHUR_DIOXIDE"
 
+@dataclass
+class OpenAQSensorDescription(SensorEntityDescription):
+    """Class to describe a Sensor entity."""
+
+    metric: str | None = None
+
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Configure the sensor platform."""
-    pass
+    entities = []
+    for sensor in list(OpenAQDeviceSensors):
+        entities.append(
+            OpenAQSensorDescription(
+                key="E pres",
+                name="Session Energy",
+                device_class=SensorDeviceClass.MEASUREMENT,
+                metric="CO2",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ))
+    async_add_devices(entities, False)
 
-
-class OpenAQSensor(SensorEntity):
+class Station(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
         description: SensorDescription,
     ):
-        pass
+        self.entity_description = description
+        self._attr_unique_id = f"_{description}"
+        self._attributes: dict[str, str] = {}
 
     @property
     def should_poll(self):
@@ -47,11 +72,16 @@ class OpenAQSensor(SensorEntity):
 
     @property
     def device_class(self):
-        pass
+        device_class = SensorDeviceClass.MEASUREMENT
 
     @property
     def native_value(self):
+        """Return the state of the sensor, rounding if a number."""
         pass
+
+    @property
+    def state_class(self):
+        SensorStateClass.MEASUREMENT
 
     @property
     def native_unit_of_measurement(self):
