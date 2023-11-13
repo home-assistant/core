@@ -48,6 +48,7 @@
     'Package pack_1 setup failed. Integration adr_0007_1 cannot be merged. Dict expected in main config. (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:9).',
     'Package pack_2 setup failed. Integration adr_0007_2 cannot be merged. Expected a dict. (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:13).',
     "Package pack_4 setup failed. Integration adr_0007_3 has duplicate key 'host' (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:20).",
+    "Package pack_5 setup failed. Integration unknown_integration Integration 'unknown_integration' not found. (See <BASE_PATH>/fixtures/core/config/package_errors/packages/configuration.yaml:23).",
   ])
 # ---
 # name: test_package_merge_error[packages_include_dir_named]
@@ -55,7 +56,7 @@
     'Package adr_0007_1 setup failed. Integration adr_0007_1 cannot be merged. Dict expected in main config. (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_1.yaml:2).',
     'Package adr_0007_2 setup failed. Integration adr_0007_2 cannot be merged. Expected a dict. (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_2.yaml:2).',
     "Package adr_0007_3_2 setup failed. Integration adr_0007_3 has duplicate key 'host' (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_3_2.yaml:1).",
-    "Package adr_0007_4 setup failed. Integration adr_0007_4 Integration 'adr_0007_4' not found. (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/adr_0007_4.yaml:2).",
+    "Package unknown_integration setup failed. Integration unknown_integration Integration 'unknown_integration' not found. (See <BASE_PATH>/fixtures/core/config/package_errors/packages_include_dir_named/integrations/unknown_integration.yaml:2).",
   ])
 # ---
 # name: test_yaml_error[basic]
