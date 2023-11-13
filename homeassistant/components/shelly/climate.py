@@ -425,7 +425,9 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         """Initialize relay switch."""
         super().__init__(coordinator, f"thermostat:{id_}")
         self._id = id_
-        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"]["type"]
+        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
+            "type", "heating"
+        )
         if self._thermostat_type == "cooling":
             self._attr_hvac_modes.append(HVACMode.COOL)
         else:
