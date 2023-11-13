@@ -45,10 +45,6 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
         """Get native value."""
         return float(self.coordinator.data["extension"])
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self.async_write_ha_state()
-
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for extension."""
         await self.coordinator.mm.set_extension(int(value))
