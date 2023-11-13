@@ -223,6 +223,7 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
+        "_reauth_lock",
         "_tasks",
         "_background_tasks",
         "_integration_for_domain",
@@ -321,6 +322,8 @@ class ConfigEntry:
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
+        # Reauth lock to prevent concurrent reauth flows
+        self._reauth_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -727,12 +730,28 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
-
         hass.async_create_task(
-            hass.config_entries.flow.async_init(
+            self._async_init_reauth(hass, context, data),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow."""
+        async with self._reauth_lock:
+            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+                # Reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -742,9 +761,7 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            ),
-            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-        )
+            )
 
     @callback
     def async_get_active_flows(
@@ -754,7 +771,9 @@ class ConfigEntry:
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(
-                self.domain, match_context={"entry_id": self.entry_id}
+                self.domain,
+                match_context={"entry_id": self.entry_id},
+                include_uninitialized=True,
             )
             if flow["context"].get("source") in sources
         )

@@ -1,16 +1,18 @@
 """The tests for the hassio update entities."""
+from datetime import timedelta
 import os
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import DOMAIN, HassioAPIError
+from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -609,8 +611,13 @@ async def test_setting_up_core_update_when_addon_fails(
         await hass.async_block_till_done()
     assert result
 
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+
     # Verify that the core update entity does exist
     state = hass.states.get("update.home_assistant_core_update")
     assert state
     assert state.state == "on"
-    assert "Could not fetch stats for test: add-on is not running" in caplog.text

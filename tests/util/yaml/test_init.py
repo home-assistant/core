@@ -57,7 +57,7 @@ def test_simple_list(try_both_loaders) -> None:
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["config"] == ["simple", "list"]
 
 
@@ -65,12 +65,12 @@ def test_simple_dict(try_both_loaders) -> None:
     """Test simple dict."""
     conf = "key: value"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["key"] == "value"
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["message:\n  {{ states.state }}"])
-def test_unhashable_key(mock_hass_config_yaml: None) -> None:
+def test_unhashable_key(try_both_loaders, mock_hass_config_yaml: None) -> None:
     """Test an unhashable key."""
     with pytest.raises(HomeAssistantError):
         load_yaml_config_file(YAML_CONFIG_FILE)
@@ -88,7 +88,7 @@ def test_environment_variable(try_both_loaders) -> None:
     os.environ["PASSWORD"] = "secret_password"
     conf = "password: !env_var PASSWORD"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["password"] == "secret_password"
     del os.environ["PASSWORD"]
 
@@ -97,7 +97,7 @@ def test_environment_variable_default(try_both_loaders) -> None:
     """Test config file with default value for environment variable."""
     conf = "password: !env_var PASSWORD secret_password"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
     assert doc["password"] == "secret_password"
 
 
@@ -105,7 +105,7 @@ def test_invalid_environment_variable(try_both_loaders) -> None:
     """Test config file with no environment variable sat."""
     conf = "password: !env_var PASSWORD"
     with pytest.raises(HomeAssistantError), io.StringIO(conf) as file:
-        yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        yaml_loader.parse_yaml(file)
 
 
 @pytest.mark.parametrize(
@@ -118,7 +118,7 @@ def test_include_yaml(
     """Test include yaml."""
     conf = "key: !include test.yaml"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert doc["key"] == value
 
 
@@ -134,7 +134,7 @@ def test_include_dir_list(
 
     conf = "key: !include_dir_list /test"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert doc["key"] == sorted(["one", "two"])
 
 
@@ -162,7 +162,7 @@ def test_include_dir_list_recursive(
     conf = "key: !include_dir_list /test"
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert sorted(doc["key"]) == sorted(["zero", "one", "two"])
@@ -184,7 +184,7 @@ def test_include_dir_named(
     conf = "key: !include_dir_named /test"
     correct = {"first": "one", "second": "two"}
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert doc["key"] == correct
 
 
@@ -213,7 +213,7 @@ def test_include_dir_named_recursive(
     correct = {"first": "one", "second": "two", "third": "three"}
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert doc["key"] == correct
@@ -232,7 +232,7 @@ def test_include_dir_merge_list(
 
     conf = "key: !include_dir_merge_list /test"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert sorted(doc["key"]) == sorted(["one", "two", "three"])
 
 
@@ -260,7 +260,7 @@ def test_include_dir_merge_list_recursive(
     conf = "key: !include_dir_merge_list /test"
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert sorted(doc["key"]) == sorted(["one", "two", "three", "four"])
@@ -284,7 +284,7 @@ def test_include_dir_merge_named(
 
     conf = "key: !include_dir_merge_named /test"
     with io.StringIO(conf) as file:
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert doc["key"] == {"key1": "one", "key2": "two", "key3": "three"}
 
 
@@ -312,7 +312,7 @@ def test_include_dir_merge_named_recursive(
     conf = "key: !include_dir_merge_named /test"
     with io.StringIO(conf) as file:
         assert ".ignore" in mock_walk.return_value[0][1], "Expecting .ignore in here"
-        doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+        doc = yaml_loader.parse_yaml(file)
         assert "tmp2" in mock_walk.return_value[0][1]
         assert ".ignore" not in mock_walk.return_value[0][1]
         assert doc["key"] == {
@@ -538,7 +538,7 @@ def test_c_loader_is_available_in_ci() -> None:
     assert yaml.loader.HAS_C_LOADER is True
 
 
-async def test_loading_actual_file_with_syntax(
+async def test_loading_actual_file_with_syntax_error(
     hass: HomeAssistant, try_both_loaders
 ) -> None:
     """Test loading a real file with syntax errors."""
@@ -547,3 +547,36 @@ async def test_loading_actual_file_with_syntax(
             "fixtures", "bad.yaml.txt"
         )
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
+
+
+def test_string_annotated(try_both_loaders) -> None:
+    """Test strings are annotated with file + line."""
+    conf = (
+        "key1: str\n"
+        "key2:\n"
+        "  blah: blah\n"
+        "key3:\n"
+        " - 1\n"
+        " - 2\n"
+        " - 3\n"
+        "key4: yes\n"
+        "key5: 1\n"
+        "key6: 1.0\n"
+    )
+    expected_annotations = {
+        "key1": [("<file>", 1), ("<file>", 1)],
+        "key2": [("<file>", 2), ("<file>", 3)],
+        "key3": [("<file>", 4), ("<file>", 5)],
+        "key4": [("<file>", 8), (None, None)],
+        "key5": [("<file>", 9), (None, None)],
+        "key6": [("<file>", 10), (None, None)],
+    }
+    with io.StringIO(conf) as file:
+        doc = yaml_loader.parse_yaml(file)
+    for key, value in doc.items():
+        assert getattr(key, "__config_file__", None) == expected_annotations[key][0][0]
+        assert getattr(key, "__line__", None) == expected_annotations[key][0][1]
+        assert (
+            getattr(value, "__config_file__", None) == expected_annotations[key][1][0]
+        )
+        assert getattr(value, "__line__", None) == expected_annotations[key][1][1]

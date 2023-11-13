@@ -232,16 +232,16 @@ TOPIC_KEYS = (
 def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
     if PRESET_NONE in config[CONF_PRESET_MODES_LIST]:
-        raise ValueError("preset_modes must not include preset mode 'none'")
+        raise vol.Invalid("preset_modes must not include preset mode 'none'")
     return config
 
 
 def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
     """Validate a target_humidity range configuration, throws otherwise."""
     if config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]:
-        raise ValueError("target_humidity_max must be > target_humidity_min")
+        raise vol.Invalid("target_humidity_max must be > target_humidity_min")
     if config[CONF_HUMIDITY_MAX] > 100:
-        raise ValueError("max_humidity must be <= 100")
+        raise vol.Invalid("max_humidity must be <= 100")
 
     return config
 

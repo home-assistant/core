@@ -590,7 +590,6 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "test.test"
     await platform.async_add_entities([ent])
     ent.async_on_remove(lambda: result.append(1))
@@ -604,7 +603,6 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "test.test"
     ent.async_on_remove(lambda: result.append(1))
     await platform.async_add_entities([ent])
@@ -619,6 +617,34 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
     ent.async_write_ha_state()
     assert len(result) == 1
     assert hass.states.get("test.test") is None
+
+
+async def test_async_remove_twice(hass: HomeAssistant) -> None:
+    """Test removing an entity twice only cleans up once."""
+    result = []
+
+    class MockEntity(entity.Entity):
+        def __init__(self) -> None:
+            self.remove_calls = []
+
+        async def async_will_remove_from_hass(self):
+            self.remove_calls.append(None)
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    ent.hass = hass
+    ent.entity_id = "test.test"
+    ent.async_on_remove(lambda: result.append(1))
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+
+    await ent.async_remove()
+    assert len(result) == 1
+    assert len(ent.remove_calls) == 1
+
+    await ent.async_remove()
+    assert len(result) == 1
+    assert len(ent.remove_calls) == 1
 
 
 async def test_set_context(hass: HomeAssistant) -> None:
@@ -813,13 +839,6 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
 async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     """Test removing an entity that is still registered creates an unavailable state."""
-    er.RegistryEntry(
-        entity_id="hello.world",
-        unique_id="test-unique-id",
-        platform="test-platform",
-        disabled_by=None,
-    )
-
     platform = MockEntityPlatform(hass, domain="hello")
     ent = entity.Entity()
     ent.entity_id = "hello.world"
@@ -1528,3 +1547,113 @@ async def test_suggest_report_issue_custom_component(
 
     suggestion = mock_entity._suggest_report_issue()
     assert suggestion == "create a bug report at https://some_url"
+
+
+async def test_reuse_entity_object_after_abort(hass: HomeAssistant) -> None:
+    """Test reuse entity object."""
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = entity.Entity()
+    ent.entity_id = "invalid"
+    with pytest.raises(HomeAssistantError, match="Invalid entity ID: invalid"):
+        await platform.async_add_entities([ent])
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'invalid' cannot be added a second time to an entity platform",
+    ):
+        await platform.async_add_entities([ent])
+
+
+async def test_reuse_entity_object_after_entity_registry_remove(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reuse entity object."""
+    entry = entity_registry.async_get_or_create("test", "test", "5678")
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    ent = entity.Entity()
+    ent._attr_unique_id = "5678"
+    await platform.async_add_entities([ent])
+    assert ent.registry_entry is entry
+    assert len(hass.states.async_entity_ids()) == 1
+
+    entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'test.test_5678' cannot be added a second time",
+    ):
+        await platform.async_add_entities([ent])
+
+
+async def test_reuse_entity_object_after_entity_registry_disabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reuse entity object."""
+    entry = entity_registry.async_get_or_create("test", "test", "5678")
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    ent = entity.Entity()
+    ent._attr_unique_id = "5678"
+    await platform.async_add_entities([ent])
+    assert ent.registry_entry is entry
+    assert len(hass.states.async_entity_ids()) == 1
+
+    entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'test.test_5678' cannot be added a second time",
+    ):
+        await platform.async_add_entities([ent])
+
+
+async def test_change_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test changing entity id."""
+    result = []
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        def __init__(self) -> None:
+            self.added_calls = []
+            self.remove_calls = []
+
+        async def async_added_to_hass(self):
+            self.added_calls.append(None)
+            self.async_on_remove(lambda: result.append(1))
+
+        async def async_will_remove_from_hass(self):
+            self.remove_calls.append(None)
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert len(ent.added_calls) == 1
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="test.test2"
+    )
+    await hass.async_block_till_done()
+
+    assert len(result) == 1
+    assert len(ent.added_calls) == 2
+    assert len(ent.remove_calls) == 1
+
+    entity_registry.async_update_entity(entry.entity_id, new_entity_id="test.test3")
+    await hass.async_block_till_done()
+
+    assert len(result) == 2
+    assert len(ent.added_calls) == 3
+    assert len(ent.remove_calls) == 2

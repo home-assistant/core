@@ -106,7 +106,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     ),
     RoombaSensorEntityDescription(
         key="scrubs_count",
-        translation_key="scrubs",
+        translation_key="scrubs_count",
         icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Scrubs",
