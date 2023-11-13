@@ -359,6 +359,14 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 
+def is_wall_display_thermostat(settings: dict[str, Any]) -> bool:
+    """Return true if the device is a Wall Display in thermostat mode."""
+    if settings["model"] != "SAWD-0A1XX10EU1":
+        return False
+
+    return not (settings.get("relay_operational", True))
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []

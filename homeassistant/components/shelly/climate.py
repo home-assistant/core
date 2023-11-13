@@ -42,7 +42,7 @@ from .const import (
 )
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyRpcEntity
-from .utils import get_device_entry_gen, get_rpc_key_ids
+from .utils import async_remove_shelly_entity, get_device_entry_gen, get_rpc_key_ids
 
 
 async def async_setup_entry(
@@ -125,6 +125,9 @@ def async_setup_rpc_entry(
     climate_ids = []
     for id_ in climate_key_ids:
         climate_ids.append(id_)
+        unique_id = f"{coordinator.mac}-switch:{id_}"
+        async_remove_shelly_entity(hass, "light", unique_id)
+        async_remove_shelly_entity(hass, "switch", unique_id)
 
     if not climate_ids:
         return

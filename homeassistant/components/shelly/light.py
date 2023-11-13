@@ -44,6 +44,7 @@ from .utils import (
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    is_wall_display_thermostat,
     percentage_to_brightness,
 )
 
@@ -104,6 +105,9 @@ def async_setup_rpc_entry(
     switch_ids = []
     for id_ in switch_key_ids:
         if not is_rpc_channel_type_light(coordinator.device.config, id_):
+            continue
+
+        if is_wall_display_thermostat(coordinator.device.shelly):
             continue
 
         switch_ids.append(id_)
