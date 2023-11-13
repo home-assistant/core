@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
 from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -91,6 +91,61 @@ async def test_user_create_entry(
     assert result["title"] == "ViCare"
     assert result["data"] == snapshot
     mock_setup_entry.assert_called_once()
+
+
+async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test reauth flow."""
+    new_password = "ABCD"
+    new_client_id = "EFGH"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
+        data=VALID_CONFIG,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # test PyViCareInvalidConfigurationError
+    with patch(
+        f"{MODULE}.config_flow.vicare_login",
+        side_effect=PyViCareInvalidConfigurationError(
+            {"error": "foo", "error_description": "bar"}
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "invalid_auth"}
+
+    # test success
+    with patch(
+        f"{MODULE}.config_flow.vicare_login",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+
+        assert len(hass.config_entries.async_entries()) == 1
+        assert (
+            hass.config_entries.async_entries()[0].data[CONF_PASSWORD] == new_password
+        )
+        assert (
+            hass.config_entries.async_entries()[0].data[CONF_CLIENT_ID] == new_client_id
+        )
+        await hass.async_block_till_done()
 
 
 async def test_form_dhcp(
