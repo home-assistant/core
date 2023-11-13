@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from yarl import URL
 
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -49,7 +50,7 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
         if "Mac" in coordinator.data and valid_global_mac_address(
             coordinator.data["Mac"]
         ):
-            device_info["connections"] = {
+            device_info[ATTR_CONNECTIONS] = {
                 (CONNECTION_NETWORK_MAC, coordinator.data["Mac"])
             }
         self._attr_device_info = device_info

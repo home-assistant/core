@@ -48,6 +48,12 @@ ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         action_fn=lambda api: api.restart_device(),
     ),
+    RensonButtonEntityDescription(
+        key="reset_filter",
+        translation_key="reset_filter",
+        entity_category=EntityCategory.CONFIG,
+        action_fn=lambda api: api.reset_filter(),
+    ),
 )
 
 

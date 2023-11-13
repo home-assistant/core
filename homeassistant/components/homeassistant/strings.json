@@ -136,5 +136,10 @@
       "name": "Reload all",
       "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
     }
+  },
+  "exceptions": {
+    "service_not_found": {
+      "message": "Service {domain}.{service} not found."
+    }
   }
 }

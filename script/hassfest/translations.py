@@ -328,6 +328,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 ),
                 slug_validator=cv.slug,
             ),
+            vol.Optional("exceptions"): cv.schema_with_slug_keys(
+                {vol.Optional("message"): translation_value_validator},
+                slug_validator=cv.slug,
+            ),
             vol.Optional("services"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
