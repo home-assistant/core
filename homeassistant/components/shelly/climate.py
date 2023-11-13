@@ -457,7 +457,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """HVAC current action."""
-        if self.status["output"]:
+        if not self.status["output"]:
             return HVACAction.IDLE
 
         return (
