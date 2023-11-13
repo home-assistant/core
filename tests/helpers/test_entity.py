@@ -590,7 +590,6 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "test.test"
     await platform.async_add_entities([ent])
     ent.async_on_remove(lambda: result.append(1))
@@ -604,7 +603,6 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "test.test"
     ent.async_on_remove(lambda: result.append(1))
     await platform.async_add_entities([ent])
@@ -841,13 +839,6 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
 async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     """Test removing an entity that is still registered creates an unavailable state."""
-    er.RegistryEntry(
-        entity_id="hello.world",
-        unique_id="test-unique-id",
-        platform="test-platform",
-        disabled_by=None,
-    )
-
     platform = MockEntityPlatform(hass, domain="hello")
     ent = entity.Entity()
     ent.entity_id = "hello.world"

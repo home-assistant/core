@@ -685,7 +685,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==5.0.0
+gcal-sync==6.0.1
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -1025,7 +1025,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.4.0
+nibe==2.5.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -2094,7 +2094,7 @@ yt-dlp==2023.10.13
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.123.0
+zeroconf==0.125.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

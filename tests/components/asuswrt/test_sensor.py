@@ -30,14 +30,15 @@ SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES
 
 
 @pytest.fixture(name="create_device_registry_devices")
-def create_device_registry_devices_fixture(hass: HomeAssistant):
+def create_device_registry_devices_fixture(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+):
     """Create device registry devices so the device tracker entities are enabled when added."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 
     for idx, device in enumerate((MOCK_MACS[2], MOCK_MACS[3])):
-        dev_reg.async_get_or_create(
+        device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(device))},
@@ -274,7 +275,9 @@ async def test_options_reload(hass: HomeAssistant, connect_legacy) -> None:
     assert connect_legacy.return_value.connection.async_connect.call_count == 2
 
 
-async def test_unique_id_migration(hass: HomeAssistant, connect_legacy) -> None:
+async def test_unique_id_migration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, connect_legacy
+) -> None:
     """Test AsusWRT entities unique id format migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -283,9 +286,8 @@ async def test_unique_id_migration(hass: HomeAssistant, connect_legacy) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    entity_reg = er.async_get(hass)
     obj_entity_id = slugify(f"{HOST} Upload")
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         sensor.DOMAIN,
         DOMAIN,
         f"{DOMAIN} {ROUTER_MAC_ADDR} Upload",
@@ -297,6 +299,6 @@ async def test_unique_id_migration(hass: HomeAssistant, connect_legacy) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    migr_entity = entity_reg.async_get(f"{sensor.DOMAIN}.{obj_entity_id}")
+    migr_entity = entity_registry.async_get(f"{sensor.DOMAIN}.{obj_entity_id}")
     assert migr_entity is not None
     assert migr_entity.unique_id == slugify(f"{ROUTER_MAC_ADDR}_sensor_tx_bytes")

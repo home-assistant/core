@@ -863,7 +863,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==5.0.0
+gcal-sync==6.0.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1311,7 +1311,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.4.0
+nibe==2.5.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2803,7 +2803,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.123.0
+zeroconf==0.125.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
