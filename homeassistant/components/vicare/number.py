@@ -75,7 +75,7 @@ def _build_entity(
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
     hass: HomeAssistant,
-):
+) -> ViCareNumber | None:
     """Create a ViCare number entity."""
     _LOGGER.debug("Found device %s", name)
     if is_supported(name, entity_description, vicare_api):
@@ -177,7 +177,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
             )
         self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
