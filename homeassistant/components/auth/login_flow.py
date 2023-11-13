@@ -172,7 +172,7 @@ class AuthProvidersView(HomeAssistantView):
                     continue
 
                 try:
-                    cast(TrustedNetworksAuthProvider, provider).async_validate_access(
+                    cast("TrustedNetworksAuthProvider", provider).async_validate_access(
                         remote_address
                     )
                 except InvalidAuthError:
