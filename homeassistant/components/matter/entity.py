@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -110,7 +111,9 @@ class MatterEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         for unsub in self._unsubscribes:
-            unsub()
+            with suppress(ValueError):
+                # suppress ValueError to prevent race conditions
+                unsub()
 
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:

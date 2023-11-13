@@ -64,6 +64,7 @@ PRODUCT_VALUE = prod(VALUES)
 )
 async def test_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     sensor_type: str,
     result: str,
     attributes: dict[str, Any],
@@ -107,8 +108,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get(f"sensor.sensor_group_{sensor_type}")
+    entity = entity_registry.async_get(f"sensor.sensor_group_{sensor_type}")
     assert entity.unique_id == "very_unique_id"
 
 
