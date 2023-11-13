@@ -1,5 +1,6 @@
 """The tests for Valve."""
 from collections.abc import Generator
+from typing import Any
 
 import pytest
 
@@ -59,6 +60,10 @@ class MockValveEntity(ValveEntity):
         self._attr_is_closed = False
         if device_class is not None:
             self._attr_device_class = device_class
+
+    def close_valve(self, **kwargs: Any) -> None:
+        """Mock implementantion for sync close function."""
+        self._attr_is_closed = True
 
 
 @pytest.fixture(autouse=True)
@@ -196,13 +201,25 @@ async def test_valve_device_class(hass: HomeAssistant) -> None:
 
 
 async def test_supported_features(hass: HomeAssistant) -> None:
-    """Test lawn mower entity with defaults."""
+    """Test valve entity with defaults."""
     valve = MockValveEntity(features=None)
     valve.hass = hass
 
     assert valve.supported_features is (
         ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
     )
+
+
+async def test_toggle(hass: HomeAssistant) -> None:
+    """Test valve entity toggling."""
+
+    valve = MockValveEntity()
+    valve.hass = hass
+
+    assert valve.is_closed is False
+
+    valve.toggle()
+    assert valve.is_closed is True
 
 
 def call_service(hass, service, ent):
