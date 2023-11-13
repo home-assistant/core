@@ -34,9 +34,6 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     """Describes ViCare sensor entity."""
 
     value_setter: Callable[[Device, float], str | None] | None = None
-    min_getter: Callable[[Device], str | None] | None = None
-    max_getter: Callable[[Device], str | None] | None = None
-    step_getter: Callable[[Device], str | None] | None = None
 
 
 CIRCUIT_SENSORS: tuple[ViCareNumberEntityDescription, ...] = (
