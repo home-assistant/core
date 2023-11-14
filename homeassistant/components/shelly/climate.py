@@ -471,9 +471,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
+        # we need to round the value when US customary system is used
         await self.call_rpc(
             "Thermostat.SetConfig",
-            {"config": {"id": self._id, "target_C": target_temp}},
+            {"config": {"id": self._id, "target_C": round(target_temp)}},
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
