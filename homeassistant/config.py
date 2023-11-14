@@ -579,24 +579,33 @@ def find_annotation(
 
 
 def stringify_invalid(
-    ex: vol.Invalid, domain: str, config: dict, max_sub_error_length: int
+    ex: vol.Invalid,
+    domain: str,
+    config: dict,
+    link: str | None,
+    max_sub_error_length: int,
 ) -> str:
     """Stringify voluptuous.Invalid.
 
     This is an alternative to the custom __str__ implemented in
     voluptuous.error.Invalid. The modifications are:
     - Format the path delimited by -> instead of @data[]
-    - Suffix with domain, file and line of the error
+    - Prefix with domain, file and line of the error
+    - Suffix with a link to the documentation
     - Give a more user friendly output for unknown options
     """
     message_prefix = f"Invalid config for [{domain}]"
+    if domain != CONF_CORE and link:
+        message_suffix = f". Please check the docs at {link}"
+    else:
+        message_suffix = ""
     if annotation := find_annotation(config, ex.path):
         message_prefix += f" at {annotation[0]}, line {annotation[1]}"
     path = "->".join(str(m) for m in ex.path)
     if ex.error_message == "extra keys not allowed":
         return (
             f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
-            f"check: {path}"
+            f"check: {path}{message_suffix}"
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
@@ -609,13 +618,17 @@ def stringify_invalid(
         offending_item_summary = (
             f"{offending_item_summary[: max_sub_error_length - 3]}..."
         )
-    return f"{message_prefix}: {output} '{path}', got {offending_item_summary}."
+    return (
+        f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
+        f"{message_suffix}."
+    )
 
 
 def humanize_error(
     validation_error: vol.Invalid,
     domain: str,
     config: dict,
+    link: str | None,
     max_sub_error_length: int = MAX_VALIDATION_ERROR_ITEM_LENGTH,
 ) -> str:
     """Provide a more helpful + complete validation error message.
@@ -626,11 +639,13 @@ def humanize_error(
     if isinstance(validation_error, vol.MultipleInvalid):
         return "\n".join(
             sorted(
-                humanize_error(sub_error, domain, config, max_sub_error_length)
+                humanize_error(sub_error, domain, config, link, max_sub_error_length)
                 for sub_error in validation_error.errors
             )
         )
-    return stringify_invalid(validation_error, domain, config, max_sub_error_length)
+    return stringify_invalid(
+        validation_error, domain, config, link, max_sub_error_length
+    )
 
 
 @callback
@@ -644,13 +659,13 @@ def _format_config_error(
     is_friendly = False
 
     if isinstance(ex, vol.Invalid):
-        message = humanize_error(ex, domain, config)
+        message = humanize_error(ex, domain, config, link)
         is_friendly = True
     else:
         message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
 
-    if domain != CONF_CORE and link:
-        message += f" Please check the docs at {link}"
+        if domain != CONF_CORE and link:
+            message += f" Please check the docs at {link}."
 
     return message, is_friendly
 
