@@ -43,12 +43,12 @@ class PlaceholderHub:
     async def authenticate(self, access_token: str) -> bool:
         api = ApiWrapper(self.host, access_token)
         return await api.async_test_authentication()
-    
+
     async def get_courses(self, access_token: str) -> list[{str, Any}]:
         api = ApiWrapper(self.host, access_token) # maybe self.api?
         courses = await api.async_get_courses()
         return courses
-        
+
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any] | None:
@@ -80,13 +80,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 async def get_courses_names(data: dict[str, Any]) -> list[str | None]:
     """Get the names of all courses for uses to select which to track"""
     # TODO - add try-except
-    courses_name = []
     hub = PlaceholderHub(data[HOST_PREFIX])
     courses_info = await hub.get_courses(data[ACCESS_TOKEN])
-    for info in courses_info:
-        courses_name.append(info["name"])
-    # TODO - sort courses, newly taken ones come first
-    return courses_name
+    return [course["name"] for course in sorted(courses_info, key=lambda x: x["name"])]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
