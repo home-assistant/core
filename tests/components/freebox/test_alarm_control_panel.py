@@ -12,9 +12,11 @@ from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
@@ -22,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
-from .const import DATA_HOME_ALARM_GET_VALUE
+from .const import DATA_HOME_ALARM_GET_VALUE, DATA_HOME_GET_NODES
 
 from tests.common import async_fire_time_changed
 
@@ -34,6 +36,7 @@ async def test_alarm_changed_from_external(
     data_get_home_endpoint_value = deepcopy(DATA_HOME_ALARM_GET_VALUE)
     data_get_home_endpoint_value["value"] = "alarm1_arming"
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
+
     await setup_platform(hass, ALARM_CONTROL_PANEL_DOMAIN)
 
     # Attributes
@@ -66,16 +69,55 @@ async def test_alarm_changed_from_external(
 
 async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> None:
     """Test Freebox Home alarm which state depends on HA."""
+    # Add arm_home feature
+    data_get_home_nodes = deepcopy(DATA_HOME_GET_NODES)
+    ALARM_NODE_ID = 7
+    data_get_home_nodes[ALARM_NODE_ID]["show_endpoints"].append(
+        {
+            "category": "",
+            "ep_type": "slot",
+            "id": 1,
+            "label": "Alarme secondaire",
+            "name": "alarm2",
+            "ui": {"access": "w", "display": "toggle"},
+            "value": True,
+            "value_type": "bool",
+            "visibility": "normal",
+        },
+    )
+    data_get_home_nodes[ALARM_NODE_ID]["type"]["endpoints"][2] = {
+        "ep_type": "slot",
+        "id": 2,
+        "label": "Alarme secondaire",
+        "name": "alarm2",
+        "value_type": "bool",
+        "visibility": "normal",
+    }
+    data_get_home_nodes[ALARM_NODE_ID]["type"]["endpoints"].append(
+        {
+            "ep_type": "signal",
+            "id": 21,
+            "label": "Alarme secondaire",
+            "name": "alarm2",
+            "param_type": "void",
+            "value_type": "bool",
+            "visibility": "normal",
+        }
+    )
+    router().home.get_home_nodes.return_value = data_get_home_nodes
     data_get_home_endpoint_value = deepcopy(DATA_HOME_ALARM_GET_VALUE)
     data_get_home_endpoint_value["value"] = "alarm1_armed"
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
+
     await setup_platform(hass, ALARM_CONTROL_PANEL_DOMAIN)
 
     # Attributes
     assert hass.states.get("alarm_control_panel.systeme_d_alarme").attributes[
         "supported_features"
     ] == (
-        AlarmControlPanelEntityFeature.ARM_AWAY | AlarmControlPanelEntityFeature.TRIGGER
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.TRIGGER
     )
 
     # Initial state: arm_away
@@ -112,6 +154,22 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
         == STATE_ALARM_ARMING
+    )
+
+    # Now call for a change -> arm_home
+    data_get_home_endpoint_value["value"] = "alarm2_armed"
+    # in reality: alarm2_arming then alarm2_armed
+    router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
+    await hass.services.async_call(
+        ALARM_CONTROL_PANEL_DOMAIN,
+        SERVICE_ALARM_ARM_HOME,
+        {ATTR_ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
+        blocking=True,
+    )
+
+    assert (
+        hass.states.get("alarm_control_panel.systeme_d_alarme").state
+        == STATE_ALARM_ARMED_HOME
     )
 
     # Now call for a change -> trigger

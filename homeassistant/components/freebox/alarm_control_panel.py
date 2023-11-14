@@ -8,7 +8,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
@@ -24,7 +24,7 @@ FREEBOX_TO_STATUS = {
     "alarm1_arming": STATE_ALARM_ARMING,
     "alarm2_arming": STATE_ALARM_ARMING,
     "alarm1_armed": STATE_ALARM_ARMED_AWAY,
-    "alarm2_armed": STATE_ALARM_ARMED_NIGHT,
+    "alarm2_armed": STATE_ALARM_ARMED_HOME,
     "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
     "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
     "alert": STATE_ALARM_TRIGGERED,
@@ -104,13 +104,15 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         can_arm_home = next(
             (
                 endpoint
-                for endpoint in self._node["show_endpoints"]
+                for endpoint in self._node["type"]["endpoints"]
                 if endpoint["name"] == "alarm2" and endpoint["ep_type"] == "signal"
             ),
             None,
         )
 
-        if can_arm_home:
+        if (
+            self._command_arm_home and can_arm_home
+        ):  # or check self.get_value("slot", "alarm2") ???
             self._attr_supported_features = (
                 AlarmControlPanelEntityFeature.ARM_AWAY
                 | AlarmControlPanelEntityFeature.ARM_HOME
