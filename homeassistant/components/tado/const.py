@@ -38,6 +38,7 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 CONF_FALLBACK = "fallback"
 DATA = "data"
 UPDATE_TRACK = "update_track"
+UPDATE_MOBILE_DEVICE_TRACK = "update_mobile_device_track"
 
 # Weather
 CONDITIONS_MAP = {
@@ -177,6 +178,7 @@ TADO_TO_HA_SWING_MODE_MAP = {
 DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}_{}"
+SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED = "tado_mobile_device_update_received_{}_{}"
 UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"

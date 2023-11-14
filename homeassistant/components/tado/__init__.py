@@ -26,9 +26,11 @@ from .const import (
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
+    SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
     UPDATE_LISTENER,
+    UPDATE_MOBILE_DEVICE_TRACK,
     UPDATE_TRACK,
 )
 
@@ -45,6 +47,7 @@ PLATFORMS = [
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=10)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -86,12 +89,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SCAN_INTERVAL,
     )
 
+    update_devices = async_track_time_interval(
+        hass,
+        lambda now: tadoconnector.update_mobile_devices(),
+        SCAN_MOBILE_DEVICE_INTERVAL,
+    )
+
     update_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA: tadoconnector,
         UPDATE_TRACK: update_track,
+        UPDATE_MOBILE_DEVICE_TRACK: update_devices,
         UPDATE_LISTENER: update_listener,
     }
 
@@ -152,6 +162,7 @@ class TadoConnector:
         self.devices = None
         self.data = {
             "device": {},
+            "mobile_device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
@@ -187,6 +198,31 @@ class TadoConnector:
         self.update_devices()
         self.update_zones()
         self.update_home()
+
+    def update_mobile_devices(self) -> None:
+        """Update the mobile devices."""
+        try:
+            mobile_devices = self.get_mobile_devices()
+        except RuntimeError:
+            _LOGGER.error("Unable to connect to Tado while updating mobile devices")
+            return
+
+        for mobile_device in mobile_devices:
+            _LOGGER.debug("Updating mobile device %s", mobile_device["name"])
+            self.data["mobile_device"][mobile_device["id"]] = mobile_device
+
+            _LOGGER.debug(
+                "Dispatching update to %s mobile device %s: %s",
+                self.home_id,
+                mobile_device["id"],
+                mobile_device,
+            )
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
+                    "mobile_device", mobile_device["id"]
+                ),
+            )
 
     def update_devices(self):
         """Update the device data from Tado."""
