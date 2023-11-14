@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
+from .const import DOMAIN, EMPTY_MAC
 from .coordinator import MotionMountCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -23,8 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
+    host = entry.data[CONF_HOST]
+
     # Create API instance
-    mm = motionmount.MotionMount(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    mm = motionmount.MotionMount(host, entry.data[CONF_PORT])
     coordinator = MotionMountCoordinator(hass, mm)
     mm.add_listener(coordinator.motionmount_callback)
 
@@ -32,9 +35,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await mm.connect()
     except (ConnectionError, TimeoutError, socket.gaierror) as ex:
+        raise ConfigEntryNotReady(f"Failed to connect to {host}") from ex
+
+    found_mac = format_mac(mm.mac.hex())
+    if found_mac not in (EMPTY_MAC, entry.unique_id):
+        # If the mac address of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        await mm.disconnect()
         raise ConfigEntryNotReady(
-            f"Failed to connect to {entry.data[CONF_HOST]}"
-        ) from ex
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+        )
+
     await coordinator.async_config_entry_first_refresh()
 
     # Store an API object for your platforms to access

@@ -12,10 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
+from .const import DOMAIN, EMPTY_MAC
 
 _LOGGER = logging.getLogger(__name__)
-EMPTY_MAC = "00:00:00:00:00:00"
 
 
 # A MotionMount can be in four states:
