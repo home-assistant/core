@@ -75,30 +75,29 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        [
-            HydrawiseSensor(coordinator, description, controller, zone)
-            for controller in coordinator.data.controllers
-            for zone in controller.zones
-            for description in SENSOR_TYPES
-        ]
+        HydrawiseSensor(coordinator, description, controller, zone)
+        for controller in coordinator.data.controllers
+        for zone in controller.zones
+        for description in SENSOR_TYPES
     )
 
 
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
+    zone: Zone
+
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        zone: Zone = self.zone
         if self.entity_description.key == "watering_time":
-            if (current_run := zone.scheduled_runs.current_run) is not None:
+            if (current_run := self.zone.scheduled_runs.current_run) is not None:
                 self._attr_native_value = int(
                     current_run.remaining_time.total_seconds() / 60
                 )
             else:
                 self._attr_native_value = 0
         elif self.entity_description.key == "next_cycle":
-            if (next_run := zone.scheduled_runs.next_run) is not None:
+            if (next_run := self.zone.scheduled_runs.next_run) is not None:
                 self._attr_native_value = dt_util.as_utc(next_run.start_time)
             else:
                 self._attr_native_value = datetime.max.replace(tzinfo=dt_util.UTC)

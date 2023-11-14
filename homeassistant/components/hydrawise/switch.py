@@ -80,46 +80,43 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        [
-            HydrawiseSwitch(coordinator, description, controller, zone)
-            for controller in coordinator.data.controllers
-            for zone in controller.zones
-            for description in SWITCH_TYPES
-        ]
+        HydrawiseSwitch(coordinator, description, controller, zone)
+        for controller in coordinator.data.controllers
+        for zone in controller.zones
+        for description in SWITCH_TYPES
     )
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
+    zone: Zone
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        zone: Zone = self.zone
         if self.entity_description.key == "manual_watering":
             await self.coordinator.api.start_zone(
-                zone, custom_run_duration=DEFAULT_WATERING_TIME
+                self.zone, custom_run_duration=DEFAULT_WATERING_TIME
             )
         elif self.entity_description.key == "auto_watering":
-            await self.coordinator.api.resume_zone(zone)
+            await self.coordinator.api.resume_zone(self.zone)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        zone: Zone = self.zone
         if self.entity_description.key == "manual_watering":
-            await self.coordinator.api.stop_zone(zone)
+            await self.coordinator.api.stop_zone(self.zone)
         elif self.entity_description.key == "auto_watering":
             await self.coordinator.api.suspend_zone(
-                zone, dt_util.now() + timedelta(days=365)
+                self.zone, dt_util.now() + timedelta(days=365)
             )
         self._attr_is_on = False
         self.async_write_ha_state()
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        zone: Zone = self.zone
         if self.entity_description.key == "manual_watering":
-            self._attr_is_on = zone.scheduled_runs.current_run is not None
+            self._attr_is_on = self.zone.scheduled_runs.current_run is not None
         elif self.entity_description.key == "auto_watering":
-            self._attr_is_on = zone.status.suspended_until is None
+            self._attr_is_on = self.zone.status.suspended_until is None
