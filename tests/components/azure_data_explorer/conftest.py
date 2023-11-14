@@ -119,8 +119,8 @@ def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data():
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
         return_value=True,
-    ) as ManagedStreamingIngestClient_ingest_from_stream:
-        yield ManagedStreamingIngestClient_ingest_from_stream
+    ) as managedStreamingIngestClient_ingest_from_stream:
+        yield managedStreamingIngestClient_ingest_from_stream
 
 
 @pytest.fixture(
@@ -131,8 +131,8 @@ def mock_azure_data_explorer_QueuedIngestClient_ingest_data():
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
         return_value=True,
-    ) as QueuedIngestClient_ingest_from_stream:
-        yield QueuedIngestClient_ingest_from_stream
+    ) as queuedIngestClient_ingest_from_stream:
+        yield queuedIngestClient_ingest_from_stream
 
 
 @pytest.fixture(autouse=True, name="mock_execute_query")
@@ -141,5 +141,5 @@ def mock_execute_query():
     with patch(
         "azure.kusto.data.KustoClient.execute_query",
         return_value=True,
-    ) as KustoResponseDataSet:
-        yield KustoResponseDataSet
+    ) as kustoResponseDataSet:
+        yield kustoResponseDataSet

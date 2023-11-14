@@ -34,7 +34,6 @@ async def test_put_event_on_queue_with_managed_client(
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
 ) -> None:
-    # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
@@ -52,7 +51,6 @@ async def test_put_event_on_queue_with_managed_client_with_error_KustoServiceErr
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
 ) -> None:
-    # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client with error KustoServiceError."""
 
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
@@ -74,7 +72,6 @@ async def test_put_event_on_queue_with_managed_client_with_error_KustoAuthentica
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
 ) -> None:
-    # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client with error KustoAuthenticationError."""
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
@@ -96,7 +93,6 @@ async def test_put_event_on_queue_with_queueing_client(
     entry_queued,
     mock_azure_data_explorer_QueuedIngestClient_ingest_data,
 ) -> None:
-    # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
@@ -330,7 +326,6 @@ async def test_Mailformed_event(
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
 ) -> None:
-    # pylint: disable=protected-access
     """Test listening to events from Hass. and getting an event with a newline in the state."""
 
     hass.states.async_set("sensor.test_sensor", "______\nMicrosof}")
@@ -348,7 +343,6 @@ async def test_None_event(
     entry_managed,
     mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
 ) -> None:
-    # pylint: disable=protected-access
     """Test listening to events from Hass. and getting an event with a newline in the state."""
 
     hass.states.async_set("sensor.test_sensor", None)

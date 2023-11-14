@@ -88,7 +88,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     data=user_input,
-                    title=self.create_title(user_input[CONF_ADX_CLUSTER_INGEST_URI]),
+                    title=self._create_title(user_input[CONF_ADX_CLUSTER_INGEST_URI]),
                     options=DEFAULT_OPTIONS,
                 )
         return self.async_show_form(
@@ -98,9 +98,9 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=True,
         )
 
-    def create_title(self, ingestURI):
+    def _create_title(self, ingest_uri: str) -> str:
         """Build the Cluster Title from the URL."""
-        url_no_https = ingestURI.split("//", maxsplit=1)[-1]
+        url_no_https = ingest_uri.split("//", maxsplit=1)[-1]
         return str(url_no_https.split(".")[0])
 
 

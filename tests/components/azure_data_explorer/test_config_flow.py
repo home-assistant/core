@@ -1,40 +1,24 @@
 """Test the AEH config flow."""
-import logging
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
-import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.azure_data_explorer.const import DOMAIN, STEP_USER
+from homeassistant.components.azure_data_explorer.const import DOMAIN
 
 from .const import BASE_CONFIG, UPDATE_OPTIONS
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@pytest.mark.parametrize(
-    ("step_config", "step_id"),
-    [
-        (BASE_CONFIG, STEP_USER),
-    ],
-    ids=["Base"],
-)
-async def test_form(
-    hass,
-    mock_setup_entry,
-    step_config,
-    step_id,
-) -> None:
+async def test_form(hass, mock_setup_entry) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        step_config.copy(),
+        BASE_CONFIG.copy(),
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -52,7 +36,7 @@ async def test_connection_error_KustoServiceError(
         context={"source": config_entries.SOURCE_USER},
         data=None,
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_execute_query.side_effect = KustoServiceError("test")
@@ -74,7 +58,7 @@ async def test_connection_error_KustoAuthenticationError(
         context={"source": config_entries.SOURCE_USER},
         data=None,
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_execute_query.side_effect = KustoAuthenticationError("test", Exception)
@@ -96,7 +80,7 @@ async def test_connection_error_Exception(
         context={"source": config_entries.SOURCE_USER},
         data=None,
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_execute_query.side_effect = Exception
