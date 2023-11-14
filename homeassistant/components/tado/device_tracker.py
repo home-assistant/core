@@ -1,7 +1,6 @@
 """Support for Tado Smart device trackers."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -13,8 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
