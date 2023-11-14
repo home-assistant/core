@@ -170,8 +170,8 @@ build.json @home-assistant/supervisor
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
 /tests/components/braviatv/ @bieniu @Drafteed
-/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
-/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
+/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
