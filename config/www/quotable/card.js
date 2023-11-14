@@ -40,3 +40,11 @@ class QuotableCard extends HTMLElement {
 }
 
 customElements.define("quotable-card", QuotableCard);
+//Add card to card picker in UI
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "quotable-card",
+  name: "Quotable Card",
+  preview: true,
+  description: "Quotable",
+});
