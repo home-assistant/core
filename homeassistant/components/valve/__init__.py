@@ -134,6 +134,7 @@ class ValveEntity(Entity):
     entity_description: ValveEntityDescription
     _attr_current_valve_position: int | None = None
     _attr_device_class: ValveDeviceClass | None
+    _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_supported_features: ValveEntityFeature = ValveEntityFeature(0)
