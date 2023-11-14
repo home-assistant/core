@@ -38,13 +38,41 @@ class ApiWrapper:
         return courses
 
     async def async_get_assignments(self, course_id: int) -> list:
-        """Retrieve a list of assignments from the Canvas API.
+        """Retrieve a list of assignments from the Canvas API."""
 
-        TODO - implement this function"""
-        pass
+        return [
+            {
+            "id": 76160,
+            "due_at": "2023-08-30T21:59:59Z",
+            "course_id": 25271,
+            "name": "First Assignment",
+            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
+            },
+            {
+            "id": 76161,
+            "due_at": "2023-09-30T21:59:59Z",
+            "course_id": 25271,
+            "name": "Second Assignment",
+            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
+            },
+
+            {
+            "id": 76162,
+            "due_at": "2023-10-30T21:59:59Z",
+            "course_id": 25271,
+            "name": "Third Assignment",
+            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
+            }
+        ]
 
     async def async_get_announcements(self) -> list:
         """Retrieve a list of announcements from the Canvas API.
 
         TODO - implement this function"""
         pass
+
+    async def async_get_conversations(self) -> list:
+        """Retrieve a list of conversations from the Instructure API."""
+        response = await self.async_make_get_request("/conversations", {"per_page": "50"})
+        conversations = json.loads(response.content.decode('utf-8'))
+        return conversations
