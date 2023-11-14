@@ -4,7 +4,9 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from contextlib import suppress
+from functools import reduce
 import logging
+import operator
 import os
 from pathlib import Path
 import re
@@ -505,6 +507,77 @@ def async_log_exception(
     _LOGGER.error(message, exc_info=not is_friendly and ex)
 
 
+def _get_annotation(item: Any) -> tuple[str, int | str] | None:
+    if not hasattr(item, "__config_file__"):
+        return None
+
+    return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
+
+
+def _get_by_path(data: dict | list, items: list[str | int]) -> Any:
+    """Access a nested object in root by item sequence.
+
+    Returns None in case of error.
+    """
+    try:
+        return reduce(operator.getitem, items, data)  # type: ignore[arg-type]
+    except (KeyError, IndexError, TypeError):
+        return None
+
+
+def find_annotation(
+    config: dict | list, path: list[str | int]
+) -> tuple[str, int | str] | None:
+    """Find file/line annotation for a node in config pointed to by path.
+
+    If the node pointed to is a dict or list, prefer the annotation for the key in
+    the key/value pair defining the dict or list.
+    If the node is not annotated, try the parent node.
+    """
+
+    def find_annotation_for_key(
+        item: dict, path: list[str | int], tail: str | int
+    ) -> tuple[str, int | str] | None:
+        for key in item:
+            if key == tail:
+                if annotation := _get_annotation(key):
+                    return annotation
+                break
+        return None
+
+    def find_annotation_rec(
+        config: dict | list, path: list[str | int], tail: str | int | None
+    ) -> tuple[str, int | str] | None:
+        item = _get_by_path(config, path)
+        if isinstance(item, dict) and tail is not None:
+            if tail_annotation := find_annotation_for_key(item, path, tail):
+                return tail_annotation
+
+        if (
+            isinstance(item, (dict, list))
+            and path
+            and (
+                key_annotation := find_annotation_for_key(
+                    _get_by_path(config, path[:-1]), path[:-1], path[-1]
+                )
+            )
+        ):
+            return key_annotation
+
+        if annotation := _get_annotation(item):
+            return annotation
+
+        if not path:
+            return None
+
+        tail = path.pop()
+        if annotation := find_annotation_rec(config, path, tail):
+            return annotation
+        return _get_annotation(item)
+
+    return find_annotation_rec(config, list(path), None)
+
+
 @callback
 def _format_config_error(
     ex: Exception, domain: str, config: dict, link: str | None = None
@@ -514,29 +587,25 @@ def _format_config_error(
     This method must be run in the event loop.
     """
     is_friendly = False
-    message = f"Invalid config for [{domain}]: "
+    message = f"Invalid config for [{domain}]"
+
     if isinstance(ex, vol.Invalid):
+        if annotation := find_annotation(config, ex.path):
+            message += f" at {annotation[0]}, line {annotation[1]}: "
+        else:
+            message += ": "
+
         if "extra keys not allowed" in ex.error_message:
             path = "->".join(str(m) for m in ex.path)
             message += (
-                f"[{ex.path[-1]}] is an invalid option for [{domain}]. "
-                f"Check: {domain}->{path}."
+                f"'{ex.path[-1]}' is an invalid option for [{domain}], check: {path}"
             )
         else:
             message += f"{humanize_error(config, ex)}."
         is_friendly = True
     else:
+        message += ": "
         message += str(ex) or repr(ex)
-
-    try:
-        domain_config = config.get(domain, config)
-    except AttributeError:
-        domain_config = config
-
-    message += (
-        f" (See {getattr(domain_config, '__config_file__', '?')}, "
-        f"line {getattr(domain_config, '__line__', '?')})."
-    )
 
     if domain != CONF_CORE and link:
         message += f" Please check the docs at {link}"
