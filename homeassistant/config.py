@@ -578,26 +578,44 @@ def find_annotation(
     return find_annotation_rec(config, list(path), None)
 
 
-def stringify_invalid(ex: vol.Invalid) -> str:
+def stringify_invalid(
+    ex: vol.Invalid, domain: str, config: dict, max_sub_error_length: int
+) -> str:
     """Stringify voluptuous.Invalid.
 
     This is an alternative to the custom __str__ implemented in
-    voluptuous.error.Invalid. The main modification is to format
-    the path delimited by -> instead of @data[].
+    voluptuous.error.Invalid. The modifications are:
+    - Format the path delimited by -> instead of @data[]
+    - Suffix with domain, file and line of the error
+    - Give a more user friendly output for unknown options
     """
+    message_prefix = f"Invalid config for [{domain}]"
+    if annotation := find_annotation(config, ex.path):
+        message_prefix += f" at {annotation[0]}, line {annotation[1]}"
     path = "->".join(str(m) for m in ex.path)
+    if ex.error_message == "extra keys not allowed":
+        return (
+            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
+            f"check: {path}"
+        )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
     # instead of str(ex)
     output = Exception.__str__(ex)
     if error_type := ex.error_type:
         output += " for " + error_type
-    return f"{output} '{path}'"
+    offending_item_summary = repr(_get_by_path(config, ex.path))
+    if len(offending_item_summary) > max_sub_error_length:
+        offending_item_summary = (
+            f"{offending_item_summary[: max_sub_error_length - 3]}..."
+        )
+    return f"{message_prefix}: {output} '{path}', got {offending_item_summary}."
 
 
 def humanize_error(
-    data: Any,
     validation_error: vol.Invalid,
+    domain: str,
+    config: dict,
     max_sub_error_length: int = MAX_VALIDATION_ERROR_ITEM_LENGTH,
 ) -> str:
     """Provide a more helpful + complete validation error message.
@@ -608,16 +626,11 @@ def humanize_error(
     if isinstance(validation_error, vol.MultipleInvalid):
         return "\n".join(
             sorted(
-                humanize_error(data, sub_error, max_sub_error_length)
+                humanize_error(sub_error, domain, config, max_sub_error_length)
                 for sub_error in validation_error.errors
             )
         )
-    offending_item_summary = repr(_get_by_path(data, validation_error.path))
-    if len(offending_item_summary) > max_sub_error_length:
-        offending_item_summary = (
-            f"{offending_item_summary[: max_sub_error_length - 3]}..."
-        )
-    return f"{stringify_invalid(validation_error)}, got {offending_item_summary}"
+    return stringify_invalid(validation_error, domain, config, max_sub_error_length)
 
 
 @callback
@@ -629,25 +642,12 @@ def _format_config_error(
     This method must be run in the event loop.
     """
     is_friendly = False
-    message = f"Invalid config for [{domain}]"
 
     if isinstance(ex, vol.Invalid):
-        if annotation := find_annotation(config, ex.path):
-            message += f" at {annotation[0]}, line {annotation[1]}: "
-        else:
-            message += ": "
-
-        if "extra keys not allowed" in ex.error_message:
-            path = "->".join(str(m) for m in ex.path)
-            message += (
-                f"'{ex.path[-1]}' is an invalid option for [{domain}], check: {path}"
-            )
-        else:
-            message += f"{humanize_error(config, ex)}."
+        message = humanize_error(ex, domain, config)
         is_friendly = True
     else:
-        message += ": "
-        message += str(ex) or repr(ex)
+        message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
 
     if domain != CONF_CORE and link:
         message += f" Please check the docs at {link}"
