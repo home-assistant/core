@@ -571,6 +571,9 @@ class PipelineRun:
 
     async def end(self) -> None:
         """Emit run end event."""
+        # Signal end of stream to listeners
+        self._capture_chunk(None)
+
         # Stop the recording thread before emitting run-end.
         # This ensures that files are properly closed if the event handler reads them.
         await self._stop_debug_recording_thread()
@@ -1058,7 +1061,7 @@ class PipelineRun:
 
         return tts_media.url
 
-    def _capture_chunk(self, audio_bytes: bytes) -> None:
+    def _capture_chunk(self, audio_bytes: bytes | None) -> None:
         """Forward audio chunk to various capturing mechanisms."""
         if self.debug_recording_queue is not None:
             # Forward to debug WAV file recording
@@ -1121,8 +1124,8 @@ class PipelineRun:
             # Not running
             return
 
-        # Signal thread to stop gracefully
-        self.debug_recording_queue.put(None)
+        # NOTE: Expecting a None to have been put in self.debug_recording_queue
+        # in self.end() to signal the thread to stop.
 
         # Wait until the thread has finished to ensure that files are fully written
         await self.hass.async_add_executor_job(self.debug_recording_thread.join)

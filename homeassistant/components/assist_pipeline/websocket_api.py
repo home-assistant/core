@@ -388,9 +388,9 @@ async def websocket_list_languages(
         vol.Required("type"): "assist_pipeline/device/capture",
         vol.Required("device_id"): str,
         vol.Required("timeout"): vol.All(
-            # timeout > 0
+            # 0 < timeout <= MAX_CAPTURE_TIMEOUT
             vol.Coerce(float),
-            vol.Range(min=0, min_included=False),
+            vol.Range(min=0, min_included=False, max=MAX_CAPTURE_TIMEOUT),
         ),
     }
 )
@@ -404,13 +404,17 @@ async def websocket_device_capture(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     device_id = msg["device_id"]
 
-    # timeout <= MAX_CAPTURE_TIMEOUT
-    timeout_seconds = min(MAX_CAPTURE_TIMEOUT, msg["timeout"])
+    # Number of seconds to record audio in wall clock time
+    timeout_seconds = msg["timeout"]
 
     # We don't know the chunk size, so the upper bound is calculated assuming a
     # single sample (16 bits) per queue item.
     bytes_per_sample = CAPTURE_WIDTH * CAPTURE_CHANNELS
-    max_queue_items = int(math.ceil(timeout_seconds * CAPTURE_RATE * bytes_per_sample))
+    max_queue_items = (
+        # +1 for None to signal end
+        int(math.ceil(timeout_seconds * CAPTURE_RATE * bytes_per_sample))
+        + 1
+    )
 
     audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=max_queue_items)
 
@@ -427,6 +431,17 @@ async def websocket_device_capture(
     pipeline_data.device_audio_queues[device_id] = audio_queue
     stopped = False
 
+    def clean_up_queue() -> None:
+        if not stopped:
+            # Clean up audio queue if another capture didn't stop us
+            pipeline_data.device_audio_queues.pop(device_id, None)
+
+    # Unsubscribe cleans up queue
+    connection.subscriptions[msg["id"]] = clean_up_queue
+
+    # Audio will follow as events
+    connection.send_result(msg["id"])
+
     try:
         with contextlib.suppress(asyncio.TimeoutError):
             async with asyncio.timeout(timeout_seconds):
@@ -441,15 +456,15 @@ async def websocket_device_capture(
                     connection.send_event(
                         msg["id"],
                         {
+                            "type": "audio",
                             "rate": CAPTURE_RATE,  # hertz
                             "width": CAPTURE_WIDTH,  # bytes
                             "channels": CAPTURE_CHANNELS,
                             "audio": base64.b64encode(audio_bytes).decode("ascii"),
                         },
                     )
-    finally:
-        if not stopped:
-            # Clean up audio queue if another capture didn't stop us
-            pipeline_data.device_audio_queues.pop(device_id, None)
 
-    connection.send_result(msg["id"])
+        # Capture has ended
+        connection.send_event(msg["id"], {"type": "end"})
+    finally:
+        clean_up_queue()
