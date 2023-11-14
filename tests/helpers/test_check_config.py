@@ -83,8 +83,7 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
             (
                 "Invalid config for [homeassistant] at "
                 f"{hass.config.path(YAML_CONFIG_FILE)}, line 2: "
-                "not a valid value for dictionary value @ data['unit_system']. Got "
-                "'bad'."
+                "not a valid value for dictionary value 'unit_system', got 'bad'."
             ),
             "homeassistant",
             {"unit_system": "bad"},
