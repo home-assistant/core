@@ -66,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: import_info[CONF_HOST],
             CONF_PING_COUNT: import_info[CONF_PING_COUNT],
         }
-        title = import_info[CONF_NAME] or import_info[CONF_HOST]
+        title = import_info.get(CONF_NAME, import_info[CONF_HOST])
 
         self._async_abort_entries_match({CONF_HOST: to_import[CONF_HOST]})
         return self.async_create_entry(

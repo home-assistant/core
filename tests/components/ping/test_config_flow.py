@@ -105,3 +105,19 @@ async def test_step_import(hass: HomeAssistant) -> None:
         "host": "127.0.0.1",
         "count": 1,
     }
+
+    # test import without name
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={CONF_IMPORTED_BY: "binary_sensor", "host": "10.10.10.10", "count": 5},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "10.10.10.10"
+    assert result["data"] == {CONF_IMPORTED_BY: "binary_sensor"}
+    assert result["options"] == {
+        "host": "10.10.10.10",
+        "count": 5,
+    }
