@@ -311,6 +311,8 @@ class Entity(ABC):
     # and removes the need for constant None checks or asserts.
     _state_info: StateInfo = None  # type: ignore[assignment]
 
+    __remove_event: asyncio.Event | None = None
+
     # Entity Properties
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
@@ -987,9 +989,9 @@ class Entity(ABC):
         parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
-        if self._platform_state == EntityPlatformState.ADDED:
+        if self._platform_state != EntityPlatformState.NOT_ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                f"Entity '{self.entity_id}' cannot be added a second time to an entity"
                 " platform"
             )
 
@@ -1009,7 +1011,7 @@ class Entity(ABC):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
 
-        self._platform_state = EntityPlatformState.NOT_ADDED
+        self._platform_state = EntityPlatformState.REMOVED
         self._call_on_remove_callbacks()
 
         self.hass = None  # type: ignore[assignment]
@@ -1022,6 +1024,7 @@ class Entity(ABC):
         await self.async_added_to_hass()
         self.async_write_ha_state()
 
+    @final
     async def async_remove(self, *, force_remove: bool = False) -> None:
         """Remove entity from Home Assistant.
 
@@ -1032,12 +1035,19 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        if self.platform and self._platform_state != EntityPlatformState.ADDED:
-            raise HomeAssistantError(
-                f"Entity {self.entity_id} async_remove called twice"
-            )
+        if self.__remove_event is not None:
+            await self.__remove_event.wait()
+            return
+
+        self.__remove_event = asyncio.Event()
+        try:
+            await self.__async_remove_impl(force_remove)
+        finally:
+            self.__remove_event.set()
+
+    @final
+    async def __async_remove_impl(self, force_remove: bool) -> None:
+        """Remove entity from Home Assistant."""
 
         self._platform_state = EntityPlatformState.REMOVED
 
@@ -1099,7 +1109,7 @@ class Entity(ABC):
             # This is an assert as it should never happen, but helps in tests
             assert (
                 not self.registry_entry.disabled_by
-            ), f"Entity {self.entity_id} is being added while it's disabled"
+            ), f"Entity '{self.entity_id}' is being added while it's disabled"
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
@@ -1156,6 +1166,10 @@ class Entity(ABC):
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
+
+        # Clear the remove event to handle entity added again after entity id change
+        self.__remove_event = None
+        self._platform_state = EntityPlatformState.NOT_ADDED
         await self.platform.async_add_entities([self])
 
     @callback

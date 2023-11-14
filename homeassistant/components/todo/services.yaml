@@ -42,5 +42,6 @@ remove_item:
         - todo.TodoListEntityFeature.DELETE_TODO_ITEM
   fields:
     item:
+      required: true
       selector:
-        object:
+        text:

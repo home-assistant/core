@@ -44,7 +44,7 @@ class ReolinkSensorEntityDescription(
 class ReolinkHostSensorEntityDescriptionMixin:
     """Mixin values for Reolink host sensor entities."""
 
-    value: Callable[[Host], int]
+    value: Callable[[Host], int | None]
 
 
 @dataclass
