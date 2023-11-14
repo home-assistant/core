@@ -76,21 +76,21 @@ class MockValve(MockEntity, ValveEntity):
 
         return False
 
-    def open_valve(self, **kwargs) -> None:
+    def open_valve(self) -> None:
         """Open valve."""
         if self.supported_features & ValveEntityFeature.STOP:
             self._values["state"] = STATE_OPENING
         else:
             self._values["state"] = STATE_OPEN
 
-    def close_valve(self, **kwargs) -> None:
+    def close_valve(self) -> None:
         """Close valve."""
         if self.supported_features & ValveEntityFeature.STOP:
             self._values["state"] = STATE_CLOSING
         else:
             self._values["state"] = STATE_CLOSED
 
-    def stop_valve(self, **kwargs) -> None:
+    def stop_valve(self) -> None:
         """Stop valve."""
         self._values["state"] = STATE_CLOSED if self.is_closed else STATE_OPEN
 
