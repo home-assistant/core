@@ -191,7 +191,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 value = self.entity_description.value_getter(self._api)
                 if value is not None:
-                    self._attr_native_value = value
+                    self._attr_native_value = float(value)
 
                 if self.entity_description.min_value_getter:
                     min_value = self.entity_description.min_value_getter(self._api)
