@@ -591,6 +591,19 @@ async def test_rpc_climate_set_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
+    # test set temperature without target temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TARGET_TEMP_LOW: 20,
+            ATTR_TARGET_TEMP_HIGH: 30,
+        },
+        blocking=True,
+    )
+    mock_rpc_device.call_rpc.assert_not_called()
+
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "target_C", 28)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
