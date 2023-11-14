@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         _LOGGER.debug("Connection successful!")
 
         # Return info that you want to store in the config entry.
-        return {"title": f"MirAIe ({login_id})"}
+        return {"title": login_id}
 
 
 def _validate_mobile_number(mobile_number):
@@ -75,11 +75,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            phone_number = user_input[CONFIG_KEY_USER_ID]
-            formatted_phone_number = _add_country_code(phone_number)
-            user_input[CONFIG_KEY_USER_ID] = formatted_phone_number
+            phone_number = _add_country_code(user_input[CONFIG_KEY_USER_ID])
+            user_input[CONFIG_KEY_USER_ID] = phone_number
 
-            await self.async_set_unique_id(formatted_phone_number)
+            await self.async_set_unique_id(phone_number)
             self._abort_if_unique_id_configured()
 
             try:

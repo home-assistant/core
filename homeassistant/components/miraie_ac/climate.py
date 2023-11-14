@@ -127,12 +127,7 @@ async def async_setup_entry(
 ) -> None:
     """Add MirAIe AC devices."""
     api: MirAIeAPI = hass.data[DOMAIN][entry.entry_id]
-    await api.initialize()
     devices: list[MirAIeDevice] = api.devices
-
-    for device in devices:
-        _LOGGER.debug("Found MirAIe device: %s", device.friendly_name)
-
     entities = list(map(MirAIeClimateEntity, devices))
     async_add_entities(entities)
 
@@ -159,7 +154,7 @@ class MirAIeClimateEntity(ClimateEntity):
     def __init__(self, device: MirAIeDevice) -> None:
         """Initialize MirAIe climate entity."""
 
-        self.device = device
+        self._device = device
         self._friendly_name = device.friendly_name
 
         self._attr_unique_id = device.device_id
@@ -180,7 +175,7 @@ class MirAIeClimateEntity(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError("No Target Temperature provided")
 
-        self.device.set_temperature(temperature)
+        self._device.set_temperature(temperature)
         _LOGGER.debug(
             "%s - Target Temperature set: %s",
             self._friendly_name,
@@ -196,17 +191,17 @@ class MirAIeClimateEntity(ClimateEntity):
         )
 
         if hvac_mode == HVACMode.OFF:
-            self.device.turn_off()
+            self._device.turn_off()
             return
 
-        if self.device.status.power_mode == MirAIePowerMode.OFF:
-            self.device.turn_on()
+        if self._device.status.power_mode == MirAIePowerMode.OFF:
+            self._device.turn_on()
 
-        self.device.set_hvac_mode(HVAC_MODE_MAP_TO_MIRAIE[hvac_mode])
+        self._device.set_hvac_mode(HVAC_MODE_MAP_TO_MIRAIE[hvac_mode])
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set Fan mode."""
-        self.device.set_fan_mode(FAN_MODE_MAP_TO_MIRAIE[fan_mode])
+        self._device.set_fan_mode(FAN_MODE_MAP_TO_MIRAIE[fan_mode])
         _LOGGER.debug(
             "%s fan mode set: %s",
             self._friendly_name,
@@ -217,17 +212,17 @@ class MirAIeClimateEntity(ClimateEntity):
         """Set Swing mode."""
 
         if swing_mode == SWING_BOTH:
-            self.device.set_vertical_swing_mode(MirAIeSwingMode.AUTO)
-            self.device.set_horizontal_swing_mode(MirAIeSwingMode.AUTO)
+            self._device.set_vertical_swing_mode(MirAIeSwingMode.AUTO)
+            self._device.set_horizontal_swing_mode(MirAIeSwingMode.AUTO)
         elif swing_mode == SWING_HORIZONTAL:
-            self.device.set_vertical_swing_mode(MirAIeSwingMode.ONE)
-            self.device.set_horizontal_swing_mode(MirAIeSwingMode.AUTO)
+            self._device.set_vertical_swing_mode(MirAIeSwingMode.ONE)
+            self._device.set_horizontal_swing_mode(MirAIeSwingMode.AUTO)
         elif swing_mode == SWING_VERTICAL:
-            self.device.set_vertical_swing_mode(MirAIeSwingMode.AUTO)
-            self.device.set_horizontal_swing_mode(MirAIeSwingMode.ONE)
+            self._device.set_vertical_swing_mode(MirAIeSwingMode.AUTO)
+            self._device.set_horizontal_swing_mode(MirAIeSwingMode.ONE)
         elif swing_mode == SWING_OFF:
-            self.device.set_vertical_swing_mode(MirAIeSwingMode.ONE)
-            self.device.set_horizontal_swing_mode(MirAIeSwingMode.ONE)
+            self._device.set_vertical_swing_mode(MirAIeSwingMode.ONE)
+            self._device.set_horizontal_swing_mode(MirAIeSwingMode.ONE)
 
         _LOGGER.debug(
             "%s swing mode set: %s",
@@ -237,7 +232,7 @@ class MirAIeClimateEntity(ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode."""
-        self.device.set_preset_mode(PRESET_MODE_MAP_TO_MIRAIE[preset_mode])
+        self._device.set_preset_mode(PRESET_MODE_MAP_TO_MIRAIE[preset_mode])
 
         _LOGGER.debug(
             "%s preset mode set: %s",
@@ -260,28 +255,28 @@ class MirAIeClimateEntity(ClimateEntity):
         return SWING_HORIZONTAL
 
     def _update_entity(self):
-        self._attr_available = self.device.status.is_online
-        self._attr_current_temperature = self.device.status.room_temp
-        self._attr_target_temperature = self.device.status.temperature
+        self._attr_available = self._device.status.is_online
+        self._attr_current_temperature = self._device.status.room_temp
+        self._attr_target_temperature = self._device.status.temperature
 
         # preset mode
-        preset_mode = self.device.status.preset_mode
+        preset_mode = self._device.status.preset_mode
         self._attr_preset_mode = (
             PRESET_NONE if preset_mode is None else PRESET_MODE_MAP_TO_HASS[preset_mode]
         )
 
         # fan mode
-        fan_mode = self.device.status.fan_mode
+        fan_mode = self._device.status.fan_mode
         self._attr_fan_mode = FAN_MODE_MAP_TO_HASS[fan_mode]
 
         # swing mode
-        v_swing_mode = self.device.status.vertical_swing_mode
-        h_swing_mode = self.device.status.horizontal_swing_mode
+        v_swing_mode = self._device.status.vertical_swing_mode
+        h_swing_mode = self._device.status.horizontal_swing_mode
         self._attr_swing_mode = self._map_swing_mode(v_swing_mode, h_swing_mode)
 
         # hvac mode
-        power_mode = self.device.status.power_mode
-        hvac_mode = self.device.status.hvac_mode
+        power_mode = self._device.status.power_mode
+        hvac_mode = self._device.status.hvac_mode
         self._attr_hvac_mode = (
             HVACMode.OFF
             if power_mode == MirAIePowerMode.OFF
@@ -297,8 +292,8 @@ class MirAIeClimateEntity(ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
-        self.device.register_callback(self.entity_state_changed_callback)
+        self._device.register_callback(self.entity_state_changed_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
-        self.device.remove_callback(self.entity_state_changed_callback)
+        self._device.remove_callback(self.entity_state_changed_callback)

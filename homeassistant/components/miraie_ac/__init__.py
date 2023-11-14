@@ -25,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     api = MirAIeAPI(auth_type=AuthType.MOBILE, login_id=login_id, password=password)
+    await api.initialize()
+
     hass.data[DOMAIN][entry.entry_id] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
