@@ -187,16 +187,14 @@ class AuthProvidersView(HomeAssistantView):
             ):
                 # We are local, return user id and username
                 users = await provider.store.async_get_users()
-                additonal_data = {
-                    "users": {
-                        user.id: credentials.data["username"]
-                        for user in users
-                        for credentials in user.credentials
-                        if (
-                            credentials.auth_provider_type == provider.type
-                            and credentials.auth_provider_id == provider.id
-                        )
-                    }
+                additonal_data["users"] = {
+                    user.id: credentials.data["username"]
+                    for user in users
+                    for credentials in user.credentials
+                    if (
+                        credentials.auth_provider_type == provider.type
+                        and credentials.auth_provider_id == provider.id
+                    )
                 }
 
             providers.append(
