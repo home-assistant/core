@@ -1,6 +1,7 @@
 """Tests for Shelly utils."""
 import pytest
 
+from homeassistant.components.shelly.const import GEN1_RELEASE_URL, GEN2_RELEASE_URL
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
     get_block_device_sleep_period,
@@ -227,8 +228,21 @@ async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:
     assert not get_rpc_input_triggers(mock_rpc_device)
 
 
-def test_get_release_url() -> None:
+@pytest.mark.parametrize(
+    ("gen", "model", "beta", "expected"),
+    [
+        (1, "SHMOS-01", False, None),
+        (1, "SHSW-1", False, GEN1_RELEASE_URL),
+        (1, "SHSW-1", True, None),
+        (2, "SAWD-0A1XX10EU1", False, None),
+        (2, "SNSW-102P16EU", False, GEN2_RELEASE_URL),
+        (2, "SNSW-102P16EU", True, None),
+    ],
+)
+def test_get_release_url(
+    gen: int, model: str, beta: bool, expected: str | None
+) -> None:
     """Test get_release_url() with a device without a release note URL."""
-    result = get_release_url(1, "SHMOS-01", False)
+    result = get_release_url(gen, model, beta)
 
-    assert result is None
+    assert result is expected
