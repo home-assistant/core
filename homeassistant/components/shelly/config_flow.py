@@ -363,8 +363,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return config_entry.data.get("gen") == 2 and not config_entry.data.get(
-            CONF_SLEEP_PERIOD
+        return (
+            config_entry.data.get("gen") == 2
+            and not config_entry.data.get(CONF_SLEEP_PERIOD)
+            and config_entry.data.get("model") != "SAWD-0A1XX10EU1"
         )
 
 
