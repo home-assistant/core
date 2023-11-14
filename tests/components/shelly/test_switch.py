@@ -1,4 +1,5 @@
 """Tests for Shelly switch platform."""
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -277,3 +278,19 @@ async def test_block_device_gas_valve(
     assert state
     assert state.state == STATE_ON  # valve is open
     assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
+
+
+async def test_wall_display_thermostat_mode(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test Wall Display in thermostat mode."""
+    new_shelly = deepcopy(mock_rpc_device.shelly)
+    new_shelly["model"] = "SAWD-0A1XX10EU1"
+
+    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
+
+    await init_integration(hass, 2)
+
+    # the switch entity should not be created, only the climate entity
+    assert hass.states.get("switch.test_name") is None
+    assert hass.states.get("climate.test_name")
