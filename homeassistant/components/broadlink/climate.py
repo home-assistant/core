@@ -43,7 +43,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
         """Initialize the climate entity."""
         super().__init__(device)
         self._attr_unique_id = device.unique_id
-        self._attr_hvac_action = None
+        self._attr_hvac_mode = None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
