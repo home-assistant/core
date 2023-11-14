@@ -5,6 +5,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -33,14 +34,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ViCareNumberEntityDescription(ViCareRequiredKeysMixin, NumberEntityDescription):
+class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare number entity."""
 
-    value_getter: Callable[[PyViCareDevice], str | None] | None = None
-    value_setter: Callable[[PyViCareDevice, float], str | None] | None = None
+    # value_getter: Callable[[PyViCareDevice], float | None] | None = None
+    value_setter: Callable[[PyViCareDevice, float], Any | None] | None = None
     min_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     max_value_getter: Callable[[PyViCareDevice], float | None] | None = None
-    stepping_getter: Callable[[PyViCareDevice], str | None] | None = None
+    stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
 PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
@@ -188,10 +189,9 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         """Update state of number."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                if self.entity_description.value_getter:
-                    value = self.entity_description.value_getter(self._api)
-                    if value is not None:
-                        self._attr_native_value = float(value)
+                value = self.entity_description.value_getter(self._api)
+                if value is not None:
+                    self._attr_native_value = value
 
                 if self.entity_description.min_value_getter:
                     min_value = self.entity_description.min_value_getter(self._api)
@@ -206,7 +206,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                 if self.entity_description.stepping_getter:
                     stepping = self.entity_description.stepping_getter(self._api)
                     if stepping is not None:
-                        self._attr_native_step = float(stepping)
+                        self._attr_native_step = stepping
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
