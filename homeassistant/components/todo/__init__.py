@@ -1,9 +1,10 @@
 """The todo integration."""
 
+from collections.abc import Callable
 import dataclasses
 import datetime
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -21,6 +22,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN, TodoItemStatus, TodoListEntityFeature
 
@@ -39,6 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     frontend.async_register_built_in_panel(hass, "todo", "todo", "mdi:clipboard-list")
 
+    websocket_api.async_register_command(hass, websocket_handle_subscribe_todo_items)
     websocket_api.async_register_command(hass, websocket_handle_todo_item_list)
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
@@ -131,6 +134,7 @@ class TodoListEntity(Entity):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
+    _update_listeners: list[Callable[[list[JsonValueType] | None], None]] | None = None
 
     @property
     def state(self) -> int | None:
@@ -167,6 +171,88 @@ class TodoListEntity(Entity):
         position in the To-do list.
         """
         raise NotImplementedError()
+
+    @final
+    @callback
+    def async_subscribe_updates(
+        self,
+        listener: Callable[[list[JsonValueType] | None], None],
+    ) -> CALLBACK_TYPE:
+        """Subscribe to To-do list item updates.
+
+        Called by websocket API.
+        """
+        if self._update_listeners is None:
+            self._update_listeners = []
+        self._update_listeners.append(listener)
+
+        @callback
+        def unsubscribe() -> None:
+            if self._update_listeners:
+                self._update_listeners.remove(listener)
+
+        return unsubscribe
+
+    @final
+    def async_update_listeners(self) -> None:
+        """Push updated To-do items to all listeners."""
+        if not self._update_listeners:
+            return
+
+        todo_items: list[JsonValueType] = [
+            dataclasses.asdict(item) for item in self.todo_items or ()
+        ]
+        for listener in self._update_listeners:
+            listener(todo_items)
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        super().async_write_ha_state()
+        self.async_update_listeners()
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "todo/item/subscribe",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+    }
+)
+@websocket_api.async_response
+async def websocket_handle_subscribe_todo_items(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to To-do list item updates."""
+    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
+    entity_id: str = msg["entity_id"]
+
+    if not (entity := component.get_entity(msg["entity_id"])):
+        connection.send_error(
+            msg["id"],
+            "invalid_entity_id",
+            f"To-do list entity not found: {entity_id}",
+        )
+        return
+
+    @callback
+    def todo_item_listener(todo_items: list[JsonValueType] | None) -> None:
+        """Push updated To-do list items to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                {
+                    "items": todo_items,
+                },
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(
+        todo_item_listener
+    )
+    connection.send_message(websocket_api.result_message(msg["id"]))
+
+    # Push an initial forecast update
+    entity.async_update_listeners()
 
 
 @websocket_api.websocket_command(

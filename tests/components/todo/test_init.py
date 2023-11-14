@@ -941,3 +941,85 @@ async def test_remove_completed_items_service_raises(
             target={"entity_id": "todo.entity1"},
             blocking=True,
         )
+
+
+async def test_subscribe(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test subscribing to todo updates."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    event_message = msg["event"]
+    assert event_message == {
+        "items": [
+            {"summary": "Item #1", "uid": "1", "status": "needs_action"},
+            {"summary": "Item #2", "uid": "2", "status": "completed"},
+        ]
+    }
+    test_entity._attr_todo_items = [
+        *test_entity._attr_todo_items,
+        TodoItem(summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+
+    test_entity.async_update_listeners()
+    msg = await client.receive_json()
+    event_message = msg["event"]
+    assert event_message == {
+        "items": [
+            {"summary": "Item #1", "uid": "1", "status": "needs_action"},
+            {"summary": "Item #2", "uid": "2", "status": "completed"},
+            {"summary": "Item #3", "uid": "3", "status": "needs_action"},
+        ]
+    }
+
+    test_entity._attr_todo_items = None
+    test_entity.async_update_listeners()
+    msg = await client.receive_json()
+    event_message = msg["event"]
+    assert event_message == {
+        "items": [],
+    }
+
+
+async def test_subscribe_entity_does_not_exist(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test failure to subscribe to an entity that does not exist."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": "todo.unknown",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "invalid_entity_id",
+        "message": "To-do list entity not found: todo.unknown",
+    }
