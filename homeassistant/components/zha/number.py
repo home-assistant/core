@@ -629,7 +629,7 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliButtonDelay(ZHANumberConfigurationEntity):
     """Inovelli button delay configuration entity."""
 
-    _unique_id_suffix = "dimming_speed_up_local"
+    _unique_id_suffix = "button_delay"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
