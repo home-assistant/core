@@ -165,7 +165,7 @@ class AuthProvidersView(HomeAssistantView):
 
         providers = []
         for provider in hass.auth.auth_providers:
-            additonal_data = {}
+            additional_data = {}
 
             if provider.type == "trusted_networks":
                 if cloud_connection:
@@ -187,7 +187,7 @@ class AuthProvidersView(HomeAssistantView):
             ):
                 # We are local, return user id and username
                 users = await provider.store.async_get_users()
-                additonal_data["users"] = {
+                additional_data["users"] = {
                     user.id: credentials.data["username"]
                     for user in users
                     for credentials in user.credentials
@@ -202,7 +202,7 @@ class AuthProvidersView(HomeAssistantView):
                     "name": provider.name,
                     "id": provider.id,
                     "type": provider.type,
-                    **additonal_data,
+                    **additional_data,
                 }
             )
 
