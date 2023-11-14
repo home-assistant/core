@@ -1631,7 +1631,7 @@ python-qbittorrent==0.4.3
 python-roborock==0.35.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.35
+python-smarttub==0.0.36
 
 # homeassistant.components.songpal
 python-songpal==0.15.2
