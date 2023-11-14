@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .api_wrapper import ApiWrapper
+from .canvas_api import CanvasAPI
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,11 +41,11 @@ class PlaceholderHub:
         self.host = f"https://{host_prefix}.instructure.com/api/v1"
 
     async def authenticate(self, access_token: str) -> bool:
-        api = ApiWrapper(self.host, access_token)
+        api = CanvasAPI(self.host, access_token)
         return await api.async_test_authentication()
 
     async def get_courses(self, access_token: str) -> list[{str, Any}]:
-        api = ApiWrapper(self.host, access_token) # maybe self.api?
+        api = CanvasAPI(self.host, access_token) # maybe self.api?
         courses = await api.async_get_courses()
         return courses
 
@@ -77,12 +77,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # Return info that you want to store in the config entry.
     # return {"title": "Canvas"}
 
-async def get_courses_names(data: dict[str, Any]) -> list[str | None]:
-    """Get the names of all courses for uses to select which to track"""
-    # TODO - add try-except
+async def get_courses_names(data: dict[str, Any]) -> dict[str, int]:
+    """Get a mapping of course names to their IDs."""
     hub = PlaceholderHub(data[HOST_PREFIX])
     courses_info = await hub.get_courses(data[ACCESS_TOKEN])
-    return [course["name"] for course in sorted(courses_info, key=lambda x: x["name"])]
+    return {course["name"]: course["id"] for course in courses_info}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -118,31 +117,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_courses(
-        self,
-        user_input: dict[str, Any] | None = None,
+    self,
+    user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle courses step."""
-        # not sure if it's necessary to check login status here
-
         if user_input is not None:
+            selected_courses = user_input[CONF_COURSES]
+            selected_courses_dict = {name: self.courses_mapping[name] for name in selected_courses}
+
             self.config_data.update(user_input)
             return self.async_create_entry(
                 title="Canvas",
                 data={HOST_PREFIX: self.config_data[HOST_PREFIX], ACCESS_TOKEN: self.config_data[ACCESS_TOKEN]},
-                options={CONF_COURSES: self.config_data[CONF_COURSES]}
-        )
+                options={CONF_COURSES: selected_courses_dict}
+            )
 
-        courses = await get_courses_names(self.config_data)
+        self.courses_mapping = await get_courses_names(self.config_data)
         return self.async_show_form(
             step_id="courses",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_COURSES): cv.multi_select(
-                        {k: k for k in courses}
-                    )
+                    vol.Required(CONF_COURSES): cv.multi_select(sorted(self.courses_mapping))
                 }
             )
         )
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

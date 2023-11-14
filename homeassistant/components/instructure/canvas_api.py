@@ -2,7 +2,7 @@ import httpx
 import urllib.parse
 import json
 
-class ApiWrapper:
+class CanvasAPI:
     """A wrapper for the Canvas API."""
 
     def __init__(self, host: str, access_token: str) -> None:
@@ -37,33 +37,11 @@ class ApiWrapper:
         courses = json.loads(response.content.decode('utf-8'))
         return courses
 
-    async def async_get_assignments(self, course_id: int) -> list:
+    async def async_get_assignments(self, course_id) -> list:
         """Retrieve a list of assignments from the Canvas API."""
-
-        return [
-            {
-            "id": 76160,
-            "due_at": "2023-08-30T21:59:59Z",
-            "course_id": 25271,
-            "name": "First Assignment",
-            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
-            },
-            {
-            "id": 76161,
-            "due_at": "2023-09-30T21:59:59Z",
-            "course_id": 25271,
-            "name": "Second Assignment",
-            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
-            },
-
-            {
-            "id": 76162,
-            "due_at": "2023-10-30T21:59:59Z",
-            "course_id": 25271,
-            "name": "Third Assignment",
-            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
-            }
-        ]
+        response = await self.async_make_get_request(f"/courses/{course_id}/assignments", {"per_page": "50"})
+        assignments = json.loads(response.content.decode('utf-8'))
+        return assignments
 
     async def async_get_announcements(self) -> list:
         """Retrieve a list of announcements from the Canvas API.
@@ -71,8 +49,8 @@ class ApiWrapper:
         TODO - implement this function"""
         pass
 
-    async def async_get_conversations(self) -> list:
+    async def async_get_conversations(self, course_id) -> list:
         """Retrieve a list of conversations from the Instructure API."""
-        response = await self.async_make_get_request("/conversations", {"per_page": "50"})
-        conversations = json.loads(response.content.decode('utf-8'))
-        return conversations
+        response = await self.async_make_get_request(f"/conversations", {"per_page": "50"})
+        assignments = json.loads(response.content.decode('utf-8'))
+        return assignments
