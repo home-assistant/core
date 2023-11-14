@@ -76,14 +76,10 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             await self._device.async_request(self._device.api.set_power, 0)
-
-        elif hvac_mode == HVACMode.AUTO:
+        else:
             await self._device.async_request(self._device.api.set_power, 1)
-            await self._device.async_request(self._device.api.set_mode, 1, 0)
-
-        elif hvac_mode == HVACMode.HEAT:
-            await self._device.async_request(self._device.api.set_power, 1)
-            await self._device.async_request(self._device.api.set_mode, 0, 0)
+            mode = 0 if hvac_mode == HVACMode.HEAT else 1
+            await self._device.async_request(self._device.api.set_mode, mode, 0)
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
