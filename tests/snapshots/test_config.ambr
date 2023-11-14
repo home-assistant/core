@@ -4,9 +4,11 @@
     "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 6: required key not provided 'platform', got None.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 9: expected str for dictionary value 'option1', got 123.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 12: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
-    "Invalid config for [adr_0007_2] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 19: required key not provided 'adr_0007_2->host', got None.",
-    "Invalid config for [adr_0007_3] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 24: expected int for dictionary value 'adr_0007_3->port', got 'foo'.",
-    "Invalid config for [adr_0007_4] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 29: 'no_such_option' is an invalid option for [adr_0007_4], check: adr_0007_4->no_such_option",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 19: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
+    "Invalid config for [adr_0007_2] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 27: required key not provided 'adr_0007_2->host', got None.",
+    "Invalid config for [adr_0007_3] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 32: expected int for dictionary value 'adr_0007_3->port', got 'foo'.",
+    "Invalid config for [adr_0007_4] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 37: 'no_such_option' is an invalid option for [adr_0007_4], check: adr_0007_4->no_such_option",
+    "Invalid config for [adr_0007_5] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 44: 'no_such_option' is an invalid option for [adr_0007_5], check: adr_0007_5->no_such_option",
   ])
 # ---
 # name: test_component_config_validation_error[basic_include]
@@ -14,8 +16,11 @@
     "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/iot_domain.yaml, line 5: required key not provided 'platform', got None.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/iot_domain.yaml, line 8: expected str for dictionary value 'option1', got 123.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/iot_domain.yaml, line 11: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/iot_domain.yaml, line 18: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
     "Invalid config for [adr_0007_2] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/configuration.yaml, line 3: required key not provided 'adr_0007_2->host', got None.",
     "Invalid config for [adr_0007_3] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/adr_0007_3.yaml, line 3: expected int for dictionary value 'adr_0007_3->port', got 'foo'.",
+    "Invalid config for [adr_0007_4] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/adr_0007_4.yaml, line 3: 'no_such_option' is an invalid option for [adr_0007_4], check: adr_0007_4->no_such_option",
+    "Invalid config for [adr_0007_5] at <BASE_PATH>/fixtures/core/config/component_validation/basic_include/integrations/adr_0007_5.yaml, line 5: 'no_such_option' is an invalid option for [adr_0007_5], check: adr_0007_5->no_such_option",
   ])
 # ---
 # name: test_component_config_validation_error[include_dir_list]
@@ -23,6 +28,7 @@
     "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_list/iot_domain/iot_domain_2.yaml, line 2: required key not provided 'platform', got None.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_list/iot_domain/iot_domain_3.yaml, line 3: expected str for dictionary value 'option1', got 123.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_list/iot_domain/iot_domain_4.yaml, line 3: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_list/iot_domain/iot_domain_5.yaml, line 6: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
   ])
 # ---
 # name: test_component_config_validation_error[include_dir_merge_list]
@@ -30,6 +36,7 @@
     "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_merge_list/iot_domain/iot_domain_1.yaml, line 5: required key not provided 'platform', got None.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_merge_list/iot_domain/iot_domain_2.yaml, line 3: expected str for dictionary value 'option1', got 123.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_merge_list/iot_domain/iot_domain_2.yaml, line 6: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/include_dir_merge_list/iot_domain/iot_domain_2.yaml, line 13: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
   ])
 # ---
 # name: test_component_config_validation_error[packages]
@@ -37,19 +44,23 @@
     "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 11: required key not provided 'platform', got None.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 16: expected str for dictionary value 'option1', got 123.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 21: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
-    "Invalid config for [adr_0007_2] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 28: required key not provided 'adr_0007_2->host', got None.",
-    "Invalid config for [adr_0007_3] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 33: expected int for dictionary value 'adr_0007_3->port', got 'foo'.",
-    "Invalid config for [adr_0007_4] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 38: 'no_such_option' is an invalid option for [adr_0007_4], check: adr_0007_4->no_such_option",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 30: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
+    "Invalid config for [adr_0007_2] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 38: required key not provided 'adr_0007_2->host', got None.",
+    "Invalid config for [adr_0007_3] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 43: expected int for dictionary value 'adr_0007_3->port', got 'foo'.",
+    "Invalid config for [adr_0007_4] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 48: 'no_such_option' is an invalid option for [adr_0007_4], check: adr_0007_4->no_such_option",
+    "Invalid config for [adr_0007_5] at <BASE_PATH>/fixtures/core/config/component_validation/packages/configuration.yaml, line 55: 'no_such_option' is an invalid option for [adr_0007_5], check: adr_0007_5->no_such_option",
   ])
 # ---
 # name: test_component_config_validation_error[packages_include_dir_named]
   list([
     "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 6: required key not provided 'platform', got None.",
     "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 9: expected str for dictionary value 'option1', got 123.",
-    "Invalid config for [iot_domain] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 12: required key not provided 'platform', got None.",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 12: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
+    "Invalid config for [iot_domain.non_adr_0007] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/iot_domain.yaml, line 19: 'no_such_option' is an invalid option for [iot_domain.non_adr_0007], check: no_such_option",
     "Invalid config for [adr_0007_2] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/adr_0007_2.yaml, line 2: required key not provided 'adr_0007_2->host', got None.",
     "Invalid config for [adr_0007_3] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/adr_0007_3.yaml, line 4: expected int for dictionary value 'adr_0007_3->port', got 'foo'.",
     "Invalid config for [adr_0007_4] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/adr_0007_4.yaml, line 4: 'no_such_option' is an invalid option for [adr_0007_4], check: adr_0007_4->no_such_option",
+    "Invalid config for [adr_0007_5] at <BASE_PATH>/fixtures/core/config/component_validation/packages_include_dir_named/integrations/adr_0007_5.yaml, line 6: 'no_such_option' is an invalid option for [adr_0007_5], check: adr_0007_5->no_such_option",
   ])
 # ---
 # name: test_package_merge_error[packages]
