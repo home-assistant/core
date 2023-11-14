@@ -6,9 +6,9 @@
     }
   },
   "services": {
-    "list_items": {
-      "name": "List to-do list items",
-      "description": "List items on a to-do list.",
+    "get_items": {
+      "name": "Get to-do list items",
+      "description": "Get items on a to-do list.",
       "fields": {
         "status": {
           "name": "Status",

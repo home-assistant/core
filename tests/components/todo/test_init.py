@@ -187,7 +187,7 @@ async def test_list_todo_items(
 @pytest.mark.parametrize(
     ("service_data", "expected_items"),
     [
-        ({}, [ITEM_1]),
+        ({}, [ITEM_1, ITEM_2]),
         (
             [
                 {"status": [TodoItemStatus.COMPLETED, TodoItemStatus.NEEDS_ACTION]},
@@ -208,7 +208,7 @@ async def test_list_todo_items(
         ),
     ],
 )
-async def test_list_todo_items_service(
+async def test_get_items_service(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     test_entity: TodoListEntity,
@@ -226,7 +226,7 @@ async def test_list_todo_items_service(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "list_items",
+        "get_items",
         service_data,
         target={"entity_id": "todo.entity1"},
         blocking=True,

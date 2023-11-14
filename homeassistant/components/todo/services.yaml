@@ -1,10 +1,11 @@
-list_items:
+get_items:
   target:
     entity:
       domain: todo
   fields:
     status:
       example: "needs_action"
+      default: needs_action
       selector:
         select:
           translation_key: status

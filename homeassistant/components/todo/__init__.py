@@ -78,16 +78,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "list_items",
+        "get_items",
         cv.make_entity_service_schema(
             {
-                vol.Optional("status", default=[TodoItemStatus.NEEDS_ACTION]): vol.All(
+                vol.Optional("status"): vol.All(
                     cv.ensure_list,
                     [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
                 ),
             }
         ),
-        _async_todo_items,
+        _async_get_todo_items,
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -273,7 +273,7 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     await entity.async_delete_todo_items(uids=uids)
 
 
-async def _async_todo_items(
+async def _async_get_todo_items(
     entity: TodoListEntity, call: ServiceCall
 ) -> dict[str, Any]:
     """Return items in the To-do list."""
@@ -281,6 +281,6 @@ async def _async_todo_items(
         "items": [
             dataclasses.asdict(item)
             for item in entity.todo_items or ()
-            if item.status in call.data["status"]
+            if not (statuses := call.data.get("status")) or item.status in statuses
         ]
     }
