@@ -535,11 +535,11 @@ def _format_config_error(
 
     message += (
         f" (See {getattr(domain_config, '__config_file__', '?')}, "
-        f"line {getattr(domain_config, '__line__', '?')}). "
+        f"line {getattr(domain_config, '__line__', '?')})."
     )
 
     if domain != CONF_CORE and link:
-        message += f"Please check the docs at {link}"
+        message += f" Please check the docs at {link}"
 
     return message, is_friendly
 
@@ -670,7 +670,7 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += (
         f" (See {getattr(pack_config, '__config_file__', '?')}:"
-        f"{getattr(pack_config, '__line__', '?')}). "
+        f"{getattr(pack_config, '__line__', '?')})."
     )
 
     _LOGGER.error(message)

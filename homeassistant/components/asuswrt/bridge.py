@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import namedtuple
+from collections.abc import Awaitable, Callable, Coroutine
+import functools
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 
@@ -47,9 +49,38 @@ WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_dict(keys: list, values: list) -> dict[str, Any]:
-    """Create a dict from a list of keys and values."""
-    return dict(zip(keys, values))
+_AsusWrtBridgeT = TypeVar("_AsusWrtBridgeT", bound="AsusWrtBridge")
+_FuncType = Callable[[_AsusWrtBridgeT], Awaitable[list[Any] | dict[str, Any]]]
+_ReturnFuncType = Callable[[_AsusWrtBridgeT], Coroutine[Any, Any, dict[str, Any]]]
+
+
+def handle_errors_and_zip(
+    exceptions: type[Exception] | tuple[type[Exception], ...], keys: list[str] | None
+) -> Callable[[_FuncType], _ReturnFuncType]:
+    """Run library methods and zip results or manage exceptions."""
+
+    def _handle_errors_and_zip(func: _FuncType) -> _ReturnFuncType:
+        """Run library methods and zip results or manage exceptions."""
+
+        @functools.wraps(func)
+        async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
+            try:
+                data = await func(self)
+            except exceptions as exc:
+                raise UpdateFailed(exc) from exc
+
+            if keys is None:
+                if not isinstance(data, dict):
+                    raise UpdateFailed("Received invalid data type")
+                return data
+
+            if not isinstance(data, list):
+                raise UpdateFailed("Received invalid data type")
+            return dict(zip(keys, data))
+
+        return _wrapper
+
+    return _handle_errors_and_zip
 
 
 class AsusWrtBridge(ABC):
@@ -236,38 +267,22 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         availability = await self._api.async_find_temperature_commands()
         return [SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]]
 
-    async def _get_bytes(self) -> dict[str, Any]:
+    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
+    async def _get_bytes(self) -> Any:
         """Fetch byte information from the router."""
-        try:
-            datas = await self._api.async_get_bytes_total()
-        except (IndexError, OSError, ValueError) as exc:
-            raise UpdateFailed(exc) from exc
+        return await self._api.async_get_bytes_total()
 
-        return _get_dict(SENSORS_BYTES, datas)
-
-    async def _get_rates(self) -> dict[str, Any]:
+    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_RATES)
+    async def _get_rates(self) -> Any:
         """Fetch rates information from the router."""
-        try:
-            rates = await self._api.async_get_current_transfer_rates()
-        except (IndexError, OSError, ValueError) as exc:
-            raise UpdateFailed(exc) from exc
+        return await self._api.async_get_current_transfer_rates()
 
-        return _get_dict(SENSORS_RATES, rates)
-
-    async def _get_load_avg(self) -> dict[str, Any]:
+    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_LOAD_AVG)
+    async def _get_load_avg(self) -> Any:
         """Fetch load average information from the router."""
-        try:
-            avg = await self._api.async_get_loadavg()
-        except (IndexError, OSError, ValueError) as exc:
-            raise UpdateFailed(exc) from exc
+        return await self._api.async_get_loadavg()
 
-        return _get_dict(SENSORS_LOAD_AVG, avg)
-
-    async def _get_temperatures(self) -> dict[str, Any]:
+    @handle_errors_and_zip((OSError, ValueError), None)
+    async def _get_temperatures(self) -> Any:
         """Fetch temperatures information from the router."""
-        try:
-            temperatures: dict[str, Any] = await self._api.async_get_temperature()
-        except (OSError, ValueError) as exc:
-            raise UpdateFailed(exc) from exc
-
-        return temperatures
+        return await self._api.async_get_temperature()
