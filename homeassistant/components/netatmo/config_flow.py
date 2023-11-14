@@ -6,7 +6,6 @@ import logging
 from typing import Any
 import uuid
 
-from pyatmo.const import ALL_SCOPES
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from .const import (
+    API_SCOPES,
     CONF_AREA_NAME,
     CONF_LAT_NE,
     CONF_LAT_SW,
@@ -57,7 +57,7 @@ class NetatmoFlowHandler(
         if self.flow_impl.name == "Home Assistant Cloud":
             exclude = ["access_doorbell", "read_doorbell"]
 
-        scopes = [scope for scope in ALL_SCOPES if scope not in exclude]
+        scopes = [scope for scope in API_SCOPES if scope not in exclude]
         scopes.sort()
 
         return {"scope": " ".join(scopes)}
