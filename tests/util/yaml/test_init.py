@@ -70,7 +70,7 @@ def test_simple_dict(try_both_loaders) -> None:
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["message:\n  {{ states.state }}"])
-def test_unhashable_key(mock_hass_config_yaml: None) -> None:
+def test_unhashable_key(try_both_loaders, mock_hass_config_yaml: None) -> None:
     """Test an unhashable key."""
     with pytest.raises(HomeAssistantError):
         load_yaml_config_file(YAML_CONFIG_FILE)
@@ -110,7 +110,11 @@ def test_invalid_environment_variable(try_both_loaders) -> None:
 
 @pytest.mark.parametrize(
     ("hass_config_yaml_files", "value"),
-    [({"test.yaml": "value"}, "value"), ({"test.yaml": None}, {})],
+    [
+        ({"test.yaml": "value"}, "value"),
+        ({"test.yaml": None}, {}),
+        ({"test.yaml": "123"}, 123),
+    ],
 )
 def test_include_yaml(
     try_both_loaders, mock_hass_config_yaml: None, value: Any
@@ -124,10 +128,14 @@ def test_include_yaml(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files", [{"/test/one.yaml": "one", "/test/two.yaml": "two"}]
+    ("hass_config_yaml_files", "value"),
+    [
+        ({"/test/one.yaml": "one", "/test/two.yaml": "two"}, ["one", "two"]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": "2"}, [1, 2]),
+    ],
 )
 def test_include_dir_list(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir list yaml."""
     mock_walk.return_value = [["/test", [], ["two.yaml", "one.yaml"]]]
@@ -135,7 +143,7 @@ def test_include_dir_list(
     conf = "key: !include_dir_list /test"
     with io.StringIO(conf) as file:
         doc = yaml_loader.parse_yaml(file)
-        assert doc["key"] == sorted(["one", "two"])
+        assert sorted(doc["key"]) == sorted(value)
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -170,11 +178,20 @@ def test_include_dir_list_recursive(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files",
-    [{"/test/first.yaml": "one", "/test/second.yaml": "two"}],
+    ("hass_config_yaml_files", "value"),
+    [
+        (
+            {"/test/first.yaml": "one", "/test/second.yaml": "two"},
+            {"first": "one", "second": "two"},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": "2"},
+            {"first": 1, "second": 2},
+        ),
+    ],
 )
 def test_include_dir_named(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir named yaml."""
     mock_walk.return_value = [
@@ -182,10 +199,9 @@ def test_include_dir_named(
     ]
 
     conf = "key: !include_dir_named /test"
-    correct = {"first": "one", "second": "two"}
     with io.StringIO(conf) as file:
         doc = yaml_loader.parse_yaml(file)
-        assert doc["key"] == correct
+        assert doc["key"] == value
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -221,11 +237,20 @@ def test_include_dir_named_recursive(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files",
-    [{"/test/first.yaml": "- one", "/test/second.yaml": "- two\n- three"}],
+    ("hass_config_yaml_files", "value"),
+    [
+        (
+            {"/test/first.yaml": "- one", "/test/second.yaml": "- two\n- three"},
+            ["one", "two", "three"],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": "- 2\n- 3"},
+            [1, 2, 3],
+        ),
+    ],
 )
 def test_include_dir_merge_list(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir merge list yaml."""
     mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
@@ -233,7 +258,7 @@ def test_include_dir_merge_list(
     conf = "key: !include_dir_merge_list /test"
     with io.StringIO(conf) as file:
         doc = yaml_loader.parse_yaml(file)
-        assert sorted(doc["key"]) == sorted(["one", "two", "three"])
+        assert sorted(doc["key"]) == sorted(value)
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -268,16 +293,26 @@ def test_include_dir_merge_list_recursive(
 
 @patch("homeassistant.util.yaml.loader.os.walk")
 @pytest.mark.parametrize(
-    "hass_config_yaml_files",
+    ("hass_config_yaml_files", "value"),
     [
-        {
-            "/test/first.yaml": "key1: one",
-            "/test/second.yaml": "key2: two\nkey3: three",
-        }
+        (
+            {
+                "/test/first.yaml": "key1: one",
+                "/test/second.yaml": "key2: two\nkey3: three",
+            },
+            {"key1": "one", "key2": "two", "key3": "three"},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": "key2: 2\nkey3: 3",
+            },
+            {"key1": 1, "key2": 2, "key3": 3},
+        ),
     ],
 )
 def test_include_dir_merge_named(
-    mock_walk, try_both_loaders, mock_hass_config_yaml: None
+    mock_walk, try_both_loaders, mock_hass_config_yaml: None, value: Any
 ) -> None:
     """Test include dir merge named yaml."""
     mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
@@ -285,7 +320,7 @@ def test_include_dir_merge_named(
     conf = "key: !include_dir_merge_named /test"
     with io.StringIO(conf) as file:
         doc = yaml_loader.parse_yaml(file)
-        assert doc["key"] == {"key1": "one", "key2": "two", "key3": "three"}
+        assert doc["key"] == value
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
@@ -538,7 +573,7 @@ def test_c_loader_is_available_in_ci() -> None:
     assert yaml.loader.HAS_C_LOADER is True
 
 
-async def test_loading_actual_file_with_syntax(
+async def test_loading_actual_file_with_syntax_error(
     hass: HomeAssistant, try_both_loaders
 ) -> None:
     """Test loading a real file with syntax errors."""

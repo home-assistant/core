@@ -187,6 +187,7 @@ omit =
     homeassistant/components/control4/director_utils.py
     homeassistant/components/control4/light.py
     homeassistant/components/coolmaster/coordinator.py
+    homeassistant/components/co2signal/coordinator.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/crownstone/__init__.py
     homeassistant/components/crownstone/devices.py
@@ -639,6 +640,8 @@ omit =
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
+    homeassistant/components/komfovent/__init__.py
+    homeassistant/components/komfovent/climate.py
     homeassistant/components/konnected/__init__.py
     homeassistant/components/konnected/panel.py
     homeassistant/components/konnected/switch.py
@@ -1066,6 +1069,7 @@ omit =
     homeassistant/components/roomba/sensor.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/roon/__init__.py
+    homeassistant/components/roon/event.py
     homeassistant/components/roon/media_browser.py
     homeassistant/components/roon/media_player.py
     homeassistant/components/roon/server.py
@@ -1431,9 +1435,12 @@ omit =
     homeassistant/components/upnp/sensor.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/v2c/__init__.py
+    homeassistant/components/v2c/binary_sensor.py
     homeassistant/components/v2c/coordinator.py
     homeassistant/components/v2c/entity.py
+    homeassistant/components/v2c/number.py
     homeassistant/components/v2c/sensor.py
+    homeassistant/components/v2c/switch.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
     homeassistant/components/velbus/button.py

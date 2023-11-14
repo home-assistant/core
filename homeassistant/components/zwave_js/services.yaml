@@ -54,6 +54,18 @@ set_config_parameter:
       required: true
       selector:
         text:
+    value_size:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 4
+    value_format:
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 3
 
 bulk_set_partial_config_parameters:
   target:
