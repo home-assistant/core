@@ -1,8 +1,8 @@
 """Fixtures for Discovergy integration tests."""
-from collections.abc import Callable, Coroutine
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from pydiscovergy import Discovergy
+from pydiscovergy.models import Reading
 import pytest
 
 from homeassistant.components.discovergy import DOMAIN
@@ -11,9 +11,30 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.discovergy import MockDiscovergy
+from tests.components.discovergy.const import GET_METERS, LAST_READING, LAST_READING_GAS
 
-ComponentSetup = Callable[[], Coroutine[Any, Any, MockDiscovergy]]
+
+def _meter_last_reading(meter_id: str) -> Reading:
+    """Side effect function for Discovergy mock."""
+    return (
+        LAST_READING_GAS
+        if meter_id == "d81a652fe0824f9a9d336016587d3b9d"
+        else LAST_READING
+    )
+
+
+@pytest.fixture(name="discovergy")
+def mock_discovergy() -> None:
+    """Mock the pydiscovergy client."""
+    mock = AsyncMock(spec=Discovergy)
+    mock.meters.return_value = GET_METERS
+    mock.meter_last_reading.side_effect = _meter_last_reading
+
+    with patch(
+        "homeassistant.components.discovergy.pydiscovergy.Discovergy",
+        return_value=mock,
+    ):
+        yield mock
 
 
 @pytest.fixture(name="config_entry")
@@ -29,22 +50,10 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[], Coroutine[Any, Any, MockDiscovergy]]:
+    hass: HomeAssistant, config_entry: MockConfigEntry, discovergy: AsyncMock
+) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    async def func() -> MockDiscovergy:
-        mock = MockDiscovergy()
-        with patch(
-            "homeassistant.components.discovergy.coordinator.Discovergy",
-            return_value=mock,
-        ), patch(
-            "homeassistant.components.discovergy.pydiscovergy.Discovergy",
-            return_value=mock,
-        ):
-            assert await async_setup_component(hass, DOMAIN, {})
-            await hass.async_block_till_done()
-        return mock
-
-    return func
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
