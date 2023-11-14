@@ -415,10 +415,7 @@ def mac_address_from_name(name: str) -> str | None:
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
-    if model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
-        return None
-
-    if beta:
+    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
     return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
