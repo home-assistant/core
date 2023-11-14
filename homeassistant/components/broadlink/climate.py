@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, DOMAINS_AND_TYPES
 from .device import BroadlinkDevice
@@ -31,7 +30,7 @@ async def async_setup_entry(
         async_add_entities([BroadlinkThermostat(device)])
 
 
-class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
+class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
     """Representation of a Broadlink Hysen climate entity."""
 
     _attr_has_entity_name = True
