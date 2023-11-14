@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from reolink_aio.api import DUAL_LENS_MODELS
+from reolink_aio.api import DUAL_LENS_MODELS, Host
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.helpers.entity import EntityDescription
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -17,8 +18,24 @@ from .const import DOMAIN
 _T = TypeVar("_T")
 
 
+@dataclass
+class ReolinkEntityDescription(EntityDescription):
+    """A class that describes entities for a camera channel."""
+
+    cmd_key: str | None = None
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
+
+
+@dataclass
+class ReolinkHostEntityDescription(EntityDescription):
+    """A class that describes host entities."""
+
+    cmd_key: str | None = None
+    supported: Callable[[Host], bool] = lambda api: True
+
+
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
-    """Parent class fo Reolink entities."""
+    """Parent class for Reolink entities."""
 
     _attr_has_entity_name = True
 

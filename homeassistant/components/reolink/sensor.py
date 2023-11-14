@@ -21,19 +21,19 @@ from homeassistant.helpers.typing import StateType
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity, ReolinkEntityDescription, ReolinkHostEntityDescription
 
 
 @dataclass
 class ReolinkSensorEntityDescriptionMixin:
-    """Mixin values for Reolink  sensor entities for a camera channel."""
+    """Mixin values for Reolink sensor entities for a camera channel."""
 
     value: Callable[[Host, int], int]
 
 
 @dataclass
 class ReolinkSensorEntityDescription(
-    SensorEntityDescription, ReolinkSensorEntityDescriptionMixin
+    SensorEntityDescription, ReolinkEntityDescription, ReolinkSensorEntityDescriptionMixin
 ):
     """A class that describes sensor entities for a camera channel."""
 
@@ -49,7 +49,7 @@ class ReolinkHostSensorEntityDescriptionMixin:
 
 @dataclass
 class ReolinkHostSensorEntityDescription(
-    SensorEntityDescription, ReolinkHostSensorEntityDescriptionMixin
+    SensorEntityDescription, ReolinkHostEntityDescription, ReolinkHostSensorEntityDescriptionMixin
 ):
     """A class that describes host sensor entities."""
 
@@ -59,6 +59,7 @@ class ReolinkHostSensorEntityDescription(
 SENSORS = (
     ReolinkSensorEntityDescription(
         key="ptz_pan_position",
+        cmd_key="GetPtzCurPos",
         translation_key="ptz_pan_position",
         icon="mdi:pan",
         state_class=SensorStateClass.MEASUREMENT,
@@ -71,6 +72,7 @@ SENSORS = (
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
+        cmd_key="GetWifiSignal",
         translation_key="wifi_signal",
         icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,

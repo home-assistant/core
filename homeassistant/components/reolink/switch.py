@@ -55,6 +55,7 @@ class ReolinkNVRSwitchEntityDescription(
 SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record_audio",
+        cmd_key="GetEnc",
         translation_key="record_audio",
         icon="mdi:microphone",
         entity_category=EntityCategory.CONFIG,
@@ -64,6 +65,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="siren_on_event",
+        cmd_key="GetAudioAlarm",
         translation_key="siren_on_event",
         icon="mdi:alarm-light",
         entity_category=EntityCategory.CONFIG,
@@ -73,6 +75,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="auto_tracking",
+        cmd_key="GetAiCfg",
         translation_key="auto_tracking",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
@@ -82,6 +85,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="auto_focus",
+        cmd_key="GetAutoFocus",
         translation_key="auto_focus",
         icon="mdi:focus-field",
         entity_category=EntityCategory.CONFIG,
@@ -91,6 +95,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="gaurd_return",
+        cmd_key="GetPtzGuard",
         translation_key="gaurd_return",
         icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
@@ -100,6 +105,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="email",
+        cmd_key="GetEmail",
         translation_key="email",
         icon="mdi:email",
         entity_category=EntityCategory.CONFIG,
@@ -109,6 +115,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="ftp_upload",
+        cmd_key="GetFtp",
         translation_key="ftp_upload",
         icon="mdi:swap-horizontal",
         entity_category=EntityCategory.CONFIG,
@@ -118,6 +125,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="push_notifications",
+        cmd_key="GetPush",
         translation_key="push_notifications",
         icon="mdi:message-badge",
         entity_category=EntityCategory.CONFIG,
@@ -127,6 +135,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="record",
+        cmd_key="GetRec",
         translation_key="record",
         icon="mdi:record-rec",
         entity_category=EntityCategory.CONFIG,
@@ -136,6 +145,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="buzzer",
+        cmd_key="GetBuzzerAlarmV20",
         translation_key="buzzer",
         icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,
@@ -145,6 +155,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="doorbell_button_sound",
+        cmd_key="GetAudioCfg",
         translation_key="doorbell_button_sound",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
@@ -154,6 +165,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="hdr",
+        cmd_key="GetIsp",
         translation_key="hdr",
         icon="mdi:hdr",
         entity_category=EntityCategory.CONFIG,
@@ -167,6 +179,7 @@ SWITCH_ENTITIES = (
 NVR_SWITCH_ENTITIES = (
     ReolinkNVRSwitchEntityDescription(
         key="email",
+        cmd_key="GetEmail",
         translation_key="email",
         icon="mdi:email",
         entity_category=EntityCategory.CONFIG,
@@ -176,6 +189,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="ftp_upload",
+        cmd_key="GetFtp",
         translation_key="ftp_upload",
         icon="mdi:swap-horizontal",
         entity_category=EntityCategory.CONFIG,
@@ -185,6 +199,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="push_notifications",
+        cmd_key="GetPush",
         translation_key="push_notifications",
         icon="mdi:message-badge",
         entity_category=EntityCategory.CONFIG,
@@ -194,6 +209,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="record",
+        cmd_key="GetRec",
         translation_key="record",
         icon="mdi:record-rec",
         entity_category=EntityCategory.CONFIG,
@@ -203,6 +219,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="buzzer",
+        cmd_key="GetBuzzerAlarmV20",
         translation_key="buzzer",
         icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,

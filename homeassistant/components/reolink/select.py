@@ -48,6 +48,7 @@ class ReolinkSelectEntityDescription(
 SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
+        cmd_key="GetWhiteLed",
         translation_key="floodlight_mode",
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
@@ -58,6 +59,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
+        cmd_key="GetIsp",
         translation_key="day_night_mode",
         icon="mdi:theme-light-dark",
         entity_category=EntityCategory.CONFIG,
@@ -76,6 +78,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="auto_quick_reply_message",
+        cmd_key="GetAutoReply",
         translation_key="auto_quick_reply_message",
         icon="mdi:message-reply-text-outline",
         entity_category=EntityCategory.CONFIG,
@@ -88,6 +91,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="auto_track_method",
+        cmd_key="GetAiCfg",
         translation_key="auto_track_method",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
@@ -98,6 +102,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="status_led",
+        cmd_key="GetPowerLed",
         translation_key="status_led",
         icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
