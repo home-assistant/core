@@ -3,47 +3,105 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaConfigFlowHandler,
-    SchemaFlowFormStep,
-)
+from homeassistant.util.network import is_ip_address
 
-from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(
-            CONF_PING_COUNT, default=DEFAULT_PING_COUNT
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=1, max=100, mode=selector.NumberSelectorMode.BOX
+
+@callback
+def async_make_schema(
+    host: str = "", ping_count: int = DEFAULT_PING_COUNT
+) -> vol.Schema:
+    """Create schema for config flow."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=host): str,
+            vol.Optional(CONF_PING_COUNT, default=ping_count): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=100, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+        }
+    )
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Ping."""
+
+    VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=async_make_schema(),
             )
-        ),
-    }
-)
 
-CONFIG_FLOW = {"user": SchemaFlowFormStep(CONFIG_SCHEMA)}
+        if not is_ip_address(user_input[CONF_HOST]):
+            self.async_abort(reason="invalid_ip_address")
 
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(CONFIG_SCHEMA),
-}
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+        return self.async_create_entry(
+            title=user_input[CONF_HOST], data={}, options=user_input
+        )
+
+    async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
+        """Import an entry."""
+
+        to_import = {
+            CONF_HOST: import_info[CONF_HOST],
+            CONF_PING_COUNT: import_info[CONF_PING_COUNT],
+        }
+        title = import_info[CONF_NAME] or import_info[CONF_HOST]
+
+        self._async_abort_entries_match({CONF_HOST: to_import[CONF_HOST]})
+        return self.async_create_entry(
+            title=title,
+            data={CONF_IMPORTED_BY: import_info[CONF_IMPORTED_BY]},
+            options=to_import,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
 
 
-class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Handle a config or options flow for Ping."""
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle an options flow for Ping."""
 
-    config_flow = CONFIG_FLOW
-    options_flow = OPTIONS_FLOW
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
 
-    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
-        return cast(str, options[CONF_HOST])
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=async_make_schema(
+                self.config_entry.options[CONF_HOST],
+                self.config_entry.options[CONF_PING_COUNT],
+            ),
+        )

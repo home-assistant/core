@@ -1,38 +1,32 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from icmplib import async_multiping
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
     SourceType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from . import PingDomainData
-from .const import CONF_PING_COUNT, DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT
+from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DOMAIN
 from .helpers import PingDataICMPLib, PingDataSubProcess
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-CONCURRENT_PING_LIMIT = 6
 SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
@@ -43,99 +37,43 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-class HostSubProcess(PingDataSubProcess):
-    """Host subclass using subprocess."""
-
-    def __init__(
-        self,
-        ip_address: str,
-        dev_id: str,
-        hass: HomeAssistant,
-        config: ConfigType,
-        privileged: bool | None,
-    ) -> None:
-        """Initialize the subclass."""
-
-        super().__init__(hass, ip_address, config[CONF_PING_COUNT], privileged)
-        self.dev_id = dev_id
-
-    async def async_is_alive(self) -> bool:
-        """Overwrite subclass update method to return alive status."""
-        await super().async_update()
-        return self.is_alive
-
-
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
     async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
-    """Set up the Host objects and return the update function."""
+    """Legacy init: import via config flow."""
 
-    data: PingDomainData = hass.data[DOMAIN]
+    for dev_name, dev_host in config[CONF_HOSTS].items():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_IMPORTED_BY: "device_tracker",
+                    CONF_NAME: dev_name,
+                    CONF_HOST: dev_host,
+                    CONF_PING_COUNT: config[CONF_PING_COUNT],
+                },
+            )
+        )
 
-    privileged = data.privileged
-    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[CONF_HOSTS].items()}
-    interval = config.get(
-        CONF_SCAN_INTERVAL,
-        timedelta(seconds=len(ip_to_dev_id) * config[CONF_PING_COUNT]) + SCAN_INTERVAL,
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Ping",
+        },
     )
-    _LOGGER.debug(
-        "Started ping tracker with interval=%s on hosts: %s",
-        interval,
-        ",".join(ip_to_dev_id.keys()),
-    )
 
-    if privileged is None:
-        hosts = [
-            HostSubProcess(ip, dev_id, hass, config, privileged)
-            for (dev_id, ip) in config[CONF_HOSTS].items()
-        ]
-
-        async def async_update(now: datetime) -> None:
-            """Update all the hosts on every interval time."""
-            results = await gather_with_limited_concurrency(
-                CONCURRENT_PING_LIMIT,
-                *(host.async_is_alive for host in hosts),
-            )
-            await asyncio.gather(
-                *(
-                    async_see(dev_id=host.dev_id, source_type=SourceType.ROUTER)
-                    for idx, host in enumerate(hosts)
-                    if results[idx]
-                )
-            )
-
-    else:
-
-        async def async_update(now: datetime) -> None:
-            """Update all the hosts on every interval time."""
-            responses = await async_multiping(
-                list(ip_to_dev_id),
-                count=PING_ATTEMPTS_COUNT,
-                timeout=ICMP_TIMEOUT,
-                privileged=privileged,
-            )
-            _LOGGER.debug("Multiping responses: %s", responses)
-            await asyncio.gather(
-                *(
-                    async_see(dev_id=dev_id, source_type=SourceType.ROUTER)
-                    for idx, dev_id in enumerate(ip_to_dev_id.values())
-                    if responses[idx].is_alive
-                )
-            )
-
-    async def _async_update_interval(now: datetime) -> None:
-        try:
-            await async_update(now)
-        finally:
-            if not hass.is_stopping:
-                async_track_point_in_utc_time(
-                    hass, _async_update_interval, now + interval
-                )
-
-    await _async_update_interval(dt_util.now())
     return True
 
 
@@ -155,7 +93,7 @@ async def async_setup_entry(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingDeviceTracker(entry.title, ping_cls(hass, host, count, data.privileged))]
+        [PingDeviceTracker(entry, ping_cls(hass, host, count, data.privileged))]
     )
 
 
@@ -166,14 +104,15 @@ class PingDeviceTracker(ScannerEntity):
 
     def __init__(
         self,
-        name: str,
+        config_entry: ConfigEntry,
         ping_cls: PingDataSubProcess | PingDataICMPLib,
     ) -> None:
         """Initialize the Ping device tracker."""
         super().__init__()
 
-        self._attr_name = name
+        self._attr_name = config_entry.title
         self.ping = ping_cls
+        self.config_entry = config_entry
 
     @property
     def ip_address(self) -> str:
@@ -183,7 +122,7 @@ class PingDeviceTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.ping.ip_address
+        return self.config_entry.entry_id
 
     @property
     def source_type(self) -> SourceType:
@@ -194,6 +133,13 @@ class PingDeviceTracker(ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if ping returns is_alive."""
         return self.ping.is_alive
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        if CONF_IMPORTED_BY in self.config_entry.data:
+            return bool(self.config_entry.data[CONF_IMPORTED_BY] == "device_tracker")
+        return False
 
     async def async_update(self) -> None:
         """Update the sensor."""

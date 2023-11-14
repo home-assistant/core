@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
@@ -13,16 +12,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PingDomainData
-from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 from .helpers import PingDataICMPLib, PingDataSubProcess
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +31,6 @@ ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
 ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
-
-DEFAULT_NAME = "Ping"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -55,9 +53,30 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Init Ping sensor from YAML."""
+    """YAML init: import via config flow."""
 
-    async_setup_sensor(hass, config, async_add_entities)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_IMPORTED_BY: "binary_sensor", **config},
+        )
+    )
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Ping",
+        },
+    )
 
 
 async def async_setup_entry(
@@ -65,23 +84,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ping config entry."""
 
-    async_setup_sensor(hass, entry.options, async_add_entities, entry, entry.title)
-
-
-@callback
-def async_setup_sensor(
-    hass: HomeAssistant,
-    config: MappingProxyType[str, Any] | dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    config_entry: ConfigEntry | None = None,
-    name: str | None = None,
-) -> None:
-    """Actually set up the sensor."""
-
     data: PingDomainData = hass.data[DOMAIN]
 
-    host: str = config[CONF_HOST]
-    count: int = int(config[CONF_PING_COUNT])
+    host: str = entry.options[CONF_HOST]
+    count: int = int(entry.options[CONF_PING_COUNT])
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if data.privileged is None:
         ping_cls = PingDataSubProcess
@@ -89,13 +95,7 @@ def async_setup_sensor(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [
-            PingBinarySensor(
-                name=name or str(config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")),
-                ping=ping_cls(hass, host, count, data.privileged),
-                config_entry=config_entry,
-            )
-        ],
+        [PingBinarySensor(entry, ping_cls(hass, host, count, data.privileged))]
     )
 
 
@@ -107,17 +107,20 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        name: str,
-        ping: PingDataSubProcess | PingDataICMPLib,
-        config_entry: ConfigEntry | None = None,
+        config_entry: ConfigEntry,
+        ping_cls: PingDataSubProcess | PingDataICMPLib,
     ) -> None:
         """Initialize the Ping Binary sensor."""
-        self._attr_name = name
+        self._attr_name = config_entry.title
+        self._attr_unique_id = config_entry.entry_id
 
-        if config_entry:
-            self._attr_unique_id = config_entry.entry_id
+        # if this was imported just enable it when it was enabled before
+        if CONF_IMPORTED_BY in config_entry.data:
+            self._attr_entity_registry_enabled_default = bool(
+                config_entry.data[CONF_IMPORTED_BY] == "binary_sensor"
+            )
 
-        self._ping = ping
+        self._ping = ping_cls
 
     @property
     def is_on(self) -> bool:

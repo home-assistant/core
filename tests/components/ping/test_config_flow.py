@@ -1,14 +1,15 @@
 """Test the Ping (ICMP) config flow."""
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ping import DOMAIN, async_setup_entry
+from homeassistant.components.ping import DOMAIN
+from homeassistant.components.ping.const import CONF_IMPORTED_BY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import BINARY_SENSOR_IMPORT_DATA
 
 from tests.common import MockConfigEntry
 
@@ -17,6 +18,7 @@ from tests.common import MockConfigEntry
     ("host", "count", "expected_title"),
     (("192.618.178.1", 10, "192.618.178.1"),),
 )
+@pytest.mark.usefixtures("patch_setup")
 async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
     """Test we get the form."""
 
@@ -26,17 +28,14 @@ async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
     assert result["step_id"] == "user"
     assert result["type"] == FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.group.async_setup_entry", wraps=async_setup_entry
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": host,
-                "count": count,
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": host,
+            "count": count,
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
@@ -51,10 +50,13 @@ async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
     ("host", "count", "expected_title"),
     (("192.618.178.1", 10, "192.618.178.1"),),
 )
+@pytest.mark.usefixtures("patch_setup")
 async def test_options(hass: HomeAssistant, host, count, expected_title) -> None:
     """Test options flow."""
 
     config_entry = MockConfigEntry(
+        version=1,
+        source=config_entries.SOURCE_USER,
         data={},
         domain=DOMAIN,
         options={"count": count, "host": host},
@@ -62,6 +64,44 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
     )
     config_entry.add_to_hass(hass)
 
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "host": "10.10.10.1",
+            "count": count,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "count": count,
+        "host": "10.10.10.1",
+    }
+
+
+@pytest.mark.usefixtures("patch_setup")
+async def test_step_import(hass: HomeAssistant) -> None:
+    """Test for import step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={CONF_IMPORTED_BY: "binary_sensor", **BINARY_SENSOR_IMPORT_DATA},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test2"
+    assert result["data"] == {CONF_IMPORTED_BY: "binary_sensor"}
+    assert result["options"] == {
+        "host": "127.0.0.1",
+        "count": 1,
+    }

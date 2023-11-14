@@ -11,7 +11,8 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_ip_address": "Invalid IP address."
     }
   },
   "options": {
@@ -22,12 +23,9 @@
           "count": "[%key:component::ping::config::step::user::data::count%]"
         }
       }
-    }
-  },
-  "services": {
-    "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads ping sensors from the YAML-configuration."
+    },
+    "abort": {
+      "invalid_ip_address": "[%key:component::ping::config::abort::invalid_ip_address%]"
     }
   }
 }
