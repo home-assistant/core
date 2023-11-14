@@ -1064,15 +1064,19 @@ class PipelineRun:
             # Forward to debug WAV file recording
             self.debug_recording_queue.put_nowait(audio_bytes)
 
-        if self._device_id is not None:
-            # Forward to device audio capture
-            pipeline_data: PipelineData = self.hass.data[DOMAIN]
-            audio_queue = pipeline_data.device_audio_queues.get(self._device_id)
-            if audio_queue is not None:
-                try:
-                    audio_queue.put_nowait(audio_bytes)
-                except asyncio.QueueFull:
-                    _LOGGER.warning("Audio queue full for device %s", self._device_id)
+        if self._device_id is None:
+            return
+
+        # Forward to device audio capture
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        audio_queue = pipeline_data.device_audio_queues.get(self._device_id)
+        if audio_queue is None:
+            return
+
+        try:
+            audio_queue.put_nowait(audio_bytes)
+        except asyncio.QueueFull:
+            _LOGGER.warning("Audio queue full for device %s", self._device_id)
 
     def _start_debug_recording_thread(self) -> None:
         """Start thread to record wake/stt audio if debug_recording_dir is set."""
