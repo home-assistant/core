@@ -302,3 +302,28 @@ async def test_unique_id_migration(
     migr_entity = entity_registry.async_get(f"{sensor.DOMAIN}.{obj_entity_id}")
     assert migr_entity is not None
     assert migr_entity.unique_id == slugify(f"{ROUTER_MAC_ADDR}_sensor_tx_bytes")
+
+
+async def test_decorator_errors(
+    hass: HomeAssistant, connect_legacy, mock_available_temps
+) -> None:
+    """Test AsusWRT sensors are unavailable on decorator type check error."""
+    sensors = [*SENSORS_BYTES, *SENSORS_TEMPERATURES]
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_TELNET, sensors)
+    config_entry.add_to_hass(hass)
+
+    mock_available_temps[1] = True
+    connect_legacy.return_value.async_get_bytes_total.return_value = "bad_response"
+    connect_legacy.return_value.async_get_temperature.return_value = "bad_response"
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    for sensor_name in sensors:
+        assert (
+            hass.states.get(f"{sensor_prefix}_{slugify(sensor_name)}").state
+            == STATE_UNAVAILABLE
+        )
