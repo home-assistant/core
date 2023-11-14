@@ -7,12 +7,9 @@ from caldav.objects import Todo
 import pytest
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 from tests.common import MockConfigEntry
 
