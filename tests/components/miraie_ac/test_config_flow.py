@@ -45,7 +45,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == f"MirAIe ({MOBILE})"
+    assert result2["title"] == MOBILE
     assert result2["data"] == {
         CONFIG_KEY_USER_ID: MOBILE,
         CONF_PASSWORD: "P@ssw0rD",
@@ -78,7 +78,7 @@ async def test_form_no_country_code(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == f"MirAIe ({COUNTRY_CODE}{MOBILE})"
+    assert result2["title"] == f"{COUNTRY_CODE}{MOBILE}"
     assert result2["data"] == {
         CONFIG_KEY_USER_ID: f"{COUNTRY_CODE}{MOBILE}",
         CONF_PASSWORD: "P@ssw0rD",
