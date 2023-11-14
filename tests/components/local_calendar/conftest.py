@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import urllib
 
 from aiohttp import ClientWebSocketResponse
@@ -20,24 +20,31 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light schedule"
+STORAGE_KEY = "light_schedule"
 TEST_ENTITY = "calendar.light_schedule"
 
 
 class FakeStore(LocalCalendarStore):
     """Mock storage implementation."""
 
-    def __init__(self, hass: HomeAssistant, path: Path, ics_content: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, path: Path, ics_content: str, read_side_effect: Any
+    ) -> None:
         """Initialize FakeStore."""
         super().__init__(hass, path)
-        self._content = ics_content
+        mock_path = self._mock_path = Mock()
+        mock_path.exists = self._mock_exists
+        mock_path.read_text = Mock()
+        mock_path.read_text.return_value = ics_content
+        mock_path.read_text.side_effect = read_side_effect
+        mock_path.write_text = self._mock_write_text
+        super().__init__(hass, mock_path)
 
-    def _load(self) -> str:
-        """Read from calendar storage."""
-        return self._content
+    def _mock_exists(self) -> bool:
+        return self._mock_path.read_text.return_value is not None
 
-    def _store(self, ics_content: str) -> None:
-        """Persist the calendar storage."""
-        self._content = ics_content
+    def _mock_write_text(self, content: str) -> None:
+        self._mock_path.read_text.return_value = content
 
 
 @pytest.fixture(name="ics_content", autouse=True)
@@ -46,15 +53,23 @@ def mock_ics_content() -> str:
     return ""
 
 
+@pytest.fixture(name="store_read_side_effect")
+def mock_store_read_side_effect() -> Any | None:
+    """Fixture to raise errors from the FakeStore."""
+    return None
+
+
 @pytest.fixture(name="store", autouse=True)
-def mock_store(ics_content: str) -> Generator[None, None, None]:
+def mock_store(
+    ics_content: str, store_read_side_effect: Any | None
+) -> Generator[None, None, None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}
 
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
         if path not in stores:
-            stores[path] = FakeStore(hass, path, ics_content)
+            stores[path] = FakeStore(hass, path, ics_content, store_read_side_effect)
         return stores[path]
 
     with patch(

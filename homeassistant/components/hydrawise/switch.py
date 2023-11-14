@@ -114,6 +114,8 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
             self.coordinator.api.run_zone(self._default_watering_timer, zone_number)
         elif self.entity_description.key == "auto_watering":
             self.coordinator.api.suspend_zone(0, zone_number)
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -122,6 +124,8 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
             self.coordinator.api.run_zone(0, zone_number)
         elif self.entity_description.key == "auto_watering":
             self.coordinator.api.suspend_zone(365, zone_number)
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     def _update_attrs(self) -> None:
         """Update state attributes."""

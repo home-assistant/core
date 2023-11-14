@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any, Generic, TypeVar
 
 from nibe.coil import Coil, CoilData
@@ -123,7 +123,7 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
         """Return device information for the main device."""
         return DeviceInfo(identifiers={(DOMAIN, self.unique_id)})
 
-    def get_coil_value(self, coil: Coil) -> int | str | float | None:
+    def get_coil_value(self, coil: Coil) -> int | str | float | date | None:
         """Return a coil with data and check for validity."""
         if coil_with_data := self.data.get(coil.address):
             return coil_with_data.value
@@ -132,7 +132,7 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
     def get_coil_float(self, coil: Coil) -> float | None:
         """Return a coil with float and check for validity."""
         if value := self.get_coil_value(coil):
-            return float(value)
+            return float(value)  # type: ignore[arg-type]
         return None
 
     async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
