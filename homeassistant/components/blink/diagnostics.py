@@ -1,27 +1,33 @@
-"""Diagnostics support for CO2Signal."""
+"""Diagnostics support for Blink."""
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Any
+
+from blinkpy.blinkpy import Blink
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import CO2SignalCoordinator
 
-TO_REDACT = {CONF_API_KEY}
+TO_REDACT = {"serial", "macaddress", "username", "password", "token"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: CO2SignalCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    api: Blink = hass.data[DOMAIN][config_entry.entry_id].api
+
+    data = {
+        camera.name: dict(camera.attributes.items())
+        for _, camera in api.cameras.items()
+    }
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "data": asdict(coordinator.data),
+        "cameras": async_redact_data(data, TO_REDACT),
     }

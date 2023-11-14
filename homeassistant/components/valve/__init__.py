@@ -134,6 +134,7 @@ class ValveEntity(Entity):
     entity_description: ValveEntityDescription
     _attr_current_valve_position: int | None = None
     _attr_device_class: ValveDeviceClass | None
+    _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_supported_features: ValveEntityFeature = ValveEntityFeature(0)
@@ -199,7 +200,7 @@ class ValveEntity(Entity):
     def is_closed(self) -> bool | None:
         """Return if the valve is closed or not."""
         if hasattr(self, "_attr_is_closed"):
-            return bool(self._attr_is_closed)
+            return self._attr_is_closed
         if self.current_valve_position is None:
             return None
         return self.current_valve_position == 0
