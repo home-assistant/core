@@ -285,6 +285,7 @@ class AiohttpClientMockResponse:
 
         Do nothing as we are mocking.
         """
+
     @property
     def response(self):
         """Property method to expose the response to other read methods."""
