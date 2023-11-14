@@ -1,6 +1,6 @@
 import httpx
 import urllib.parse
-
+import json
 
 class ApiWrapper:
     """A wrapper for the Canvas API."""
@@ -20,7 +20,7 @@ class ApiWrapper:
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                self.host + endpoint + parameters_string, headers=headers
+                self.host + endpoint + "?" + parameters_string, headers=headers
             )
 
         return response
@@ -32,10 +32,10 @@ class ApiWrapper:
         return response.status_code == 200
 
     async def async_get_courses(self) -> list:
-        """Retrieve a list of courses from the Instructure API.
-
-        TODO - implement this function"""
-        pass
+        """Retrieve a list of courses from the Instructure API."""
+        response = await self.async_make_get_request("/courses", {"per_page": "50"})
+        courses = json.loads(response.content.decode('utf-8'))
+        return courses
 
     async def async_get_assignments(self, course_id: int) -> list:
         """Retrieve a list of assignments from the Canvas API.

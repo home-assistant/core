@@ -6,6 +6,12 @@
           "host_prefix": "Domain (e.g. chalmers)",
           "access_token": "[%key:common::config_flow::data::access_token%]"
         }
+      },
+      "courses": {
+        "title": "Configure courses",
+        "data": {
+          "courses": "Select courses to track."
+        }
       }
     },
     "error": {
