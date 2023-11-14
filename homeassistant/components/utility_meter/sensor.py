@@ -270,6 +270,9 @@ async def async_setup_platform(
             CONF_TARIFF_ENTITY
         )
         conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
+        conf_sensor_always_available = hass.data[DATA_UTILITY][meter][
+            CONF_SENSOR_ALWAYS_AVAILABLE
+        ]
         meter_sensor = UtilityMeterSensor(
             cron_pattern=conf_cron_pattern,
             delta_values=conf_meter_delta_values,
@@ -284,6 +287,7 @@ async def async_setup_platform(
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
             suggested_entity_id=suggested_entity_id,
+            sensor_always_available=conf_sensor_always_available,
         )
         meters.append(meter_sensor)
 
@@ -376,9 +380,9 @@ class UtilityMeterSensor(RestoreSensor):
         tariff_entity,
         tariff,
         unique_id,
+        sensor_always_available,
         suggested_entity_id=None,
         device_info=None,
-        sensor_always_available=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
