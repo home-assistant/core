@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +37,12 @@ class ReolinkSelectEntityDescriptionMixin:
 
 @dataclass
 class ReolinkSelectEntityDescription(
-    SelectEntityDescription, ReolinkSelectEntityDescriptionMixin
+    SelectEntityDescription,
+    ReolinkChannelEntityDescription,
+    ReolinkSelectEntityDescriptionMixin,
 ):
     """A class that describes select entities."""
 
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], str] | None = None
 
 
@@ -142,13 +143,9 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         entity_description: ReolinkSelectEntityDescription,
     ) -> None:
         """Initialize Reolink select entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
         self._log_error = True
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
 
         if callable(entity_description.get_options):
             self._attr_options = entity_description.get_options(self._host.api, channel)

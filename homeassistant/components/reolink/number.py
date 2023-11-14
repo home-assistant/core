@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
 @dataclass
@@ -32,12 +32,13 @@ class ReolinkNumberEntityDescriptionMixin:
 
 @dataclass
 class ReolinkNumberEntityDescription(
-    NumberEntityDescription, ReolinkNumberEntityDescriptionMixin
+    NumberEntityDescription,
+    ReolinkChannelEntityDescription,
+    ReolinkNumberEntityDescriptionMixin,
 ):
     """A class that describes number entities."""
 
     mode: NumberMode = NumberMode.AUTO
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     get_min_value: Callable[[Host, int], float] | None = None
     get_max_value: Callable[[Host, int], float] | None = None
 
@@ -356,8 +357,8 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         entity_description: ReolinkNumberEntityDescription,
     ) -> None:
         """Initialize Reolink number entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
 
         if entity_description.get_min_value is not None:
             self._attr_native_min_value = entity_description.get_min_value(
@@ -368,9 +369,6 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
                 self._host.api, channel
             )
         self._attr_mode = entity_description.mode
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
 
     @property
     def native_value(self) -> float | None:

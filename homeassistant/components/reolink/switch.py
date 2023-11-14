@@ -15,7 +15,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 
 
 @dataclass
@@ -28,11 +33,11 @@ class ReolinkSwitchEntityDescriptionMixin:
 
 @dataclass
 class ReolinkSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkSwitchEntityDescriptionMixin
+    SwitchEntityDescription,
+    ReolinkChannelEntityDescription,
+    ReolinkSwitchEntityDescriptionMixin,
 ):
     """A class that describes switch entities."""
-
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 @dataclass
@@ -45,11 +50,11 @@ class ReolinkNVRSwitchEntityDescriptionMixin:
 
 @dataclass
 class ReolinkNVRSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkNVRSwitchEntityDescriptionMixin
+    SwitchEntityDescription,
+    ReolinkHostEntityDescription,
+    ReolinkNVRSwitchEntityDescriptionMixin,
 ):
     """A class that describes NVR switch entities."""
-
-    supported: Callable[[Host], bool] = lambda api: True
 
 
 SWITCH_ENTITIES = (
@@ -266,12 +271,8 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
     @property
     def is_on(self) -> bool:
