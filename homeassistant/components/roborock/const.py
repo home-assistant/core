@@ -7,11 +7,12 @@ CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
 PLATFORMS = [
-    Platform.VACUUM,
+    Platform.BUTTON,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
-    Platform.NUMBER,
-    Platform.BINARY_SENSOR,
+    Platform.VACUUM,
 ]

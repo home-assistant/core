@@ -44,6 +44,20 @@
         "name": "Water shortage"
       }
     },
+    "button": {
+      "reset_sensor_consumable": {
+        "name": "Reset sensor consumable"
+      },
+      "reset_air_filter_consumable": {
+        "name": "Reset air filter consumable"
+      },
+      "reset_side_brush_consumable": {
+        "name": "Reset side brush consumable"
+      },
+      "reset_main_brush_consumable": {
+        "name": "Reset main brush consumable"
+      }
+    },
     "number": {
       "volume": {
         "name": "Volume"

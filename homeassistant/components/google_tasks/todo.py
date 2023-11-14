@@ -65,7 +65,9 @@ class GoogleTaskTodoListEntity(
 
     _attr_has_entity_name = True
     _attr_supported_features = (
-        TodoListEntityFeature.CREATE_TODO_ITEM | TodoListEntityFeature.UPDATE_TODO_ITEM
+        TodoListEntityFeature.CREATE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEM
+        | TodoListEntityFeature.DELETE_TODO_ITEM
     )
 
     def __init__(
@@ -113,4 +115,9 @@ class GoogleTaskTodoListEntity(
             uid,
             task=_convert_todo_item(item),
         )
+        await self.coordinator.async_refresh()
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Delete To-do items."""
+        await self.coordinator.api.delete(self._task_list_id, uids)
         await self.coordinator.async_refresh()
