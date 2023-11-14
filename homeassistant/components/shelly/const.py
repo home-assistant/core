@@ -152,7 +152,7 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
 RPC_THERMOSTAT_SETTINGS: Final = {
     "min": 5,
     "max": 35,
-    "step": 1,
+    "step": 0.5,
 }
 
 # Kelvin value for colorTemp
