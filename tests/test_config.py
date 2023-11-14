@@ -114,7 +114,26 @@ async def mock_iot_domain_integration(hass: HomeAssistant) -> Integration:
 
 
 @pytest.fixture
-async def mock_non_adr_0007_integration(hass) -> None:
+async def mock_iot_domain_integration_with_docs(hass: HomeAssistant) -> Integration:
+    """Mock an integration which provides an IoT domain."""
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+
+    return mock_integration(
+        hass,
+        MockModule(
+            "iot_domain",
+            platform_schema_base=comp_platform_schema_base,
+            platform_schema=comp_platform_schema,
+            partial_manifest={
+                "documentation": "https://www.home-assistant.io/integrations/iot_domain"
+            },
+        ),
+    )
+
+
+@pytest.fixture
+async def mock_non_adr_0007_integration(hass: HomeAssistant) -> None:
     """Mock a non-ADR-0007 compliant integration with iot_domain platform.
 
     The integration allows setting up iot_domain entities under the iot_domain's
@@ -132,7 +151,34 @@ async def mock_non_adr_0007_integration(hass) -> None:
 
 
 @pytest.fixture
-async def mock_adr_0007_integrations(hass) -> list[Integration]:
+async def mock_non_adr_0007_integration_with_docs(hass: HomeAssistant) -> None:
+    """Mock a non-ADR-0007 compliant integration with iot_domain platform.
+
+    The integration allows setting up iot_domain entities under the iot_domain's
+    configuration key
+    """
+
+    mock_integration(
+        hass,
+        MockModule(
+            "non_adr_0007",
+            partial_manifest={
+                "documentation": "https://www.home-assistant.io/integrations/non_adr_0007"
+            },
+        ),
+    )
+    test_platform_schema = IOT_DOMAIN_PLATFORM_SCHEMA.extend(
+        {vol.Required("option1"): str, vol.Optional("option2"): str}
+    )
+    mock_platform(
+        hass,
+        "non_adr_0007.iot_domain",
+        MockPlatform(platform_schema=test_platform_schema),
+    )
+
+
+@pytest.fixture
+async def mock_adr_0007_integrations(hass: HomeAssistant) -> list[Integration]:
     """Mock ADR-0007 compliant integrations."""
     integrations = []
     for domain in [
@@ -157,6 +203,45 @@ async def mock_adr_0007_integrations(hass) -> list[Integration]:
             mock_integration(
                 hass,
                 MockModule(domain, config_schema=adr_0007_config_schema),
+            )
+        )
+    return integrations
+
+
+@pytest.fixture
+async def mock_adr_0007_integrations_with_docs(
+    hass: HomeAssistant,
+) -> list[Integration]:
+    """Mock ADR-0007 compliant integrations."""
+    integrations = []
+    for domain in [
+        "adr_0007_1",
+        "adr_0007_2",
+        "adr_0007_3",
+        "adr_0007_4",
+        "adr_0007_5",
+    ]:
+        adr_0007_config_schema = vol.Schema(
+            {
+                domain: vol.Schema(
+                    {
+                        vol.Required("host"): str,
+                        vol.Required("port", default=8080): int,
+                    }
+                )
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+        integrations.append(
+            mock_integration(
+                hass,
+                MockModule(
+                    domain,
+                    config_schema=adr_0007_config_schema,
+                    partial_manifest={
+                        "documentation": f"https://www.home-assistant.io/integrations/{domain}"
+                    },
+                ),
             )
         )
     return integrations
@@ -1496,6 +1581,52 @@ async def test_component_config_validation_error(
     mock_iot_domain_integration: Integration,
     mock_non_adr_0007_integration: None,
     mock_adr_0007_integrations: list[Integration],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test schema error in component."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "component_validation", config_dir
+    )
+    config = await config_util.async_hass_config_yaml(hass)
+
+    for domain in [
+        "iot_domain",
+        "adr_0007_1",
+        "adr_0007_2",
+        "adr_0007_3",
+        "adr_0007_4",
+        "adr_0007_5",
+    ]:
+        integration = await async_get_integration(hass, domain)
+        await config_util.async_process_component_config(
+            hass,
+            config,
+            integration=integration,
+        )
+
+    error_records = [
+        record.message.replace(base_path, "<BASE_PATH>")
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "basic",
+    ],
+)
+async def test_component_config_validation_error_with_docs(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    mock_iot_domain_integration_with_docs: Integration,
+    mock_non_adr_0007_integration_with_docs: None,
+    mock_adr_0007_integrations_with_docs: list[Integration],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test schema error in component."""
