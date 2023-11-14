@@ -1,5 +1,6 @@
 """Tests for the Vogel's MotionMount config flow."""
 import dataclasses
+import socket
 from unittest.mock import MagicMock, PropertyMock
 
 import motionmount
@@ -45,6 +46,25 @@ async def test_user_connection_error(
 ) -> None:
     """Test that the flow is aborted when there is an connection error."""
     mock_motionmount_config_flow.connect.side_effect = ConnectionRefusedError()
+
+    user_input = MOCK_USER_INPUT.copy()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=user_input,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_user_connection_error_invalid_hostname(
+    hass: HomeAssistant,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test that the flow is aborted when an invalid hostname is provided."""
+    mock_motionmount_config_flow.connect.side_effect = socket.gaierror()
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -231,6 +251,25 @@ async def test_zeroconf_connection_error(
 ) -> None:
     """Test that the flow is aborted when there is an connection error."""
     mock_motionmount_config_flow.connect.side_effect = ConnectionRefusedError()
+
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V1)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_connection_error_invalid_hostname(
+    hass: HomeAssistant,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test that the flow is aborted when there is an connection error."""
+    mock_motionmount_config_flow.connect.side_effect = socket.gaierror()
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V1)
 
