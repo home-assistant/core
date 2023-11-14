@@ -151,8 +151,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @riokuu
 /tests/components/blebox/ @bbx-a @riokuu
-/homeassistant/components/blink/ @fronzbot
-/tests/components/blink/ @fronzbot
+/homeassistant/components/blink/ @fronzbot @mkmer
+/tests/components/blink/ @fronzbot @mkmer
 /homeassistant/components/bluemaestro/ @bdraco
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core

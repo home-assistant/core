@@ -1,6 +1,8 @@
 """Base entity for the Fully Kiosk Browser integration."""
 from __future__ import annotations
 
+from yarl import URL
+
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -30,13 +32,20 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
     def __init__(self, coordinator: FullyKioskDataUpdateCoordinator) -> None:
         """Initialize the Fully Kiosk Browser entity."""
         super().__init__(coordinator=coordinator)
+
+        url = URL.build(
+            scheme="https" if coordinator.use_ssl else "http",
+            host=coordinator.data["ip4"],
+            port=2323,
+        )
+
         device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data["deviceID"])},
             name=coordinator.data["deviceName"],
             manufacturer=coordinator.data["deviceManufacturer"],
             model=coordinator.data["deviceModel"],
             sw_version=coordinator.data["appVersionName"],
-            configuration_url=f"http://{coordinator.data['ip4']}:2323",
+            configuration_url=str(url),
         )
         if "Mac" in coordinator.data and valid_global_mac_address(
             coordinator.data["Mac"]
