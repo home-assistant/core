@@ -49,7 +49,7 @@ homeassistant:
     pack_adr_0007_5:
       # Multiple errors:
       # - host is missing
-      # - no_such_option does not exost
+      # - no_such_option does not exist
       # - port is wrong type
       adr_0007_5:
         no_such_option: foo
