@@ -2,7 +2,6 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 from nibe.coil import CoilData
 from nibe.coil_groups import UNIT_COILGROUPS
 from nibe.heatpump import Model
@@ -18,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import async_add_model
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +39,7 @@ async def test_reset_button(
     model: Model,
     entity_id: str,
     coils: dict[int, Any],
-    freezer: FrozenDateTimeFactory,
+    freezer_ticker: Any,
 ):
     """Test reset button."""
 
@@ -61,9 +58,7 @@ async def test_reset_button(
     # Signal alarm
     coils[unit.alarm] = 100
 
-    freezer.tick(60)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await freezer_ticker(60)
 
     state = hass.states.get(entity_id)
     assert state

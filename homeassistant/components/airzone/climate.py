@@ -31,6 +31,7 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
@@ -208,7 +209,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         await self._async_update_hvac_params(params)
 
         if slave_raise:
-            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -219,6 +222,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             params[API_COOL_SET_POINT] = kwargs[ATTR_TARGET_TEMP_HIGH]
             params[API_HEAT_SET_POINT] = kwargs[ATTR_TARGET_TEMP_LOW]
         await self._async_update_hvac_params(params)
+
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
     @callback
     def _handle_coordinator_update(self) -> None:
