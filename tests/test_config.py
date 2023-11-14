@@ -133,7 +133,7 @@ async def mock_non_adr_0007_integration(hass) -> None:
 async def mock_adr_0007_integrations(hass) -> list[Integration]:
     """Mock ADR-0007 compliant integrations."""
     integrations = []
-    for domain in ["adr_0007_1", "adr_0007_2", "adr_0007_3"]:
+    for domain in ["adr_0007_1", "adr_0007_2", "adr_0007_3", "adr_0007_4"]:
         adr_0007_config_schema = vol.Schema(
             {
                 domain: vol.Schema(
@@ -1498,7 +1498,13 @@ async def test_component_config_validation_error(
     )
     config = await config_util.async_hass_config_yaml(hass)
 
-    for domain in ["iot_domain", "adr_0007_1", "adr_0007_2", "adr_0007_3"]:
+    for domain in [
+        "iot_domain",
+        "adr_0007_1",
+        "adr_0007_2",
+        "adr_0007_3",
+        "adr_0007_4",
+    ]:
         integration = await async_get_integration(hass, domain)
         await config_util.async_process_component_config(
             hass,
