@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
 from .entity import SystemBridgeEntity
 
 
@@ -27,9 +27,29 @@ class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     value: Callable = round
 
 
+def camera_in_use(data: SystemBridgeCoordinatorData) -> bool | None:
+    """Return if the camera is in use."""
+    if data.system.camera_usage is not None:
+        return len(data.system.camera_usage) > 0
+    return None
+
+
 BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
+        key="camera_in_use",
+        translation_key="camera_in_use",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        value=camera_in_use,
+    ),
+    SystemBridgeBinarySensorEntityDescription(
+        key="pending_restart",
+        translation_key="pending_restart",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda data: data.system.pending_reboot,
+    ),
+    SystemBridgeBinarySensorEntityDescription(
         key="version_available",
+        translation_key="version_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         value=lambda data: data.system.version_newer_available,
     ),

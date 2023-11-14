@@ -39,6 +39,9 @@
       "boot_time": {
         "name": "Boot time"
       },
+      "camera_in_use": {
+        "name": "Camera in use"
+      },
       "cpu_power_package": {
         "name": "CPU package power"
       },
@@ -66,6 +69,9 @@
       "os": {
         "name": "Operating system"
       },
+      "pending_restart": {
+        "name": "Pending restart"
+      },
       "processes": {
         "name": "Processes"
       },
@@ -74,6 +80,9 @@
       },
       "version": {
         "name": "Version"
+      },
+      "version_available": {
+        "name": "New version available"
       },
       "version_latest": {
         "name": "Latest version"
