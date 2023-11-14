@@ -54,6 +54,10 @@ API_SCOPES = [
     "write_smarther",  # Smarther products
     "write_thermostat",  # Netatmo climate products
 ]
+API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_doorbell",
+    "read_doorbell"
+]
 
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"

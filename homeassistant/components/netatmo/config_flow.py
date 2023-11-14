@@ -10,10 +10,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
+from homeassistant.components import cloud
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
+from .api import get_api_scopes
 from .const import (
     API_SCOPES,
     CONF_AREA_NAME,
@@ -53,13 +55,7 @@ class NetatmoFlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        exclude = []
-        if self.flow_impl.name == "Home Assistant Cloud":
-            exclude = ["access_doorbell", "read_doorbell"]
-
-        scopes = [scope for scope in API_SCOPES if scope not in exclude]
-        scopes.sort()
-
+        scopes = get_api_scopes(self.flow_impl.domain)
         return {"scope": " ".join(scopes)}
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:

@@ -152,15 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
 
-    if entry.data["auth_implementation"] == cloud.DOMAIN:
-        required_scopes = {
-            scope
-            for scope in API_SCOPES
-            if scope not in ("access_doorbell", "read_doorbell")
-        }
-    else:
-        required_scopes = set(API_SCOPES)
-
+    required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & required_scopes):
         _LOGGER.warning(
             "Session is missing scopes: %s",
