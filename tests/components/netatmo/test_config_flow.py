@@ -2,12 +2,11 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from pyatmo.const import ALL_SCOPES
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import zeroconf
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
+    API_SCOPES,
     CONF_NEW_AREA,
     CONF_WEATHER_AREAS,
     DOMAIN,
@@ -85,7 +84,7 @@ async def test_full_flow(
         },
     )
 
-    scope = "+".join(sorted(ALL_SCOPES))
+    scope = "+".join(sorted(API_SCOPES))
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
@@ -260,7 +259,7 @@ async def test_reauth(
         },
     )
 
-    scope = "+".join(sorted(ALL_SCOPES))
+    scope = "+".join(sorted(API_SCOPES))
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
