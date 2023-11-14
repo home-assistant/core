@@ -27,14 +27,12 @@ from .const import DOMAIN
 class RDWBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    is_on_fn: Callable[[Vehicle], bool | None]
 
-
-@dataclass
-class RDWBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RDWBinarySensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes RDW binary sensor entity."""
+
+    is_on_fn: Callable[[Vehicle], bool | None]
 
 
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
