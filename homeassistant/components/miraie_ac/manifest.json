@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/miraie_ac",
   "iot_class": "cloud_push",
-  "requirements": ["py-miraie-ac==0.1.9"]
+  "requirements": ["py-miraie-ac==0.1.10"]
 }

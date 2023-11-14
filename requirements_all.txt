@@ -1538,7 +1538,7 @@ py-improv-ble-client==1.0.3
 py-melissa-climate==2.1.4
 
 # homeassistant.components.miraie_ac
-py-miraie-ac==0.1.9
+py-miraie-ac==0.1.10
 
 # homeassistant.components.nextbus
 py-nextbusnext==1.0.2
