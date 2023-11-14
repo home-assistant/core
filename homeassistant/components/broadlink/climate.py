@@ -53,15 +53,15 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _update_state(self, data: Any) -> None:
+    def _update_state(self, data: dict[str, Any]) -> None:
         """Update data."""
-        if data["power"]:
-            if data["auto_mode"]:
+        if data.get("power"):
+            if data.get("auto_mode"):
                 self._attr_hvac_mode = HVACMode.AUTO
             else:
                 self._attr_hvac_mode = HVACMode.HEAT
 
-            if data["active"]:
+            if data.get("active"):
                 self._attr_hvac_action = HVACAction.HEATING
             else:
                 self._attr_hvac_action = HVACAction.IDLE
@@ -69,8 +69,8 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
 
-        self._attr_current_temperature = data["room_temp"]
-        self._attr_target_temperature = data["thermostat_temp"]
+        self._attr_current_temperature = data.get("room_temp")
+        self._attr_target_temperature = data.get("thermostat_temp")
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
