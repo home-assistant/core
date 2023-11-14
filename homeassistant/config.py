@@ -581,8 +581,9 @@ def find_annotation(
 def stringify_invalid(ex: vol.Invalid) -> str:
     """Stringify voluptuous.Invalid.
 
-    Based on voluptuous.error.Invalid.__str__, the main modification
-    is to format the path delimited by -> instead of @data[].
+    This is an alternative to the custom __str__ implemented in
+    voluptuous.error.Invalid. The main modification is to format
+    the path delimited by -> instead of @data[].
     """
     path = "->".join(str(m) for m in ex.path)
     # This function is an alternative to the stringification done by
