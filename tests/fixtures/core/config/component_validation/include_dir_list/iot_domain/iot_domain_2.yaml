@@ -1,3 +1,2 @@
-# This violates the non_adr_0007.iot_domain platform schema
-platform: non_adr_0007
-option1: 123
+# This violates the iot_domain platform schema (platform missing)
+paltfrom: non_adr_0007
