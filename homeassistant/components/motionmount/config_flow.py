@@ -84,7 +84,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info.hostname
         port = discovery_info.port
         zctype = discovery_info.type
-        name = discovery_info.name.replace(f".{zctype}", "")
+        name = discovery_info.name.removesuffix(f".{zctype}")
         unique_id = discovery_info.properties.get("mac")
 
         self.discovery_info.update(
