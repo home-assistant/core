@@ -36,14 +36,14 @@ _TOKEN_FILENAME = "vicare_token.save"
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_getter: Callable[[Device], bool]
+    value_getter: Callable[[Device], Any] | None = None
 
 
 @dataclass()
 class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 
-    value_setter: Callable[[Device], bool]
+    value_setter: Callable[[Device], bool] | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
