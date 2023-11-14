@@ -13,7 +13,7 @@ from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .helpers import CannotConnect, InvalidAuth, parse_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,10 +23,16 @@ USER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Required(CONF_TOKEN): str,
+        vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
     }
 )
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): str,
+        vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
+    }
+)
 
 
 async def validate_input(hass, data):
@@ -41,7 +47,7 @@ async def validate_input(hass, data):
             data[CONF_HOST],
             data[CONF_TOKEN],
             data[CONF_PORT],
-            True,
+            data[CONF_ENCRYPT_TOKEN],
             DEFAULT_TIMEOUT,
         )
 
@@ -77,6 +83,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST, default=discovery_info.ip): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_TOKEN): str,
+                vol.Required(CONF_ENCRYPT_TOKEN, default=True): bool,
             }
         )
 
@@ -100,6 +107,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: self._data[CONF_HOST],
             CONF_PORT: self._data[CONF_PORT],
             CONF_TOKEN: user_input[CONF_TOKEN],
+            CONF_ENCRYPT_TOKEN: user_input[CONF_ENCRYPT_TOKEN],
         }
 
         try:

@@ -5,7 +5,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "token": "[%key:common::config_flow::data::access_token%]"
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "encrypt_token": "Use a secure connection to the Bridge."
         }
       },
       "reauth_confirm": {
