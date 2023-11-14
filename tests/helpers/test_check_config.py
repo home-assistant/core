@@ -81,9 +81,9 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
 
         error = CheckConfigError(
             (
-                "Invalid config for [homeassistant]: not a valid value for dictionary "
-                "value @ data['unit_system']. Got 'bad'. (See "
-                f"{hass.config.path(YAML_CONFIG_FILE)}, line 2). "
+                "Invalid config for [homeassistant] at "
+                f"{hass.config.path(YAML_CONFIG_FILE)}, line 2: "
+                "not a valid value for dictionary value 'unit_system', got 'bad'."
             ),
             "homeassistant",
             {"unit_system": "bad"},
@@ -190,9 +190,9 @@ async def test_component_import_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("component", "errors", "warnings", "message"),
     [
-        ("frontend", 1, 0, "[blah] is an invalid option for [frontend]"),
-        ("http", 1, 0, "[blah] is an invalid option for [http]"),
-        ("logger", 0, 1, "[blah] is an invalid option for [logger]"),
+        ("frontend", 1, 0, "'blah' is an invalid option for [frontend]"),
+        ("http", 1, 0, "'blah' is an invalid option for [http]"),
+        ("logger", 0, 1, "'blah' is an invalid option for [logger]"),
     ],
 )
 async def test_component_schema_error(
@@ -274,21 +274,21 @@ async def test_platform_not_found_safe_mode(hass: HomeAssistant) -> None:
         (
             "blah:\n  - platform: test\n    option1: 123",
             1,
-            "Invalid config for [blah.test]: expected str for dictionary value",
+            "expected str for dictionary value",
             {"option1": 123, "platform": "test"},
         ),
         # Test the attached config is unvalidated (key old is removed by validator)
         (
             "blah:\n  - platform: test\n    old: blah\n    option1: 123",
             1,
-            "Invalid config for [blah.test]: expected str for dictionary value",
+            "expected str for dictionary value",
             {"old": "blah", "option1": 123, "platform": "test"},
         ),
         # Test base platform configuration error
         (
             "blah:\n  - paltfrom: test\n",
             1,
-            "Invalid config for [blah]: required key not provided",
+            "required key not provided",
             {"paltfrom": "test"},
         ),
     ],

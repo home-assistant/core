@@ -2,8 +2,7 @@
 import logging
 from typing import Any
 
-from oauthlib.oauth2 import AccessDeniedError, MissingTokenError
-from ring_doorbell import Auth
+import ring_doorbell
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -17,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    auth = Auth(f"HomeAssistant/{ha_version}")
+    auth = ring_doorbell.Auth(f"HomeAssistant/{ha_version}")
 
     try:
         token = await hass.async_add_executor_job(
@@ -26,9 +25,9 @@ async def validate_input(hass: core.HomeAssistant, data):
             data["password"],
             data.get("2fa"),
         )
-    except MissingTokenError as err:
+    except ring_doorbell.Requires2FAError as err:
         raise Require2FA from err
-    except AccessDeniedError as err:
+    except ring_doorbell.AuthenticationError as err:
         raise InvalidAuth from err
 
     return token
