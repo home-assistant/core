@@ -208,7 +208,6 @@ class TadoConnector:
             return
 
         for mobile_device in mobile_devices:
-            _LOGGER.debug("Updating mobile device %s", mobile_device["name"])
             self.data["mobile_device"][mobile_device["id"]] = mobile_device
 
             _LOGGER.debug(
