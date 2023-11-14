@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
+from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -576,6 +576,47 @@ def find_annotation(
         return _get_annotation(item)
 
     return find_annotation_rec(config, list(path), None)
+
+
+def stringify_invalid(ex: vol.Invalid) -> str:
+    """Stringify voluptuous.Invalid.
+
+    Based on voluptuous.error.Invalid.__str__, the main modification
+    is to format the path delimited by -> instead of @data[].
+    """
+    path = "->".join(str(m) for m in ex.path)
+    # This function is an alternative to the stringification done by
+    # vol.Invalid.__str__, so we need to call Exception.__str__ here
+    # instead of str(ex)
+    output = Exception.__str__(ex)
+    if error_type := ex.error_type:
+        output += " for " + error_type
+    return f"{output} '{path}'"
+
+
+def humanize_error(
+    data: Any,
+    validation_error: vol.Invalid,
+    max_sub_error_length: int = MAX_VALIDATION_ERROR_ITEM_LENGTH,
+) -> str:
+    """Provide a more helpful + complete validation error message.
+
+    This is a modified version of voluptuous.error.Invalid.__str__,
+    the modifications make some minor changes to the formatting.
+    """
+    if isinstance(validation_error, vol.MultipleInvalid):
+        return "\n".join(
+            sorted(
+                humanize_error(data, sub_error, max_sub_error_length)
+                for sub_error in validation_error.errors
+            )
+        )
+    offending_item_summary = repr(_get_by_path(data, validation_error.path))
+    if len(offending_item_summary) > max_sub_error_length:
+        offending_item_summary = (
+            f"{offending_item_summary[: max_sub_error_length - 3]}..."
+        )
+    return f"{stringify_invalid(validation_error)}, got {offending_item_summary}"
 
 
 @callback
