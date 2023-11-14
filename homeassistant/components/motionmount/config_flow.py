@@ -1,5 +1,6 @@
 """Config flow for Vogel's MotionMount."""
 import logging
+import socket
 from typing import Any
 
 import motionmount
@@ -42,7 +43,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         info = {}
         try:
             info = await self._validate_input(user_input)
-        except ConnectionError:
+        except (ConnectionError, socket.gaierror):
             return self.async_abort(reason="cannot_connect")
         except TimeoutError:
             return self.async_abort(reason="time_out")
@@ -108,7 +109,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await self._validate_input(self.discovery_info)
-        except ConnectionError:
+        except (ConnectionError, socket.gaierror):
             return self.async_abort(reason="cannot_connect")
         except TimeoutError:
             return self.async_abort(reason="time_out")
