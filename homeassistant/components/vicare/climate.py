@@ -298,16 +298,23 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 f"Cannot set invalid vicare program: {preset_mode}/{vicare_program}"
             )
 
-        _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
+        _LOGGER.debug("Current preset %s", self._current_program)
         if self._current_program != VICARE_PROGRAM_NORMAL:
-            # We can't deactivate "normal"
+            # We can't deactivate "normal" or "reduced"
+            _LOGGER.debug("deactivating %s", self._current_program)
             try:
                 self._circuit.deactivateProgram(self._current_program)
             except PyViCareCommandError:
-                _LOGGER.debug("Unable to deactivate program %s", self._current_program)
+                _LOGGER.error("Unable to deactivate program %s", self._current_program)
+
+        _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
         if vicare_program != VICARE_PROGRAM_NORMAL:
-            # And we can't explicitly activate normal, either
-            self._circuit.activateProgram(vicare_program)
+            # And we can't explicitly activate "normal" or "reduced", either
+            _LOGGER.debug("activating %s", vicare_program)
+            try:
+                self._circuit.activateProgram(vicare_program)
+            except PyViCareCommandError:
+                _LOGGER.error("Unable to activate program %s", vicare_program)
 
     @property
     def extra_state_attributes(self):
