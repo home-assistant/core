@@ -413,7 +413,7 @@ class BlockSleepingClimate(
 
 
 class RpcClimate(ShellyRpcEntity, ClimateEntity):
-    """Entity that controls a relay on RPC based Shelly devices."""
+    """Entity that controls a thermostat on RPC based Shelly devices."""
 
     _attr_hvac_modes = [HVACMode.OFF]
     _attr_icon = "mdi:thermostat"
@@ -424,7 +424,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
-        """Initialize relay switch."""
+        """Initialize."""
         super().__init__(coordinator, f"thermostat:{id_}")
         self._id = id_
         self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
