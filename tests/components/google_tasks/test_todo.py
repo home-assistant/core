@@ -761,13 +761,6 @@ async def test_delete_server_error(
                         "position": "0000000000000002",
                     },
                     {
-                        "id": "task-3-1",
-                        "title": "Child 1",
-                        "status": "needsAction",
-                        "parent": "task-3",
-                        "position": "0000000000000001",
-                    },
-                    {
                         "id": "task-3",
                         "title": "Task 3 (Parent)",
                         "status": "needsAction",
@@ -783,6 +776,13 @@ async def test_delete_server_error(
                         "id": "task-1",
                         "title": "Task 1",
                         "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-3-1",
+                        "title": "Child 1",
+                        "status": "needsAction",
+                        "parent": "task-3",
                         "position": "0000000000000001",
                     },
                     {
@@ -806,6 +806,10 @@ async def test_parent_child_ordering(
     """Test getting todo list items."""
 
     assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "4"
 
     items = await ws_get_items()
     assert items == snapshot

@@ -33,16 +33,6 @@
     }),
     dict({
       'status': 'needs_action',
-      'summary': 'Child 1',
-      'uid': 'task-3-1',
-    }),
-    dict({
-      'status': 'needs_action',
-      'summary': 'Child 2',
-      'uid': 'task-3-2',
-    }),
-    dict({
-      'status': 'needs_action',
       'summary': 'Task 4',
       'uid': 'task-4',
     }),

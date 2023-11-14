@@ -1,7 +1,6 @@
 """Google Tasks todo platform."""
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import timedelta
 from typing import Any, cast
 
@@ -124,31 +123,14 @@ class GoogleTaskTodoListEntity(
         await self.coordinator.async_refresh()
 
 
-def _order_tasks(tasks: list[dict[str, Any]]) -> Iterator[dict[str, Any]]:
+def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Order the task items response.
 
-    Home Assistant To-do items do not support the Google Task parent/sibbling relationships
-    so we preserve them as a pre-order traversal where children come after
-    their parents. All tasks have an order amongst their sibblings based on
-    position.
+    All tasks have an order amongst their sibblings based on position.
+
+        Home Assistant To-do items do not support the Google Task parent/sibbling
+    relationships and the desired behavior is for them to be filtered.
     """
-    # Build a dict of parent task id to child tasks, a tree with "" as the root.
-    # The siblings at each level are sorted by position.
-    children: dict[str, list[dict[str, Any]]] = {}
-    for task in tasks:
-        parent = task.get("parent", "")
-        if child_list := children.get(parent):
-            child_list.append(task)
-        else:
-            children[parent] = [task]
-    for subtasks in children.values():
-        subtasks.sort(key=lambda task: task["position"])
-
-    # Pre-order traversal of the root tasks down to their children. Anytime
-    # child tasks are found, they are inserted at the front of the queue.
-    queue = [*children.get("", ())]
-    while queue and (task := queue.pop(0)):
-        yield task
-
-        if child_tasks := children.get(task["id"]):
-            queue = [*child_tasks, *queue]
+    parents = [task for task in tasks if task.get("parent") is None]
+    parents.sort(key=lambda task: task["position"])
+    return parents
