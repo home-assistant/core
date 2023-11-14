@@ -25,6 +25,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -541,7 +542,10 @@ async def test_device_not_calibrated(
 
 
 async def test_rpc_climate_hvac_mode(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device,
+    monkeypatch,
 ) -> None:
     """Test climate hvac mode service."""
     await init_integration(hass, 2, model="SAWD-0A1XX10EU1")
@@ -551,6 +555,10 @@ async def test_rpc_climate_hvac_mode(
     assert state.attributes[ATTR_TEMPERATURE] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 12.3
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry
+    assert entry.unique_id == "123456789ABC-thermostat:0"
 
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "output", False)
     mock_rpc_device.mock_update()
