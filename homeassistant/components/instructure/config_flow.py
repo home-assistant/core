@@ -131,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.config_data.update(user_input)
             return self.async_create_entry(
-                title="Canvas-Course",
+                title="Canvas",
                 data={HOST_PREFIX: self.config_data[HOST_PREFIX], ACCESS_TOKEN: self.config_data[ACCESS_TOKEN]},
                 options={CONF_COURSES: self.config_data[CONF_COURSES]}
         )
