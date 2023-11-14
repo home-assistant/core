@@ -26,7 +26,6 @@ from .utils import (
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
-    is_wall_display_thermostat,
 )
 
 
@@ -117,8 +116,13 @@ def async_setup_rpc_entry(
         if is_rpc_channel_type_light(coordinator.device.config, id_):
             continue
 
-        if is_wall_display_thermostat(coordinator.device.shelly):
-            continue
+        if coordinator.model == "SAWD-0A1XX10EU1":
+            if coordinator.device.shelly["relay_operational"]:
+                # Wall Display in relay mode, we need to remove a climate entity
+                unique_id = f"{coordinator.mac}-thermostat:{id_}"
+                async_remove_shelly_entity(hass, "climate", unique_id)
+            else:
+                continue
 
         switch_ids.append(id_)
         unique_id = f"{coordinator.mac}-switch:{id_}"

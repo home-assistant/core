@@ -1,6 +1,4 @@
 """Tests for Shelly utils."""
-from typing import Any
-
 import pytest
 
 from homeassistant.components.shelly.const import (
