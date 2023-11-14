@@ -23,7 +23,7 @@ from .entity import TwenteMilieuEntity
 
 @dataclass(kw_only=True)
 class TwenteMilieuSensorDescription(SensorEntityDescription):
-    """Describe an Ambient PWS binary sensor."""
+    """Describe an Twente Milieu sensor."""
 
     waste_type: WasteType
 
