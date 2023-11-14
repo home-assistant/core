@@ -104,6 +104,9 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: host, CONF_PORT: port}
             )
+        else:
+            # Avoid probing devices that already have an entry
+            self._async_abort_entries_match({CONF_HOST: host})
 
         self.context.update({"title_placeholders": {"name": name}})
 
