@@ -18,9 +18,6 @@ Adax-local==0.1.5
 # homeassistant.components.ambiclimate
 Ambiclimate==0.2.1
 
-# homeassistant.components.co2signal
-CO2Signal==0.4.2
-
 # homeassistant.components.doorbird
 DoorBirdPy==2.1.0
 
@@ -197,7 +194,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.3.0
+aiocomelit==0.5.2
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1
@@ -213,6 +210,9 @@ aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
 aioecowitt==2023.5.0
+
+# homeassistant.components.co2signal
+aioelectricitymaps==0.1.5
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -685,7 +685,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==5.0.0
+gcal-sync==6.0.1
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -781,7 +781,7 @@ habitipy==0.2.0
 hass-nabucasa==0.74.0
 
 # homeassistant.components.conversation
-hassil==1.2.5
+hassil==1.5.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -805,7 +805,7 @@ holidays==0.35
 home-assistant-frontend==20231030.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.10.16
+home-assistant-intents==2023.11.13
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1025,7 +1025,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.4.0
+nibe==2.5.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1141,7 +1141,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer-times-calculator==0.0.6
+prayer-times-calculator==0.0.10
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
@@ -1469,7 +1469,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.0
+pyoverkiz==1.13.2
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1508,7 +1508,7 @@ pyqwikswitch==0.93
 pyrainbird==4.0.0
 
 # homeassistant.components.risco
-pyrisco==0.5.7
+pyrisco==0.5.8
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1637,7 +1637,7 @@ python-qbittorrent==0.4.3
 python-roborock==0.36.1
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.35
+python-smarttub==0.0.36
 
 # homeassistant.components.songpal
 python-songpal==0.16
@@ -1748,7 +1748,7 @@ reolink-aio==0.7.15
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell==0.7.3
+ring-doorbell==0.8.0
 
 # homeassistant.components.roku
 rokuecp==0.18.1
@@ -1896,7 +1896,7 @@ surepy==0.8.0
 switchbot-api==1.2.1
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.9.5
+systembridgeconnector==3.10.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
@@ -1991,7 +1991,7 @@ vallox-websocket-api==4.0.2
 vehicle==2.2.0
 
 # homeassistant.components.velbus
-velbus-aio==2023.10.2
+velbus-aio==2023.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2094,7 +2094,7 @@ yt-dlp==2023.10.13
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.123.0
+zeroconf==0.127.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
@@ -2118,7 +2118,7 @@ zigpy-znp==0.11.6
 zigpy==0.59.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.53.1
+zwave-js-server-python==0.54.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
