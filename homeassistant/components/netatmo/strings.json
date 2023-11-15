@@ -121,7 +121,7 @@
       "description": "Unregisters the webhook from the Netatmo backend."
     },
     "set_preset_mode_with_end_datetime": {
-      "name": "Set preset mode with end datetime",
+      "name": "Set preset mode with end date & time",
       "description": "Sets the preset mode for a Netatmo climate device. The preset mode must match a preset mode configured at Netatmo.",
       "fields": {
         "preset_mode": {
@@ -129,8 +129,8 @@
           "description": "Climate preset mode such as Schedule, Away or Frost Guard."
         },
         "end_datetime": {
-          "name": "End datetime",
-          "description": "Datetime for until when the preset will be active."
+          "name": "End date & time",
+          "description": "Date & time the preset will be active until."
         }
       }
     }
