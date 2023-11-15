@@ -1,4 +1,5 @@
 """Test the CO2 Signal config flow."""
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aioelectricitymaps.exceptions import (
@@ -15,7 +16,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture(name="em_config_flow")
-def mock_em_config_flow(electricity_maps: AsyncMock) -> None:
+def mock_em_config_flow(
+    electricity_maps: AsyncMock,
+) -> Generator[AsyncMock, None, None]:
     """Patch the electricity maps client in the config flow."""
     with patch(
         "homeassistant.components.co2signal.config_flow.ElectricityMaps",
