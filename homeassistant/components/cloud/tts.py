@@ -150,4 +150,4 @@ class CloudProvider(Provider):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT]), data)
+        return (str(options[ATTR_AUDIO_OUTPUT].value), data)

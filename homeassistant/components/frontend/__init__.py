@@ -385,8 +385,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    # Can be removed in 2023
-    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+    # Shopping list panel was replaced by todo panel in 2023.11
+    hass.http.register_redirect("/shopping-list", "/todo")
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 

@@ -10,7 +10,7 @@ from .const import (
     DATA_CALL_GET_CALLS_LOG,
     DATA_CONNECTION_GET_STATUS,
     DATA_HOME_GET_NODES,
-    DATA_HOME_GET_VALUES,
+    DATA_HOME_PIR_GET_VALUES,
     DATA_LAN_GET_HOSTS_LIST,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
@@ -24,7 +24,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
-    with patch("homeassistant.components.freebox.router.Path"):
+    with patch("homeassistant.components.freebox.router.Path"), patch(
+        "homeassistant.components.freebox.router.os.makedirs"
+    ):
         yield
 
 
@@ -81,7 +83,7 @@ def mock_router(mock_device_registry_devices):
         # home devices
         instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
         instance.home.get_home_endpoint_value = AsyncMock(
-            return_value=DATA_HOME_GET_VALUES
+            return_value=DATA_HOME_PIR_GET_VALUES
         )
         instance.close = AsyncMock()
         yield service_mock

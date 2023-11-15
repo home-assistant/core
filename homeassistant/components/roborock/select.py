@@ -24,9 +24,9 @@ class RoborockSelectDescriptionMixin:
     # The command that the select entity will send to the api.
     api_command: RoborockCommand
     # Gets the current value of the select entity.
-    value_fn: Callable[[Status], str]
+    value_fn: Callable[[Status], str | None]
     # Gets all options of the select entity.
-    options_lambda: Callable[[Status], list[str]]
+    options_lambda: Callable[[Status], list[str] | None]
     # Takes the value from the select entiy and converts it for the api.
     parameter_lambda: Callable[[str, Status], list[int]]
 
@@ -43,21 +43,23 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         key="water_box_mode",
         translation_key="mop_intensity",
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-        value_fn=lambda data: data.water_box_mode.name,
+        value_fn=lambda data: data.water_box_mode_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda data: data.water_box_mode.keys()
-        if data.water_box_mode
+        if data.water_box_mode is not None
         else None,
-        parameter_lambda=lambda key, status: [status.water_box_mode.as_dict().get(key)],
+        parameter_lambda=lambda key, status: [status.get_mop_intensity_code(key)],
     ),
     RoborockSelectDescription(
         key="mop_mode",
         translation_key="mop_mode",
         api_command=RoborockCommand.SET_MOP_MODE,
-        value_fn=lambda data: data.mop_mode.name,
+        value_fn=lambda data: data.mop_mode_name,
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda data: data.mop_mode.keys() if data.mop_mode else None,
-        parameter_lambda=lambda key, status: [status.mop_mode.as_dict().get(key)],
+        options_lambda=lambda data: data.mop_mode.keys()
+        if data.mop_mode is not None
+        else None,
+        parameter_lambda=lambda key, status: [status.get_mop_mode_code(key)],
     ),
 ]
 
@@ -74,13 +76,15 @@ async def async_setup_entry(
     ]
     async_add_entities(
         RoborockSelectEntity(
-            f"{description.key}_{slugify(device_id)}",
-            coordinator,
-            description,
+            f"{description.key}_{slugify(device_id)}", coordinator, description, options
         )
         for device_id, coordinator in coordinators.items()
         for description in SELECT_DESCRIPTIONS
-        if description.options_lambda(coordinator.roborock_device_info.props.status)
+        if (
+            options := description.options_lambda(
+                coordinator.roborock_device_info.props.status
+            )
+        )
         is not None
     )
 
@@ -95,11 +99,12 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockSelectDescription,
+        options: list[str],
     ) -> None:
         """Create a select entity."""
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator)
-        self._attr_options = self.entity_description.options_lambda(self._device_status)
+        self._attr_options = options
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""

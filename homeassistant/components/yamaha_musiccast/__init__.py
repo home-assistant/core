@@ -10,7 +10,7 @@ from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
@@ -176,12 +176,12 @@ class MusicCastDeviceEntity(MusicCastEntity):
         )
 
         if self._zone_id == DEFAULT_ZONE:
-            device_info["connections"] = {
+            device_info[ATTR_CONNECTIONS] = {
                 (CONNECTION_NETWORK_MAC, format_mac(mac))
                 for mac in self.coordinator.data.mac_addresses.values()
             }
         else:
-            device_info["via_device"] = (DOMAIN, self.coordinator.data.device_id)
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self.coordinator.data.device_id)
 
         return device_info
 
