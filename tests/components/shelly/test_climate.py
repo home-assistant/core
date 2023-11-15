@@ -20,7 +20,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import DOMAIN, MODEL_WALL_DISPLAY
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
@@ -548,7 +548,7 @@ async def test_rpc_climate_hvac_mode(
     monkeypatch,
 ) -> None:
     """Test climate hvac mode service."""
-    await init_integration(hass, 2, model="SAWD-0A1XX10EU1")
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
@@ -586,7 +586,7 @@ async def test_rpc_climate_set_temperature(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
     """Test climate set target temperature."""
-    await init_integration(hass, 2, model="SAWD-0A1XX10EU1")
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_TEMPERATURE] == 23
@@ -628,7 +628,7 @@ async def test_rpc_climate_hvac_mode_cool(
     new_config["thermostat:0"]["type"] = "cooling"
     monkeypatch.setattr(mock_rpc_device, "config", new_config)
 
-    await init_integration(hass, 2, model="SAWD-0A1XX10EU1")
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.COOL

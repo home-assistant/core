@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import GAS_VALVE_OPEN_STATES
+from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -116,7 +116,7 @@ def async_setup_rpc_entry(
         if is_rpc_channel_type_light(coordinator.device.config, id_):
             continue
 
-        if coordinator.model == "SAWD-0A1XX10EU1":
+        if coordinator.model == MODEL_WALL_DISPLAY:
             if coordinator.device.shelly["relay_operational"]:
                 # Wall Display in relay mode, we need to remove a climate entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"

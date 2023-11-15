@@ -6,7 +6,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import DOMAIN, MODEL_WALL_DISPLAY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -285,7 +285,7 @@ async def test_wall_display_thermostat_mode(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
     """Test Wall Display in thermostat mode."""
-    await init_integration(hass, 2, model="SAWD-0A1XX10EU1")
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the switch entity should not be created, only the climate entity
     assert hass.states.get("switch.test_name") is None
@@ -308,7 +308,7 @@ async def test_wall_display_relay_mode(
 
     monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
 
-    await init_integration(hass, 2, model="SAWD-0A1XX10EU1")
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the climate entity should be removed
     assert hass.states.get(entity_id) is None
