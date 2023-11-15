@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -30,6 +30,7 @@ class GetWeatherIntent(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         weather: WeatherEntity | None = None
+        weather_state: State | None = None
         component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
         entities = list(component.entities)
 
@@ -41,9 +42,10 @@ class GetWeatherIntent(intent.IntentHandler):
             matching_states = intent.async_match_states(
                 hass, name=weather_name, domains=[DOMAIN]
             )
-            for weather_state in matching_states:
-                weather = component.get_entity(weather_state.entity_id)
+            for maybe_weather_state in matching_states:
+                weather = component.get_entity(maybe_weather_state.entity_id)
                 if weather is not None:
+                    weather_state = maybe_weather_state
                     break
 
             if weather is None:
@@ -54,11 +56,16 @@ class GetWeatherIntent(intent.IntentHandler):
             # First weather entity
             weather = entities[0]
             weather_name = weather.name
+            weather_state = hass.states.get(weather.entity_id)
 
         if weather is None:
             raise intent.IntentHandleError("No weather entity")
 
+        if weather_state is None:
+            raise intent.IntentHandleError(f"No state for weather: {weather.name}")
+
         assert weather is not None
+        assert weather_state is not None
 
         # Create response
         response = intent_obj.create_response()
@@ -73,6 +80,6 @@ class GetWeatherIntent(intent.IntentHandler):
             ]
         )
 
-        response.async_set_states(matched_states=[weather])
+        response.async_set_states(matched_states=[weather_state])
 
         return response
