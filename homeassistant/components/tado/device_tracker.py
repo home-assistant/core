@@ -61,7 +61,7 @@ async def async_add_tracked_entities(
         new_tracked.append(TadoDeviceTrackerEntity(device["id"], device["name"], tado))
         tracked.add(device["id"])
 
-    async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked)
 
 
 class TadoDeviceTrackerEntity(ScannerEntity):
