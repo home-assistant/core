@@ -1,14 +1,11 @@
 """Adds config flow for OpenAQ."""
 
-from .const import (
-    SENSOR_ID,
-    DEFAULT_SENSOR_ID,
-    DOMAIN
-    )
-
-from homeassistant import config_entries
 import voluptuous as vol
 
+from homeassistant import config_entries
+
+from .const import DEFAULT_SENSOR_ID, DOMAIN, SENSOR_ID
+from .data_entry_flow import FlowResult
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -16,22 +13,23 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAQ."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self._data = {}
+        self._data: dict[str, str] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle user initiated configuration."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Todo: validate the user input
+            # validate the user input
             self._data = user_input
             # self._data[CONF_MONITORED_VARIABLES] = DEFAULT_MONITORED_VARIABLES
             return self.async_create_entry(title=self._data[SENSOR_ID], data=self._data)

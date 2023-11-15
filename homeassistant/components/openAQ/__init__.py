@@ -1,11 +1,10 @@
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.helpers import device_registry
-from .const import (
-    DOMAIN,
-    PLATFORMS
-)
+"""The OpenAQ Integration."""
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN, PLATFORMS
 
 # async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 #     """Read configuration from yaml."""
@@ -15,16 +14,15 @@ from .const import (
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration from config entry."""
-    dr = device_registry.async_get(hass)
-
-    """ Create OpenAQ Device """
-    dr.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "entry")},
-        name="brb",
-        model="Unknown",
-    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    device_registry = dr.async_get(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "test")},
+        name="test",  # needs to be the same as in sensor.py Station name
+        model="Unknown",  # Add later from api
+    )
 
     return True
 
