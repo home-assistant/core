@@ -43,11 +43,6 @@
         "name": "Wi-Fi RSSI"
       }
     },
-    "binary_sensor": {
-      "camera_armed": {
-        "name": "Camera armed"
-      }
-    },
     "switch": {
       "camera_motion": {
         "name": "Camera motion detection"
