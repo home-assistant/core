@@ -26,7 +26,6 @@ async def async_setup_entry(
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     tracked: set = set()
 
-    @callback
     async def async_update_devices() -> None:
         """Update the values of the devices."""
         await async_add_tracked_entities(hass, tado, async_add_entities, tracked)
@@ -35,7 +34,7 @@ async def async_setup_entry(
 
     async_dispatcher_connect(
         hass,
-        f"{DOMAIN}-update-{entry.entry_id}",
+        SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
         async_update_devices,
     )
 
@@ -79,7 +78,7 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         self._active = False
 
     @callback
-    async def async_update_state(self) -> None:
+    def update_state(self) -> None:
         """Update the Tado device."""
         _LOGGER.debug(
             "Updating Tado mobile device: %s (ID: %s)",
@@ -95,10 +94,9 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         else:
             _LOGGER.debug("Tado device %s is not at home", device["name"])
 
-    @callback
     async def async_on_demand_update(self) -> None:
         """Update state on demand."""
-        await self.async_update_state()
+        self.update_state()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -107,9 +105,7 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
-                    "mobile_device", self._device_id
-                ),
+                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
                 self.async_on_demand_update,
             )
         )

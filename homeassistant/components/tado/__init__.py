@@ -89,8 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SCAN_INTERVAL,
     )
 
-    await hass.async_add_executor_job(tadoconnector.update_mobile_devices)
-
     update_devices = async_track_time_interval(
         hass,
         lambda now: tadoconnector.update_mobile_devices(),
@@ -212,18 +210,15 @@ class TadoConnector:
         for mobile_device in mobile_devices:
             self.data["mobile_device"][mobile_device["id"]] = mobile_device
 
-            _LOGGER.debug(
-                "Dispatching update to %s mobile device %s: %s",
-                self.home_id,
-                mobile_device["id"],
-                mobile_device,
-            )
-            dispatcher_send(
-                self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(
-                    "mobile_device", mobile_device["id"]
-                ),
-            )
+        _LOGGER.debug(
+            "Dispatching update to %s mobile devices: %s",
+            self.home_id,
+            mobile_devices,
+        )
+        dispatcher_send(
+            self.hass,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+        )
 
     def update_devices(self):
         """Update the device data from Tado."""
