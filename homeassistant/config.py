@@ -490,21 +490,37 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
 
 @callback
-def async_log_exception(
-    ex: Exception,
+def async_log_schema_error(
+    ex: vol.Invalid,
     domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
-    """Log an error for configuration validation.
-
-    This method must be run in the event loop.
-    """
+    """Log a schema validation error."""
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message, is_friendly = _format_config_error(ex, domain, config, link)
-    _LOGGER.error(message, exc_info=not is_friendly and ex)
+    message = _format_schema_error(ex, domain, config, link)
+    _LOGGER.error(message)
+
+
+@callback
+def async_log_config_validator_error(
+    ex: vol.Invalid | HomeAssistantError,
+    domain: str,
+    config: dict,
+    hass: HomeAssistant,
+    link: str | None = None,
+) -> None:
+    """Log an error from a custom config validator."""
+    if isinstance(ex, vol.Invalid):
+        async_log_schema_error(ex, domain, config, hass, link)
+        return
+
+    if hass is not None:
+        async_notify_setup_error(hass, domain, link)
+    message = _format_homeassistant_error(ex, domain, config, link)
+    _LOGGER.error(message, exc_info=ex)
 
 
 def _get_annotation(item: Any) -> tuple[str, int | str] | None:
@@ -655,25 +671,24 @@ def humanize_error(
 
 
 @callback
-def _format_config_error(
-    ex: Exception, domain: str, config: dict, link: str | None = None
-) -> tuple[str, bool]:
-    """Generate log exception for configuration validation.
+def _format_homeassistant_error(
+    ex: HomeAssistantError, domain: str, config: dict, link: str | None = None
+) -> str:
+    """Format HomeAssistantError thrown by a custom config validator."""
+    message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
 
-    This method must be run in the event loop.
-    """
-    is_friendly = False
+    if domain != CONF_CORE and link:
+        message += f" Please check the docs at {link}."
 
-    if isinstance(ex, vol.Invalid):
-        message = humanize_error(ex, domain, config, link)
-        is_friendly = True
-    else:
-        message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
+    return message
 
-        if domain != CONF_CORE and link:
-            message += f" Please check the docs at {link}."
 
-    return message, is_friendly
+@callback
+def _format_schema_error(
+    ex: vol.Invalid, domain: str, config: dict, link: str | None = None
+) -> str:
+    """Format configuration validation error."""
+    return humanize_error(ex, domain, config, link)
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
@@ -995,7 +1010,9 @@ async def async_process_component_config(  # noqa: C901
                 await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_config_validator_error(
+                ex, domain, config, hass, integration.documentation
+            )
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s config validator", domain)
@@ -1006,7 +1023,7 @@ async def async_process_component_config(  # noqa: C901
         try:
             return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_schema_error(ex, domain, config, hass, integration.documentation)
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
@@ -1025,7 +1042,9 @@ async def async_process_component_config(  # noqa: C901
         try:
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, p_config, hass, integration.documentation)
+            async_log_schema_error(
+                ex, domain, p_config, hass, integration.documentation
+            )
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -1062,7 +1081,7 @@ async def async_process_component_config(  # noqa: C901
             try:
                 p_validated = platform.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
-                async_log_exception(
+                async_log_schema_error(
                     ex,
                     f"{domain}.{p_name}",
                     p_config,

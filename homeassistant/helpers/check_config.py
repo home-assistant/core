@@ -15,7 +15,8 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
-    _format_config_error,
+    _format_homeassistant_error,
+    _format_schema_error,
     config_per_platform,
     extract_domain_configs,
     load_yaml_config_file,
@@ -94,15 +95,20 @@ async def async_check_ha_config_file(  # noqa: C901
     def _pack_error(
         package: str, component: str, config: ConfigType, message: str
     ) -> None:
-        """Handle errors from packages: _log_pkg_error."""
+        """Handle errors from packages."""
         message = f"Package {package} setup failed. Component {component} {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
 
-    def _comp_error(ex: Exception, domain: str, component_config: ConfigType) -> None:
-        """Handle errors from components: async_log_exception."""
-        message = _format_config_error(ex, domain, component_config)[0]
+    def _comp_error(
+        ex: vol.Invalid | HomeAssistantError, domain: str, component_config: ConfigType
+    ) -> None:
+        """Handle errors from components."""
+        if isinstance(ex, vol.Invalid):
+            message = _format_schema_error(ex, domain, component_config)
+        else:
+            message = _format_homeassistant_error(ex, domain, component_config)
         if domain in frontend_dependencies:
             result.add_error(message, domain, component_config)
         else:
@@ -149,7 +155,7 @@ async def async_check_ha_config_file(  # noqa: C901
         result[CONF_CORE] = core_config
     except vol.Invalid as err:
         result.add_error(
-            _format_config_error(err, CONF_CORE, core_config)[0], CONF_CORE, core_config
+            _format_schema_error(err, CONF_CORE, core_config), CONF_CORE, core_config
         )
         core_config = {}
 
