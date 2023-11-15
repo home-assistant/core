@@ -39,25 +39,23 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         or "async_step_usb" in config_flow
     )
 
-    if not needs_unique_id:
-        return
-
-    has_unique_id = (
-        "self.async_set_unique_id" in config_flow
-        or "self._async_handle_discovery_without_unique_id" in config_flow
-        or "register_discovery_flow" in config_flow
-        or "AbstractOAuth2FlowHandler" in config_flow
-    )
-
-    if not has_unique_id:
-        if config.specific_integrations:
-            notice_method = integration.add_warning
-        else:
-            notice_method = integration.add_error
-
-        notice_method(
-            "config_flow", "Config flows that are discoverable need to set a unique ID"
+    if needs_unique_id:
+        has_unique_id = (
+            "self.async_set_unique_id" in config_flow
+            or "self._async_handle_discovery_without_unique_id" in config_flow
+            or "register_discovery_flow" in config_flow
+            or "AbstractOAuth2FlowHandler" in config_flow
         )
+
+        if not has_unique_id:
+            if config.specific_integrations:
+                notice_method = integration.add_warning
+            else:
+                notice_method = integration.add_error
+
+            notice_method(
+                "config_flow", "Config flows that are discoverable need to set a unique ID"
+            )
 
     init_file = integration.path / "__init__.py"
     coordinator_file = integration.path / "coordinator.py"
