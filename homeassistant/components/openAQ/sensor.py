@@ -16,7 +16,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ICON
-from .helpers.typing import UndefinedType
 
 
 class OpenAQDeviceSensors(str, Enum):
@@ -43,7 +42,6 @@ class OpenAQSensorDescription(SensorEntityDescription):
     """Class to describe a Sensor entity."""
 
     metric: Enum | None = None
-    name: str | UndefinedType | None = None
 
 
 async def async_setup_entry(
@@ -85,7 +83,7 @@ class Station(SensorEntity):
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]
         )
-        self._attr_name = self.entity_description.name
+        # self._attr_name = self.entity_description.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.station_id)},
         )
