@@ -1,7 +1,11 @@
 """Tests for Shelly utils."""
 import pytest
 
-from homeassistant.components.shelly.const import GEN1_RELEASE_URL, GEN2_RELEASE_URL
+from homeassistant.components.shelly.const import (
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
+    MODEL_WALL_DISPLAY,
+)
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
     get_block_device_sleep_period,
@@ -234,7 +238,7 @@ async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:
         (1, "SHMOS-01", False, None),
         (1, "SHSW-1", False, GEN1_RELEASE_URL),
         (1, "SHSW-1", True, None),
-        (2, "SAWD-0A1XX10EU1", False, None),
+        (2, MODEL_WALL_DISPLAY, False, None),
         (2, "SNSW-102P16EU", False, GEN2_RELEASE_URL),
         (2, "SNSW-102P16EU", True, None),
     ],
