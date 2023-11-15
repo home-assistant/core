@@ -73,11 +73,6 @@ class GetWeatherIntent(intent.IntentHandler):
             ]
         )
 
-        state = hass.states.get(weather.entity_id)
-        if state is None:
-            raise intent.IntentHandleError(f"No state for {weather.entity_id}")
-
-        assert state is not None
-        response.async_set_states(matched_states=[state])
+        response.async_set_states(matched_states=[weather])
 
         return response
