@@ -23,11 +23,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-@dataclass
-class RDWBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-
 @dataclass(kw_only=True)
 class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes RDW binary sensor entity."""
