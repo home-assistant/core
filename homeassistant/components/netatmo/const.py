@@ -84,6 +84,7 @@ ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 
+SERVICE_CLEAR_TEMPERATURE_SETTING = "clear_temperature_setting"
 SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"

@@ -48,6 +48,7 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
+    SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
     SERVICE_SET_TEMPERATURE,
@@ -152,6 +153,11 @@ async def async_setup_entry(
             vol.Optional(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_temperature",
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TEMPERATURE_SETTING,
+        {},
+        "_async_service_clear_temperature_setting",
     )
 
 
@@ -471,6 +477,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             end_timestamp,
         )
         await self._room.async_therm_manual(target_temperature, end_timestamp)
+
+    async def _async_service_clear_temperature_setting(
+        self, **kwargs: Any
+    ) -> None:
+        _LOGGER.debug(
+            "Clearing %s temperature setting",
+            self._room.entity_id
+        )
+        await self._room.async_therm_home()
 
     @property
     def device_info(self) -> DeviceInfo:

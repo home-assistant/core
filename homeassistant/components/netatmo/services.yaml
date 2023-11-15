@@ -65,6 +65,12 @@ set_temperature:
       selector:
         datetime:
 
+clear_temperature_setting:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+
 set_persons_home:
   target:
     entity:

@@ -147,6 +147,10 @@
           "description": "Date & time the target temperature will be active until. If not provided, the Netatmo default of 3 hours will be used."
         }
       }
+    },
+    "clear_temperature_setting": {
+      "name": "Clear temperature setting",
+      "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
     }
   }
 }
