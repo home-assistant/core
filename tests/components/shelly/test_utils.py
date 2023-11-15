@@ -16,7 +16,6 @@ from homeassistant.components.shelly.utils import (
     get_rpc_channel_name,
     get_rpc_input_triggers,
     is_block_momentary_input,
-    is_wall_display_thermostat,
 )
 from homeassistant.util import dt as dt_util
 
@@ -251,19 +250,3 @@ def test_get_release_url(
     result = get_release_url(gen, model, beta)
 
     assert result is expected
-
-
-@pytest.mark.parametrize(
-    ("settings", "expected"),
-    [
-        ({"model": "SHSW-1"}, False),
-        ({"model": "SAWD-0A1XX10EU1", "relay_operational": False}, True),
-        ({"model": "SAWD-0A1XX10EU1", "relay_operational": True}, False),
-        ({"model": "SAWD-0A1XX10EU1"}, False),
-    ],
-)
-def test_is_wall_display_thermostat(settings: dict[str, Any], expected: bool) -> None:
-    """Test is_wall_display_thermostat() function."""
-    result = is_wall_display_thermostat(settings)
-
-    assert result == expected
