@@ -25,16 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_COUNTRY): CountrySelector(
-            CountrySelectorConfig(
-                countries=list(SUPPORTED_COUNTRIES),
-            )
-        ),
-    }
-)
-
 
 class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
@@ -60,8 +50,20 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title = locale.territories[selected_country]
             return self.async_create_entry(title=title, data=self.data)
 
+        user_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_COUNTRY, default=self.hass.config.country
+                ): CountrySelector(
+                    CountrySelectorConfig(
+                        countries=list(SUPPORTED_COUNTRIES),
+                    )
+                ),
+            }
+        )
+
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=user_schema, errors=errors
         )
 
     async def async_step_province(self, user_input=None) -> FlowResult:
