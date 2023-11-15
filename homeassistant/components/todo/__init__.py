@@ -226,7 +226,7 @@ async def websocket_handle_subscribe_todo_items(
     component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     entity_id: str = msg["entity_id"]
 
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := component.get_entity(entity_id)):
         connection.send_error(
             msg["id"],
             "invalid_entity_id",
