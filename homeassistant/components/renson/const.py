@@ -5,14 +5,12 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "renson"
 
-SET_TIMER_LEVEL_SCHEMA = vol.Schema(
-    {
-        vol.Required("timer_level"): vol.In(
-            ["level1", "level2", "level3", "level4", "holiday", "breeze"]
-        ),
-        vol.Required("time"): cv.positive_int,
-    }
-)
+SET_TIMER_LEVEL_SCHEMA = {
+    vol.Required("timer_level"): vol.In(
+        ["level1", "level2", "level3", "level4", "holiday", "breeze"]
+    ),
+    vol.Required("time"): cv.positive_int,
+}
 
 SET_DAY_NIGHT_TIME_SCHEMA = vol.Schema(
     {
