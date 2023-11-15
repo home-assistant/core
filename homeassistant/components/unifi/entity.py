@@ -21,9 +21,10 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceEntryType,
+    DeviceInfo,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 
@@ -45,12 +46,19 @@ def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
 
 
 @callback
-def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_wlan_available_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if WLAN is available."""
+    wlan = controller.api.wlans[obj_id]
+    return controller.available and wlan.enabled
+
+
+@callback
+def async_device_device_info_fn(controller: UniFiController, obj_id: str) -> DeviceInfo:
     """Create device registry entry for device."""
     if "_" in obj_id:  # Sub device (outlet or port)
         obj_id = obj_id.partition("_")[0]
 
-    device = api.devices[obj_id]
+    device = controller.api.devices[obj_id]
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, device.mac)},
         manufacturer=ATTR_MANUFACTURER,
@@ -62,9 +70,9 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
 
 
 @callback
-def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_wlan_device_info_fn(controller: UniFiController, obj_id: str) -> DeviceInfo:
     """Create device registry entry for WLAN."""
-    wlan = api.wlans[obj_id]
+    wlan = controller.api.wlans[obj_id]
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, wlan.id)},
@@ -75,9 +83,9 @@ def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceIn
 
 
 @callback
-def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_client_device_info_fn(controller: UniFiController, obj_id: str) -> DeviceInfo:
     """Create device registry entry for client."""
-    client = api.clients[obj_id]
+    client = controller.api.clients[obj_id]
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
         default_manufacturer=client.oui,
@@ -92,7 +100,7 @@ class UnifiDescription(Generic[HandlerT, ApiItemT]):
     allowed_fn: Callable[[UniFiController, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     available_fn: Callable[[UniFiController, str], bool]
-    device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo | None]
+    device_info_fn: Callable[[UniFiController, str], DeviceInfo | None]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
     name_fn: Callable[[ApiItemT], str | None]
@@ -129,7 +137,7 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
         self._removed = False
 
         self._attr_available = description.available_fn(controller, obj_id)
-        self._attr_device_info = description.device_info_fn(controller.api, obj_id)
+        self._attr_device_info = description.device_info_fn(controller, obj_id)
         self._attr_should_poll = description.should_poll
         self._attr_unique_id = description.unique_id_fn(controller, obj_id)
 

@@ -1,6 +1,7 @@
 """Test the Fully Kiosk Browser sensors."""
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
@@ -25,13 +26,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_sensors_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("sensor.amazon_fire_battery")
     assert state
     assert state.state == "100"
@@ -141,7 +142,8 @@ async def test_sensors_sensors(
 
     # Test unknown/missing data
     mock_fully_kiosk.getDeviceInfo.return_value = {}
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
@@ -150,7 +152,8 @@ async def test_sensors_sensors(
 
     # Test failed update
     mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")

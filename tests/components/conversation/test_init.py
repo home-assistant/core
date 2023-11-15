@@ -1307,7 +1307,14 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     # Confirm intents are loaded
     assert agent._lang_intents.get(language)
 
-    # Clear cache
+    # Try to clear for a different language
+    await hass.services.async_call("conversation", "reload", {"language": "elvish"})
+    await hass.async_block_till_done()
+
+    # Confirm intents are still loaded
+    assert agent._lang_intents.get(language)
+
+    # Clear cache for all languages
     await hass.services.async_call("conversation", "reload", {})
     await hass.async_block_till_done()
 
@@ -1409,6 +1416,7 @@ async def test_turn_on_area(
 ) -> None:
     """Test turning on an area."""
     entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -1480,6 +1488,7 @@ async def test_light_area_same_name(
 ) -> None:
     """Test turning on a light with the same name as an area."""
     entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

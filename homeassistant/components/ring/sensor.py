@@ -68,6 +68,9 @@ class RingSensor(RingEntityMixin, SensorEntity):
 class HealthDataRingSensor(RingSensor):
     """Ring sensor that relies on health data."""
 
+    # These sensors are data hungry and not useful. Disable by default.
+    _attr_entity_registry_enabled_default = False
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -88,12 +91,6 @@ class HealthDataRingSensor(RingSensor):
     def _health_update_callback(self, _health_data):
         """Call update method."""
         self.async_write_ha_state()
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        # These sensors are data hungry and not useful. Disable by default.
-        return False
 
     @property
     def native_value(self):

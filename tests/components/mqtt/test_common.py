@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+import voluptuous as vol
 import yaml
 
 from homeassistant import config as module_hass_config
@@ -23,13 +24,11 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -365,6 +364,7 @@ async def help_test_default_availability_list_payload_any(
 
 async def help_test_default_availability_list_single(
     hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     domain: str,
     config: ConfigType,
@@ -380,10 +380,10 @@ async def help_test_default_availability_list_single(
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-    entry.add_to_hass(hass)
-    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
-        await entry.async_setup(hass)
+    with patch(
+        "homeassistant.config.load_yaml_config_file", return_value=config
+    ), suppress(vol.MultipleInvalid):
+        await mqtt_mock_entry()
 
     assert (
         "two or more values in the same group of exclusion 'availability'"
@@ -1638,9 +1638,9 @@ async def help_test_entity_category(
     entry = ent_registry.async_get(entity_id)
     assert entry is not None and entry.entity_category is None
 
-    # Discover an entity with entity category set to "config"
+    # Discover an entity with entity category set to "diagnostic"
     unique_id = "veryunique2"
-    config["entity_category"] = "config"
+    config["entity_category"] = EntityCategory.DIAGNOSTIC
     config["unique_id"] = unique_id
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
@@ -1648,7 +1648,7 @@ async def help_test_entity_category(
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
     assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry is not None and entry.entity_category == "config"
+    assert entry is not None and entry.entity_category == EntityCategory.DIAGNOSTIC
 
     # Discover an entity with entity category set to "no_such_category"
     unique_id = "veryunique3"
@@ -1928,3 +1928,28 @@ async def help_test_discovery_setup(
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{name}")
     assert state and state.state is not None
+
+
+async def help_test_skipped_async_ha_write_state(
+    hass: HomeAssistant, topic: str, payload1: str, payload2: str
+) -> None:
+    """Test entity.async_ha_write_state is only called on changes."""
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        assert len(mock_async_ha_write_state.mock_calls) == 0
+        async_fire_mqtt_message(hass, topic, payload1)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(hass, topic, payload1)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(hass, topic, payload2)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+        async_fire_mqtt_message(hass, topic, payload2)
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2

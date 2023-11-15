@@ -101,7 +101,7 @@
         },
         "color_name": {
           "name": "Color name",
-          "description": "A human readable color name."
+          "description": "A human-readable color name."
         },
         "rgb_color": {
           "name": "RGB color",

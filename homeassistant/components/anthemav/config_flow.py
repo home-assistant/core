@@ -9,8 +9,8 @@ from anthemav.connection import Connection
 from anthemav.device_error import DeviceError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -43,7 +43,7 @@ async def connect_device(user_input: dict[str, Any]) -> Connection:
     return avr
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AnthemAVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthem A/V Receivers."""
 
     VERSION = 1
@@ -56,9 +56,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
-
-        if CONF_NAME not in user_input:
-            user_input[CONF_NAME] = DEFAULT_NAME
 
         errors = {}
 
@@ -84,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_MODEL] = avr.protocol.model
             await self.async_set_unique_id(user_input[CONF_MAC])
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
         finally:
             if avr is not None:
                 avr.close()

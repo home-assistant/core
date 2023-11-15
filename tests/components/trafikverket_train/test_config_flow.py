@@ -66,6 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "time": "10:00",
         "weekday": ["mon", "fri"],
     }
+    assert result["options"] == {"filter_product": None}
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["result"].unique_id == "{}-{}-{}-{}".format(
         "stockholmc", "uppsalac", "10:00", "['mon', 'fri']"
@@ -448,3 +449,55 @@ async def test_reauth_flow_error_departures(
         "time": "10:00",
         "weekday": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
     }
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "1234567890",
+            CONF_NAME: "Stockholm C to Uppsala C at 10:00",
+            CONF_FROM: "Stockholm C",
+            CONF_TO: "Uppsala C",
+            CONF_TIME: "10:00",
+            CONF_WEEKDAY: WEEKDAYS,
+        },
+        unique_id=f"stockholmc-uppsalac-10:00-{WEEKDAYS}",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.trafikverket_train.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"filter_product": "SJ Regionaltåg"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"filter_product": "SJ Regionaltåg"}
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"filter_product": ""},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"filter_product": None}

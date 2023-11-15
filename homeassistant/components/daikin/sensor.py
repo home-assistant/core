@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -192,12 +191,9 @@ class DaikinSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self._attr_device_info = api.device_info
+        self._attr_unique_id = f"{api.device.mac}-{description.key}"
         self._api = api
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._api.device.mac}-{self.entity_description.key}"
 
     @property
     def native_value(self) -> float | None:
@@ -207,8 +203,3 @@ class DaikinSensor(SensorEntity):
     async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return self._api.device_info

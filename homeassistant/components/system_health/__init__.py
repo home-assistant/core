@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -73,7 +72,7 @@ async def get_integration_info(
     """Get integration system health."""
     try:
         assert registration.info_callback
-        async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
+        async with asyncio.timeout(INFO_CALLBACK_TIMEOUT):
             data = await registration.info_callback(hass)
     except asyncio.TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}

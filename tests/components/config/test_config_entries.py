@@ -396,6 +396,7 @@ async def test_initialize_flow(hass: HomeAssistant, client) -> None:
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
+        "preview": None,
     }
 
 
@@ -571,6 +572,7 @@ async def test_two_step_flow(
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -647,6 +649,7 @@ async def test_continue_flow_unauth(
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     hass_admin_user.groups = []
@@ -795,6 +798,9 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
+                async def async_step_user(self, user_input=None):
+                    raise NotImplementedError
+
             return OptionsFlowHandler()
 
     mock_integration(hass, MockModule("test"))
@@ -822,7 +828,54 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
         "description_placeholders": {"enabled": "Set to true to be true"},
         "errors": None,
         "last_step": None,
+        "preview": None,
     }
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "method"),
+    [
+        ("/api/config/config_entries/options/flow", "post"),
+        ("/api/config/config_entries/options/flow/1", "get"),
+        ("/api/config/config_entries/options/flow/1", "post"),
+    ],
+)
+async def test_options_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+) -> None:
+    """Test unauthorized on options flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    schema = OrderedDict()
+                    schema[vol.Required("enabled")] = bool
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=schema,
+                        description_placeholders={"enabled": "Set to true to be true"},
+                    )
+
+            return OptionsFlowHandler()
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    hass_admin_user.groups = []
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
@@ -871,6 +924,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -952,6 +1006,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -1218,6 +1273,9 @@ async def test_ignore_flow(
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
             return self.async_show_form(step_id="account")
+
+        async def async_step_account(self, user_input=None):
+            raise NotImplementedError
 
     ws_client = await hass_ws_client(hass)
 

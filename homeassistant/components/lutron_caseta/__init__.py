@@ -8,7 +8,6 @@ import logging
 import ssl
 from typing import Any, cast
 
-import async_timeout
 from pylutron_caseta import BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
@@ -19,7 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -172,7 +172,7 @@ async def async_setup_entry(
 
     timed_out = True
     with contextlib.suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(BRIDGE_TIMEOUT):
+        async with asyncio.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
             timed_out = False
 

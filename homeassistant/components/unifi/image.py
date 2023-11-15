@@ -20,12 +20,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
 
@@ -61,11 +61,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, _: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        name_fn=lambda _: "QR Code",
+        name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         should_poll=False,
         supported_fn=lambda controller, obj_id: True,
@@ -82,13 +82,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up image platform for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if controller.site_role != "admin":
-        return
-
-    controller.register_platform_add_entities(
-        UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiImageEntity,
+        ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 

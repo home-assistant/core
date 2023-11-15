@@ -349,9 +349,9 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         description: ProtectSelectEntityDescription,
     ) -> None:
         """Initialize the unifi protect select entity."""
+        self._async_set_options(data, description)
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
-        self._async_set_options()
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -366,30 +366,27 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             _LOGGER.debug(
                 "Updating dynamic select options for %s", entity_description.name
             )
-            self._async_set_options()
+            self._async_set_options(self.data, entity_description)
+        if (unifi_value := entity_description.get_ufp_value(device)) is None:
+            unifi_value = TYPE_EMPTY_VALUE
+        self._attr_current_option = self._unifi_to_hass_options.get(
+            unifi_value, unifi_value
+        )
 
     @callback
-    def _async_set_options(self) -> None:
+    def _async_set_options(
+        self, data: ProtectData, description: ProtectSelectEntityDescription
+    ) -> None:
         """Set options attributes from UniFi Protect device."""
-
-        if self.entity_description.ufp_options is not None:
-            options = self.entity_description.ufp_options
+        if (ufp_options := description.ufp_options) is not None:
+            options = ufp_options
         else:
-            assert self.entity_description.ufp_options_fn is not None
-            options = self.entity_description.ufp_options_fn(self.data.api)
+            assert description.ufp_options_fn is not None
+            options = description.ufp_options_fn(data.api)
 
         self._attr_options = [item["name"] for item in options]
         self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
-
-    @property
-    def current_option(self) -> str:
-        """Return the current selected option."""
-
-        unifi_value = self.entity_description.get_ufp_value(self.device)
-        if unifi_value is None:
-            unifi_value = TYPE_EMPTY_VALUE
-        return self._unifi_to_hass_options.get(unifi_value, unifi_value)
 
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
@@ -404,3 +401,23 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the options, option, and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_option = self._attr_current_option
+        previous_options = self._attr_options
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_current_option != previous_option
+            or self._attr_options != previous_options
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()

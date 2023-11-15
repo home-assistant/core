@@ -432,8 +432,6 @@ def _get_last_state_changes_single_stmt(metadata_id: int) -> Select:
                 lastest_state_for_metadata_id := (
                     select(
                         States.metadata_id.label("max_metadata_id"),
-                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                        # pylint: disable-next=not-callable
                         func.max(States.last_updated_ts).label("max_last_updated"),
                     )
                     .filter(States.metadata_id == metadata_id)
@@ -537,8 +535,6 @@ def _get_start_time_state_for_entities_stmt(
             most_recent_states_for_entities_by_date := (
                 select(
                     States.metadata_id.label("max_metadata_id"),
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
                     func.max(States.last_updated_ts).label("max_last_updated"),
                 )
                 .filter(

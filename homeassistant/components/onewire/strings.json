@@ -68,9 +68,6 @@
       "counter_b": {
         "name": "Counter B"
       },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "humidity_hih3600": {
         "name": "HIH3600 humidity"
       },
@@ -86,9 +83,6 @@
       "humidity_raw": {
         "name": "Raw humidity"
       },
-      "illuminance": {
-        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
-      },
       "moisture_1": {
         "name": "Moisture 1"
       },
@@ -101,17 +95,8 @@
       "moisture_4": {
         "name": "Moisture 4"
       },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "thermocouple_temperature_k": {
         "name": "Thermocouple K temperature"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "voltage_vad": {
         "name": "VAD voltage"

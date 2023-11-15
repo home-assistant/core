@@ -9,7 +9,8 @@ from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
@@ -35,19 +36,19 @@ class RoborockEntity(Entity):
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
-        return self._api.cache.get(attribute)
+        return self._api.cache[attribute]
 
     async def send(
         self,
-        command: RoborockCommand,
+        command: RoborockCommand | str,
         params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
-            response = await self._api.send_command(command, params)
+            response: dict = await self._api.send_command(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
-                f"Error while calling {command.name} with {params}"
+                f"Error while calling {command.name if isinstance(command, RoborockCommand) else command} with {params}"
             ) from err
 
         return response
@@ -79,15 +80,11 @@ class RoborockCoordinatedEntity(
     def _device_status(self) -> Status:
         """Return the status of the device."""
         data = self.coordinator.data
-        if data:
-            status = data.status
-            if status:
-                return status
-        return Status({})
+        return data.status
 
     async def send(
         self,
-        command: RoborockCommand,
+        command: RoborockCommand | str,
         params: dict[str, Any] | list[Any] | int | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
