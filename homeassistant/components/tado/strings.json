@@ -123,5 +123,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_device_tracker": {
+      "title": "YAML device tracker configuration import failed",
+      "description": "Configuring using YAML is being removed, as a device tracker.\n\nRemove the YAML device tracker configuration and restart Home Assistant."
+    }
   }
 }

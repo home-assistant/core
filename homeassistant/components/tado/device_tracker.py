@@ -23,11 +23,11 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     async_create_issue(
         hass,
         DOMAIN,
-        "deprecated_yaml",
+        "deprecated_yaml_import_device_tracker",
         breaks_in_ha_version="2024.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml_import",
+        translation_key="deprecated_yaml_import_device_tracker",
     )
 
 
