@@ -37,6 +37,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
+from .types import HeatingProgram
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,15 +51,6 @@ VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
-
-VICARE_PROGRAM_ACTIVE = "active"
-VICARE_PROGRAM_COMFORT = "comfort"
-VICARE_PROGRAM_ECO = "eco"
-VICARE_PROGRAM_EXTERNAL = "external"
-VICARE_PROGRAM_HOLIDAY = "holiday"
-VICARE_PROGRAM_NORMAL = "normal"
-VICARE_PROGRAM_REDUCED = "reduced"
-VICARE_PROGRAM_STANDBY = "standby"
 
 VICARE_HOLD_MODE_AWAY = "away"
 VICARE_HOLD_MODE_HOME = "home"
@@ -78,15 +70,15 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
-    VICARE_PROGRAM_COMFORT: PRESET_COMFORT,
-    VICARE_PROGRAM_ECO: PRESET_ECO,
-    VICARE_PROGRAM_NORMAL: PRESET_NONE,
+    HeatingProgram.COMFORT: PRESET_COMFORT,
+    HeatingProgram.ECO: PRESET_ECO,
+    HeatingProgram.NORMAL: PRESET_NONE,
 }
 
 HA_TO_VICARE_PRESET_HEATING = {
-    PRESET_COMFORT: VICARE_PROGRAM_COMFORT,
-    PRESET_ECO: VICARE_PROGRAM_ECO,
-    PRESET_NONE: VICARE_PROGRAM_NORMAL,
+    PRESET_COMFORT: HeatingProgram.COMFORT,
+    PRESET_ECO: HeatingProgram.ECO,
+    PRESET_NONE: HeatingProgram.NORMAL,
 }
 
 
@@ -299,13 +291,13 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             )
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        if self._current_program != VICARE_PROGRAM_NORMAL:
+        if self._current_program != HeatingProgram.NORMAL:
             # We can't deactivate "normal"
             try:
                 self._circuit.deactivateProgram(self._current_program)
             except PyViCareCommandError:
                 _LOGGER.debug("Unable to deactivate program %s", self._current_program)
-        if vicare_program != VICARE_PROGRAM_NORMAL:
+        if vicare_program != HeatingProgram.NORMAL:
             # And we can't explicitly activate normal, either
             self._circuit.activateProgram(vicare_program)
 
