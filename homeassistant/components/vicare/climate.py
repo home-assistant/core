@@ -300,7 +300,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         _LOGGER.debug("Current preset %s", self._current_program)
         if self._current_program != VICARE_PROGRAM_NORMAL:
-            # We can't deactivate "normal" or "reduced"
+            # We can't deactivate "normal"
             _LOGGER.debug("deactivating %s", self._current_program)
             try:
                 self._circuit.deactivateProgram(self._current_program)
@@ -309,7 +309,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
         if vicare_program != VICARE_PROGRAM_NORMAL:
-            # And we can't explicitly activate "normal" or "reduced", either
+            # And we can't explicitly activate "normal", either
             _LOGGER.debug("activating %s", vicare_program)
             try:
                 self._circuit.activateProgram(vicare_program)
