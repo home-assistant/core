@@ -138,6 +138,168 @@ async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "arrived"
 
 
+async def test_last_tracker_removed(hass: HomeAssistant) -> None:
+    """Test last tracker is removed."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "proximity": {
+                "home": {
+                    "devices": ["device_tracker.test1"],
+                    "tolerance": "1",
+                }
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "0"
+    assert state.attributes.get("nearest") == "test1"
+    assert state.attributes.get("dir_of_travel") == "arrived"
+
+    hass.states.async_remove("device_tracker.test1")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "not set"
+    assert state.attributes.get("nearest") == "not set"
+    assert state.attributes.get("dir_of_travel") == "not set"
+
+
+async def test_one_tracker_removed(hass: HomeAssistant) -> None:
+    """Test one tracker is removed."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "proximity": {
+                "home": {
+                    "ignored_zones": ["work"],
+                    "devices": ["device_tracker.test1", "device_tracker.test2"],
+                    "tolerance": "1",
+                }
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
+    )
+    hass.states.async_set(
+        "device_tracker.test2",
+        "home",
+        {"friendly_name": "test2", "latitude": 2.1, "longitude": 1.1},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "0"
+    assert state.attributes.get("nearest") in ["test1, test2", "test2, test1"]
+    assert state.attributes.get("dir_of_travel") == "arrived"
+
+    hass.states.async_remove("device_tracker.test1")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "0"
+    assert state.attributes.get("nearest") == "test2"
+    assert state.attributes.get("dir_of_travel") == "arrived"
+
+
+async def test_nearest_tracker_removed(hass: HomeAssistant) -> None:
+    """Test nearest tracker is removed."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "proximity": {
+                "home": {
+                    "ignored_zones": ["work"],
+                    "devices": ["device_tracker.test1", "device_tracker.test2"],
+                    "tolerance": "1",
+                }
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
+    )
+    hass.states.async_set(
+        "device_tracker.test2",
+        "not_home",
+        {"friendly_name": "test2", "latitude": 20.1, "longitude": 10.1},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "0"
+    assert state.attributes.get("nearest") == "test1"
+    assert state.attributes.get("dir_of_travel") == "arrived"
+
+    hass.states.async_remove("device_tracker.test1")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "not set"
+    assert state.attributes.get("nearest") == "not set"
+    assert state.attributes.get("dir_of_travel") == "not set"
+
+
+async def test_away_tracker_removed(hass: HomeAssistant) -> None:
+    """Test away tracker is removed."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "proximity": {
+                "home": {
+                    "ignored_zones": ["work"],
+                    "devices": ["device_tracker.test1", "device_tracker.test2"],
+                    "tolerance": "1",
+                }
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
+    )
+    hass.states.async_set(
+        "device_tracker.test2",
+        "not_home",
+        {"friendly_name": "test2", "latitude": 20.1, "longitude": 10.1},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "0"
+    assert state.attributes.get("nearest") == "test1"
+    assert state.attributes.get("dir_of_travel") == "arrived"
+
+    hass.states.async_remove("device_tracker.test2")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("proximity.home")
+    assert state.state == "0"
+    assert state.attributes.get("nearest") == "test1"
+    assert state.attributes.get("dir_of_travel") == "arrived"
+
+
 async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     """Test for trackers in zone."""
     config = {

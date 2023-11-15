@@ -43,7 +43,7 @@ class ProximityData(TypedDict):
 
     dist_to_zone: str | float
     dir_of_travel: str | float
-    nearest: str | float
+    nearest: str
 
 
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
@@ -80,19 +80,84 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
         """Fetch and process state change event."""
-        if new_state is None:
-            _LOGGER.debug("%s: no new_state -> abort", self.friendly_name)
-            return
-
         self.state_change_data = StateChangedData(entity, old_state, new_state)
         await self.async_refresh()
 
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
-        if (
-            state_change_data := self.state_change_data
-        ) is None or state_change_data.new_state is None:
+        if (state_change_data := self.state_change_data) is None:
             return self.data
+
+        # no new_state, entity has been removed
+        if state_change_data.new_state is None:
+            # both old and new can't be None
+            assert state_change_data.old_state is not None
+
+            remaining_devices = [
+                device
+                for device in self.proximity_devices
+                if device.lower() != state_change_data.entity_id
+            ]
+
+            # just some entity has been removed
+            if (
+                remaining_devices
+                and state_change_data.old_state.name not in self.data["nearest"]
+            ):
+                _LOGGER.debug(
+                    "%s: %s has been removed -> abort",
+                    self.friendly_name,
+                    state_change_data.entity_id,
+                )
+                return self.data
+
+            # the nearest entity has been removed
+            if (
+                remaining_devices
+                and self.data["nearest"] == state_change_data.old_state.name
+            ):
+                _LOGGER.debug(
+                    "%s: %s has been removed, but was the nearest -> reset",
+                    self.friendly_name,
+                    state_change_data.entity_id,
+                )
+                return {
+                    "dist_to_zone": DEFAULT_DIST_TO_ZONE,
+                    "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
+                    "nearest": DEFAULT_NEAREST,
+                }
+
+            # one of the nearest entities has been removed
+            if (
+                remaining_devices
+                and state_change_data.old_state.name in self.data["nearest"]
+            ):
+                _LOGGER.debug(
+                    "%s: %s has been removed, but was in nearest -> remove from nearest",
+                    self.friendly_name,
+                    state_change_data.entity_id,
+                )
+                new_nearest = [
+                    device
+                    for device in self.data["nearest"].split(", ")
+                    if device != state_change_data.old_state.name
+                ]
+                return {
+                    "dist_to_zone": self.data["dist_to_zone"],
+                    "dir_of_travel": self.data["dir_of_travel"],
+                    "nearest": ", ".join(new_nearest),
+                }
+
+            # last tracked entity has been removed
+            _LOGGER.debug(
+                "%s: last tracked device has been removed -> reset",
+                self.friendly_name,
+            )
+            return {
+                "dist_to_zone": DEFAULT_DIST_TO_ZONE,
+                "dir_of_travel": DEFAULT_DIR_OF_TRAVEL,
+                "nearest": DEFAULT_NEAREST,
+            }
 
         entity_name = state_change_data.new_state.name
         devices_to_calculate = False
