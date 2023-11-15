@@ -22,10 +22,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-
-    async def async_step_login(self, user_input=None, errors=None) -> FlowResult:
+    async def async_step_login(self, user_input: dict[str, Any] | None=None) -> FlowResult:
         """Handle login with credentials by user."""
         if not user_input:
             data_schema = vol.Schema(
@@ -47,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
             except AuthException as ex:
-                _LOGGER.exception("Error during login", exc_info=ex)
+                _LOGGER.exception("Error during login")
                 return await self.async_step_login(errors={"base": "invalid_auth"})
 
         data = {
