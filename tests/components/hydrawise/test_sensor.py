@@ -1,8 +1,9 @@
 """Test Hydrawise sensor."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
+from pydrawise.schema import Zone
 import pytest
 
 from homeassistant.components.hydrawise.const import NEXT_CYCLE_SUSPENDED
@@ -33,13 +34,13 @@ async def test_states(
 @pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
 async def test_suspended_state(
     hass: HomeAssistant,
-    mock_zones: list[dict[str, Any]],
+    zones: list[Zone],
     mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
 ) -> None:
     """Test sensor states."""
-    mock_zones[0]["time"] = NEXT_CYCLE_SUSPENDED
+    zones[0].scheduled_runs.next_run = None
     await mock_add_config_entry()
 
     next_cycle = hass.states.get("sensor.zone_one_next_cycle")
     assert next_cycle is not None
-    assert next_cycle.state == "unknown"
+    assert next_cycle.state == "9999-12-31T23:59:59+00:00"
