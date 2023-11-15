@@ -15,7 +15,6 @@ class RefossEntity(CoordinatorEntity[RefossDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        name = coordinator.device.dev_name
         mac = coordinator.device.mac
         self.channel_id = channel
         if channel == 0:
@@ -28,5 +27,5 @@ class RefossEntity(CoordinatorEntity[RefossDataUpdateCoordinator]):
             connections={(CONNECTION_NETWORK_MAC, mac)},
             identifiers={(DOMAIN, mac)},
             manufacturer="Refoss",
-            name=name,
+            name=coordinator.device.dev_name,
         )

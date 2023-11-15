@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
+from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import RefossEntity
 
 
@@ -40,7 +40,7 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    hass.data[DOMAIN][DISPATCHERS].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
 

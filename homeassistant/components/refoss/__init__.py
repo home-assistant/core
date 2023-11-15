@@ -10,13 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
 from .bridge import DiscoveryService
-from .const import (
-    COORDINATORS,
-    DATA_DISCOVERY_SERVICE,
-    DISCOVERY_SCAN_INTERVAL,
-    DISPATCHERS,
-    DOMAIN,
-)
+from .const import COORDINATORS, DATA_DISCOVERY_SERVICE, DISCOVERY_SCAN_INTERVAL, DOMAIN
 from .util import refoss_discovery_server
 
 PLATFORMS: Final = [
@@ -31,7 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     refoss_discovery = DiscoveryService(hass, discover)
     hass.data[DOMAIN][DATA_DISCOVERY_SERVICE] = refoss_discovery
 
-    hass.data[DOMAIN].setdefault(DISPATCHERS, [])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
@@ -50,10 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if hass.data[DOMAIN].get(DISPATCHERS) is not None:
-        for cleanup in hass.data[DOMAIN][DISPATCHERS]:
-            cleanup()
-
     if hass.data[DOMAIN].get(DATA_DISCOVERY_SERVICE) is not None:
         refoss_discovery: DiscoveryService = hass.data[DOMAIN][DATA_DISCOVERY_SERVICE]
         refoss_discovery.discovery.clean_up()
@@ -63,6 +52,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         hass.data[DOMAIN].pop(COORDINATORS, None)
-        hass.data[DOMAIN].pop(DISPATCHERS, None)
 
     return unload_ok
