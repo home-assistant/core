@@ -60,6 +60,24 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         "config_flow", "Config flows that are discoverable need to set a unique ID"
     )
 
+    init_file = integration.path / "__init__.py"
+    coordinator_file = integration.path / "coordinator.py"
+
+    init = init_file.read_text()
+
+    if coordinator_file.is_file():
+        coordinator = coordinator_file.read_text()
+    else:
+        coordinator = ""
+
+    if (
+        "ConfigEntryAuthFailed" in init or "ConfigEntryAuthFailed" in coordinator
+    ) and "async_step_reauth" not in config_flow:
+        integration.add_error(
+            "config_flow",
+            "Reauth flow is needed in order to raise ConfigEntryAuthFailed",
+        )
+
 
 def _generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Validate and generate config flow data."""
