@@ -48,17 +48,15 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         or "AbstractOAuth2FlowHandler" in config_flow
     )
 
-    if has_unique_id:
-        return
+    if not has_unique_id:
+        if config.specific_integrations:
+            notice_method = integration.add_warning
+        else:
+            notice_method = integration.add_error
 
-    if config.specific_integrations:
-        notice_method = integration.add_warning
-    else:
-        notice_method = integration.add_error
-
-    notice_method(
-        "config_flow", "Config flows that are discoverable need to set a unique ID"
-    )
+        notice_method(
+            "config_flow", "Config flows that are discoverable need to set a unique ID"
+        )
 
     init_file = integration.path / "__init__.py"
     coordinator_file = integration.path / "coordinator.py"
@@ -72,7 +70,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
 
     if (
         "ConfigEntryAuthFailed" in init or "ConfigEntryAuthFailed" in coordinator
-    ) and "async_step_reauth" not in config_flow:
+    ) and "async def async_step_reauth" not in config_flow:
         integration.add_error(
             "config_flow",
             "Reauth flow is needed in order to raise ConfigEntryAuthFailed",
