@@ -97,7 +97,8 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         else:
             _LOGGER.debug("Tado device %s is not at home", device["name"])
 
-    async def async_on_demand_update(self) -> None:
+    @callback
+    def on_demand_update(self) -> None:
         """Update state on demand."""
         self.update_state()
         self.async_write_ha_state()
@@ -109,7 +110,7 @@ class TadoDeviceTrackerEntity(ScannerEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-                self.async_on_demand_update,
+                self.on_demand_update,
             )
         )
 
