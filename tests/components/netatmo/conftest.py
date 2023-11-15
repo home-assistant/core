@@ -2,11 +2,10 @@
 from time import time
 from unittest.mock import AsyncMock, patch
 
+from pyatmo.const import ALL_SCOPES
 import pytest
 
 from .common import fake_get_image, fake_post_request
-
-from homeassistant.components.netatmo.const import API_SCOPES
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +23,7 @@ def mock_config_entry_fixture(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": API_SCOPES,
+                "scope": ALL_SCOPES,
             },
         },
         options={

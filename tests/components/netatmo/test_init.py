@@ -4,11 +4,11 @@ from time import time
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from pyatmo.const import ALL_SCOPES
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
-from homeassistant.components.netatmo.const import API_SCOPES
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -244,7 +244,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": API_SCOPES,
+                "scope": ALL_SCOPES,
             },
         },
     )

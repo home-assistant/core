@@ -10,14 +10,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
-from homeassistant.components import cloud
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from .api import get_api_scopes
 from .const import (
-    API_SCOPES,
     CONF_AREA_NAME,
     CONF_LAT_NE,
     CONF_LAT_SW,

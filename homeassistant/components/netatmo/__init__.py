@@ -42,7 +42,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
-    API_SCOPES,
     AUTH,
     CONF_CLOUDHOOK_URL,
     DATA_CAMERAS,
@@ -153,10 +152,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
-    if not (set(session.token["scope"]) & required_scopes):
+    if not (set(session.token["scope"]) & set(required_scopes)):
         _LOGGER.warning(
             "Session is missing scopes: %s",
-            required_scopes - set(session.token["scope"]),
+            set(required_scopes) - set(session.token["scope"]),
         )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
