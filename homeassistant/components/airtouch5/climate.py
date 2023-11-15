@@ -44,39 +44,6 @@ from .entity import Airtouch5Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Airtouch 5 Climate entities."""
-    client: Airtouch5SimpleClient = hass.data[DOMAIN][config_entry.entry_id]
-
-    entities: list[ClimateEntity] = []
-
-    # Add each AC (and remember what zones they apply to)
-    zone_to_ac: dict[int, AcAbility] = {}
-    for ac in client.ac:
-        for i in range(ac.start_zone_number, ac.start_zone_number + ac.zone_count):
-            zone_to_ac[i] = ac
-        entities.append(Airtouch5AC(client, ac))
-
-    # Add each zone
-    for zone in client.zones:
-        entities.append(Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number]))
-
-    async_add_entities(entities)
-
-
-class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
-    """Base class for Airtouch5 Climate Entities."""
-
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1
-    _attr_name = None
-
-
 AC_MODE_TO_HVAC_MODE = {
     AcMode.AUTO: HVACMode.AUTO,
     AcMode.AUTO_COOL: HVACMode.AUTO,
@@ -120,6 +87,38 @@ FAN_MODE_TO_SET_AC_FAN_SPEED = {
     FAN_TURBO: SetAcFanSpeed.SET_TO_TURBO,
     FAN_INTELLIGENT_AUTO: SetAcFanSpeed.SET_TO_INTELLIGENT_AUTO,
 }
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Airtouch 5 Climate entities."""
+    client: Airtouch5SimpleClient = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities: list[ClimateEntity] = []
+
+    # Add each AC (and remember what zones they apply to)
+    zone_to_ac: dict[int, AcAbility] = {}
+    for ac in client.ac:
+        for i in range(ac.start_zone_number, ac.start_zone_number + ac.zone_count):
+            zone_to_ac[i] = ac
+        entities.append(Airtouch5AC(client, ac))
+
+    # Add each zone
+    for zone in client.zones:
+        entities.append(Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number]))
+
+    async_add_entities(entities)
+
+
+class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
+    """Base class for Airtouch5 Climate Entities."""
+
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 1
+    _attr_name = None
 
 
 class Airtouch5AC(Airtouch5ClimateEntity):
@@ -205,13 +204,14 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         self._client.ac_status_callbacks.remove(self._async_update_attrs)
 
     async def _control(
+        self,
         *,
         power: SetPowerSetting = SetPowerSetting.KEEP_POWER_SETTING,
         ac_mode: SetAcMode = SetAcMode.KEEP_AC_MODE,
         fan: SetAcFanSpeed = SetAcFanSpeed.KEEP_AC_FAN_SPEED,
-        setpoint: SetPointControl = SetpointControl.KEEP_SETPOINT_VALUE,
+        setpoint: SetpointControl = SetpointControl.KEEP_SETPOINT_VALUE,
         temp: int = 0,
-        )->None:
+    ) -> None:
         control = AcControl(
             power,
             self._ability.ac_number,
@@ -237,14 +237,14 @@ class Airtouch5AC(Airtouch5ClimateEntity):
                 raise ValueError(f"Unsupported hvac mode: {hvac_mode}")
             set_ac_mode = HVAC_MODE_TO_SET_AC_MODE[hvac_mode]
 
-        self._control(power=set_power_setting, ac_mode=set_ac_mode)
+        await self._control(power=set_power_setting, ac_mode=set_ac_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in FAN_MODE_TO_SET_AC_FAN_SPEED:
             raise ValueError(f"Unsupported fan mode: {fan_mode}")
         fan_speed = FAN_MODE_TO_SET_AC_FAN_SPEED[fan_mode]
-        self._control(fan=fan_speed)
+        await self._control(fan=fan_speed)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -252,7 +252,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             _LOGGER.debug("Argument `temperature` is missing in set_temperature")
             return
 
-        self._control(temp=temp)
+        await self._control(temp=temp)
 
 
 class Airtouch5Zone(Airtouch5ClimateEntity):
