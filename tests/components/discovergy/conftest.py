@@ -1,4 +1,5 @@
 """Fixtures for Discovergy integration tests."""
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from pydiscovergy import Discovergy
@@ -24,7 +25,7 @@ def _meter_last_reading(meter_id: str) -> Reading:
 
 
 @pytest.fixture(name="discovergy")
-def mock_discovergy() -> None:
+def mock_discovergy() -> Generator[AsyncMock, None, None]:
     """Mock the pydiscovergy client."""
     mock = AsyncMock(spec=Discovergy)
     mock.meters.return_value = GET_METERS
