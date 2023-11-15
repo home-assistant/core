@@ -500,7 +500,7 @@ def async_log_schema_error(
     """Log a schema validation error."""
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message = _format_schema_error(ex, domain, config, link)
+    message = format_schema_error(ex, domain, config, link)
     _LOGGER.error(message)
 
 
@@ -519,7 +519,7 @@ def async_log_config_validator_error(
 
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message = _format_homeassistant_error(ex, domain, config, link)
+    message = format_homeassistant_error(ex, domain, config, link)
     _LOGGER.error(message, exc_info=ex)
 
 
@@ -671,7 +671,7 @@ def humanize_error(
 
 
 @callback
-def _format_homeassistant_error(
+def format_homeassistant_error(
     ex: HomeAssistantError, domain: str, config: dict, link: str | None = None
 ) -> str:
     """Format HomeAssistantError thrown by a custom config validator."""
@@ -684,7 +684,7 @@ def _format_homeassistant_error(
 
 
 @callback
-def _format_schema_error(
+def format_schema_error(
     ex: vol.Invalid, domain: str, config: dict, link: str | None = None
 ) -> str:
     """Format configuration validation error."""

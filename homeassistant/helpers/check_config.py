@@ -15,10 +15,10 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
-    _format_homeassistant_error,
-    _format_schema_error,
     config_per_platform,
     extract_domain_configs,
+    format_homeassistant_error,
+    format_schema_error,
     load_yaml_config_file,
     merge_packages_config,
 )
@@ -106,9 +106,9 @@ async def async_check_ha_config_file(  # noqa: C901
     ) -> None:
         """Handle errors from components."""
         if isinstance(ex, vol.Invalid):
-            message = _format_schema_error(ex, domain, component_config)
+            message = format_schema_error(ex, domain, component_config)
         else:
-            message = _format_homeassistant_error(ex, domain, component_config)
+            message = format_homeassistant_error(ex, domain, component_config)
         if domain in frontend_dependencies:
             result.add_error(message, domain, component_config)
         else:
@@ -155,7 +155,7 @@ async def async_check_ha_config_file(  # noqa: C901
         result[CONF_CORE] = core_config
     except vol.Invalid as err:
         result.add_error(
-            _format_schema_error(err, CONF_CORE, core_config), CONF_CORE, core_config
+            format_schema_error(err, CONF_CORE, core_config), CONF_CORE, core_config
         )
         core_config = {}
 
