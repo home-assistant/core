@@ -150,11 +150,12 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_plm_manually(self, user_input=None):
         """Set up the PLM modem type manually."""
         errors = {}
+        schema_defaults = {}
         if user_input is not None:
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = "cannot_connect"
-        schema_defaults = user_input if user_input is not None else {}
+            schema_defaults = user_input
         data_schema = build_plm_manual_schema(**schema_defaults)
         return self.async_show_form(
             step_id=STEP_PLM_MANUALLY, data_schema=data_schema, errors=errors
