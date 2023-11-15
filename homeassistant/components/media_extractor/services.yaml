@@ -13,9 +13,9 @@ play_media:
       selector:
         select:
           options:
-            - "CHANNEL"
-            - "EPISODE"
-            - "PLAYLIST MUSIC"
-            - "MUSIC"
-            - "TVSHOW"
-            - "VIDEO"
+            - "channel"
+            - "episode"
+            - "playlist"
+            - "music"
+            - "tv_show"
+            - "video"
