@@ -295,6 +295,75 @@ async def mock_custom_validator_integrations(hass: HomeAssistant) -> list[Integr
         )
 
 
+@pytest.fixture
+async def mock_custom_validator_integrations_with_docs(
+    hass: HomeAssistant,
+) -> list[Integration]:
+    """Mock integrations with custom validator."""
+    integrations = []
+
+    for domain in ("custom_validator_ok_1", "custom_validator_ok_2"):
+
+        def gen_async_validate_config(domain):
+            schema = vol.Schema(
+                {
+                    domain: vol.Schema(
+                        {
+                            vol.Required("host"): str,
+                            vol.Optional("port", default=8080): int,
+                        }
+                    )
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+
+            async def async_validate_config(
+                hass: HomeAssistant, config: ConfigType
+            ) -> ConfigType:
+                """Validate config."""
+                return schema(config)
+
+            return async_validate_config
+
+        integrations.append(
+            mock_integration(
+                hass,
+                MockModule(
+                    domain,
+                    partial_manifest={
+                        "documentation": f"https://www.home-assistant.io/integrations/{domain}"
+                    },
+                ),
+            )
+        )
+        mock_platform(
+            hass,
+            f"{domain}.config",
+            Mock(async_validate_config=gen_async_validate_config(domain)),
+        )
+
+    for domain, exception in [
+        ("custom_validator_bad_1", HomeAssistantError("broken")),
+        ("custom_validator_bad_2", ValueError("broken")),
+    ]:
+        integrations.append(
+            mock_integration(
+                hass,
+                MockModule(
+                    domain,
+                    partial_manifest={
+                        "documentation": f"https://www.home-assistant.io/integrations/{domain}"
+                    },
+                ),
+            )
+        )
+        mock_platform(
+            hass,
+            f"{domain}.config",
+            Mock(async_validate_config=AsyncMock(side_effect=exception)),
+        )
+
+
 async def test_create_default_config(hass: HomeAssistant) -> None:
     """Test creation of default config."""
     assert not os.path.isfile(YAML_PATH)
@@ -1683,6 +1752,7 @@ async def test_component_config_validation_error_with_docs(
     mock_iot_domain_integration_with_docs: Integration,
     mock_non_adr_0007_integration_with_docs: None,
     mock_adr_0007_integrations_with_docs: list[Integration],
+    mock_custom_validator_integrations_with_docs: list[Integration],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test schema error in component."""
@@ -1700,6 +1770,10 @@ async def test_component_config_validation_error_with_docs(
         "adr_0007_3",
         "adr_0007_4",
         "adr_0007_5",
+        "custom_validator_ok_1",
+        "custom_validator_ok_2",
+        "custom_validator_bad_1",
+        "custom_validator_bad_2",
     ]:
         integration = await async_get_integration(hass, domain)
         await config_util.async_process_component_config(
