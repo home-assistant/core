@@ -185,6 +185,10 @@
         "time": {
           "name": "Time",
           "description": "Time of the timer (0 will disable the timer)"
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that timer will be set on. Platform dependent."
         }
       }
     },
@@ -203,6 +207,10 @@
         "activate": {
           "name": "Activate",
           "description": "Activate or disable the breeze feature"
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will set the breeze settings. Platform dependent."
         }
       }
     },
@@ -217,6 +225,10 @@
         "night": {
           "name": "Start night",
           "description": "Start time of the night"
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will be setting day and night settings. Platform dependent."
         }
       }
     },
@@ -251,6 +263,10 @@
         "co2_hysteresis": {
           "name": "CO2 hysteresis",
           "description": "Sets the CO2 pollution threshold hysteresis level in ppm"
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will set the pollution settings. Platform dependent."
         }
       }
     }

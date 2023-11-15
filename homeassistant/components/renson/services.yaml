@@ -23,6 +23,11 @@ set_timer_level:
           step: 10
           unit_of_measurement: "min"
           mode: slider
+    entity_id:
+      selector:
+        entity:
+          integration: renson
+          domain: fan
 
 set_breeze:
   fields:
@@ -50,6 +55,11 @@ set_breeze:
       default: false
       selector:
         boolean:
+    entity_id:
+      selector:
+        entity:
+          integration: renson
+          domain: fan
 
 set_day_night_time:
   fields:
@@ -65,6 +75,11 @@ set_day_night_time:
       example: "22:00:00"
       selector:
         time:
+    entity_id:
+      selector:
+        entity:
+          integration: renson
+          domain: fan
 
 set_pollution_settings:
   fields:
@@ -118,3 +133,8 @@ set_pollution_settings:
           step: 50
           unit_of_measurement: "ppm"
           mode: slider
+    entity_id:
+      selector:
+        entity:
+          integration: renson
+          domain: fan
