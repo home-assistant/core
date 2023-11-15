@@ -19,6 +19,7 @@ from .const import (
     ATTR_SELECTED_TAGS,
     ATTR_UPDATE_FREQUENCY,
     DOMAIN,
+    FETCH_A_QUOTE_URL,
     GET_TAGS_URL,
     HTTP_CLIENT_TIMEOUT,
     SERVICE_FETCH_A_QUOTE,
@@ -52,6 +53,7 @@ def register_services(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         service=SERVICE_FETCH_A_QUOTE,
         service_func=partial(_fetch_a_quote_service, session, hass),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.register(
@@ -82,8 +84,15 @@ async def _search_authors_service(
 
 async def _fetch_a_quote_service(
     session: aiohttp.ClientSession, hass: HomeAssistant, service: ServiceCall
-) -> None:
-    pass
+) -> ServiceResponse:
+    response = await session.get(FETCH_A_QUOTE_URL, timeout=HTTP_CLIENT_TIMEOUT)
+    if response.status == HTTPStatus.OK:
+        data = await response.json()
+        if data:
+            quote = {data["content"]: data["author"]}
+            return quote
+
+    return None
 
 
 def _update_configuration_service(hass: HomeAssistant, service: ServiceCall) -> None:

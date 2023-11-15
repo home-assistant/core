@@ -8,7 +8,7 @@ ENTITY_ID: Final = f"{DOMAIN}.quotable"
 BASE_URL: Final = "https://api.quotable.io"
 GET_TAGS_URL: Final = f"{BASE_URL}/tags"
 SEARCH_AUTHORS_URL: Final = f"{BASE_URL}/search/authors"
-FETCH_A_QUOTE_URL: Final = f"{BASE_URL}/quotes/random"
+FETCH_A_QUOTE_URL: Final = f"{BASE_URL}/random"
 
 HTTP_CLIENT_TIMEOUT: Final = 10
 
