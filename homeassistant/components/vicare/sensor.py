@@ -43,6 +43,7 @@ from .const import (
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
 from .entity import ViCareEntity
+from .types import HeatingProgram
 from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -487,6 +488,24 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getSupplyTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="active_program",
+        name="Active program",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            HeatingProgram.ACTIVE,
+            HeatingProgram.COMFORT,
+            HeatingProgram.ECO,
+            HeatingProgram.EXTERNAL,
+            HeatingProgram.FIXED,
+            HeatingProgram.FORCED,
+            HeatingProgram.HOLIDAY,
+            HeatingProgram.NORMAL,
+            HeatingProgram.REDUCED,
+            HeatingProgram.STANDBY,
+        ],
+        value_getter=lambda api: api.getActiveProgram(),
     ),
 )
 
