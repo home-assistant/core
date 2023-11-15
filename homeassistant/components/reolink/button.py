@@ -27,38 +27,25 @@ from .entity import (
 )
 
 
-@dataclass
-class ReolinkButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities for a camera channel."""
-
-    method: Callable[[Host, int], Any]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkButtonEntityDescription(
     ButtonEntityDescription,
     ReolinkChannelEntityDescription,
-    ReolinkButtonEntityDescriptionMixin,
 ):
     """A class that describes button entities for a camera channel."""
 
     enabled_default: Callable[[Host, int], bool] | None = None
+    method: Callable[[Host, int], Any]
 
 
-@dataclass
-class ReolinkHostButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities for the host."""
-
-    method: Callable[[Host], Any]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkHostButtonEntityDescription(
     ButtonEntityDescription,
     ReolinkHostEntityDescription,
-    ReolinkHostButtonEntityDescriptionMixin,
 ):
     """A class that describes button entities for the host."""
+
+    method: Callable[[Host], Any]
 
 
 BUTTON_ENTITIES = (

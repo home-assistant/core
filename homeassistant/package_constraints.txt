@@ -4,7 +4,7 @@ aiodiscover==1.5.1
 aiohttp-fast-url-dispatcher==0.1.0
 aiohttp-zlib-ng==0.1.1
 aiohttp==3.8.5;python_version<'3.12'
-aiohttp==3.9.0b0;python_version>='3.12'
+aiohttp==3.9.0rc0;python_version>='3.12'
 aiohttp_cors==0.7.0
 astral==2.2
 async-upnp-client==0.36.2

@@ -23,24 +23,17 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
-@dataclass
-class ReolinkLightEntityDescriptionMixin:
-    """Mixin values for Reolink light entities."""
-
-    is_on_fn: Callable[[Host, int], bool]
-    turn_on_off_fn: Callable[[Host, int, bool], Any]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkLightEntityDescription(
     LightEntityDescription,
     ReolinkChannelEntityDescription,
-    ReolinkLightEntityDescriptionMixin,
 ):
     """A class that describes light entities."""
 
     get_brightness_fn: Callable[[Host, int], int | None] | None = None
+    is_on_fn: Callable[[Host, int], bool]
     set_brightness_fn: Callable[[Host, int, int], Any] | None = None
+    turn_on_off_fn: Callable[[Host, int, bool], Any]
 
 
 LIGHT_ENTITIES = (

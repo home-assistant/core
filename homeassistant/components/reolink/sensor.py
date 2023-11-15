@@ -29,36 +29,24 @@ from .entity import (
 )
 
 
-@dataclass
-class ReolinkSensorEntityDescriptionMixin:
-    """Mixin values for Reolink sensor entities for a camera channel."""
+@dataclass(kw_only=True)
+class ReolinkSensorEntityDescription(
+    SensorEntityDescription,
+    ReolinkChannelEntityDescription,
+):
+    """A class that describes sensor entities for a camera channel."""
 
     value: Callable[[Host, int], int]
 
 
-@dataclass
-class ReolinkSensorEntityDescription(
-    SensorEntityDescription,
-    ReolinkChannelEntityDescription,
-    ReolinkSensorEntityDescriptionMixin,
-):
-    """A class that describes sensor entities for a camera channel."""
-
-
-@dataclass
-class ReolinkHostSensorEntityDescriptionMixin:
-    """Mixin values for Reolink host sensor entities."""
-
-    value: Callable[[Host], int | None]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkHostSensorEntityDescription(
     SensorEntityDescription,
     ReolinkHostEntityDescription,
-    ReolinkHostSensorEntityDescriptionMixin,
 ):
     """A class that describes host sensor entities."""
+
+    value: Callable[[Host], int | None]
 
 
 SENSORS = (

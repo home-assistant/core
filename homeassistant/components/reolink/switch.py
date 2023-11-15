@@ -23,38 +23,26 @@ from .entity import (
 )
 
 
-@dataclass
-class ReolinkSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink switch entities."""
-
-    value: Callable[[Host, int], bool]
-    method: Callable[[Host, int, bool], Any]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkSwitchEntityDescription(
     SwitchEntityDescription,
     ReolinkChannelEntityDescription,
-    ReolinkSwitchEntityDescriptionMixin,
 ):
     """A class that describes switch entities."""
 
-
-@dataclass
-class ReolinkNVRSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink NVR switch entities."""
-
-    value: Callable[[Host], bool]
-    method: Callable[[Host, bool], Any]
+    method: Callable[[Host, int, bool], Any]
+    value: Callable[[Host, int], bool]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkNVRSwitchEntityDescription(
     SwitchEntityDescription,
     ReolinkHostEntityDescription,
-    ReolinkNVRSwitchEntityDescriptionMixin,
 ):
     """A class that describes NVR switch entities."""
+
+    method: Callable[[Host, bool], Any]
+    value: Callable[[Host], bool]
 
 
 SWITCH_ENTITIES = (

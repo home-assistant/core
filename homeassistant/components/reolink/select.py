@@ -27,22 +27,15 @@ from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescrip
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class ReolinkSelectEntityDescriptionMixin:
-    """Mixin values for Reolink select entities."""
-
-    method: Callable[[Host, int, str], Any]
-    get_options: list[str] | Callable[[Host, int], list[str]]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkSelectEntityDescription(
     SelectEntityDescription,
     ReolinkChannelEntityDescription,
-    ReolinkSelectEntityDescriptionMixin,
 ):
     """A class that describes select entities."""
 
+    get_options: list[str] | Callable[[Host, int], list[str]]
+    method: Callable[[Host, int, str], Any]
     value: Callable[[Host, int], str] | None = None
 
 
