@@ -40,9 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.WATER_HEATER,
-    Platform.DEVICE_TRACKER,
 ]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
