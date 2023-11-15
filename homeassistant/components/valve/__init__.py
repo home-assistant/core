@@ -221,16 +221,6 @@ class ValveEntity(Entity):
         """Close valve."""
         await self.hass.async_add_executor_job(ft.partial(self.close_valve))
 
-    def toggle(self) -> None:
-        """Toggle the entity."""
-        fns = {
-            "open": self.open_valve,
-            "close": self.close_valve,
-            "stop": self.stop_valve,
-        }
-        function = self._get_toggle_function(fns)
-        function()
-
     async def async_toggle(self) -> None:
         """Toggle the entity."""
         fns = {
