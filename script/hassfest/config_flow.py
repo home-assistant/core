@@ -10,6 +10,7 @@ from .model import Brand, Config, Integration
 from .serializer import format_python_namespace
 
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
+REAUTH_FLOW_IGNORE = {"rachio"}
 
 
 def _validate_integration(config: Config, integration: Integration) -> None:
@@ -68,9 +69,10 @@ def _validate_integration(config: Config, integration: Integration) -> None:
     else:
         coordinator = ""
 
-    if (
+    needs_reauth_flow = integration.domain not in REAUTH_FLOW_IGNORE and (
         "ConfigEntryAuthFailed" in init or "ConfigEntryAuthFailed" in coordinator
-    ) and "async def async_step_reauth" not in config_flow:
+    )
+    if needs_reauth_flow and "async def async_step_reauth" not in config_flow:
         integration.add_error(
             "config_flow",
             "Reauth flow is needed in order to raise ConfigEntryAuthFailed",
