@@ -315,6 +315,17 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         await super().async_will_remove_from_hass()
         self._client.zone_status_callbacks.remove(self._async_update_attrs)
 
+    async def _control(
+        self,
+        *,
+        zsv: ZoneSettingValue = ZoneSettingValue.KEEP_SETTING_VALUE,
+        power: ZoneSettingPower = ZoneSettingPower.KEEP_POWER_STATE,
+        value: float = 0,
+    ) -> None:
+        control = ZoneControlZone(self._name.zone_number, zsv, power, value)
+        packet = self._client.data_packet_factory.zone_control([control])
+        await self._client.send_packet(packet)
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         power: ZoneSettingPower
@@ -326,14 +337,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         else:
             power = ZoneSettingPower.SET_TO_ON
 
-        zcz = ZoneControlZone(
-            self._name.zone_number,
-            ZoneSettingValue.KEEP_SETTING_VALUE,
-            power,
-            0,
-        )
-        packet = self._client.data_packet_factory.zone_control([zcz])
-        await self._client.send_packet(packet)
+        await self._control(power=power)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Enable or disable Turbo. Done this way as we can't have a turbo HVACMode."""
@@ -343,14 +347,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         else:
             power = ZoneSettingPower.SET_TO_ON
 
-        zcz = ZoneControlZone(
-            self._name.zone_number,
-            ZoneSettingValue.KEEP_SETTING_VALUE,
-            power,
-            0,
-        )
-        packet = self._client.data_packet_factory.zone_control([zcz])
-        await self._client.send_packet(packet)
+        await self._control(power=power)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -359,14 +356,10 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
             _LOGGER.debug("Argument `temperature` is missing in set_temperature")
             return
 
-        zcz = ZoneControlZone(
-            self._name.zone_number,
-            ZoneSettingValue.SET_TARGET_SETPOINT,
-            ZoneSettingPower.KEEP_POWER_STATE,
-            float(temp),
+        await self._control(
+            zsv=ZoneSettingValue.SET_TARGET_SETPOINT,
+            value=float(temp),
         )
-        packet = self._client.data_packet_factory.zone_control([zcz])
-        await self._client.send_packet(packet)
 
     async def async_turn_on(self) -> None:
         """Turn the zone on."""
