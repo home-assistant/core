@@ -30,7 +30,12 @@ HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
 
-API_SCOPES_EXCLUDED_FROM_CLOUD = ["access_doorbell", "read_doorbell"]
+API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_doorbell",
+    "read_doorbell",
+    "read_mhs1",
+    "write_mhs1"
+]
 
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
