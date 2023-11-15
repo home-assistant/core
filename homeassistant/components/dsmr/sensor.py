@@ -67,21 +67,13 @@ EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass
-class DSMRSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    obis_reference: str
-
-
-@dataclass
-class DSMRSensorEntityDescription(
-    SensorEntityDescription, DSMRSensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
     dsmr_versions: set[str] | None = None
     is_gas: bool = False
+    obis_reference: str
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (

@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.9.0b0;python_version>='3.12'",
+    "aiohttp==3.9.0rc0;python_version>='3.12'",
     "aiohttp==3.8.5;python_version<'3.12'",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.1.0",

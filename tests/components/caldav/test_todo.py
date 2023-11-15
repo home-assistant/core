@@ -1,5 +1,4 @@
 """The tests for the webdav todo component."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, Mock
 
 from caldav.objects import Todo
@@ -7,6 +6,8 @@ import pytest
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
@@ -88,6 +89,15 @@ def mock_calendars(todos: list[str], supported_components: list[str]) -> list[Mo
     return [calendar]
 
 
+@pytest.fixture(autouse=True)
+async def mock_add_to_hass(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Fixture to add the ConfigEntry."""
+    config_entry.add_to_hass(hass)
+
+
 @pytest.mark.parametrize(
     ("todos", "expected_state"),
     [
@@ -115,11 +125,11 @@ def mock_calendars(todos: list[str], supported_components: list[str]) -> list[Mo
 )
 async def test_todo_list_state(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
     expected_state: str,
 ) -> None:
     """Test a calendar entity from a config entry."""
-    assert await setup_integration()
+    await config_entry.async_setup(hass)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -136,11 +146,11 @@ async def test_todo_list_state(
 )
 async def test_supported_components(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
     has_entity: bool,
 ) -> None:
     """Test a calendar supported components matches VTODO."""
-    assert await setup_integration()
+    await config_entry.async_setup(hass)
 
     state = hass.states.get(TEST_ENTITY)
     assert (state is not None) == has_entity
