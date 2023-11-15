@@ -249,7 +249,7 @@ async def websocket_handle_subscribe_todo_items(
     connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(
         todo_item_listener
     )
-    connection.send_message(websocket_api.result_message(msg["id"]))
+    connection.send_result(msg["id"])
 
     # Push an initial forecast update
     entity.async_update_listeners()
