@@ -89,6 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SCAN_INTERVAL,
     )
 
+    await hass.async_add_executor_job(tadoconnector.update_mobile_devices)
+
     update_devices = async_track_time_interval(
         hass,
         lambda now: tadoconnector.update_mobile_devices(),

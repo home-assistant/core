@@ -48,18 +48,16 @@ async def async_add_tracked_entities(
 ) -> None:
     """Add new tracker entities from Tado."""
     _LOGGER.debug("Fetching Tado devices from API")
-    known_devices = await hass.async_add_executor_job(tado.get_me)
-
     new_tracked = []
-    for device in known_devices["mobileDevices"]:
-        if device["id"] in tracked:
+    for device_key, device in tado.data["mobile_device"].items():
+        if device_key in tracked:
             continue
 
         _LOGGER.debug(
-            "Adding Tado device %s with deviceID %s", device["name"], device["id"]
+            "Adding Tado device %s with deviceID %s", device["name"], device_key
         )
-        new_tracked.append(TadoDeviceTrackerEntity(device["id"], device["name"], tado))
-        tracked.add(device["id"])
+        new_tracked.append(TadoDeviceTrackerEntity(device_key, device["name"], tado))
+        tracked.add(device_key)
 
     async_add_entities(new_tracked)
 
