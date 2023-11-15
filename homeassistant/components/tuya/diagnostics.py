@@ -5,7 +5,7 @@ from contextlib import suppress
 import json
 from typing import Any, cast
 
-from tuya_iot import TuyaDevice
+from tuya_sharing import CustomerDevice
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
@@ -49,14 +49,12 @@ def _async_get_diagnostics(
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
     mqtt_connected = None
-    if hass_data.home_manager.mq.client:
-        mqtt_connected = hass_data.home_manager.mq.client.is_connected()
+    if hass_data.manager.mq.client:
+        mqtt_connected = hass_data.manager.mq.client.is_connected()
 
     data = {
-        "endpoint": entry.data[CONF_ENDPOINT],
-        "auth_type": entry.data[CONF_AUTH_TYPE],
-        "country_code": entry.data[CONF_COUNTRY_CODE],
-        "app_type": entry.data[CONF_APP_TYPE],
+        "endpoint": hass_data.manager.customer_api.endpoint,
+        "terminal_id": hass_data.manager.terminal_id,
         "mqtt_connected": mqtt_connected,
         "disabled_by": entry.disabled_by,
         "disabled_polling": entry.pref_disable_polling,
@@ -65,13 +63,13 @@ def _async_get_diagnostics(
     if device:
         tuya_device_id = next(iter(device.identifiers))[1]
         data |= _async_device_as_dict(
-            hass, hass_data.device_manager.device_map[tuya_device_id]
+            hass, hass_data.manager.device_map[tuya_device_id]
         )
     else:
         data.update(
             devices=[
                 _async_device_as_dict(hass, device)
-                for device in hass_data.device_manager.device_map.values()
+                for device in hass_data.manager.device_map.values()
             ]
         )
 
