@@ -25,12 +25,9 @@ def async_describe_events(
         device: dr.DeviceEntry | None = None
         device_name: str = "Unknown device"
 
-        try:
-            device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
-            if device:
-                device_name = device.name_by_user or device.name or "Unknown device"
-        except (KeyError, AttributeError):
-            pass
+        device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
+        if device:
+            device_name = device.name_by_user or device.name or "Unknown device"
 
         timeout_seconds = event.data[ATTR_SECONDS]
         message = f"{device_name} will record audio for {timeout_seconds} second(s)"
