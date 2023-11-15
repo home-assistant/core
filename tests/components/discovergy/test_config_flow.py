@@ -1,5 +1,5 @@
 """Test the Discovergy config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 import pytest
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 from tests.components.discovergy.const import GET_METERS
 
 
-async def test_form(hass: HomeAssistant, mock_meters: Mock) -> None:
+async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -25,7 +25,10 @@ async def test_form(hass: HomeAssistant, mock_meters: Mock) -> None:
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.discovergy.config_flow.pydiscovergy.Discovergy",
+        return_value=discovergy,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -45,12 +48,14 @@ async def test_form(hass: HomeAssistant, mock_meters: Mock) -> None:
 
 
 async def test_reauth(
-    hass: HomeAssistant, mock_meters: Mock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, discovergy: AsyncMock
 ) -> None:
     """Test reauth flow."""
+    config_entry.add_to_hass(hass)
+
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": mock_config_entry.unique_id},
+        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
         data=None,
     )
 
@@ -60,7 +65,10 @@ async def test_reauth(
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.discovergy.config_flow.pydiscovergy.Discovergy",
+        return_value=discovergy,
+    ):
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
@@ -88,7 +96,7 @@ async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) ->
     """Test to handle exceptions."""
 
     with patch(
-        "pydiscovergy.Discovergy.meters",
+        "homeassistant.components.discovergy.config_flow.pydiscovergy.Discovergy.meters",
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -104,7 +112,10 @@ async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) ->
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": message}
 
-    with patch("pydiscovergy.Discovergy.meters", return_value=GET_METERS):
+    with patch(
+        "homeassistant.components.discovergy.config_flow.pydiscovergy.Discovergy.meters",
+        return_value=GET_METERS,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
