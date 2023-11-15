@@ -198,13 +198,13 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
                     "wibble": {"test_panel": "Invalid"},
                 }
             },
-            "[wibble] is an invalid option",
+            "'wibble' is an invalid option",
         ),
         (
             {
                 "alarm_control_panel": {"platform": "template"},
             },
-            "required key not provided @ data['panels']",
+            "required key 'panels' not provided",
         ),
         (
             {
