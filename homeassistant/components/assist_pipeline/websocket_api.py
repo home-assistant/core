@@ -13,12 +13,17 @@ from typing import Any, Final
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
-from .const import DEFAULT_PIPELINE_TIMEOUT, DEFAULT_WAKE_WORD_TIMEOUT, DOMAIN
+from .const import (
+    DEFAULT_PIPELINE_TIMEOUT,
+    DEFAULT_WAKE_WORD_TIMEOUT,
+    DOMAIN,
+    EVENT_RECORDING,
+)
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
@@ -442,6 +447,15 @@ async def websocket_device_capture(
 
     # Audio will follow as events
     connection.send_result(msg["id"])
+
+    # Record to logbook
+    hass.bus.async_fire(
+        EVENT_RECORDING,
+        {
+            ATTR_DEVICE_ID: device_id,
+            ATTR_SECONDS: timeout_seconds,
+        },
+    )
 
     try:
         with contextlib.suppress(asyncio.TimeoutError):
