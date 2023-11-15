@@ -33,6 +33,7 @@ from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.util.unit_system import (
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -245,6 +246,53 @@ async def mock_adr_0007_integrations_with_docs(
             )
         )
     return integrations
+
+
+@pytest.fixture
+async def mock_custom_validator_integrations(hass: HomeAssistant) -> list[Integration]:
+    """Mock integrations with custom validator."""
+    integrations = []
+
+    for domain in ("custom_validator_ok_1", "custom_validator_ok_2"):
+
+        def gen_async_validate_config(domain):
+            schema = vol.Schema(
+                {
+                    domain: vol.Schema(
+                        {
+                            vol.Required("host"): str,
+                            vol.Required("port", default=8080): int,
+                        }
+                    )
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+
+            async def async_validate_config(
+                hass: HomeAssistant, config: ConfigType
+            ) -> ConfigType:
+                """Validate config."""
+                return schema(config)
+
+            return async_validate_config
+
+        integrations.append(mock_integration(hass, MockModule(domain)))
+        mock_platform(
+            hass,
+            f"{domain}.config",
+            Mock(async_validate_config=gen_async_validate_config(domain)),
+        )
+
+    for domain, exception in [
+        ("custom_validator_bad_1", HomeAssistantError("broken")),
+        ("custom_validator_bad_2", ValueError("broken")),
+    ]:
+        integrations.append(mock_integration(hass, MockModule(domain)))
+        mock_platform(
+            hass,
+            f"{domain}.config",
+            Mock(async_validate_config=AsyncMock(side_effect=exception)),
+        )
 
 
 async def test_create_default_config(hass: HomeAssistant) -> None:
@@ -1581,6 +1629,7 @@ async def test_component_config_validation_error(
     mock_iot_domain_integration: Integration,
     mock_non_adr_0007_integration: None,
     mock_adr_0007_integrations: list[Integration],
+    mock_custom_validator_integrations: list[Integration],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test schema error in component."""
@@ -1598,6 +1647,10 @@ async def test_component_config_validation_error(
         "adr_0007_3",
         "adr_0007_4",
         "adr_0007_5",
+        "custom_validator_ok_1",
+        "custom_validator_ok_2",
+        "custom_validator_bad_1",
+        "custom_validator_bad_2",
     ]:
         integration = await async_get_integration(hass, domain)
         await config_util.async_process_component_config(
@@ -1607,7 +1660,10 @@ async def test_component_config_validation_error(
         )
 
     error_records = [
-        record.message.replace(base_path, "<BASE_PATH>")
+        (
+            record.message.replace(base_path, "<BASE_PATH>"),
+            "has_exc_info" if record.exc_info else "no_exc_info",
+        )
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
