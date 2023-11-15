@@ -127,8 +127,6 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
-        self.async_schedule_update_ha_state(force_refresh=True)
-
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
         uid: str = cast(str, item.uid)
@@ -155,7 +153,6 @@ class WebDavTodoListEntity(TodoListEntity):
             )
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete To-do items."""
@@ -177,5 +174,3 @@ class WebDavTodoListEntity(TodoListEntity):
                 await self.hass.async_add_executor_job(item.delete)
             except (requests.ConnectionError, DAVError) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
-
-        self.async_schedule_update_ha_state(force_refresh=True)

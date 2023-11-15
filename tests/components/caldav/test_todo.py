@@ -81,17 +81,26 @@ def mock_supported_components() -> list[str]:
 
 
 @pytest.fixture(name="calendar")
-def mock_calendar(todos: list[str], supported_components: list[str]) -> Mock:
+def mock_calendar(supported_components: list[str]) -> Mock:
     """Fixture to create the primary calendar for the test."""
     calendar = Mock()
-    items = [
-        Todo(None, f"{idx}.ics", item, calendar, str(idx))
-        for idx, item in enumerate(todos)
-    ]
-    calendar.search = MagicMock(return_value=items)
+    calendar.search = MagicMock(return_value=[])
     calendar.name = CALENDAR_NAME
     calendar.get_supported_components = MagicMock(return_value=supported_components)
     return calendar
+
+
+def create_todo(calendar: Mock, idx: str, ics: str) -> Todo:
+    """Create a caldav Todo object."""
+    return Todo(client=None, url=f"{idx}.ics", data=ics, parent=calendar, id=idx)
+
+
+@pytest.fixture(autouse=True)
+def mock_search_items(calendar: Mock, todos: list[str]) -> None:
+    """Fixture to add search results to the test calendar."""
+    calendar.search.return_value = [
+        create_todo(calendar, str(idx), item) for idx, item in enumerate(todos)
+    ]
 
 
 @pytest.fixture(name="calendars")
@@ -174,7 +183,15 @@ async def test_add_item(
     calendar: Mock,
 ) -> None:
     """Test adding an item to the list."""
+    calendar.search.return_value = []
     await config_entry.async_setup(hass)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+    # Simulat return value for the state update after the service call
+    calendar.search.return_value = [create_todo(calendar, "2", TODO_NEEDS_ACTION)]
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -189,6 +206,11 @@ async def test_add_item(
         "status": "NEEDS-ACTION",
         "summary": "Cheese",
     }
+
+    # Verify state was updated
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
 
 
 async def test_add_item_failure(
@@ -212,14 +234,19 @@ async def test_add_item_failure(
 
 
 @pytest.mark.parametrize(
-    ("update_data", "expected_ics"),
+    ("update_data", "expected_ics", "expected_state"),
     [
-        ({"rename": "Swiss Cheese"}, ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"]),
-        ({"status": "needs_action"}, ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"]),
-        ({"status": "completed"}, ["SUMMARY:Cheese", "STATUS:COMPLETED"]),
+        (
+            {"rename": "Swiss Cheese"},
+            ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+            "1",
+        ),
+        ({"status": "needs_action"}, ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"], "1"),
+        ({"status": "completed"}, ["SUMMARY:Cheese", "STATUS:COMPLETED"], "0"),
         (
             {"rename": "Swiss Cheese", "status": "needs_action"},
             ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+            "1",
         ),
     ],
 )
@@ -230,6 +257,7 @@ async def test_update_item(
     calendar: Mock,
     update_data: dict[str, Any],
     expected_ics: list[str],
+    expected_state: str,
 ) -> None:
     """Test creating a an item on the list."""
 
@@ -237,6 +265,10 @@ async def test_update_item(
     calendar.search = MagicMock(return_value=[item])
 
     await config_entry.async_setup(hass)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
 
     calendar.todo_by_uid = MagicMock(return_value=item)
 
@@ -257,6 +289,10 @@ async def test_update_item(
     ics = dav_client.put.call_args.args[1]
     for expected in expected_ics:
         assert expected in ics
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == expected_state
 
 
 async def test_update_item_failure(
