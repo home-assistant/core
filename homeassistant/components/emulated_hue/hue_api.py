@@ -676,19 +676,20 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
 @lru_cache(maxsize=512)
 def _build_entity_state_dict(entity: State) -> dict[str, Any]:
     """Build a state dict for an entity."""
+    is_on = entity.state != STATE_OFF
     data: dict[str, Any] = {
-        STATE_ON: entity.state != STATE_OFF,
+        STATE_ON: is_on,
         STATE_BRIGHTNESS: None,
         STATE_HUE: None,
         STATE_SATURATION: None,
         STATE_COLOR_TEMP: None,
     }
-    if data[STATE_ON]:
+    attributes = entity.attributes
+    if is_on:
         data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
-            entity.attributes.get(ATTR_BRIGHTNESS, 0)
+            attributes.get(ATTR_BRIGHTNESS) or 0
         )
-        hue_sat = entity.attributes.get(ATTR_HS_COLOR)
-        if hue_sat is not None:
+        if (hue_sat := attributes.get(ATTR_HS_COLOR)) is not None:
             hue = hue_sat[0]
             sat = hue_sat[1]
             # Convert hass hs values back to hue hs values
@@ -697,7 +698,7 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         else:
             data[STATE_HUE] = HUE_API_STATE_HUE_MIN
             data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
-        data[STATE_COLOR_TEMP] = entity.attributes.get(ATTR_COLOR_TEMP, 0)
+        data[STATE_COLOR_TEMP] = attributes.get(ATTR_COLOR_TEMP) or 0
 
     else:
         data[STATE_BRIGHTNESS] = 0
@@ -706,25 +707,23 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         data[STATE_COLOR_TEMP] = 0
 
     if entity.domain == climate.DOMAIN:
-        temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
+        temperature = attributes.get(ATTR_TEMPERATURE, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == humidifier.DOMAIN:
-        humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
+        humidity = attributes.get(ATTR_HUMIDITY, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == media_player.DOMAIN:
-        level = entity.attributes.get(
-            ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
-        )
+        level = attributes.get(ATTR_MEDIA_VOLUME_LEVEL, 1.0 if is_on else 0.0)
         # Convert 0.0-1.0 to 0-254
         data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
     elif entity.domain == fan.DOMAIN:
-        percentage = entity.attributes.get(ATTR_PERCENTAGE) or 0
+        percentage = attributes.get(ATTR_PERCENTAGE) or 0
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == cover.DOMAIN:
-        level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
+        level = attributes.get(ATTR_CURRENT_POSITION, 0)
         data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     _clamp_values(data)
     return data
