@@ -35,7 +35,7 @@ async def async_setup_entry(
 
     async_dispatcher_connect(
         hass,
-        "{DOMAIN}-update-{self.config_entry.entry_id}",
+        f"{DOMAIN}-update-{entry.entry_id}",
         async_update_devices,
     )
 
