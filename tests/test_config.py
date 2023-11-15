@@ -194,7 +194,7 @@ async def mock_adr_0007_integrations(hass: HomeAssistant) -> list[Integration]:
                 domain: vol.Schema(
                     {
                         vol.Required("host"): str,
-                        vol.Required("port", default=8080): int,
+                        vol.Optional("port", default=8080): int,
                     }
                 )
             },
@@ -227,7 +227,7 @@ async def mock_adr_0007_integrations_with_docs(
                 domain: vol.Schema(
                     {
                         vol.Required("host"): str,
-                        vol.Required("port", default=8080): int,
+                        vol.Optional("port", default=8080): int,
                     }
                 )
             },
@@ -261,7 +261,7 @@ async def mock_custom_validator_integrations(hass: HomeAssistant) -> list[Integr
                     domain: vol.Schema(
                         {
                             vol.Required("host"): str,
-                            vol.Required("port", default=8080): int,
+                            vol.Optional("port", default=8080): int,
                         }
                     )
                 },
@@ -1660,10 +1660,10 @@ async def test_component_config_validation_error(
         )
 
     error_records = [
-        (
-            record.message.replace(base_path, "<BASE_PATH>"),
-            "has_exc_info" if record.exc_info else "no_exc_info",
-        )
+        {
+            "message": record.message.replace(base_path, "<BASE_PATH>"),
+            "has_exc_info": bool(record.exc_info),
+        }
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
