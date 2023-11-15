@@ -22,8 +22,36 @@
         'serial_number': '**REDACTED**',
         'type': 'TST',
       }),
+      dict({
+        'additional': dict({
+          'administration_number': '**REDACTED**',
+          'current_scaling_factor': 1,
+          'first_measurement_time': 1517569090926,
+          'internal_meters': 1,
+          'last_measurement_time': 1678430543742,
+          'manufacturer_id': 'TST',
+          'printed_full_serial_number': '**REDACTED**',
+          'scaling_factor': 1,
+          'voltage_scaling_factor': 1,
+        }),
+        'full_serial_number': '**REDACTED**',
+        'load_profile_type': 'SLP',
+        'location': '**REDACTED**',
+        'measurement_type': 'GAS',
+        'meter_id': 'd81a652fe0824f9a9d336016587d3b9d',
+        'serial_number': '**REDACTED**',
+        'type': 'PIP',
+      }),
     ]),
     'readings': dict({
+      'd81a652fe0824f9a9d336016587d3b9d': dict({
+        'time': '2023-03-10T07:32:06.702000',
+        'values': dict({
+          'actualityDuration': 52000.0,
+          'storageNumber': 0.0,
+          'volume': 21064800.0,
+        }),
+      }),
       'f8d610b7a8cc4e73939fa33b990ded54': dict({
         'time': '2023-03-10T07:32:06.702000',
         'values': dict({

@@ -1896,7 +1896,7 @@ surepy==0.8.0
 switchbot-api==1.2.1
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.9.5
+systembridgeconnector==3.10.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
@@ -2094,7 +2094,7 @@ yt-dlp==2023.10.13
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.126.0
+zeroconf==0.127.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

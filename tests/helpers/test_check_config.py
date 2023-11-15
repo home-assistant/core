@@ -288,7 +288,7 @@ async def test_platform_not_found_safe_mode(hass: HomeAssistant) -> None:
         (
             "blah:\n  - paltfrom: test\n",
             1,
-            "required key not provided",
+            "required key 'platform' not provided",
             {"paltfrom": "test"},
         ),
     ],
