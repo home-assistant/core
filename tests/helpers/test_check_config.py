@@ -442,21 +442,19 @@ action:
 
 
 @pytest.mark.parametrize(
-    ("exception", "errors", "warnings", "message", "config"),
+    ("exception", "errors", "warnings", "message"),
     [
         (
             Exception("Broken"),
             1,
             0,
             "Unexpected error calling config validator: Broken",
-            {"value": 1},
         ),
         (
             HomeAssistantError("Broken"),
             0,
             1,
             "Invalid config for [bla]: Broken",
-            {"bla": {"value": 1}},
         ),
     ],
 )
@@ -466,7 +464,6 @@ async def test_config_platform_raise(
     errors: int,
     warnings: int,
     message: str,
-    config: dict,
 ) -> None:
     """Test bad config validation platform."""
     mock_platform(
@@ -486,7 +483,7 @@ bla:
         error = CheckConfigError(
             message,
             "bla",
-            config,
+            {"value": 1},
         )
         _assert_warnings_errors(res, [error] * warnings, [error] * errors)
 
