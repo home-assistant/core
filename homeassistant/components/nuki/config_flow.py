@@ -23,7 +23,6 @@ USER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Required(CONF_TOKEN): str,
-        vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
     }
 )
 
@@ -47,7 +46,7 @@ async def validate_input(hass, data):
             data[CONF_HOST],
             data[CONF_TOKEN],
             data[CONF_PORT],
-            data[CONF_ENCRYPT_TOKEN],
+            data.get(CONF_ENCRYPT_TOKEN, True),
             DEFAULT_TIMEOUT,
         )
 
@@ -83,7 +82,6 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST, default=discovery_info.ip): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_TOKEN): str,
-                vol.Required(CONF_ENCRYPT_TOKEN, default=True): bool,
             }
         )
 
@@ -139,8 +137,25 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_validate(self, user_input=None):
         """Handle init step of a flow."""
 
+        data_schema = self.discovery_schema or USER_SCHEMA
+
         errors = {}
         if user_input is not None:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                    vol.Optional(
+                        CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
+                    ): vol.Coerce(int),
+                    vol.Required(
+                        CONF_TOKEN, default=user_input.get(CONF_TOKEN, "")
+                    ): str,
+                    vol.Optional(
+                        CONF_ENCRYPT_TOKEN,
+                        default=user_input.get(CONF_ENCRYPT_TOKEN, True),
+                    ): bool,
+                }
+            )
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -157,7 +172,6 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=bridge_id, data=user_input)
 
-        data_schema = self.discovery_schema or USER_SCHEMA
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
