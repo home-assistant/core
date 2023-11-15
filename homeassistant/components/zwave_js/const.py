@@ -123,14 +123,8 @@ ATTR_PARAMETERS = "parameters"
 ATTR_AUTO_RELOCK_TIME = "auto_relock_time"
 ATTR_BLOCK_TO_BLOCK = "block_to_block"
 ATTR_HOLD_AND_RELEASE_TIME = "hold_and_release_time"
-ATTR_INSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION = (
-    "inside_handles_can_open_door_configuration"
-)
 ATTR_LOCK_TIMEOUT = "lock_timeout"
 ATTR_OPERATION_TYPE = "operation_type"
-ATTR_OUTSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION = (
-    "outside_handles_can_open_door_configuration"
-)
 ATTR_TWIST_ASSIST = "twist_assist"
 
 ADDON_SLUG = "core_zwave_js"

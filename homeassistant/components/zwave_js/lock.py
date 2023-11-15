@@ -31,10 +31,8 @@ from .const import (
     ATTR_AUTO_RELOCK_TIME,
     ATTR_BLOCK_TO_BLOCK,
     ATTR_HOLD_AND_RELEASE_TIME,
-    ATTR_INSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION,
     ATTR_LOCK_TIMEOUT,
     ATTR_OPERATION_TYPE,
-    ATTR_OUTSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION,
     ATTR_TWIST_ASSIST,
     DATA_CLIENT,
     DOMAIN,
@@ -114,12 +112,6 @@ async def async_setup_entry(
                 lambda x: OperationType[x],
             ),
             vol.Optional(ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
-            vol.Optional(ATTR_OUTSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION): vol.All(
-                [cv.boolean], vol.Length(4, 4)
-            ),
-            vol.Optional(ATTR_INSIDE_HANDLES_CAN_OPEN_DOOR_CONFIGURATION): vol.All(
-                [cv.boolean], vol.Length(4, 4)
-            ),
             vol.Optional(ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
             vol.Optional(ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
             vol.Optional(ATTR_TWIST_ASSIST): vol.Coerce(bool),
@@ -196,8 +188,6 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         self,
         operation_type: OperationType,
         lock_timeout: int | None = None,
-        outside_handles_can_open_door_configuration: list[bool] | None = None,
-        inside_handles_can_open_door_configuration: list[bool] | None = None,
         auto_relock_time: int | None = None,
         hold_and_release_time: int | None = None,
         twist_assist: bool | None = None,
@@ -207,14 +197,6 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         params: dict[str, Any] = {"operation_type": operation_type}
         for attr, val in (
             ("lock_timeout_configuration", lock_timeout),
-            (
-                "outside_handles_can_open_door_configuration",
-                outside_handles_can_open_door_configuration,
-            ),
-            (
-                "inside_handles_can_open_door_configuration",
-                inside_handles_can_open_door_configuration,
-            ),
             ("auto_relock_time", auto_relock_time),
             ("hold_and_release_time", hold_and_release_time),
             ("twist_assist", twist_assist),
