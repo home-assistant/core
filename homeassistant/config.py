@@ -593,6 +593,7 @@ def stringify_invalid(
     - Prefix with domain, file and line of the error
     - Suffix with a link to the documentation
     - Give a more user friendly output for unknown options
+    - Give a more user friendly output for missing options
     """
     message_prefix = f"Invalid config for [{domain}]"
     if domain != CONF_CORE and link:
@@ -606,6 +607,11 @@ def stringify_invalid(
         return (
             f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
             f"check: {path}{message_suffix}"
+        )
+    if ex.error_message == "required key not provided":
+        return (
+            f"{message_prefix}: required key '{ex.path[-1]}' not provided"
+            f"{message_suffix}."
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
