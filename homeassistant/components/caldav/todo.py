@@ -137,7 +137,7 @@ class WebDavTodoListEntity(TodoListEntity):
                 self._calendar.todo_by_uid, uid
             )
         except NotFoundError as err:
-            raise HomeAssistantError(f"Could not find To-do item {uid}: {err}") from err
+            raise HomeAssistantError(f"Could not find To-do item {uid}") from err
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
@@ -167,7 +167,7 @@ class WebDavTodoListEntity(TodoListEntity):
         try:
             items = await asyncio.gather(*tasks)
         except NotFoundError as err:
-            raise HomeAssistantError(f"Could not find To-do item: {err}") from err
+            raise HomeAssistantError("Could not find To-do item") from err
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
 
