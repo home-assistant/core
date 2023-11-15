@@ -15,11 +15,11 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("host", "count", "expected_title"),
-    (("192.618.178.1", 10, "192.618.178.1"),),
+    ("host", "expected_title"),
+    (("192.618.178.1", "192.618.178.1"),),
 )
 @pytest.mark.usefixtures("patch_setup")
-async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
+async def test_form(hass: HomeAssistant, host, expected_title) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -32,7 +32,6 @@ async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
         result["flow_id"],
         {
             "host": host,
-            "count": count,
         },
     )
     await hass.async_block_till_done()
@@ -41,7 +40,7 @@ async def test_form(hass: HomeAssistant, host, count, expected_title) -> None:
     assert result["title"] == expected_title
     assert result["data"] == {}
     assert result["options"] == {
-        "count": count,
+        "count": 5,
         "host": host,
     }
 

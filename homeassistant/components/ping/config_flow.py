@@ -19,23 +19,6 @@ from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def async_make_schema(
-    host: str = "", ping_count: int = DEFAULT_PING_COUNT
-) -> vol.Schema:
-    """Create schema for config flow."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Optional(CONF_PING_COUNT, default=ping_count): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=100, mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-        }
-    )
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ping."""
 
@@ -48,7 +31,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=async_make_schema(),
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                    }
+                ),
             )
 
         if not is_ip_address(user_input[CONF_HOST]):
@@ -56,7 +43,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
         return self.async_create_entry(
-            title=user_input[CONF_HOST], data={}, options=user_input
+            title=user_input[CONF_HOST],
+            data={},
+            options={**user_input, CONF_PING_COUNT: DEFAULT_PING_COUNT},
         )
 
     async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
@@ -100,8 +89,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=async_make_schema(
-                self.config_entry.options[CONF_HOST],
-                self.config_entry.options[CONF_PING_COUNT],
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=self.config_entry.options[CONF_HOST]
+                    ): str,
+                    vol.Optional(
+                        CONF_PING_COUNT,
+                        default=self.config_entry.options[CONF_PING_COUNT],
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=1, max=100, mode=selector.NumberSelectorMode.BOX
+                        )
+                    ),
+                }
             ),
         )
