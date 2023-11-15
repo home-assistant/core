@@ -22,7 +22,7 @@ async def test_form(hass, mock_setup_entry) -> None:
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "cluster"
+    assert result2["title"] == "https://cluster.region.kusto.windows.net"
     mock_setup_entry.assert_called_once()
 
 

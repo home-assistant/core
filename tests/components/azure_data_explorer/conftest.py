@@ -52,18 +52,7 @@ async def mock_entry_fixture_managed(hass, filter_schema):
         title="test-instance",
         options=BASIC_OPTIONS,
     )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
-    )
-    assert entry.state == ConfigEntryState.LOADED
-
-    # Clear the component_loaded event from the queue.
-    async_fire_time_changed(
-        hass,
-        utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL]),
-    )
-    await hass.async_block_till_done()
+    await _entry(hass, filter_schema, entry)
     return entry
 
 
@@ -76,6 +65,11 @@ async def mock_entry_fixture_queued(hass, filter_schema):
         title="test-instance",
         options=BASIC_OPTIONS,
     )
+    await _entry(hass, filter_schema, entry)
+    return entry
+
+
+async def _entry(hass, filter_schema, entry):
     entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
@@ -88,7 +82,6 @@ async def mock_entry_fixture_queued(hass, filter_schema):
         utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL]),
     )
     await hass.async_block_till_done()
-    return entry
 
 
 @pytest.fixture(name="entry_with_one_event")
