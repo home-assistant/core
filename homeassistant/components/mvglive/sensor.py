@@ -4,7 +4,6 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
-import re
 
 from mvg import MvgApi, TransportType
 import voluptuous as vol
@@ -21,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_NEXT_DEPARTURE = "nextdeparture"
 CONF_STATION = "station"
 CONF_DESTINATIONS = "destinations"
+CONF_DIRECTIONS = "directions"
 CONF_LINES = "lines"
 CONF_PRODUCTS = "products"
 CONF_TIMEOFFSET = "timeoffset"
@@ -30,8 +30,6 @@ NONE_ICON = "mdi:clock"
 
 ATTRIBUTION = "Data provided by mvg.de"
 
-ENTITY_ID_FORMAT = "mvglive.{}"
-
 SCAN_INTERVAL = timedelta(seconds=45)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -40,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {
                 vol.Required(CONF_STATION): cv.string,
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
+                vol.Optional(CONF_DIRECTIONS, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_PRODUCTS, default=None): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
@@ -99,17 +98,11 @@ class MVGLiveSensor(SensorEntity):
         self._icon = NONE_ICON
 
     @property
-    def entity_id(self):
-        """Return the entity_id of the sensor."""
-        stripped_station = re.sub(r"\W+", "_", self._station).lower()
-        return ENTITY_ID_FORMAT.format(stripped_station)
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         if self._name:
             return self._name
-        return "MVG station sensor: " + self._station
+        return self._station
 
     @property
     def native_value(self):
