@@ -35,21 +35,13 @@ from .entity import HomeWizardEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class HomeWizardEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
-
-    has_fn: Callable[[Data], bool]
-    value_fn: Callable[[Data], StateType]
-
-
-@dataclass
-class HomeWizardSensorEntityDescription(
-    SensorEntityDescription, HomeWizardEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class HomeWizardSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
     enabled_fn: Callable[[Data], bool] = lambda data: True
+    has_fn: Callable[[Data], bool]
+    value_fn: Callable[[Data], StateType]
 
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
