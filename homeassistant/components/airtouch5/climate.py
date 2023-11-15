@@ -186,10 +186,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
 
         self._attr_current_temperature = status.temperature
         self._attr_target_temperature = status.ac_setpoint
-        if (
-            status.ac_power_state is AcPowerState.OFF
-            or status.ac_power_state is AcPowerState.AWAY_OFF
-        ):
+        if status.ac_power_state in [AcPowerState.OFF, AcPowerState.AWAY_OFF]:
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = AC_MODE_TO_HVAC_MODE[status.ac_mode]
