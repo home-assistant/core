@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 
 from aioelectricitymaps.models import CarbonIntensityResponse
 
@@ -22,18 +21,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import CO2SignalCoordinator
 
-SCAN_INTERVAL = timedelta(minutes=3)
 
-
-@dataclass
-class ElectricityMapsMixin:
-    """Mixin for value and unit_of_measurement_fn function."""
-
-    value_fn: Callable[[CarbonIntensityResponse], float | None]
-
-
-@dataclass
-class CO2SensorEntityDescription(SensorEntityDescription, ElectricityMapsMixin):
+@dataclass(kw_only=True)
+class CO2SensorEntityDescription(SensorEntityDescription):
     """Provide a description of a CO2 sensor."""
 
     # For backwards compat, allow description to override unique ID key to use
@@ -41,6 +31,7 @@ class CO2SensorEntityDescription(SensorEntityDescription, ElectricityMapsMixin):
     unit_of_measurement_fn: Callable[
         [CarbonIntensityResponse], str | None
     ] | None = None
+    value_fn: Callable[[CarbonIntensityResponse], float | None]
 
 
 SENSORS = (
