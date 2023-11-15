@@ -43,13 +43,13 @@ class CanvasAPI:
         assignments = json.loads(response.content.decode('utf-8'))
         return assignments
 
-    async def async_get_announcements(self) -> list:
-        """Retrieve a list of announcements from the Canvas API.
+    async def async_get_announcements(self, course_id) -> list:
+        """Retrieve a list of announcements from the Canvas API."""
+        response = await self.async_make_get_request("/announcements", {"per_page": "50", "context_codes": f"course_{course_id}"})
+        announcements = json.loads(response.content.decode('utf-8'))
+        return announcements
 
-        TODO - implement this function"""
-        pass
-
-    async def async_get_conversations(self, course_id) -> list:
+    async def async_get_conversations(self) -> list:
         """Retrieve a list of conversations from the Instructure API."""
         response = await self.async_make_get_request(f"/conversations", {"per_page": "50"})
         assignments = json.loads(response.content.decode('utf-8'))

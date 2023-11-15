@@ -9,7 +9,6 @@ from datetime import datetime
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass
 )
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -32,13 +31,15 @@ class BaseEntityDescriptionMixin:
 @dataclass
 class BaseEntityDescription(SensorEntityDescription):
     """Describe Canvas sensor entity default overrides"""
+
+    icon: str = "mdi:school"
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
+    avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
 
 
 @dataclass
 class CanvasSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
     """Describe Canvas resource sensor entity"""
-    icon: str = "mdi:note-outline"
     fetch_data: Callable = None
 
 
@@ -46,23 +47,53 @@ SENSOR_DESCRIPTIONS: tuple[CanvasSensorEntityDescription, ...] = (
     CanvasSensorEntityDescription(
         key="upcoming_assignments",
         translation_key="upcoming_assignments",
-        icon="mdi:school",
-        name_fn=lambda data: data[0]["name"] if data else "No assignments in this course",
-        value_fn= lambda data: datetime_process(data[0]["due_at"]) if data else "",
-        attr_fn=lambda data: data,
+        icon="mdi:note-outline",
+        avabl_fn=lambda data: len(data) > 0,
+        name_fn=lambda _: "Assignments",
+        value_fn= lambda data: datetime_process(data[0]["due_at"]),
+        attr_fn=lambda data: {
+            'assignments': [{
+                'title': assignment['name'],
+                'description': assignment['description'],
+                'due_at': assignment['due_at'],
+            } for assignment in data]
+        },
         fetch_data=lambda api, course_id: api.async_get_assignments(course_id),
     ),
     CanvasSensorEntityDescription(
-        key="inbox",
-        translation_key="inbox",
-        icon="mdi:email",
-        name_fn=lambda data: data[0]["subject"] if data else "No messages in inbox",
-        value_fn= lambda data: data[0]["last_message"] if data else "",
-        attr_fn=lambda data: data,
-        fetch_data=lambda api, course_id: api.async_get_conversations(course_id),
-    )
+        key="announcements",
+        translation_key="announcements",
+        icon="mdi:message-alert",
+        avabl_fn=lambda data: len(data) > 0,
+        name_fn=lambda _: "Announcements",
+        value_fn= lambda data: data[0]["title"][:20],
+        attr_fn=lambda data: {
+            'messages': [{
+                'title': announcement['title'],
+                'date': announcement['posted_at'],
+                'author': announcement['user_name'],
+            } for announcement in data]
+        },
+        fetch_data=lambda api, course_id: api.async_get_announcements(course_id),
+    ),
 )
 
+inbox_sensor_entity_description = CanvasSensorEntityDescription(
+    key="inbox",
+    translation_key="inbox",
+    icon="mdi:email",
+    avabl_fn=lambda data: len(data) > 0,
+    name_fn=lambda _: "Inbox",
+    value_fn= lambda data: data[0]["subject"][:20],
+    attr_fn=lambda data: {
+        'messages': [{
+            'title': message['subject'],
+            'date': message['last_message_at'],
+            'author': message['participants'][0]['full_name'],
+        } for message in data]
+    },
+    fetch_data=lambda api, _: api.async_get_conversations(),
+)
 
 def datetime_process(date_time):
     standard_timestamp = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
@@ -80,17 +111,19 @@ class CanvasSensorEntity(SensorEntity):
         self,
         api: CanvasAPI,
         entity_description: CanvasSensorEntityDescription,
-        course_id: str,
+        course_name: str,
+        course_id: int,
     ) -> None:
         """Initialize a Canvas sensor."""
         self.api = api
         self.entity_description = entity_description
+        self.course_name = course_name
         self.course_id = course_id
-        self._attr_unique_id = f"{self.entity_description.key}"
+        self._attr_unique_id = f"{self.course_id}-{self.entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.entity_description.key)},
-            name="blabalbalab",
+            name=self.course_name,
             manufacturer="Canvas",
             entry_type=DeviceEntryType.SERVICE,
         )
@@ -102,12 +135,32 @@ class CanvasSensorEntity(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.entity_description.name_fn(self.data)
+        if not self.available:
+            return None
+
+        return f"{self.course_name} - {self.entity_description.name_fn(self.data)}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.data is not None
+            and self.entity_description.avabl_fn(self.data)
+        )
 
     @property
     def native_value(self):
         """Return the due time."""
+        if not self.available:
+            return None
+
         return self.entity_description.value_fn(self.data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra state attributes."""
+        return self.entity_description.attr_fn(self.data)
 
 
 async def async_setup_entry(
@@ -118,14 +171,16 @@ async def async_setup_entry(
     """Set up Canvas sensor based on a config entry"""
 
     api = hass.data[DOMAIN][entry.entry_id]
-    course_ids = entry.options["courses"].values()
+    courses = entry.options["courses"] # k: course name, v: course id
+
+    entities = [CanvasSensorEntity(api, description, course_name, courses[course_name])
+            for description in SENSOR_DESCRIPTIONS
+            for course_name in courses]
+
+    entities.append(CanvasSensorEntity(api, inbox_sensor_entity_description, "", ""))
 
     async_add_entities(
-        (
-            CanvasSensorEntity(api, description, course_id)
-            for description in SENSOR_DESCRIPTIONS
-            for course_id in course_ids
-        ),
+        tuple(entities),
         update_before_add = True
     )
 

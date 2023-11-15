@@ -22,5 +22,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "upcoming_assignments": {
+        "name": "Upcoming assignments"
+      },
+      "inbox": {
+        "name": "Inbox"
+      }
+    }
   }
 }
