@@ -1,6 +1,6 @@
 """The todo integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 import logging
@@ -69,9 +69,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional("status"): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
+                    vol.Optional("due"): cv.date,
+                    vol.Optional("description"): cv.string,
                 }
             ),
-            cv.has_at_least_one_key("rename", "status"),
+            cv.has_at_least_one_key("rename", "status", "due", "description"),
         ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
@@ -134,6 +136,12 @@ class TodoItem:
 
     status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""
+
+    due: datetime.datetime | None = None
+    """The date and time that a to-do is expected to be completed."""
+
+    description: str | None = None
+    """A more complete description of than that provided by the summary."""
 
 
 class TodoListEntity(Entity):
@@ -262,6 +270,17 @@ async def websocket_handle_subscribe_todo_items(
     entity.async_update_listeners()
 
 
+def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    result: dict[str, str] = {}
+    for name, value in obj:
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            result[name] = value.isoformat()
+        elif value is not None:
+            result[name] = str(value)
+    return result
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "todo/item/list",
@@ -285,7 +304,13 @@ async def websocket_handle_todo_item_list(
     items: list[TodoItem] = entity.todo_items or []
     connection.send_message(
         websocket_api.result_message(
-            msg["id"], {"items": [dataclasses.asdict(item) for item in items]}
+            msg["id"],
+            {
+                "items": [
+                    dataclasses.asdict(item, dict_factory=_api_items_factory)
+                    for item in items
+                ]
+            },
         )
     )
 
@@ -354,8 +379,23 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if not found:
         raise ValueError(f"Unable to find To-do item '{item}'")
 
+    if (due := call.data.get("due")) and (
+        not entity.supported_features
+        or not entity.supported_features & TodoListEntityFeature.DUE
+    ):
+        raise ValueError(f"Entity {entity.name} does not support setting due date")
+    if (description := call.data.get("description")) and (
+        not entity.supported_features
+        or not entity.supported_features & TodoListEntityFeature.DESCRIPTION
+    ):
+        raise ValueError(f"Entity {entity.name} does not support setting description")
+
     update_item = TodoItem(
-        uid=found.uid, summary=call.data.get("rename"), status=call.data.get("status")
+        uid=found.uid,
+        summary=call.data.get("rename"),
+        status=call.data.get("status"),
+        due=due,
+        description=description,
     )
 
     await entity.async_update_todo_item(item=update_item)

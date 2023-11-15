@@ -1,6 +1,7 @@
 """Tests for the todo integration."""
 
 from collections.abc import Generator
+import datetime
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -553,6 +554,70 @@ async def test_update_item_service_invalid_input(
             target={"entity_id": "todo.entity1"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("update_data"),
+    (({"due": "2023-11-13"}), ({"description": "Submit revised draft"})),
+)
+async def test_update_todo_item_field_unsupported(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    update_data: dict[str, Any],
+) -> None:
+    """Test updating an item in a To-do list."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    with pytest.raises(ValueError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            "update_item",
+            {"item": "1", **update_data},
+            target={"entity_id": "todo.entity1"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("supported_entity_feature", "update_data", "expected_update"),
+    (
+        (
+            TodoListEntityFeature.DUE,
+            {"due": "2023-11-13"},
+            TodoItem(uid="1", due=datetime.date(2023, 11, 13)),
+        ),
+        (
+            TodoListEntityFeature.DESCRIPTION,
+            {"description": "Submit revised draft"},
+            TodoItem(uid="1", description="Submit revised draft"),
+        ),
+    ),
+)
+async def test_update_todo_item_field(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    supported_entity_feature: int,
+    update_data: dict[str, Any],
+    expected_update: TodoItem,
+) -> None:
+    """Test updating an item in a To-do list."""
+
+    test_entity._attr_supported_features |= supported_entity_feature
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "update_item",
+        {"item": "1", **update_data},
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_update_todo_item.call_args
+    assert args
+    item = args.kwargs.get("item")
+    assert item == expected_update
 
 
 async def test_remove_todo_item_service_by_id(

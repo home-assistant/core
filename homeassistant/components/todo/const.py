@@ -12,6 +12,8 @@ class TodoListEntityFeature(IntFlag):
     DELETE_TODO_ITEM = 2
     UPDATE_TODO_ITEM = 4
     MOVE_TODO_ITEM = 8
+    DUE = 16
+    DESCRIPTION = 32
 
 
 class TodoItemStatus(StrEnum):
