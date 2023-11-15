@@ -69,10 +69,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         "remove_item",
-        cv.make_entity_service_schema(
-            {
-                vol.Required("item"): vol.All(cv.ensure_list, [cv.string]),
-            }
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("item"): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional("status"): vol.In(
+                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                    ),
+                }
+            ),
+            cv.has_at_least_one_key("item", "status"),
         ),
         _async_remove_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
@@ -266,10 +272,21 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     """Remove an item in the To-do list."""
     uids = []
     for item in call.data.get("item", []):
+        # Remove by uid or summary name
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
             raise ValueError(f"Unable to find To-do item '{item}")
         uids.append(found.uid)
+
+    if status := call.data.get("status"):
+        # Remove by status
+        uids.extend(
+            [
+                item.uid
+                for item in entity.todo_items or ()
+                if item.status == status and item.uid
+            ]
+        )
     await entity.async_delete_todo_items(uids=uids)
 
 
