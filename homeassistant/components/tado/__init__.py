@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SCAN_INTERVAL,
     )
 
-    update_devices = async_track_time_interval(
+    update_mobile_devices = async_track_time_interval(
         hass,
         lambda now: tadoconnector.update_mobile_devices(),
         SCAN_MOBILE_DEVICE_INTERVAL,
@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         DATA: tadoconnector,
         UPDATE_TRACK: update_track,
-        UPDATE_MOBILE_DEVICE_TRACK: update_devices,
+        UPDATE_MOBILE_DEVICE_TRACK: update_mobile_devices,
         UPDATE_LISTENER: update_listener,
     }
 
@@ -138,6 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
     hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][UPDATE_MOBILE_DEVICE_TRACK]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
