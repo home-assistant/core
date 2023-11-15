@@ -15,9 +15,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_HOME,
     PRESET_NONE,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -70,9 +73,16 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
+    HeatingProgram.ACTIVE: PRESET_NONE,
     HeatingProgram.COMFORT: PRESET_COMFORT,
     HeatingProgram.ECO: PRESET_ECO,
-    HeatingProgram.NORMAL: PRESET_NONE,
+    HeatingProgram.EXTERNAL: PRESET_NONE,
+    HeatingProgram.FIXED: PRESET_NONE,
+    HeatingProgram.FORCED: PRESET_NONE,
+    HeatingProgram.HOLIDAY: PRESET_AWAY,
+    HeatingProgram.NORMAL: PRESET_HOME,
+    HeatingProgram.REDUCED: PRESET_SLEEP,
+    HeatingProgram.STANDBY: PRESET_NONE,
 }
 
 HA_TO_VICARE_PRESET_HEATING = {
