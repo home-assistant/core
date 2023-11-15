@@ -1077,8 +1077,9 @@ class PipelineRun:
             return
 
         try:
-            audio_queue.put_nowait(audio_bytes)
+            audio_queue.queue.put_nowait(audio_bytes)
         except asyncio.QueueFull:
+            audio_queue.overflow = True
             _LOGGER.warning("Audio queue full for device %s", self._device_id)
 
     def _start_debug_recording_thread(self) -> None:
@@ -1656,6 +1657,20 @@ class PipelineRuns:
                 pipeline_run.abort_wake_word_detection = True
 
 
+@dataclass
+class DeviceAudioQueue:
+    """Audio capture queue for a satellite device."""
+
+    queue: asyncio.Queue[bytes | None]
+    """Queue of audio chunks (None = stop signal)"""
+
+    id: str = field(default_factory=ulid_util.ulid)
+    """Unique id to ensure the correct audio queue is cleaned up in websocket API."""
+
+    overflow: bool = False
+    """Flag to be set if audio samples were dropped because the queue was full."""
+
+
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
@@ -1665,7 +1680,7 @@ class PipelineData:
         self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
         self.pipeline_devices: set[str] = set()
         self.pipeline_runs = PipelineRuns(pipeline_store)
-        self.device_audio_queues: dict[str, asyncio.Queue[bytes | None]] = {}
+        self.device_audio_queues: dict[str, DeviceAudioQueue] = {}
 
 
 @dataclass

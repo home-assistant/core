@@ -22,6 +22,7 @@ from .const import DEFAULT_PIPELINE_TIMEOUT, DEFAULT_WAKE_WORD_TIMEOUT, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
+    DeviceAudioQueue,
     PipelineData,
     PipelineError,
     PipelineEvent,
@@ -409,14 +410,13 @@ async def websocket_device_capture(
 
     # We don't know the chunk size, so the upper bound is calculated assuming a
     # single sample (16 bits) per queue item.
-    bytes_per_sample = CAPTURE_WIDTH * CAPTURE_CHANNELS
     max_queue_items = (
         # +1 for None to signal end
-        int(math.ceil(timeout_seconds * CAPTURE_RATE * bytes_per_sample))
+        int(math.ceil(timeout_seconds * CAPTURE_RATE))
         + 1
     )
 
-    audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=max_queue_items)
+    audio_queue = DeviceAudioQueue(queue=asyncio.Queue(maxsize=max_queue_items))
 
     # Running simultaneous captures for a single device will not work by design.
     # The new capture will cause the old capture to stop.
@@ -425,16 +425,17 @@ async def websocket_device_capture(
     ) is not None:
         with contextlib.suppress(asyncio.QueueFull):
             # Signal other websocket command that we're taking over
-            old_audio_queue.put_nowait(None)
+            old_audio_queue.queue.put_nowait(None)
 
     # Only one client can be capturing audio at a time
     pipeline_data.device_audio_queues[device_id] = audio_queue
-    stopped = False
 
     def clean_up_queue() -> None:
-        if not stopped:
-            # Clean up audio queue if another capture didn't stop us
-            pipeline_data.device_audio_queues.pop(device_id, None)
+        # Clean up our audio queue
+        maybe_audio_queue = pipeline_data.device_audio_queues.get(device_id)
+        if (maybe_audio_queue is not None) and (maybe_audio_queue.id == audio_queue.id):
+            # Only pop if this is our queue
+            pipeline_data.device_audio_queues.pop(device_id)
 
     # Unsubscribe cleans up queue
     connection.subscriptions[msg["id"]] = clean_up_queue
@@ -447,10 +448,9 @@ async def websocket_device_capture(
             async with asyncio.timeout(timeout_seconds):
                 while True:
                     # Send audio chunks encoded as base64
-                    audio_bytes = await audio_queue.get()
+                    audio_bytes = await audio_queue.queue.get()
                     if audio_bytes is None:
                         # Signal to stop
-                        stopped = True
                         break
 
                     connection.send_event(
@@ -465,6 +465,8 @@ async def websocket_device_capture(
                     )
 
         # Capture has ended
-        connection.send_event(msg["id"], {"type": "end"})
+        connection.send_event(
+            msg["id"], {"type": "end", "overflow": audio_queue.overflow}
+        )
     finally:
         clean_up_queue()

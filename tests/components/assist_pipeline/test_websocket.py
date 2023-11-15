@@ -6,7 +6,11 @@ from unittest.mock import ANY, patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.assist_pipeline.const import DOMAIN
-from homeassistant.components.assist_pipeline.pipeline import Pipeline, PipelineData
+from homeassistant.components.assist_pipeline.pipeline import (
+    DeviceAudioQueue,
+    Pipeline,
+    PipelineData,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -2164,14 +2168,14 @@ async def test_device_capture(
     # run start
     msg = await client_pipeline.receive_json()
     assert msg["event"]["type"] == "run-start"
-    # msg["event"]["data"]["pipeline"] = ANY
-    # assert msg["event"]["data"] == snapshot
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
     handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
 
     # stt
     msg = await client_pipeline.receive_json()
     assert msg["event"]["type"] == "stt-start"
-    # assert msg["event"]["data"] == snapshot
+    assert msg["event"]["data"] == snapshot
 
     for audio_chunk in audio_chunks:
         await client_pipeline.send_bytes(bytes([handler_id]) + audio_chunk)
@@ -2181,7 +2185,11 @@ async def test_device_capture(
 
     msg = await client_pipeline.receive_json()
     assert msg["event"]["type"] == "stt-end"
-    # assert msg["event"]["data"] == snapshot
+
+    # run end
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "run-end"
+    assert msg["event"]["data"] == snapshot
 
     # Verify capture
     events = []
@@ -2196,7 +2204,7 @@ async def test_device_capture(
 
     assert len(events) == len(audio_chunks) + 1
 
-    # First 3 events should be audio chunks
+    # Verify audio chunks
     for i, audio_chunk in enumerate(audio_chunks):
         assert events[i]["type"] == "audio"
         assert events[i]["rate"] == 16000
@@ -2208,3 +2216,239 @@ async def test_device_capture(
 
     # Last event is the end
     assert events[-1]["type"] == "end"
+
+
+async def test_device_capture_override(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test overriding an existing audio capture from a satellite device."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    satellite_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "satellite-1234")},
+    )
+
+    audio_chunks = [b"chunk1", b"chunk2", b"chunk3"]
+
+    # Start first capture
+    client_capture_1 = await hass_ws_client(hass)
+    await client_capture_1.send_json_auto_id(
+        {
+            "type": "assist_pipeline/device/capture",
+            "timeout": 30,
+            "device_id": satellite_device.id,
+        }
+    )
+
+    # result
+    msg = await client_capture_1.receive_json()
+    assert msg["success"]
+
+    # Run pipeline
+    client_pipeline = await hass_ws_client(hass)
+    await client_pipeline.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "stt",
+            "input": {
+                "sample_rate": 16000,
+                "no_vad": True,
+                "no_chunking": True,
+            },
+            "device_id": satellite_device.id,
+        }
+    )
+
+    # result
+    msg = await client_pipeline.receive_json()
+    assert msg["success"]
+
+    # run start
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+
+    # stt
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "stt-start"
+    assert msg["event"]["data"] == snapshot
+
+    # Send first audio chunk
+    await client_pipeline.send_bytes(bytes([handler_id]) + audio_chunks[0])
+
+    # Verify first capture
+    msg = await client_capture_1.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"] == snapshot
+    assert msg["event"]["audio"] == base64.b64encode(audio_chunks[0]).decode("ascii")
+
+    # Start a new capture
+    client_capture_2 = await hass_ws_client(hass)
+    await client_capture_2.send_json_auto_id(
+        {
+            "type": "assist_pipeline/device/capture",
+            "timeout": 30,
+            "device_id": satellite_device.id,
+        }
+    )
+
+    # result (capture 2)
+    msg = await client_capture_2.receive_json()
+    assert msg["success"]
+
+    # Send remaining audio chunks
+    for audio_chunk in audio_chunks[1:]:
+        await client_pipeline.send_bytes(bytes([handler_id]) + audio_chunk)
+
+    # End of audio stream
+    await client_pipeline.send_bytes(bytes([handler_id]))
+
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "stt-end"
+    assert msg["event"]["data"] == snapshot
+
+    # run end
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "run-end"
+    assert msg["event"]["data"] == snapshot
+
+    # Verify that first capture ended with no more audio
+    msg = await client_capture_1.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"] == snapshot
+    assert msg["event"]["type"] == "end"
+
+    # Verify that the second capture got the remaining audio
+    events = []
+    async with asyncio.timeout(1):
+        while True:
+            msg = await client_capture_2.receive_json()
+            assert msg["type"] == "event"
+            event_data = msg["event"]
+            events.append(event_data)
+            if event_data["type"] == "end":
+                break
+
+    # -1 since first audio chunk went to the first capture
+    assert len(events) == len(audio_chunks)
+
+    # Verify all but first audio chunk
+    for i, audio_chunk in enumerate(audio_chunks[1:]):
+        assert events[i]["type"] == "audio"
+        assert events[i]["rate"] == 16000
+        assert events[i]["width"] == 2
+        assert events[i]["channels"] == 1
+
+        # Audio is base64 encoded
+        assert events[i]["audio"] == base64.b64encode(audio_chunk).decode("ascii")
+
+    # Last event is the end
+    assert events[-1]["type"] == "end"
+
+
+async def test_device_capture_queue_full(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test audio capture from a satellite device when the recording queue fills up."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    satellite_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "satellite-1234")},
+    )
+
+    class FakeQueue(asyncio.Queue):
+        """Queue that reports full for anything but None."""
+
+        def put_nowait(self, item):
+            if item is not None:
+                raise asyncio.QueueFull()
+
+            super().put_nowait(item)
+
+    with patch(
+        "homeassistant.components.assist_pipeline.websocket_api.DeviceAudioQueue"
+    ) as mock:
+        mock.return_value = DeviceAudioQueue(queue=FakeQueue())
+
+        # Start capture
+        client_capture = await hass_ws_client(hass)
+        await client_capture.send_json_auto_id(
+            {
+                "type": "assist_pipeline/device/capture",
+                "timeout": 30,
+                "device_id": satellite_device.id,
+            }
+        )
+
+        # result
+        msg = await client_capture.receive_json()
+        assert msg["success"]
+
+    # Run pipeline
+    client_pipeline = await hass_ws_client(hass)
+    await client_pipeline.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "stt",
+            "input": {
+                "sample_rate": 16000,
+                "no_vad": True,
+                "no_chunking": True,
+            },
+            "device_id": satellite_device.id,
+        }
+    )
+
+    # result
+    msg = await client_pipeline.receive_json()
+    assert msg["success"]
+
+    # run start
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+
+    # stt
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "stt-start"
+    assert msg["event"]["data"] == snapshot
+
+    # Single sample will "overflow" the queue
+    await client_pipeline.send_bytes(bytes([handler_id, 0, 0]))
+
+    # End of audio stream
+    await client_pipeline.send_bytes(bytes([handler_id]))
+
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "stt-end"
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_pipeline.receive_json()
+    assert msg["event"]["type"] == "run-end"
+    assert msg["event"]["data"] == snapshot
+
+    # Queue should have been overflowed
+    async with asyncio.timeout(1):
+        msg = await client_capture.receive_json()
+        assert msg["type"] == "event"
+        assert msg["event"] == snapshot
+        assert msg["event"]["type"] == "end"
+        assert msg["event"]["overflow"]
