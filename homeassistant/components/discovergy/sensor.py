@@ -30,20 +30,15 @@ from .const import DOMAIN, MANUFACTURER
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class DiscovergyMixin:
-    """Mixin for alternative keys."""
+@dataclass(kw_only=True)
+class DiscovergySensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Discovergy sensor entity."""
 
     value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
         default=lambda reading, key, scale: float(reading.values[key] / scale)
     )
     alternative_keys: list[str] = field(default_factory=lambda: [])
     scale: int = field(default_factory=lambda: 1000)
-
-
-@dataclass
-class DiscovergySensorEntityDescription(DiscovergyMixin, SensorEntityDescription):
-    """Define Sensor entity description class."""
 
 
 GAS_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
