@@ -32,10 +32,12 @@ async def async_setup_entry(
 
     await async_update_devices()
 
-    async_dispatcher_connect(
-        hass,
-        SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-        async_update_devices,
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+            async_update_devices,
+        )
     )
 
 
