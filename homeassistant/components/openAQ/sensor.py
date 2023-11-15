@@ -10,7 +10,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,7 +56,22 @@ async def async_setup_entry(
 ) -> None:
     """Configure the sensor platform."""
     entities = []
+
     for metric in list(OpenAQDeviceSensors):
+        match metric.value:
+            case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
+                unit = None
+            case SensorDeviceClass.CO | SensorDeviceClass.CO2:
+                unit = CONCENTRATION_PARTS_PER_MILLION
+            case SensorDeviceClass.PM25 | SensorDeviceClass.PM10 | SensorDeviceClass.PM1 | SensorDeviceClass.OZONE | SensorDeviceClass.NITROGEN_DIOXIDE | SensorDeviceClass.NITROGEN_MONOXIDE | SensorDeviceClass.SULPHUR_DIOXIDE:
+                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+            case SensorDeviceClass.ATMOSPHERIC_PRESSURE:
+                unit = UnitOfPressure.BAR
+            case SensorDeviceClass.HUMIDITY:
+                unit = PERCENTAGE
+            case SensorDeviceClass.TEMPERATURE:
+                unit = UnitOfTemperature.CELSIUS
+
         entities.append(
             Station(
                 hass,
@@ -59,6 +81,7 @@ async def async_setup_entry(
                     name=metric.name.replace("_", " "),
                     metric=metric,
                     entity_category=EntityCategory.DIAGNOSTIC,
+                    native_unit_of_measurement=unit,
                 ),
             ),
         )
@@ -83,12 +106,10 @@ class Station(SensorEntity):
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]
         )
-        # self._attr_name = self.entity_description.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.station_id)},
         )
         self._attr_icon = ICON
-        self._attr_native_unit_of_measurement = None
 
     @property
     def should_poll(self) -> bool:
@@ -109,13 +130,8 @@ class Station(SensorEntity):
         return self.metric
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the native unit of measurement."""
-        if self.metric == SensorDeviceClass.TIMESTAMP:
-            return None
-        return self.entity_description.metric
-
-    @property
     def native_value(self):
         """Return the state of the sensor, rounding if a number."""
-        return None
+        if self.metric == SensorDeviceClass.TIMESTAMP:
+            return None
+        return 1
