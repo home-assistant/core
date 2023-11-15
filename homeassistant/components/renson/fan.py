@@ -7,11 +7,13 @@ from typing import Any
 
 from renson_endura_delta.field_enum import CURRENT_LEVEL_FIELD, DataType
 from renson_endura_delta.renson import Level, RensonVentilation
+import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -19,13 +21,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import (
-    DOMAIN,
-    SET_BREEZE_SCHEMA,
-    SET_DAY_NIGHT_TIME_SCHEMA,
-    SET_POLLUTION_SETTINGS_SCHEMA,
-    SET_TIMER_LEVEL_SCHEMA,
-)
+from .const import DOMAIN
 from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
@@ -46,6 +42,39 @@ SPEED_MAPPING = {
     Level.LEVEL2.value: 2,
     Level.LEVEL3.value: 3,
     Level.LEVEL4.value: 4,
+}
+
+SET_TIMER_LEVEL_SCHEMA = {
+    vol.Required("timer_level"): vol.In(
+        ["level1", "level2", "level3", "level4", "holiday", "breeze"]
+    ),
+    vol.Required("time"): cv.positive_int,
+}
+
+SET_DAY_NIGHT_TIME_SCHEMA = {
+    vol.Required("day"): cv.time,
+    vol.Required("night"): cv.time,
+}
+
+
+SET_BREEZE_SCHEMA = {
+    vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
+    vol.Required("temperature"): cv.positive_int,
+    vol.Required("activate"): bool,
+}
+
+SET_POLLUTION_SETTINGS_SCHEMA = {
+    vol.Required("day_pollution_level"): vol.In(
+        ["level1", "level2", "level3", "level4"]
+    ),
+    vol.Required("night_pollution_level"): vol.In(
+        ["level1", "level2", "level3", "level4"]
+    ),
+    vol.Optional("humidity_control"): bool,
+    vol.Optional("airquality_control"): bool,
+    vol.Optional("co2_control"): bool,
+    vol.Optional("co2_threshold"): cv.positive_int,
+    vol.Optional("co2_hysteresis"): cv.positive_int,
 }
 
 
