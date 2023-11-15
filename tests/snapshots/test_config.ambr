@@ -305,6 +305,9 @@
       Invalid config for [adr_0007_5] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 44: 'no_such_option' is an invalid option for [adr_0007_5], check: adr_0007_5->no_such_option. Please check the docs at https://www.home-assistant.io/integrations/adr_0007_5
       Invalid config for [adr_0007_5] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 45: expected int for dictionary value 'adr_0007_5->port', got 'foo'. Please check the docs at https://www.home-assistant.io/integrations/adr_0007_5.
     ''',
+    "Invalid config for [custom_validator_ok_2] at <BASE_PATH>/fixtures/core/config/component_validation/basic/configuration.yaml, line 52: required key 'host' not provided. Please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2.",
+    'Invalid config for [custom_validator_bad_1]: broken Please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1.',
+    'Unknown error calling custom_validator_bad_2 config validator',
   ])
 # ---
 # name: test_package_merge_error[packages]
