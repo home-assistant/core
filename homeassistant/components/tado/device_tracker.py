@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     async def async_update_devices() -> None:
         """Update the values of the devices."""
-        await async_add_tracked_entities(hass, tado, async_add_entities, tracked)
+        add_tracked_entities(hass, tado, async_add_entities, tracked)
 
     await async_update_devices()
 
@@ -39,7 +39,8 @@ async def async_setup_entry(
     )
 
 
-async def async_add_tracked_entities(
+@callback
+def add_tracked_entities(
     hass: HomeAssistant,
     tado: Any,
     async_add_entities: AddEntitiesCallback,
