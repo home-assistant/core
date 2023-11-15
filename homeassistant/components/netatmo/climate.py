@@ -39,6 +39,7 @@ from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    ATTR_TARGET_TEMPERATURE,
     CONF_URL_ENERGY,
     DATA_SCHEDULES,
     DOMAIN,
@@ -49,6 +50,7 @@ from .const import (
     NETATMO_CREATE_CLIMATE,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
+    SERVICE_SET_TEMPERATURE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
 from .netatmo_entity_base import NetatmoBase
@@ -142,6 +144,14 @@ async def async_setup_entry(
             vol.Required(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_preset_mode_with_end_datetime",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_TEMPERATURE,
+        {
+            vol.Required(ATTR_TARGET_TEMPERATURE): cv.Number,
+            vol.Optional(ATTR_END_DATETIME): cv.datetime,
+        },
+        "_async_service_set_temperature",
     )
 
 
@@ -441,11 +451,26 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
         )
         _LOGGER.debug(
-            "Setting %s preset to %s with optional end datetime to %s",
+            "Setting %s preset to %s with optional end datetime %s",
             self._room.home.entity_id,
             preset_mode,
             end_timestamp,
         )
+
+    async def _async_service_set_temperature(
+        self, **kwargs: Any
+    ) -> None:
+        target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
+        end_datetime = kwargs.get(ATTR_END_DATETIME)
+        end_timestamp = int(dt_util.as_timestamp(end_datetime)) if end_datetime else None
+
+        _LOGGER.debug(
+            "Setting %s to target temperature %s with optional end datetime %s",
+            self._room.entity_id,
+            target_temperature,
+            end_timestamp,
+        )
+        await self._room.async_therm_manual(target_temperature, end_timestamp)
 
     @property
     def device_info(self) -> DeviceInfo:
