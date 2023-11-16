@@ -427,7 +427,9 @@ class EvoBroker:
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
+        access_token_expires = _dt_local_to_aware(
+            self.client.access_token_expires  # type: ignore[arg-type]
+        )
 
         app_storage = {
             CONF_USERNAME: self.client.username,
@@ -437,8 +439,9 @@ class EvoBroker:
         }
 
         if self.client_v1 and self.client_v1.user_data:
-            app_storage[USER_DATA] = {
-                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
+            user_id = self.client_v1.user_data["userInfo"]["userID"]  # type: ignore[index]
+            app_storage[USER_DATA] = {  # type: ignore[assignment]
+                "userInfo": {"userID": user_id},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
         else:

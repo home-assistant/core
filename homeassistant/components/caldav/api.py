@@ -23,3 +23,10 @@ async def async_get_calendars(
         for calendar, supported_components in zip(calendars, components_results)
         if component in supported_components
     ]
+
+
+def get_attr_value(obj: caldav.CalendarObjectResource, attribute: str) -> str | None:
+    """Return the value of the CalDav object attribute if defined."""
+    if hasattr(obj, attribute):
+        return getattr(obj, attribute).value
+    return None

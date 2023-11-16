@@ -26,6 +26,7 @@ from systembridgemodels.media_files import File as MediaFile, MediaFiles
 from systembridgemodels.media_get_file import MediaGetFile
 from systembridgemodels.media_get_files import MediaGetFiles
 from systembridgemodels.memory import Memory
+from systembridgemodels.processes import Processes
 from systembridgemodels.register_data_listener import RegisterDataListener
 from systembridgemodels.system import System
 
@@ -53,6 +54,7 @@ class SystemBridgeCoordinatorData(BaseModel):
     gpu: Gpu = None
     media: Media = None
     memory: Memory = None
+    processes: Processes = None
     system: System = None
 
 
