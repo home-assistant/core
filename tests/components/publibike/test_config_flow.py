@@ -38,6 +38,9 @@ async def test_form(hass):
         "homeassistant.components.publibike.PubliBike.getStations",
         return_value=[MagicMock(stationId=123)],
     ), patch(
+        "homeassistant.components.publibike.config_flow.PubliBikeConfigFlow._get_station_name",
+        return_value="StationName",
+    ), patch(
         "homeassistant.components.publibike.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -48,7 +51,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "PubliBike"
+    assert result2["title"] == "PubliBike - StationName"
     assert result2["data"] == {"station_id": 123}
     assert len(mock_setup_entry.mock_calls) == 1
 
