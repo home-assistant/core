@@ -25,11 +25,14 @@ async def async_setup_entry(
     country: str = config_entry.data[CONF_COUNTRY]
     province: str | None = config_entry.data.get(CONF_PROVINCE)
 
-    async_add_entities([
-        HolidayCalendarEntity(
-            config_entry.title, country, province, unique_id=config_entry.entry_id
-        )
-    ], True)
+    async_add_entities(
+        [
+            HolidayCalendarEntity(
+                config_entry.title, country, province, unique_id=config_entry.entry_id
+            )
+        ],
+        True,
+    )
 
 
 class HolidayCalendarEntity(CalendarEntity):
