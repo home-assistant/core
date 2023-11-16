@@ -7,6 +7,10 @@ class QuotableCard extends HTMLElement {
     ];
   }
 
+  setConfig(config) {
+    this._config = config;
+  }
+
   set hass(hass) {
     if (!this.content) {
       this.innerHTML = `
@@ -64,8 +68,6 @@ class QuotableCard extends HTMLElement {
     }
   }
 
-  setConfig(config) {}
-
   getCardSize() {
     return 3;
   }
@@ -73,9 +75,34 @@ class QuotableCard extends HTMLElement {
   static getStubConfig() {
     return { entity: "quotable.quotable" };
   }
+
+  static getConfigElement() {
+    return document.createElement("quotable-card-editor");
+  }
 }
 
+class QuotableCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+  }
+
+  setConfig(config) {
+    this._config = config;
+    this.render();
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+    Multiselects and slider here
+    `;
+  }
+}
+
+customElements.define("quotable-card-editor", QuotableCardEditor);
+
 customElements.define("quotable-card", QuotableCard);
+
 //Add card to card picker in UI
 window.customCards = window.customCards || [];
 window.customCards.push({
