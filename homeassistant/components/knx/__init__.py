@@ -67,6 +67,7 @@ from .const import (
 )
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
+from .helpers.entity_store import KNXEntityStore
 from .project import STORAGE_KEY as PROJECT_STORAGE_KEY, KNXProject
 from .schema import (
     BinarySensorSchema,
@@ -191,9 +192,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
     # always forward sensor for system entities (telegram counter, etc.)
-    platforms = {platform for platform in SUPPORTED_PLATFORMS if platform in config}
-    platforms.add(Platform.SENSOR)
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
+    # TODO: forward all platforms to get entity store connected
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SWITCH)
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in config and platform not in (Platform.SENSOR, Platform.SWITCH)
+        ],
+    )
 
     # set up notify service for backwards compatibility - remove 2024.11
     if NotifySchema.PLATFORM in config:
@@ -278,6 +287,7 @@ class KNXModule:
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)
+        self.entity_store = KNXEntityStore(hass=hass, entry=entry)
 
         self.xknx = XKNX(
             connection_config=self.connection_config(),
@@ -298,8 +308,10 @@ class KNXModule:
         )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
-        self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
-        self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
+        self._group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
+        self._knx_event_callback: TelegramQueue.Callback = (
+            self.register_event_callback()
+        )
 
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
@@ -309,6 +321,7 @@ class KNXModule:
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.project.load_project()
+        await self.entity_store.load_data()
         await self.telegrams.load_history()
         await self.xknx.start()
 

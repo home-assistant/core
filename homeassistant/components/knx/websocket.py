@@ -13,6 +13,8 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
+from .helpers.entity_store import EntityStoreException
+from .helpers.entity_store_schema import CREATE_ENTITY_SCHEMA, UPDATE_ENTITY_SCHEMA
 from .telegrams import TelegramDict
 
 if TYPE_CHECKING:
@@ -30,6 +32,9 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_create_entity)
+    websocket_api.async_register_command(hass, ws_update_entity)
+    websocket_api.async_register_command(hass, ws_delete_entity)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -212,4 +217,90 @@ def ws_subscribe_telegram(
         action=forward_telegram,
         name="KNX GroupMonitor subscription",
     )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    vol.All(
+        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+            {
+                vol.Required("type"): "knx/create_entity",
+                vol.Required("data"): CREATE_ENTITY_SCHEMA,
+            }
+        ),
+    )
+)
+@websocket_api.async_response
+async def ws_create_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command of group monitor."""
+    knx: KNXModule = hass.data[DOMAIN]
+    try:
+        await knx.entity_store.create_entitiy(msg["data"]["platform"], msg["data"])
+    except EntityStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    vol.All(
+        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+            {
+                vol.Required("type"): "knx/update_entity",
+                vol.Required("data"): UPDATE_ENTITY_SCHEMA,
+            }
+        ),
+    )
+)
+@websocket_api.async_response
+async def ws_update_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command of group monitor."""
+    knx: KNXModule = hass.data[DOMAIN]
+    try:
+        await knx.entity_store.update_entity(
+            msg["data"]["platform"], msg["data"]["unique_id"], msg["data"]
+        )
+    except EntityStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/delete_entity",
+        vol.Required("platform"): str,
+        vol.Required("unique_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_delete_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command of group monitor."""
+    knx: KNXModule = hass.data[DOMAIN]
+    try:
+        await knx.entity_store.delete_entity(msg["platform"], msg["unique_id"])
+    except EntityStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
     connection.send_result(msg["id"])
