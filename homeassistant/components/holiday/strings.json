@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Holiday has already been setup with chosen configuration"
+    },
     "step": {
       "user": {
         "data": {

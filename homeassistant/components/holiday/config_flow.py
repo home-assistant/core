@@ -46,6 +46,8 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if SUPPORTED_COUNTRIES[selected_country]:
                 return await self.async_step_province()
 
+            self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
+
             locale = Locale(self.hass.config.language)
             title = locale.territories[selected_country]
             return self.async_create_entry(title=title, data=self.data)
@@ -72,6 +74,13 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the province step."""
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
+
+            self._async_abort_entries_match(
+                {
+                    CONF_COUNTRY: combined_input[CONF_COUNTRY],
+                    CONF_PROVINCE: combined_input[CONF_PROVINCE],
+                }
+            )
 
             locale = Locale(self.hass.config.language)
             name = f"{locale.territories[combined_input[CONF_COUNTRY]]}, {combined_input[CONF_PROVINCE]}"
