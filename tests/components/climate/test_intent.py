@@ -150,7 +150,8 @@ async def test_get_temperature(
     assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_1.entity_id
-    assert float(response.matched_states[0].state) == 10.0
+    state = response.matched_states[0]
+    assert state.attributes["current_temperature"] == 10.0
 
     # Select by area instead (climate_2)
     response = await intent.async_handle(
@@ -162,7 +163,8 @@ async def test_get_temperature(
     assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
-    assert float(response.matched_states[0].state) == 22.0
+    state = response.matched_states[0]
+    assert state.attributes["current_temperature"] == 22.0
 
 
 async def test_get_temperature_no_entities(
