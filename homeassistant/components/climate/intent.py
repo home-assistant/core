@@ -57,11 +57,6 @@ class GetTemperatureIntent(intent.IntentHandler):
 
         assert climate_entity is not None
 
-        if climate_entity.current_temperature is None:
-            raise intent.IntentHandleError(
-                f"No temperature for entity: {climate_entity.entity_id}"
-            )
-
         if climate_state is None:
             raise intent.IntentHandleError(f"No state for {climate_entity.name}")
 
