@@ -874,7 +874,7 @@ async def async_list_events_service(
         DOMAIN,
         "deprecated_service_calendar_list_events",
         breaks_in_ha_version="2024.6.0",
-        is_fixable=False,
+        is_fixable=True,
         is_persistent=False,
         issue_domain=calendar.platform.platform_name,
         severity=IssueSeverity.WARNING,
