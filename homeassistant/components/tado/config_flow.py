@@ -31,6 +31,8 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+CONF_HOME_ID = "home_id"
+
 
 async def validate_input(
     hass: core.HomeAssistant, data: dict[str, Any]
@@ -109,6 +111,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(properties[zeroconf.ATTR_PROPERTIES_ID])
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
+
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Import a config entry from configuration.yaml."""
+        _LOGGER.debug("Importing Tado from configuration.yaml")
+        self._async_abort_entries_match(
+            {
+                CONF_USERNAME: import_config[CONF_USERNAME],
+                CONF_PASSWORD: import_config[CONF_PASSWORD],
+                CONF_HOME_ID: import_config.get(CONF_HOME_ID, None),
+            }
+        )
+        return self.async_create_entry(
+            title=import_config[CONF_USERNAME],
+            data={
+                CONF_USERNAME: import_config[CONF_USERNAME],
+                CONF_PASSWORD: import_config[CONF_PASSWORD],
+                CONF_HOME_ID: import_config.get(CONF_HOME_ID, None),
+            },
+        )
 
     @staticmethod
     @callback
