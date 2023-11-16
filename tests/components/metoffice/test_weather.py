@@ -100,13 +100,15 @@ async def test_site_cannot_connect(
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_update(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, wavertree_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    requests_mock: requests_mock.Mocker,
+    wavertree_data,
 ) -> None:
     """Test we handle cannot connect error."""
-    registry = er.async_get(hass)
 
     # Pre-create the hourly entity
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "53.38374_-2.90929",
@@ -143,13 +145,15 @@ async def test_site_cannot_update(
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_one_weather_site_running(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, wavertree_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    requests_mock: requests_mock.Mocker,
+    wavertree_data,
 ) -> None:
     """Test the Met Office weather platform."""
-    registry = er.async_get(hass)
 
     # Pre-create the hourly entity
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "53.38374_-2.90929",
@@ -219,19 +223,21 @@ async def test_one_weather_site_running(
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_two_weather_sites_running(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, wavertree_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    requests_mock: requests_mock.Mocker,
+    wavertree_data,
 ) -> None:
     """Test we handle two different weather sites both running."""
-    registry = er.async_get(hass)
 
     # Pre-create the hourly entities
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "53.38374_-2.90929",
         suggested_object_id="met_office_wavertree_3_hourly",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "52.75556_0.44231",
@@ -369,9 +375,10 @@ async def test_two_weather_sites_running(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
-async def test_new_config_entry(hass: HomeAssistant, no_sensor, wavertree_data) -> None:
+async def test_new_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
+) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -383,17 +390,16 @@ async def test_new_config_entry(hass: HomeAssistant, no_sensor, wavertree_data) 
 
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 1
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_legacy_config_entry(
-    hass: HomeAssistant, no_sensor, wavertree_data
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
 ) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
     # Pre-create the hourly entity
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "53.38374_-2.90929",
@@ -411,7 +417,7 @@ async def test_legacy_config_entry(
 
     assert len(hass.states.async_entity_ids("weather")) == 2
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 2
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 2
 
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
@@ -510,6 +516,7 @@ async def test_forecast_service(
 async def test_forecast_subscription(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     no_sensor,
@@ -519,9 +526,8 @@ async def test_forecast_subscription(
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
 
-    registry = er.async_get(hass)
     # Pre-create the hourly entity
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "53.38374_-2.90929",
@@ -559,6 +565,7 @@ async def test_forecast_subscription(
         assert forecast1 == snapshot
 
         freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         msg = await client.receive_json()
 
@@ -575,5 +582,8 @@ async def test_forecast_subscription(
                 "subscription": subscription_id,
             }
         )
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         msg = await client.receive_json()
         assert msg["success"]

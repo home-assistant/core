@@ -4,17 +4,19 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import cast
 
-from aiohttp import ClientError, ServerDisconnectedError
+from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.enums import OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, Scenario
+from pyoverkiz.models import Device, Scenario, Setup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -67,14 +69,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 client.get_scenarios(),
             ]
         )
-    except BadCredentialsException as exception:
+    except (BadCredentialsException, NotSuchTokenException) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
-    except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
+    except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
+
+    setup = cast(Setup, setup)
+    scenarios = cast(list[Scenario], scenarios)
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,

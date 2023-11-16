@@ -4,7 +4,9 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from contextlib import suppress
+from functools import reduce
 import logging
+import operator
 import os
 from pathlib import Path
 import re
@@ -15,7 +17,7 @@ from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
+from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -488,60 +490,205 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
 
 @callback
-def async_log_exception(
-    ex: Exception,
+def async_log_schema_error(
+    ex: vol.Invalid,
     domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
-    """Log an error for configuration validation.
-
-    This method must be run in the event loop.
-    """
+    """Log a schema validation error."""
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message, is_friendly = _format_config_error(ex, domain, config, link)
-    _LOGGER.error(message, exc_info=not is_friendly and ex)
+    message = format_schema_error(ex, domain, config, link)
+    _LOGGER.error(message)
 
 
 @callback
-def _format_config_error(
-    ex: Exception, domain: str, config: dict, link: str | None = None
-) -> tuple[str, bool]:
-    """Generate log exception for configuration validation.
-
-    This method must be run in the event loop.
-    """
-    is_friendly = False
-    message = f"Invalid config for [{domain}]: "
+def async_log_config_validator_error(
+    ex: vol.Invalid | HomeAssistantError,
+    domain: str,
+    config: dict,
+    hass: HomeAssistant,
+    link: str | None = None,
+) -> None:
+    """Log an error from a custom config validator."""
     if isinstance(ex, vol.Invalid):
-        if "extra keys not allowed" in ex.error_message:
-            path = "->".join(str(m) for m in ex.path)
-            message += (
-                f"[{ex.path[-1]}] is an invalid option for [{domain}]. "
-                f"Check: {domain}->{path}."
-            )
-        else:
-            message += f"{humanize_error(config, ex)}."
-        is_friendly = True
-    else:
-        message += str(ex) or repr(ex)
+        async_log_schema_error(ex, domain, config, hass, link)
+        return
 
+    if hass is not None:
+        async_notify_setup_error(hass, domain, link)
+    message = format_homeassistant_error(ex, domain, config, link)
+    _LOGGER.error(message, exc_info=ex)
+
+
+def _get_annotation(item: Any) -> tuple[str, int | str] | None:
+    if not hasattr(item, "__config_file__"):
+        return None
+
+    return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
+
+
+def _get_by_path(data: dict | list, items: list[str | int]) -> Any:
+    """Access a nested object in root by item sequence.
+
+    Returns None in case of error.
+    """
     try:
-        domain_config = config.get(domain, config)
-    except AttributeError:
-        domain_config = config
+        return reduce(operator.getitem, items, data)  # type: ignore[arg-type]
+    except (KeyError, IndexError, TypeError):
+        return None
 
-    message += (
-        f" (See {getattr(domain_config, '__config_file__', '?')}, "
-        f"line {getattr(domain_config, '__line__', '?')}). "
+
+def find_annotation(
+    config: dict | list, path: list[str | int]
+) -> tuple[str, int | str] | None:
+    """Find file/line annotation for a node in config pointed to by path.
+
+    If the node pointed to is a dict or list, prefer the annotation for the key in
+    the key/value pair defining the dict or list.
+    If the node is not annotated, try the parent node.
+    """
+
+    def find_annotation_for_key(
+        item: dict, path: list[str | int], tail: str | int
+    ) -> tuple[str, int | str] | None:
+        for key in item:
+            if key == tail:
+                if annotation := _get_annotation(key):
+                    return annotation
+                break
+        return None
+
+    def find_annotation_rec(
+        config: dict | list, path: list[str | int], tail: str | int | None
+    ) -> tuple[str, int | str] | None:
+        item = _get_by_path(config, path)
+        if isinstance(item, dict) and tail is not None:
+            if tail_annotation := find_annotation_for_key(item, path, tail):
+                return tail_annotation
+
+        if (
+            isinstance(item, (dict, list))
+            and path
+            and (
+                key_annotation := find_annotation_for_key(
+                    _get_by_path(config, path[:-1]), path[:-1], path[-1]
+                )
+            )
+        ):
+            return key_annotation
+
+        if annotation := _get_annotation(item):
+            return annotation
+
+        if not path:
+            return None
+
+        tail = path.pop()
+        if annotation := find_annotation_rec(config, path, tail):
+            return annotation
+        return _get_annotation(item)
+
+    return find_annotation_rec(config, list(path), None)
+
+
+def stringify_invalid(
+    ex: vol.Invalid,
+    domain: str,
+    config: dict,
+    link: str | None,
+    max_sub_error_length: int,
+) -> str:
+    """Stringify voluptuous.Invalid.
+
+    This is an alternative to the custom __str__ implemented in
+    voluptuous.error.Invalid. The modifications are:
+    - Format the path delimited by -> instead of @data[]
+    - Prefix with domain, file and line of the error
+    - Suffix with a link to the documentation
+    - Give a more user friendly output for unknown options
+    - Give a more user friendly output for missing options
+    """
+    message_prefix = f"Invalid config for [{domain}]"
+    if domain != CONF_CORE and link:
+        message_suffix = f". Please check the docs at {link}"
+    else:
+        message_suffix = ""
+    if annotation := find_annotation(config, ex.path):
+        message_prefix += f" at {annotation[0]}, line {annotation[1]}"
+    path = "->".join(str(m) for m in ex.path)
+    if ex.error_message == "extra keys not allowed":
+        return (
+            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
+            f"check: {path}{message_suffix}"
+        )
+    if ex.error_message == "required key not provided":
+        return (
+            f"{message_prefix}: required key '{ex.path[-1]}' not provided"
+            f"{message_suffix}."
+        )
+    # This function is an alternative to the stringification done by
+    # vol.Invalid.__str__, so we need to call Exception.__str__ here
+    # instead of str(ex)
+    output = Exception.__str__(ex)
+    if error_type := ex.error_type:
+        output += " for " + error_type
+    offending_item_summary = repr(_get_by_path(config, ex.path))
+    if len(offending_item_summary) > max_sub_error_length:
+        offending_item_summary = (
+            f"{offending_item_summary[: max_sub_error_length - 3]}..."
+        )
+    return (
+        f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
+        f"{message_suffix}."
     )
 
-    if domain != CONF_CORE and link:
-        message += f"Please check the docs at {link}"
 
-    return message, is_friendly
+def humanize_error(
+    validation_error: vol.Invalid,
+    domain: str,
+    config: dict,
+    link: str | None,
+    max_sub_error_length: int = MAX_VALIDATION_ERROR_ITEM_LENGTH,
+) -> str:
+    """Provide a more helpful + complete validation error message.
+
+    This is a modified version of voluptuous.error.Invalid.__str__,
+    the modifications make some minor changes to the formatting.
+    """
+    if isinstance(validation_error, vol.MultipleInvalid):
+        return "\n".join(
+            sorted(
+                humanize_error(sub_error, domain, config, link, max_sub_error_length)
+                for sub_error in validation_error.errors
+            )
+        )
+    return stringify_invalid(
+        validation_error, domain, config, link, max_sub_error_length
+    )
+
+
+@callback
+def format_homeassistant_error(
+    ex: HomeAssistantError, domain: str, config: dict, link: str | None = None
+) -> str:
+    """Format HomeAssistantError thrown by a custom config validator."""
+    message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
+
+    if domain != CONF_CORE and link:
+        message += f" Please check the docs at {link}."
+
+    return message
+
+
+@callback
+def format_schema_error(
+    ex: vol.Invalid, domain: str, config: dict, link: str | None = None
+) -> str:
+    """Format configuration validation error."""
+    return humanize_error(ex, domain, config, link)
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
@@ -670,7 +817,7 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += (
         f" (See {getattr(pack_config, '__config_file__', '?')}:"
-        f"{getattr(pack_config, '__line__', '?')}). "
+        f"{getattr(pack_config, '__line__', '?')})."
     )
 
     _LOGGER.error(message)
@@ -724,15 +871,15 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
     return None
 
 
-def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | str:
+def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | None:
     """Merge package into conf, recursively."""
-    error: bool | str = False
+    duplicate_key: str | None = None
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
                 continue
             conf[key] = conf.get(key, OrderedDict())
-            error = _recursive_merge(conf=conf[key], package=pack_conf)
+            duplicate_key = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
@@ -743,7 +890,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | st
             if conf.get(key) is not None:
                 return key
             conf[key] = pack_conf
-    return error
+    return duplicate_key
 
 
 async def merge_packages_config(
@@ -818,10 +965,10 @@ async def merge_packages_config(
                 )
                 continue
 
-            error = _recursive_merge(conf=config[comp_name], package=comp_conf)
-            if error:
+            duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
+            if duplicate_key:
                 _log_pkg_error(
-                    pack_name, comp_name, config, f"has duplicate key '{error}'"
+                    pack_name, comp_name, config, f"has duplicate key '{duplicate_key}'"
                 )
 
     return config
@@ -863,7 +1010,9 @@ async def async_process_component_config(  # noqa: C901
                 await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_config_validator_error(
+                ex, domain, config, hass, integration.documentation
+            )
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s config validator", domain)
@@ -874,7 +1023,7 @@ async def async_process_component_config(  # noqa: C901
         try:
             return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_schema_error(ex, domain, config, hass, integration.documentation)
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
@@ -893,7 +1042,9 @@ async def async_process_component_config(  # noqa: C901
         try:
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, p_config, hass, integration.documentation)
+            async_log_schema_error(
+                ex, domain, p_config, hass, integration.documentation
+            )
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -930,7 +1081,7 @@ async def async_process_component_config(  # noqa: C901
             try:
                 p_validated = platform.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
-                async_log_exception(
+                async_log_schema_error(
                     ex,
                     f"{domain}.{p_name}",
                     p_config,
