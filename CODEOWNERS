@@ -1219,8 +1219,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
-/homeassistant/components/sveriges_radio_audio/ @LudvigLemner, @Max-Noren, @delinor
-/tests/components/sveriges_radio_audio/ @LudvigLemner, @Max-Noren, @delinor
+/homeassistant/components/sveriges_radio/ @LudvigLemner
 /homeassistant/components/sveriges_radio_traffic/ @OskarJakobsson
 /tests/components/sveriges_radio_traffic/ @OskarJakobsson
 /homeassistant/components/swiss_hydrological_data/ @fabaff

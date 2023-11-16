@@ -5476,9 +5476,9 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "sveriges_radio_audio": {
-      "name": "Sveriges Radio Audio",
-      "integration_type": "hub",
+    "sveriges_radio": {
+      "name": "Sveriges Radio",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

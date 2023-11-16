@@ -2497,6 +2497,9 @@ sunwatcher==0.2.1
 # homeassistant.components.surepetcare
 surepy==0.8.0
 
+# homeassistant.components.sveriges_radio
+sverigesradio==0.3
+
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
 

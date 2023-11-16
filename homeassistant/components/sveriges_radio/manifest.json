@@ -1,0 +1,10 @@
+{
+  "domain": "sveriges_radio",
+  "name": "Sveriges Radio",
+  "codeowners": ["@LudvigLemner"],
+  "config_flow": true,
+  "documentation": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["sverigesradio==0.3"]
+}
