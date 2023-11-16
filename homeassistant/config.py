@@ -515,7 +515,7 @@ def async_log_config_validator_error(
 
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message = format_homeassistant_error(ex, domain, config, link)
+    message = format_homeassistant_error(hass, ex, domain, config, link)
     _LOGGER.error(message, exc_info=ex)
 
 
@@ -677,11 +677,19 @@ def humanize_error(
 
 @callback
 def format_homeassistant_error(
-    ex: HomeAssistantError, domain: str, config: dict, link: str | None = None
+    hass: HomeAssistant,
+    ex: HomeAssistantError,
+    domain: str,
+    config: dict,
+    link: str | None = None,
 ) -> str:
     """Format HomeAssistantError thrown by a custom config validator."""
-    message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
-
+    message_prefix = f"Invalid config for [{domain}]"
+    # HomeAssistantError raised by custom config validator has no path to the
+    # offending configuration key, use the domain key as path instead.
+    if annotation := find_annotation(config, [domain]):
+        message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
+    message = f"{message_prefix}: {str(ex) or repr(ex)}"
     if domain != CONF_CORE and link:
         message += f" Please check the docs at {link}."
 
