@@ -217,12 +217,12 @@ def update_rasc_state(
                 print("fire", RASC_START, "response:", entity_id)  # noqa: T201
                 hass.bus.async_fire(
                     RASC_RESPONSE,
-                    {"type": RASC_START},
+                    {"type": RASC_START, "entity_id": entity_id},
                 )
             print("fire", RASC_COMPLETE, "response:", entity_id)  # noqa: T201
             hass.bus.async_fire(
                 RASC_RESPONSE,
-                {"type": RASC_COMPLETE},
+                {"type": RASC_COMPLETE, "entity_id": entity_id},
             )
             time_to_complete = time.time() - state["exec_time"]
             update_state(
@@ -246,7 +246,7 @@ def update_rasc_state(
             print("fire", RASC_START, "response:", entity_id)  # noqa: T201
             hass.bus.async_fire(
                 RASC_RESPONSE,
-                {"type": state["next_response"]},
+                {"type": state["next_response"], "entity_id": entity_id},
             )
             state["next_response"] = RASC_COMPLETE
             time_to_start = time.time() - state["exec_time"]

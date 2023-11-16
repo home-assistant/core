@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.rascalscheduler import setup_rascal_scheduler_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -50,7 +51,6 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
-    ServiceNotFound,
     TemplateError,
 )
 from homeassistant.helpers import condition
@@ -60,7 +60,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -248,6 +247,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = component = EntityComponent[BaseAutomationEntity](
         LOGGER, DOMAIN, hass
     )
+
+    # set up rascal scheduler component
+    setup_rascal_scheduler_entity(hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -654,38 +656,48 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # to recursively trigger themselves
             script_stack_cv.set([])
 
-            try:
-                with trace_path("action"):
-                    await self.action_script.async_run(
-                        variables, trigger_context, started_action
-                    )
-            except ServiceNotFound as err:
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
-                    is_fixable=True,
-                    is_persistent=True,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="service_not_found",
-                    translation_placeholders={
-                        "service": f"{err.domain}.{err.service}",
-                        "entity_id": self.entity_id,
-                        "name": self.name or self.entity_id,
-                        "edit": f"/config/automation/edit/{self.unique_id}",
-                    },
-                )
-                automation_trace.set_error(err)
-            except (vol.Invalid, HomeAssistantError) as err:
-                self._logger.error(
-                    "Error while executing automation %s: %s",
-                    self.entity_id,
-                    err,
-                )
-                automation_trace.set_error(err)
-            except Exception as err:  # pylint: disable=broad-except
-                self._logger.exception("While executing automation %s", self.entity_id)
-                automation_trace.set_error(err)
+            # routine_id, routine_entity = dag_opeator(
+            #     self.hass,
+            #     str(self._attr_unique_id),
+            #     self.action_script.sequence,
+            #     variables,
+            #     trigger_context,
+            # )
+            # for action in routine_entity.actions:
+            #     print("action_id: ", action.action_id, "actions: ", action.action)
+
+            # try:
+            #     with trace_path("action"):
+            #         await self.action_script.async_run(
+            #             variables, trigger_context, started_action
+            #         )
+            # except ServiceNotFound as err:
+            #     async_create_issue(
+            #         self.hass,
+            #         DOMAIN,
+            #         f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
+            #         is_fixable=True,
+            #         is_persistent=True,
+            #         severity=IssueSeverity.ERROR,
+            #         translation_key="service_not_found",
+            #         translation_placeholders={
+            #             "service": f"{err.domain}.{err.service}",
+            #             "entity_id": self.entity_id,
+            #             "name": self.name or self.entity_id,
+            #             "edit": f"/config/automation/edit/{self.unique_id}",
+            #         },
+            #     )
+            #     automation_trace.set_error(err)
+            # except (vol.Invalid, HomeAssistantError) as err:
+            #     self._logger.error(
+            #         "Error while executing automation %s: %s",
+            #         self.entity_id,
+            #         err,
+            #     )
+            #     automation_trace.set_error(err)
+            # except Exception as err:  # pylint: disable=broad-except
+            #     self._logger.exception("While executing automation %s", self.entity_id)
+            #     automation_trace.set_error(err)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""

@@ -9,6 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.rascalscheduler import create_x_ready_queue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -81,6 +82,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     component: EntityComponent[SwitchEntity] = hass.data[DOMAIN]
+
+    def get_entity_id() -> str:
+        return DOMAIN + "." + entry.title.split()[0]
+
+    create_x_ready_queue(hass, get_entity_id())
     return await component.async_setup_entry(entry)
 
 
