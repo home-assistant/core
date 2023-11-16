@@ -453,7 +453,7 @@ action:
             HomeAssistantError("Broken"),
             0,
             1,
-            "Invalid config for [bla]: Broken",
+            "Invalid config for [bla] at configuration.yaml, line 11: Broken",
         ),
     ],
 )

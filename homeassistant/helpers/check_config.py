@@ -115,7 +115,7 @@ async def async_check_ha_config_file(  # noqa: C901
         if isinstance(ex, vol.Invalid):
             message = format_schema_error(hass, ex, domain, component_config)
         else:
-            message = format_homeassistant_error(ex, domain, component_config)
+            message = format_homeassistant_error(hass, ex, domain, component_config)
         if domain in frontend_dependencies:
             result.add_error(message, domain, config_to_attach)
         else:
