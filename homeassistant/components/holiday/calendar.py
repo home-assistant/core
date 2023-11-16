@@ -51,8 +51,8 @@ class HolidayCalendarEntity(CalendarEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
         )
 
     @property
