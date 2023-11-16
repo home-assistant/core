@@ -36,7 +36,7 @@
           "periodically_resetting": "[%key:component::utility_meter::config::step::user::data::periodically_resetting%]"
         },
         "data_description": {
-          "always_available": "If activated, the sensor will always be available with the last totalized value, even if the source entity is unavailable or unknown.",
+          "always_available": "[%key:component::utility_meter::config::step::user::data_description::always_available%]",
           "periodically_resetting": "[%key:component::utility_meter::config::step::user::data_description::periodically_resetting%]"
         }
       }
