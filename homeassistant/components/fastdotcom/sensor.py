@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
+from .const import DATA_UPDATED, DOMAIN
 
 
 async def async_setup_entry(
@@ -24,12 +24,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
+    async_add_entities([SpeedtestSensor(hass.data[DOMAIN])])
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SpeedtestSensor(RestoreEntity, SensorEntity):
-    """Implementation of a FAst.com sensor."""
+    """Implementation of a Fast.com sensor."""
 
     _attr_name = "Fast.com Download"
     _attr_device_class = SensorDeviceClass.DATA_RATE
@@ -51,10 +51,8 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
                 self.hass, DATA_UPDATED, self._schedule_immediate_update
             )
         )
-
-        if not (state := await self.async_get_last_state()):
-            return
-        self._attr_native_value = state.state
+        # Initial run to get data
+        self.update()
 
     def update(self) -> None:
         """Get the latest data and update the states."""
