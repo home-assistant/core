@@ -83,6 +83,8 @@ def add_tracked_entities(
 class TadoDeviceTrackerEntity(ScannerEntity):
     """A Tado Device Tracker entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         device_id: str,
@@ -95,6 +97,7 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         self._device_name = device_name
         self._tado = tado
         self._active = False
+        self._mac_address = None
 
     @callback
     def update_state(self) -> None:
