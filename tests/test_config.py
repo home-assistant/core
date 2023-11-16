@@ -1819,6 +1819,46 @@ async def test_package_merge_error(
 
 
 @pytest.mark.parametrize(
+    "error",
+    [
+        FileNotFoundError("No such file or directory: b'liblibc.a'"),
+        ImportError(
+            ("ModuleNotFoundError: No module named 'not_installed_something'"),
+            name="not_installed_something",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "config_dir",
+    ["packages", "packages_include_dir_named"],
+)
+async def test_package_merge_exception(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    error: Exception,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test exception when merging packages."""
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "package_exceptions", config_dir
+    )
+    with patch(
+        "homeassistant.config.async_get_integration_with_requirements",
+        side_effect=error,
+    ):
+        await config_util.async_hass_config_yaml(hass)
+
+    error_records = [
+        record.message.replace(base_path, "<BASE_PATH>")
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+
+@pytest.mark.parametrize(
     "config_dir",
     [
         "basic",
