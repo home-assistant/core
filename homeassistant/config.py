@@ -84,11 +84,7 @@ SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
 
 LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
-INTEGRATION_LOAD_EXCEPTIONS = (
-    IntegrationNotFound,
-    RequirementsNotFound,
-    *LOAD_EXCEPTIONS,
-)
+INTEGRATION_LOAD_EXCEPTIONS = (IntegrationNotFound, RequirementsNotFound)
 
 SAFE_MODE_FILENAME = "safe-mode"
 
@@ -490,21 +486,37 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
 
 @callback
-def async_log_exception(
-    ex: Exception,
+def async_log_schema_error(
+    ex: vol.Invalid,
     domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
-    """Log an error for configuration validation.
-
-    This method must be run in the event loop.
-    """
+    """Log a schema validation error."""
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message, is_friendly = _format_config_error(ex, domain, config, link)
-    _LOGGER.error(message, exc_info=not is_friendly and ex)
+    message = format_schema_error(hass, ex, domain, config, link)
+    _LOGGER.error(message)
+
+
+@callback
+def async_log_config_validator_error(
+    ex: vol.Invalid | HomeAssistantError,
+    domain: str,
+    config: dict,
+    hass: HomeAssistant,
+    link: str | None = None,
+) -> None:
+    """Log an error from a custom config validator."""
+    if isinstance(ex, vol.Invalid):
+        async_log_schema_error(ex, domain, config, hass, link)
+        return
+
+    if hass is not None:
+        async_notify_setup_error(hass, domain, link)
+    message = format_homeassistant_error(ex, domain, config, link)
+    _LOGGER.error(message, exc_info=ex)
 
 
 def _get_annotation(item: Any) -> tuple[str, int | str] | None:
@@ -578,7 +590,13 @@ def find_annotation(
     return find_annotation_rec(config, list(path), None)
 
 
+def _relpath(hass: HomeAssistant, path: str) -> str:
+    """Return path relative to the Home Assistant config dir."""
+    return os.path.relpath(path, hass.config.config_dir)
+
+
 def stringify_invalid(
+    hass: HomeAssistant,
     ex: vol.Invalid,
     domain: str,
     config: dict,
@@ -593,6 +611,7 @@ def stringify_invalid(
     - Prefix with domain, file and line of the error
     - Suffix with a link to the documentation
     - Give a more user friendly output for unknown options
+    - Give a more user friendly output for missing options
     """
     message_prefix = f"Invalid config for [{domain}]"
     if domain != CONF_CORE and link:
@@ -600,12 +619,17 @@ def stringify_invalid(
     else:
         message_suffix = ""
     if annotation := find_annotation(config, ex.path):
-        message_prefix += f" at {annotation[0]}, line {annotation[1]}"
+        message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in ex.path)
     if ex.error_message == "extra keys not allowed":
         return (
             f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
             f"check: {path}{message_suffix}"
+        )
+    if ex.error_message == "required key not provided":
+        return (
+            f"{message_prefix}: required key '{ex.path[-1]}' not provided"
+            f"{message_suffix}."
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
@@ -625,6 +649,7 @@ def stringify_invalid(
 
 
 def humanize_error(
+    hass: HomeAssistant,
     validation_error: vol.Invalid,
     domain: str,
     config: dict,
@@ -639,35 +664,40 @@ def humanize_error(
     if isinstance(validation_error, vol.MultipleInvalid):
         return "\n".join(
             sorted(
-                humanize_error(sub_error, domain, config, link, max_sub_error_length)
+                humanize_error(
+                    hass, sub_error, domain, config, link, max_sub_error_length
+                )
                 for sub_error in validation_error.errors
             )
         )
     return stringify_invalid(
-        validation_error, domain, config, link, max_sub_error_length
+        hass, validation_error, domain, config, link, max_sub_error_length
     )
 
 
 @callback
-def _format_config_error(
-    ex: Exception, domain: str, config: dict, link: str | None = None
-) -> tuple[str, bool]:
-    """Generate log exception for configuration validation.
+def format_homeassistant_error(
+    ex: HomeAssistantError, domain: str, config: dict, link: str | None = None
+) -> str:
+    """Format HomeAssistantError thrown by a custom config validator."""
+    message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
 
-    This method must be run in the event loop.
-    """
-    is_friendly = False
+    if domain != CONF_CORE and link:
+        message += f" Please check the docs at {link}."
 
-    if isinstance(ex, vol.Invalid):
-        message = humanize_error(ex, domain, config, link)
-        is_friendly = True
-    else:
-        message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
+    return message
 
-        if domain != CONF_CORE and link:
-            message += f" Please check the docs at {link}."
 
-    return message, is_friendly
+@callback
+def format_schema_error(
+    hass: HomeAssistant,
+    ex: vol.Invalid,
+    domain: str,
+    config: dict,
+    link: str | None = None,
+) -> str:
+    """Format configuration validation error."""
+    return humanize_error(hass, ex, domain, config, link)
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
@@ -789,15 +819,19 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
 
 
-def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
+def _log_pkg_error(
+    hass: HomeAssistant, package: str, component: str, config: dict, message: str
+) -> None:
     """Log an error while merging packages."""
-    message = f"Package {package} setup failed. Integration {component} {message}"
+    message = f"Package {package} setup failed. {message}"
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
-    message += (
-        f" (See {getattr(pack_config, '__config_file__', '?')}:"
-        f"{getattr(pack_config, '__line__', '?')})."
-    )
+    config_file = getattr(pack_config, "__config_file__", None)
+    if config_file:
+        config_file = _relpath(hass, config_file)
+    else:
+        config_file = "?"
+    message += f" (See {config_file}:{getattr(pack_config, '__line__', '?')})."
 
     _LOGGER.error(message)
 
@@ -876,7 +910,9 @@ async def merge_packages_config(
     hass: HomeAssistant,
     config: dict,
     packages: dict[str, Any],
-    _log_pkg_error: Callable = _log_pkg_error,
+    _log_pkg_error: Callable[
+        [HomeAssistant, str, str, dict, str], None
+    ] = _log_pkg_error,
 ) -> dict:
     """Merge packages into the top-level configuration. Mutate config."""
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -893,8 +929,17 @@ async def merge_packages_config(
                     hass, domain
                 )
                 component = integration.get_component()
+            except LOAD_EXCEPTIONS as ex:
+                _log_pkg_error(
+                    hass,
+                    pack_name,
+                    comp_name,
+                    config,
+                    f"Integration {comp_name} caused error: {str(ex)}",
+                )
+                continue
             except INTEGRATION_LOAD_EXCEPTIONS as ex:
-                _log_pkg_error(pack_name, comp_name, config, str(ex))
+                _log_pkg_error(hass, pack_name, comp_name, config, str(ex))
                 continue
 
             try:
@@ -928,7 +973,11 @@ async def merge_packages_config(
 
             if not isinstance(comp_conf, dict):
                 _log_pkg_error(
-                    pack_name, comp_name, config, "cannot be merged. Expected a dict."
+                    hass,
+                    pack_name,
+                    comp_name,
+                    config,
+                    f"Integration {comp_name} cannot be merged. Expected a dict.",
                 )
                 continue
 
@@ -937,17 +986,22 @@ async def merge_packages_config(
 
             if not isinstance(config[comp_name], dict):
                 _log_pkg_error(
+                    hass,
                     pack_name,
                     comp_name,
                     config,
-                    "cannot be merged. Dict expected in main config.",
+                    f"Integration {comp_name} cannot be merged. Dict expected in main config.",
                 )
                 continue
 
             duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
             if duplicate_key:
                 _log_pkg_error(
-                    pack_name, comp_name, config, f"has duplicate key '{duplicate_key}'"
+                    hass,
+                    pack_name,
+                    comp_name,
+                    config,
+                    f"Integration {comp_name} has duplicate key '{duplicate_key}'.",
                 )
 
     return config
@@ -989,7 +1043,9 @@ async def async_process_component_config(  # noqa: C901
                 await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_config_validator_error(
+                ex, domain, config, hass, integration.documentation
+            )
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s config validator", domain)
@@ -1000,7 +1056,7 @@ async def async_process_component_config(  # noqa: C901
         try:
             return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, config, hass, integration.documentation)
+            async_log_schema_error(ex, domain, config, hass, integration.documentation)
             return None
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
@@ -1019,7 +1075,9 @@ async def async_process_component_config(  # noqa: C901
         try:
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
-            async_log_exception(ex, domain, p_config, hass, integration.documentation)
+            async_log_schema_error(
+                ex, domain, p_config, hass, integration.documentation
+            )
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -1056,7 +1114,7 @@ async def async_process_component_config(  # noqa: C901
             try:
                 p_validated = platform.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
-                async_log_exception(
+                async_log_schema_error(
                     ex,
                     f"{domain}.{p_name}",
                     p_config,

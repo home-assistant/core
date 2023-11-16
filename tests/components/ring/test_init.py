@@ -9,7 +9,7 @@ from ring_doorbell import AuthenticationError, RingError, RingTimeout
 
 import homeassistant.components.ring as ring
 from homeassistant.components.ring import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -46,7 +46,6 @@ async def test_auth_failed_on_setup(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
-    caplog,
 ) -> None:
     """Test auth failure on setup entry."""
     mock_config_entry.add_to_hass(hass)
@@ -54,14 +53,10 @@ async def test_auth_failed_on_setup(
         "ring_doorbell.Ring.update_data",
         side_effect=AuthenticationError,
     ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result is False
-        assert "Access token is no longer valid. Please set up Ring again" in [
-            record.message for record in caplog.records if record.levelname == "ERROR"
-        ]
-
-        assert DOMAIN not in hass.data
+        assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
@@ -75,7 +70,7 @@ async def test_auth_failure_on_global_update(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
+    assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
     with patch(
         "ring_doorbell.Ring.update_devices",
         side_effect=AuthenticationError,
@@ -83,11 +78,11 @@ async def test_auth_failure_on_global_update(
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
-        assert "Ring access token is no longer valid. Set up Ring again" in [
-            record.message for record in caplog.records if record.levelname == "ERROR"
+        assert "Ring access token is no longer valid, need to re-authenticate" in [
+            record.message for record in caplog.records if record.levelname == "WARNING"
         ]
 
-        assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+        assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_auth_failure_on_device_update(
@@ -100,7 +95,7 @@ async def test_auth_failure_on_device_update(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
+    assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
     with patch(
         "ring_doorbell.RingDoorBell.history",
         side_effect=AuthenticationError,
@@ -108,11 +103,11 @@ async def test_auth_failure_on_device_update(
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
-        assert "Ring access token is no longer valid. Set up Ring again" in [
-            record.message for record in caplog.records if record.levelname == "ERROR"
+        assert "Ring access token is no longer valid, need to re-authenticate" in [
+            record.message for record in caplog.records if record.levelname == "WARNING"
         ]
 
-        assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+        assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(
