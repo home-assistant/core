@@ -50,6 +50,7 @@ class HolidayCalendarEntity(CalendarEntity):
         """Initialize HolidayCalendarEntity."""
         self._country = country
         self._province = province
+        self._location = name
         self._event: CalendarEvent | None = None
         self._attr_name = None
         self._attr_unique_id = unique_id
@@ -90,7 +91,7 @@ class HolidayCalendarEntity(CalendarEntity):
             summary=next_holiday[1],
             start=next_holiday[0],
             end=next_holiday[0],
-            location=str(self.name),
+            location=self._location,
         )
 
     async def async_get_events(
@@ -112,7 +113,7 @@ class HolidayCalendarEntity(CalendarEntity):
                     summary=holiday_name,
                     start=holiday_date,
                     end=holiday_date,
-                    location=str(self.name),
+                    location=self._location,
                 )
                 event_list.append(event)
 
