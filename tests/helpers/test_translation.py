@@ -56,14 +56,14 @@ async def test_component_translation_path(
     )
 
     assert path.normpath(
-        translation.component_translation_path("switch.test", "en", int_test)
+        translation.component_translation_path("test.switch", "en", int_test)
     ) == path.normpath(
         hass.config.path("custom_components", "test", "translations", "switch.en.json")
     )
 
     assert path.normpath(
         translation.component_translation_path(
-            "switch.test_embedded", "en", int_test_embedded
+            "test_embedded.switch", "en", int_test_embedded
         )
     ) == path.normpath(
         hass.config.path(
@@ -282,7 +282,7 @@ async def test_translation_merging(
     def mock_load_bad_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.season"] = {"state": "bad data"}
+        result["season.sensor"] = {"state": "bad data"}
         return result
 
     with patch(
@@ -308,7 +308,7 @@ async def test_translation_merging_loaded_apart(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.moon"] = {
+        result["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
