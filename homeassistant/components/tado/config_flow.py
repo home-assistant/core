@@ -119,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 CONF_USERNAME: import_config[CONF_USERNAME],
                 CONF_PASSWORD: import_config[CONF_PASSWORD],
-                CONF_HOME_ID: import_config.get(CONF_HOME_ID, None),
+                CONF_HOME_ID: import_config.get(CONF_HOME_ID),
             }
         )
         return self.async_create_entry(
