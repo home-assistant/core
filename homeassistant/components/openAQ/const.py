@@ -1,14 +1,15 @@
-"""Define AirVisual constants."""
-import logging
+"""Define constants for OpenAQ integration."""
 
-DOMAIN = "airvisual"
-LOGGER = logging.getLogger(__package__)
+from homeassistant.const import Platform
 
-INTEGRATION_TYPE_GEOGRAPHY_COORDS = "Geographical Location by Latitude/Longitude"
-INTEGRATION_TYPE_GEOGRAPHY_NAME = "Geographical Location by Name"
-INTEGRATION_TYPE_NODE_PRO = "AirVisual Node/Pro"
+DOMAIN = "openAQ"
+SENSOR_ID = "sensorid"
+DEFAULT_SENSOR_ID = "1234"
 
-CONF_CITY = "city"
-CONF_COUNTRY = "country"
-CONF_GEOGRAPHIES = "geographies"
-CONF_INTEGRATION_TYPE = "integration_type"
+SENSOR = "sensor"
+
+ICON = "mdi:air-filter"
+
+PLATFORMS = [
+    Platform.SENSOR,
+]
