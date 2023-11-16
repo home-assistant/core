@@ -496,7 +496,7 @@ def async_log_schema_error(
     """Log a schema validation error."""
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message = format_schema_error(ex, domain, config, link)
+    message = format_schema_error(hass, ex, domain, config, link)
     _LOGGER.error(message)
 
 
@@ -590,7 +590,13 @@ def find_annotation(
     return find_annotation_rec(config, list(path), None)
 
 
+def _relpath(hass: HomeAssistant, path: str) -> str:
+    """Return path relative to the Home Assistant config dir."""
+    return os.path.relpath(path, hass.config.config_dir)
+
+
 def stringify_invalid(
+    hass: HomeAssistant,
     ex: vol.Invalid,
     domain: str,
     config: dict,
@@ -613,7 +619,7 @@ def stringify_invalid(
     else:
         message_suffix = ""
     if annotation := find_annotation(config, ex.path):
-        message_prefix += f" at {annotation[0]}, line {annotation[1]}"
+        message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in ex.path)
     if ex.error_message == "extra keys not allowed":
         return (
@@ -643,6 +649,7 @@ def stringify_invalid(
 
 
 def humanize_error(
+    hass: HomeAssistant,
     validation_error: vol.Invalid,
     domain: str,
     config: dict,
@@ -657,12 +664,14 @@ def humanize_error(
     if isinstance(validation_error, vol.MultipleInvalid):
         return "\n".join(
             sorted(
-                humanize_error(sub_error, domain, config, link, max_sub_error_length)
+                humanize_error(
+                    hass, sub_error, domain, config, link, max_sub_error_length
+                )
                 for sub_error in validation_error.errors
             )
         )
     return stringify_invalid(
-        validation_error, domain, config, link, max_sub_error_length
+        hass, validation_error, domain, config, link, max_sub_error_length
     )
 
 
@@ -681,10 +690,14 @@ def format_homeassistant_error(
 
 @callback
 def format_schema_error(
-    ex: vol.Invalid, domain: str, config: dict, link: str | None = None
+    hass: HomeAssistant,
+    ex: vol.Invalid,
+    domain: str,
+    config: dict,
+    link: str | None = None,
 ) -> str:
     """Format configuration validation error."""
-    return humanize_error(ex, domain, config, link)
+    return humanize_error(hass, ex, domain, config, link)
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
@@ -806,15 +819,19 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
 
 
-def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
+def _log_pkg_error(
+    hass: HomeAssistant, package: str, component: str, config: dict, message: str
+) -> None:
     """Log an error while merging packages."""
     message = f"Package {package} setup failed. {message}"
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
-    message += (
-        f" (See {getattr(pack_config, '__config_file__', '?')}:"
-        f"{getattr(pack_config, '__line__', '?')})."
-    )
+    config_file = getattr(pack_config, "__config_file__", None)
+    if config_file:
+        config_file = _relpath(hass, config_file)
+    else:
+        config_file = "?"
+    message += f" (See {config_file}:{getattr(pack_config, '__line__', '?')})."
 
     _LOGGER.error(message)
 
@@ -893,7 +910,9 @@ async def merge_packages_config(
     hass: HomeAssistant,
     config: dict,
     packages: dict[str, Any],
-    _log_pkg_error: Callable[[str, str, dict, str], None] = _log_pkg_error,
+    _log_pkg_error: Callable[
+        [HomeAssistant, str, str, dict, str], None
+    ] = _log_pkg_error,
 ) -> dict:
     """Merge packages into the top-level configuration. Mutate config."""
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -912,6 +931,7 @@ async def merge_packages_config(
                 component = integration.get_component()
             except LOAD_EXCEPTIONS as ex:
                 _log_pkg_error(
+                    hass,
                     pack_name,
                     comp_name,
                     config,
@@ -919,7 +939,7 @@ async def merge_packages_config(
                 )
                 continue
             except INTEGRATION_LOAD_EXCEPTIONS as ex:
-                _log_pkg_error(pack_name, comp_name, config, str(ex))
+                _log_pkg_error(hass, pack_name, comp_name, config, str(ex))
                 continue
 
             try:
@@ -953,6 +973,7 @@ async def merge_packages_config(
 
             if not isinstance(comp_conf, dict):
                 _log_pkg_error(
+                    hass,
                     pack_name,
                     comp_name,
                     config,
@@ -965,6 +986,7 @@ async def merge_packages_config(
 
             if not isinstance(config[comp_name], dict):
                 _log_pkg_error(
+                    hass,
                     pack_name,
                     comp_name,
                     config,
@@ -975,6 +997,7 @@ async def merge_packages_config(
             duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
             if duplicate_key:
                 _log_pkg_error(
+                    hass,
                     pack_name,
                     comp_name,
                     config,

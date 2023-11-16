@@ -1730,7 +1730,7 @@ async def test_component_config_validation_error(
 
     error_records = [
         {
-            "message": record.message.replace(base_path, "<BASE_PATH>"),
+            "message": record.message,
             "has_exc_info": bool(record.exc_info),
         }
         for record in caplog.get_records("call")
@@ -1783,7 +1783,7 @@ async def test_component_config_validation_error_with_docs(
         )
 
     error_records = [
-        record.message.replace(base_path, "<BASE_PATH>")
+        record.message
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
@@ -1811,7 +1811,7 @@ async def test_package_merge_error(
     await config_util.async_hass_config_yaml(hass)
 
     error_records = [
-        record.message.replace(base_path, "<BASE_PATH>")
+        record.message
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
@@ -1851,7 +1851,7 @@ async def test_package_merge_exception(
         await config_util.async_hass_config_yaml(hass)
 
     error_records = [
-        record.message.replace(base_path, "<BASE_PATH>")
+        record.message
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
