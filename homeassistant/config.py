@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
+from yaml.error import MarkedYAMLError
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -393,12 +394,24 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     secrets = Secrets(Path(hass.config.config_dir))
 
     # Not using async_add_executor_job because this is an internal method.
-    config = await hass.loop.run_in_executor(
-        None,
-        load_yaml_config_file,
-        hass.config.path(YAML_CONFIG_FILE),
-        secrets,
-    )
+    try:
+        config = await hass.loop.run_in_executor(
+            None,
+            load_yaml_config_file,
+            hass.config.path(YAML_CONFIG_FILE),
+            secrets,
+        )
+    except HomeAssistantError as ex:
+        if not (base_ex := ex.__cause__) or not isinstance(base_ex, MarkedYAMLError):
+            raise
+
+        # Rewrite path to offending YAML file to be relative the hass config dir
+        if base_ex.context_mark and base_ex.context_mark.name:
+            base_ex.context_mark.name = _relpath(hass, base_ex.context_mark.name)
+        if base_ex.problem_mark and base_ex.problem_mark.name:
+            base_ex.problem_mark.name = _relpath(hass, base_ex.problem_mark.name)
+        raise
+
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
