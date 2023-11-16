@@ -41,17 +41,18 @@ async def async_setup_entry(
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     tracked: set = set()
 
-    async def async_update_devices() -> None:
+    @callback
+    def update_devices() -> None:
         """Update the values of the devices."""
         add_tracked_entities(hass, tado, async_add_entities, tracked)
 
-    await async_update_devices()
+    update_devices()
 
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-            async_update_devices,
+            update_devices,
         )
     )
 
