@@ -54,7 +54,8 @@ def _validate_integration(config: Config, integration: Integration) -> None:
                 notice_method = integration.add_error
 
             notice_method(
-                "config_flow", "Config flows that are discoverable need to set a unique ID"
+                "config_flow",
+                "Config flows that are discoverable need to set a unique ID",
             )
 
     init_file = integration.path / "__init__.py"
