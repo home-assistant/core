@@ -146,6 +146,11 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         return self._active
 
     @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the device."""
+        return self._device_id
+
+    @property
     def source_type(self) -> SourceType:
         """Return the source type."""
         return SourceType.GPS
