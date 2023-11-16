@@ -84,11 +84,7 @@ SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
 
 LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
-INTEGRATION_LOAD_EXCEPTIONS = (
-    IntegrationNotFound,
-    RequirementsNotFound,
-    *LOAD_EXCEPTIONS,
-)
+INTEGRATION_LOAD_EXCEPTIONS = (IntegrationNotFound, RequirementsNotFound)
 
 SAFE_MODE_FILENAME = "safe-mode"
 
@@ -812,7 +808,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
 def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
     """Log an error while merging packages."""
-    message = f"Package {package} setup failed. Integration {component} {message}"
+    message = f"Package {package} setup failed. {message}"
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += (
@@ -897,7 +893,7 @@ async def merge_packages_config(
     hass: HomeAssistant,
     config: dict,
     packages: dict[str, Any],
-    _log_pkg_error: Callable = _log_pkg_error,
+    _log_pkg_error: Callable[[str, str, dict, str], None] = _log_pkg_error,
 ) -> dict:
     """Merge packages into the top-level configuration. Mutate config."""
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -914,6 +910,14 @@ async def merge_packages_config(
                     hass, domain
                 )
                 component = integration.get_component()
+            except LOAD_EXCEPTIONS as ex:
+                _log_pkg_error(
+                    pack_name,
+                    comp_name,
+                    config,
+                    f"Integration {comp_name} caused error: {str(ex)}",
+                )
+                continue
             except INTEGRATION_LOAD_EXCEPTIONS as ex:
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
@@ -949,7 +953,10 @@ async def merge_packages_config(
 
             if not isinstance(comp_conf, dict):
                 _log_pkg_error(
-                    pack_name, comp_name, config, "cannot be merged. Expected a dict."
+                    pack_name,
+                    comp_name,
+                    config,
+                    f"Integration {comp_name} cannot be merged. Expected a dict.",
                 )
                 continue
 
@@ -961,14 +968,17 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    "cannot be merged. Dict expected in main config.",
+                    f"Integration {comp_name} cannot be merged. Dict expected in main config.",
                 )
                 continue
 
             duplicate_key = _recursive_merge(conf=config[comp_name], package=comp_conf)
             if duplicate_key:
                 _log_pkg_error(
-                    pack_name, comp_name, config, f"has duplicate key '{duplicate_key}'"
+                    pack_name,
+                    comp_name,
+                    config,
+                    f"Integration {comp_name} has duplicate key '{duplicate_key}'.",
                 )
 
     return config

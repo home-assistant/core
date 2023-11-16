@@ -380,7 +380,7 @@ async def test_package_invalid(hass: HomeAssistant) -> None:
 
         warning = CheckConfigError(
             (
-                "Package p1 setup failed. Component group cannot be merged. Expected a "
+                "Package p1 setup failed. Integration group cannot be merged. Expected a "
                 "dict."
             ),
             "homeassistant.packages.p1.group",
