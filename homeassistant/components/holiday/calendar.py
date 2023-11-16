@@ -39,6 +39,7 @@ class HolidayCalendarEntity(CalendarEntity):
     """Representation of a Holiday Calendar element."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
