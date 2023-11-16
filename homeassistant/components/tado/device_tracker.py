@@ -155,7 +155,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        return self._longitude
+        return None
 
     @property
     def unique_id(self) -> str:
