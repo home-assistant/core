@@ -93,7 +93,11 @@ async def async_check_ha_config_file(  # noqa: C901
     async_clear_install_history(hass)
 
     def _pack_error(
-        package: str, component: str, config: ConfigType, message: str
+        hass: HomeAssistant,
+        package: str,
+        component: str,
+        config: ConfigType,
+        message: str,
     ) -> None:
         """Handle errors from packages."""
         message = f"Package {package} setup failed. {message}"
@@ -109,7 +113,7 @@ async def async_check_ha_config_file(  # noqa: C901
     ) -> None:
         """Handle errors from components."""
         if isinstance(ex, vol.Invalid):
-            message = format_schema_error(ex, domain, component_config)
+            message = format_schema_error(hass, ex, domain, component_config)
         else:
             message = format_homeassistant_error(ex, domain, component_config)
         if domain in frontend_dependencies:
@@ -158,7 +162,9 @@ async def async_check_ha_config_file(  # noqa: C901
         result[CONF_CORE] = core_config
     except vol.Invalid as err:
         result.add_error(
-            format_schema_error(err, CONF_CORE, core_config), CONF_CORE, core_config
+            format_schema_error(hass, err, CONF_CORE, core_config),
+            CONF_CORE,
+            core_config,
         )
         core_config = {}
 
