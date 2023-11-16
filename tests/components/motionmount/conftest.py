@@ -2,7 +2,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-# import motionmount
 import pytest
 
 from homeassistant.components.motionmount.const import DOMAIN
