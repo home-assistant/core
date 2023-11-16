@@ -1646,7 +1646,7 @@ python-songpal==0.16
 python-tado==0.15.0
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==13.1
+python-telegram-bot==20.6
 
 # homeassistant.components.tile
 pytile==2023.04.0
