@@ -17,13 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, ANNOUNCMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
 
-from .canvas_api import CanvasAPI
-
-ANNOUNCMENTS_KEY: str = "announcements"
-ASSIGNMENTS_KEY: str = "assignments"
-CONVERSATIONS_KEY: str = "conversations"
+from .coordinator import CanvasDataUpdateCoordinator
 
 
 @dataclass
@@ -102,12 +98,12 @@ class CanvasSensorEntity(SensorEntity):
         self,
         entity_description: CanvasSensorEntityDescription,
         data: dict[str, Any],
-        api: CanvasAPI,
+        coordinator: CanvasDataUpdateCoordinator,
     ) -> None:
         """Initialize a Canvas sensor."""
         self.entity_description = entity_description
         self.data = data
-        self.api = api
+        self.coordinator = coordinator 
         self._attr_unique_id = f"{self.entity_description.name_fn(self.data)}"
 
         self._attr_device_info = DeviceInfo(
@@ -147,12 +143,22 @@ class CanvasSensorEntity(SensorEntity):
         """Return the extra state attributes."""
         return self.entity_description.attr_fn(self.data)
 
+def reset_state(): # <- call this method on data update (or async_setup_entry, but probably more correct to call this)
+    # deletes all old entities
+    # ceates new ones
+
+    # TODO: Basically do everything that 'async_setup_entry' does
+
+    pass
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Canvas sensor based on a config entry"""
+
+    reset_state()
 
     hass.data[DOMAIN][ASSIGNMENTS_KEY] = [
         {
@@ -182,14 +188,14 @@ async def async_setup_entry(
         {
             "title": "Hello!",
             "posted_at": "2023-10-30T21:59:59Z",
-            "user_name": "Farnaz Fotrousi",
+            "user_name": "[REDACTED]",
             "message": "Oh noooooooo"
         },
         {
-            "title": "Hello again, my name is Farnaz! 😜",
+            "title": "Hello again, my name is [REDACTED]! 😜",
             "posted_at": "2023-10-30T21:59:59Z",
-            "user_name": "Farnaz Fotrousi",
-            "message": "I am FARNAZZZZZZ"
+            "user_name": "[REDACTED]",
+            "message": "I am [REDACTED]"
         }
     ]
 
@@ -239,21 +245,21 @@ async def async_setup_entry(
     },
     ]
 
-    api = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    assignment_entities = [create_entity(ASSIGNMENTS_KEY, assignment, api) for assignment in hass.data[DOMAIN][ASSIGNMENTS_KEY]]
-    announcement_entities = [create_entity(ANNOUNCMENTS_KEY, announcement, api) for announcement in hass.data[DOMAIN][ANNOUNCMENTS_KEY]]
-    inbox_entities = [create_entity(CONVERSATIONS_KEY, conversation, api) for conversation in hass.data[DOMAIN][CONVERSATIONS_KEY]]
+    # TODO: turn into loop and handle missing data
+    # note, I think its fixed with ".get(ASSIGNMENTS_KEY, [])", but needs to be tested /Tejo
+    assignment_entities = [create_entity(ASSIGNMENTS_KEY, assignment, coordinator) for assignment in hass.data[DOMAIN].get(ASSIGNMENTS_KEY, [])]
+    announcement_entities = [create_entity(ANNOUNCMENTS_KEY, announcement, coordinator) for announcement in hass.data[DOMAIN].get(ANNOUNCMENTS_KEY, [])]
+    inbox_entities = [create_entity(CONVERSATIONS_KEY, conversation, coordinator) for conversation in hass.data[DOMAIN].get(CONVERSATIONS_KEY, [])]
 
     entities = assignment_entities + announcement_entities + inbox_entities
 
-    async_add_entities(
-        tuple(entities)
-    )
+    async_add_entities(tuple(entities))
 
 
-def create_entity(data_type: str, data: dict[str, Any], api: CanvasAPI) -> CanvasSensorEntity:
+def create_entity(data_type: str, data: dict[str, Any], coordinator: CanvasDataUpdateCoordinator) -> CanvasSensorEntity:
     entity_description = SENSOR_DESCRIPTIONS[data_type]
-    entity = CanvasSensorEntity(entity_description, data, api)
+    entity = CanvasSensorEntity(entity_description, data, coordinator)
 
     return entity
