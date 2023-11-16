@@ -14,3 +14,16 @@ AREAS = [
     "Värmland",
 ]
 CONF_AREA = "area"
+CONF_AREA_NAME = "Area"
+CONF_AREA_ICON = "mdi:map-marker"
+DATE = "createddate"
+DATE_NAME = "Timestamp"
+DATE_ICON = "mdi:update"
+DESC = "description"
+DESC_NAME = "Message"
+DESC_ICON = "mdi:message"
+INFO = [
+    (DESC, DESC_NAME, DESC_ICON),
+    (CONF_AREA, CONF_AREA_NAME, CONF_AREA_ICON),
+    (DATE, DATE_NAME, DATE_ICON),
+]

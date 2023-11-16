@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_AREA_NAME, DATE, INFO
 
 # dothis: Check trafikverket Train and try to do something similar. May be difficult/impossible to "dynamically" update location with sensor integration.
 # Instead set it during initial set up.
@@ -25,11 +25,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sr traffic platform."""
+    # Add entry to trafficsensor constructor
     area = entry.data.get("area")
-    async_add_entities([TrafficSensor(hass, area)])
-
-
-# async def async_update_entry()
+    names = INFO  # ["message", "time", "area"]
+    async_add_entities([TrafficSensor(hass, area, name, entry) for name in names])
 
 
 # Maybe need this maybe not?
@@ -56,20 +55,26 @@ class TrafficSensor(SensorEntity):
     """A class for the Sveriges Radio traffic sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Message"
+    # _attr_name = "Message"
     _attr_device_class = None
 
-    def __init__(self, hass: HomeAssistant | None, area) -> None:
+    def __init__(self, hass: HomeAssistant | None, area, name, entry) -> None:
         """Initialize the sensor."""
         # do stuff
+        self.entry = entry
+        api_name, description_name, icon = name
         self.thehass = hass
-        self._attr_native_value = "No updates"
+        self._attr_name = description_name
+        self.api_name = api_name
+        self._attr_native_value = (
+            area if description_name == CONF_AREA_NAME else "No updates"
+        )
         self._attr_auto_update = True
         self._attr_should_poll = True
         self.traffic_area = area
-        self._attr_unique_id = "05b972dcf28374406d13e879724bfe3b"
+        self._attr_unique_id = f"05b972dcf28374406d13e879724bfe3b{name}"
         self.selector = MySelect()
-        # self.selector.options = self._get_traffic_areas().split(", ")
+        self._attr_icon = icon
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
@@ -78,13 +83,8 @@ class TrafficSensor(SensorEntity):
         """
 
         # The stuff we send to the config entry is not saved in the config entry (After first setup)
-        domainsaver = self.hass.config_entries.async_entries(domain=DOMAIN)
-        # print(len(domainsaver))
-        self.traffic_area = domainsaver[0].data.get("area")
-        # print(self.traffic_area)
-        # Can't access selectors _attr (protected)
-        # if not self.selector._attr_options:
-        #     self.selector._attr_options = self._get_traffic_areas().split(", ")
+        # domainsaver = self.hass.config_entries.async_entries(domain=DOMAIN)
+        self.traffic_area = self.entry.data.get("area")
         self._attr_native_value = self._get_traffic_info()
 
     def _get_traffic_info(self) -> str | None:
@@ -95,22 +95,18 @@ class TrafficSensor(SensorEntity):
             timeout=10,
         )
         tree = defET.fromstring(response.content)
-        descriptionReturn = ""
+        return_string = ""
+        if self._attr_name == CONF_AREA_NAME:
+            return self.traffic_area
 
         for message in tree.findall(".//message"):
-            # message.find("title").text
-            descriptionReturn = message.find("description").text
-            # message.find("exactlocation").text
-            # message.find("createddate").text
+            return_string = message.find(self.api_name).text
 
-            # msgs.append(description)
-            # self._attr_native_value = description
-            # msg_data = {"Road": title, "description": description, "location": location, "createddate": time}
+        if self.api_name == DATE:
+            (date, _, time) = return_string.partition("T")
+            return_string = time[0:5] + ", " + date
 
-            # msgs.append(msg_data)
-            # test = ", ".join(msgs)
-
-        return descriptionReturn
+        return return_string
 
     # If we are going with Trafikverket plan then this method is probably not needed
     def _get_traffic_areas(self) -> str:

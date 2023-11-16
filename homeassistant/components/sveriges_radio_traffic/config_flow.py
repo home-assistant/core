@@ -94,7 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -103,7 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title="Sveriges Radio Traffic", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -135,16 +137,10 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         if user_input is not None:
             if not (_filter := user_input.get(CONF_AREA)) or _filter == "":
                 user_input[CONF_AREA] = None
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(
+                title="Sveriges Radio Traffic", data=user_input
+            )
 
         return self.async_show_form(
             step_id="init", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-        # return self.async_show_form(
-        #     step_id="init",
-        #     data_schema=self.add_suggested_values_to_schema(
-        #         vol.Schema(STEP_USER_DATA_SCHEMA),
-        #         user_input or "hejsan"
-        #     ),
-        #     errors=errors,
-        # )
