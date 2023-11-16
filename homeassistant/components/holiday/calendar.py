@@ -58,6 +58,15 @@ class HolidayCalendarEntity(CalendarEntity):
             name=name,
         )
 
+    def _default_language(self, hass: HomeAssistant) -> str:
+        """Return the default language."""
+        return (
+            country_holidays(hass.config.country).default_language
+            or hass.config.language
+            if hass.config.country
+            else hass.config.language
+        )
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -65,7 +74,7 @@ class HolidayCalendarEntity(CalendarEntity):
             self._country,
             subdiv=self._province,
             years=dt_util.now().year,
-            language=self.hass.config.language,
+            language=self._default_language(self.hass),
         )
 
         next_holiday = min(
@@ -92,7 +101,7 @@ class HolidayCalendarEntity(CalendarEntity):
             self._country,
             subdiv=self._province,
             years=list({start_date.year, end_date.year}),
-            language=hass.config.language,
+            language=self._default_language(hass),
         )
 
         event_list: list[CalendarEvent] = []
