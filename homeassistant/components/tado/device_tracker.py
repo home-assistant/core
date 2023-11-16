@@ -150,7 +150,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        return self._latitude
+        return None
 
     @property
     def longitude(self) -> float | None:
