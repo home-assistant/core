@@ -8,13 +8,12 @@ from functools import partial
 import logging
 from typing import Any
 
-from oauthlib.oauth2 import AccessDeniedError
-import requests
-from ring_doorbell import Auth, Ring
+import ring_doorbell
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, __version__
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -53,25 +52,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         ).result()
 
-    auth = Auth(f"HomeAssistant/{__version__}", entry.data["token"], token_updater)
-    ring = Ring(auth)
+    auth = ring_doorbell.Auth(
+        f"HomeAssistant/{__version__}", entry.data["token"], token_updater
+    )
+    ring = ring_doorbell.Ring(auth)
 
     try:
         await hass.async_add_executor_job(ring.update_data)
-    except AccessDeniedError:
-        _LOGGER.error("Access token is no longer valid. Please set up Ring again")
-        return False
+    except ring_doorbell.AuthenticationError as err:
+        _LOGGER.warning("Ring access token is no longer valid, need to re-authenticate")
+        raise ConfigEntryAuthFailed(err) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": ring,
         "devices": ring.devices(),
         "device_data": GlobalDataUpdater(
-            hass, "device", entry.entry_id, ring, "update_devices", timedelta(minutes=1)
+            hass, "device", entry, ring, "update_devices", timedelta(minutes=1)
         ),
         "dings_data": GlobalDataUpdater(
             hass,
             "active dings",
-            entry.entry_id,
+            entry,
             ring,
             "update_dings",
             timedelta(seconds=5),
@@ -79,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "history_data": DeviceDataUpdater(
             hass,
             "history",
-            entry.entry_id,
+            entry,
             ring,
             lambda device: device.history(limit=10),
             timedelta(minutes=1),
@@ -87,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "health_data": DeviceDataUpdater(
             hass,
             "health",
-            entry.entry_id,
+            entry,
             ring,
             lambda device: device.update_health_data(),
             timedelta(minutes=1),
@@ -143,15 +144,15 @@ class GlobalDataUpdater:
         self,
         hass: HomeAssistant,
         data_type: str,
-        config_entry_id: str,
-        ring: Ring,
+        config_entry: ConfigEntry,
+        ring: ring_doorbell.Ring,
         update_method: str,
         update_interval: timedelta,
     ) -> None:
         """Initialize global data updater."""
         self.hass = hass
         self.data_type = data_type
-        self.config_entry_id = config_entry_id
+        self.config_entry = config_entry
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
@@ -187,17 +188,19 @@ class GlobalDataUpdater:
             await self.hass.async_add_executor_job(
                 getattr(self.ring, self.update_method)
             )
-        except AccessDeniedError:
-            _LOGGER.error("Ring access token is no longer valid. Set up Ring again")
-            await self.hass.config_entries.async_unload(self.config_entry_id)
+        except ring_doorbell.AuthenticationError:
+            _LOGGER.warning(
+                "Ring access token is no longer valid, need to re-authenticate"
+            )
+            self.config_entry.async_start_reauth(self.hass)
             return
-        except requests.Timeout:
+        except ring_doorbell.RingTimeout:
             _LOGGER.warning(
                 "Time out fetching Ring %s data",
                 self.data_type,
             )
             return
-        except requests.RequestException as err:
+        except ring_doorbell.RingError as err:
             _LOGGER.warning(
                 "Error fetching Ring %s data: %s",
                 self.data_type,
@@ -216,15 +219,15 @@ class DeviceDataUpdater:
         self,
         hass: HomeAssistant,
         data_type: str,
-        config_entry_id: str,
-        ring: Ring,
-        update_method: Callable[[Ring], Any],
+        config_entry: ConfigEntry,
+        ring: ring_doorbell.Ring,
+        update_method: Callable[[ring_doorbell.Ring], Any],
         update_interval: timedelta,
     ) -> None:
         """Initialize device data updater."""
         self.data_type = data_type
         self.hass = hass
-        self.config_entry_id = config_entry_id
+        self.config_entry = config_entry
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
@@ -276,20 +279,22 @@ class DeviceDataUpdater:
         for device_id, info in self.devices.items():
             try:
                 data = info["data"] = self.update_method(info["device"])
-            except AccessDeniedError:
-                _LOGGER.error("Ring access token is no longer valid. Set up Ring again")
-                self.hass.add_job(
-                    self.hass.config_entries.async_unload(self.config_entry_id)
+            except ring_doorbell.AuthenticationError:
+                _LOGGER.warning(
+                    "Ring access token is no longer valid, need to re-authenticate"
+                )
+                self.hass.loop.call_soon_threadsafe(
+                    self.config_entry.async_start_reauth, self.hass
                 )
                 return
-            except requests.Timeout:
+            except ring_doorbell.RingTimeout:
                 _LOGGER.warning(
                     "Time out fetching Ring %s data for device %s",
                     self.data_type,
                     device_id,
                 )
                 continue
-            except requests.RequestException as err:
+            except ring_doorbell.RingError as err:
                 _LOGGER.warning(
                     "Error fetching Ring %s data for device %s: %s",
                     self.data_type,

@@ -109,7 +109,7 @@ class ComelitCoverEntity(
         if not self.is_closing and not self.is_opening:
             return
 
-        action = STATE_OFF if self.is_closing else STATE_ON
+        action = STATE_ON if self.is_closing else STATE_OFF
         await self._api.set_device_status(COVER, self._device.index, action)
 
     @callback
