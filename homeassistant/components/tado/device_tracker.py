@@ -135,7 +135,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
             )
         )
 
-        self.on_demand_update()
+        self.update_state()
 
     @property
     def name(self) -> str:
