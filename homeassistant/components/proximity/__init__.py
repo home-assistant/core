@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DIR_OF_TRAVEL,
-    ATTR_DIST_TO_CONVERTED,
+    ATTR_DIST_TO,
     ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
@@ -107,12 +107,14 @@ class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
     @property
     def state(self) -> str | int | float:
         """Return the state."""
-        return self.coordinator.data[ATTR_DIST_TO_CONVERTED]
+        return self.coordinator.data.proximity[ATTR_DIST_TO]
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            ATTR_DIR_OF_TRAVEL: str(self.coordinator.data[ATTR_DIR_OF_TRAVEL]),
-            ATTR_NEAREST: str(self.coordinator.data[ATTR_NEAREST]),
+            ATTR_DIR_OF_TRAVEL: str(
+                self.coordinator.data.proximity[ATTR_DIR_OF_TRAVEL]
+            ),
+            ATTR_NEAREST: str(self.coordinator.data.proximity[ATTR_NEAREST]),
         }

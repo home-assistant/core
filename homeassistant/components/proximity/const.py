@@ -4,9 +4,10 @@ from typing import Final
 
 from homeassistant.const import UnitOfLength
 
+ATTR_PROXIMITY_DATA: Final = "proximity_data"
+ATTR_ENTITIES_DATA: Final = "entities_data"
 ATTR_DIR_OF_TRAVEL: Final = "dir_of_travel"
 ATTR_DIST_TO: Final = "dist_to_zone"
-ATTR_DIST_TO_CONVERTED: Final = "dist_to_zone_converted"
 ATTR_NEAREST: Final = "nearest"
 
 CONF_IGNORED_ZONES = "ignored_zones"

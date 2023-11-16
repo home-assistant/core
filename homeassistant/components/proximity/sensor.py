@@ -17,7 +17,7 @@ from homeassistant.util import slugify
 from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
 from .coordinator import ProximityDataUpdateCoordinator
 
-SENSORS: list[SensorEntityDescription] = [
+SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_DIST_TO,
         device_class=SensorDeviceClass.DISTANCE,
@@ -28,6 +28,9 @@ SENSORS: list[SensorEntityDescription] = [
         translation_key=ATTR_DIR_OF_TRAVEL,
         icon="mdi:compass-outline",
     ),
+]
+
+SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_NEAREST, translation_key=ATTR_NEAREST, icon="mdi:near-me"
     ),
@@ -44,9 +47,21 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[DOMAIN][discovery_info[CONF_NAME]]
+    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][
+        discovery_info[CONF_NAME]
+    ]
 
-    async_add_entities(ProximitySensor(sensor, coordinator) for sensor in SENSORS)
+    entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
+        ProximitySensor(sensor, coordinator) for sensor in SENSORS_PER_PROXIMITY
+    ]
+
+    entities += [
+        ProximityTrackedEntitySensor(sensor, coordinator, tracked_entity)
+        for sensor in SENSORS_PER_ENTITY
+        for tracked_entity in coordinator.proximity_devices
+    ]
+
+    async_add_entities(entities)
 
 
 class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordinator]):
@@ -69,6 +84,37 @@ class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordin
     @property
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
-        if (value := self.coordinator.data[self.entity_description.key]) == "not set":
+        if (
+            value := self.coordinator.data.proximity[self.entity_description.key]
+        ) == "not set":
             return None
         return value
+
+
+class ProximityTrackedEntitySensor(
+    SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordinator]
+):
+    """Represents a Proximity tracked entity sensor."""
+
+    def __init__(
+        self,
+        description: SensorEntityDescription,
+        coordinator: ProximityDataUpdateCoordinator,
+        tracked_entity: str,
+    ) -> None:
+        """Initialize the proximity."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self.tracked_entity = tracked_entity
+
+        self._attr_unique_id = slugify(
+            f"{slugify(coordinator.friendly_name)}_{tracked_entity}_{description.key}"
+        )
+
+    @property
+    def native_value(self) -> str | float | None:
+        """Return native sensor value."""
+        if (data := self.coordinator.data.entities.get(self.tracked_entity)) is None:
+            return None
+        return data.get(self.entity_description.key)
