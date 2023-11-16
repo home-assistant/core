@@ -57,6 +57,7 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
 BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
+        translation_key="battery_is_charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value=lambda data: data.battery.is_charging,
     ),
@@ -90,7 +91,6 @@ async def async_setup_entry(
 class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
     """Define a System Bridge binary sensor."""
 
-    _attr_has_entity_name = True
     entity_description: SystemBridgeBinarySensorEntityDescription
 
     def __init__(
