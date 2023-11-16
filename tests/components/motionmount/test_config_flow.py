@@ -116,7 +116,7 @@ async def test_user_not_connected_error(
     assert result["reason"] == "not_connected"
 
 
-async def test_user_response_error_single_device_old_CE_old_new_Pro(
+async def test_user_response_error_single_device_old_ce_old_new_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
@@ -143,7 +143,7 @@ async def test_user_response_error_single_device_old_CE_old_new_Pro(
     assert result["result"]
 
 
-async def test_user_response_error_single_device_new_CE_old_Pro(
+async def test_user_response_error_single_device_new_ce_old_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
@@ -171,7 +171,7 @@ async def test_user_response_error_single_device_new_CE_old_Pro(
     assert result["result"]
 
 
-async def test_user_response_error_single_device_new_CE_new_Pro(
+async def test_user_response_error_single_device_new_ce_new_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
@@ -198,7 +198,7 @@ async def test_user_response_error_single_device_new_CE_new_Pro(
     assert result["result"].unique_id == ZEROCONF_MAC
 
 
-async def test_user_response_error_multi_device_old_CE_old_new_Pro(
+async def test_user_response_error_multi_device_old_ce_old_new_pro(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motionmount_config_flow: MagicMock,
@@ -222,7 +222,7 @@ async def test_user_response_error_multi_device_old_CE_old_new_Pro(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_response_error_multi_device_new_CE_new_Pro(
+async def test_user_response_error_multi_device_new_ce_new_pro(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motionmount_config_flow: MagicMock,
@@ -321,7 +321,7 @@ async def test_zeroconf_not_connected_error(
     assert result["reason"] == "not_connected"
 
 
-async def test_show_zeroconf_form_old_CE_old_Pro(
+async def test_show_zeroconf_form_old_ce_old_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
@@ -342,7 +342,7 @@ async def test_show_zeroconf_form_old_CE_old_Pro(
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
-async def test_show_zeroconf_form_old_CE_new_Pro(
+async def test_show_zeroconf_form_old_ce_new_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
@@ -363,7 +363,7 @@ async def test_show_zeroconf_form_old_CE_new_Pro(
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
-async def test_show_zeroconf_form_new_CE_old_Pro(
+async def test_show_zeroconf_form_new_ce_old_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
@@ -384,7 +384,7 @@ async def test_show_zeroconf_form_new_CE_old_Pro(
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
-async def test_show_zeroconf_form_new_CE_new_Pro(
+async def test_show_zeroconf_form_new_ce_new_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
 ) -> None:
