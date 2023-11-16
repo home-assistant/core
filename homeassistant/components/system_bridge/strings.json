@@ -32,7 +32,7 @@
   "entity": {
     "binary_sensor": {
       "battery_is_charging": {
-        "name": "Battery is charging"
+        "name": "Battery charging"
       },
       "camera_in_use": {
         "name": "Camera in use"
