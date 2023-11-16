@@ -8,5 +8,11 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "services": {
+    "speedtest": {
+      "name": "Speed test",
+      "description": "Immediately executes a speed test with Fast.com."
+    }
   }
 }
