@@ -1,6 +1,6 @@
 """The tests for assist_pipeline logbook."""
 from homeassistant.components import assist_pipeline, logbook
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -30,7 +30,7 @@ async def test_recording_event(
         [
             MockRow(
                 assist_pipeline.EVENT_RECORDING,
-                {ATTR_DEVICE_ID: satellite_device.id, ATTR_SECONDS: 10},
+                {ATTR_DEVICE_ID: satellite_device.id},
             ),
         ],
     )[0]
@@ -38,6 +38,5 @@ async def test_recording_event(
     assert event[logbook.LOGBOOK_ENTRY_NAME] == "My Satellite"
     assert event[logbook.LOGBOOK_ENTRY_DOMAIN] == assist_pipeline.DOMAIN
     assert (
-        event[logbook.LOGBOOK_ENTRY_MESSAGE]
-        == "My Satellite will record audio for 10 second(s)"
+        event[logbook.LOGBOOK_ENTRY_MESSAGE] == "My Satellite started recording audio"
     )

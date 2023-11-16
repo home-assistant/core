@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 
@@ -29,8 +29,7 @@ def async_describe_events(
         if device:
             device_name = device.name_by_user or device.name or "Unknown device"
 
-        timeout_seconds = event.data[ATTR_SECONDS]
-        message = f"{device_name} will record audio for {timeout_seconds} second(s)"
+        message = f"{device_name} started recording audio"
 
         return {
             LOGBOOK_ENTRY_NAME: device_name,
