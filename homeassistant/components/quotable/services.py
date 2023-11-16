@@ -91,15 +91,14 @@ async def _fetch_a_quote_service(
     if quotable is None:
         return None
 
-    selected_tags = quotable.config.get(ATTR_SELECTED_TAGS, [])
-    selected_authors = quotable.config.get(ATTR_SELECTED_AUTHORS, [])
+    params = {
+        "tags": "|".join(quotable.config.get(ATTR_SELECTED_TAGS, [])),
+        "author": "|".join(quotable.config.get(ATTR_SELECTED_AUTHORS, [])),
+    }
 
-    tags_param = "".join(selected_tags).replace(",", "|")
-    authors_param = "".join(selected_authors).replace(",", "|")
-
-    url = f"{FETCH_A_QUOTE_URL}?tags={tags_param}&author={authors_param}"
-
-    response = await session.get(url, timeout=HTTP_CLIENT_TIMEOUT)
+    response = await session.get(
+        FETCH_A_QUOTE_URL, params=params, timeout=HTTP_CLIENT_TIMEOUT
+    )
 
     if response.status == HTTPStatus.OK:
         data = await response.json()
