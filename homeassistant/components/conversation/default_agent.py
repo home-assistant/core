@@ -643,17 +643,20 @@ class DefaultAgent(AbstractConversationAgent):
         self, user_input: ConversationInput
     ) -> dict[str, Any] | None:
         """Return intent recognition context for user input."""
-        intent_context: dict[str, Any] | None = None
-        if user_input.device_id:
-            devices = dr.async_get(self.hass)
-            device = devices.async_get(user_input.device_id)
-            if (device is not None) and (device.area_id is not None):
-                areas = ar.async_get(self.hass)
-                device_area = areas.async_get_area(device.area_id)
-                if device_area is not None:
-                    intent_context = {"area": device_area.name}
+        if not user_input.device_id:
+            return None
 
-        return intent_context
+        devices = dr.async_get(self.hass)
+        device = devices.async_get(user_input.device_id)
+        if (device is None) or (device.area_id is None):
+            return None
+
+        areas = ar.async_get(self.hass)
+        device_area = areas.async_get_area(device.area_id)
+        if device_area is None:
+            return None
+
+        return {"area": device_area.name}
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents | None
