@@ -398,9 +398,10 @@ async def test_read_door_state(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["obstruction-detected"] is True
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a cover unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     cover_entry = entity_registry.async_get_or_create(
         "cover",

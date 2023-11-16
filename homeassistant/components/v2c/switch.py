@@ -55,11 +55,10 @@ async def async_setup_entry(
     """Set up V2C switch platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[SwitchEntity] = [
+    async_add_entities(
         V2CSwitchEntity(coordinator, description, config_entry.entry_id)
         for description in TRYDAN_SWITCHES
-    ]
-    async_add_entities(entities)
+    )
 
 
 class V2CSwitchEntity(V2CBaseEntity, SwitchEntity):

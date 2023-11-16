@@ -15,9 +15,10 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
-    _format_config_error,
     config_per_platform,
     extract_domain_configs,
+    format_homeassistant_error,
+    format_schema_error,
     load_yaml_config_file,
     merge_packages_config,
 )
@@ -94,22 +95,27 @@ async def async_check_ha_config_file(  # noqa: C901
     def _pack_error(
         package: str, component: str, config: ConfigType, message: str
     ) -> None:
-        """Handle errors from packages: _log_pkg_error."""
+        """Handle errors from packages."""
         message = f"Package {package} setup failed. Component {component} {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
 
-    def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
-        """Handle errors from components: async_log_exception."""
-        if domain in frontend_dependencies:
-            result.add_error(
-                _format_config_error(ex, domain, config)[0], domain, config
-            )
+    def _comp_error(
+        ex: vol.Invalid | HomeAssistantError,
+        domain: str,
+        component_config: ConfigType,
+        config_to_attach: ConfigType,
+    ) -> None:
+        """Handle errors from components."""
+        if isinstance(ex, vol.Invalid):
+            message = format_schema_error(ex, domain, component_config)
         else:
-            result.add_warning(
-                _format_config_error(ex, domain, config)[0], domain, config
-            )
+            message = format_homeassistant_error(ex, domain, component_config)
+        if domain in frontend_dependencies:
+            result.add_error(message, domain, config_to_attach)
+        else:
+            result.add_warning(message, domain, config_to_attach)
 
     async def _get_integration(
         hass: HomeAssistant, domain: str
@@ -152,7 +158,7 @@ async def async_check_ha_config_file(  # noqa: C901
         result[CONF_CORE] = core_config
     except vol.Invalid as err:
         result.add_error(
-            _format_config_error(err, CONF_CORE, core_config)[0], CONF_CORE, core_config
+            format_schema_error(err, CONF_CORE, core_config), CONF_CORE, core_config
         )
         core_config = {}
 
@@ -204,7 +210,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 )[domain]
                 continue
             except (vol.Invalid, HomeAssistantError) as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, config, config[domain])
                 continue
             except Exception as err:  # pylint: disable=broad-except
                 logging.getLogger(__name__).exception(
@@ -225,7 +231,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 if domain in config:
                     result[domain] = config[domain]
             except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, config, config[domain])
                 continue
 
         component_platform_schema = getattr(
@@ -243,7 +249,7 @@ async def async_check_ha_config_file(  # noqa: C901
             try:
                 p_validated = component_platform_schema(p_config)
             except vol.Invalid as ex:
-                _comp_error(ex, domain, p_config)
+                _comp_error(ex, domain, p_config, p_config)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -279,7 +285,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 try:
                     p_validated = platform_schema(p_validated)
                 except vol.Invalid as ex:
-                    _comp_error(ex, f"{domain}.{p_name}", p_config)
+                    _comp_error(ex, f"{domain}.{p_name}", p_config, p_config)
                     continue
 
             platforms.append(p_validated)
