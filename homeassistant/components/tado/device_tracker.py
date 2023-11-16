@@ -94,7 +94,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     ) -> None:
         """Initialize a Tado Device Tracker entity."""
         super().__init__()
-        self._device_id = device_id
+        self._attr_unique_id = device_id
         self._device_name = device_name
         self._tado = tado
         self._active = False
@@ -107,9 +107,9 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         _LOGGER.debug(
             "Updating Tado mobile device: %s (ID: %s)",
             self._device_name,
-            self._device_id,
+            self._attr_unique_id,
         )
-        device = self._tado.data["mobile_device"][self._device_id]
+        device = self._tado.data["mobile_device"][self._attr_unique_id]
 
         self._active = False
         if device.get("location") is not None and device["location"]["atHome"]:
@@ -158,9 +158,9 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         return None
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return the unique ID of the device."""
-        return self._device_id
+        return self._attr_unique_id
 
     @property
     def source_type(self) -> SourceType:
