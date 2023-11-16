@@ -19,6 +19,8 @@ from .const import (
     ATTR_SELECTED_TAGS,
     ATTR_UPDATE_FREQUENCY,
     DOMAIN,
+    EVENT_NEW_QUOTE_FETCHED,
+    FETCH_A_QUOTE_URL,
     GET_TAGS_URL,
     HTTP_CLIENT_TIMEOUT,
     SERVICE_FETCH_A_QUOTE,
@@ -52,6 +54,7 @@ def register_services(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         service=SERVICE_FETCH_A_QUOTE,
         service_func=partial(_fetch_a_quote_service, session, hass),
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     hass.services.register(
@@ -82,8 +85,33 @@ async def _search_authors_service(
 
 async def _fetch_a_quote_service(
     session: aiohttp.ClientSession, hass: HomeAssistant, service: ServiceCall
-) -> None:
-    pass
+) -> ServiceResponse:
+    """Get the Quotable instance from hass.data."""
+    quotable = hass.data.get(DOMAIN)
+    if quotable is None:
+        return None
+
+    selected_tags = quotable.config.get(ATTR_SELECTED_TAGS, [])
+    selected_authors = quotable.config.get(ATTR_SELECTED_AUTHORS, [])
+
+    tags_param = "".join(selected_tags).replace(",", "|")
+    authors_param = "".join(selected_authors).replace(",", "|")
+
+    url = f"{FETCH_A_QUOTE_URL}?tags={tags_param}&author={authors_param}"
+
+    response = await session.get(url, timeout=HTTP_CLIENT_TIMEOUT)
+
+    if response.status == HTTPStatus.OK:
+        data = await response.json()
+        if data:
+            quote = {"author": data[0]["author"], "content": data[0]["content"]}
+
+            hass.bus.fire(EVENT_NEW_QUOTE_FETCHED, quote)
+
+            if service.return_response:
+                return quote
+
+    return None
 
 
 def _update_configuration_service(hass: HomeAssistant, service: ServiceCall) -> None:

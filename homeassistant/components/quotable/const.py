@@ -23,3 +23,5 @@ ATTR_SELECTED_AUTHORS: Final = "selected_authors"
 ATTR_UPDATE_FREQUENCY: Final = "update_frequency"
 
 DEFAULT_UPDATE_FREQUENCY: Final = 1800
+
+EVENT_NEW_QUOTE_FETCHED: Final = f"{DOMAIN}_new_quote_fetched"
