@@ -1,6 +1,7 @@
 """The Quotable integration."""
 
 from datetime import datetime, timedelta
+import json
 import logging
 from typing import Any
 
@@ -82,11 +83,10 @@ class Quotable:
     @property
     def attrs(self) -> dict[str, Any]:
         """Attributes that are saved in state."""
-        return {**self.config, **{ATTR_QUOTES: self.quotes}}
+        return {**self.config, **{ATTR_QUOTES: json.dumps(self.quotes)}}
 
     def update_configuration(self, selected_tags, selected_authors, update_frequency):
         """Update configuration."""
-
         self.config[ATTR_SELECTED_TAGS] = selected_tags
         self.config[ATTR_SELECTED_AUTHORS] = selected_authors
 
