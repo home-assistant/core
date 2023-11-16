@@ -6,6 +6,12 @@
           "host_prefix": "Domain (e.g. chalmers)",
           "access_token": "[%key:common::config_flow::data::access_token%]"
         }
+      },
+      "courses": {
+        "title": "Configure courses",
+        "data": {
+          "courses": "Select courses to track."
+        }
       }
     },
     "error": {
@@ -15,6 +21,19 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "assignments": {
+        "name": "Upcoming assignments"
+      },
+      "announcements": {
+        "name": "Announcements"
+      },
+      "inbox": {
+        "name": "Inbox"
+      }
     }
   }
 }
