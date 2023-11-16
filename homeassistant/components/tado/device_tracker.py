@@ -5,8 +5,9 @@ import logging
 from typing import Any
 
 from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,7 +81,7 @@ def add_tracked_entities(
     async_add_entities(new_tracked)
 
 
-class TadoDeviceTrackerEntity(ScannerEntity):
+class TadoDeviceTrackerEntity(TrackerEntity):
     """A Tado Device Tracker entity."""
 
     _attr_should_poll = False
@@ -97,7 +98,8 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         self._device_name = device_name
         self._tado = tado
         self._active = False
-        self._mac_address = None
+        self._latitude = None
+        self._longitude = None
 
     @callback
     def update_state(self) -> None:
@@ -141,9 +143,19 @@ class TadoDeviceTrackerEntity(ScannerEntity):
         return self._device_name
 
     @property
-    def is_connected(self) -> bool:
-        """Return true if the device is connected and home."""
-        return self._active
+    def state(self) -> str:
+        """Return the state of the device."""
+        return STATE_HOME if self._active else STATE_NOT_HOME
+
+    @property
+    def latitude(self) -> float | None:
+        """Return latitude value of the device."""
+        return self._latitude
+
+    @property
+    def longitude(self) -> float | None:
+        """Return longitude value of the device."""
+        return self._longitude
 
     @property
     def unique_id(self) -> str:
