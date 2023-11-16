@@ -613,9 +613,9 @@ def stringify_invalid(
     - Give a more user friendly output for unknown options
     - Give a more user friendly output for missing options
     """
-    message_prefix = f"Invalid config for [{domain}]"
+    message_prefix = f"Invalid config for '{domain}'"
     if domain != CONF_CORE and link:
-        message_suffix = f". Please check the docs at {link}"
+        message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
     if annotation := find_annotation(config, ex.path):
@@ -623,13 +623,13 @@ def stringify_invalid(
     path = "->".join(str(m) for m in ex.path)
     if ex.error_message == "extra keys not allowed":
         return (
-            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
+            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for '{domain}', "
             f"check: {path}{message_suffix}"
         )
     if ex.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{ex.path[-1]}' not provided"
-            f"{message_suffix}."
+            f"{message_suffix}"
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
@@ -644,7 +644,7 @@ def stringify_invalid(
         )
     return (
         f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
-        f"{message_suffix}."
+        f"{message_suffix}"
     )
 
 
@@ -684,14 +684,14 @@ def format_homeassistant_error(
     link: str | None = None,
 ) -> str:
     """Format HomeAssistantError thrown by a custom config validator."""
-    message_prefix = f"Invalid config for [{domain}]"
+    message_prefix = f"Invalid config for '{domain}'"
     # HomeAssistantError raised by custom config validator has no path to the
     # offending configuration key, use the domain key as path instead.
     if annotation := find_annotation(config, [domain]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     message = f"{message_prefix}: {str(ex) or repr(ex)}"
     if domain != CONF_CORE and link:
-        message += f" Please check the docs at {link}."
+        message += f", please check the docs at {link}"
 
     return message
 
