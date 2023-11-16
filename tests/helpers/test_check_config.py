@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.check_config import (
     CheckConfigError,
     HomeAssistantConfig,
@@ -379,7 +380,7 @@ async def test_package_invalid(hass: HomeAssistant) -> None:
 
         warning = CheckConfigError(
             (
-                "Package p1 setup failed. Component group cannot be merged. Expected a "
+                "Package p1 setup failed. Integration group cannot be merged. Expected a "
                 "dict."
             ),
             "homeassistant.packages.p1.group",
@@ -440,12 +441,35 @@ action:
         assert "input_datetime" in res
 
 
-async def test_config_platform_raise(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("exception", "errors", "warnings", "message"),
+    [
+        (
+            Exception("Broken"),
+            1,
+            0,
+            "Unexpected error calling config validator: Broken",
+        ),
+        (
+            HomeAssistantError("Broken"),
+            0,
+            1,
+            "Invalid config for [bla]: Broken",
+        ),
+    ],
+)
+async def test_config_platform_raise(
+    hass: HomeAssistant,
+    exception: Exception,
+    errors: int,
+    warnings: int,
+    message: str,
+) -> None:
     """Test bad config validation platform."""
     mock_platform(
         hass,
         "bla.config",
-        Mock(async_validate_config=Mock(side_effect=Exception("Broken"))),
+        Mock(async_validate_config=Mock(side_effect=exception)),
     )
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG
@@ -457,11 +481,11 @@ bla:
     with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
         error = CheckConfigError(
-            "Unexpected error calling config validator: Broken",
+            message,
             "bla",
             {"value": 1},
         )
-        _assert_warnings_errors(res, [], [error])
+        _assert_warnings_errors(res, [error] * warnings, [error] * errors)
 
 
 async def test_removed_yaml_support(hass: HomeAssistant) -> None:

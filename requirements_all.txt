@@ -1015,7 +1015,7 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.35
+holidays==0.36
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231030.2
@@ -2143,7 +2143,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==3.1.0
+python-homewizard-energy==4.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
