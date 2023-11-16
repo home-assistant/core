@@ -13,6 +13,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     CONF_FALLBACK,
@@ -115,19 +116,47 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         _LOGGER.debug("Importing Tado from configuration.yaml")
+        username = import_config[CONF_USERNAME]
+        password = import_config[CONF_PASSWORD]
+        home_id = import_config.get(CONF_HOME_ID, None)
+
         self._async_abort_entries_match(
             {
-                CONF_USERNAME: import_config[CONF_USERNAME],
-                CONF_PASSWORD: import_config[CONF_PASSWORD],
-                CONF_HOME_ID: import_config.get(CONF_HOME_ID),
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_HOME_ID: home_id,
             }
         )
+
+        try:
+            await validate_input(
+                self.hass,
+                {
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
+            )
+        except RuntimeError:
+            _LOGGER.exception("Unexpected exception while importing Tado")
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "failed_to_import",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="failed_to_import",
+            )
+
+        if home_id is not None:
+            await self.async_set_unique_id(home_id)
+            self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=import_config[CONF_USERNAME],
             data={
-                CONF_USERNAME: import_config[CONF_USERNAME],
-                CONF_PASSWORD: import_config[CONF_PASSWORD],
-                CONF_HOME_ID: import_config.get(CONF_HOME_ID, None),
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_HOME_ID: home_id,
             },
         )
 
