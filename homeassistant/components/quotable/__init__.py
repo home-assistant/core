@@ -20,6 +20,7 @@ from .const import (
     DEFAULT_UPDATE_FREQUENCY,
     DOMAIN,
     ENTITY_ID,
+    EVENT_NEW_QUOTE_FETCHED,
     SERVICE_FETCH_A_QUOTE,
 )
 from .services import register_services
@@ -66,14 +67,17 @@ class Quotable:
     def __init__(self, hass, config):
         """Initialize Quotable."""
         self._hass = hass
-        self.quotes = []
         self.config = config
-        self._unsubscribe = None
-        self._add_event_listener()
+        self.quotes = []
         self._update_state()
+
+        self._unsubscribe_fetch_a_quote = None
+        self._subscribe_fetch_a_quote()
         self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._cancel_event_listener
+            EVENT_HOMEASSISTANT_STOP, self._cancel_async_event_listeners
         )
+
+        self._hass.bus.listen(EVENT_NEW_QUOTE_FETCHED, self._handle_new_quote_fetched)
 
     @property
     def attrs(self) -> dict[str, Any]:
@@ -85,16 +89,25 @@ class Quotable:
         self.config[ATTR_SELECTED_TAGS] = selected_tags
         self.config[ATTR_SELECTED_AUTHORS] = selected_authors
         self.config[ATTR_UPDATE_FREQUENCY] = update_frequency
-        self._add_event_listener()
+        self._subscribe_fetch_a_quote()
         self._update_state()
 
     def _update_state(self):
         self._hass.states.set(ENTITY_ID, datetime.now(), self.attrs)
 
-    def _add_event_listener(self):
-        self._cancel_event_listener(self)
+    def _handle_new_quote_fetched(self, event: Event):
+        self.quotes.insert(0, event.data)
 
-        self._unsubscribe = async_track_time_interval(
+        if len(self.quotes) > 10:
+            self.quotes.pop()
+
+        self._update_state()
+
+    def _subscribe_fetch_a_quote(self):
+        if self._unsubscribe_fetch_a_quote:
+            self._unsubscribe_fetch_a_quote()
+
+        self._unsubscribe_fetch_a_quote = async_track_time_interval(
             self._hass,
             self._schedule_fetch_a_quote_task,
             timedelta(seconds=self.config[ATTR_UPDATE_FREQUENCY]),
@@ -102,10 +115,8 @@ class Quotable:
         )
 
     @callback
-    def _cancel_event_listener(self, _: Event):
-        if self._unsubscribe:
-            self._unsubscribe()
-            self._unsubscribe = None
+    def _cancel_async_event_listeners(self, _: Event):
+        self._unsubscribe_fetch_a_quote()
 
     @callback
     def _schedule_fetch_a_quote_task(self, _: datetime) -> None:

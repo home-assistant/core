@@ -8,7 +8,7 @@ ENTITY_ID: Final = f"{DOMAIN}.quotable"
 BASE_URL: Final = "https://api.quotable.io"
 GET_TAGS_URL: Final = f"{BASE_URL}/tags"
 SEARCH_AUTHORS_URL: Final = f"{BASE_URL}/search/authors"
-FETCH_A_QUOTE_URL: Final = f"{BASE_URL}/random"
+FETCH_A_QUOTE_URL: Final = f"{BASE_URL}/quotes/random"
 
 HTTP_CLIENT_TIMEOUT: Final = 10
 
@@ -23,3 +23,5 @@ ATTR_SELECTED_AUTHORS: Final = "selected_authors"
 ATTR_UPDATE_FREQUENCY: Final = "update_frequency"
 
 DEFAULT_UPDATE_FREQUENCY: Final = 1800
+
+EVENT_NEW_QUOTE_FETCHED: Final = f"{DOMAIN}_new_quote_fetched"
