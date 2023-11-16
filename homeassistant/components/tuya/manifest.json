@@ -43,5 +43,8 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["tuya_iot"],
-  "requirements": ["tuya-device-sharing-sdk==0.1.8"]
+  "requirements": [
+    "tuya-device-sharing-sdk==0.1.8",
+    "segno==1.5.3"
+  ]
 }

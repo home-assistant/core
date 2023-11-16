@@ -2,14 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter your Tuya credentials",
+        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
-          "country_code": "Country",
-          "access_id": "Tuya IoT Access ID",
-          "access_secret": "Tuya IoT Access Secret",
-          "username": "Account",
-          "password": "[%key:common::config_flow::data::password%]"
+          "user_code": "User code"
         }
+      },
+      "scan": {
+        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login:\n\n {qrcode} \n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {

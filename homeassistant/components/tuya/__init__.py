@@ -14,7 +14,7 @@ from tuya_sharing import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.const import __version__
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     if CONF_APP_TYPE in entry.data:
-        raise ConfigEntryNotReady()
+        raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     if hass.data[DOMAIN].get(entry.entry_id) is None:
         token_listener = TokenListener(hass, entry)
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def report_version(hass: HomeAssistant, manager: Manager):
+async def report_version(hass: HomeAssistant, manager: Manager):
     integration = await async_get_integration(hass, DOMAIN)
     manifest = integration.manifest
     tuya_version = manifest["version"]
@@ -159,14 +159,14 @@ class DeviceListener(SharingDeviceListener):
             device.id,
             self.manager.device_map[device.id].status,
         )
-        dispatcher_send(self.hass, f"{SMART_LIFE_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
+        dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
 
-        dispatcher_send(self.hass, SMART_LIFE_DISCOVERY_NEW, [device.id])
+        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""

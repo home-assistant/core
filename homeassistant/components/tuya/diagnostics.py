@@ -17,8 +17,6 @@ from homeassistant.util import dt as dt_util
 from . import HomeAssistantTuyaData
 from .const import (
     CONF_APP_TYPE,
-    CONF_AUTH_TYPE,
-    CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
     DOMAIN,
     DPCode,
@@ -77,13 +75,13 @@ def _async_get_diagnostics(
 
 
 @callback
-def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, Any]:
+def _async_device_as_dict(hass: HomeAssistant, device: CustomerDevice) -> dict[str, Any]:
     """Represent a Tuya device as a dictionary."""
 
     # Base device information, without sensitive information.
     data = {
+        "id": device.id,
         "name": device.name,
-        "model": device.model if hasattr(device, "model") else None,
         "category": device.category,
         "product_id": device.product_id,
         "product_name": device.product_name,
@@ -97,6 +95,8 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
         "status_range": {},
         "status": {},
         "home_assistant": {},
+        "set_up": device.set_up,
+        "support_local": device.support_local,
     }
 
     # Gather Tuya states
