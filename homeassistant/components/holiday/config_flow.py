@@ -66,7 +66,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_schema, errors=errors
         )
 
-    async def async_step_province(self, user_input=None) -> FlowResult:
+    async def async_step_province(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the province step."""
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
