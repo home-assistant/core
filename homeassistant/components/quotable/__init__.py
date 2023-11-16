@@ -86,10 +86,15 @@ class Quotable:
 
     def update_configuration(self, selected_tags, selected_authors, update_frequency):
         """Update configuration."""
+
         self.config[ATTR_SELECTED_TAGS] = selected_tags
         self.config[ATTR_SELECTED_AUTHORS] = selected_authors
-        self.config[ATTR_UPDATE_FREQUENCY] = update_frequency
-        self._subscribe_fetch_a_quote()
+
+        if self.config[ATTR_UPDATE_FREQUENCY] != update_frequency:
+            self.config[ATTR_UPDATE_FREQUENCY] = update_frequency
+            # Recreate event listener only if update_frequency is changed
+            self._subscribe_fetch_a_quote()
+
         self._update_state()
 
     def _update_state(self):
