@@ -46,7 +46,7 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
         key="pending_restart",
         translation_key="pending_restart",
         icon="mdi:restart",
-        value=lambda data: data.system.pending_reboot,
+        value=lambda data: data.system.pending_restart,
     ),
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
