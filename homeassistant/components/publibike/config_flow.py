@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+from pypublibike.location import Location
 from pypublibike.publibike import PubliBike, Station
 from requests import RequestException
 import voluptuous as vol
@@ -78,6 +79,17 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception(
                         "Unknown exception occurred while validating the station id"
                     )
+            else:
+                publi_bike = PubliBike()
+                location = Location(
+                    latitude=self.hass.config.latitude,
+                    longitude=self.hass.config.longitude,
+                )
+                station = await self.hass.async_add_executor_job(
+                    publi_bike.findNearestStationTo, location
+                )
+                station_id = station.stationId
+                user_input[STATION_ID] = station_id
 
             if not errors:
                 station_name = await self._get_station_name(station_id)
