@@ -56,6 +56,48 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_no_id(hass):
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    class MockStation:
+        def __init__(self, stationId):
+            self.stationId = 123
+            self.name = "StationName"
+
+        def refresh(self):
+            pass
+
+    with patch(
+        "homeassistant.components.publibike.PubliBike.getStations",
+        return_value=[MagicMock(stationId=123)],
+    ), patch(
+        "homeassistant.components.publibike.config_flow.PubliBike.findNearestStationTo",
+        return_value=MagicMock(stationId=123, name="StationName"),
+    ), patch(
+        "homeassistant.components.publibike.config_flow.Station",
+        new_callable=lambda: MockStation,
+    ), patch(
+        "homeassistant.components.publibike.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "PubliBike - StationName"
+    assert result2["data"] == {"station_id": 123}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_invalid_id(hass):
     """Test we handle an invalid station id."""
 
