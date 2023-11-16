@@ -1,7 +1,7 @@
 """Config flow for Wyoming integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -10,6 +10,9 @@ from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
+
+if TYPE_CHECKING:
+    from wyoming.info import Satellite
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -59,12 +62,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # wake-word-detection
         wake_installed = [wake for wake in service.info.wake if wake.installed]
 
+        # satellite
+        satellite_installed: Satellite | None = None
+
+        if (service.info.satellite is not None) and service.info.satellite.installed:
+            satellite_installed = service.info.satellite
+
         if asr_installed:
             name = asr_installed[0].name
         elif tts_installed:
             name = tts_installed[0].name
         elif wake_installed:
             name = wake_installed[0].name
+        elif satellite_installed:
+            name = satellite_installed.name
         else:
             return self.async_abort(reason="no_services")
 

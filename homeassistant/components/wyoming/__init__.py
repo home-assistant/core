@@ -9,6 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
+from .satellite import WyomingSatellite
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry,
         service.platforms,
     )
+
+    if service.info.satellite is not None:
+        hass.async_create_background_task(
+            WyomingSatellite(hass, service).run(),
+            f"Satellite {service.info.satellite.name}",
+        )
 
     return True
 
