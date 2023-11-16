@@ -47,7 +47,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Invalid config for [custom_validator_bad_1]: broken',
+      'message': 'Invalid config for [custom_validator_bad_1] at configuration.yaml, line 55: broken',
     }),
     dict({
       'has_exc_info': True,
@@ -103,7 +103,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Invalid config for [custom_validator_bad_1]: broken',
+      'message': 'Invalid config for [custom_validator_bad_1] at configuration.yaml, line 9: broken',
     }),
     dict({
       'has_exc_info': True,
@@ -135,7 +135,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Invalid config for [custom_validator_bad_1]: broken',
+      'message': 'Invalid config for [custom_validator_bad_1] at configuration.yaml, line 1: broken',
     }),
     dict({
       'has_exc_info': True,
@@ -167,7 +167,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Invalid config for [custom_validator_bad_1]: broken',
+      'message': 'Invalid config for [custom_validator_bad_1] at configuration.yaml, line 1: broken',
     }),
     dict({
       'has_exc_info': True,
@@ -223,7 +223,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Invalid config for [custom_validator_bad_1]: broken',
+      'message': 'Invalid config for [custom_validator_bad_1] at configuration.yaml, line 67: broken',
     }),
     dict({
       'has_exc_info': True,
@@ -279,7 +279,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Invalid config for [custom_validator_bad_1]: broken',
+      'message': 'Invalid config for [custom_validator_bad_1] at integrations/custom_validator_bad_1.yaml, line 2: broken',
     }),
     dict({
       'has_exc_info': True,
@@ -306,7 +306,7 @@
       Invalid config for [adr_0007_5] at configuration.yaml, line 45: expected int for dictionary value 'adr_0007_5->port', got 'foo'. Please check the docs at https://www.home-assistant.io/integrations/adr_0007_5.
     ''',
     "Invalid config for [custom_validator_ok_2] at configuration.yaml, line 52: required key 'host' not provided. Please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2.",
-    'Invalid config for [custom_validator_bad_1]: broken Please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1.',
+    'Invalid config for [custom_validator_bad_1] at configuration.yaml, line 55: broken Please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1.',
     'Unknown error calling custom_validator_bad_2 config validator',
   ])
 # ---
