@@ -10,12 +10,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
@@ -27,28 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fast.com sensor."""
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Fast.com sensor, but create an issue if config is provided."""
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{FASTDOTCOM_DOMAIN}",
-        is_fixable=False,
-        breaks_in_ha_version="2024.4.0",
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": FASTDOTCOM_DOMAIN,
-            "integration_title": "Fastdotcom",
-        },
-    )
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
