@@ -720,9 +720,9 @@ async def test_async_start_setup(hass: HomeAssistant) -> None:
 
 async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times for platforms."""
-    with setup.async_start_setup(hass, ["sensor.august"]):
+    with setup.async_start_setup(hass, ["august.sensor"]):
         assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+            hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], datetime.datetime
         )
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
