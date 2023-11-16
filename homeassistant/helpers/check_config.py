@@ -102,7 +102,10 @@ async def async_check_ha_config_file(  # noqa: C901
         result.add_warning(message, domain, pack_config)
 
     def _comp_error(
-        ex: vol.Invalid | HomeAssistantError, domain: str, component_config: ConfigType
+        ex: vol.Invalid | HomeAssistantError,
+        domain: str,
+        component_config: ConfigType,
+        config_to_attach: ConfigType,
     ) -> None:
         """Handle errors from components."""
         if isinstance(ex, vol.Invalid):
@@ -110,9 +113,9 @@ async def async_check_ha_config_file(  # noqa: C901
         else:
             message = format_homeassistant_error(ex, domain, component_config)
         if domain in frontend_dependencies:
-            result.add_error(message, domain, component_config)
+            result.add_error(message, domain, config_to_attach)
         else:
-            result.add_warning(message, domain, component_config)
+            result.add_warning(message, domain, config_to_attach)
 
     async def _get_integration(
         hass: HomeAssistant, domain: str
@@ -207,7 +210,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 )[domain]
                 continue
             except (vol.Invalid, HomeAssistantError) as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, config, config[domain])
                 continue
             except Exception as err:  # pylint: disable=broad-except
                 logging.getLogger(__name__).exception(
@@ -228,7 +231,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 if domain in config:
                     result[domain] = config[domain]
             except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
+                _comp_error(ex, domain, config, config[domain])
                 continue
 
         component_platform_schema = getattr(
@@ -246,7 +249,7 @@ async def async_check_ha_config_file(  # noqa: C901
             try:
                 p_validated = component_platform_schema(p_config)
             except vol.Invalid as ex:
-                _comp_error(ex, domain, p_config)
+                _comp_error(ex, domain, p_config, p_config)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -282,7 +285,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 try:
                     p_validated = platform_schema(p_validated)
                 except vol.Invalid as ex:
-                    _comp_error(ex, f"{domain}.{p_name}", p_config)
+                    _comp_error(ex, f"{domain}.{p_name}", p_config, p_config)
                     continue
 
             platforms.append(p_validated)
