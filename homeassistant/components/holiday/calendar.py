@@ -53,7 +53,6 @@ class HolidayCalendarEntity(CalendarEntity):
         self._province = province
         self._location = name
         self._event: CalendarEvent | None = None
-        self._attr_name = None
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
