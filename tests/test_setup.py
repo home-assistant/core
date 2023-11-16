@@ -23,8 +23,8 @@ from .common import (
     MockModule,
     MockPlatform,
     assert_setup_component,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 
 
@@ -90,9 +90,9 @@ async def test_validate_platform_config(
         hass,
         MockModule("platform_conf", platform_schema_base=platform_schema_base),
     )
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform(platform_schema=platform_schema),
     )
 
@@ -156,9 +156,9 @@ async def test_validate_platform_config_2(
         ),
     )
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform("whatever", platform_schema=platform_schema),
     )
 
@@ -185,9 +185,9 @@ async def test_validate_platform_config_3(
         hass, MockModule("platform_conf", platform_schema=component_schema)
     )
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform("whatever", platform_schema=platform_schema),
     )
 
@@ -213,9 +213,9 @@ async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
         MockModule("platform_conf", platform_schema_base=component_schema),
     )
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "platform_conf.whatever",
+        "whatever.platform_conf",
         MockPlatform(platform_schema=platform_schema),
     )
 
@@ -350,7 +350,7 @@ async def test_component_setup_with_validation_and_dependency(
         MockModule("platform_a", setup=config_check_setup, dependencies=["comp_a"]),
     )
 
-    mock_entity_platform(hass, "switch.platform_a", platform)
+    mock_platform(hass, "platform_a.switch", platform)
 
     await setup.async_setup_component(
         hass,
@@ -367,9 +367,9 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
 
     mock_setup = Mock(spec_set=True)
 
-    mock_entity_platform(
+    mock_platform(
         hass,
-        "switch.platform_a",
+        "platform_a.switch",
         MockPlatform(platform_schema=platform_schema, setup_platform=mock_setup),
     )
 
@@ -618,7 +618,7 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
             async_setup_entry=mock_async_setup_entry,
         ),
     )
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
     await setup.async_setup_component(hass, "comp", {})
 
     assert calls == [1, 2, 1, 2]
