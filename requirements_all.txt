@@ -1015,7 +1015,7 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.35
+holidays==0.36
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231030.2
@@ -1610,6 +1610,9 @@ pyairnow==1.2.1
 # homeassistant.components.airvisual_pro
 pyairvisual==2023.08.1
 
+# homeassistant.components.asuswrt
+pyasuswrt==0.1.20
+
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
@@ -2146,7 +2149,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==3.1.0
+python-homewizard-energy==4.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2550,7 +2553,7 @@ switchbot-api==1.2.1
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.9.5
+systembridgeconnector==3.10.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
@@ -2808,7 +2811,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.126.0
+zeroconf==0.127.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
