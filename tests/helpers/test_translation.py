@@ -255,7 +255,7 @@ async def test_translation_merging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations."""
-    hass.config.components.add("sensor.moon")
+    hass.config.components.add("moon.sensor")
     hass.config.components.add("sensor")
 
     orig_load_translations = translation.load_translations_files
@@ -263,7 +263,7 @@ async def test_translation_merging(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.moon"] = {
+        result["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
@@ -276,7 +276,7 @@ async def test_translation_merging(
 
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
-    hass.config.components.add("sensor.season")
+    hass.config.components.add("season.sensor")
 
     # Patch in some bad translation data
     def mock_load_bad_translations_files(files):
@@ -323,7 +323,7 @@ async def test_translation_merging_loaded_apart(
 
     assert "component.sensor.state.moon__phase.first_quarter" not in translations
 
-    hass.config.components.add("sensor.moon")
+    hass.config.components.add("moon.sensor")
 
     with patch(
         "homeassistant.helpers.translation.load_translations_files",

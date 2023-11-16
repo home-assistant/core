@@ -663,7 +663,7 @@ async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
     hass.config.components.add("notbase.switch")
     hass.config.components.add("myintegration")
     hass.config.components.add("device_tracker")
-    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("other.device_tracker")
     hass.config.components.add("myintegration.light")
     assert setup.async_get_loaded_integrations(hass) == {
         "other",

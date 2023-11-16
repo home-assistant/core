@@ -16,7 +16,7 @@ REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
-PLATFORM_FORMAT: Final = "{platform}.{domain}"
+PLATFORM_FORMAT: Final = "{domain}.{platform}"
 
 
 class Platform(StrEnum):

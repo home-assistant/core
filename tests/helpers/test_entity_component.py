@@ -215,7 +215,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
         await component.async_setup({DOMAIN: {"platform": "mod1"}})
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 1
-        assert "test_domain.mod1" not in hass.config.components
+        assert "mod1.test_domain" not in hass.config.components
 
         # Should not trigger attempt 2
         async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
@@ -226,7 +226,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 2
-        assert "test_domain.mod1" not in hass.config.components
+        assert "mod1.test_domain" not in hass.config.components
 
         # This should not trigger attempt 3
         async_fire_time_changed(hass, utcnow + timedelta(seconds=59))
@@ -237,7 +237,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
-        assert "test_domain.mod1" in hass.config.components
+        assert "mod1.test_domain" in hass.config.components
 
 
 async def test_extract_from_service_fails_if_no_entity_id(hass: HomeAssistant) -> None:
@@ -317,7 +317,7 @@ async def test_setup_dependencies_platform(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert "test_component" in hass.config.components
     assert "test_component2" in hass.config.components
-    assert "test_domain.test_component" in hass.config.components
+    assert "test_component.test_domain" in hass.config.components
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
@@ -680,7 +680,7 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
     await component.async_setup({DOMAIN: {"platform": "mod1"}})
     await hass.async_block_till_done()
     assert len(platform1_setup.mock_calls) == 1
-    assert "test_domain.mod1" not in hass.config.components
+    assert "mod1.test_domain" not in hass.config.components
 
     with patch.object(
         component._platforms[DOMAIN], "async_shutdown"
