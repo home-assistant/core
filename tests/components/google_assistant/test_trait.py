@@ -223,7 +223,7 @@ async def test_onoff_input_boolean(hass: HomeAssistant) -> None:
 
 @pytest.mark.freeze_time("2023-08-01T00:02:57+00:00")
 async def test_doorbell_event(hass: HomeAssistant) -> None:
-    """Test doorbell event trait support for input_boolean domain."""
+    """Test doorbell event trait support for event domain."""
     assert trait.ObjectDetection.supported(event.DOMAIN, 0, "doorbell", None)
 
     state = State(

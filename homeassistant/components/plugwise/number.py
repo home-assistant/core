@@ -23,19 +23,11 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass
-class PlugwiseEntityDescriptionMixin:
-    """Mixin values for Plugwise entities."""
-
-    command: Callable[[Smile, str, str, float], Awaitable[None]]
-
-
-@dataclass
-class PlugwiseNumberEntityDescription(
-    NumberEntityDescription, PlugwiseEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class PlugwiseNumberEntityDescription(NumberEntityDescription):
     """Class describing Plugwise Number entities."""
 
+    command: Callable[[Smile, str, str, float], Awaitable[None]]
     key: NumberType
 
 

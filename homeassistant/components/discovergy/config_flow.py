@@ -60,15 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         self.existing_entry = await self.async_set_unique_id(self.context["unique_id"])
 
-        if entry_data is None:
-            return self.async_show_form(
-                step_id="reauth",
-                data_schema=make_schema(
-                    self.existing_entry.data[CONF_EMAIL] or "",
-                    self.existing_entry.data[CONF_PASSWORD] or "",
-                ),
-            )
-
         return await self._validate_and_save(entry_data, step_id="reauth")
 
     async def _validate_and_save(

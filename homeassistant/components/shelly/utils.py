@@ -26,7 +26,10 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
+    DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -375,13 +378,10 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 
 @callback
-def device_update_info(
+def update_device_fw_info(
     hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
 ) -> None:
-    """Update device registry info."""
-
-    LOGGER.debug("Updating device registry info for %s", entry.title)
-
+    """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
     dev_reg = dr_async_get(hass)
@@ -389,6 +389,11 @@ def device_update_info(
         identifiers={(DOMAIN, entry.entry_id)},
         connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
+        if device.sw_version == shellydevice.firmware_version:
+            return
+
+        LOGGER.debug("Updating device registry info for %s", entry.title)
+
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 
@@ -406,3 +411,11 @@ def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
     return mac.upper() if len(mac) == 12 else None
+
+
+def get_release_url(gen: int, model: str, beta: bool) -> str | None:
+    """Return release URL or None."""
+    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+        return None
+
+    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL

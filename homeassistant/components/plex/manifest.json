@@ -8,9 +8,9 @@
   "iot_class": "local_push",
   "loggers": ["plexapi", "plexwebsocket"],
   "requirements": [
-    "PlexAPI==4.15.3",
+    "PlexAPI==4.15.4",
     "plexauth==0.0.6",
-    "plexwebsocket==0.0.13"
+    "plexwebsocket==0.0.14"
   ],
   "zeroconf": ["_plexmediasvr._tcp.local."]
 }
