@@ -25,8 +25,11 @@
   },
   "entity": {
     "sensor": {
-      "upcoming_assignments": {
+      "assignments": {
         "name": "Upcoming assignments"
+      },
+      "announcements": {
+        "name": "Announcements"
       },
       "inbox": {
         "name": "Inbox"
