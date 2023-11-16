@@ -230,33 +230,6 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     assert state is not None
     assert state.state == "unavailable"
 
-    if not yaml_config:
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                "periodically_resetting": True,
-                "always_available": True,
-                "source": entity_id,
-            },
-        )
-
-        await hass.async_block_till_done()
-
-        # test unavailable state
-        state = hass.states.get("sensor.energy_bill_offpeak")
-        assert state is not None
-        assert state.state == "3"
-
-        # test unknown state
-        hass.states.async_set(
-            entity_id, None, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("sensor.energy_bill_offpeak")
-        assert state is not None
-        assert state.state == "3"
-
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),

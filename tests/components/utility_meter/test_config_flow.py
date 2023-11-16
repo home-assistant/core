@@ -243,7 +243,11 @@ async def test_options(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"source": input_sensor2_entity_id, "periodically_resetting": False},
+        user_input={
+            "source": input_sensor2_entity_id,
+            "periodically_resetting": False,
+            "always_available": True,
+        },
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -253,7 +257,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": False,
-        "always_available": False,
+        "always_available": True,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }
@@ -265,7 +269,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "periodically_resetting": False,
-        "always_available": False,
+        "always_available": True,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }
