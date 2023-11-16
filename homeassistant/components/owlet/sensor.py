@@ -97,17 +97,18 @@ async def async_setup_entry(
         hass.data[DOMAIN][config_entry.entry_id].values()
     )
 
-    async_add_entities(
-        OwletSensor(coordinator, sensor)
-        for coordinator in coordinators
-        for sensor in SENSORS
-    )
+    sensors = []
+
+    for coordinator in coordinators:
+        for sensor in SENSORS:
+            if sensor.key in coordinator.sock.properties:
+                sensors.append(OwletSensor(coordinator, sensor))
+
+    async_add_entities(sensors)
 
 
 class OwletSensor(OwletBaseEntity, SensorEntity):
     """Representation of an Owlet sensor."""
-
-    entity_description: OwletSensorEntityDescription
 
     def __init__(
         self,
@@ -116,7 +117,7 @@ class OwletSensor(OwletBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self.entity_description: OwletSensorEntityDescription = description
         self._attr_unique_id = f"{self.sock.serial}-{description.key}"
 
     @property
@@ -146,5 +147,5 @@ class OwletSensor(OwletBaseEntity, SensorEntity):
     def options(self) -> list[str]:
         """Set options for sleep state."""
         if self.entity_description.key != "sleep_state":
-            return None
+            return []
         return list(SLEEP_STATES.values())

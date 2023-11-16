@@ -1475,7 +1475,7 @@ pyotp==2.8.0
 pyoverkiz==1.13.2
 
 # homeassistant.components.owlet
-pyowletapi==2023.7.2
+pyowletapi==2023.11.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0

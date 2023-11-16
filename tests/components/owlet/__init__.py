@@ -8,14 +8,8 @@ from homeassistant.components.owlet.const import (
     CONF_OWLET_EXPIRY,
     CONF_OWLET_REFRESH,
     DOMAIN,
-    POLLING_INTERVAL,
 )
-from homeassistant.const import (
-    CONF_API_TOKEN,
-    CONF_REGION,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_API_TOKEN, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture

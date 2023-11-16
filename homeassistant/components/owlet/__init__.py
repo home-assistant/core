@@ -15,13 +15,7 @@ from pyowletapi.exceptions import (
 from pyowletapi.sock import Sock
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_TOKEN,
-    CONF_REGION,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_API_TOKEN, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -78,8 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     coordinators = {
-        serial: OwletCoordinator(hass, sock, entry)
-        for (serial, sock) in socks.items()
+        serial: OwletCoordinator(hass, sock, entry) for (serial, sock) in socks.items()
     }
 
     await asyncio.gather(

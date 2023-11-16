@@ -17,13 +17,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, MANUFACTURER, POLLING_INTERVAL
+from .const import DOMAIN, POLLING_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class OwletCoordinator(DataUpdateCoordinator[None]):
     """Coordinator is responsible for querying the device at a specified route."""
+
     def __init__(self, hass: HomeAssistant, sock: Sock, entry: ConfigEntry) -> None:
         """Initialise a custom coordinator."""
         super().__init__(
@@ -33,7 +34,7 @@ class OwletCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=POLLING_INTERVAL),
         )
         self.sock = sock
-        self.config_entry = entry
+        self.config_entry: ConfigEntry = entry
 
     async def _async_update_data(self) -> None:
         """Fetch the data from the device."""
