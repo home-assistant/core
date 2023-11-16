@@ -31,7 +31,7 @@
     "step": {
       "init": {
         "data": {
-          "always_available": "Sensor always available",
+          "always_available": "[%key:component::utility_meter::config::step::user::data::always_available%]",
           "source": "[%key:component::utility_meter::config::step::user::data::source%]",
           "periodically_resetting": "[%key:component::utility_meter::config::step::user::data::periodically_resetting%]"
         },
