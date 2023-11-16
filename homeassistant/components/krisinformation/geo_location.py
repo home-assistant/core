@@ -134,6 +134,10 @@ class KrisinformationLocationEvent(GeolocationEvent):
         self._external_id = external_id
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
+        feed_entry = self._feed_manager.get_entry(external_id)
+        if feed_entry:
+            self._latitude = feed_entry.latitude
+            self._longitude = feed_entry.longitude
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -147,6 +151,16 @@ class KrisinformationLocationEvent(GeolocationEvent):
             #SIGNAL_UPDATE_ENTITY.format(self._external_id),
             self._update_callback,
         )
+
+    @property
+    def latitude(self):
+        """Return the latitude of the event."""
+        return self._latitude
+
+    @property
+    def longitude(self):
+        """Return the longitude of the event."""
+        return self._longitude
 
     @callback
     def _delete_callback(self) -> None:
