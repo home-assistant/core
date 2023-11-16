@@ -778,7 +778,7 @@ hass-nabucasa==0.74.0
 hassil==1.2.5
 
 # homeassistant.components.hassmpris
-hassmpris_client==0.0.23
+hassmpris_client==0.0.25
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4

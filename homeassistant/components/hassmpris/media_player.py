@@ -1,7 +1,5 @@
 """Support for interfacing with the HASS MPRIS agent."""
 
-# mypy: warn-unused-configs, disallow-any-generics, disallow-subclassing-any, disallow-untyped-calls, disallow-untyped-defs, disallow-incomplete-defs, check-untyped-defs, disallow-untyped-decorators, no-implicit-optional, warn-redundant-casts, warn-unused-ignores, warn-return-any, no-implicit-reexport, strict-equality, strict-concatenate
-
 from __future__ import annotations
 
 import asyncio
@@ -596,7 +594,7 @@ class EntityManager:
             started_syncing = False
             finished_syncing = False
             async for update in self.client.stream_updates(
-                timeout=EXPECTED_HEARTBEAT_FREQUENCY * 1.5
+                timeout=round(EXPECTED_HEARTBEAT_FREQUENCY * 1.5)
             ):
                 if not started_syncing:
                     # First update.  Mark entities available.  This does not
