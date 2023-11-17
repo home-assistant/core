@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import (
+    CoreState,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -400,6 +401,11 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 3
+
+    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+        await hass.async_stop()
+
+    assert hass.state == CoreState.stopped
 
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
