@@ -188,7 +188,7 @@ async def async_setup_entry(
             if description.value_fn(coordinator.data, value_key, description.scale)
         )
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEntity):
