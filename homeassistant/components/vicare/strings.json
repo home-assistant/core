@@ -20,6 +20,19 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "entity": {
+    "number": {
+      "normal_temperature": {
+        "name": "Normal temperature"
+      },
+      "reduced_temperature": {
+        "name": "Reduced temperature"
+      },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      }
+    }
+  },
   "services": {
     "set_vicare_mode": {
       "name": "Set ViCare mode",
