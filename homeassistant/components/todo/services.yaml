@@ -60,11 +60,5 @@ remove_item:
       required: true
       selector:
         text:
-    status:
-      example: "needs_action"
-      selector:
-        select:
-          translation_key: status
-          options:
-            - needs_action
-            - completed
+
+remove_completed_items:
