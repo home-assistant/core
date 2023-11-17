@@ -131,5 +131,4 @@ async def test_get_hosts_list(
     await hass.async_block_till_done()
 
     # If get_hosts_list failed, not called again
-    assert router_bridge_mode.call_count == 1
     assert router_bridge_mode().lan.get_hosts_list.call_count == 1

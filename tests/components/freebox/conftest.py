@@ -24,37 +24,6 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-def init_mock_router(service_mock, bridge_mode):
-    """Mock a successful connection with or without bridge mode."""
-
-    instance = service_mock.return_value
-    instance.open = AsyncMock()
-    instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)
-    # device_tracker
-    if bridge_mode:
-        instance.lan.get_hosts_list = AsyncMock(
-            side_effect=HttpRequestError(
-                "Request failed (APIResponse: %s)"
-                % json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)
-            )
-        )
-    else:
-        instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
-    # sensor
-    instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
-    instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)
-    instance.storage.get_raids = AsyncMock(return_value=DATA_STORAGE_GET_RAIDS)
-    instance.connection.get_status = AsyncMock(return_value=DATA_CONNECTION_GET_STATUS)
-    # switch
-    instance.wifi.get_global_config = AsyncMock(return_value=WIFI_GET_GLOBAL_CONFIG)
-    # home devices
-    instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
-    instance.home.get_home_endpoint_value = AsyncMock(
-        return_value=DATA_HOME_PIR_GET_VALUES
-    )
-    instance.close = AsyncMock()
-
-
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
@@ -101,9 +70,27 @@ def mock_device_registry_devices(
 @pytest.fixture(name="router")
 def mock_router(mock_device_registry_devices):
     """Mock a successful connection."""
-
     with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
-        init_mock_router(service_mock, False)
+        instance = service_mock.return_value
+        instance.open = AsyncMock()
+        instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)
+        # device_tracker
+        instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
+        # sensor
+        instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
+        instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)
+        instance.storage.get_raids = AsyncMock(return_value=DATA_STORAGE_GET_RAIDS)
+        instance.connection.get_status = AsyncMock(
+            return_value=DATA_CONNECTION_GET_STATUS
+        )
+        # switch
+        instance.wifi.get_global_config = AsyncMock(return_value=WIFI_GET_GLOBAL_CONFIG)
+        # home devices
+        instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
+        instance.home.get_home_endpoint_value = AsyncMock(
+            return_value=DATA_HOME_PIR_GET_VALUES
+        )
+        instance.close = AsyncMock()
         yield service_mock
 
 
@@ -117,4 +104,5 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
             % json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)
         )
     )
-        yield service_mock
+
+    return router
