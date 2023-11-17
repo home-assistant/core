@@ -412,6 +412,23 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     assert hass.state == CoreState.stopped
 
 
+async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+    """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
+
+    task = asyncio.Future()
+    hass._tasks.add(task)
+
+    def fail_the_task(_):
+        task.set_exception(Exception("test_exception"))
+
+    with patch.object(task, "cancel", side_effect=fail_the_task) as patched_call:
+        await hass.async_stop()
+        assert patched_call.called
+
+    assert "test_exception" in caplog.text
+    assert hass.state == ha.CoreState.stopped
+
+
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff with exit code checks."""
     test_stopping = async_capture_events(hass, EVENT_HOMEASSISTANT_STOPPING)

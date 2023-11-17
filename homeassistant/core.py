@@ -877,7 +877,7 @@ class HomeAssistant:
                 "the stop event to prevent delaying shutdown",
                 task,
             )
-            task.cancel("Home Assistant stage 2 shutdown")
+            task.cancel("Home Assistant final writes shutdown stage")
             try:
                 async with asyncio.timeout(0.1):
                     await task
