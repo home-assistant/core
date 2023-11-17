@@ -1,0 +1,1 @@
+"""Package for fire risk."""
