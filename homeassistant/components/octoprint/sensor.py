@@ -123,14 +123,14 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         """Return sensor state."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
         if not printer:
-            return None
+            return "Disconnected"
 
         return printer.state.text
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+        return self.coordinator.last_update_success
 
 
 class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
