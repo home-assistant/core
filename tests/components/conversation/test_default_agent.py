@@ -343,10 +343,10 @@ async def test_device_area_context(
     )
     device_registry.async_update_device(bedroom_satellite.id, area_id=area_bedroom.id)
 
-    # Turn on all lights in the area of a device
+    # Turn on lights in the area of a device
     result = await conversation.async_converse(
         hass,
-        "turn on all lights",
+        "turn on the lights",
         None,
         Context(),
         None,
@@ -367,7 +367,7 @@ async def test_device_area_context(
     # Ensure we can still target other areas by name
     result = await conversation.async_converse(
         hass,
-        "turn on all lights in the bedroom",
+        "turn on lights in the bedroom",
         None,
         Context(),
         None,
@@ -388,7 +388,7 @@ async def test_device_area_context(
     # Turn off all lights in the area of the otherkj device
     result = await conversation.async_converse(
         hass,
-        "turn all lights off",
+        "turn lights off",
         None,
         Context(),
         None,

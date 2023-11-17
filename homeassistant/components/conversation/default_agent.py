@@ -224,17 +224,10 @@ class DefaultAgent(AbstractConversationAgent):
         # loaded in async_recognize.
         assert lang_intents is not None
 
-        # Include slot values from intent_context, such as the name of the
-        # device's area.
+        # Slot values to pass to the intent
         slots = {
-            entity_name: {"value": entity_value}
-            for entity_name, entity_value in result.context.items()
+            entity.name: {"value": entity.value} for entity in result.entities_list
         }
-
-        # Override context with result entities
-        slots.update(
-            {entity.name: {"value": entity.value} for entity in result.entities_list}
-        )
 
         try:
             intent_response = await intent.async_handle(
