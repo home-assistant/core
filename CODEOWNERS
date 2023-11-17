@@ -307,8 +307,8 @@ build.json @home-assistant/supervisor
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
-/homeassistant/components/ecobee/ @marthoc @marcolivierarsenault
-/tests/components/ecobee/ @marthoc @marcolivierarsenault
+/homeassistant/components/ecobee/ @marcolivierarsenault
+/tests/components/ecobee/ @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
