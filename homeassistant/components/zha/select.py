@@ -447,7 +447,7 @@ class InovelliOutputModeEntity(ZCLEnumSelectEntity):
 
 
 class InovelliSwitchType(types.enum8):
-    """Inovelli output mode."""
+    """Inovelli switch mode."""
 
     Single_Pole = 0x00
     Three_Way_Dumb = 0x01
@@ -456,7 +456,7 @@ class InovelliSwitchType(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM31-SN"}
 )
 class InovelliSwitchTypeEntity(ZCLEnumSelectEntity):
     """Inovelli switch type control."""
@@ -464,6 +464,25 @@ class InovelliSwitchTypeEntity(ZCLEnumSelectEntity):
     _unique_id_suffix = "switch_type"
     _attribute_name = "switch_type"
     _enum = InovelliSwitchType
+    _attr_translation_key: str = "switch_type"
+
+
+class InovelliFanSwitchType(types.enum1):
+    """Inovelli fan switch mode."""
+
+    Load_Only = 0x00
+    Three_Way_AUX = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+class InovelliFanSwitchTypeEntity(ZCLEnumSelectEntity):
+    """Inovelli fan switch type control."""
+
+    _unique_id_suffix = "switch_type"
+    _attribute_name = "switch_type"
+    _enum = InovelliFanSwitchType
     _attr_translation_key: str = "switch_type"
 
 
@@ -484,6 +503,34 @@ class InovelliLedScalingModeEntity(ZCLEnumSelectEntity):
     _attribute_name = "led_scaling_mode"
     _enum = InovelliLedScalingMode
     _attr_translation_key: str = "led_scaling_mode"
+
+
+class InovelliFanLedScalingMode(types.enum8):
+    """Inovelli fan led mode."""
+
+    VZM31SN = 0x00
+    Grade_1 = 0x01
+    Grade_2 = 0x02
+    Grade_3 = 0x03
+    Grade_4 = 0x04
+    Grade_5 = 0x05
+    Grade_6 = 0x06
+    Grade_7 = 0x07
+    Grade_8 = 0x08
+    Grade_9 = 0x09
+    Adaptive = 0x0A
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+class InovelliFanLedScalingModeEntity(ZCLEnumSelectEntity):
+    """Inovelli fan switch led mode control."""
+
+    _unique_id_suffix = "smart_fan_led_display_levels"
+    _attribute_name = "smart_fan_led_display_levels"
+    _enum = InovelliFanLedScalingMode
+    _attr_translation_key: str = "smart_fan_led_display_levels"
 
 
 class InovelliNonNeutralOutput(types.enum1):
