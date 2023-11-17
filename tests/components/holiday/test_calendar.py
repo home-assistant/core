@@ -39,6 +39,7 @@ async def test_holiday_calendar_entity(
     entity = calendar.HolidayCalendarEntity(
         "United States, AK", "US", "AK", config_entry.entry_id
     )
+    entity.hass = hass
 
     start_date = datetime(2023, 1, 1)
     end_date = datetime(2023, 1, 1)

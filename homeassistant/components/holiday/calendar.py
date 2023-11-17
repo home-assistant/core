@@ -28,7 +28,10 @@ async def async_setup_entry(
     async_add_entities(
         [
             HolidayCalendarEntity(
-                config_entry.title, country, province, unique_id=config_entry.entry_id
+                config_entry.title,
+                country,
+                province,
+                unique_id=config_entry.entry_id,
             )
         ],
         True,
@@ -59,14 +62,16 @@ class HolidayCalendarEntity(CalendarEntity):
             name=name,
         )
 
-    def _default_language(self, hass: HomeAssistant) -> str:
+    def _default_language(self) -> str | None:
         """Return the default language."""
-        return (
-            country_holidays(hass.config.country).default_language
-            or hass.config.language
-            if hass.config.country
-            else hass.config.language
-        )
+        obj_holidays = country_holidays(self._country, subdiv=self._province)
+        available_languages = obj_holidays.supported_languages
+
+        configured_language = self.hass.config.language
+        if configured_language in available_languages:
+            return configured_language
+
+        return obj_holidays.default_language
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -75,7 +80,7 @@ class HolidayCalendarEntity(CalendarEntity):
             self._country,
             subdiv=self._province,
             years=dt_util.now().year,
-            language=self._default_language(self.hass),
+            language=self._default_language(),
         )
 
         next_holiday = min(
@@ -102,7 +107,7 @@ class HolidayCalendarEntity(CalendarEntity):
             self._country,
             subdiv=self._province,
             years=list({start_date.year, end_date.year}),
-            language=self._default_language(hass),
+            language=self._default_language(),
         )
 
         event_list: list[CalendarEvent] = []
