@@ -463,12 +463,12 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             end_timestamp,
         )
 
-    async def _async_service_set_temperature(
-        self, **kwargs: Any
-    ) -> None:
+    async def _async_service_set_temperature(self, **kwargs: Any) -> None:
         target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
         end_datetime = kwargs.get(ATTR_END_DATETIME)
-        end_timestamp = int(dt_util.as_timestamp(end_datetime)) if end_datetime else None
+        end_timestamp = (
+            int(dt_util.as_timestamp(end_datetime)) if end_datetime else None
+        )
 
         _LOGGER.debug(
             "Setting %s to target temperature %s with optional end datetime %s",
@@ -478,13 +478,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         )
         await self._room.async_therm_manual(target_temperature, end_timestamp)
 
-    async def _async_service_clear_temperature_setting(
-        self, **kwargs: Any
-    ) -> None:
-        _LOGGER.debug(
-            "Clearing %s temperature setting",
-            self._room.entity_id
-        )
+    async def _async_service_clear_temperature_setting(self, **kwargs: Any) -> None:
+        _LOGGER.debug("Clearing %s temperature setting", self._room.entity_id)
         await self._room.async_therm_home()
 
     @property
