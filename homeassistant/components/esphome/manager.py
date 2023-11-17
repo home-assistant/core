@@ -490,10 +490,7 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        for disconnect_cb in entry_data.disconnect_callbacks:
-            disconnect_cb()
-        entry_data.disconnect_callbacks.clear()
-        entry_data.available = False
+        entry_data.async_on_disconnect()
         entry_data.expected_disconnect = expected_disconnect
         # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
@@ -758,10 +755,7 @@ async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEn
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
-    data.available = False
-    for disconnect_cb in data.disconnect_callbacks:
-        disconnect_cb()
-    data.disconnect_callbacks.clear()
+    data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.async_cleanup()
