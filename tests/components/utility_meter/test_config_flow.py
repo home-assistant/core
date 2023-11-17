@@ -198,6 +198,60 @@ async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
     }
 
 
+async def test_always_available(hass: HomeAssistant) -> None:
+    """Test sensor always available."""
+    input_sensor_entity_id = "sensor.input"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "cycle": "monthly",
+            "name": "Electricity meter",
+            "offset": 0,
+            "periodically_resetting": False,
+            "source": input_sensor_entity_id,
+            "tariffs": [],
+            "always_available": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Electricity meter"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Electricity meter",
+        "net_consumption": False,
+        "periodically_resetting": False,
+        "always_available": True,
+        "offset": 0,
+        "source": input_sensor_entity_id,
+        "tariffs": [],
+    }
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Electricity meter",
+        "net_consumption": False,
+        "offset": 0,
+        "periodically_resetting": False,
+        "always_available": True,
+        "source": input_sensor_entity_id,
+        "tariffs": [],
+    }
+
+
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
     for k in schema:
