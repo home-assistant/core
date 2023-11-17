@@ -831,17 +831,11 @@ def _log_pkg_error(
     hass: HomeAssistant, package: str, component: str, config: dict, message: str
 ) -> None:
     """Log an error while merging packages."""
-    message = f"Package {package} setup failed. {message}"
+    message_prefix = f"Setup of package '{package}'"
+    if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, package]):
+        message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
 
-    pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
-    config_file = getattr(pack_config, "__config_file__", None)
-    if config_file:
-        config_file = _relpath(hass, config_file)
-    else:
-        config_file = "?"
-    message += f" (See {config_file}:{getattr(pack_config, '__line__', '?')})."
-
-    _LOGGER.error(message)
+    _LOGGER.error("%s failed: %s", message_prefix, message)
 
 
 def _identify_config_schema(module: ComponentProtocol) -> str | None:
@@ -985,7 +979,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} cannot be merged. Expected a dict.",
+                    f"integration '{comp_name}' cannot be merged, expected a dict",
                 )
                 continue
 
@@ -998,7 +992,10 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} cannot be merged. Dict expected in main config.",
+                    (
+                        f"integration '{comp_name}' cannot be merged, dict expected in "
+                        "main config"
+                    ),
                 )
                 continue
 
@@ -1009,7 +1006,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} has duplicate key '{duplicate_key}'.",
+                    f"integration '{comp_name}' has duplicate key '{duplicate_key}'",
                 )
 
     return config
