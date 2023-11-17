@@ -10,7 +10,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config import async_log_exception, config_without_domain
+from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
@@ -80,7 +80,7 @@ async def async_validate_config(hass, config):
                     hass, cfg[CONF_TRIGGER]
                 )
         except vol.Invalid as err:
-            async_log_exception(err, DOMAIN, cfg, hass)
+            async_log_schema_error(err, DOMAIN, cfg, hass)
             continue
 
         legacy_warn_printed = False
