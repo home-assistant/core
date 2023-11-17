@@ -175,8 +175,8 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         entity_description: ReolinkButtonEntityDescription,
     ) -> None:
         """Initialize Reolink button entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
 
         if entity_description.enabled_default is not None:
             self._attr_entity_registry_enabled_default = (

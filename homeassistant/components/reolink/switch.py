@@ -289,8 +289,8 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkNVRSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data)
         self.entity_description = entity_description
+        super().__init__(reolink_data)
 
         self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 
