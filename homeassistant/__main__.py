@@ -141,8 +141,11 @@ def get_arguments() -> argparse.Namespace:
         "--log-no-color", action="store_true", help="Disable color logs"
     )
     parser.add_argument(
-        "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
-    ).completer = lambda **kwargs: get_scripts()  # type: ignore[attr-defined]
+        "--script",
+        nargs=argparse.REMAINDER,
+        help="Run one of the embedded scripts",
+        choices=get_scripts(),
+    )
     parser.add_argument(
         "--ignore-os-check",
         action="store_true",
