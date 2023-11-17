@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import mimetypes
 
-from sverigesradio import Channel, SverigesRadio
-
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
@@ -17,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
+from .sveriges_radio import Channel, SverigesRadio
 
 CODEC_TO_MIMETYPE = {
     "MP3": "audio/mpeg",
@@ -97,26 +96,31 @@ class RadioMediaSource(MediaSource):
         return mime_type
 
     @callback
-    def _async_build_stations(
+    async def _async_build_stations(
         self, radios: SverigesRadio, stations: list[Channel]
     ) -> list[BrowseMediaSource]:
-        """Build list of media sources from radio stations."""
-        items: list[BrowseMediaSource] = []
+        """Build list of media sources for a specific channel."""
+        radio = self.radio
 
-        for station in stations:
-            mime_type = self._async_get_station_mime_type(station)
+        if radio is None:
+            raise BrowseError("Sveriges Radio not initialized")
 
-            items.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=station.id,
-                    media_class=MediaClass.MUSIC,
-                    media_content_type=mime_type,
-                    title=station.name,
-                    can_play=True,
-                    can_expand=False,
-                    thumbnail=station.image,
-                )
-            )
+        # Fetch the specific channel (channel 164 in this case)
+        station = await radio.channel(164)
+        if not station:
+            raise BrowseError("Channel not found")
 
-        return items
+        # Create a BrowseMediaSource object for the channel
+        channel_media = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=str(station.id),
+            media_class=MediaClass.MUSIC,
+            media_content_type=MediaType.MUSIC,
+            title=station.name,
+            can_play=True,
+            can_expand=False,
+            thumbnail=station.image,
+        )
+
+        # Return a list containing only this channel
+        return [channel_media]
