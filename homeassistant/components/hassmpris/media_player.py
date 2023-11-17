@@ -624,7 +624,7 @@ class MPRISCoordinator(DataUpdateCoordinator):
             and REMOVE_CLONES_WHILE_RUNNING
         )
 
-    def _add_players_not_running(self):
+    def _add_players_not_running(self) -> None:
         for entry in self._player_registry_entries():
             player_id = _get_player_id(entry)
             if player_id not in self.data:
