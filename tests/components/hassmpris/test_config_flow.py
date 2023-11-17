@@ -1,4 +1,5 @@
 """Test the MPRIS media playback remote control config flow."""
+from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import patch
 
@@ -97,8 +98,8 @@ _hostinfo = {
 }
 
 _zeroconfinfo = zeroconf.ZeroconfServiceInfo(
-    host="127.0.0.1",
-    addresses=[],
+    ip_address=IPv4Address("127.0.0.1"),
+    ip_addresses=[IPv4Address("127.0.0.1")],
     port=40051,
     hostname="uniqueid",
     name="thename",
@@ -253,8 +254,8 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
 async def test_invalid_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test we get the user form and, upon success, go to confirm step."""
     badinfo = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=[],
+        ip_address=IPv4Address("127.0.0.1"),
+        ip_addresses=[IPv4Address("127.0.0.1")],
         port=40051,
         hostname="uniqueid",
         name="thename",
