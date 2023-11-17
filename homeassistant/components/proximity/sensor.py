@@ -52,13 +52,14 @@ async def async_setup_platform(
     ]
 
     entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
-        ProximitySensor(sensor, coordinator) for sensor in SENSORS_PER_PROXIMITY
+        ProximitySensor(description, coordinator)
+        for description in SENSORS_PER_PROXIMITY
     ]
 
     entities += [
-        ProximityTrackedEntitySensor(sensor, coordinator, tracked_entity)
-        for sensor in SENSORS_PER_ENTITY
-        for tracked_entity in coordinator.proximity_devices
+        ProximityTrackedEntitySensor(description, coordinator, tracked_entity_id)
+        for description in SENSORS_PER_ENTITY
+        for tracked_entity_id in coordinator.proximity_devices
     ]
 
     async_add_entities(entities)
@@ -77,9 +78,7 @@ class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordin
 
         self.entity_description = description
 
-        self._attr_unique_id = slugify(
-            f"{slugify(coordinator.friendly_name)}_{description.key}"
-        )
+        self._attr_unique_id = slugify(f"{coordinator.friendly_name}_{description.key}")
 
     @property
     def native_value(self) -> str | float | None:
@@ -100,21 +99,21 @@ class ProximityTrackedEntitySensor(
         self,
         description: SensorEntityDescription,
         coordinator: ProximityDataUpdateCoordinator,
-        tracked_entity: str,
+        tracked_entity_id: str,
     ) -> None:
         """Initialize the proximity."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.tracked_entity = tracked_entity
+        self.tracked_entity_id = tracked_entity_id
 
         self._attr_unique_id = slugify(
-            f"{slugify(coordinator.friendly_name)}_{tracked_entity}_{description.key}"
+            f"{coordinator.friendly_name}_{tracked_entity_id}_{description.key}"
         )
 
     @property
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
-        if (data := self.coordinator.data.entities.get(self.tracked_entity)) is None:
+        if (data := self.coordinator.data.entities.get(self.tracked_entity_id)) is None:
             return None
         return data.get(self.entity_description.key)
