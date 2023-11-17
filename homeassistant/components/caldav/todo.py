@@ -1,15 +1,25 @@
 """CalDAV todo platform."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import cast
 
 import caldav
+from caldav.lib.error import DAVError, NotFoundError
+import requests
 
-from homeassistant.components.todo import TodoItem, TodoItemStatus, TodoListEntity
+from homeassistant.components.todo import (
+    TodoItem,
+    TodoItemStatus,
+    TodoListEntity,
+    TodoListEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import async_get_calendars, get_attr_value
@@ -25,6 +35,10 @@ TODO_STATUS_MAP = {
     "IN-PROCESS": TodoItemStatus.NEEDS_ACTION,
     "COMPLETED": TodoItemStatus.COMPLETED,
     "CANCELLED": TodoItemStatus.COMPLETED,
+}
+TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
+    TodoItemStatus.NEEDS_ACTION: "NEEDS-ACTION",
+    TodoItemStatus.COMPLETED: "COMPLETED",
 }
 
 
@@ -71,6 +85,11 @@ class WebDavTodoListEntity(TodoListEntity):
     """CalDAV To-do list entity."""
 
     _attr_has_entity_name = True
+    _attr_supported_features = (
+        TodoListEntityFeature.CREATE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEM
+        | TodoListEntityFeature.DELETE_TODO_ITEM
+    )
 
     def __init__(self, calendar: caldav.Calendar, config_entry_id: str) -> None:
         """Initialize WebDavTodoListEntity."""
@@ -92,3 +111,66 @@ class WebDavTodoListEntity(TodoListEntity):
             for resource in results
             if (todo_item := _todo_item(resource)) is not None
         ]
+
+    async def async_create_todo_item(self, item: TodoItem) -> None:
+        """Add an item to the To-do list."""
+        try:
+            await self.hass.async_add_executor_job(
+                partial(
+                    self._calendar.save_todo,
+                    summary=item.summary,
+                    status=TODO_STATUS_MAP_INV.get(
+                        item.status or TodoItemStatus.NEEDS_ACTION, "NEEDS-ACTION"
+                    ),
+                ),
+            )
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV save error: {err}") from err
+
+    async def async_update_todo_item(self, item: TodoItem) -> None:
+        """Update a To-do item."""
+        uid: str = cast(str, item.uid)
+        try:
+            todo = await self.hass.async_add_executor_job(
+                self._calendar.todo_by_uid, uid
+            )
+        except NotFoundError as err:
+            raise HomeAssistantError(f"Could not find To-do item {uid}") from err
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
+        vtodo = todo.icalendar_component  # type: ignore[attr-defined]
+        if item.summary:
+            vtodo["summary"] = item.summary
+        if item.status:
+            vtodo["status"] = TODO_STATUS_MAP_INV.get(item.status, "NEEDS-ACTION")
+        try:
+            await self.hass.async_add_executor_job(
+                partial(
+                    todo.save,
+                    no_create=True,
+                    obj_type="todo",
+                ),
+            )
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV save error: {err}") from err
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Delete To-do items."""
+        tasks = (
+            self.hass.async_add_executor_job(self._calendar.todo_by_uid, uid)
+            for uid in uids
+        )
+
+        try:
+            items = await asyncio.gather(*tasks)
+        except NotFoundError as err:
+            raise HomeAssistantError("Could not find To-do item") from err
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
+
+        # Run serially as some CalDAV servers do not support concurrent modifications
+        for item in items:
+            try:
+                await self.hass.async_add_executor_job(item.delete)
+            except (requests.ConnectionError, DAVError) as err:
+                raise HomeAssistantError(f"CalDAV delete error: {err}") from err

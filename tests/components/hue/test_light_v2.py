@@ -350,7 +350,10 @@ async def test_light_availability(
 
 
 async def test_grouped_lights(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2,
+    v2_resources_test_data,
 ) -> None:
     """Test if all v2 grouped lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -359,8 +362,7 @@ async def test_grouped_lights(
 
     # test if entities for hue groups are created and enabled by default
     for entity_id in ("light.test_zone", "light.test_room"):
-        ent_reg = er.async_get(hass)
-        entity_entry = ent_reg.async_get(entity_id)
+        entity_entry = entity_registry.async_get(entity_id)
 
         assert entity_entry
         # scene entities should have be assigned to the room/zone device/service

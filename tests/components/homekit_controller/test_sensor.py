@@ -409,12 +409,12 @@ async def test_rssi_sensor(
 
 async def test_migrate_rssi_sensor_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     utcnow,
     entity_registry_enabled_by_default: None,
     enable_bluetooth: None,
 ) -> None:
     """Test an rssi sensor unique id migration."""
-    entity_registry = er.async_get(hass)
     rssi_sensor = entity_registry.async_get_or_create(
         "sensor",
         "homekit_controller",
