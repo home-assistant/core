@@ -1102,7 +1102,7 @@ async def async_get_forecast_service(
 ) -> ServiceResponse:
     """Get weather forecast.
 
-    Deprecated: please use async_forecast_service.
+    Deprecated: please use async_get_forecasts_service.
     """
     _LOGGER.warning(
         "Detected use of service 'weather.get_forecast'. "
@@ -1114,7 +1114,7 @@ async def async_get_forecast_service(
         DOMAIN,
         "deprecated_service_weather_get_forecast",
         breaks_in_ha_version="2024.6.0",
-        is_fixable=False,
+        is_fixable=True,
         is_persistent=False,
         issue_domain=weather.platform.platform_name,
         severity=ir.IssueSeverity.WARNING,
