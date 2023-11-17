@@ -79,7 +79,7 @@ class LightningImpactAPI:
         return json_data
 
     async def async_get_lightning_impact_api(
-        self, year: str, month: str, day: str
+        self, year: int, month: int, day: int
     ) -> Any:
         """Get data from the API asynchroniously."""
         api_url = APIURL_TEMPLATE.format(year, month, day)
@@ -94,7 +94,8 @@ class LightningImpactAPI:
                 if is_new_session:
                     await self.session.close()
                 raise SmhiForecastException(
-                    f"Failed to lightning API with status code {response.status}"
+                    f"Failed to access lightning API with status code {response.status}"
+                    + str(api_url)
                 )
             data = await response.text()
             if is_new_session:
@@ -108,16 +109,16 @@ class SmhiLightning:
 
     def __init__(
         self,
-        year: str,
-        month: str,
-        day: str,
+        year: int,
+        month: int,
+        day: int,
         session: Optional[aiohttp.ClientSession] = None,
         api: LightningImpactAPI = LightningImpactAPI(),
     ) -> None:
         """Set values."""
-        self._year = (year,)
-        self._month = (month,)
-        self._day = (day,)
+        self._year = year
+        self._month = month
+        self._day = day
         self._api = api
 
         if session:
@@ -130,26 +131,26 @@ class SmhiLightning:
         )
         return _get_all_lightning_impacts_from_api(json_data)
 
+    async def async_get_lightning_impact_most_recent(self) -> list[LightningImpact]:
+        """Return the most recent day of available lightning impacts."""
+        json_data = await self._api.async_get_lightning_impact_api(
+            self._year, self._month, self._day
+        )
+        return _get_all_lightning_impacts_from_api(json_data)
+
 
 def _get_all_lightning_impacts_from_api(api_result: dict) -> list[LightningImpact]:
     """Convert results from API to a List of LightningImpacts."""
 
-    lightning_impacts = []
+    lightning_impacts: list[LightningImpact] = []
 
     for impact in api_result["values"]:
-        for param in impact:
-            if param["name"] == "hours":
-                hour = int(param)
-            elif param["name"] == "minutes":
-                minute = int(param)
-            elif param["name"] == "seconds":
-                second = int(param)
-            elif param["name"] == "lat":
-                latitude = float(param)
-            elif param["name"] == "lon":
-                longitude = float(param)
-            elif param["name"] == "peakCurrent":
-                peakCurrent = int(param)
+        hour = int(impact["hours"])
+        minute = int(impact["minutes"])
+        second = int(impact["seconds"])
+        latitude = float(impact["lat"])
+        longitude = float(impact["lon"])
+        peakCurrent = int(impact["peakCurrent"])
 
         lightning_impact = LightningImpact(
             latitude, longitude, hour, minute, second, peakCurrent
