@@ -38,6 +38,14 @@ from .const import (
 
 PLATFORM = "media_player"
 
+PLAYER_STATE_MAP = {
+    mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,
+    mpris_pb2.PlayerStatus.APPEARED: MediaPlayerState.IDLE,
+    mpris_pb2.PlayerStatus.PLAYING: MediaPlayerState.PLAYING,
+    mpris_pb2.PlayerStatus.PAUSED: MediaPlayerState.PAUSED,
+    mpris_pb2.PlayerStatus.STOPPED: MediaPlayerState.IDLE,
+}
+
 SUPPORTED_MINIMAL = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.PLAY
@@ -134,6 +142,9 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
         self._attr_available = True
         self._metadata: dict[str, Any] = {}
 
+    def _debug(self, format_string: str, *args: Any) -> None:
+        _LOGGER.debug("%s: " + format_string, self.name, *args)
+
     @callback
     def _handle_coordinator_update(self) -> None:
         if self.player_id not in self.coordinator.data:
@@ -146,9 +157,8 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
 
         if "available" in data:
             if self._attr_available != data["available"]:
-                _LOGGER.debug(
-                    "%s: Updating availability from %s to %s",
-                    self.name,
+                self._debug(
+                    "Updating availability from %s to %s",
                     self._attr_available,
                     data["available"],
                 )
@@ -164,11 +174,8 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
                     self._attr_state == MediaPlayerState.PLAYING
                     and data["state"] == MediaPlayerState.PAUSED
                 )
-                _LOGGER.debug(
-                    "%s: Updating state from %s to %s",
-                    self.name,
-                    self._attr_state,
-                    data["state"],
+                self._debug(
+                    "Updating state from %s to %s", self._attr_state, data["state"]
                 )
                 self._attr_state = data["state"]
                 if (
@@ -181,9 +188,8 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
                         self._attr_playback_rate * elapsed.total_seconds()
                     )
                     self._attr_media_position_updated_at = dt_util.utcnow()
-                    _LOGGER.debug(
-                        "%s: Artificially setting media position to %s",
-                        self.name,
+                    self._debug(
+                        "Artificially setting media position to %s",
                         self._attr_media_position,
                     )
                 updated = True
@@ -191,7 +197,7 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
 
         if "metadata" in data:
             if self._metadata != data["metadata"]:
-                _LOGGER.debug("%s: Updating metadata", self.name)
+                self._debug("Updating metadata")
                 self._metadata = data["metadata"]
                 if "mpris:length" in data["metadata"]:
                     length: int | None = round(
@@ -202,11 +208,7 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
                 else:
                     length = None
                 self._attr_media_duration = length
-                _LOGGER.debug(
-                    "%s: Setting media duration to %s",
-                    self.name,
-                    self._attr_media_duration,
-                )
+                self._debug("Setting media duration to %s", self._attr_media_duration)
                 updated = True
             del data["metadata"]
 
@@ -215,18 +217,14 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
             if self._attr_media_duration is None:
                 if self._attr_media_position is not None:
                     # Media duration is None, position must be forced to None.
-                    _LOGGER.debug("%s: Nullifying media position", self.name)
+                    self._debug("Nullifying media position")
                     self._attr_media_position = None
             elif self._attr_media_position != new_position:
                 # Media duration is known, and position has changed.
                 self._attr_media_position = (
                     new_position if new_position is not None else None
                 )
-                _LOGGER.debug(
-                    "%s: Setting media position to %s",
-                    self.name,
-                    self._attr_media_position,
-                )
+                self._debug("Setting media position to %s", self._attr_media_position)
             # We update the time that the position update was sent
             # from the server, so that UI can keep accurate track
             # of where the play head is.  Think of someone seeking
@@ -274,16 +272,12 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
                     feats = feats & ~bitwisefield
 
         if feats != self._attr_supported_features:
-            _LOGGER.debug(
-                "%s: new feature bitfield: %s",
-                self.name,
-                feats,
-            )
+            self._debug("new feature bitfield: %s", feats)
             self._attr_supported_features = feats
             update_state = True
 
         if props.HasField("Rate") and props.Rate != self._attr_playback_rate:
-            _LOGGER.debug("%s: new rate: %s", self.name, props.Rate)
+            self._debug("New rate: %s", props.Rate)
             self._attr_playback_rate = props.Rate
             update_state = True
 
@@ -297,7 +291,6 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        assert self.player_id
         return self.player_id
 
     @property
@@ -311,19 +304,13 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Entity has been added to HASS."""
-        _LOGGER.debug("Added: %s", self.name)
         await super().async_added_to_hass()
+        # And now update all the properties based on the info we have.
         self._handle_coordinator_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Entity is about to be removed from HASS."""
-        _LOGGER.debug("Will remove: %s", self.name)
-        await super().async_will_remove_from_hass()
 
     async def async_media_play(self) -> None:
         """Begin playback."""
         try:
-            _LOGGER.debug("%s: play", self.name)
             await self.coordinator.client.play(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot play: %s" % exc) from exc
@@ -331,7 +318,6 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Pause playback."""
         try:
-            _LOGGER.debug("%s: pause", self.name)
             await self.coordinator.client.pause(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot pause: %s" % exc) from exc
@@ -339,7 +325,6 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     async def async_media_stop(self) -> None:
         """Stop playback."""
         try:
-            _LOGGER.debug("%s: stop", self.name)
             await self.coordinator.client.stop(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot stop: %s" % exc) from exc
@@ -347,7 +332,6 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         try:
-            _LOGGER.debug("%s: next track", self.name)
             await self.coordinator.client.next(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot next: %s" % exc) from exc
@@ -355,7 +339,6 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         try:
-            _LOGGER.debug("%s: previous track", self.name)
             await self.coordinator.client.previous(self.player_id)
         except Exception as exc:
             raise HomeAssistantError("cannot previous: %s" % exc) from exc
@@ -363,7 +346,6 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         try:
-            _LOGGER.debug("%s: seeking to %s", self.name, position)
             trackid = self._metadata.get("mpris:trackid", None)
             await self.coordinator.client.set_position(
                 self.player_id,
@@ -511,36 +493,40 @@ class MPRISCoordinator(DataUpdateCoordinator):
     async def _monitor_updates(self) -> AsyncGenerator[None, None]:
         """Obtain a real-time feed of player updates."""
         try:
-            started_syncing = False
-            finished_syncing = False
+            started_initial_sync = False
+            finished_initial_sync = False
             async for update in self.client.stream_updates(
                 timeout=round(EXPECTED_HEARTBEAT_FREQUENCY * 1.5)
             ):
-                if not started_syncing:
-                    # First update.  Mark entities available.  This does not
-                    # mark players as off or idle or any other state — that
-                    # happens below in _handle_update() and then at the end
-                    # in _finish_initial_players_sync() for all entities that
-                    # did not get corresponding updates from the server.
-                    started_syncing = True
+                if not started_initial_sync:
+                    # First update.
+                    started_initial_sync = True
                 if update.HasField("player"):
                     # There's a player update incoming.
                     updated = self._handle_update(update.player)
-                    if finished_syncing and updated:
+                    if finished_initial_sync and updated:
+                        # Every update must be broadcast to subscribers,
+                        # once we have finished initial syncing.
                         self.async_set_updated_data(self.data)
-                elif not finished_syncing:
-                    # Ah, this is the signal that all players known to the agent
-                    # have had their information sent to Home Assistant.
+                elif not finished_initial_sync:
+                    # We got a player update message with no player field,
+                    # or a heartbeat, during the initial sync phase.
+                    # This is the signal that all players known to the agent have
+                    # had their information sent to Home Assistant, and from now
+                    # on, all updates will be incremental as they happen.
+                    # Nowis the time to broadcast all accumulated initial status
+                    # updates for running players, and to resuscitate all players
+                    # not currently known to the agent but known to Home Assistant.
                     self._add_players_not_running()
                     self._mark_all_entities_available()
-                    finished_syncing = True
+                    finished_initial_sync = True
                     self.async_set_updated_data(self.data)
                 yield
         finally:
             # Whether due to error or request, we no longer get updates.
             # All entities are now unavailable from the standpoint of the
             # HASS MPRIS client.
-            if started_syncing:
+            if started_initial_sync:
                 # The loop synced entities successfully at least once
                 # Time to mark any available entities as unavailable.
                 self._mark_all_entities_unavailable()
@@ -569,15 +555,8 @@ class MPRISCoordinator(DataUpdateCoordinator):
             self.async_add_entities([entity])
             updated = True
 
-        table = {
-            mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,
-            mpris_pb2.PlayerStatus.APPEARED: MediaPlayerState.IDLE,
-            mpris_pb2.PlayerStatus.PLAYING: MediaPlayerState.PLAYING,
-            mpris_pb2.PlayerStatus.PAUSED: MediaPlayerState.PAUSED,
-            mpris_pb2.PlayerStatus.STOPPED: MediaPlayerState.IDLE,
-        }
         if discovery_data.status != mpris_pb2.PlayerStatus.UNKNOWN:
-            state = table[discovery_data.status]
+            state = PLAYER_STATE_MAP[discovery_data.status]
             _LOGGER.debug("New state of player %s: %s", player_id, state)
             self.data[player_id]["state"] = state
             updated = True
