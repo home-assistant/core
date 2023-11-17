@@ -5,9 +5,9 @@ from datetime import timedelta
 import logging
 from collections.abc import Callable
 
-
 from krisinformation import KrisinformationFeedEntry, KrisinformationFeedManager
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
@@ -26,8 +26,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 
 
 _LOGGER = logging.getLogger(__name__)
+DOMAIN =  "krisinformation"
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=120)
 DEFAULT_RADIUS_IN_KM = 50.0
 SOURCE = "krisinformation"
 
@@ -43,9 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    config: ConfigType, #Ändra denna till ConfigEntry?
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
@@ -69,6 +70,34 @@ def setup_platform(
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
+# This might be more correct to use
+#async def async_setup_entry(
+#    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+#) -> None:
+#    """Set up the Krisinformation feed platform."""
+#    manager: KrisinformationFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
+#
+#    @callback
+#    def async_add_geolocation(
+#        feed_manager: KrisinformationFeedEntityManager,
+#        integration_id: str,
+#        external_id: str,
+#    ) -> None:
+#        """Add geolocation entity from feed."""
+#        new_entity = KrisinformationLocationEvent(feed_manager, external_id)
+#        _LOGGER.debug("Adding geolocation %s", new_entity)
+#        async_add_entities([new_entity], True)
+#
+#    manager.listeners.append(
+#        async_dispatcher_connect(hass, manager.signal_new_entity, async_add_geolocation)
+#    )
+#    # Do not wait for update here so that the setup can be completed and because an
+#    # update will fetch data from the feed via HTTP and then process that data.
+#    entry.async_create_task(hass, manager.async_update()) #Either this
+#    hass.ascync_create_task(manager.async_update()) #Or this
+#    _LOGGER.debug("Geolocation setup done")
+
+
 class KrisinformationFeedEntityManager:
     """Feed Entity Manager for Krisinformation.se feed."""
 
@@ -83,7 +112,6 @@ class KrisinformationFeedEntityManager:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._feed_manager = KrisinformationFeedManager(
-            # Byta ut mot Crisisalerter?
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
@@ -94,7 +122,7 @@ class KrisinformationFeedEntityManager:
         self._scan_interval = scan_interval
         self._coordinates = coordinates
         self._radius_in_km = radius_in_km
-        # self._entities: list[KrisinformationFeedEntity] = []
+       # self._entities: list[KrisinformationFeedEntity] = []
 
     def startup(self) -> None:
         """Start up this manager."""
@@ -152,16 +180,6 @@ class KrisinformationLocationEvent(GeolocationEvent):
             self._update_callback,
         )
 
-    @property
-    def latitude(self):
-        """Return the latitude of the event."""
-        return self._latitude
-
-    @property
-    def longitude(self):
-        """Return the longitude of the event."""
-        return self._longitude
-
     @callback
     def _delete_callback(self) -> None:
         """Remove this entity."""
@@ -181,3 +199,21 @@ class KrisinformationLocationEvent(GeolocationEvent):
         feed_entry = self._feed_manager.get_entry(self._external_id)
         if feed_entry:
             self._update_from_feed(feed_entry)
+
+    async def async_update(self) -> None:
+        """Update this entity from the data held in the feed manager."""
+        _LOGGER.debug("Updating %s", self._external_id)
+        feed_entry = self._feed_manager.get_entry(self._external_id)
+        if feed_entry:
+            self._update_from_feed(feed_entry)
+
+    @property
+    def latitude(self) -> float | None:
+        """Return the latitude of the event."""
+        return self._latitude
+
+    @property
+    def longitude(self) -> float | None:
+        """Return the longitude of the event."""
+        return self._longitude
+

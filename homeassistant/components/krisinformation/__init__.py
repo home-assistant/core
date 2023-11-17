@@ -1,5 +1,8 @@
 """The krisinformation integration."""
 from __future__ import annotations
+from typing import Tuple
+
+from geojson import Feature
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -9,7 +12,7 @@ from .const import DOMAIN
 
 # List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.GEO_LOCATION]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -38,7 +41,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 from aio_geojson_client.feed import GeoJsonFeed
 from aio_geojson_client.feed_entry import FeedEntry
 from aio_geojson_client.feed_manager import FeedManagerBase
-
 
 class KrisinformationFeedManager(FeedManagerBase):
     """Feed Manager for Krisinformation.se feed."""
@@ -85,3 +87,11 @@ class KrisinformationFeed(GeoJsonFeed):
 
 class KrisinformationFeedEntry(FeedEntry):
     """Krisinformation.se feed entry."""
+    def __init__(self, home_coordinates: tuple[float, float], feature: Feature):
+        super().__init__(home_coordinates, feature)
+        self._feature = feature
+
+    @property
+    def attribution(self) -> str:
+        """Return the attribution of the entry."""
+        return "Krisinformation.se"
