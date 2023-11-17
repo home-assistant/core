@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
+from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER
 import zigpy.zcl
 
 from homeassistant.core import callback
@@ -72,25 +73,7 @@ class TuyaClusterHandler(ClusterHandler):
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize TuyaClusterHandler."""
         super().__init__(cluster, endpoint)
-
-        if self.cluster.endpoint.manufacturer in (
-            "_TZE200_7tdtqgwv",
-            "_TZE200_amp6tsvy",
-            "_TZE200_oisqyl4o",
-            "_TZE200_vhy3iakz",
-            "_TZ3000_uim07oem",
-            "_TZE200_wfxuhoea",
-            "_TZE200_tviaymwx",
-            "_TZE200_g1ib5ldv",
-            "_TZE200_wunufsil",
-            "_TZE200_7deq70b8",
-            "_TZE200_tz32mtza",
-            "_TZE200_2hf7x9n3",
-            "_TZE200_aqnazj70",
-            "_TZE200_1ozguk6x",
-            "_TZE200_k6jhsr0q",
-            "_TZE200_9mahtqtg",
-        ):
+        if endpoint.device.quirk_id == TUYA_PLUG_MANUFACTURER:
             self.ZCL_INIT_ATTRS = {
                 "backlight_mode": True,
                 "power_on_state": True,

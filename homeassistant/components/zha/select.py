@@ -6,6 +6,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -246,29 +247,10 @@ class TuyaPowerOnState(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
-    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, quirk_ids=TUYA_PLUG_ONOFF
 )
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="tuya_manufacturer",
-    manufacturers={
-        "_TZE200_7tdtqgwv",
-        "_TZE200_amp6tsvy",
-        "_TZE200_oisqyl4o",
-        "_TZE200_vhy3iakz",
-        "_TZ3000_uim07oem",
-        "_TZE200_wfxuhoea",
-        "_TZE200_tviaymwx",
-        "_TZE200_g1ib5ldv",
-        "_TZE200_wunufsil",
-        "_TZE200_7deq70b8",
-        "_TZE200_tz32mtza",
-        "_TZE200_2hf7x9n3",
-        "_TZE200_aqnazj70",
-        "_TZE200_1ozguk6x",
-        "_TZE200_k6jhsr0q",
-        "_TZE200_9mahtqtg",
-    },
+    cluster_handler_names="tuya_manufacturer", quirk_ids=TUYA_PLUG_MANUFACTURER
 )
 class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity):
     """Representation of a ZHA power on state select entity."""
@@ -288,8 +270,7 @@ class TuyaBacklightMode(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
-    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, quirk_ids=TUYA_PLUG_ONOFF
 )
 class TuyaBacklightModeSelectEntity(ZCLEnumSelectEntity):
     """Representation of a ZHA backlight mode select entity."""
@@ -310,25 +291,7 @@ class MoesBacklightMode(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="tuya_manufacturer",
-    manufacturers={
-        "_TZE200_7tdtqgwv",
-        "_TZE200_amp6tsvy",
-        "_TZE200_oisqyl4o",
-        "_TZE200_vhy3iakz",
-        "_TZ3000_uim07oem",
-        "_TZE200_wfxuhoea",
-        "_TZE200_tviaymwx",
-        "_TZE200_g1ib5ldv",
-        "_TZE200_wunufsil",
-        "_TZE200_7deq70b8",
-        "_TZE200_tz32mtza",
-        "_TZE200_2hf7x9n3",
-        "_TZE200_aqnazj70",
-        "_TZE200_1ozguk6x",
-        "_TZE200_k6jhsr0q",
-        "_TZE200_9mahtqtg",
-    },
+    cluster_handler_names="tuya_manufacturer", quirk_ids=TUYA_PLUG_MANUFACTURER
 )
 class MoesBacklightModeSelectEntity(ZCLEnumSelectEntity):
     """Moes devices have a different backlight mode select options."""
