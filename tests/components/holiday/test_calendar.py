@@ -18,8 +18,8 @@ async def assert_setup_calendar(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the calendar."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_COUNTRY: "US", CONF_PROVINCE: "AK"},
-        title="United States, AK",
+        data={CONF_COUNTRY: "CH", CONF_PROVINCE: "GE"},
+        title="Switzerland, GE",
     )
     config_entry.add_to_hass(hass)
 
@@ -30,14 +30,16 @@ async def assert_setup_calendar(hass: HomeAssistant) -> MockConfigEntry:
 
 
 async def test_holiday_calendar_entity(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test HolidayCalendarEntity functionality."""
     freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
 
     config_entry = await assert_setup_calendar(hass)
     entity = calendar.HolidayCalendarEntity(
-        "United States, AK", "US", "AK", config_entry.entry_id
+        "Switzerland, GE", "CH", "GE", config_entry.entry_id
     )
     entity.hass = hass
 
@@ -48,10 +50,18 @@ async def test_holiday_calendar_entity(
 
     assert len(events) == 1
 
-    assert events[0].summary == "New Year's Day"
+    assert events[0].summary == "Neujahrestag"
     assert events[0].start == start_date.date()
     assert events[0].end == end_date.date() + timedelta(days=1)
-    assert events[0].location == "United States, AK"
+    assert events[0].location == "Switzerland, GE"
+
+    hass.config.language = "fr"
+    result = entity._default_language()
+
+    assert result == "fr"
+
+    events = await entity.async_get_events(hass, start_date, end_date)
+    assert events[0].summary == "Nouvel An"
 
 
 async def test_async_get_events(
@@ -64,7 +74,7 @@ async def test_async_get_events(
 
     await assert_setup_calendar(hass)
 
-    entity_id = "calendar.united_states_ak"
+    entity_id = "calendar.switzerland_ge"
     assert entity_id in entity_registry.entities
 
     state = hass.states.get(entity_id)
@@ -72,7 +82,7 @@ async def test_async_get_events(
 
     assert state.state == "on"
 
-    assert state.attributes.get("message") == "New Year's Day"
+    assert state.attributes.get("message") == "Neujahrestag"
     assert state.attributes.get("start_time") == "2023-01-01 00:00:00"
     assert state.attributes.get("end_time") == "2023-01-02 00:00:00"
-    assert state.attributes.get("location") == "United States, AK"
+    assert state.attributes.get("location") == "Switzerland, GE"
