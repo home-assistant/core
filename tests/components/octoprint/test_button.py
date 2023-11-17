@@ -9,22 +9,9 @@ from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.core import HomeAssistant
 
 from . import init_integration
-
-
-@callback
-def _enable_entity(hass: HomeAssistant, entity_id: str) -> None:
-    """Enable disabled entity."""
-    ent_reg = async_get(hass)
-    entry = ent_reg.async_get(entity_id)
-    updated_entry = ent_reg.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
-    assert updated_entry != entry
-    assert updated_entry.disabled is False
 
 
 async def test_pause_job(hass: HomeAssistant) -> None:
