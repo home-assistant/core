@@ -1,6 +1,7 @@
 """Support for Krisinformation sensor."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +52,7 @@ class CrisisAlerterSensor(SensorEntity):
         self._area: str | None = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             "Länk": self._web,
@@ -67,7 +68,7 @@ class CrisisAlerterSensor(SensorEntity):
             self.first_update()
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         return self._attr_name
 
