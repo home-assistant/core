@@ -211,21 +211,23 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
 
         if "position" in data:
             new_position = data["position"]
-            if self._attr_media_duration is not None:
-                if self._attr_media_position != new_position:
+            if self._attr_media_duration is None:
+                if self._attr_media_position is not None:
+                    # Media duration is None, position must be forced to None.
+                    _LOGGER.debug("%s: Nullifying media position", self.name)
                     self._attr_media_position_updated_at = dt_util.utcnow()
-                    self._attr_media_position = (
-                        round(new_position) if new_position is not None else None
-                    )
-                    _LOGGER.debug(
-                        "%s: Setting media position to %s",
-                        self.name,
-                        self._attr_media_position,
-                    )
-            else:
-                _LOGGER.debug("%s: Nullifying media position", self.name)
+                    self._attr_media_position = None
+            elif self._attr_media_position != new_position:
+                # Media duration is known, and position has changed.
                 self._attr_media_position_updated_at = dt_util.utcnow()
-                self._attr_media_position = None
+                self._attr_media_position = (
+                    round(new_position) if new_position is not None else None
+                )
+                _LOGGER.debug(
+                    "%s: Setting media position to %s",
+                    self.name,
+                    self._attr_media_position,
+                )
             updated = True
             del data["position"]
 
