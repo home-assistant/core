@@ -1146,7 +1146,9 @@ def mock_zeroconf() -> Generator[None, None, None]:
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
     from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
-    from zeroconf.asyncio import AsyncZeroconf
+    from zeroconf.asyncio import (
+        AsyncZeroconf,  # pylint: disable=import-outside-toplevel
+    )
 
     with patch(
         "homeassistant.components.zeroconf.HaAsyncZeroconf", spec=AsyncZeroconf
