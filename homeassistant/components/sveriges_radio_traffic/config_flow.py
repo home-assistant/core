@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -84,7 +85,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        # USed to be an argument here, the configentry to get stuff maybe not needed?
         return OptionsFlowHandler(config_entry=config_entry)
 
     async def async_step_user(
@@ -103,9 +103,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title="Sveriges Radio Traffic", data=user_input
-                )
+                user_input[CONF_NAME] = "Sveriges Radio Traffic"
+                return self.async_create_entry(title="Sveriges Radio Traffic", data={})
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -137,6 +136,7 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         if user_input is not None:
             if not (_filter := user_input.get(CONF_AREA)) or _filter == "":
                 user_input[CONF_AREA] = None
+            user_input[CONF_NAME] = "Sveriges Radio Traffic"
             return self.async_create_entry(
                 title="Sveriges Radio Traffic", data=user_input
             )

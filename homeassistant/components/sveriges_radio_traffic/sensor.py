@@ -11,9 +11,10 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_AREA_NAME, DATE, INFO
+from .const import CONF_AREA_NAME, DATE, DOMAIN, INFO
 
 # dothis: Check trafikverket Train and try to do something similar. May be difficult/impossible to "dynamically" update location with sensor integration.
 # Instead set it during initial set up.
@@ -27,8 +28,12 @@ async def async_setup_entry(
     """Set up the sr traffic platform."""
     # Add entry to trafficsensor constructor
     area = entry.data.get("area")
+    titlename = entry.data.get("name")
+    # print("Name i sensor:", name)
     names = INFO  # ["message", "time", "area"]
-    async_add_entities([TrafficSensor(hass, area, name, entry) for name in names])
+    async_add_entities(
+        [TrafficSensor(hass, area, name, entry, titlename) for name in names]
+    )
 
 
 # Maybe need this maybe not?
@@ -58,7 +63,9 @@ class TrafficSensor(SensorEntity):
     # _attr_name = "Message"
     _attr_device_class = None
 
-    def __init__(self, hass: HomeAssistant | None, area, name, entry) -> None:
+    def __init__(
+        self, hass: HomeAssistant | None, area, name, entry, titlename
+    ) -> None:
         """Initialize the sensor."""
         # do stuff
         self.entry = entry
@@ -76,6 +83,12 @@ class TrafficSensor(SensorEntity):
         self.selector = MySelect()
         self._attr_icon = icon
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+            suggested_area="Sveriges Radio Traffic",
+        )
+
     def update(self) -> None:
         """Fetch new state data for the sensor.
 
@@ -89,6 +102,7 @@ class TrafficSensor(SensorEntity):
 
     def _get_traffic_info(self) -> str | None:
         """Fetch traffic information from specific area."""
+        # Obs! Below is dangerous if traffic_area isn't set, add security
         response = requests.get(
             "http://api.sr.se/api/v2/traffic/messages?trafficareaname="
             + self.traffic_area,
