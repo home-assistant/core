@@ -46,7 +46,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="normal_temperature",
-        name="Normal temperature",
+        translation_key="normal_temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -58,7 +58,7 @@ PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ),
     ViCareNumberEntityDescription(
         key="reduced_temperature",
-        name="Reduced temperature",
+        translation_key="reduced_temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -70,7 +70,7 @@ PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ),
     ViCareNumberEntityDescription(
         key="comfort_temperature",
-        name="Comfort temperature",
+        translation_key="comfort_temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
