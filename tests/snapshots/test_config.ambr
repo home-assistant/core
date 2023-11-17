@@ -312,38 +312,38 @@
 # ---
 # name: test_package_merge_error[packages]
   list([
-    'Package pack_1 setup failed. Integration adr_0007_1 cannot be merged. Dict expected in main config. (See configuration.yaml:9).',
-    'Package pack_2 setup failed. Integration adr_0007_2 cannot be merged. Expected a dict. (See configuration.yaml:13).',
-    "Package pack_4 setup failed. Integration adr_0007_3 has duplicate key 'host'. (See configuration.yaml:20).",
-    "Package pack_5 setup failed. Integration 'unknown_integration' not found. (See configuration.yaml:23).",
+    "Setup of package 'pack_1' at configuration.yaml, line 7 failed: integration 'adr_0007_1' cannot be merged, dict expected in main config",
+    "Setup of package 'pack_2' at configuration.yaml, line 11 failed: integration 'adr_0007_2' cannot be merged, expected a dict",
+    "Setup of package 'pack_4' at configuration.yaml, line 19 failed: integration 'adr_0007_3' has duplicate key 'host'",
+    "Setup of package 'pack_5' at configuration.yaml, line 22 failed: Integration 'unknown_integration' not found.",
   ])
 # ---
 # name: test_package_merge_error[packages_include_dir_named]
   list([
-    'Package adr_0007_1 setup failed. Integration adr_0007_1 cannot be merged. Dict expected in main config. (See integrations/adr_0007_1.yaml:2).',
-    'Package adr_0007_2 setup failed. Integration adr_0007_2 cannot be merged. Expected a dict. (See integrations/adr_0007_2.yaml:2).',
-    "Package adr_0007_3_2 setup failed. Integration adr_0007_3 has duplicate key 'host'. (See integrations/adr_0007_3_2.yaml:1).",
-    "Package unknown_integration setup failed. Integration 'unknown_integration' not found. (See integrations/unknown_integration.yaml:2).",
+    "Setup of package 'adr_0007_1' at integrations/adr_0007_1.yaml, line 2 failed: integration 'adr_0007_1' cannot be merged, dict expected in main config",
+    "Setup of package 'adr_0007_2' at integrations/adr_0007_2.yaml, line 2 failed: integration 'adr_0007_2' cannot be merged, expected a dict",
+    "Setup of package 'adr_0007_3_2' at integrations/adr_0007_3_2.yaml, line 1 failed: integration 'adr_0007_3' has duplicate key 'host'",
+    "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 2 failed: Integration 'unknown_integration' not found.",
   ])
 # ---
 # name: test_package_merge_exception[packages-error0]
   list([
-    "Package pack_1 setup failed. Integration test_domain caused error: No such file or directory: b'liblibc.a' (See configuration.yaml:4).",
+    "Setup of package 'pack_1' at configuration.yaml, line 3 failed: Integration test_domain caused error: No such file or directory: b'liblibc.a'",
   ])
 # ---
 # name: test_package_merge_exception[packages-error1]
   list([
-    "Package pack_1 setup failed. Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something' (See configuration.yaml:4).",
+    "Setup of package 'pack_1' at configuration.yaml, line 3 failed: Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something'",
   ])
 # ---
 # name: test_package_merge_exception[packages_include_dir_named-error0]
   list([
-    "Package unknown_integration setup failed. Integration test_domain caused error: No such file or directory: b'liblibc.a' (See integrations/unknown_integration.yaml:1).",
+    "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 1 failed: Integration test_domain caused error: No such file or directory: b'liblibc.a'",
   ])
 # ---
 # name: test_package_merge_exception[packages_include_dir_named-error1]
   list([
-    "Package unknown_integration setup failed. Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something' (See integrations/unknown_integration.yaml:1).",
+    "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 1 failed: Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something'",
   ])
 # ---
 # name: test_yaml_error[basic]
