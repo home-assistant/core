@@ -149,7 +149,9 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_TEMPERATURE,
         {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(vol.Coerce(float), vol.Range(min=7, max=30)),
+            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
+                vol.Coerce(float), vol.Range(min=7, max=30)
+            ),
             vol.Optional(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_temperature",

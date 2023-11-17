@@ -435,7 +435,11 @@ async def test_service_set_temperature_with_end(
     await hass.services.async_call(
         NETATMO_DOMAIN,
         NETATMO_SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_TARGET_TEMPERATURE: 25, ATTR_END_DATETIME: "2023-11-17 12:23:00"},
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_TARGET_TEMPERATURE: 25,
+            ATTR_END_DATETIME: "2023-11-17 12:23:00",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
