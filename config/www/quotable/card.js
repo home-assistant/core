@@ -21,6 +21,7 @@ class QuotableCard extends HTMLElement {
   }
 
   async updateQuoteAndAuthor() {
+    // Update quote on card
     if (this.updateInProgress) {
       return;
     }
@@ -53,6 +54,7 @@ class QuotableCard extends HTMLElement {
     }
   }
 
+  //Uodate card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
     if (!this.content) {
       this.innerHTML = `
@@ -111,17 +113,14 @@ class QuotableCard extends HTMLElement {
     return 3;
   }
 
-  disconnectedCallback() {
-    clearInterval(this._updateInterval);
-  }
-
-  static getStubConfig() {
+  getStubConfig() {
     return { entity: "quotable.quotable" };
   }
 }
 
 customElements.define("quotable-card", QuotableCard);
 
+//Add card to card picker with a preview
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "quotable-card",
