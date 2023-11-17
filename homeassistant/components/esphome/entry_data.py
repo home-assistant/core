@@ -439,4 +439,7 @@ class RuntimeEntryData:
         # may also try to discard/remove themselves.
         for disconnect_cb in self.disconnect_callbacks.copy():
             disconnect_cb()
+        # Make sure to clear the set to give up the reference
+        # to it and make sure all the callbacks can be GC'd.
         self.disconnect_callbacks.clear()
+        self.disconnect_callbacks = set()
