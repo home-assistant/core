@@ -41,9 +41,9 @@ LINKNLINK_DEVICES = {
     "Kitchen": (  # Not supported.
         "192.168.2.64",
         "ec0b12a43bc3",
-        "unknow",
+        "eMotion2",
         "LinknLink",
-        "unknow",
+        "EMOTION2",
         0x7777,
         57,
         5,

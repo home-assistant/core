@@ -37,8 +37,6 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
-        print(device.type)
-        print(DEVICE_TYPES)
         if device.type not in DEVICE_TYPES:
             _LOGGER.error(
                 (
