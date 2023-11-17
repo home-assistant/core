@@ -16,12 +16,16 @@ from homeassistant.helpers import entity_registry as er
     [
         "sensor.electricity_teststrasse_1_total_consumption",
         "sensor.electricity_teststrasse_1_total_power",
+        "sensor.electricity_teststrasse_1_last_transmitted",
         "sensor.gas_teststrasse_1_total_gas_consumption",
+        "sensor.gas_teststrasse_1_last_transmitted",
     ],
     ids=[
         "electricity total consumption",
         "electricity total power",
+        "electricity last transmitted",
         "gas total consumption",
+        "gas last transmitted",
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
