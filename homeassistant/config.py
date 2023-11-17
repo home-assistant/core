@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
+from yaml.error import MarkedYAMLError
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -393,12 +394,24 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     secrets = Secrets(Path(hass.config.config_dir))
 
     # Not using async_add_executor_job because this is an internal method.
-    config = await hass.loop.run_in_executor(
-        None,
-        load_yaml_config_file,
-        hass.config.path(YAML_CONFIG_FILE),
-        secrets,
-    )
+    try:
+        config = await hass.loop.run_in_executor(
+            None,
+            load_yaml_config_file,
+            hass.config.path(YAML_CONFIG_FILE),
+            secrets,
+        )
+    except HomeAssistantError as ex:
+        if not (base_ex := ex.__cause__) or not isinstance(base_ex, MarkedYAMLError):
+            raise
+
+        # Rewrite path to offending YAML file to be relative the hass config dir
+        if base_ex.context_mark and base_ex.context_mark.name:
+            base_ex.context_mark.name = _relpath(hass, base_ex.context_mark.name)
+        if base_ex.problem_mark and base_ex.problem_mark.name:
+            base_ex.problem_mark.name = _relpath(hass, base_ex.problem_mark.name)
+        raise
+
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
@@ -613,9 +626,9 @@ def stringify_invalid(
     - Give a more user friendly output for unknown options
     - Give a more user friendly output for missing options
     """
-    message_prefix = f"Invalid config for [{domain}]"
+    message_prefix = f"Invalid config for '{domain}'"
     if domain != CONF_CORE and link:
-        message_suffix = f". Please check the docs at {link}"
+        message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
     if annotation := find_annotation(config, ex.path):
@@ -623,13 +636,13 @@ def stringify_invalid(
     path = "->".join(str(m) for m in ex.path)
     if ex.error_message == "extra keys not allowed":
         return (
-            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
+            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for '{domain}', "
             f"check: {path}{message_suffix}"
         )
     if ex.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{ex.path[-1]}' not provided"
-            f"{message_suffix}."
+            f"{message_suffix}"
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
@@ -644,7 +657,7 @@ def stringify_invalid(
         )
     return (
         f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
-        f"{message_suffix}."
+        f"{message_suffix}"
     )
 
 
@@ -684,14 +697,14 @@ def format_homeassistant_error(
     link: str | None = None,
 ) -> str:
     """Format HomeAssistantError thrown by a custom config validator."""
-    message_prefix = f"Invalid config for [{domain}]"
+    message_prefix = f"Invalid config for '{domain}'"
     # HomeAssistantError raised by custom config validator has no path to the
     # offending configuration key, use the domain key as path instead.
     if annotation := find_annotation(config, [domain]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     message = f"{message_prefix}: {str(ex) or repr(ex)}"
     if domain != CONF_CORE and link:
-        message += f" Please check the docs at {link}."
+        message += f", please check the docs at {link}"
 
     return message
 
