@@ -295,7 +295,7 @@ class ESPHomeManager:
                 event.data["entity_id"], attribute, new_state
             )
 
-        self.entry_data.disconnect_callbacks.append(
+        self.entry_data.disconnect_callbacks.add(
             async_track_state_change_event(
                 hass, [entity_id], send_home_assistant_state_event
             )
@@ -440,7 +440,7 @@ class ESPHomeManager:
             reconnect_logic.name = device_info.name
 
         if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
-            entry_data.disconnect_callbacks.append(
+            entry_data.disconnect_callbacks.add(
                 await async_connect_scanner(
                     hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
                 )
@@ -462,7 +462,7 @@ class ESPHomeManager:
             )
 
             if device_info.voice_assistant_version:
-                entry_data.disconnect_callbacks.append(
+                entry_data.disconnect_callbacks.add(
                     await cli.subscribe_voice_assistant(
                         self._handle_pipeline_start,
                         self._handle_pipeline_stop,
@@ -492,7 +492,7 @@ class ESPHomeManager:
         )
         for disconnect_cb in entry_data.disconnect_callbacks:
             disconnect_cb()
-        entry_data.disconnect_callbacks = []
+        entry_data.disconnect_callbacks.clear()
         entry_data.available = False
         entry_data.expected_disconnect = expected_disconnect
         # Mark state as stale so that we will always dispatch
@@ -761,7 +761,7 @@ async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEn
     data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
-    data.disconnect_callbacks = []
+    data.disconnect_callbacks.clear()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.async_cleanup()
