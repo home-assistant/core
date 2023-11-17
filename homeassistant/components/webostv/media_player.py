@@ -8,7 +8,6 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-import ssl
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
@@ -469,18 +468,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
         """Retrieve an image.
 
-        webOS uses self-signed certificates, thus we need to use an empty
-        SSLContext to bypass validation errors if url starts with https.
+        webOS uses self-signed certificates, thus we need to skip SSL certificate validation.
         """
         content = None
-        ssl_context = None
-        if url.startswith("https"):
-            ssl_context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
-
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError):
             async with asyncio.timeout(10):
-                response = await websession.get(url, ssl=ssl_context)
+                response = await websession.get(url, ssl=False)
                 if response.status == HTTPStatus.OK:
                     content = await response.read()
 
