@@ -108,9 +108,13 @@ def mock_router(mock_device_registry_devices):
 
 
 @pytest.fixture(name="router_bridge_mode")
-def mock_router_bridge_mode(mock_device_registry_devices):
+def mock_router_bridge_mode(mock_device_registry_devices, router):
     """Mock a successful connection to Freebox Bridge mode."""
 
-    with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
-        init_mock_router(service_mock, True)
+    router().lan.get_hosts_list = AsyncMock(
+        side_effect=HttpRequestError(
+            "Request failed (APIResponse: %s)"
+            % json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)
+        )
+    )
         yield service_mock
