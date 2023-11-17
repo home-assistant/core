@@ -218,7 +218,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.4.0
+aioesphomeapi==18.5.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -799,7 +799,7 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.35
+holidays==0.36
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231030.2
@@ -1223,6 +1223,9 @@ pyairnow==1.2.1
 # homeassistant.components.airvisual_pro
 pyairvisual==2023.08.1
 
+# homeassistant.components.asuswrt
+pyasuswrt==0.1.20
+
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
@@ -1344,7 +1347,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.1
+pyinsteon==1.5.2
 
 # homeassistant.components.ipma
 pyipma==3.0.7
@@ -1600,7 +1603,7 @@ python-ecobee-api==0.2.17
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==3.1.0
+python-homewizard-energy==4.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9

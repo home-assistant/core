@@ -45,6 +45,14 @@ pytestmark = [
                 "switch.device_cloud_connection",
             ],
         ),
+        (
+            "SDM630",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+                "switch.device_cloud_connection",
+            ],
+        ),
     ],
 )
 async def test_entities_not_created_for_device(

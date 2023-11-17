@@ -1,6 +1,9 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
+from datetime import datetime
+
+from pydrawise.schema import Zone
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -71,27 +74,30 @@ async def async_setup_entry(
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    entities = [
-        HydrawiseSensor(data=zone, coordinator=coordinator, description=description)
-        for zone in coordinator.api.relays
+    async_add_entities(
+        HydrawiseSensor(coordinator, description, controller, zone)
+        for controller in coordinator.data.controllers
+        for zone in controller.zones
         for description in SENSOR_TYPES
-    ]
-    async_add_entities(entities)
+    )
 
 
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
+    zone: Zone
+
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
         if self.entity_description.key == "watering_time":
-            if relay_data["timestr"] == "Now":
-                self._attr_native_value = int(relay_data["run"] / 60)
+            if (current_run := self.zone.scheduled_runs.current_run) is not None:
+                self._attr_native_value = int(
+                    current_run.remaining_time.total_seconds() / 60
+                )
             else:
                 self._attr_native_value = 0
-        else:  # _sensor_type == 'next_cycle'
-            next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
-            self._attr_native_value = dt_util.utc_from_timestamp(
-                dt_util.as_timestamp(dt_util.now()) + next_cycle
-            )
+        elif self.entity_description.key == "next_cycle":
+            if (next_run := self.zone.scheduled_runs.next_run) is not None:
+                self._attr_native_value = dt_util.as_utc(next_run.start_time)
+            else:
+                self._attr_native_value = datetime.max.replace(tzinfo=dt_util.UTC)
