@@ -37,7 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare number entity."""
 
-    # value_getter: Callable[[PyViCareDevice], float | None] | None = None
     value_setter: Callable[[PyViCareDevice, float], Any | None] | None = None
     min_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     max_value_getter: Callable[[PyViCareDevice], float | None] | None = None
@@ -46,7 +45,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 
 PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
-        key="normal temperature",
+        key="normal_temperature",
         name="Normal temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
@@ -58,7 +57,7 @@ PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         stepping_getter=lambda api: api.getProgramStepping("normal"),
     ),
     ViCareNumberEntityDescription(
-        key="reduced temperature",
+        key="reduced_temperature",
         name="Reduced temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
@@ -70,7 +69,7 @@ PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         stepping_getter=lambda api: api.getProgramStepping("reduced"),
     ),
     ViCareNumberEntityDescription(
-        key="comfort temperature",
+        key="comfort_temperature",
         name="Comfort temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,

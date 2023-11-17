@@ -36,7 +36,7 @@ _TOKEN_FILENAME = "vicare_token.save"
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_getter: Callable[[Device], Any]
+    value_getter: Callable[[Device], bool | float]
 
 
 @dataclass()
