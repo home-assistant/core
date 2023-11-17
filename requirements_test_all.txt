@@ -106,10 +106,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.0.3
 
 # homeassistant.components.python_script
-RestrictedPython==6.2;python_version<'3.12'
-
-# homeassistant.components.python_script
-RestrictedPython==7.0a1.dev0;python_version>='3.12'
+RestrictedPython==7.0
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -218,7 +215,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.1
+aioesphomeapi==18.5.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1290,7 +1287,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.2
+pyenphase==1.14.3
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1603,7 +1600,7 @@ python-ecobee-api==0.2.17
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.0.0
+python-homewizard-energy==4.1.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
