@@ -97,7 +97,6 @@ class FreeboxRouter:
 
         # Access to Host list not available in bridge mode, API return error_code 'nodev'
         if self.supports_hosts:
-            hosts_list_initialized = False
             try:
                 fbx_devices = await self._api.lan.get_hosts_list()
             except HttpRequestError as err:
