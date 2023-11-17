@@ -7,7 +7,7 @@ from typing import Any
 
 import hassmpris_client
 
-from .media_player import EntityManager
+from .media_player import MPRISCoordinator
 
 
 @dataclass
@@ -17,4 +17,4 @@ class HassmprisData:
     client: hassmpris_client.AsyncMPRISClient
     unloaders: list[Callable[[], Coroutine[Any, Any, None]]]
     unload_func: Callable[..., Coroutine[Any, Any, None]] | None
-    entity_manager: EntityManager | None
+    entity_manager: MPRISCoordinator | None
