@@ -210,24 +210,29 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
             del data["metadata"]
 
         if "position" in data:
-            new_position = data["position"]
+            new_position = None if data["position"] is None else round(data["position"])
             if self._attr_media_duration is None:
                 if self._attr_media_position is not None:
                     # Media duration is None, position must be forced to None.
                     _LOGGER.debug("%s: Nullifying media position", self.name)
-                    self._attr_media_position_updated_at = dt_util.utcnow()
                     self._attr_media_position = None
             elif self._attr_media_position != new_position:
                 # Media duration is known, and position has changed.
-                self._attr_media_position_updated_at = dt_util.utcnow()
                 self._attr_media_position = (
-                    round(new_position) if new_position is not None else None
+                    new_position if new_position is not None else None
                 )
                 _LOGGER.debug(
                     "%s: Setting media position to %s",
                     self.name,
                     self._attr_media_position,
                 )
+            # We update the time that the position update was sent
+            # from the server, so that UI can keep accurate track
+            # of where the play head is.  Think of someone seeking
+            # to second 33 of a music track twice in a row.  If we
+            # did not update this timestamp, then the play head UI
+            # shows would be in second 66.
+            self._attr_media_position_updated_at = dt_util.utcnow()
             updated = True
             del data["position"]
 
@@ -382,7 +387,7 @@ class MPRISCoordinatorUpdate(TypedDict):
     state: NotRequired[MediaPlayerState]
     metadata: NotRequired[dict[str, Any]]
     mpris_properties: NotRequired[mpris_pb2.MPRISPlayerProperties]
-    position: NotRequired[float]
+    position: NotRequired[float | None]
 
 
 class MPRISCoordinator(DataUpdateCoordinator):
