@@ -121,10 +121,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.0.3
 
 # homeassistant.components.python_script
-RestrictedPython==6.2;python_version<'3.12'
-
-# homeassistant.components.python_script
-RestrictedPython==7.0a1.dev0;python_version>='3.12'
+RestrictedPython==7.0
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -239,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.1
+aioesphomeapi==18.5.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -988,7 +985,7 @@ hass-nabucasa==0.74.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.5.0
+hassil==1.5.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1021,7 +1018,7 @@ holidays==0.36
 home-assistant-frontend==20231030.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.11.13
+home-assistant-intents==2023.11.17
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1713,7 +1710,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.2
+pyenphase==1.14.3
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2146,7 +2143,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.0.0
+python-homewizard-energy==4.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
