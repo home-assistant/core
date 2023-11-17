@@ -17,42 +17,46 @@ class QuotableCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    this.updateQuoteAndAuthor();
+
+    if (this._hass) {
+      this.updateQuoteAndAuthor();
+      this.addPopUp();
+    }
   }
 
   async updateQuoteAndAuthor() {
+    // Update quote on card
     if (this.updateInProgress) {
       return;
     }
 
-    if (this._hass) {
-      this.updateInProgress = true;
+    this.updateInProgress = true;
 
-      try {
-        const entityState = this._hass.states[this._config.entity];
+    try {
+      const entityState = this._hass.states[this._config.entity];
 
-        // Check if the entity state and its attributes exist
-        if (entityState && entityState.attributes) {
-          const attributes = entityState.attributes;
+      // Check if the entity state and its attributes exist
+      if (entityState && entityState.attributes) {
+        const attributes = entityState.attributes;
 
-          const quotes = JSON.parse(attributes.quotes) || [];
+        const quotes = JSON.parse(attributes.quotes) || [];
 
-          // Use the first quote and author from the state attributes
-          const quote =
-            quotes.length > 0 ? quotes[0].content : this.DEFAULT_QUOTE;
-          const author =
-            quotes.length > 0 ? quotes[0].author : this.DEFAULT_AUTHOR;
+        // Use the first quote and author from the state attributes
+        const quote =
+          quotes.length > 0 ? quotes[0].content : this.DEFAULT_QUOTE;
+        const author =
+          quotes.length > 0 ? quotes[0].author : this.DEFAULT_AUTHOR;
 
-          this.render(quote, author);
-        }
-      } catch (error) {
-        this.render(this.DEFAULT_QUOTE, this.DEFAULT_AUTHOR);
-      } finally {
-        this.updateInProgress = false;
+        this.render(quote, author);
       }
+    } catch (error) {
+      this.render(this.DEFAULT_QUOTE, this.DEFAULT_AUTHOR);
+    } finally {
+      this.updateInProgress = false;
     }
   }
 
+  //Uodate card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
     if (!this.content) {
       this.innerHTML = `
@@ -107,21 +111,39 @@ class QuotableCard extends HTMLElement {
     }
   }
 
+  addPopUp() {
+    if (!this._clickListenerAdded) {
+      this.addEventListener("click", () => {
+        console.log("Clicked! Opening popup...");
+        this._openPopup();
+      });
+      this._clickListenerAdded = true;
+    }
+  }
+
+  _openPopup() {
+    const popupData = {
+      title: "Quotable settings",
+      content: [
+        //Pop up form elements go here
+      ],
+    };
+
+    this._hass.callService("browser_mod", "popup", popupData);
+  }
+
   getCardSize() {
     return 3;
   }
 
-  disconnectedCallback() {
-    clearInterval(this._updateInterval);
-  }
-
-  static getStubConfig() {
+  getStubConfig() {
     return { entity: "quotable.quotable" };
   }
 }
 
 customElements.define("quotable-card", QuotableCard);
 
+//Add card to card picker with a preview
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "quotable-card",
