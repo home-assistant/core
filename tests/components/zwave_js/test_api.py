@@ -457,7 +457,7 @@ async def test_node_metadata(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_comments(
+async def test_node_alerts(
     hass: HomeAssistant,
     wallmote_central_scene,
     integration,
@@ -473,13 +473,14 @@ async def test_node_comments(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/node_comments",
+            TYPE: "zwave_js/node_alerts",
             DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()
     result = msg["result"]
     assert result["comments"] == [{"level": "info", "text": "test"}]
+    assert result["is_embedded"]
 
 
 async def test_add_node(
