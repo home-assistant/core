@@ -170,7 +170,7 @@ async def test_sensors_printer_disconnected(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.octoprint_current_state")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "Disconnected"
     assert state.name == "OctoPrint Current State"
     entry = entity_registry.async_get("sensor.octoprint_current_state")
     assert entry.unique_id == "Current State-uuid"
