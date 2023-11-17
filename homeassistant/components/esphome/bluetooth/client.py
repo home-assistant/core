@@ -217,7 +217,7 @@ class ESPHomeClient(BaseBleakClient):
             if not future.done():
                 future.set_result(None)
         self._disconnected_futures.clear()
-        self._disconnect_callbacks.remove(self._async_esp_disconnected)
+        self._disconnect_callbacks.discard(self._async_esp_disconnected)
         self._unsubscribe_connection_state()
 
     def _async_ble_device_disconnected(self) -> None:
