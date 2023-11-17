@@ -402,6 +402,10 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_final_write) == 1
     assert len(test_all) == 3
 
+
+async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, test timeouts at each step."""
+
     with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
         await hass.async_stop()
 
