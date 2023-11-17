@@ -42,7 +42,6 @@ pytestmark = [
             [
                 "switch.device",
                 "switch.device_switch_lock",
-                "switch.device_cloud_connection",
             ],
         ),
         (
