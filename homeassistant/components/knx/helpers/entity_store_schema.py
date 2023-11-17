@@ -8,7 +8,11 @@ from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
-from ..schema import ga_list_validator, sync_state_validator
+from ..validation import (
+    ga_list_validator,
+    ga_list_validator_optional,
+    sync_state_validator,
+)
 
 BASE_ENTITY_SCHEMA = vol.Schema(
     {
@@ -24,7 +28,7 @@ SWITCH_SCHEMA = BASE_ENTITY_SCHEMA.extend(
         vol.Required("device_class"): vol.Maybe(SWITCH_DEVICE_CLASSES_SCHEMA),
         vol.Required("invert"): bool,
         vol.Required("switch_address"): ga_list_validator,
-        vol.Required("switch_state_address"): vol.Maybe(ga_list_validator),
+        vol.Required("switch_state_address"): ga_list_validator_optional,
         vol.Required("respond_to_read"): bool,
     }
 )
