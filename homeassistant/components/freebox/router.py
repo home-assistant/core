@@ -114,7 +114,7 @@ class FreeboxRouter:
                             ve,
                         )
 
-                    if json_resp is not None and json_resp.get("error_code") == "nodev":
+                    if json_resp and json_resp.get("error_code") == "nodev":
                         # No need to retry, Host list not available
                         self.supports_hosts = False
                         hosts_list_initialized = True
