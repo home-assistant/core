@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/entity_store.json"
 
-KNXPlatformStoreModel = dict[str, dict[str, Any]]  # uuid: configuration
+KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
 KNXEntityStoreModel = dict[
     str, KNXPlatformStoreModel
 ]  # platform: KNXPlatformStoreModel

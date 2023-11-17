@@ -61,7 +61,7 @@ UPDATE_ENTITY_BASE_SCHEMA = {
     **CREATE_ENTITY_BASE_SCHEMA,
 }
 
-DELETE_ENTITY_SCHEMA = {
+LOOKUP_ENTITY_SCHEMA = {
     vol.Required("platform"): vol.Coerce(Platform),
     vol.Required("unique_id"): str,
 }
