@@ -121,8 +121,7 @@ class FreeboxRouter:
                             "Host list is not available using bridge mode (%s)",
                             json_resp.get("msg"),
                         )
-
-                if not hosts_list_initialized:
+                else:
                     raise err
 
         # Adds the Freebox itself
