@@ -47,13 +47,14 @@ SUPPORTED_TURN_OFF = MediaPlayerEntityFeature.TURN_OFF
 SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
 
 # Enable to remove clones (second / third, nth instances)
-# of any player when the player exits.  Not enabled by
-# default because events in the logbook disappear when
-# the player goes away.
-# Clones are always removed upon start or reload of the
-# integration, since there is no value in keeping them
-# around.
-REMOVE_CLONES_WHILE_RUNNING = True
+# of any player when the player exits or the integration
+# reconnects to an agent and these instances of the player
+# are no longer running.
+# Not enabled by default because events in the logbook
+# disappear when the player is removed.
+# This will become a setting configurable through the UI
+# once it's figured out how to add settings.
+REMOVE_CLONES_WHILE_RUNNING = False
 
 
 def _get_player_id(
