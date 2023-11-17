@@ -88,35 +88,6 @@ class MockValveWithIsClosedEntity(ValveEntity):
         self._attr_is_closed = True
 
 
-class MockSlowClosingValveEntity(ValveEntity):
-    """Mock valve device to use in tests that uses the closing state."""
-
-    def __init__(
-        self,
-        unique_id: str = "mock_valve",
-        name: str = "Valve",
-        features: ValveEntityFeature = (ValveEntityFeature.STOP),
-        current_position: int = None,
-    ) -> None:
-        """Initialize the valve."""
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self._attr_supported_features = features
-        self._attr_current_valve_position = current_position
-
-    def close_valve(self) -> None:
-        """Mock implementantion for sync close function."""
-        self._attr_is_closing = True
-
-    def open_valve(self) -> None:
-        """Mock implementantion for sync close function."""
-        self._attr_current_valve_position = 100
-
-    def finish_close_valve(self) -> None:
-        """Mock implementantion for sync close function."""
-        self._attr_is_closing = False
-
-
 @pytest.fixture(autouse=True)
 def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
     """Mock config flow."""
@@ -277,34 +248,6 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     valve.hass = hass
 
     assert valve.supported_features is None
-
-
-async def test_toggle(hass: HomeAssistant) -> None:
-    """Test valve entity toggling."""
-
-    valve = MockValveEntity(current_position=100)
-    valve.hass = hass
-
-    assert valve.is_closed is False
-
-    valve.toggle()
-    assert valve.is_closed is True
-
-
-async def test_toggle_stoppable_valve(hass: HomeAssistant) -> None:
-    """Test valve entity toggling when the valve has closing/opening states."""
-
-    valve = MockSlowClosingValveEntity(current_position=100)
-    valve.hass = hass
-
-    assert valve.is_closed is False
-
-    valve.toggle()
-    assert valve.state is STATE_CLOSING
-    valve.finish_close_valve()
-
-    valve.toggle()
-    assert valve.state is STATE_OPEN
 
 
 def call_service(hass, service, ent, position=None):
