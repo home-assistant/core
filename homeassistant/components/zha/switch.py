@@ -365,6 +365,17 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+class InovelliSmartFanMode(ZHASwitchConfigurationEntity):
+    """Inovelli smart fan mode control."""
+
+    _unique_id_suffix = "smart_fan_mode"
+    _attribute_name = "smart_fan_mode"
+    _attr_translation_key = "smart_fan_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
 class InovelliDoubleTapUpEnabled(ZHASwitchConfigurationEntity):
