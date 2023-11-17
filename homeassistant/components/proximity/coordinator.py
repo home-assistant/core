@@ -238,39 +238,36 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 )
                 entities_data[device][ATTR_DIR_OF_TRAVEL] = None
 
-            # calculate drection of travel only for last updated tracked entity
-            if (
-                (state_change_data := self.state_change_data) is not None
-                and device == state_change_data.entity_id
-                and device_state.state.lower() == self.proximity_zone.lower()
-            ):
-                _LOGGER.debug(
-                    "%s: %s in zone -> direction_of_travel=arrived",
-                    self.friendly_name,
-                    device_state.entity_id,
-                )
-                entities_data[device][ATTR_DIR_OF_TRAVEL] = "arrived"
-            elif (
-                state_change_data is not None
-                and device == state_change_data.entity_id
-                and (old_state := state_change_data.old_state) is not None
-                and (new_state := state_change_data.new_state) is not None
-            ):
-                _LOGGER.debug(
-                    "%s: calculate direction of travel for %s",
-                    self.friendly_name,
-                    device,
-                )
-                entities_data[device][
-                    ATTR_DIR_OF_TRAVEL
-                ] = self._calc_direction_of_travel(
-                    zone_state,
-                    device_state,
-                    old_state.attributes.get(ATTR_LATITUDE),
-                    old_state.attributes.get(ATTR_LONGITUDE),
-                    new_state.attributes.get(ATTR_LATITUDE),
-                    new_state.attributes.get(ATTR_LONGITUDE),
-                )
+        # calculate direction of travel only for last updated tracked entity
+        if (state_change_data := self.state_change_data) is not None and entities_data[
+            state_change_data.entity_id
+        ][ATTR_DIST_TO] == 0:
+            _LOGGER.debug(
+                "%s: %s in zone -> direction_of_travel=arrived",
+                self.friendly_name,
+                state_change_data.entity_id,
+            )
+            entities_data[state_change_data.entity_id][ATTR_DIR_OF_TRAVEL] = "arrived"
+        elif (
+            state_change_data is not None
+            and (old_state := state_change_data.old_state) is not None
+            and (new_state := state_change_data.new_state) is not None
+        ):
+            _LOGGER.debug(
+                "%s: calculate direction of travel for %s",
+                self.friendly_name,
+                state_change_data.entity_id,
+            )
+            entities_data[state_change_data.entity_id][
+                ATTR_DIR_OF_TRAVEL
+            ] = self._calc_direction_of_travel(
+                zone_state,
+                new_state,
+                old_state.attributes.get(ATTR_LATITUDE),
+                old_state.attributes.get(ATTR_LONGITUDE),
+                new_state.attributes.get(ATTR_LATITUDE),
+                new_state.attributes.get(ATTR_LONGITUDE),
+            )
 
         # takeover data for legacy proximity entity
         proximity_data: dict[str, str | float] = {
