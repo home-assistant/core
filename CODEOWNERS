@@ -699,6 +699,8 @@ build.json @home-assistant/supervisor
 /tests/components/life360/ @pnbruckner
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
+/homeassistant/components/linknlink/ @danielhiversen @xuanxuan000
+/tests/components/linknlink/ @danielhiversen @xuanxuan000
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar

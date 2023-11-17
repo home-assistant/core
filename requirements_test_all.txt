@@ -919,6 +919,9 @@ libsoundtouch==0.8
 # homeassistant.components.life360
 life360==6.0.0
 
+# homeassistant.components.linknlink
+linknlink==0.1.9
+
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
 

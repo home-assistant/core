@@ -286,6 +286,14 @@ DHCP: list[dict[str, str | bool]] = [
         "registered_devices": True,
     },
     {
+        "domain": "linknlink",
+        "hostname": "linknlink_*",
+    },
+    {
+        "domain": "linknlink",
+        "registered_devices": True,
+    },
+    {
         "domain": "litterrobot",
         "hostname": "litter-robot4",
     },
