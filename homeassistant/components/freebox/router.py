@@ -38,6 +38,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def is_json(json_str):
+    """Validate if a String is a JSON value or not."""
+    try:
+        json.loads(json_str)
+        return True
+    except ValueError as ve:
+        _LOGGER.error(
+            "Failed to parse JSON '%s', error '%s'",
+            json_str,
+            ve,
+        )
+        return False
+
+
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
@@ -104,25 +118,21 @@ class FreeboxRouter:
                     r"Request failed \(APIResponse: (.+)\)", str(err)
                 ):
                     json_str = matcher.group(1)
-                    try:
+                    if is_json(json_str):
                         json_resp = json.loads(json_str)
-                    except ValueError as ve:
-                        _LOGGER.error(
-                            "Failed to parse JSON '%s', error '%s'",
-                            json_str,
-                            ve,
-                        )
-                        raise err
 
-                    if json_resp and json_resp.get("error_code") == "nodev":
-                        # No need to retry, Host list not available
-                        self.supports_hosts = False
-                        _LOGGER.debug(
-                            "Host list is not available using bridge mode (%s)",
-                            json_resp.get("msg"),
-                        )
+                        if json_resp and json_resp.get("error_code") == "nodev":
+                            # No need to retry, Host list not available
+                            self.supports_hosts = False
+                            _LOGGER.debug(
+                                "Host list is not available using bridge mode (%s)",
+                                json_resp.get("msg"),
+                            )
+                        else:
+                            raise err
                     else:
                         raise err
+
                 else:
                     raise err
 
