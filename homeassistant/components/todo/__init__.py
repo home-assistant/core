@@ -38,6 +38,15 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+TODO_ITEM_FIELD_FEATURES = {
+    "due": TodoListEntityFeature.DUE,
+    "description": TodoListEntityFeature.DESCRIPTION,
+}
+TODO_ITEM_FIELD_SCHEMA = {
+    vol.Optional("due"): cv.date,
+    vol.Optional("description"): cv.string,
+}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Todo entities."""
@@ -55,6 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "add_item",
         {
             vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
+            **TODO_ITEM_FIELD_SCHEMA,
         },
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
@@ -69,8 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional("status"): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
-                    vol.Optional("due"): cv.date,
-                    vol.Optional("description"): cv.string,
+                    **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
             cv.has_at_least_one_key("rename", "status", "due", "description"),
@@ -137,8 +146,8 @@ class TodoItem:
     status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""
 
-    due: datetime.datetime | None = None
-    """The date and time that a to-do is expected to be completed."""
+    due: datetime.date | None = None
+    """The date that a to-do is expected to be completed."""
 
     description: str | None = None
     """A more complete description of than that provided by the summary."""
@@ -274,7 +283,7 @@ def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     result: dict[str, str] = {}
     for name, value in obj:
-        if isinstance(value, (datetime.datetime, datetime.date)):
+        if isinstance(value, datetime.date):
             result[name] = value.isoformat()
         elif value is not None:
             result[name] = str(value)
@@ -367,9 +376,21 @@ def _find_by_uid_or_summary(
 
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
-    await entity.async_create_todo_item(
-        item=TodoItem(summary=call.data["item"], status=TodoItemStatus.NEEDS_ACTION)
-    )
+    item_data = {
+        "summary": call.data["item"],
+        "status": TodoItemStatus.NEEDS_ACTION,
+    }
+    for field, required_feature in TODO_ITEM_FIELD_FEATURES.items():
+        if value := call.data.get(field):
+            if (
+                not entity.supported_features
+                or not entity.supported_features & required_feature
+            ):
+                raise ValueError(
+                    f"Entity {entity.name} does not support setting field '{field}'"
+                )
+        item_data[field] = value
+    await entity.async_create_todo_item(item=TodoItem(**item_data))
 
 
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -379,26 +400,23 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if not found:
         raise ValueError(f"Unable to find To-do item '{item}'")
 
-    if (due := call.data.get("due")) and (
-        not entity.supported_features
-        or not entity.supported_features & TodoListEntityFeature.DUE
-    ):
-        raise ValueError(f"Entity {entity.name} does not support setting due date")
-    if (description := call.data.get("description")) and (
-        not entity.supported_features
-        or not entity.supported_features & TodoListEntityFeature.DESCRIPTION
-    ):
-        raise ValueError(f"Entity {entity.name} does not support setting description")
+    item_data: dict[str, Any] = {
+        "uid": found.uid,
+        "summary": call.data.get("rename"),
+        "status": call.data.get("status"),
+    }
+    for field, required_feature in TODO_ITEM_FIELD_FEATURES.items():
+        if value := call.data.get(field):
+            if (
+                not entity.supported_features
+                or not entity.supported_features & required_feature
+            ):
+                raise ValueError(
+                    f"Entity {entity.name} does not support setting field '{field}'"
+                )
+        item_data[field] = value
 
-    update_item = TodoItem(
-        uid=found.uid,
-        summary=call.data.get("rename"),
-        status=call.data.get("status"),
-        due=due,
-        description=description,
-    )
-
-    await entity.async_update_todo_item(item=update_item)
+    await entity.async_update_todo_item(item=TodoItem(**item_data))
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -418,7 +436,7 @@ async def _async_get_todo_items(
     """Return items in the To-do list."""
     return {
         "items": [
-            dataclasses.asdict(item)
+            dataclasses.asdict(item, dict_factory=_api_items_factory)
             for item in entity.todo_items or ()
             if not (statuses := call.data.get("status")) or item.status in statuses
         ]

@@ -264,7 +264,7 @@ async def test_unsupported_websocket(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a To-do list that does not support features."""
+    """Test a To-do list for an entity that does not exist."""
 
     entity1 = TodoListEntity()
     entity1.entity_id = "todo.entity1"
@@ -328,23 +328,34 @@ async def test_add_item_service_raises(
 
 
 @pytest.mark.parametrize(
-    ("item_data", "expected_error"),
+    ("item_data", "expected_exception", "expected_error"),
     [
-        ({}, "required key not provided"),
-        ({"item": ""}, "length of value must be at least 1"),
+        ({}, vol.Invalid, "required key not provided"),
+        ({"item": ""}, vol.Invalid, "length of value must be at least 1"),
+        (
+            {"item": "Submit forms", "description": "Submit tax forms"},
+            ValueError,
+            "does not support setting field 'description'",
+        ),
+        (
+            {"item": "Submit forms", "due": "2023-11-17"},
+            ValueError,
+            "does not support setting field 'due'",
+        ),
     ],
 )
 async def test_add_item_service_invalid_input(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
     item_data: dict[str, Any],
+    expected_exception: str,
     expected_error: str,
 ) -> None:
     """Test invalid input to the add item service."""
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match=expected_error):
+    with pytest.raises(expected_exception, match=expected_error):
         await hass.services.async_call(
             DOMAIN,
             "add_item",
@@ -352,6 +363,55 @@ async def test_add_item_service_invalid_input(
             target={"entity_id": "todo.entity1"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("supported_entity_feature", "item_data", "expected_item"),
+    (
+        (
+            TodoListEntityFeature.DUE,
+            {"item": "New item", "due": "2023-11-13"},
+            TodoItem(
+                summary="New item",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=datetime.date(2023, 11, 13),
+            ),
+        ),
+        (
+            TodoListEntityFeature.DESCRIPTION,
+            {"item": "New item", "description": "Submit revised draft"},
+            TodoItem(
+                summary="New item",
+                status=TodoItemStatus.NEEDS_ACTION,
+                description="Submit revised draft",
+            ),
+        ),
+    ),
+)
+async def test_add_item_service_extended_fields(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    supported_entity_feature: int,
+    item_data: dict[str, Any],
+    expected_item: TodoItem,
+) -> None:
+    """Test adding an item in a To-do list."""
+
+    test_entity._attr_supported_features |= supported_entity_feature
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "add_item",
+        {"item": "New item", **item_data},
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_create_todo_item.call_args
+    assert args
+    item = args.kwargs.get("item")
+    assert item == expected_item
 
 
 async def test_update_todo_item_service_by_id(
@@ -594,7 +654,7 @@ async def test_update_todo_item_field_unsupported(
         ),
     ),
 )
-async def test_update_todo_item_field(
+async def test_update_todo_item_extended_fields(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
     supported_entity_feature: int,
@@ -1087,4 +1147,64 @@ async def test_subscribe_entity_does_not_exist(
     assert msg["error"] == {
         "code": "invalid_entity_id",
         "message": "To-do list entity not found: todo.unknown",
+    }
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data"),
+    [
+        ({"due": datetime.date(2023, 11, 17)}, {"due": "2023-11-17"}),
+        ({"description": "Some description"}, {"description": "Some description"}),
+    ],
+)
+async def test_list_todo_items_extended_fields(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
+) -> None:
+    """Test listing items in a To-do list with extended fields."""
+
+    test_entity._attr_todo_items = [
+        TodoItem(
+            **ITEM_1,
+            **item_data,
+        ),
+    ]
+    await create_mock_platform(hass, [test_entity])
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "todo/item/list", "entity_id": "todo.entity1"}
+    )
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert resp.get("success")
+    assert resp.get("result") == {
+        "items": [
+            {
+                **ITEM_1,
+                **expected_item_data,
+            },
+        ]
+    }
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_items",
+        {},
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {
+        "todo.entity1": {
+            "items": [
+                {
+                    **ITEM_1,
+                    **expected_item_data,
+                },
+            ]
+        }
     }
