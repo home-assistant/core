@@ -88,11 +88,13 @@ class ShoppingTodoListEntity(TodoListEntity):
         # Shopping list integration doesn't currently support config entry unload
         # so this code may not be used in practice, however it is here in case
         # this changes in the future.
-        self.async_on_remove(self._data.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(
+            self._data.async_add_listener(self.async_shopping_data_updated)
+        )
 
     @callback
-    def async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
+    def async_shopping_data_updated(self) -> None:
+        """Write the state to the state machine and notify listeners."""
         super().async_write_ha_state()
         self.async_update_listeners()
 
