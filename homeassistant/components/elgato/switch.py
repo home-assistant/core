@@ -19,21 +19,13 @@ from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
-@dataclass
-class ElgatoEntityDescriptionMixin:
-    """Mixin values for Elgato entities."""
-
-    is_on_fn: Callable[[ElgatoData], bool | None]
-    set_fn: Callable[[Elgato, bool], Awaitable[Any]]
-
-
-@dataclass
-class ElgatoSwitchEntityDescription(
-    SwitchEntityDescription, ElgatoEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ElgatoSwitchEntityDescription(SwitchEntityDescription):
     """Class describing Elgato switch entities."""
 
     has_fn: Callable[[ElgatoData], bool] = lambda _: True
+    is_on_fn: Callable[[ElgatoData], bool | None]
+    set_fn: Callable[[Elgato, bool], Awaitable[Any]]
 
 
 SWITCHES = [

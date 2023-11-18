@@ -35,21 +35,13 @@ from .entity import HomeWizardEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class HomeWizardEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
-
-    has_fn: Callable[[Data], bool]
-    value_fn: Callable[[Data], StateType]
-
-
-@dataclass
-class HomeWizardSensorEntityDescription(
-    SensorEntityDescription, HomeWizardEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class HomeWizardSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
     enabled_fn: Callable[[Data], bool] = lambda data: True
+    has_fn: Callable[[Data], bool]
+    value_fn: Callable[[Data], StateType]
 
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
@@ -208,6 +200,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_w is not None,
         value_fn=lambda data: data.active_power_w,
     ),
@@ -217,6 +210,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_l1_w is not None,
         value_fn=lambda data: data.active_power_l1_w,
     ),
@@ -226,6 +220,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_l2_w is not None,
         value_fn=lambda data: data.active_power_l2_w,
     ),
@@ -235,6 +230,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         has_fn=lambda data: data.active_power_l3_w is not None,
         value_fn=lambda data: data.active_power_l3_w,
     ),

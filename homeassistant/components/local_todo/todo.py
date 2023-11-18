@@ -7,9 +7,9 @@ from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
-from pydantic import ValidationError
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -74,7 +74,7 @@ def _convert_item(item: TodoItem) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo."""
     try:
         return Todo(**dataclasses.asdict(item, dict_factory=_todo_dict_factory))
-    except ValidationError as err:
+    except CalendarParseError as err:
         _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, err)
         raise HomeAssistantError("Error parsing todo input fields") from err
 

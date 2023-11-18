@@ -1,4 +1,5 @@
 """Tests for TTS media source."""
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,7 +15,10 @@ from .common import (
     MockTTSEntity,
     mock_config_entry_setup,
     mock_setup,
+    retrieve_media,
 )
+
+from tests.typing import ClientSessionGenerator
 
 
 class MSEntity(MockTTSEntity):
@@ -88,16 +92,18 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
 
 
 @pytest.mark.parametrize("mock_provider", [MSProvider(DEFAULT_LANG)])
-async def test_legacy_resolving(hass: HomeAssistant, mock_provider: MSProvider) -> None:
+async def test_legacy_resolving(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_provider: MSProvider
+) -> None:
     """Test resolving legacy provider."""
     await mock_setup(hass, mock_provider)
     mock_get_tts_audio = mock_provider.get_tts_audio
 
-    media = await media_source.async_resolve_media(
-        hass, "media-source://tts/test?message=Hello%20World", None
-    )
+    media_id = "media-source://tts/test?message=Hello%20World"
+    media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
+    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -107,13 +113,11 @@ async def test_legacy_resolving(hass: HomeAssistant, mock_provider: MSProvider) 
 
     # Pass language and options
     mock_get_tts_audio.reset_mock()
-    media = await media_source.async_resolve_media(
-        hass,
-        "media-source://tts/test?message=Bye%20World&language=de_DE&voice=Paulus",
-        None,
-    )
+    media_id = "media-source://tts/test?message=Bye%20World&language=de_DE&voice=Paulus"
+    media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
+    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -123,16 +127,18 @@ async def test_legacy_resolving(hass: HomeAssistant, mock_provider: MSProvider) 
 
 
 @pytest.mark.parametrize("mock_tts_entity", [MSEntity(DEFAULT_LANG)])
-async def test_resolving(hass: HomeAssistant, mock_tts_entity: MSEntity) -> None:
+async def test_resolving(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts_entity: MSEntity
+) -> None:
     """Test resolving entity."""
     await mock_config_entry_setup(hass, mock_tts_entity)
     mock_get_tts_audio = mock_tts_entity.get_tts_audio
 
-    media = await media_source.async_resolve_media(
-        hass, "media-source://tts/tts.test?message=Hello%20World", None
-    )
+    media_id = "media-source://tts/tts.test?message=Hello%20World"
+    media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
+    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -142,13 +148,13 @@ async def test_resolving(hass: HomeAssistant, mock_tts_entity: MSEntity) -> None
 
     # Pass language and options
     mock_get_tts_audio.reset_mock()
-    media = await media_source.async_resolve_media(
-        hass,
-        "media-source://tts/tts.test?message=Bye%20World&language=de_DE&voice=Paulus",
-        None,
+    media_id = (
+        "media-source://tts/tts.test?message=Bye%20World&language=de_DE&voice=Paulus"
     )
+    media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
+    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
