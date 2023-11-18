@@ -31,8 +31,6 @@ ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
-PARALLEL_UPDATES = 1
-
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,

@@ -26,8 +26,6 @@ from .coordinator import PingUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
-
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOSTS): {cv.slug: cv.string},
