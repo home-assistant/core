@@ -27,6 +27,14 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
         key=ATTR_DIR_OF_TRAVEL,
         translation_key=ATTR_DIR_OF_TRAVEL,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "arrived",
+            "away_from",
+            "stationary",
+            "towards",
+            "unknown",
+        ],
     ),
 ]
 

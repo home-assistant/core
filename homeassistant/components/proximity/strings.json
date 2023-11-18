@@ -7,7 +7,6 @@
         "state": {
           "arrived": "Arrived",
           "away_from": "Away from",
-          "not_set": "Not set",
           "stationary": "Stationary",
           "towards": "Towards",
           "unknown": "Unknown"
