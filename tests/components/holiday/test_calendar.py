@@ -14,7 +14,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 
 
-async def assert_setup_calendar(hass: HomeAssistant) -> MockConfigEntry:
+async def assert_setup_calendar(
+    hass: HomeAssistant, language: str = "en"
+) -> tuple[MockConfigEntry, calendar.HolidayCalendarEntity]:
     """Set up the calendar."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -26,7 +28,14 @@ async def assert_setup_calendar(hass: HomeAssistant) -> MockConfigEntry:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    return config_entry
+    hass.config.language = language
+
+    entity = calendar.HolidayCalendarEntity(
+        hass, "Switzerland, GE", "CH", "GE", config_entry.entry_id
+    )
+    entity.hass = hass
+
+    return config_entry, entity
 
 
 async def test_holiday_calendar_entity(
@@ -37,11 +46,7 @@ async def test_holiday_calendar_entity(
     """Test HolidayCalendarEntity functionality."""
     freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
 
-    config_entry = await assert_setup_calendar(hass)
-    entity = calendar.HolidayCalendarEntity(
-        "Switzerland, GE", "CH", "GE", config_entry.entry_id
-    )
-    entity.hass = hass
+    config_entry, entity = await assert_setup_calendar(hass)
 
     start_date = datetime(2023, 1, 1)
     end_date = datetime(2023, 1, 1)
@@ -55,10 +60,7 @@ async def test_holiday_calendar_entity(
     assert events[0].end == end_date.date() + timedelta(days=1)
     assert events[0].location == "Switzerland, GE"
 
-    hass.config.language = "fr"
-    result = entity._default_language()
-
-    assert result == "fr"
+    config_entry, entity = await assert_setup_calendar(hass, language="fr")
 
     events = await entity.async_get_events(hass, start_date, end_date)
     assert events[0].summary == "Nouvel An"
