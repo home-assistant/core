@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -32,11 +31,9 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         ping: PingDataSubProcess | PingDataICMPLib,
     ) -> None:
         """Initialize the Ping coordinator."""
-        self.config_entry = config_entry
         self.ping = ping
 
         super().__init__(

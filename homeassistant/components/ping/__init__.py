@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ping_cls = PingDataICMPLib
 
     coordinator = PingUpdateCoordinator(
-        hass=hass, config_entry=entry, ping=ping_cls(hass, host, count, data.privileged)
+        hass=hass, ping=ping_cls(hass, host, count, data.privileged)
     )
     await coordinator.async_config_entry_first_refresh()
 
