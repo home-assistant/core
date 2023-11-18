@@ -12,7 +12,25 @@ from .common import setup_platform
 from tests.common import async_fire_time_changed
 
 
-async def test_get_hosts_list(
+async def test_router_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    router: Mock,
+) -> None:
+    """Test get_hosts_list invoqued multiple times if freebox into router mode."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert router().lan.get_hosts_list.call_count == 1
+
+    # Simulate an update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert router().lan.get_hosts_list.call_count == 2
+
+
+async def test_bridge_mode(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     router_bridge_mode: Mock,

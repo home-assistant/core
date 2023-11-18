@@ -38,16 +38,16 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_json(json_str: str):
+def is_json(json_str):
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
         return True
-    except ValueError as ve:
+    except (ValueError, TypeError) as err:
         _LOGGER.error(
             "Failed to parse JSON '%s', error '%s'",
             json_str,
-            ve,
+            err,
         )
         return False
 
@@ -114,24 +114,23 @@ class FreeboxRouter:
             try:
                 fbx_devices = await self._api.lan.get_hosts_list()
             except HttpRequestError as err:
-                if matcher := re.search(
-                    r"Request failed \(APIResponse: (.+)\)", str(err)
+                if (
+                    (
+                        matcher := re.search(
+                            r"Request failed \(APIResponse: (.+)\)", str(err)
+                        )
+                    )
+                    and (json_str := matcher.group(1))
+                    and is_json(json_str)
+                    and (json_resp := json.loads(json_str))
+                    and json_resp.get("error_code") == "nodev"
                 ):
-                    json_str = matcher.group(1)
-                    if is_json(json_str):
-                        json_resp = json.loads(json_str)
-
-                        if json_resp and json_resp.get("error_code") == "nodev":
-                            # No need to retry, Host list not available
-                            self.supports_hosts = False
-                            _LOGGER.debug(
-                                "Host list is not available using bridge mode (%s)",
-                                json_resp.get("msg"),
-                            )
-                        else:
-                            raise err
-                    else:
-                        raise err
+                    # No need to retry, Host list not available
+                    self.supports_hosts = False
+                    _LOGGER.debug(
+                        "Host list is not available using bridge mode (%s)",
+                        json_resp.get("msg"),
+                    )
 
                 else:
                     raise err
