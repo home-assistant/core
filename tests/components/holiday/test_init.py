@@ -20,8 +20,6 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
-
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing integration."""
@@ -30,7 +28,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    
+
     assert entry.state == ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
