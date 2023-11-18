@@ -134,6 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
+EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
@@ -1175,12 +1176,9 @@ class EventBus:
         self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
-
-        def remove_listener() -> None:
-            """Remove the listener."""
-            self._async_remove_listener(event_type, filterable_job)
-
-        return remove_listener
+        return functools.partial(
+            self._async_remove_listener, event_type, filterable_job
+        )
 
     def listen_once(
         self,
@@ -1773,7 +1771,13 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
+        func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
         schema: vol.Schema | None,
         domain: str,
         service: str,
@@ -1864,7 +1868,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
     ) -> None:
@@ -1882,7 +1886,11 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,

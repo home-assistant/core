@@ -5,6 +5,7 @@ import logging
 from typing import Any, cast
 
 from pyatmo.modules import NATherm1
+from pyatmo.modules.device_types import DeviceType
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -106,8 +107,8 @@ CURRENT_HVAC_MAP_NETATMO = {True: HVACAction.HEATING, False: HVACAction.IDLE}
 
 DEFAULT_MAX_TEMP = 30
 
-NA_THERM = "NATherm1"
-NA_VALVE = "NRV"
+NA_THERM = DeviceType.NATherm1
+NA_VALVE = DeviceType.NRV
 
 
 async def async_setup_entry(
@@ -117,6 +118,10 @@ async def async_setup_entry(
 
     @callback
     def _create_entity(netatmo_device: NetatmoRoom) -> None:
+        if not netatmo_device.room.climate_type:
+            msg = f"No climate type found for this room: {netatmo_device.room.name}"
+            _LOGGER.debug(msg)
+            return
         entity = NetatmoThermostat(netatmo_device)
         async_add_entities([entity])
 
@@ -170,7 +175,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             ]
         )
 
-        self._model: str = f"{self._room.climate_type}"
+        assert self._room.climate_type
+        self._model: DeviceType = self._room.climate_type
 
         self._config_url = CONF_URL_ENERGY
 
@@ -184,7 +190,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._selected_schedule = None
 
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
-        if self._model == NA_THERM:
+        if self._model is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
         self._attr_unique_id = f"{self._room.entity_id}-{self._model}"

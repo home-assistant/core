@@ -1,6 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
-from asyncio import timeout
+from asyncio import shield, timeout
 from collections.abc import Collection
 from functools import lru_cache
 from http import HTTPStatus
@@ -41,6 +41,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.aiohttp_compat import enable_compression
 from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -62,6 +63,7 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
+SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -218,7 +220,7 @@ class APIStatesView(HomeAssistantView):
         response = web.Response(
             body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
         )
-        response.enable_compression()
+        enable_compression(response)
         return response
 
 
@@ -388,11 +390,17 @@ class APIDomainServicesView(HomeAssistantView):
         )
 
         try:
-            await hass.services.async_call(
-                domain, service, data, blocking=True, context=context
-            )
+            async with timeout(SERVICE_WAIT_TIMEOUT):
+                # shield the service call from cancellation on connection drop
+                await shield(
+                    hass.services.async_call(
+                        domain, service, data, blocking=True, context=context
+                    )
+                )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
+        except TimeoutError:
+            pass
         finally:
             cancel_listen()
 
