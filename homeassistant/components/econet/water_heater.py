@@ -155,6 +155,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
 
     async def async_added_to_hass(self) -> None:
         """Initialize energy usage."""
+        await super().async_added_to_hass()
         await self.async_update_ha_state(force_refresh=True)
 
     def turn_away_mode_on(self) -> None:
