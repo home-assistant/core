@@ -35,7 +35,7 @@ async def patch_ping():
 
 
 @pytest.fixture(name="config_entry")
-async def mock_config_entry(hass: HomeAssistant, request) -> MockConfigEntry:
+async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a MockConfigEntry for testing."""
     return MockConfigEntry(
         domain=DOMAIN,
