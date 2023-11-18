@@ -348,15 +348,19 @@ def test_cluster_handler_registry() -> None:
         for model_quirk_list in manufacturer.values():
             for quirk in model_quirk_list:
                 quirk_id = getattr(quirk, zha_const.ATTR_QUIRK_ID, None)
-                for endpoint in quirk.endpoints:
+                device_description = getattr(quirk, "replacement", None) or getattr(
+                    quirk, "signature", None
+                )
+                for endpoint in device_description["ENDPOINTS"]:
                     for endpoint_clusters in [
-                        endpoint.in_clusters,
-                        endpoint.out_clusters,
+                        endpoint.get("INPUT_CLUSTERS", None),
+                        endpoint.get("OUTPUT_CLUSTERS", [None]),
                     ]:
                         for cluster_id in endpoint_clusters:
-                            if cluster_id not in all_quirk_ids:
-                                all_quirk_ids[cluster_id] = set()
-                            all_quirk_ids[cluster_id].add(quirk_id)
+                            if cluster_id:
+                                if cluster_id not in all_quirk_ids:
+                                    all_quirk_ids[cluster_id] = {None}
+                                all_quirk_ids[cluster_id].add(quirk_id)
     del quirk, model_quirk_list, manufacturer
 
     for (
