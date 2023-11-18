@@ -62,9 +62,16 @@ class TodoItemFieldDescription:
     """A description of To-do item fields and validation requirements."""
 
     service_field: str
+    """Field name for service calls."""
+
     todo_item_field: str
+    """Field name for TodoItem."""
+
     validation: Callable[[Any], Any]
+    """Voluptuous validation function."""
+
     required_feature: TodoListEntityFeature
+    """Entity feature that enables this field."""
 
 
 TODO_ITEM_FIELDS = [
