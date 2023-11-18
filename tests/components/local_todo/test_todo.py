@@ -273,7 +273,7 @@ async def test_rename(
         blocking=True,
     )
 
-    # Verify item is marked as completed
+    # Verify item has been renamed
     items = await ws_get_items()
     assert len(items) == 1
     item = items[0]
