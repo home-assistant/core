@@ -23,6 +23,7 @@ from .const import (
     FETCH_A_QUOTE_URL,
     GET_TAGS_URL,
     HTTP_CLIENT_TIMEOUT,
+    SEARCH_AUTHORS_URL,
     SERVICE_FETCH_A_QUOTE,
     SERVICE_FETCH_ALL_TAGS,
     SERVICE_SEARCH_AUTHORS,
@@ -48,6 +49,7 @@ def register_services(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         service=SERVICE_SEARCH_AUTHORS,
         service_func=partial(_search_authors_service, session),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -69,9 +71,9 @@ async def _fetch_all_tags_service(
 ) -> ServiceResponse:
     response = await session.get(GET_TAGS_URL, timeout=HTTP_CLIENT_TIMEOUT)
     if response.status == HTTPStatus.OK:
-        data = await response.json()
-        if data:
-            tags = {item["slug"]: item["name"] for item in data}
+        tags = await response.json()
+        if tags:
+            tags = {tag.get("slug"): tag.get("name") for tag in tags}
             return tags
 
     return None
@@ -79,8 +81,24 @@ async def _fetch_all_tags_service(
 
 async def _search_authors_service(
     session: aiohttp.ClientSession, service: ServiceCall
-) -> None:
-    pass
+) -> ServiceResponse:
+    query = service.data.get("query")
+
+    if not query:
+        return None
+
+    params = {"query": query, "matchThreshold": 1}
+
+    response = await session.get(
+        SEARCH_AUTHORS_URL, params=params, timeout=HTTP_CLIENT_TIMEOUT
+    )
+
+    if response.status == HTTPStatus.OK:
+        data = await response.json()
+        if authors := data.get("results"):
+            return {author.get("slug"): author.get("name") for author in authors}
+
+    return None
 
 
 async def _fetch_a_quote_service(
@@ -101,9 +119,12 @@ async def _fetch_a_quote_service(
     )
 
     if response.status == HTTPStatus.OK:
-        data = await response.json()
-        if data:
-            quote = {"author": data[0]["author"], "content": data[0]["content"]}
+        quotes = await response.json()
+        if quotes:
+            quote = {
+                "author": quotes[0].get("author"),
+                "content": quotes[0].get("content"),
+            }
 
             hass.bus.fire(EVENT_NEW_QUOTE_FETCHED, quote)
 
