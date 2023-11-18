@@ -111,7 +111,6 @@ class WebDavTodoListEntity(TodoListEntity):
             for resource in results
             if (todo_item := _todo_item(resource)) is not None
         ]
-        self.async_update_listeners()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""

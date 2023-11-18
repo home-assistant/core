@@ -211,6 +211,12 @@ class TodoListEntity(Entity):
         for listener in self._update_listeners:
             listener(todo_items)
 
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Notify to-do item subscribers."""
+        super()._async_write_ha_state()
+        self.async_update_listeners()
+
 
 @websocket_api.websocket_command(
     {
