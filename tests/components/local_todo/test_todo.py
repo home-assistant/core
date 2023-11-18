@@ -59,7 +59,7 @@ async def ws_move_item(
 ) -> Callable[[str, str | None], Awaitable[None]]:
     """Fixture to move an item in the todo list."""
 
-    async def move(uid: str, pos: int) -> None:
+    async def move(uid: str, previous_uid: str | None) -> None:
         # Fetch items using To-do platform
         client = await hass_ws_client()
         id = ws_req_id()
@@ -68,8 +68,9 @@ async def ws_move_item(
             "type": "todo/item/move",
             "entity_id": TEST_ENTITY,
             "uid": uid,
-            "pos": pos,
         }
+        if previous_uid is not None:
+            data["previous_uid"] = previous_uid
         await client.send_json(data)
         resp = await client.receive_json()
         assert resp.get("id") == id
@@ -78,13 +79,13 @@ async def ws_move_item(
     return move
 
 
-async def test_create_item(
+async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
-    """Test creating a todo item."""
+    """Test adding a todo item."""
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -92,8 +93,8 @@ async def test_create_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "replace batteries"},
+        "add_item",
+        {"item": "replace batteries"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -109,16 +110,16 @@ async def test_create_item(
     assert state.state == "1"
 
 
-async def test_delete_item(
+async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
-    """Test deleting a todo item."""
+    """Test removing a todo item."""
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "replace batteries"},
+        "add_item",
+        {"item": "replace batteries"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -135,8 +136,8 @@ async def test_delete_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "delete_item",
-        {"uid": [items[0]["uid"]]},
+        "remove_item",
+        {"item": [items[0]["uid"]]},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -149,17 +150,17 @@ async def test_delete_item(
     assert state.state == "0"
 
 
-async def test_bulk_delete(
+async def test_bulk_remove(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
-    """Test deleting multiple todo items."""
+    """Test removing multiple todo items."""
     for i in range(0, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "create_item",
-            {"summary": f"soda #{i}"},
+            "add_item",
+            {"item": f"soda #{i}"},
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
@@ -174,8 +175,8 @@ async def test_bulk_delete(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "delete_item",
-        {"uid": uids},
+        "remove_item",
+        {"item": uids},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -198,8 +199,8 @@ async def test_update_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "create_item",
-        {"summary": "soda"},
+        "add_item",
+        {"item": "soda"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -219,7 +220,7 @@ async def test_update_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"uid": item["uid"], "status": "completed"},
+        {"item": item["uid"], "status": "completed"},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -237,30 +238,29 @@ async def test_update_item(
 
 
 @pytest.mark.parametrize(
-    ("src_idx", "pos", "expected_items"),
+    ("src_idx", "dst_idx", "expected_items"),
     [
         # Move any item to the front of the list
-        (0, 0, ["item 1", "item 2", "item 3", "item 4"]),
-        (1, 0, ["item 2", "item 1", "item 3", "item 4"]),
-        (2, 0, ["item 3", "item 1", "item 2", "item 4"]),
-        (3, 0, ["item 4", "item 1", "item 2", "item 3"]),
+        (0, None, ["item 1", "item 2", "item 3", "item 4"]),
+        (1, None, ["item 2", "item 1", "item 3", "item 4"]),
+        (2, None, ["item 3", "item 1", "item 2", "item 4"]),
+        (3, None, ["item 4", "item 1", "item 2", "item 3"]),
         # Move items right
         (0, 1, ["item 2", "item 1", "item 3", "item 4"]),
         (0, 2, ["item 2", "item 3", "item 1", "item 4"]),
         (0, 3, ["item 2", "item 3", "item 4", "item 1"]),
         (1, 2, ["item 1", "item 3", "item 2", "item 4"]),
         (1, 3, ["item 1", "item 3", "item 4", "item 2"]),
-        (1, 4, ["item 1", "item 3", "item 4", "item 2"]),
-        (1, 5, ["item 1", "item 3", "item 4", "item 2"]),
         # Move items left
-        (2, 1, ["item 1", "item 3", "item 2", "item 4"]),
-        (3, 1, ["item 1", "item 4", "item 2", "item 3"]),
-        (3, 2, ["item 1", "item 2", "item 4", "item 3"]),
+        (2, 0, ["item 1", "item 3", "item 2", "item 4"]),
+        (3, 0, ["item 1", "item 4", "item 2", "item 3"]),
+        (3, 1, ["item 1", "item 2", "item 4", "item 3"]),
         # No-ops
-        (1, 1, ["item 1", "item 2", "item 3", "item 4"]),
+        (0, 0, ["item 1", "item 2", "item 3", "item 4"]),
+        (2, 1, ["item 1", "item 2", "item 3", "item 4"]),
         (2, 2, ["item 1", "item 2", "item 3", "item 4"]),
+        (3, 2, ["item 1", "item 2", "item 3", "item 4"]),
         (3, 3, ["item 1", "item 2", "item 3", "item 4"]),
-        (3, 4, ["item 1", "item 2", "item 3", "item 4"]),
     ],
 )
 async def test_move_item(
@@ -269,15 +269,15 @@ async def test_move_item(
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
     ws_move_item: Callable[[str, str | None], Awaitable[None]],
     src_idx: int,
-    pos: int,
+    dst_idx: int | None,
     expected_items: list[str],
 ) -> None:
     """Test moving a todo item within the list."""
     for i in range(1, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "create_item",
-            {"summary": f"item {i}"},
+            "add_item",
+            {"item": f"item {i}"},
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
@@ -289,7 +289,10 @@ async def test_move_item(
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
     # Prepare items for moving
-    await ws_move_item(uids[src_idx], pos)
+    previous_uid = None
+    if dst_idx is not None:
+        previous_uid = uids[dst_idx]
+    await ws_move_item(uids[src_idx], previous_uid)
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -311,7 +314,42 @@ async def test_move_item_unknown(
         "type": "todo/item/move",
         "entity_id": TEST_ENTITY,
         "uid": "unknown",
-        "pos": 0,
+        "previous_uid": "item-2",
+    }
+    await client.send_json(data)
+    resp = await client.receive_json()
+    assert resp.get("id") == 1
+    assert not resp.get("success")
+    assert resp.get("error", {}).get("code") == "failed"
+    assert "not found in todo list" in resp["error"]["message"]
+
+
+async def test_move_item_previous_unknown(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_ws_client: WebSocketGenerator,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+) -> None:
+    """Test moving a todo item that does not exist."""
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "add_item",
+        {"item": "item 1"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    # Prepare items for moving
+    client = await hass_ws_client()
+    data = {
+        "id": 1,
+        "type": "todo/item/move",
+        "entity_id": TEST_ENTITY,
+        "uid": items[0]["uid"],
+        "previous_uid": "unknown",
     }
     await client.send_json(data)
     resp = await client.receive_json()

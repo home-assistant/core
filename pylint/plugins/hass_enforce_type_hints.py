@@ -2469,7 +2469,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_move_todo_item",
                     arg_types={
                         1: "str",
-                        2: "int",
+                        2: "str | None",
                     },
                     return_type="None",
                 ),

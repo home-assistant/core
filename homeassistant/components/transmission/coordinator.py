@@ -71,12 +71,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
             self._session = self.api.get_session()
-
-            self.check_completed_torrent()
-            self.check_started_torrent()
-            self.check_removed_torrent()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
+
+        self.check_completed_torrent()
+        self.check_started_torrent()
+        self.check_removed_torrent()
 
         return data
 
@@ -146,7 +146,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         """Stop all active torrents."""
         if not self.torrents:
             return
-        torrent_ids = [torrent.id for torrent in self.torrents]
+        torrent_ids: list[int | str] = [torrent.id for torrent in self.torrents]
         self.api.stop_torrent(torrent_ids)
 
     def set_alt_speed_enabled(self, is_enabled: bool) -> None:
@@ -158,4 +158,4 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         if self._session is None:
             return None
 
-        return self._session.alt_speed_enabled  # type: ignore[no-any-return]
+        return self._session.alt_speed_enabled

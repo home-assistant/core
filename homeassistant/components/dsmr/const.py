@@ -34,6 +34,3 @@ DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
 
 DSMR_PROTOCOL = "dsmr_protocol"
 RFXTRX_DSMR_PROTOCOL = "rfxtrx_dsmr_protocol"
-
-# Temp obis until sensors replaced by mbus variants
-BELGIUM_5MIN_GAS_METER_READING = r"\d-\d:24\.2\.3.+?\r\n"

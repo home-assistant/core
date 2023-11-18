@@ -21,13 +21,14 @@ ENTITY_ID = "remote.jvc_projector"
 
 async def test_entity_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
 ) -> None:
     """Tests entity state is registered."""
     entity = hass.states.get(ENTITY_ID)
     assert entity
-    assert er.async_get(hass).async_get(entity.entity_id)
+    assert entity_registry.async_get(entity.entity_id)
 
 
 async def test_commands(

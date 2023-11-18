@@ -2649,7 +2649,16 @@ async def test_closest_function_home_vs_group_entity_id(hass: HomeAssistant) -> 
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
+    await group.Group.async_create_group(
+        hass,
+        "location group",
+        created_by_service=False,
+        entity_ids=["test_domain.object"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
@@ -2677,7 +2686,16 @@ async def test_closest_function_home_vs_group_state(hass: HomeAssistant) -> None
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
+    await group.Group.async_create_group(
+        hass,
+        "location group",
+        created_by_service=False,
+        entity_ids=["test_domain.object"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
@@ -2727,7 +2745,16 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "new group", ["test.object"])
+    await group.Group.async_create_group(
+        hass,
+        "new group",
+        created_by_service=False,
+        entity_ids=["test.object"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
 
     info = render_to_info(
         hass,
@@ -2769,7 +2796,14 @@ async def test_expand(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
     await group.Group.async_create_group(
-        hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
+        hass,
+        "power sensors",
+        created_by_service=False,
+        entity_ids=["sensor.power_1", "sensor.power_2", "sensor.power_3"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     info = render_to_info(
@@ -4046,9 +4080,10 @@ def test_state_with_unit(hass: HomeAssistant) -> None:
     assert tpl.async_render() == ""
 
 
-def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
+def test_state_with_unit_and_rounding(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test formatting the state rounded and with unit."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", suggested_object_id="test"
     )
@@ -4119,6 +4154,7 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
 )
 def test_state_with_unit_and_rounding_options(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     rounded: str,
     with_unit: str,
     output1_1,
@@ -4127,7 +4163,6 @@ def test_state_with_unit_and_rounding_options(
     output2_2,
 ) -> None:
     """Test formatting the state rounded and with unit."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", suggested_object_id="test"
     )
