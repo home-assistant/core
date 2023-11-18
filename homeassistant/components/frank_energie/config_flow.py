@@ -44,10 +44,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_REFRESH_TOKEN: auth.refreshToken,
                     }
 
-                    await self.async_set_unique_id(user_input[CONF_USERNAME])
-                    self._abort_if_unique_id_configured()
-
-                    return await self._async_create_entry(data)
+                    user = await api.user()
+                    return await self._async_create_entry(data, user.id)
 
         data_schema = vol.Schema(
             {
@@ -76,10 +74,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input[CONF_AUTHENTICATION]:
             return await self.async_step_login()
 
-        return await self._async_create_entry({})
+        return await self._async_create_entry({}, "frank_energie")
 
-    async def _async_create_entry(self, data: dict[str, Any]) -> FlowResult:
-        await self.async_set_unique_id(data.get(CONF_USERNAME, "frank_energie"))
+    async def _async_create_entry(
+        self, data: dict[str, Any], unique_id: str
+    ) -> FlowResult:
+        """Create entry for config flow."""
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
