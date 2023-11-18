@@ -81,15 +81,18 @@ async def _fetch_all_tags_service(
 async def _search_authors_service(
     session: aiohttp.ClientSession, service: ServiceCall
 ) -> ServiceResponse:
-    response = await session.get(SEARCH_AUTHORS_URL, timeout=HTTP_CLIENT_TIMEOUT)
+    search_query = service.data.get("query")
+
+    if not search_query:
+        return None
+
+    search_url = f"{SEARCH_AUTHORS_URL}?query={search_query}&matchThreshold=1"
+    response = await session.get(search_url, timeout=HTTP_CLIENT_TIMEOUT)
+
     if response.status == HTTPStatus.OK:
         data = await response.json()
-        if data:
-            authors = {
-                item["id"]: item["name"]
-                for item in data
-                if item.get("quotecount", 0) > 0
-            }
+        if data and data.get("count", 0) > 0:
+            authors = {item["slug"]: item["name"] for item in data["results"]}
             return authors
 
     return None
