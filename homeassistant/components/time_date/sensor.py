@@ -105,14 +105,14 @@ class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _state: str | None = None
+    unsub: CALLBACK_TYPE | None = None
 
     def __init__(self, hass: HomeAssistant, option_type: str) -> None:
         """Initialize the sensor."""
         self._attr_translation_key = option_type
         self.type = option_type
-        self._state: str | None = None
-        self.unsub: CALLBACK_TYPE | None = None
-
         object_id = "internet_time" if option_type == "beat" else option_type
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._attr_unique_id = option_type
