@@ -12,6 +12,7 @@ import zigpy.device
 import zigpy.endpoint
 from zigpy.endpoint import Endpoint as ZigpyEndpoint
 import zigpy.profiles.zha
+import zigpy.quirks as zigpy_quirks
 import zigpy.types as t
 from zigpy.zcl import foundation
 import zigpy.zcl.clusters
@@ -340,16 +341,36 @@ async def test_out_cluster_handler_config(
 
 def test_cluster_handler_registry() -> None:
     """Test ZIGBEE cluster handler Registry."""
+
+    # get all quirk ID from zigpy quirks registry
+    all_quirk_ids = {}
+    for manufacturer in zigpy_quirks._DEVICE_REGISTRY.registry.values():
+        for model_quirk_list in manufacturer.values():
+            for quirk in model_quirk_list:
+                quirk_id = getattr(quirk, zha_const.ATTR_QUIRK_ID, None)
+                for endpoint in quirk.endpoints:
+                    for endpoint_clusters in [
+                        endpoint.in_clusters,
+                        endpoint.out_clusters,
+                    ]:
+                        for cluster_id in endpoint_clusters:
+                            if cluster_id not in all_quirk_ids:
+                                all_quirk_ids[cluster_id] = set()
+                            all_quirk_ids[cluster_id].add(quirk_id)
+    del quirk, model_quirk_list, manufacturer
+
     for (
         cluster_id,
         cluster_handler_classes,
     ) in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
+        assert cluster_id in all_quirk_ids
         assert isinstance(cluster_handler_classes, dict)
         for quirk_id, cluster_handler in cluster_handler_classes.items():
             assert isinstance(quirk_id, NoneType) or isinstance(quirk_id, str)
             assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
+            assert quirk_id in all_quirk_ids[cluster_id]
 
 
 def test_epch_unclaimed_cluster_handlers(cluster_handler) -> None:
