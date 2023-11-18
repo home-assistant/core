@@ -2,17 +2,6 @@
   {
     "number": "0988290475",
     "type": "missed",
-    "id": 95,
-    "duration": 15,
-    "datetime": 1613752718,
-    "contact_id": 0,
-    "line_id": 0,
-    "name": "SHOULD BE FILTERED",
-    "new": false
-  },
-  {
-    "number": "0988290475",
-    "type": "missed",
     "id": 94,
     "duration": 15,
     "datetime": 1613752718,
