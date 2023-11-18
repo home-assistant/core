@@ -34,6 +34,8 @@ class RoombaSensorEntityDescription(
 ):
     """Immutable class for describing Roomba data."""
 
+    exists_fn: Callable[[IRobotEntity], bool] = lambda _: True
+
 
 SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
@@ -51,6 +53,9 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.battery_stats.get("nLithChrg")
         or self.battery_stats.get("nNimhChrg"),
+        exists_fn=lambda self: bool(
+            self.battery_stats.get("nLithChrg") or self.battery_stats.get("nNimhChrg")
+        ),
     ),
     RoombaSensorEntityDescription(
         key="total_cleaning_time",
@@ -127,9 +132,15 @@ async def async_setup_entry(
     roomba = domain_data.roomba
     blid = domain_data.blid
 
-    async_add_entities(
-        RoombaSensor(roomba, blid, entity_description) for entity_description in SENSORS
+    entities = filter(
+        lambda sensor: sensor.entity_description.exists_fn(sensor),
+        [
+            RoombaSensor(roomba, blid, entity_description)
+            for entity_description in SENSORS
+        ],
     )
+
+    async_add_entities(entities)
 
 
 class RoombaSensor(IRobotEntity, SensorEntity):
