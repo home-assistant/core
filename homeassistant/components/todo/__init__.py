@@ -368,9 +368,11 @@ def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     result: dict[str, str] = {}
     for name, value in obj:
-        if isinstance(value, datetime.date):
+        if value is None:
+            continue
+        if isinstance(value, (datetime.date, datetime.datetime)):
             result[name] = value.isoformat()
-        elif value is not None:
+        else:
             result[name] = str(value)
     return result
 
