@@ -6,6 +6,8 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
@@ -1021,7 +1023,7 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
@@ -1039,7 +1041,7 @@ class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
@@ -1055,7 +1057,7 @@ class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
@@ -1072,7 +1074,7 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
@@ -1089,7 +1091,7 @@ class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):

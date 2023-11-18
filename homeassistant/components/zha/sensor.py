@@ -6,6 +6,7 @@ import functools
 import numbers
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
@@ -1142,7 +1143,7 @@ class DanfossOpenWindowDetectionEnum(types.enum8):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossOpenWindowDetection(EnumSensor):
@@ -1160,7 +1161,7 @@ class DanfossOpenWindowDetection(EnumSensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossLoadEstimate(Sensor):
@@ -1174,7 +1175,7 @@ class DanfossLoadEstimate(Sensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossAdaptationRunStatus(BitMapSensor):
@@ -1194,7 +1195,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossPreheatTime(Sensor):
@@ -1209,7 +1210,7 @@ class DanfossPreheatTime(Sensor):
 
 @MULTI_MATCH(
     cluster_handler_names="diagnostic",
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossSoftwareErrorCode(BitMapSensor):
@@ -1242,7 +1243,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
 
 @MULTI_MATCH(
     cluster_handler_names="diagnostic",
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossMotorStepCounter(Sensor):

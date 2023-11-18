@@ -6,7 +6,11 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
+from zhaquirks.quirk_ids import (
+    DANFOSS_ALLY_THERMOSTAT,
+    TUYA_PLUG_MANUFACTURER,
+    TUYA_PLUG_ONOFF,
+)
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -631,7 +635,7 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the day of the week for exercising."""
@@ -652,7 +656,7 @@ class DanfossOrientationEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossOrientation(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the orientation of the valve.
@@ -676,7 +680,7 @@ class DanfossAdaptationRunControlEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for controlling the current adaptation run."""
@@ -696,7 +700,7 @@ class DanfossViewingDirectionEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="thermostat_ui",
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossViewingDirection(ZCLEnumSelectEntity):
     """Danfoss Proprietary attribute for setting the viewing direction of the screen."""

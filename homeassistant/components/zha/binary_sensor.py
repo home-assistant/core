@@ -4,6 +4,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -341,7 +342,7 @@ class AqaraLinkageAlarmState(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossMountingModeActive(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in mounting mode."""
@@ -354,7 +355,7 @@ class DanfossMountingModeActive(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossHeatRequired(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether heat is required."""
@@ -366,7 +367,7 @@ class DanfossHeatRequired(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossPreheatStatus(BinarySensor):
     """Danfoss TRV Proprietary attribute exposing whether in pre-heating mode."""

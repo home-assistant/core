@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT, TUYA_PLUG_MANUFACTURER
 import zigpy.zcl
 from zigpy.zcl import clusters
 from zigpy.zcl.clusters.closures import DoorLock
@@ -418,7 +418,7 @@ class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.hvac.Thermostat.cluster_id, "danfoss.ally_thermostat"
+    clusters.hvac.Thermostat.cluster_id, DANFOSS_ALLY_THERMOSTAT
 )
 class DanfossThermostatClusterHandler(ThermostatClusterHandler):
     """TRV Channel class for the Danfoss TRV and derivatives."""
@@ -464,7 +464,7 @@ class DanfossThermostatClusterHandler(ThermostatClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.hvac.UserInterface.cluster_id, "danfoss.ally_thermostat"
+    clusters.hvac.UserInterface.cluster_id, DANFOSS_ALLY_THERMOSTAT
 )
 class DanfossUserInterfaceClusterHandler(UserInterface):
     """Interface Channel class for the Danfoss TRV and derivatives."""
@@ -478,7 +478,7 @@ class DanfossUserInterfaceClusterHandler(UserInterface):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    clusters.homeautomation.Diagnostic.cluster_id, "danfoss.ally_thermostat"
+    clusters.homeautomation.Diagnostic.cluster_id, DANFOSS_ALLY_THERMOSTAT
 )
 class DanfossDiagnosticClusterHandler(Diagnostic):
     """Diagnostic Channel class for the Danfoss TRV and derivatives."""

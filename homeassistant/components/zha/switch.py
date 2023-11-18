@@ -5,7 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT, TUYA_PLUG_ONOFF
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -596,7 +596,7 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating an open window."""
@@ -609,7 +609,7 @@ class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute enabling open window detection."""
@@ -622,7 +622,7 @@ class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for switching to mounting mode."""
@@ -634,7 +634,7 @@ class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
@@ -647,7 +647,7 @@ class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for communicating available heat."""
@@ -660,7 +660,7 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for enabling load balancing."""
@@ -673,7 +673,7 @@ class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={"danfoss.ally_thermostat"},
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
     """Danfoss Proprietary attribute for enabling daily adaptation run.
