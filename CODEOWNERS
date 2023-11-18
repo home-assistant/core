@@ -412,7 +412,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/foscam/ @skgsergio
 /tests/components/foscam/ @skgsergio
 /homeassistant/components/frank_energie/ @bajansen @DCSBL
-/tests/components/frank_energie/ @bajansen @DCSBL
 /homeassistant/components/freebox/ @hacf-fr @Quentame
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415

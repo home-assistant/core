@@ -2120,7 +2120,7 @@ python-etherscan-api==0.0.3
 python-family-hub-local==0.0.2
 
 # homeassistant.components.frank_energie
-python-frank-energie==5.0.1
+python-frank-energie==5.1.0
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12

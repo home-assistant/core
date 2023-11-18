@@ -11,7 +11,7 @@ from python_frank_energie.models import Invoices, MarketPrices, MonthSummary, Pr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -59,6 +59,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
         tomorrow = today + timedelta(days=1)
         day_after_tomorrow = today + timedelta(days=2)
 
+        ## Token expires after 7 days, so we renew it if it's expired
+        if self.api.is_authenticated and not self.api.authentication_valid():
+            await self.__try_renew_token()
+
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
@@ -77,12 +81,6 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
             if str(ex).startswith("user-error:"):
                 raise ConfigEntryAuthFailed from ex
 
-            raise UpdateFailed(ex) from ex
-
-        except AuthException as ex:
-            LOGGER.debug("Authentication tokens expired, trying to renew them (%s)", ex)
-            await self.__try_renew_token()
-            # Tell we have no data, so update coordinator tries again with renewed tokens
             raise UpdateFailed(ex) from ex
 
         return DeviceResponseEntry(
@@ -132,5 +130,4 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
             LOGGER.debug("Successfully renewed token")
 
         except AuthException as ex:
-            LOGGER.error("Failed to renew token: %s. Starting user reauth flow", ex)
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryError("Failed to renew token") from ex

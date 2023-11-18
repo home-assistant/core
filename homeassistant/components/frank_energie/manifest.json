@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/frank_energie",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["python-frank-energie==5.0.1"]
+  "requirements": ["python-frank-energie==5.1.0"]
 }
