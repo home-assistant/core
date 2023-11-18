@@ -90,6 +90,9 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.DUE_DATETIME
+        | TodoListEntityFeature.DUE_DATE
+        | TodoListEntityFeature.DESCRIPTION
     )
     _attr_should_poll = False
 
@@ -115,6 +118,8 @@ class LocalTodoListEntity(TodoListEntity):
                 status=ICS_TODO_STATUS_MAP.get(
                     item.status or TodoStatus.NEEDS_ACTION, TodoItemStatus.NEEDS_ACTION
                 ),
+                due=item.due,
+                description=item.description,
             )
             for item in self._calendar.todos
         ]

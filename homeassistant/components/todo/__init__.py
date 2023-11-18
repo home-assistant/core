@@ -66,9 +66,7 @@ TODO_ITEM_FIELDS = [
     ),
     TodoItemFieldDescription(
         service_field=CONF_DUE_DATE_TIME,
-        validation=vol.All(
-            cv.datetime, cv.datetime_has_timezone, cv.datetime_as_local_timezone
-        ),
+        validation=vol.All(cv.datetime, cv.datetime_as_local_timezone),
         todo_item_field=CONF_DUE,
         required_feature=TodoListEntityFeature.DUE_DATETIME,
     ),
