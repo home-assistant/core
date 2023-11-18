@@ -280,6 +280,12 @@ class AiohttpClientMockResponse:
     def close(self):
         """Mock close."""
 
+    async def wait_for_close(self):
+        """Wait until all requests are done.
+
+        Do nothing as we are mocking.
+        """
+
     @property
     def response(self):
         """Property method to expose the response to other read methods."""
