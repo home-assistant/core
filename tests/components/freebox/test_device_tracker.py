@@ -1,4 +1,4 @@
-"""Tests for the Freebox sensors."""
+"""Tests for the Freebox device trackers."""
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
