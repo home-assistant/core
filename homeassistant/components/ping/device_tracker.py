@@ -1,7 +1,6 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -19,15 +18,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PingDomainData
 from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DOMAIN
-from .helpers import PingDataICMPLib, PingDataSubProcess
+from .coordinator import PingUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(minutes=5)
+PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
@@ -84,40 +83,25 @@ async def async_setup_entry(
 
     data: PingDomainData = hass.data[DOMAIN]
 
-    host: str = entry.options[CONF_HOST]
-    count: int = int(entry.options[CONF_PING_COUNT])
-    ping_cls: type[PingDataSubProcess | PingDataICMPLib]
-    if data.privileged is None:
-        ping_cls = PingDataSubProcess
-    else:
-        ping_cls = PingDataICMPLib
-
-    async_add_entities(
-        [PingDeviceTracker(entry, ping_cls(hass, host, count, data.privileged))]
-    )
+    async_add_entities([PingDeviceTracker(entry, data.coordinators[entry.entry_id])])
 
 
-class PingDeviceTracker(ScannerEntity):
+class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
     """Representation of a Ping device tracker."""
 
-    ping: PingDataSubProcess | PingDataICMPLib
-
     def __init__(
-        self,
-        config_entry: ConfigEntry,
-        ping_cls: PingDataSubProcess | PingDataICMPLib,
+        self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
         """Initialize the Ping device tracker."""
-        super().__init__()
+        super().__init__(coordinator)
 
         self._attr_name = config_entry.title
-        self.ping = ping_cls
         self.config_entry = config_entry
 
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        return self.ping.ip_address
+        return self.coordinator.data.ip_address
 
     @property
     def unique_id(self) -> str:
@@ -132,7 +116,7 @@ class PingDeviceTracker(ScannerEntity):
     @property
     def is_connected(self) -> bool:
         """Return true if ping returns is_alive."""
-        return self.ping.is_alive
+        return self.coordinator.data.is_alive
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -140,7 +124,3 @@ class PingDeviceTracker(ScannerEntity):
         if CONF_IMPORTED_BY in self.config_entry.data:
             return bool(self.config_entry.data[CONF_IMPORTED_BY] == "device_tracker")
         return False
-
-    async def async_update(self) -> None:
-        """Update the sensor."""
-        await self.ping.async_update()
