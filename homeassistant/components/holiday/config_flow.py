@@ -37,7 +37,6 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             self.data = user_input
 
@@ -64,9 +63,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(
-            step_id="user", data_schema=user_schema, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=user_schema)
 
     async def async_step_province(
         self, user_input: dict[str, Any] | None = None
