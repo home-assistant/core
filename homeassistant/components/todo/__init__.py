@@ -30,7 +30,15 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, TodoItemStatus, TodoListEntityFeature
+from .const import (
+    CONF_DESCRIPTION,
+    CONF_DUE,
+    CONF_DUE_DATE,
+    CONF_DUE_DATE_TIME,
+    DOMAIN,
+    TodoItemStatus,
+    TodoListEntityFeature,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +46,59 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-TODO_ITEM_FIELD_FEATURES = {
-    "due": TodoListEntityFeature.DUE,
-    "description": TodoListEntityFeature.DESCRIPTION,
-}
+
+@dataclasses.dataclass
+class TodoItemFieldDescription:
+    """A description of To-do item fields and validation requirements."""
+
+    service_field: str
+    todo_item_field: str
+    validation: Callable[[Any], Any]
+    required_feature: TodoListEntityFeature
+
+
+TODO_ITEM_FIELDS = [
+    TodoItemFieldDescription(
+        service_field=CONF_DUE_DATE,
+        validation=cv.date,
+        todo_item_field=CONF_DUE,
+        required_feature=TodoListEntityFeature.DUE_DATE,
+    ),
+    TodoItemFieldDescription(
+        service_field=CONF_DUE_DATE_TIME,
+        validation=vol.All(
+            cv.datetime, cv.datetime_has_timezone, cv.datetime_as_local_timezone
+        ),
+        todo_item_field=CONF_DUE,
+        required_feature=TodoListEntityFeature.DUE_DATETIME,
+    ),
+    TodoItemFieldDescription(
+        service_field=CONF_DESCRIPTION,
+        validation=cv.string,
+        todo_item_field=CONF_DESCRIPTION,
+        required_feature=TodoListEntityFeature.DESCRIPTION,
+    ),
+]
+
 TODO_ITEM_FIELD_SCHEMA = {
-    vol.Optional("due"): cv.date,
-    vol.Optional("description"): cv.string,
+    vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
 }
+TODO_ITEM_FIELD_VALIDATIONS = [
+    cv.has_at_most_one_key(CONF_DUE_DATE, CONF_DUE_DATE_TIME)
+]
+
+
+def _validate_todo_item_fields(
+    supported_features: int | None, call_data: dict[str, Any]
+) -> None:
+    """Validate service call fields against entity supported features."""
+    for desc in TODO_ITEM_FIELDS:
+        if desc.service_field not in call_data:
+            continue
+        if not supported_features or not supported_features & desc.required_feature:
+            raise ValueError(
+                f"Entity does not support setting field '{desc.service_field}'"
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -62,10 +115,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         "add_item",
-        {
-            vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
-            **TODO_ITEM_FIELD_SCHEMA,
-        },
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
+                    **TODO_ITEM_FIELD_SCHEMA,
+                }
+            ),
+            *TODO_ITEM_FIELD_VALIDATIONS,
+            cv.has_at_most_one_key(CONF_DUE_DATE, CONF_DUE_DATE_TIME),
+        ),
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
@@ -82,7 +141,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
-            cv.has_at_least_one_key("rename", "status", "due", "description"),
+            *TODO_ITEM_FIELD_VALIDATIONS,
+            cv.has_at_least_one_key(
+                "rename", "status", *[desc.service_field for desc in TODO_ITEM_FIELDS]
+            ),
         ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
@@ -146,11 +208,19 @@ class TodoItem:
     status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""
 
-    due: datetime.date | None = None
-    """The date that a to-do is expected to be completed."""
+    due: datetime.date | datetime.datetime | None = None
+    """The date and time that a to-do is expected to be completed.
+
+    This field may be a date or datetime depending whether the entity feature
+    DUE_DATE or DUE_DATETIME are set.
+    """
 
     description: str | None = None
-    """A more complete description of than that provided by the summary."""
+    """A more complete description of than that provided by the summary.
+
+    This field may be set when TodoListEntityFeature.DESCRIPTION is supported by
+    the entity.
+    """
 
 
 class TodoListEntity(Entity):
@@ -376,21 +446,18 @@ def _find_by_uid_or_summary(
 
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
-    item_data = {
-        "summary": call.data["item"],
-        "status": TodoItemStatus.NEEDS_ACTION,
-    }
-    for field, required_feature in TODO_ITEM_FIELD_FEATURES.items():
-        if value := call.data.get(field):
-            if (
-                not entity.supported_features
-                or not entity.supported_features & required_feature
-            ):
-                raise ValueError(
-                    f"Entity {entity.name} does not support setting field '{field}'"
-                )
-        item_data[field] = value
-    await entity.async_create_todo_item(item=TodoItem(**item_data))
+    _validate_todo_item_fields(entity.supported_features, call.data)
+    await entity.async_create_todo_item(
+        item=TodoItem(
+            summary=call.data["item"],
+            status=TodoItemStatus.NEEDS_ACTION,
+            **{
+                desc.todo_item_field: call.data.get(desc.service_field)
+                for desc in TODO_ITEM_FIELDS
+                if desc.service_field in call.data
+            },
+        )
+    )
 
 
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -400,23 +467,20 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if not found:
         raise ValueError(f"Unable to find To-do item '{item}'")
 
-    item_data: dict[str, Any] = {
-        "uid": found.uid,
-        "summary": call.data.get("rename"),
-        "status": call.data.get("status"),
-    }
-    for field, required_feature in TODO_ITEM_FIELD_FEATURES.items():
-        if value := call.data.get(field):
-            if (
-                not entity.supported_features
-                or not entity.supported_features & required_feature
-            ):
-                raise ValueError(
-                    f"Entity {entity.name} does not support setting field '{field}'"
-                )
-        item_data[field] = value
+    _validate_todo_item_fields(entity.supported_features, call.data)
 
-    await entity.async_update_todo_item(item=TodoItem(**item_data))
+    await entity.async_update_todo_item(
+        item=TodoItem(
+            uid=found.uid,
+            summary=call.data.get("rename"),
+            status=call.data.get("status"),
+            **{
+                desc.todo_item_field: call.data.get(desc.service_field)
+                for desc in TODO_ITEM_FIELDS
+                if desc.service_field in call.data
+            },
+        )
+    )
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:

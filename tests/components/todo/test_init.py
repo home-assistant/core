@@ -4,6 +4,7 @@ from collections.abc import Generator
 import datetime
 from typing import Any
 from unittest.mock import AsyncMock
+import zoneinfo
 
 import pytest
 import voluptuous as vol
@@ -44,6 +45,8 @@ ITEM_2 = {
     "summary": "Item #2",
     "status": "completed",
 }
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Los_Angeles")
+TEST_OFFSET = "-08:00"
 
 
 class MockFlow(ConfigFlow):
@@ -338,9 +341,17 @@ async def test_add_item_service_raises(
             "does not support setting field 'description'",
         ),
         (
-            {"item": "Submit forms", "due": "2023-11-17"},
+            {"item": "Submit forms", "due_date": "2023-11-17"},
             ValueError,
-            "does not support setting field 'due'",
+            "does not support setting field 'due_date'",
+        ),
+        (
+            {
+                "item": "Submit forms",
+                "due_date_time": f"2023-11-17T17:00:00{TEST_OFFSET}",
+            },
+            ValueError,
+            "does not support setting field 'due_date_time'",
         ),
     ],
 )
@@ -369,12 +380,21 @@ async def test_add_item_service_invalid_input(
     ("supported_entity_feature", "item_data", "expected_item"),
     (
         (
-            TodoListEntityFeature.DUE,
-            {"item": "New item", "due": "2023-11-13"},
+            TodoListEntityFeature.DUE_DATE,
+            {"item": "New item", "due_date": "2023-11-13"},
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
                 due=datetime.date(2023, 11, 13),
+            ),
+        ),
+        (
+            TodoListEntityFeature.DUE_DATETIME,
+            {"item": "New item", "due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"},
+            TodoItem(
+                summary="New item",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=datetime.datetime(2023, 11, 13, 17, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -618,7 +638,11 @@ async def test_update_item_service_invalid_input(
 
 @pytest.mark.parametrize(
     ("update_data"),
-    (({"due": "2023-11-13"}), ({"description": "Submit revised draft"})),
+    [
+        ({"due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"}),
+        ({"due_date": "2023-11-13"}),
+        ({"description": "Submit revised draft"}),
+    ],
 )
 async def test_update_todo_item_field_unsupported(
     hass: HomeAssistant,
@@ -643,9 +667,17 @@ async def test_update_todo_item_field_unsupported(
     ("supported_entity_feature", "update_data", "expected_update"),
     (
         (
-            TodoListEntityFeature.DUE,
-            {"due": "2023-11-13"},
+            TodoListEntityFeature.DUE_DATE,
+            {"due_date": "2023-11-13"},
             TodoItem(uid="1", due=datetime.date(2023, 11, 13)),
+        ),
+        (
+            TodoListEntityFeature.DUE_DATETIME,
+            {"due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"},
+            TodoItem(
+                uid="1",
+                due=datetime.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+            ),
         ),
         (
             TodoListEntityFeature.DESCRIPTION,
@@ -1154,6 +1186,10 @@ async def test_subscribe_entity_does_not_exist(
     ("item_data", "expected_item_data"),
     [
         ({"due": datetime.date(2023, 11, 17)}, {"due": "2023-11-17"}),
+        (
+            {"due": datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE)},
+            {"due": f"2023-11-17T17:00:00{TEST_OFFSET}"},
+        ),
         ({"description": "Some description"}, {"description": "Some description"}),
     ],
 )

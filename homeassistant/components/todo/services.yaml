@@ -25,6 +25,14 @@ add_item:
       example: "Submit income tax return"
       selector:
         text:
+    due_date:
+      example: "2023-11-17"
+      selector:
+        date:
+    due_date_time:
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
 update_item:
   target:
     entity:
@@ -49,6 +57,14 @@ update_item:
           options:
             - needs_action
             - completed
+    due_date:
+      example: "2023-11-17"
+      selector:
+        date:
+    due_date_time:
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
 remove_item:
   target:
     entity:
