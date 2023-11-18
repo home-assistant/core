@@ -79,7 +79,7 @@ class HolidayCalendarEntity(CalendarEntity):
         obj_holidays = country_holidays(
             self._country,
             subdiv=self._province,
-            years=dt_util.now().year,
+            years=[dt_util.now().year, dt_util.now().year + 1],
             language=self._default_language(),
         )
 
