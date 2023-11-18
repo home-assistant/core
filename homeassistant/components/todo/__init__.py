@@ -49,7 +49,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 def _as_local_timezone(value: Any) -> datetime.datetime:
-    """Convert all datetime values to the local timezone."""
+    """Convert a datetime values to the local timezone."""
 
     if not isinstance(value, datetime.datetime):
         raise vol.Invalid(f"Invalid datetime specified: {value}")
@@ -130,8 +130,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
-            *TODO_ITEM_FIELD_VALIDATIONS,
             cv.has_at_most_one_key(CONF_DUE_DATE, CONF_DUE_DATE_TIME),
+            *TODO_ITEM_FIELD_VALIDATIONS,
         ),
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],

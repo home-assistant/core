@@ -6,7 +6,6 @@ import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from unittest.mock import Mock, patch
 import uuid
-import zoneinfo
 
 import pytest
 import voluptuous as vol
@@ -20,8 +19,6 @@ from homeassistant.helpers import (
     selector,
     template,
 )
-
-TEST_TZ = zoneinfo.ZoneInfo("America/Los_Angeles")
 
 
 def test_boolean() -> None:
