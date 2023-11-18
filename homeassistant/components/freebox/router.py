@@ -38,7 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_json(json_str):
+def is_json(json_str: str):
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
