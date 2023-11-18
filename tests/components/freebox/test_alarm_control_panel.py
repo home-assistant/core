@@ -33,6 +33,13 @@ async def test_alarm_changed_from_external(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test Freebox Home alarm which state depends on external changes."""
+    # Add remove arm_home feature
+    data_get_home_nodes = deepcopy(DATA_HOME_GET_NODES)
+    ALARM_NODE_ID = 7
+    ALARM_HOME_ENDPOINT_ID = 2
+    del data_get_home_nodes[ALARM_NODE_ID]["type"]["endpoints"][ALARM_HOME_ENDPOINT_ID]
+    router().home.get_home_nodes.return_value = data_get_home_nodes
+
     data_get_home_endpoint_value = deepcopy(DATA_HOME_ALARM_GET_VALUE)
     data_get_home_endpoint_value["value"] = "alarm1_arming"
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
@@ -69,42 +76,6 @@ async def test_alarm_changed_from_external(
 
 async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> None:
     """Test Freebox Home alarm which state depends on HA."""
-    # Add arm_home feature
-    data_get_home_nodes = deepcopy(DATA_HOME_GET_NODES)
-    ALARM_NODE_ID = 7
-    data_get_home_nodes[ALARM_NODE_ID]["show_endpoints"].append(
-        {
-            "category": "",
-            "ep_type": "slot",
-            "id": 1,
-            "label": "Alarme secondaire",
-            "name": "alarm2",
-            "ui": {"access": "w", "display": "toggle"},
-            "value": True,
-            "value_type": "bool",
-            "visibility": "normal",
-        },
-    )
-    data_get_home_nodes[ALARM_NODE_ID]["type"]["endpoints"][2] = {
-        "ep_type": "slot",
-        "id": 2,
-        "label": "Alarme secondaire",
-        "name": "alarm2",
-        "value_type": "bool",
-        "visibility": "normal",
-    }
-    data_get_home_nodes[ALARM_NODE_ID]["type"]["endpoints"].append(
-        {
-            "ep_type": "signal",
-            "id": 21,
-            "label": "Alarme secondaire",
-            "name": "alarm2",
-            "param_type": "void",
-            "value_type": "bool",
-            "visibility": "normal",
-        }
-    )
-    router().home.get_home_nodes.return_value = data_get_home_nodes
     data_get_home_endpoint_value = deepcopy(DATA_HOME_ALARM_GET_VALUE)
     data_get_home_endpoint_value["value"] = "alarm1_armed"
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value

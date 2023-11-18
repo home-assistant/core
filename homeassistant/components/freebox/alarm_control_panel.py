@@ -72,7 +72,19 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         self._command_state = self.get_command_id(
             node["type"]["endpoints"], "signal", "state"
         )
-        self._set_features()
+
+        if self._command_arm_home:
+            self._attr_supported_features = (
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.TRIGGER
+            )
+
+        else:
+            self._attr_supported_features = (
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.TRIGGER
+            )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -97,30 +109,3 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             self._attr_state = FREEBOX_TO_STATUS.get(state)
         else:
             self._attr_state = STATE_ALARM_DISARMED
-
-    def _set_features(self) -> None:
-        """Set alarm features."""
-        # Search if the arm home feature is present => has an "alarm2" endpoint
-        can_arm_home = next(
-            (
-                endpoint
-                for endpoint in self._node["type"]["endpoints"]
-                if endpoint["name"] == "alarm2" and endpoint["ep_type"] == "signal"
-            ),
-            None,
-        )
-
-        if (
-            self._command_arm_home and can_arm_home
-        ):  # or check self.get_value("slot", "alarm2") ???
-            self._attr_supported_features = (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                | AlarmControlPanelEntityFeature.ARM_HOME
-                | AlarmControlPanelEntityFeature.TRIGGER
-            )
-
-        else:
-            self._attr_supported_features = (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                | AlarmControlPanelEntityFeature.TRIGGER
-            )
