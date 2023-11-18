@@ -205,12 +205,6 @@ class TodoListEntity(Entity):
         for listener in self._update_listeners:
             listener(todo_items)
 
-    @callback
-    def async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
-        super().async_write_ha_state()
-        self.async_update_listeners()
-
 
 @websocket_api.websocket_command(
     {
@@ -223,6 +217,7 @@ async def websocket_handle_subscribe_todo_items(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to To-do list item updates."""
+    _LOGGER.debug("todo/item/subscribe")
     component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     entity_id: str = msg["entity_id"]
 
@@ -237,6 +232,7 @@ async def websocket_handle_subscribe_todo_items(
     @callback
     def todo_item_listener(todo_items: list[JsonValueType] | None) -> None:
         """Push updated To-do list items to websocket."""
+        _LOGGER.debug("todo_item_listener invoked")
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],

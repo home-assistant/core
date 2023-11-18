@@ -75,6 +75,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                 )
             self._attr_todo_items = items
         super()._handle_coordinator_update()
+        self.async_update_listeners()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a To-do item."""

@@ -9,7 +9,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -89,6 +89,12 @@ class ShoppingTodoListEntity(TodoListEntity):
         # so this code may not be used in practice, however it is here in case
         # this changes in the future.
         self.async_on_remove(self._data.async_add_listener(self.async_write_ha_state))
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        super().async_write_ha_state()
+        self.async_update_listeners()
 
     @property
     def todo_items(self) -> list[TodoItem]:

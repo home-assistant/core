@@ -118,6 +118,7 @@ class LocalTodoListEntity(TodoListEntity):
             )
             for item in self._calendar.todos
         ]
+        self.async_update_listeners()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
