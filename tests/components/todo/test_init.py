@@ -398,6 +398,15 @@ async def test_add_item_service_invalid_input(
             ),
         ),
         (
+            TodoListEntityFeature.DUE_DATETIME,
+            {"item": "New item", "due_date_time": "2023-11-13T17:00:00+00:00"},
+            TodoItem(
+                summary="New item",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=datetime.datetime(2023, 11, 13, 9, 00, 00, tzinfo=TEST_TIMEZONE),
+            ),
+        ),
+        (
             TodoListEntityFeature.DESCRIPTION,
             {"item": "New item", "description": "Submit revised draft"},
             TodoItem(
@@ -432,6 +441,48 @@ async def test_add_item_service_extended_fields(
     assert args
     item = args.kwargs.get("item")
     assert item == expected_item
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_exception", "expected_error"),
+    [
+        (
+            {
+                "item": "Submit forms",
+                "due_date_time": "2023-11-17",
+            },
+            vol.Invalid,
+            "to have a timezone",
+        ),
+        (
+            {
+                "item": "Submit forms",
+                "due_date_time": "2023-11-17T17:00:00",
+            },
+            vol.Invalid,
+            "to have a timezone",
+        ),
+    ],
+)
+async def test_add_item_date_time_validation(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+    item_data: dict[str, Any],
+    expected_exception: str,
+    expected_error: str,
+) -> None:
+    """Test invalid input to the add item service."""
+    test_entity._attr_supported_features |= TodoListEntityFeature.DUE_DATETIME
+    await create_mock_platform(hass, [test_entity])
+
+    with pytest.raises(expected_exception, match=expected_error):
+        await hass.services.async_call(
+            DOMAIN,
+            "add_item",
+            item_data,
+            target={"entity_id": "todo.entity1"},
+            blocking=True,
+        )
 
 
 async def test_update_todo_item_service_by_id(
