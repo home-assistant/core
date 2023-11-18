@@ -103,7 +103,7 @@ TODO_ITEM_FIELD_VALIDATIONS = [
 ]
 
 
-def _validate_todo_item_fields(
+def _validate_supported_features(
     supported_features: int | None, call_data: dict[str, Any]
 ) -> None:
     """Validate service call fields against entity supported features."""
@@ -461,7 +461,7 @@ def _find_by_uid_or_summary(
 
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
-    _validate_todo_item_fields(entity.supported_features, call.data)
+    _validate_supported_features(entity.supported_features, call.data)
     await entity.async_create_todo_item(
         item=TodoItem(
             summary=call.data["item"],
@@ -482,7 +482,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if not found:
         raise ValueError(f"Unable to find To-do item '{item}'")
 
-    _validate_todo_item_fields(entity.supported_features, call.data)
+    _validate_supported_features(entity.supported_features, call.data)
 
     await entity.async_update_todo_item(
         item=TodoItem(
