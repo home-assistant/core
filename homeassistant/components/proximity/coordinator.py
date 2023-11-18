@@ -112,12 +112,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         latitude: float | None,
         longitude: float | None,
     ) -> float | None:
-        if device.state.lower() == self.proximity_zone.lower():
-            _LOGGER.debug(
-                "%s: %s in zone -> distance=0", self.friendly_name, device.entity_id
-            )
-            return 0
-
         if latitude is None or longitude is None:
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
@@ -161,6 +155,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 device.entity_id,
             )
             return None
+
+        if device.state.lower() == self.proximity_zone.lower():
+            _LOGGER.debug(
+                "%s: %s in zone -> direction_of_travel=arrived",
+                self.friendly_name,
+                device.entity_id,
+            )
+            return "arrived"
 
         if (
             old_latitude is None
@@ -239,32 +241,29 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 entities_data[device][ATTR_DIR_OF_TRAVEL] = None
 
         # calculate direction of travel only for last updated tracked entity
-        if (state_change_data := self.state_change_data) is not None and entities_data[
-            state_change_data.entity_id
-        ][ATTR_DIST_TO] == 0:
-            _LOGGER.debug(
-                "%s: %s in zone -> direction_of_travel=arrived",
-                self.friendly_name,
-                state_change_data.entity_id,
-            )
-            entities_data[state_change_data.entity_id][ATTR_DIR_OF_TRAVEL] = "arrived"
-        elif (
-            state_change_data is not None
-            and (old_state := state_change_data.old_state) is not None
-            and (new_state := state_change_data.new_state) is not None
-        ):
+        if (state_change_data := self.state_change_data) is not None and (
+            new_state := state_change_data.new_state
+        ) is not None:
             _LOGGER.debug(
                 "%s: calculate direction of travel for %s",
                 self.friendly_name,
                 state_change_data.entity_id,
             )
+
+            if (old_state := state_change_data.old_state) is not None:
+                old_lat = old_state.attributes.get(ATTR_LATITUDE)
+                old_lon = old_state.attributes.get(ATTR_LONGITUDE)
+            else:
+                old_lat = None
+                old_lon = None
+
             entities_data[state_change_data.entity_id][
                 ATTR_DIR_OF_TRAVEL
             ] = self._calc_direction_of_travel(
                 zone_state,
                 new_state,
-                old_state.attributes.get(ATTR_LATITUDE),
-                old_state.attributes.get(ATTR_LONGITUDE),
+                old_lat,
+                old_lon,
                 new_state.attributes.get(ATTR_LATITUDE),
                 new_state.attributes.get(ATTR_LONGITUDE),
             )
