@@ -45,8 +45,5 @@
         }
       }
     }
-  },
-  "mounts": [
-    "source=/home/allen/home-assistant-frontend,target=/workspaces/frontend,type=bind,consistency=cached"
-  ]
+  }
 }
