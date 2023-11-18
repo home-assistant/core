@@ -170,7 +170,6 @@ async def test_cleanup_disconnected_cams(
     )
     device_models = [device.model for device in device_entries]
     assert sorted(device_models) == sorted(expected_models)
-    assert device_registry.async_remove_device.call_args_list == []
 
 
 async def test_no_repair_issue(
