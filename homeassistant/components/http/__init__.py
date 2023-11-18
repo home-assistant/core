@@ -541,7 +541,9 @@ class HomeAssistantHTTP:
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
         self.runner = web.AppRunner(
-            self.app, access_log_class=HomeAssistantAccessLogger
+            self.app,
+            access_log_class=HomeAssistantAccessLogger,
+            handler_cancellation=True,
         )
         await self.runner.setup()
 
