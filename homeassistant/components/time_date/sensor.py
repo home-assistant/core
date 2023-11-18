@@ -6,32 +6,34 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, OPTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_STR_FORMAT = "%H:%M"
 
-OPTION_TYPES = {
-    "time": "Time",
-    "date": "Date",
-    "date_time": "Date & Time",
-    "date_time_utc": "Date & Time (UTC)",
-    "date_time_iso": "Date & Time (ISO)",
-    "time_date": "Time & Date",
-    "beat": "Internet Time",
-    "time_utc": "Time (UTC)",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,11 +51,34 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Time and Date sensor."""
-    if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
-        return False
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Time & Date",
+        },
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    if "beat" in config[CONF_DISPLAY_OPTIONS]:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Time & Date sensor."""
+    if "beat" in entry.options[CONF_DISPLAY_OPTIONS]:
         async_create_issue(
             hass,
             DOMAIN,
@@ -70,9 +95,10 @@ async def async_setup_platform(
         )
         _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
 
-    async_add_entities(
-        [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
-    )
+    entities = []
+    for option_type in entry.options[CONF_DISPLAY_OPTIONS]:
+        entities.append(TimeDateSensor(option_type, entry.entry_id))
+    async_add_entities(entities)
 
 
 class TimeDateSensor(SensorEntity):
@@ -82,16 +108,21 @@ class TimeDateSensor(SensorEntity):
 
     def __init__(self, hass: HomeAssistant, option_type: str) -> None:
         """Initialize the sensor."""
-        self._name = OPTION_TYPES[option_type]
+        self._attr_translation_key = option_type
         self.type = option_type
         self._state: str | None = None
-        self.hass = hass
         self.unsub: CALLBACK_TYPE | None = None
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+        object_id = "internet_time" if option_type == "beat" else option_type
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self._attr_unique_id = option_type
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, DOMAIN)},
+            name="Time & Date",
+        )
+
+        self._update_internal_state(dt_util.utcnow())
 
     @property
     def native_value(self) -> str | None:

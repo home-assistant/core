@@ -6,16 +6,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.time_date.const import DOMAIN
-import homeassistant.components.time_date.sensor as time_date
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import event, issue_registry as ir
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from . import load_int
 
-ALL_DISPLAY_OPTIONS = list(time_date.OPTION_TYPES.keys())
-CONFIG = {"sensor": {"platform": "time_date", "display_options": ALL_DISPLAY_OPTIONS}}
+from tests.common import async_fire_time_changed
 
 
 @patch("homeassistant.components.time_date.sensor.async_track_point_in_utc_time")
@@ -54,12 +51,9 @@ async def test_intervals(
 ) -> None:
     """Test timing intervals of sensors when time zone is UTC."""
     hass.config.set_time_zone("UTC")
-    config = {"sensor": {"platform": "time_date", "display_options": [display_option]}}
-
     freezer.move_to(start_time)
 
-    await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    await load_int(hass, [display_option])
 
     mock_track_interval.assert_called_once_with(hass, ANY, tracked_time)
 
@@ -70,8 +64,7 @@ async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
-    await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
+    await load_int(hass)
 
     state = hass.states.get("sensor.time")
     assert state.state == "00:54"
@@ -130,8 +123,7 @@ async def test_states_non_default_timezone(
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
-    await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
+    await load_int(hass)
 
     state = hass.states.get("sensor.time")
     assert state.state == "20:54"
@@ -262,9 +254,7 @@ async def test_timezone_intervals(
     hass.config.set_time_zone(time_zone)
     freezer.move_to(start_time)
 
-    config = {"sensor": {"platform": "time_date", "display_options": ["date"]}}
-    await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    await load_int(hass, ["date"])
 
     mock_track_interval.assert_called_once()
     next_time = mock_track_interval.mock_calls[0][1][2]
@@ -274,8 +264,7 @@ async def test_timezone_intervals(
 
 async def test_icons(hass: HomeAssistant) -> None:
     """Test attributes of sensors."""
-    await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
+    await load_int(hass)
 
     state = hass.states.get("sensor.time")
     assert state.attributes["icon"] == "mdi:clock"
@@ -313,10 +302,7 @@ async def test_deprecation_warning(
     expected_issues: list[str],
 ) -> None:
     """Test deprecation warning for swatch beat."""
-    config = {"sensor": {"platform": "time_date", "display_options": display_options}}
-
-    await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    await load_int(hass, display_options)
 
     warnings = [record for record in caplog.records if record.levelname == "WARNING"]
     assert len(warnings) == len(expected_warnings)

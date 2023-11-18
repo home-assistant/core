@@ -1,4 +1,70 @@
 {
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "display_options": "Sensors"
+        }
+      }
+    },
+    "error": {
+      "timezone_not_exist": "Timezone is not set in Home Assistant configuration"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "display_options": "[%key:component::time_date::config::step::user::data::display_options%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "display_options": {
+      "options": {
+        "time": "Time",
+        "date": "Date",
+        "date_time": "Date & Time",
+        "date_time_utc": "Date & Time (UTC)",
+        "date_time_iso": "Date & Time (ISO)",
+        "time_date": "Time & Date",
+        "beat": "Internet time",
+        "time_utc": "Time (UTC)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "time": {
+        "name": "[%key:component::time_date::selector::display_options::options::time%]"
+      },
+      "date": {
+        "name": "[%key:component::time_date::selector::display_options::options::date%]"
+      },
+      "date_time": {
+        "name": "[%key:component::time_date::selector::display_options::options::date_time%]"
+      },
+      "date_time_utc": {
+        "name": "[%key:component::time_date::selector::display_options::options::date_time_utc%]"
+      },
+      "date_time_iso": {
+        "name": "[%key:component::time_date::selector::display_options::options::date_time_iso%]"
+      },
+      "time_date": {
+        "name": "[%key:component::time_date::selector::display_options::options::time_date%]"
+      },
+      "beat": {
+        "name": "[%key:component::time_date::selector::display_options::options::beat%]"
+      },
+      "time_utc": {
+        "name": "[%key:component::time_date::selector::display_options::options::time_utc%]"
+      }
+    }
+  },
   "issues": {
     "deprecated_beat": {
       "title": "The `{config_key}` Time & Date sensor is being removed",
