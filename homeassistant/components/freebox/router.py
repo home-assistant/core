@@ -120,10 +120,8 @@ class FreeboxRouter:
                             r"Request failed \(APIResponse: (.+)\)", str(err)
                         )
                     )
-                    and (json_str := matcher.group(1))
-                    and is_json(json_str)
-                    and (json_resp := json.loads(json_str))
-                    and json_resp.get("error_code") == "nodev"
+                    and is_json(json_str := matcher.group(1))
+                    and (json_resp := json.loads(json_str)).get("error_code") == "nodev"
                 ):
                     # No need to retry, Host list not available
                     self.supports_hosts = False
