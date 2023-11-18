@@ -31,7 +31,7 @@ async def async_setup_entry(
                 config_entry.title,
                 country,
                 province,
-                unique_id=config_entry.entry_id,
+                config_entry.entry_id,
             )
         ],
         True,
