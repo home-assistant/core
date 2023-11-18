@@ -16,6 +16,7 @@ import zigpy.quirks as zigpy_quirks
 import zigpy.types as t
 from zigpy.zcl import foundation
 import zigpy.zcl.clusters
+from zigpy.zcl.clusters import CLUSTERS_BY_ID
 import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
@@ -344,6 +345,8 @@ def test_cluster_handler_registry() -> None:
 
     # get all quirk ID from zigpy quirks registry
     all_quirk_ids = {}
+    for cluster_id in CLUSTERS_BY_ID:
+        all_quirk_ids[cluster_id] = {None}
     for manufacturer in zigpy_quirks._DEVICE_REGISTRY.registry.values():
         for model_quirk_list in manufacturer.values():
             for quirk in model_quirk_list:
@@ -351,16 +354,20 @@ def test_cluster_handler_registry() -> None:
                 device_description = getattr(quirk, "replacement", None) or getattr(
                     quirk, "signature", None
                 )
-                for endpoint in device_description["ENDPOINTS"]:
-                    for endpoint_clusters in [
-                        endpoint.get("INPUT_CLUSTERS", None),
-                        endpoint.get("OUTPUT_CLUSTERS", [None]),
-                    ]:
-                        for cluster_id in endpoint_clusters:
-                            if cluster_id:
-                                if cluster_id not in all_quirk_ids:
-                                    all_quirk_ids[cluster_id] = {None}
-                                all_quirk_ids[cluster_id].add(quirk_id)
+
+                for endpoint in device_description["endpoints"].values():
+                    cluster_ids = set()
+                    if "input_clusters" in endpoint:
+                        cluster_ids.update(endpoint["input_clusters"])
+                    if "output_clusters" in endpoint:
+                        cluster_ids.update(endpoint["output_clusters"])
+                    for cluster_id in cluster_ids:
+                        if not isinstance(cluster_id, int):
+                            cluster_id = cluster_id.cluster_id
+                        if cluster_id not in all_quirk_ids:
+                            all_quirk_ids[cluster_id] = {None}
+                        all_quirk_ids[cluster_id].add(quirk_id)
+
     del quirk, model_quirk_list, manufacturer
 
     for (
