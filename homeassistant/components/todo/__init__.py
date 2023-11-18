@@ -28,6 +28,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -45,6 +46,15 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
+
+def _as_local_timezone(value: Any) -> datetime.datetime:
+    """Convert all datetime values to the local timezone."""
+
+    if not isinstance(value, datetime.datetime):
+        raise vol.Invalid(f"Invalid datetime specified: {value}")
+
+    return dt_util.as_local(value)
 
 
 @dataclasses.dataclass
@@ -66,7 +76,7 @@ TODO_ITEM_FIELDS = [
     ),
     TodoItemFieldDescription(
         service_field=CONF_DUE_DATE_TIME,
-        validation=vol.All(cv.datetime, cv.datetime_as_local_timezone),
+        validation=vol.All(cv.datetime, _as_local_timezone),
         todo_item_field=CONF_DUE,
         required_feature=TodoListEntityFeature.DUE_DATETIME,
     ),

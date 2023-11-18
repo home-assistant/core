@@ -45,8 +45,8 @@ ITEM_2 = {
     "summary": "Item #2",
     "status": "completed",
 }
-TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Los_Angeles")
-TEST_OFFSET = "-08:00"
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
+TEST_OFFSET = "-06:00"
 
 
 class MockFlow(ConfigFlow):
@@ -110,6 +110,12 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
             async_unload_entry=async_unload_entry_init,
         ),
     )
+
+
+@pytest.fixture(autouse=True)
+def set_time_zone(hass: HomeAssistant) -> None:
+    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    hass.config.set_time_zone("America/Regina")
 
 
 async def create_mock_platform(
@@ -403,7 +409,16 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 9, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=datetime.datetime(2023, 11, 13, 11, 00, 00, tzinfo=TEST_TIMEZONE),
+            ),
+        ),
+        (
+            TodoListEntityFeature.DUE_DATETIME,
+            {"item": "New item", "due_date_time": "2023-11-13"},
+            TodoItem(
+                summary="New item",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=datetime.datetime(2023, 11, 13, 0, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -441,48 +456,6 @@ async def test_add_item_service_extended_fields(
     assert args
     item = args.kwargs.get("item")
     assert item == expected_item
-
-
-@pytest.mark.parametrize(
-    ("item_data", "expected_exception", "expected_error"),
-    [
-        (
-            {
-                "item": "Submit forms",
-                "due_date_time": "2023-11-17",
-            },
-            vol.Invalid,
-            "to have a timezone",
-        ),
-        (
-            {
-                "item": "Submit forms",
-                "due_date_time": "2023-11-17T17:00:00",
-            },
-            vol.Invalid,
-            "to have a timezone",
-        ),
-    ],
-)
-async def test_add_item_date_time_validation(
-    hass: HomeAssistant,
-    test_entity: TodoListEntity,
-    item_data: dict[str, Any],
-    expected_exception: str,
-    expected_error: str,
-) -> None:
-    """Test invalid input to the add item service."""
-    test_entity._attr_supported_features |= TodoListEntityFeature.DUE_DATETIME
-    await create_mock_platform(hass, [test_entity])
-
-    with pytest.raises(expected_exception, match=expected_error):
-        await hass.services.async_call(
-            DOMAIN,
-            "add_item",
-            item_data,
-            target={"entity_id": "todo.entity1"},
-            blocking=True,
-        )
 
 
 async def test_update_todo_item_service_by_id(

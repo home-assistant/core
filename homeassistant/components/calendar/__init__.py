@@ -87,6 +87,23 @@ MIN_NEW_EVENT_DURATION = datetime.timedelta(seconds=1)
 MIN_EVENT_DURATION = datetime.timedelta(seconds=0)
 
 
+def _has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Assert that all datetime values have a timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Validate that all datetime values have a timezone."""
+        for k in keys:
+            if (
+                (value := obj.get(k))
+                and isinstance(value, datetime.datetime)
+                and value.tzinfo is None
+            ):
+                raise vol.Invalid("Expected all values to have a timezone")
+        return obj
+
+    return validate
+
+
 def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Verify that all datetime values have a consistent timezone."""
 
@@ -232,22 +249,14 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
 CALENDAR_EVENT_SCHEMA = vol.Schema(
     vol.All(
         {
-            vol.Required("start"): vol.Any(
-                cv.date,
-                vol.All(
-                    cv.datetime, cv.datetime_has_timezone, cv.datetime_as_local_timezone
-                ),
-            ),
-            vol.Required("end"): vol.Any(
-                cv.date,
-                vol.All(
-                    cv.datetime, cv.datetime_has_timezone, cv.datetime_as_local_timezone
-                ),
-            ),
+            vol.Required("start"): vol.Any(cv.date, cv.datetime),
+            vol.Required("end"): vol.Any(cv.date, cv.datetime),
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type("start", "end"),
+        _has_timezone("start", "end"),
+        _as_local_timezone("start", "end"),
         _has_min_duration("start", "end", MIN_EVENT_DURATION),
     ),
     extra=vol.ALLOW_EXTRA,

@@ -722,26 +722,6 @@ def time_zone(value: str) -> str:
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
-def datetime_has_timezone(value: Any) -> datetime_sys:
-    """Assert that all datetime values have a timezone."""
-    if not isinstance(value, datetime_sys):
-        raise vol.Invalid(f"Invalid datetime specified: {value}")
-
-    if value.tzinfo is None:
-        raise vol.Invalid("Expected all values to have a timezone")
-
-    return value
-
-
-def datetime_as_local_timezone(value: Any) -> datetime_sys:
-    """Convert all datetime values to the local timezone."""
-
-    if not isinstance(value, datetime_sys):
-        raise vol.Invalid(f"Invalid datetime specified: {value}")
-
-    return dt_util.as_local(value)
-
-
 def socket_timeout(value: Any | None) -> object:
     """Validate timeout float > 0.0.
 
