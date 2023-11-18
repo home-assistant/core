@@ -22,41 +22,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_login(self, user_input: dict[str, Any] | None=None) -> FlowResult:
+    async def async_step_login(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle login with credentials by user."""
-        if not user_input:
-            data_schema = vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            )
+        errors: dict[str, str] | None = None
 
-            return self.async_show_form(
-                step_id="login",
-                data_schema=data_schema,
-                errors=errors,
-            )
+        if user_input:
+            async with FrankEnergie() as api:
+                try:
+                    auth = await api.login(
+                        user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    )
+                except AuthException:
+                    errors = {"base": "invalid_auth"}
 
-        async with FrankEnergie() as api:
-            try:
-                auth = await api.login(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
-            except AuthException as ex:
-                _LOGGER.exception("Error during login")
-                return await self.async_step_login(errors={"base": "invalid_auth"})
+                else:
+                    data = {
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_AUTH_TOKEN: auth.authToken,
+                        CONF_REFRESH_TOKEN: auth.refreshToken,
+                    }
 
-        data = {
-            CONF_USERNAME: user_input[CONF_USERNAME],
-            CONF_AUTH_TOKEN: auth.authToken,
-            CONF_REFRESH_TOKEN: auth.refreshToken,
-        }
+                    await self.async_set_unique_id(user_input[CONF_USERNAME])
+                    self._abort_if_unique_id_configured()
 
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        self._abort_if_unique_id_configured()
+                    return await self._async_create_entry(data)
 
-        return await self._async_create_entry(data)
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="login",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""
