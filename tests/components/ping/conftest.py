@@ -8,7 +8,6 @@ from homeassistant.components.ping import DOMAIN
 from homeassistant.components.ping.const import CONF_PING_COUNT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -51,5 +50,5 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
