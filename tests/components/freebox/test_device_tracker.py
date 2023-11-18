@@ -39,6 +39,7 @@ async def test_bridge_mode(
     await setup_platform(hass, DEVICE_TRACKER_DOMAIN)
 
     assert router_bridge_mode().lan.get_hosts_list.call_count == 1
+
     # Simulate an update
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
