@@ -11,10 +11,6 @@ class QuotableCard extends HTMLElement {
       "Today is a gift, that's why they call it the present. Make the most of it!";
   }
 
-  setConfig(config) {
-    this._config = config;
-  }
-
   set hass(hass) {
     this._hass = hass;
 
@@ -22,6 +18,10 @@ class QuotableCard extends HTMLElement {
       this.updateQuoteAndAuthor();
       this.addPopUp();
     }
+  }
+
+  setConfig(config) {
+    this._config = config;
   }
 
   async updateQuoteAndAuthor() {
@@ -136,7 +136,7 @@ class QuotableCard extends HTMLElement {
     return 3;
   }
 
-  getStubConfig() {
+  static getStubConfig() {
     return { entity: "quotable.quotable" };
   }
 }
