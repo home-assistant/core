@@ -425,9 +425,7 @@ omit =
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/camera.py
-    homeassistant/components/freebox/device_tracker.py
     homeassistant/components/freebox/home_base.py
-    homeassistant/components/freebox/router.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/device_tracker.py
