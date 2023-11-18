@@ -94,6 +94,14 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         super().__init__(unique_id, coordinator)
         self._attr_options = options
 
+    @property
+    def options(self) -> list[str]:
+        """Get the option of the selector - if the api just became available - get it for the first time."""
+        if not self._attr_options and self.api.is_available:
+            new_options = self.entity_description.options_lambda(self._device_status)
+            self._attr_options = new_options if new_options is not None else []
+        return self._attr_options
+
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.send(
@@ -119,9 +127,11 @@ def determine_valid_select_entities(
                 f"{description.key}_{slugify(device_id)}"
                 in coordinator.supported_entities
                 or coordinator.api.is_available
-                and (options := description.options_lambda(
-                    coordinator.roborock_device_info.props.status
-                ))
+                and (
+                    options := description.options_lambda(
+                        coordinator.roborock_device_info.props.status
+                    )
+                )
                 is not None
             ):
                 valid_select_entities.append(
@@ -129,7 +139,7 @@ def determine_valid_select_entities(
                         f"{description.key}_{slugify(device_id)}",
                         coordinator,
                         description,
-                        options
+                        options if options is not None else [],
                     )
                 )
     return valid_select_entities

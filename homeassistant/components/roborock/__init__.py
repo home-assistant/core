@@ -137,6 +137,10 @@ async def setup_device(
     mqtt_client = RoborockMqttClient(user_data, DeviceData(device, product_info.name))
     try:
         networking = await mqtt_client.get_networking()
+        if networking is None:
+            # If the api does not return an error but does return None for
+            # get_networking - then we need to go through cache checking.
+            raise RoborockException("Networking request returned None.")
     except RoborockException as err:
         if cached_data is None:
             # If we have never added this device before - don't start now.
@@ -147,7 +151,8 @@ async def setup_device(
             )
             _LOGGER.debug(err)
             return None
-        # If cached data exist, then we have set up this vacuum before, and we have cached network information.
+        # If cached data exist, then we have set up this vacuum before,
+        # and we have cached network information.
         networking = cached_data.network_info
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client

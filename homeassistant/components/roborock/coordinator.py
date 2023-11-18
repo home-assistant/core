@@ -85,7 +85,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     async def _recover(self) -> None:
         """When the api has been unavailable - we need to update the cache for all the values that we need."""
         await asyncio.gather(
-            *(self.api.cache.get(key).async_value() for key in self.needed_cache_keys)
+            *(self.api.cache[key].async_value() for key in self.needed_cache_keys)
         )
 
     async def _update_device_prop(self) -> None:
