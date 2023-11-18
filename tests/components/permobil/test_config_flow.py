@@ -61,11 +61,13 @@ async def test_sucessful_config_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_EMAIL] == MOCK_EMAIL
-    assert result["data"][CONF_REGION] == MOCK_URL
-    assert result["data"][CONF_CODE] == MOCK_CODE
-    assert result["data"][CONF_TOKEN] == MOCK_TOKEN[0]
-    assert result["data"][CONF_TTL] == MOCK_TOKEN[1]
+    assert result["data"] == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_REGION: MOCK_URL,
+        CONF_CODE: MOCK_CODE,
+        CONF_TOKEN: MOCK_TOKEN[0],
+        CONF_TTL: MOCK_TOKEN[1],
+    }
 
 
 async def test_sucessful_config_flow_fail_reauth(hass: HomeAssistant) -> None:
@@ -106,11 +108,13 @@ async def test_sucessful_config_flow_fail_reauth(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_EMAIL] == MOCK_EMAIL
-    assert result["data"][CONF_REGION] == MOCK_URL
-    assert result["data"][CONF_CODE] == MOCK_CODE
-    assert result["data"][CONF_TOKEN] == MOCK_TOKEN[0]
-    assert result["data"][CONF_TTL] == MOCK_TOKEN[1]
+    assert result["data"] == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_REGION: MOCK_URL,
+        CONF_CODE: MOCK_CODE,
+        CONF_TOKEN: MOCK_TOKEN[0],
+        CONF_TTL: MOCK_TOKEN[1],
+    }
 
 
 async def test_config_flow_incorrect_code(hass: HomeAssistant) -> None:
@@ -238,7 +242,7 @@ async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
     reauth_token = ("b" * 256, "reauth_date")
     reauth_code = "567890"
     mock_api: Mock = Mock()
-    mock_api.request_application_code = AsyncMock()
+    mock_api.request_application_code = AsyncMock(return_value=None)
     mock_api.request_application_token = AsyncMock(return_value=reauth_token)
     mock_entry = MockConfigEntry(
         domain="permobil",
@@ -272,13 +276,13 @@ async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_EMAIL] == MOCK_EMAIL
-    assert result["data"][CONF_REGION] == MOCK_URL
-
-    # check that the reauth values have replaced the old ones
-    assert result["data"][CONF_CODE] == reauth_code
-    assert result["data"][CONF_TOKEN] == reauth_token[0]
-    assert result["data"][CONF_TTL] == reauth_token[1]
+    assert result["data"] == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_REGION: MOCK_URL,
+        CONF_CODE: reauth_code,  # new value
+        CONF_TOKEN: reauth_token[0],  # new value
+        CONF_TTL: reauth_token[1],  # new value
+    }
 
 
 async def test_config_flow_reauth_fail_invalid_code(hass: HomeAssistant) -> None:
@@ -286,7 +290,7 @@ async def test_config_flow_reauth_fail_invalid_code(hass: HomeAssistant) -> None
     # new code
     reauth_invalid_code = "567890"  # pretend this code is invalid/incorrect
     mock_api: Mock = Mock()
-    mock_api.request_application_code = AsyncMock()
+    mock_api.request_application_code = AsyncMock(return_value=None)
     mock_api.request_application_token = AsyncMock(side_effect=MyPermobilAPIException)
     mock_entry = MockConfigEntry(
         domain="permobil",
