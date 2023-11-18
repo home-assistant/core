@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
 from .coordinator import ProximityDataUpdateCoordinator
@@ -76,6 +75,8 @@ async def async_setup_platform(
 class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordinator]):
     """Represents a Proximity sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         description: SensorEntityDescription,
@@ -86,7 +87,7 @@ class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordin
 
         self.entity_description = description
 
-        self._attr_unique_id = slugify(f"{coordinator.friendly_name}_{description.key}")
+        self._attr_name = f"{coordinator.friendly_name} {description.key}"
 
     @property
     def native_value(self) -> str | float | None:
@@ -103,6 +104,8 @@ class ProximityTrackedEntitySensor(
 ):
     """Represents a Proximity tracked entity sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         description: SensorEntityDescription,
@@ -115,8 +118,8 @@ class ProximityTrackedEntitySensor(
         self.entity_description = description
         self.tracked_entity_id = tracked_entity_id
 
-        self._attr_unique_id = slugify(
-            f"{coordinator.friendly_name}_{tracked_entity_id}_{description.key}"
+        self._attr_name = (
+            f"{coordinator.friendly_name} {tracked_entity_id} {description.key}"
         )
 
     @property

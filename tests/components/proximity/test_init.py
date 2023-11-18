@@ -46,11 +46,11 @@ async def test_proximities(hass: HomeAssistant, friendly_name: str) -> None:
     assert state.state == "0"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_{friendly_name}_nearest")
+    state = hass.states.get(f"sensor.{friendly_name}_nearest")
     assert state.state == STATE_UNKNOWN
 
     for device in config["proximity"][friendly_name]["devices"]:
-        entity_base_name = f"sensor.{DOMAIN}_{friendly_name}_{slugify(device)}"
+        entity_base_name = f"sensor.{friendly_name}_{slugify(device)}"
         state = hass.states.get(f"{entity_base_name}_dist_to_zone")
         assert state.state == STATE_UNKNOWN
         state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -96,17 +96,17 @@ async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
 
     # proximity entity
     state = hass.states.get("proximity.home")
-    assert state.state == "0"
+    assert state.state == "12491"
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "arrived"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
-    assert state.state == "0"
+    assert state.state == "12491361"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == "arrived"
 
@@ -139,10 +139,10 @@ async def test_device_tracker_test1_away(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "11912010"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -180,10 +180,10 @@ async def test_device_tracker_test1_awayfurther(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -202,10 +202,10 @@ async def test_device_tracker_test1_awayfurther(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "away_from"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "4625264"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -242,10 +242,10 @@ async def test_device_tracker_test1_awaycloser(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "4625264"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -264,10 +264,10 @@ async def test_device_tracker_test1_awaycloser(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "towards"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -298,10 +298,10 @@ async def test_all_device_trackers_in_ignored_zone(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "not set"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -333,10 +333,10 @@ async def test_device_tracker_test1_no_coordinates(hass: HomeAssistant) -> None:
     assert state.attributes.get("dir_of_travel") == "not set"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -373,10 +373,10 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "11912010"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -395,10 +395,10 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
     assert state.attributes.get("dir_of_travel") == "stationary"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "11912010"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -434,20 +434,20 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
 
     # proximity entity
     state = hass.states.get("proximity.home")
-    assert state.state == "0"
+    assert state.state == "12491"
     assert (state.attributes.get("nearest") == "test1, test2") or (
         state.attributes.get("nearest") == "test2, test1"
     )
     assert state.attributes.get("dir_of_travel") == "arrived"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1, test2"
 
     for device in ["device_tracker.test1", "device_tracker.test2"]:
-        entity_base_name = f"sensor.{DOMAIN}_home_{slugify(device)}"
+        entity_base_name = f"sensor.home_{slugify(device)}"
         state = hass.states.get(f"{entity_base_name}_dist_to_zone")
-        assert state.state == "0"
+        assert state.state == "12491361"
         state = hass.states.get(f"{entity_base_name}_dir_of_travel")
         assert state.state == "arrived"
 
@@ -496,16 +496,16 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -524,16 +524,16 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "4625264"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -582,16 +582,16 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test2"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "4625264"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -610,16 +610,16 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "4625264"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -663,16 +663,16 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "11912010"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -746,16 +746,16 @@ async def test_device_tracker_test1_awayfurther_test2_first(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test2"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -805,16 +805,16 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -833,16 +833,16 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test2"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "989156"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
@@ -861,16 +861,16 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     # sensor entities
-    state = hass.states.get(f"sensor.{DOMAIN}_home_nearest")
+    state = hass.states.get("sensor.home_nearest")
     assert state.state == "test1"
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test1')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == "2218752"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    entity_base_name = f"sensor.{DOMAIN}_home_{slugify('device_tracker.test2')}"
+    entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
