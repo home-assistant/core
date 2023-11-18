@@ -45,21 +45,13 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._image_url = None
         self._image_content = None
         self._attr_unique_id = f"{self._device_id:s}_camera"
+        self._attr_motion_detection_enabled = True
+        self._attr_brand = DEFAULT_NAME
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._device.has_subscription
-
-    @property
-    def motion_detection_enabled(self) -> bool:
-        """Return the camera motion detection status."""
-        return True
-
-    @property
-    def brand(self):
-        """Return the camera brand."""
-        return DEFAULT_NAME
 
     @property
     def model(self):

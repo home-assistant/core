@@ -64,5 +64,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarmed": {
+        "name": "Alarmed"
+      },
+      "armed": {
+        "name": "Armed"
+      }
+    },
+    "switch": {
+      "bypassed": {
+        "name": "Bypassed"
+      }
+    }
   }
 }

@@ -18,13 +18,12 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -93,7 +92,7 @@ def _calculate_unique_id(config_entry_unique_id: str | None, forecast_type: str)
     return f"{config_entry_unique_id}_{forecast_type}"
 
 
-class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
+class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -118,18 +117,9 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         self._attr_entity_registry_enabled_default = (
             forecast_type == DEFAULT_FORECAST_TYPE
         )
-        self._attr_name = f"{config_entry.data[CONF_NAME]} - {forecast_type.title()}"
+        self._attr_name = forecast_type.title()
         self._attr_unique_id = _calculate_unique_id(
             config_entry.unique_id, forecast_type
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
         )
 
     def _forecast_dict(
@@ -312,10 +302,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         """Return the forecast array."""
         return self._forecast(self.forecast_type)
 
-    async def async_forecast_daily(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast(DAILY)
 
-    async def async_forecast_hourly(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(HOURLY)

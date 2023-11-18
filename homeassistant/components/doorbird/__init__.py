@@ -5,13 +5,10 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-from aiohttp import web
 from doorbirdpy import DoorBird
 import requests
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -20,33 +17,19 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import API_URL, CONF_EVENTS, DOMAIN, PLATFORMS
+from .const import CONF_EVENTS, DOMAIN, PLATFORMS
 from .device import ConfiguredDoorBird
 from .models import DoorBirdData
-from .util import get_door_station_by_token
+from .view import DoorBirdRequestView
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOM_URL = "hass_url_override"
-
-RESET_DEVICE_FAVORITES = "doorbird_reset_favorites"
-
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_EVENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_CUSTOM_URL): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -54,29 +37,8 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
-
     # Provide an endpoint for the door stations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
-
-    def _reset_device_favorites_handler(event: Event) -> None:
-        """Handle clearing favorites on device."""
-        if (token := event.data.get("token")) is None:
-            return
-
-        door_station = get_door_station_by_token(hass, token)
-
-        if door_station is None:
-            _LOGGER.error("Device not found for provided token")
-            return
-
-        # Clear webhooks
-        favorites: dict[str, list[str]] = door_station.device.favorites()
-        for favorite_type, favorite_ids in favorites.items():
-            for favorite_id in favorite_ids:
-                door_station.device.delete_favorite(favorite_type, favorite_id)
-
-    hass.bus.async_listen(RESET_DEVICE_FAVORITES, _reset_device_favorites_handler)
-
     return True
 
 
@@ -150,6 +112,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_register_events(
     hass: HomeAssistant, door_station: ConfiguredDoorBird
 ) -> bool:
+    """Register events on device."""
     try:
         await hass.async_add_executor_job(door_station.register_events, hass)
     except requests.exceptions.HTTPError:
@@ -180,7 +143,9 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 @callback
-def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     options = dict(entry.options)
     modified = False
     for importable_option in (CONF_EVENTS,):
@@ -190,36 +155,3 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
 
     if modified:
         hass.config_entries.async_update_entry(entry, options=options)
-
-
-class DoorBirdRequestView(HomeAssistantView):
-    """Provide a page for the device to call."""
-
-    requires_auth = False
-    url = API_URL
-    name = API_URL[1:].replace("/", ":")
-    extra_urls = [API_URL + "/{event}"]
-
-    async def get(self, request: web.Request, event: str) -> web.Response:
-        """Respond to requests from the device."""
-        hass: HomeAssistant = request.app["hass"]
-        token: str | None = request.query.get("token")
-        if token is None or (device := get_door_station_by_token(hass, token)) is None:
-            return web.Response(
-                status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
-            )
-
-        if device:
-            event_data = device.get_event_data(event)
-        else:
-            event_data = {}
-
-        if event == "clear":
-            hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
-
-            message = f"HTTP Favorites cleared for {device.slug}"
-            return web.Response(text=message)
-
-        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
-
-        return web.Response(text="OK")

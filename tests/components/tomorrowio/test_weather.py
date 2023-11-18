@@ -78,6 +78,7 @@ async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> St
     data = _get_config_schema(hass, SOURCE_USER)(config)
     data[CONF_NAME] = DEFAULT_NAME
     config_entry = MockConfigEntry(
+        title=DEFAULT_NAME,
         domain=DOMAIN,
         data=data,
         options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
@@ -153,9 +154,66 @@ async def test_legacy_config_entry(hass: HomeAssistant) -> None:
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 30
 
 
-async def test_v4_weather(hass: HomeAssistant) -> None:
+async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -> None:
     """Test v4 weather data."""
     weather_state = await _setup(hass, API_V4_ENTRY_DATA)
+
+    tomorrowio_config_entry_update.assert_called_with(
+        [
+            "temperature",
+            "humidity",
+            "pressureSeaLevel",
+            "windSpeed",
+            "windDirection",
+            "weatherCode",
+            "visibility",
+            "pollutantO3",
+            "windGust",
+            "cloudCover",
+            "precipitationType",
+            "pollutantCO",
+            "mepIndex",
+            "mepHealthConcern",
+            "mepPrimaryPollutant",
+            "cloudBase",
+            "cloudCeiling",
+            "cloudCover",
+            "dewPoint",
+            "epaIndex",
+            "epaHealthConcern",
+            "epaPrimaryPollutant",
+            "temperatureApparent",
+            "fireIndex",
+            "pollutantNO2",
+            "pollutantO3",
+            "particulateMatter10",
+            "particulateMatter25",
+            "grassIndex",
+            "treeIndex",
+            "weedIndex",
+            "precipitationType",
+            "pressureSurfaceLevel",
+            "solarGHI",
+            "pollutantSO2",
+            "uvIndex",
+            "uvHealthConcern",
+            "windGust",
+        ],
+        [
+            "temperatureMin",
+            "temperatureMax",
+            "dewPoint",
+            "humidity",
+            "windSpeed",
+            "windDirection",
+            "weatherCode",
+            "precipitationIntensityAvg",
+            "precipitationProbability",
+        ],
+        nowcast_timestep=60,
+        location="80.0,80.0",
+    )
+
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert len(weather_state.attributes[ATTR_FORECAST]) == 14
@@ -171,7 +229,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         ATTR_FORECAST_WIND_BEARING: 239.6,
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
-    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
+    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
@@ -204,7 +262,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
         ATTR_FORECAST_WIND_BEARING: 239.6,
         ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
-    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
+    assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
     assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"

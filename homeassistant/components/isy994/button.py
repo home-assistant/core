@@ -21,6 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_NETWORK, DOMAIN
+from .models import IsyData
 
 
 async def async_setup_entry(
@@ -29,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX button from config entry."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
     isy: ISY = isy_data.root
     device_info = isy_data.devices
     entities: list[

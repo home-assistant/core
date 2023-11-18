@@ -42,19 +42,19 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
         MOCK_STATUS,
     ),
 )
-async def test_device_entry(hass: HomeAssistant, status: OrderedDict) -> None:
+async def test_device_entry(
+    hass: HomeAssistant, status: OrderedDict, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful setup of device entries."""
     await async_init_integration(hass, status=status)
 
     # Verify device info is properly set up.
-    device_entries = dr.async_get(hass)
-
     if "SERIALNO" not in status:
-        assert len(device_entries.devices) == 0
+        assert len(device_registry.devices) == 0
         return
 
-    assert len(device_entries.devices) == 1
-    entry = device_entries.async_get_device({(DOMAIN, status["SERIALNO"])})
+    assert len(device_registry.devices) == 1
+    entry = device_registry.async_get_device({(DOMAIN, status["SERIALNO"])})
     assert entry is not None
     # Specify the mapping between field name and the expected fields in device entry.
     fields = {

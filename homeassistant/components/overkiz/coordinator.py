@@ -43,7 +43,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         name: str,
         client: OverkizClient,
         devices: list[Device],
-        places: Place,
+        places: Place | None,
         update_interval: timedelta | None = None,
         config_entry_id: str,
     ) -> None:

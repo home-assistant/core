@@ -134,9 +134,26 @@ class ActiveConnection:
         self.send_message(messages.event_message(msg_id, event))
 
     @callback
-    def send_error(self, msg_id: int, code: str, message: str) -> None:
-        """Send a error message."""
-        self.send_message(messages.error_message(msg_id, code, message))
+    def send_error(
+        self,
+        msg_id: int,
+        code: str,
+        message: str,
+        translation_key: str | None = None,
+        translation_domain: str | None = None,
+        translation_placeholders: dict[str, Any] | None = None,
+    ) -> None:
+        """Send an error message."""
+        self.send_message(
+            messages.error_message(
+                msg_id,
+                code,
+                message,
+                translation_key=translation_key,
+                translation_domain=translation_domain,
+                translation_placeholders=translation_placeholders,
+            )
+        )
 
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
@@ -164,12 +181,12 @@ class ActiveConnection:
         if (
             # Not using isinstance as we don't care about children
             # as these are always coming from JSON
-            type(msg) is not dict  # pylint: disable=unidiomatic-typecheck
+            type(msg) is not dict  # noqa: E721
             or (
                 not (cur_id := msg.get("id"))
-                or type(cur_id) is not int  # pylint: disable=unidiomatic-typecheck
+                or type(cur_id) is not int  # noqa: E721
                 or not (type_ := msg.get("type"))
-                or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
+                or type(type_) is not str  # noqa: E721
             )
         ):
             self.logger.error("Received invalid command: %s", msg)

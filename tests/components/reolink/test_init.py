@@ -85,7 +85,7 @@ async def test_firmware_error_twice(
 
     assert config_entry.state == ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_update"
+    entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.is_state(entity_id, STATE_OFF)
 
     async_fire_time_changed(

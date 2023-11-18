@@ -35,13 +35,13 @@ async def async_setup_entry(
 
 
 class ReolinkUpdateEntity(
-    ReolinkBaseCoordinatorEntity[str | Literal[False]], UpdateEntity
+    ReolinkBaseCoordinatorEntity[str | Literal[False] | NewSoftwareVersion],
+    UpdateEntity,
 ):
     """Update entity for a Netgear device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_release_url = "https://reolink.com/download-center/"
-    _attr_name = "Update"
 
     def __init__(
         self,

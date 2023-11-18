@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
-import datetime as dt
 from datetime import timedelta
 import logging
 from typing import Any
@@ -27,7 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import utcnow
 
 from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
@@ -198,13 +197,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         ):
             return None
         return self._currently_playing["progress_ms"] / 1000
-
-    @property
-    def media_position_updated_at(self) -> dt.datetime | None:
-        """When was the position of the current playing media valid."""
-        if not self._currently_playing:
-            return None
-        return utc_from_timestamp(self._currently_playing["timestamp"] / 1000)
 
     @property
     def media_image_url(self) -> str | None:
@@ -413,6 +405,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             additional_types=[MediaType.EPISODE]
         )
         self._currently_playing = current or {}
+        # Record the last updated time, because Spotify's timestamp property is unreliable
+        # and doesn't actually return the fetch time as is mentioned in the API description
+        self._attr_media_position_updated_at = utcnow() if current is not None else None
 
         context = self._currently_playing.get("context") or {}
 

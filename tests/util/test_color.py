@@ -31,7 +31,6 @@ GAMUT_INVALID_4 = color_util.GamutType(
 )
 
 
-# pylint: disable=invalid-name
 def test_color_RGB_to_xy_brightness() -> None:
     """Test color_RGB_to_xy_brightness."""
     assert color_util.color_RGB_to_xy_brightness(0, 0, 0) == (0, 0, 0)

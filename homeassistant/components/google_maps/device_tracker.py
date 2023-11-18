@@ -112,11 +112,19 @@ class GoogleMapsScanner:
 
             last_seen = dt_util.as_utc(person.datetime)
             if last_seen < self._prev_seen.get(dev_id, last_seen):
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Ignoring %s update because timestamp is older than last timestamp",
                     person.nickname,
                 )
                 _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
+                continue
+            if last_seen == self._prev_seen.get(dev_id):
+                _LOGGER.debug(
+                    "Ignoring %s update because timestamp "
+                    "is the same as the last timestamp %s",
+                    person.nickname,
+                    last_seen,
+                )
                 continue
             self._prev_seen[dev_id] = last_seen
 

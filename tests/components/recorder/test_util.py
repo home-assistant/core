@@ -1,6 +1,6 @@
 """Test util methods."""
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
@@ -948,7 +948,7 @@ def test_execute_stmt_lambda_element(
             assert rows == ["mock_row"]
 
 
-@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=UTC))
 async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 

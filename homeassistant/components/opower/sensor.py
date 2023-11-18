@@ -45,6 +45,7 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         name="Current bill electric usage to date",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        # Not TOTAL_INCREASING because it can decrease for accounts with solar
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.usage_to_date,

@@ -4,7 +4,12 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.sensor import ATTR_OPTIONS
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
+from homeassistant.const import (
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -66,21 +71,22 @@ async def test_sensors(
     assert state.state == "2019-11-11T09:10:02+00:00"
 
     entry = entity_registry.async_get("sensor.test_ha_1000_series_uptime")
+
     assert entry
     assert entry.unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251_uptime"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the disabled by default IPP sensors."""
-    registry = er.async_get(hass)
-
     state = hass.states.get("sensor.test_ha_1000_series_uptime")
     assert state is None
 
-    entry = registry.async_get("sensor.test_ha_1000_series_uptime")
+    entry = entity_registry.async_get("sensor.test_ha_1000_series_uptime")
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
@@ -88,6 +94,7 @@ async def test_disabled_by_default_sensors(
 
 async def test_missing_entry_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_ipp: AsyncMock,
 ) -> None:
@@ -98,8 +105,6 @@ async def test_missing_entry_unique_id(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-
-    entity = registry.async_get("sensor.test_ha_1000_series")
+    entity = entity_registry.async_get("sensor.test_ha_1000_series")
     assert entity
     assert entity.unique_id == f"{mock_config_entry.entry_id}_printer"

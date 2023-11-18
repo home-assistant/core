@@ -6,7 +6,7 @@ import logging
 from anova_wifi import AnovaApi, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device[1],
             api.jwt,
         )
-        for device in entry.data["devices"]
+        for device in entry.data[CONF_DEVICES]
     ]
     try:
         new_devices = await api.get_devices()
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={
                 **entry.data,
-                **{"devices": serialize_device_list(devices)},
+                **{CONF_DEVICES: serialize_device_list(devices)},
             },
         )
     coordinators = [AnovaCoordinator(hass, device) for device in devices]

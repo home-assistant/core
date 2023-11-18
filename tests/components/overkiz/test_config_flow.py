@@ -1,6 +1,7 @@
 """Tests for Overkiz (by Somfy) config flow."""
 from __future__ import annotations
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
@@ -37,8 +38,8 @@ MOCK_GATEWAY_RESPONSE = [Mock(id=TEST_GATEWAY_ID)]
 MOCK_GATEWAY2_RESPONSE = [Mock(id=TEST_GATEWAY_ID2)]
 
 FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
-    host="192.168.0.51",
-    addresses=["192.168.0.51"],
+    ip_address=ip_address("192.168.0.51"),
+    ip_addresses=[ip_address("192.168.0.51")],
     port=443,
     hostname=f"gateway-{TEST_GATEWAY_ID}.local.",
     type="_kizbox._tcp.local.",

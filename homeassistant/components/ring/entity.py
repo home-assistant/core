@@ -3,7 +3,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, RING_DEVICES_COORDINATOR
 
 
 class RingEntityMixin(Entity):
@@ -19,14 +19,24 @@ class RingEntityMixin(Entity):
         self._config_entry_id = config_entry_id
         self._device = device
         self._attr_extra_state_attributes = {}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},
+            manufacturer="Ring",
+            model=device.model,
+            name=device.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.ring_objects["device_data"].async_add_listener(self._update_callback)
+        self.ring_objects[RING_DEVICES_COORDINATOR].async_add_listener(
+            self._update_callback
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
-        self.ring_objects["device_data"].async_remove_listener(self._update_callback)
+        self.ring_objects[RING_DEVICES_COORDINATOR].async_remove_listener(
+            self._update_callback
+        )
 
     @callback
     def _update_callback(self) -> None:
@@ -37,13 +47,3 @@ class RingEntityMixin(Entity):
     def ring_objects(self):
         """Return the Ring API objects."""
         return self.hass.data[DOMAIN][self._config_entry_id]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
-            manufacturer="Ring",
-            model=self._device.model,
-            name=self._device.name,
-        )

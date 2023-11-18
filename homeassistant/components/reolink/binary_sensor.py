@@ -28,47 +28,38 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
 
-@dataclass
-class ReolinkBinarySensorEntityDescriptionMixin:
-    """Mixin values for Reolink binary sensor entities."""
-
-    value: Callable[[Host, int | None], bool]
-
-
-@dataclass
-class ReolinkBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ReolinkBinarySensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes binary sensor entities."""
 
-    icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    supported: Callable[[Host, int | None], bool] = lambda host, ch: True
+    icon: str = "mdi:motion-sensor"
+    supported: Callable[[Host, int], bool] = lambda host, ch: True
+    value: Callable[[Host, int], bool]
 
 
 BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="motion",
-        name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda api, ch: api.motion_detected(ch),
     ),
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
-        name="Face",
+        translation_key="face",
         icon="mdi:face-recognition",
         value=lambda api, ch: api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PERSON_DETECTION_TYPE,
-        name="Person",
+        translation_key="person",
         value=lambda api, ch: api.ai_detected(ch, PERSON_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PERSON_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=VEHICLE_DETECTION_TYPE,
-        name="Vehicle",
+        translation_key="vehicle",
         icon="mdi:car",
         icon_off="mdi:car-off",
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
@@ -76,7 +67,7 @@ BINARY_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
-        name="Pet",
+        translation_key="pet",
         icon="mdi:dog-side",
         icon_off="mdi:dog-side-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
@@ -84,7 +75,7 @@ BINARY_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",
-        name="Visitor",
+        translation_key="visitor",
         icon="mdi:bell-ring-outline",
         icon_off="mdi:doorbell",
         value=lambda api, ch: api.visitor_detected(ch),
@@ -130,7 +121,11 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         self.entity_description = entity_description
 
         if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
-            self._attr_name = f"{entity_description.name} lens {self._channel}"
+            if entity_description.translation_key is not None:
+                key = entity_description.translation_key
+            else:
+                key = entity_description.key
+            self._attr_translation_key = f"{key}_lens_{self._channel}"
 
         self._attr_unique_id = (
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
@@ -166,6 +161,6 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
             )
         )
 
-    async def _async_handle_event(self, event):
+    async def _async_handle_event(self, event: str) -> None:
         """Handle incoming event for motion detection."""
         self.async_write_ha_state()

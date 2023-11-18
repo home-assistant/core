@@ -47,6 +47,8 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
     )
+    _attr_has_entity_name = True
+    _attr_name = None
     _installation: Installation
 
     def __init__(self, contract: str, auth: Auth) -> None:
@@ -57,14 +59,13 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._auth = auth
 
         self._attr_code_arm_required = False
-        self._attr_name = f"contract {self.contract}"
-        self._attr_unique_id = self.contract
+        self._attr_unique_id = contract
 
         self._attr_device_info = DeviceInfo(
-            name="Prosegur Alarm",
+            name=f"Contract {contract}",
             manufacturer="Prosegur",
             model="smart",
-            identifiers={(DOMAIN, self.contract)},
+            identifiers={(DOMAIN, contract)},
             configuration_url="https://smart.prosegur.com",
         )
 

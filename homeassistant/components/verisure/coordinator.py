@@ -47,7 +47,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.hass.async_add_executor_job(self.verisure.login_cookie)
         except VerisureLoginError as ex:
-            LOGGER.error("Could not log in to verisure, %s", ex)
+            LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except VerisureError as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
@@ -63,8 +63,16 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.update_cookie)
-        except VerisureLoginError as ex:
-            raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
+        except VerisureLoginError:
+            LOGGER.debug("Cookie expired, acquiring new cookies")
+            try:
+                await self.hass.async_add_executor_job(self.verisure.login_cookie)
+            except VerisureLoginError as ex:
+                LOGGER.error("Credentials expired for Verisure, %s", ex)
+                raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
+            except VerisureError as ex:
+                LOGGER.error("Could not log in to verisure, %s", ex)
+                raise ConfigEntryAuthFailed("Could not log in to verisure") from ex
         except VerisureError as ex:
             raise UpdateFailed("Unable to update cookie") from ex
         try:
@@ -83,17 +91,15 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Could not read overview") from err
 
         def unpack(overview: list, value: str) -> dict | list:
-            return (
-                next(
-                    (
-                        item["data"]["installation"][value]
-                        for item in overview
-                        if value in item.get("data", {}).get("installation", {})
-                    ),
-                    [],
-                )
-                or []
+            unpacked: dict | list | None = next(
+                (
+                    item["data"]["installation"][value]
+                    for item in overview
+                    if value in item.get("data", {}).get("installation", {})
+                ),
+                None,
             )
+            return unpacked or []
 
         # Store data in a way Home Assistant can easily consume it
         self._overview = overview

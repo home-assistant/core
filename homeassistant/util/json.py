@@ -11,7 +11,7 @@ import orjson
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .file import WriteError  # pylint: disable=unused-import # noqa: F401
+from .file import WriteError  # noqa: F401
 
 _SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayTy
     """Parse JSON data and ensure result is a list."""
     value: JsonValueType = json_loads(__obj)
     # Avoid isinstance overhead as we are not interested in list subclasses
-    if type(value) is list:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is list:  # noqa: E721
         return value
     raise ValueError(f"Expected JSON to be parsed as a list got {type(value)}")
 
@@ -51,7 +51,7 @@ def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObject
     """Parse JSON data and ensure result is a dictionary."""
     value: JsonValueType = json_loads(__obj)
     # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is dict:  # noqa: E721
         return value
     raise ValueError(f"Expected JSON to be parsed as a dict got {type(value)}")
 
@@ -89,7 +89,7 @@ def load_json_array(
         default = []
     value: JsonValueType = load_json(filename, default=default)
     # Avoid isinstance overhead as we are not interested in list subclasses
-    if type(value) is list:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is list:  # noqa: E721
         return value
     _LOGGER.exception(
         "Expected JSON to be parsed as a list got %s in: %s", {type(value)}, filename
@@ -108,7 +108,7 @@ def load_json_object(
         default = {}
     value: JsonValueType = load_json(filename, default=default)
     # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is dict:  # noqa: E721
         return value
     _LOGGER.exception(
         "Expected JSON to be parsed as a dict got %s in: %s", {type(value)}, filename
