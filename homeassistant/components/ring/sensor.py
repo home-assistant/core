@@ -14,7 +14,12 @@ from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from .const import (
+    DOMAIN,
+    RING_DEVICES,
+    RING_HEALTH_COORDINATOR,
+    RING_HISTORY_COORDINATOR,
+)
 from .entity import RingEntityMixin
 
 
@@ -24,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a sensor for a Ring device."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
 
     entities = [
         description.cls(config_entry.entry_id, device, description)
@@ -75,7 +80,7 @@ class HealthDataRingSensor(RingSensor):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["health_data"].async_track_device(
+        await self.ring_objects[RING_HEALTH_COORDINATOR].async_track_device(
             self._device, self._health_update_callback
         )
 
@@ -83,7 +88,7 @@ class HealthDataRingSensor(RingSensor):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["health_data"].async_untrack_device(
+        self.ring_objects[RING_HEALTH_COORDINATOR].async_untrack_device(
             self._device, self._health_update_callback
         )
 
@@ -112,7 +117,7 @@ class HistoryRingSensor(RingSensor):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["history_data"].async_track_device(
+        await self.ring_objects[RING_HISTORY_COORDINATOR].async_track_device(
             self._device, self._history_update_callback
         )
 
@@ -120,7 +125,7 @@ class HistoryRingSensor(RingSensor):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["history_data"].async_untrack_device(
+        self.ring_objects[RING_HISTORY_COORDINATOR].async_untrack_device(
             self._device, self._history_update_callback
         )
 
