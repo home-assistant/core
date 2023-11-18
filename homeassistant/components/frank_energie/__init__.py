@@ -17,7 +17,6 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Frank Energie component from a config entry."""
 
-    # Initialise the coordinator and save it as domain-data
     api = FrankEnergie(
         clientsession=async_get_clientsession(hass),
         auth_token=entry.data.get(CONF_AUTH_TOKEN, None),
@@ -25,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     frank_coordinator = FrankEnergieCoordinator(hass, entry, api)
 
-    # Fetch initial data, so we have data when entities subscribe and set up the platform
     await frank_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = frank_coordinator
 

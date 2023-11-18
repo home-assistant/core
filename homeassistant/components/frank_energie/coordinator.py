@@ -59,7 +59,6 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
         tomorrow = today + timedelta(days=1)
         day_after_tomorrow = today + timedelta(days=2)
 
-        ## Token expires after 7 days, so we renew it if it's expired
         if self.api.is_authenticated and not self.api.authentication_valid():
             await self.__try_renew_token()
 
@@ -99,12 +98,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
         user_prices = await self.api.user_prices(start_date)
 
         if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
-            # If user_prices are available for both gas and electricity return them
             return user_prices
 
         public_prices = await self.api.prices(start_date, end_date)
 
-        # Use public prices if no user prices are available
         if len(user_prices.gas.all) == 0:
             LOGGER.info("No gas prices found for user, falling back to public prices")
             user_prices.gas = public_prices.gas
