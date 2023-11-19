@@ -141,8 +141,11 @@ class QuotableCard extends HTMLElement {
   static getStubConfig() {
     return { entity: "quotable.quotable" };
   }
-}
 
+  static getConfigElement() {
+    return document.createElement("quotable-card-editor");
+  }
+}
 customElements.define("quotable-card", QuotableCard);
 
 //Add card to card picker with a preview
