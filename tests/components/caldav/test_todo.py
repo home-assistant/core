@@ -17,7 +17,7 @@ from tests.typing import WebSocketGenerator
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
-SUPPORTED_FEATURES = 7
+SUPPORTED_FEATURES = 119
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -39,6 +39,12 @@ SUMMARY:Cheese
 STATUS:NEEDS-ACTION
 END:VTODO
 END:VCALENDAR"""
+
+RESULT_ITEM = {
+    "uid": "2",
+    "summary": "Cheese",
+    "status": "needs_action",
+}
 
 TODO_COMPLETED = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -67,6 +73,12 @@ END:VCALENDAR"""
 def platforms() -> list[Platform]:
     """Fixture to set up config entry platforms."""
     return [Platform.TODO]
+
+
+@pytest.fixture(autouse=True)
+def set_tz(hass: HomeAssistant) -> None:
+    """Fixture to set timezone with fixed offset year round."""
+    hass.config.set_time_zone("America/Regina")
 
 
 @pytest.fixture(name="todos")
@@ -235,20 +247,59 @@ async def test_add_item_failure(
 
 
 @pytest.mark.parametrize(
-    ("update_data", "expected_ics", "expected_state"),
+    ("update_data", "expected_ics", "expected_state", "expected_item"),
     [
         (
             {"rename": "Swiss Cheese"},
             ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
             "1",
+            {**RESULT_ITEM, "summary": "Swiss Cheese"},
         ),
-        ({"status": "needs_action"}, ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"], "1"),
-        ({"status": "completed"}, ["SUMMARY:Cheese", "STATUS:COMPLETED"], "0"),
+        (
+            {"status": "needs_action"},
+            ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"],
+            "1",
+            RESULT_ITEM,
+        ),
+        (
+            {"status": "completed"},
+            ["SUMMARY:Cheese", "STATUS:COMPLETED"],
+            "0",
+            {**RESULT_ITEM, "status": "completed"},
+        ),
         (
             {"rename": "Swiss Cheese", "status": "needs_action"},
             ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
             "1",
+            {**RESULT_ITEM, "summary": "Swiss Cheese"},
         ),
+        (
+            {"due_date": "2023-11-18"},
+            ["SUMMARY:Cheese", "DUE:20231118"],
+            "1",
+            {**RESULT_ITEM, "due": "2023-11-18"},
+        ),
+        (
+            {"due_date_time": "2023-11-18T08:30:00-06:00"},
+            ["SUMMARY:Cheese", "DUE:20231118T143000Z"],
+            "1",
+            {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
+        ),
+        (
+            {"description": "Make sure to get Swiss"},
+            ["SUMMARY:Cheese", "DESCRIPTION:Make sure to get Swiss"],
+            "1",
+            {**RESULT_ITEM, "description": "Make sure to get Swiss"},
+        ),
+    ],
+    ids=[
+        "rename",
+        "status_needs_action",
+        "status_completed",
+        "rename_status",
+        "due_date",
+        "due_date_time",
+        "description",
     ],
 )
 async def test_update_item(
@@ -259,6 +310,7 @@ async def test_update_item(
     update_data: dict[str, Any],
     expected_ics: list[str],
     expected_state: str,
+    expected_item: dict[str, Any],
 ) -> None:
     """Test creating a an item on the list."""
 
@@ -294,6 +346,16 @@ async def test_update_item(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        "get_items",
+        {},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {TEST_ENTITY: {"items": [expected_item]}}
 
 
 async def test_update_item_failure(
