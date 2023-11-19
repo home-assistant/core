@@ -30,6 +30,7 @@ async def async_setup_entry(
     coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
     ]
+    added_devices: list[str] = []
 
     def _prepare_light_entity(ain: str, device: FritzhomeDevice) -> FritzboxLight:
         supported_color_temps = device.get_color_temps()
@@ -44,13 +45,14 @@ async def async_setup_entry(
 
     def _add_entities() -> None:
         """Add devices."""
-        async_add_entities(
-            [
-                _prepare_light_entity(ain, device)
-                for ain, device in coordinator.data.devices.items()
-                if ain in coordinator.new_devices and device.has_lightbulb
-            ]
-        )
+        entities: list[FritzboxLight] = []
+        for ain, device in coordinator.data.devices.items():
+            if ain in added_devices:
+                continue
+            added_devices.append(ain)
+            if device.has_lightbulb:
+                entities.append(_prepare_light_entity(ain, device))
+        async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 

@@ -71,18 +71,19 @@ async def async_setup_entry(
     coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
     ]
+    added_devices: list[str] = []
 
     def _add_entities() -> None:
         """Add devices."""
-        async_add_entities(
-            [
-                FritzboxBinarySensor(coordinator, ain, description)
-                for ain, device in coordinator.data.devices.items()
-                if ain in coordinator.new_devices
-                for description in BINARY_SENSOR_TYPES
-                if description.suitable(device)
-            ]
-        )
+        entities: list[FritzboxBinarySensor] = []
+        for ain, device in coordinator.data.devices.items():
+            if ain in added_devices:
+                continue
+            added_devices.append(ain)
+            for description in BINARY_SENSOR_TYPES:
+                if description.suitable(device):
+                    entities.append(FritzboxBinarySensor(coordinator, ain, description))
+        async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 

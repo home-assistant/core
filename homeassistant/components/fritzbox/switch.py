@@ -19,16 +19,18 @@ async def async_setup_entry(
     coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
     ]
+    added_devices: list[str] = []
 
     def _add_entities() -> None:
         """Add devices."""
-        async_add_entities(
-            [
-                FritzboxSwitch(coordinator, ain)
-                for ain, device in coordinator.data.devices.items()
-                if ain in coordinator.new_devices and device.has_switch
-            ]
-        )
+        entities: list[FritzboxSwitch] = []
+        for ain, device in coordinator.data.devices.items():
+            if ain in added_devices:
+                continue
+            added_devices.append(ain)
+            if device.has_switch:
+                entities.append(FritzboxSwitch(coordinator, ain))
+        async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
