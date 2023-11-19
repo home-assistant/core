@@ -11,6 +11,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError, HTTPE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
@@ -37,6 +38,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.fritz: Fritzhome = hass.data[DOMAIN][self.entry.entry_id][CONF_CONNECTIONS]
         self.configuration_url = self.fritz.get_prefixed_host()
         self.has_templates = has_templates
+        self.new_device_found = False
+        self.new_device_signal = f"{DOMAIN}_{entry.unique_id}_new_device"
 
         super().__init__(
             hass,
@@ -44,6 +47,15 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             name=entry.entry_id,
             update_interval=timedelta(seconds=30),
         )
+
+        self.data = FritzboxCoordinatorData({}, {})
+        self.async_add_listener(self._notify_about_new_devices)
+
+    def _notify_about_new_devices(self) -> None:
+        """Send signal to platforms about new discovered device."""
+        if self.new_device_found:
+            dispatcher_send(self.hass, self.new_device_signal)
+            self.new_device_found = False
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
@@ -80,12 +92,16 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 device.present = False
 
             device_data[device.ain] = device
+            if device.ain not in self.data.devices:
+                self.new_device_found = True
 
         template_data = {}
         if self.has_templates:
             templates = self.fritz.get_templates()
             for template in templates:
                 template_data[template.ain] = template
+                if template.ain not in self.data.templates:
+                    self.new_device_found = True
 
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 
