@@ -162,7 +162,9 @@ NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: (
-            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "dog_cat") and not api.supported(ch, "ai_animal")
+            api.supported(ch, "ai_sensitivity")
+            and api.ai_supported(ch, "dog_cat")
+            and not api.supported(ch, "ai_animal")
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
@@ -240,7 +242,9 @@ NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=8,
         supported=lambda api, ch: (
-            api.supported(ch, "ai_delay") and api.ai_supported(ch, "dog_cat") and not api.supported(ch, "ai_animal")
+            api.supported(ch, "ai_delay")
+            and api.ai_supported(ch, "dog_cat")
+            and not api.supported(ch, "ai_animal")
         ),
         value=lambda api, ch: api.ai_delay(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "dog_cat"),
