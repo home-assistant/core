@@ -492,8 +492,6 @@ class HoneywellUSThermostat(ClimateEntity):
             try:
                 await self._data.client.login()
                 await self._device.refresh()
-                self._attr_available = True
-                self._retry = 0
 
             except (
                 AuthError,
@@ -503,10 +501,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
 
-        try:
-            await self._device.refresh()
             self._attr_available = True
             self._retry = 0
+
+        try:
+            await self._device.refresh()
 
         except UnauthorizedError:
             await _login()
@@ -517,3 +516,6 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except UnexpectedResponse:
             pass
+
+        self._attr_available = True
+        self._retry = 0
