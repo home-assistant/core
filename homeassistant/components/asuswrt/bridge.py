@@ -41,6 +41,7 @@ from .const import (
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
+    SENSORS_TEMPERATURES_LEGACY,
 )
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
@@ -277,7 +278,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
         availability = await self._api.async_find_temperature_commands()
-        return [SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]]
+        return [SENSORS_TEMPERATURES_LEGACY[i] for i in range(3) if availability[i]]
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
     async def _get_bytes(self) -> Any:
