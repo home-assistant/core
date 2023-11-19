@@ -9,6 +9,8 @@ class QuotableCard extends HTMLElement {
     this.DEFAULT_AUTHOR = "Quotable";
     this.DEFAULT_QUOTE =
       "Today is a gift, that's why they call it the present. Make the most of it!";
+    this.quotes = [];
+    this.quoteIndex = 0;
   }
 
   set hass(hass) {
@@ -16,7 +18,6 @@ class QuotableCard extends HTMLElement {
 
     if (this._hass) {
       this.updateQuoteAndAuthor();
-      this.addPopUp();
     }
   }
 
@@ -39,23 +40,45 @@ class QuotableCard extends HTMLElement {
       if (entityState && entityState.attributes) {
         const attributes = entityState.attributes;
 
-        const quotes = JSON.parse(attributes.quotes) || [];
+        const newQuotes = JSON.parse(attributes.quotes) || [];
 
-        // Use the first quote and author from the state attributes
-        const quote =
-          quotes.length > 0 ? quotes[0].content : this.DEFAULT_QUOTE;
-        const author =
-          quotes.length > 0 ? quotes[0].author : this.DEFAULT_AUTHOR;
-
-        this.render(quote, author);
+        if (newQuotes.length > 0) {
+          this.quotes = newQuotes;
+          const quote = this.quotes[this.quoteIndex].content;
+          const author = this.quotes[this.quoteIndex].author;
+          this.render(quote, author);
+        } else {
+          this.fetchNewQuote();
+        }
       }
     } catch (error) {
+      // Show a default quote if update error
       this.render(this.DEFAULT_QUOTE, this.DEFAULT_AUTHOR);
+      console.log("error caought in update quote");
     } finally {
       this.updateInProgress = false;
     }
   }
 
+  async fetchNewQuote() {
+    try {
+      const serviceData = {
+        entity_id: this._config.entity,
+      };
+
+      // Call quotable service to fetch a new quote
+      const response = await this._hass.callService(
+        "quotable",
+        "fetch_a_quote",
+        serviceData
+      );
+
+      // Render the response directly
+      this.render(response.content, response.author);
+    } catch (error) {
+      console.error("Error fetching new quotes:", error);
+    }
+  }
   //Uodate card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
     if (!this.content) {
@@ -109,27 +132,6 @@ class QuotableCard extends HTMLElement {
       `;
       this.content = this.querySelector(".background-image");
     }
-  }
-
-  addPopUp() {
-    if (!this._clickListenerAdded) {
-      this.addEventListener("click", () => {
-        console.log("Clicked! Opening popup...");
-        this._openPopup();
-      });
-      this._clickListenerAdded = true;
-    }
-  }
-
-  _openPopup() {
-    const popupData = {
-      title: "Quotable settings",
-      content: [
-        //Pop up form elements go here
-      ],
-    };
-
-    this._hass.callService("browser_mod", "popup", popupData);
   }
 
   getCardSize() {
