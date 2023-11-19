@@ -66,11 +66,14 @@ class HolidayCalendarEntity(CalendarEntity):
 
         obj_holidays = country_holidays(self._country, subdiv=self._province)
         available_languages = obj_holidays.supported_languages
-        self._default_language = (
-            hass.config.language
-            if hass.config.language in available_languages
-            else obj_holidays.default_language
-        )
+
+        if hass.config.language in available_languages:
+            self._default_language = hass.config.language
+        else:
+            self._default_language = obj_holidays.default_language or "en_US"
+
+        if self._default_language == "en" and self._country != "CA":
+            self._default_language = "en_US"
 
     @property
     def event(self) -> CalendarEvent | None:
