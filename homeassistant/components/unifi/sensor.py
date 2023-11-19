@@ -19,6 +19,7 @@ from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
+from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
@@ -46,6 +47,12 @@ from .entity import (
     async_device_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
+)
+
+WIRED_DISCONNECTION = (EventKey.WIRED_CLIENT_DISCONNECTED,)
+WIRELESS_DISCONNECTION = (
+    EventKey.WIRELESS_CLIENT_DISCONNECTED,
+    EventKey.WIRELESS_GUEST_DISCONNECTED,
 )
 
 
@@ -159,8 +166,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, _: controller.available,
         device_info_fn=async_client_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
+        event_is_on=(WIRED_DISCONNECTION + WIRELESS_DISCONNECTION),
+        event_to_subscribe=(WIRED_DISCONNECTION + WIRELESS_DISCONNECTION),
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         should_poll=False,
@@ -179,8 +186,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, _: controller.available,
         device_info_fn=async_client_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
+        event_is_on=(WIRED_DISCONNECTION + WIRELESS_DISCONNECTION),
+        event_to_subscribe=(WIRED_DISCONNECTION + WIRELESS_DISCONNECTION),
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         should_poll=False,
@@ -369,3 +376,17 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         obj = description.object_fn(self.controller.api, self._obj_id)
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
+
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Event subscription callback."""
+        if event.mac != self._obj_id:
+            return
+        if (
+            self.entity_description.event_is_on is None
+            or event.key not in self.entity_description.event_is_on
+        ):
+            return
+        if self._attr_native_value != 0:
+            self._attr_native_value = 0
+            self.async_write_ha_state()
