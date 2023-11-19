@@ -63,9 +63,11 @@ def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert TodoItem dataclass items to dictionary of attributes for ical consumption."""
     result: dict[str, str] = {}
     for name, value in obj:
+        if value is None:
+            continue
         if name == "status":
             result[name] = ICS_TODO_STATUS_MAP_INV[value]
-        elif value is not None:
+        else:
             result[name] = value
     return result
 
