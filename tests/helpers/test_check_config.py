@@ -82,8 +82,8 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
 
         error = CheckConfigError(
             (
-                f"Invalid config for [homeassistant] at {YAML_CONFIG_FILE}, line 2:"
-                " not a valid value for dictionary value 'unit_system', got 'bad'."
+                f"Invalid config for 'homeassistant' at {YAML_CONFIG_FILE}, line 2:"
+                " not a valid value for dictionary value 'unit_system', got 'bad'"
             ),
             "homeassistant",
             {"unit_system": "bad"},
@@ -190,9 +190,9 @@ async def test_component_import_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("component", "errors", "warnings", "message"),
     [
-        ("frontend", 1, 0, "'blah' is an invalid option for [frontend]"),
-        ("http", 1, 0, "'blah' is an invalid option for [http]"),
-        ("logger", 0, 1, "'blah' is an invalid option for [logger]"),
+        ("frontend", 1, 0, "'blah' is an invalid option for 'frontend'"),
+        ("http", 1, 0, "'blah' is an invalid option for 'http'"),
+        ("logger", 0, 1, "'blah' is an invalid option for 'logger'"),
     ],
 )
 async def test_component_schema_error(
@@ -379,8 +379,8 @@ async def test_package_invalid(hass: HomeAssistant) -> None:
 
         warning = CheckConfigError(
             (
-                "Package p1 setup failed. Integration group cannot be merged. Expected a "
-                "dict."
+                "Setup of package 'p1' failed: integration 'group' cannot be merged"
+                ", expected a dict"
             ),
             "homeassistant.packages.p1.group",
             {"group": ["a"]},
@@ -453,7 +453,7 @@ action:
             HomeAssistantError("Broken"),
             0,
             1,
-            "Invalid config for [bla] at configuration.yaml, line 11: Broken",
+            "Invalid config for 'bla' at configuration.yaml, line 11: Broken",
         ),
     ],
 )
