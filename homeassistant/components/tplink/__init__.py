@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from kasa import SmartDevice, SmartDeviceException
+from kasa import DeviceType, SmartDevice, SmartDeviceException
 from kasa.discover import Discover
 
 from homeassistant import config_entries
@@ -27,7 +27,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_DEVICE_TYPE, DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
@@ -86,10 +86,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     host = entry.data[CONF_HOST]
+    device_type = DeviceType.Unknown
+    if device_type_str := entry.data.get(CONF_DEVICE_TYPE):
+        device_type = DeviceType.from_value(device_type_str)
     try:
-        device: SmartDevice = await Discover.discover_single(host, timeout=10)
+        device: SmartDevice = await SmartDevice.connect(
+            host, device_type=device_type, timeout=10
+        )
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
+
+    # Save the device class name if it is not already saved
+    # so that we can use connect_single next time instead of discover_single
+    # to avoid UDP discovery.
+    if not entry.data.get(CONF_DEVICE_TYPE) != device.device_type.value:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_DEVICE_TYPE: device.device_type.value}
+        )
 
     found_mac = dr.format_mac(device.mac)
     if found_mac != entry.unique_id:

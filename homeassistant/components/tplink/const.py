@@ -19,4 +19,6 @@ CONF_STRIP: Final = "strip"
 CONF_SWITCH: Final = "switch"
 CONF_SENSOR: Final = "sensor"
 
+CONF_DEVICE_TYPE: Final = "device_type"
+
 PLATFORMS: Final = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]

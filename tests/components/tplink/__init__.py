@@ -1,5 +1,6 @@
 """Tests for the TP-Link component."""
 
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
@@ -62,6 +63,7 @@ def _mocked_bulb() -> SmartBulb:
     bulb.set_hsv = AsyncMock()
     bulb.set_color_temp = AsyncMock()
     bulb.protocol = _mock_protocol()
+    bulb.device_type = MagicMock(value="Bulb")
     return bulb
 
 
@@ -201,15 +203,19 @@ def _patch_discovery(device=None, no_device=False):
     return patch("homeassistant.components.tplink.Discover.discover", new=_discovery)
 
 
+@contextmanager
 def _patch_single_discovery(device=None, no_device=False):
     async def _discover_single(*args, **kwargs):
         if no_device:
             raise SmartDeviceException
         return device if device else _mocked_bulb()
 
-    return patch(
+    with patch(
         "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
-    )
+    ), patch(
+        "homeassistant.components.tplink.Discover.connect_single", new=_discover_single
+    ):
+        yield
 
 
 async def initialize_config_entry_for_device(
