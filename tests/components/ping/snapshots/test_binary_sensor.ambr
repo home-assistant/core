@@ -90,6 +90,34 @@
   })
 # ---
 # name: test_setup_and_update.1
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ping',
+        '10.10.10.10',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Ping',
+    'model': None,
+    'name': '10.10.10.10',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_setup_and_update.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -106,7 +134,7 @@
     'state': 'on',
   })
 # ---
-# name: test_setup_and_update.2
+# name: test_setup_and_update.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
