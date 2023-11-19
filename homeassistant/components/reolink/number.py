@@ -22,24 +22,16 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
 
-@dataclass
-class ReolinkNumberEntityDescriptionMixin:
-    """Mixin values for Reolink number entities."""
-
-    value: Callable[[Host, int], float | None]
-    method: Callable[[Host, int, float], Any]
-
-
-@dataclass
-class ReolinkNumberEntityDescription(
-    NumberEntityDescription, ReolinkNumberEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkNumberEntityDescription(NumberEntityDescription):
     """A class that describes number entities."""
 
+    get_max_value: Callable[[Host, int], float] | None = None
+    get_min_value: Callable[[Host, int], float] | None = None
+    method: Callable[[Host, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
     supported: Callable[[Host, int], bool] = lambda api, ch: True
-    get_min_value: Callable[[Host, int], float] | None = None
-    get_max_value: Callable[[Host, int], float] | None = None
+    value: Callable[[Host, int], float | None]
 
 
 NUMBER_ENTITIES = (

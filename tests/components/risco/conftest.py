@@ -172,6 +172,16 @@ def connect_with_error(exception):
 
 
 @pytest.fixture
+def connect_with_single_error(exception):
+    """Fixture to simulate error on connect."""
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.connect",
+        side_effect=[exception, None],
+    ):
+        yield
+
+
+@pytest.fixture
 async def setup_risco_local(hass, local_config_entry):
     """Set up a local Risco integration for testing."""
     with patch(

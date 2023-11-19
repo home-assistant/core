@@ -1773,7 +1773,10 @@ class Service:
         self,
         func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None,
         domain: str,
@@ -1865,7 +1868,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
     ) -> None:
@@ -1884,7 +1887,10 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
