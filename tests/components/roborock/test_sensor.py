@@ -1,5 +1,5 @@
 """Test Roborock Sensors."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from roborock import DeviceData, HomeDataDevice
 from roborock.cloud_api import RoborockMqttClient
@@ -65,37 +65,29 @@ async def test_listener_update(
         USER_DATA, DeviceData(device=HomeDataDevice("abc123", "", "", "", ""), model="")
     )
     # Test Status
-    with patch(
-        "roborock.protocol._Parser.parse",
-        return_value=(
+    with patch("roborock.api.AttributeCache.value", STATUS.as_dict()):
+        # Symbolizes a mqtt message coming in
+        client.on_message_received(
             [
                 RoborockMessage(
                     protocol=RoborockMessageProtocol.GENERAL_REQUEST,
                     payload=b'{"t": 1699464794, "dps": {"121": 5}}',
                 )
-            ],
-            b"",
-        ),
-    ), patch("roborock.api.AttributeCache.value", STATUS.as_dict()):
-        # Symbolizes a mqtt message coming in
-        client.on_message(None, None, AsyncMock())
+            ]
+        )
     # Test consumable
     assert hass.states.get("sensor.roborock_s7_maxv_filter_time_left").state == str(
         FILTER_REPLACE_TIME - 74382
     )
-    with patch(
-        "roborock.protocol._Parser.parse",
-        return_value=(
+    with patch("roborock.api.AttributeCache.value", CONSUMABLE.as_dict()):
+        client.on_message_received(
             [
                 RoborockMessage(
                     protocol=RoborockMessageProtocol.GENERAL_REQUEST,
                     payload=b'{"t": 1699464794, "dps": {"127": 743}}',
                 )
-            ],
-            b"",
-        ),
-    ), patch("roborock.api.AttributeCache.value", CONSUMABLE.as_dict()):
-        client.on_message(None, None, AsyncMock())
+            ]
+        )
     assert hass.states.get("sensor.roborock_s7_maxv_filter_time_left").state == str(
         FILTER_REPLACE_TIME - 743
     )
