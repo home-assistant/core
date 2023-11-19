@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         child_coordinators = [
             # The child coordinators only update energy data so we can
             # set a longer update interval to avoid flooding the device
-            TPLinkDataUpdateCoordinator(hass, child, timedelta(minutes=2))
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60))
             for child in device.children
         ]
 
