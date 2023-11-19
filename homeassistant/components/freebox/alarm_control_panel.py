@@ -28,6 +28,7 @@ FREEBOX_TO_STATUS = {
     "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
     "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
     "alert": STATE_ALARM_TRIGGERED,
+    "idle": STATE_ALARM_DISARMED,
 }
 
 
@@ -101,4 +102,4 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         if state:
             self._attr_state = FREEBOX_TO_STATUS.get(state)
         else:
-            self._attr_state = STATE_ALARM_DISARMED
+            self._attr_state = None
