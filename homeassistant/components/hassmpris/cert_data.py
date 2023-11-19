@@ -15,7 +15,7 @@ from .const import CONF_CLIENT_CERT, CONF_CLIENT_KEY, CONF_TRUST_CHAIN
 
 def _load_cert_chain(chain: bytes) -> list[Certificate]:
     start_line = b"-----BEGIN CERTIFICATE-----"
-    cert_slots = chain.split(start_line)
+    cert_slots: list[bytes] = chain.split(start_line)
     certificates: list[Certificate] = []
     for single_pem_cert in cert_slots[1:]:
         loaded = x509.load_pem_x509_certificate(start_line + single_pem_cert)

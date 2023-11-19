@@ -1,9 +1,9 @@
 """The MPRIS media playback remote control integration."""
 from __future__ import annotations
 
-import datetime
-from typing import cast
+from typing import Any, cast
 
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 import hassmpris_client
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,9 +13,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .cert_data import CertStore
 from .const import CONF_HOST, CONF_MPRIS_PORT, DOMAIN, LOGGER as _LOGGER
-from .models import HassmprisData
+from .models import ConfigEntryData, HassmprisData
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 
@@ -34,11 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Authentication data is missing -- must reauth"
         ) from exc
 
+    entry_data = cast(ConfigEntryData, entry.data)
     clnt = hassmpris_client.AsyncMPRISClient(
-        entry.data[CONF_HOST],
-        entry.data[CONF_MPRIS_PORT],
+        entry_data[CONF_HOST],
+        entry_data[CONF_MPRIS_PORT],
         client_cert,
-        client_key,
+        cast(RSAPrivateKey, client_key),
         trust_chain,
     )
     try:
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         clnt, [], None, None
     )
 
-    async def _run_unloaders(*unused_args):
+    async def _run_unloaders(*unused_args: Any) -> None:
         _LOGGER.debug("Running unloaders")
         while component_data.unloaders:
             await component_data.unloaders.pop()()
@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    async def async_close_client():
+    async def async_close_client() -> None:
         _LOGGER.debug("Closing connection to agent")
         await component_data.client.close()
         _LOGGER.debug("Connection closed")

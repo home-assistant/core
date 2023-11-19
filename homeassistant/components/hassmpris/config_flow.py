@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 import hassmpris_client
 import pskca
@@ -36,6 +36,7 @@ from .const import (
     STEP_USER,
     STEP_ZEROCONF_CONFIRM,
 )
+from .models import ConfigEntryData
 
 
 def _conf_schema_factory(defaults: dict[str, Any]) -> vol.Schema:
@@ -72,7 +73,7 @@ def _conf_schema_factory(defaults: dict[str, Any]) -> vol.Schema:
     )
 
 
-def _genuid(host, cakes_port, mpris_port):
+def _genuid(host: str, cakes_port: int, mpris_port: int) -> str:
     return f"{host}:{cakes_port}:{mpris_port}"
 
 
@@ -94,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._count = 0
         self._host: str = DEF_HOST
@@ -108,14 +109,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._cakes_client: hassmpris_client.AsyncCAKESClient | None = None
 
     @callback
-    def _get_data(self):
-        data = {
-            CONF_UNIQUE_ID: self._unique_id,
-            CONF_HOST: self._host,
-            CONF_CAKES_PORT: self._cakes_port,
-            CONF_MPRIS_PORT: self._mpris_port,
-        }
-        return data
+    def _get_data(self) -> ConfigEntryData:
+        assert self._unique_id is not None
+        return cast(
+            ConfigEntryData,
+            {
+                CONF_UNIQUE_ID: self._unique_id,
+                CONF_HOST: self._host,
+                CONF_CAKES_PORT: self._cakes_port,
+                CONF_MPRIS_PORT: self._mpris_port,
+            },
+        )
 
     @callback
     def _get_cert_data(
@@ -133,31 +137,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         cakes_port: int,
         mpris_port: int,
         unique_id: str | None = None,
-    ):
+    ) -> None:
         self._title = title
         self._host = host
         self._cakes_port = cakes_port
         self._mpris_port = mpris_port
         self._unique_id = unique_id
 
-    def _get_unique_id_by_connection_data(self):
+    def _get_unique_id_by_connection_data(self) -> str:
         return _genuid(self._host, self._cakes_port, self._mpris_port)
 
-    def _get_unique_id_by_zeroconf(self):
+    def _get_unique_id_by_zeroconf(self) -> str | None:
         return self._unique_id
 
-    def _get_any_unique_id(self):
+    def _get_any_unique_id(self) -> str:
         if id_ := self._get_unique_id_by_zeroconf():
             return id_
         return self._get_unique_id_by_connection_data()
 
-    def _update_server_data(self, host: str, cakes_port: int, mpris_port: int):
+    def _update_server_data(self, host: str, cakes_port: int, mpris_port: int) -> None:
         self._host = host
         self._cakes_port = cakes_port
         self._mpris_port = mpris_port
 
-    async def _create_entry(self):
-        async def persist_cert_data(unique_id: str):
+    async def _create_entry(self) -> FlowResult:
+        async def persist_cert_data(unique_id: str) -> None:
             """Persist the certificate data just generated in this flow."""
             await CertStore(
                 self.hass,
@@ -170,6 +174,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if zeroconf_uid := self._get_unique_id_by_zeroconf():
             if existing_entry := await self.async_set_unique_id(zeroconf_uid):
                 _LOGGER.debug("Existing entry, unique ID: %s", existing_entry.unique_id)
+                assert existing_entry.unique_id is not None  # for type checker
                 await persist_cert_data(existing_entry.unique_id)
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -180,6 +185,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._get_unique_id_by_connection_data()
         ):
             _LOGGER.debug("Existing entry, generated ID: %s", existing_entry.unique_id)
+            assert existing_entry.unique_id is not None  # for type checker
             await persist_cert_data(existing_entry.unique_id)
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -235,8 +241,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Ignoring invalid zeroconf announcement: %s", discovery_info)
             return self.async_abort(reason=REASON_INVALID_ZEROCONF)
 
+        split_discovery = discovery_info.name.split(".")
         self._set_data(
-            discovery_info.name.split(".")[0],
+            split_discovery[0],
             discovery_info.host,
             int(discovery_info.properties[CONF_CAKES_PORT]),
             int(discovery_info.port or DEF_MPRIS_PORT),

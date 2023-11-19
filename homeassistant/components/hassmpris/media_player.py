@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 import json
 import re
-from typing import Any, NotRequired, TypedDict, cast
+from typing import Any, Final, Union, cast
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -36,15 +36,15 @@ from .const import (
     LOGGER as _LOGGER,
 )
 
-PLATFORM = "media_player"
-
-PLAYER_STATE_MAP = {
-    mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,
-    mpris_pb2.PlayerStatus.APPEARED: MediaPlayerState.IDLE,
-    mpris_pb2.PlayerStatus.PLAYING: MediaPlayerState.PLAYING,
-    mpris_pb2.PlayerStatus.PAUSED: MediaPlayerState.PAUSED,
-    mpris_pb2.PlayerStatus.STOPPED: MediaPlayerState.IDLE,
+PLAYER_STATE_MAP: dict[Any, MediaPlayerState] = {
+    mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,  # type: ignore[attr-defined]
+    mpris_pb2.PlayerStatus.APPEARED: MediaPlayerState.IDLE,  # type: ignore[attr-defined]
+    mpris_pb2.PlayerStatus.PLAYING: MediaPlayerState.PLAYING,  # type: ignore[attr-defined]
+    mpris_pb2.PlayerStatus.PAUSED: MediaPlayerState.PAUSED,  # type: ignore[attr-defined]
+    mpris_pb2.PlayerStatus.STOPPED: MediaPlayerState.IDLE,  # type: ignore[attr-defined]
 }
+AVAILABLE = "available"
+UNAVAILABLE = "unavailable"
 
 SUPPORTED_MINIMAL = (
     MediaPlayerEntityFeature.PAUSE
@@ -63,6 +63,8 @@ SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
 # This will become a setting configurable through the UI
 # once it's figured out how to add settings.
 REMOVE_CLONES_WHILE_RUNNING = False
+
+WAIT_BETWEEN_RECONNECTS: Final = 5
 
 
 def _get_player_id(
@@ -112,7 +114,7 @@ async def async_setup_entry(
     component_data.unloaders.append(_async_stop_manager)
 
 
-class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
+class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
     """Represents an MPRIS media player entity."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
@@ -121,23 +123,24 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     _attr_should_poll: bool = False
     _attr_has_entity_name = True
 
+    coordinator_context: str
+
     def __init__(
         self,
         coordinator: MPRISCoordinator,
+        context: str,
         integration_id: str,
-        player_id: str,
     ) -> None:
         """Initialize the entity.
 
         Arguments:
           coordinator: the coordinator handling this entity
           integration_id: unique identifier of the integration
-          player_id: the name / unique identifier of the player
+          context: the name / unique identifier of the player,
+                   also used as the coordinator context
           initial_state: the (optional) initial state of the entity
         """
-        super().__init__(coordinator)
-        self.coordinator = coordinator
-        self.player_id = player_id
+        super().__init__(coordinator, context=context)
         self._integration_id = integration_id
         self._attr_available = True
         self._metadata: dict[str, Any] = {}
@@ -147,115 +150,137 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if self.player_id not in self.coordinator.data:
+        if self.coordinator_context not in self.coordinator.data:
             # This player has been removed.  Ignore this.
             return
 
-        data = self.coordinator.data[self.player_id]
-
         updated = False
 
-        if "available" in data:
-            if self._attr_available != data["available"]:
-                self._debug(
-                    "Updating availability from %s to %s",
-                    self._attr_available,
-                    data["available"],
-                )
-                self._attr_available = data["available"]
-                if not self._attr_available:
-                    self._attr_state = MediaPlayerState.OFF
-                updated = True
-                del data["available"]
-
-        if "state" in data:
-            if self._attr_state != data["state"]:
-                from_playing_to_paused = (
-                    self._attr_state == MediaPlayerState.PLAYING
-                    and data["state"] == MediaPlayerState.PAUSED
-                )
-                self._debug(
-                    "Updating state from %s to %s", self._attr_state, data["state"]
-                )
-                self._attr_state = data["state"]
-                if (
-                    from_playing_to_paused
-                    and self._attr_media_position_updated_at is not None
-                    and self._attr_media_position is not None
-                ):
-                    elapsed = dt_util.utcnow() - self._attr_media_position_updated_at
-                    self._attr_media_position += round(
-                        self._attr_playback_rate * elapsed.total_seconds()
-                    )
-                    self._attr_media_position_updated_at = dt_util.utcnow()
-                    self._debug(
-                        "Artificially setting media position to %s",
-                        self._attr_media_position,
-                    )
-                updated = True
-            del data["state"]
-
-        if "metadata" in data:
-            if self._metadata != data["metadata"]:
-                self._debug("Updating metadata")
-                self._metadata = data["metadata"]
-                if "mpris:length" in data["metadata"]:
-                    length: int | None = round(
-                        float(self._metadata["mpris:length"]) / 1000 / 1000
-                    )
-                    if length is not None and length <= 0:
-                        length = None
-                else:
-                    length = None
-                self._attr_media_duration = length
-                self._debug("Setting media duration to %s", self._attr_media_duration)
-                updated = True
-            del data["metadata"]
-
-        if "position" in data:
-            new_position = None if data["position"] is None else round(data["position"])
-            if self._attr_media_duration is None:
-                if self._attr_media_position is not None:
-                    # Media duration is None, position must be forced to None.
-                    self._debug("Nullifying media position")
-                    self._attr_media_position = None
-            elif self._attr_media_position != new_position:
-                # Media duration is known, and position has changed.
-                self._attr_media_position = (
-                    new_position if new_position is not None else None
-                )
-                self._debug("Setting media position to %s", self._attr_media_position)
-            # We update the time that the position update was sent
-            # from the server, so that UI can keep accurate track
-            # of where the play head is.  Think of someone seeking
-            # to second 33 of a music track twice in a row.  If we
-            # did not update this timestamp, then the play head UI
-            # shows would be in second 66.
+        def reset_player_attributes() -> None:
+            self._attr_media_position = None
             self._attr_media_position_updated_at = dt_util.utcnow()
-            updated = True
-            del data["position"]
+            self._attr_media_duration = None
+            self._attr_playback_rate = 1.0
+            self._metadata = {}
 
-        if "mpris_properties" in data:
-            updated = self._update_mpris_properties(data["mpris_properties"]) or updated
-            del data["mpris_properties"]
+        while self.coordinator.data[self.coordinator_context]:
+            updated = True
+            data = self.coordinator.data[self.coordinator_context].pop(0)
+
+            if data in (AVAILABLE, UNAVAILABLE):
+                availability = data == AVAILABLE
+                if self._attr_available != availability:
+                    self._debug(
+                        "Updating availability from %s to %s",
+                        self._attr_available,
+                        availability,
+                    )
+                    if availability:
+                        # Player has just come back from unavailability,
+                        # but we don't yet know its state.  Provisionally
+                        # consider the player off until its status update
+                        # appears here.
+                        self._attr_state = MediaPlayerState.OFF
+                        reset_player_attributes()
+                    self._attr_available = availability
+                    if not self._attr_available:
+                        # Player has stopped being available, probably
+                        # because the agent went AWOL.
+                        # Its state should be off, because that is what
+                        # its state must be while the agent is away.
+                        self._attr_state = MediaPlayerState.OFF
+                        reset_player_attributes()
+                continue
+
+            if data.status != mpris_pb2.PlayerStatus.UNKNOWN:  # type: ignore[attr-defined]
+                state = PLAYER_STATE_MAP[data.status]  # type: ignore[attr-defined]
+                if self._attr_state != state:
+                    from_playing_to_paused = (
+                        self._attr_state == MediaPlayerState.PLAYING
+                        and state == MediaPlayerState.PAUSED
+                    )
+                    self._debug("Updating state from %s to %s", self._attr_state, state)
+                    self._attr_state = state
+                    if (
+                        from_playing_to_paused
+                        and self._attr_media_position_updated_at is not None
+                        and self._attr_media_position is not None
+                    ):
+                        elapsed = (
+                            dt_util.utcnow() - self._attr_media_position_updated_at
+                        )
+                        self._attr_media_position += round(
+                            self._attr_playback_rate * elapsed.total_seconds()
+                        )
+                        self._attr_media_position_updated_at = dt_util.utcnow()
+                        self._debug(
+                            "Artificially setting media position to %s",
+                            self._attr_media_position,
+                        )
+                    elif self._attr_state == MediaPlayerState.OFF:
+                        reset_player_attributes()
+
+            if data.json_metadata:  # type: ignore[attr-defined]
+                metadata = json.loads(data.json_metadata)  # type: ignore[attr-defined]
+                if self._metadata != metadata:
+                    self._debug("Updating metadata")
+                    self._metadata = metadata
+                    if "mpris:length" in metadata:
+                        length: int | None = round(
+                            float(self._metadata["mpris:length"]) / 1000 / 1000
+                        )
+                        if length is not None and length <= 0:
+                            length = None
+                    else:
+                        length = None
+                    self._attr_media_duration = length
+                    self._debug(
+                        "Setting media duration to %s", self._attr_media_duration
+                    )
+
+            if data.HasField("seeked"):  # type: ignore[attr-defined]
+                position = data.seeked.position  # type: ignore[attr-defined]
+                new_position = None if position is None else round(position)
+                if self._attr_media_duration is None:
+                    if self._attr_media_position is not None:
+                        # Media duration is None, position must be forced to None.
+                        self._debug("Nullifying media position")
+                        self._attr_media_position = None
+                elif self._attr_media_position != new_position:
+                    # Media duration is known, and position has changed.
+                    self._attr_media_position = (
+                        new_position if new_position is not None else None
+                    )
+                    self._debug(
+                        "Setting media position to %s", self._attr_media_position
+                    )
+                # We update the time that the position update was sent
+                # from the server, so that UI can keep accurate track
+                # of where the play head is.  Think of someone seeking
+                # to second 33 of a music track twice in a row.  If we
+                # did not update this timestamp, then the play head UI
+                # shows would be in second 66.
+                self._attr_media_position_updated_at = dt_util.utcnow()
+
+            if data.HasField("properties"):  # type: ignore[attr-defined]
+                self._update_mpris_properties(data.properties)  # type: ignore[attr-defined]
 
         if updated:
+            self._debug("Writing HA state")
             self.async_write_ha_state()
 
     def _update_mpris_properties(
         self,
-        props: mpris_pb2.MPRISPlayerProperties,
-    ) -> bool:
+        props: mpris_pb2.MPRISPlayerProperties,  # type: ignore[valid-type]
+    ) -> None:
         """Update player properties based on incoming MPRISPlayerProperties."""
 
         feats = self._attr_supported_features
-        if props.HasField("CanControl"):
-            if not props.CanControl:
+        if props.HasField("CanControl"):  # type: ignore[attr-defined]
+            if not props.CanControl:  # type: ignore[attr-defined]
                 feats = cast(MediaPlayerEntityFeature, 0)
             else:
                 feats = SUPPORTED_MINIMAL
-
-        update_state = False
 
         for name, bitwisefield in {
             "CanPlay": MediaPlayerEntityFeature.PLAY,
@@ -264,7 +289,7 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
             "CanGoNext": MediaPlayerEntityFeature.NEXT_TRACK,
             "CanGoPrevious": MediaPlayerEntityFeature.PREVIOUS_TRACK,
         }.items():
-            if props.HasField(name):
+            if props.HasField(name):  # type: ignore[attr-defined]
                 val = getattr(props, name)
                 if val:
                     feats = feats | bitwisefield
@@ -274,24 +299,20 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
         if feats != self._attr_supported_features:
             self._debug("new feature bitfield: %s", feats)
             self._attr_supported_features = feats
-            update_state = True
 
-        if props.HasField("Rate") and props.Rate != self._attr_playback_rate:
-            self._debug("New rate: %s", props.Rate)
-            self._attr_playback_rate = props.Rate
-            update_state = True
-
-        return update_state
+        if props.HasField("Rate") and props.Rate != self._attr_playback_rate:  # type: ignore[attr-defined]
+            self._debug("New rate: %s", props.Rate)  # type: ignore[attr-defined]
+            self._attr_playback_rate = props.Rate  # type: ignore[attr-defined]
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID of this entity."""
-        return self._integration_id + "-" + self.player_id
+        return self._integration_id + "-" + self.coordinator_context
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self.player_id
+        return self.coordinator_context
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -311,35 +332,35 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Begin playback."""
         try:
-            await self.coordinator.client.play(self.player_id)
+            await self.coordinator.client.play(self.coordinator_context)
         except Exception as exc:
             raise HomeAssistantError("cannot play: %s" % exc) from exc
 
     async def async_media_pause(self) -> None:
         """Pause playback."""
         try:
-            await self.coordinator.client.pause(self.player_id)
+            await self.coordinator.client.pause(self.coordinator_context)
         except Exception as exc:
             raise HomeAssistantError("cannot pause: %s" % exc) from exc
 
     async def async_media_stop(self) -> None:
         """Stop playback."""
         try:
-            await self.coordinator.client.stop(self.player_id)
+            await self.coordinator.client.stop(self.coordinator_context)
         except Exception as exc:
             raise HomeAssistantError("cannot stop: %s" % exc) from exc
 
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         try:
-            await self.coordinator.client.next(self.player_id)
+            await self.coordinator.client.next(self.coordinator_context)
         except Exception as exc:
             raise HomeAssistantError("cannot next: %s" % exc) from exc
 
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         try:
-            await self.coordinator.client.previous(self.player_id)
+            await self.coordinator.client.previous(self.coordinator_context)
         except Exception as exc:
             raise HomeAssistantError("cannot previous: %s" % exc) from exc
 
@@ -348,7 +369,7 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
         try:
             trackid = self._metadata.get("mpris:trackid", None)
             await self.coordinator.client.set_position(
-                self.player_id,
+                self.coordinator_context,
                 trackid,
                 position,
             )
@@ -363,17 +384,11 @@ class HASSMPRISEntity(CoordinatorEntity, MediaPlayerEntity):
         return {ATTR_PLAYBACK_RATE: self._attr_playback_rate}
 
 
-class MPRISCoordinatorUpdate(TypedDict):
-    """The type of update sent through MPRISCoordinator.data to entities."""
-
-    available: NotRequired[bool]
-    state: NotRequired[MediaPlayerState]
-    metadata: NotRequired[dict[str, Any]]
-    mpris_properties: NotRequired[mpris_pb2.MPRISPlayerProperties]
-    position: NotRequired[float | None]
-
-
-class MPRISCoordinator(DataUpdateCoordinator):
+class MPRISCoordinator(
+    DataUpdateCoordinator[
+        dict[str, list[Union[mpris_pb2.MPRISPlayerUpdate, AVAILABLE, UNAVAILABLE]]]  # type: ignore[valid-type]
+    ]
+):
     """The entity manager manages MPRIS media player entities.
 
     This class is responsible for maintaining the known player entities
@@ -400,12 +415,15 @@ class MPRISCoordinator(DataUpdateCoordinator):
           async_add_entities: callback to add entities async
         """
         super().__init__(hass, _LOGGER, name="MPRIS")
-        self.data: dict[str, MPRISCoordinatorUpdate] = {}
+        self.data: dict[  # type: ignore[valid-type]
+            str, list[Union[mpris_pb2.MPRISPlayerUpdate, AVAILABLE, UNAVAILABLE]]
+        ] = {}
         self.config_entry = config_entry
         self.async_add_entities = async_add_entities
         self._client = mpris_client
         self._shutdown: asyncio.Future[bool] = asyncio.Future()
         self._started = False
+        self._deferred_task: asyncio.Task | None = None
 
     @property
     def client(self) -> hassmpris_client.AsyncMPRISClient:
@@ -453,7 +471,7 @@ class MPRISCoordinator(DataUpdateCoordinator):
                     cycle_update_count,
                     exc,
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(WAIT_BETWEEN_RECONNECTS)
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 lg = _LOGGER.exception if type(exc) not in seen_excs else _LOGGER.debug
                 seen_excs[type(exc)] = True
@@ -462,7 +480,7 @@ class MPRISCoordinator(DataUpdateCoordinator):
                     cycle_update_count,
                     exc,
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(WAIT_BETWEEN_RECONNECTS)
         await self._shutdown
         _LOGGER.debug("Streaming updates ended")
 
@@ -484,16 +502,31 @@ class MPRISCoordinator(DataUpdateCoordinator):
 
     def _mark_all_entities_unavailable(self) -> None:
         for player_id in self.data:
-            self.data[player_id]["available"] = False
+            self.data[player_id].append(UNAVAILABLE)
 
     def _mark_all_entities_available(self) -> None:
         for player_id in self.data:
-            self.data[player_id]["available"] = True
+            self.data[player_id].append(AVAILABLE)
+
+    async def _dispatch_deferred_update(self) -> None:
+        """Coalesce updates of data sent by the agent over the wire.
+
+        Coalescence happens in increments of 20 milliseconds.
+        """
+        if self._deferred_task is not None:
+            self._deferred_task.cancel()
+
+        async def update() -> None:
+            await asyncio.sleep(0.02)
+            self.async_set_updated_data(self.data)
+            self._deferred_task = None
+
+        self._deferred_task = self.hass.loop.create_task(update())
 
     async def _monitor_updates(self) -> AsyncGenerator[None, None]:
         """Obtain a real-time feed of player updates."""
+        started_initial_sync = False
         try:
-            started_initial_sync = False
             finished_initial_sync = False
             async for update in self.client.stream_updates(
                 timeout=round(EXPECTED_HEARTBEAT_FREQUENCY * 1.5)
@@ -501,13 +534,13 @@ class MPRISCoordinator(DataUpdateCoordinator):
                 if not started_initial_sync:
                     # First update.
                     started_initial_sync = True
-                if update.HasField("player"):
+                if update.HasField("player"):  # type: ignore[attr-defined]
                     # There's a player update incoming.
-                    updated = self._handle_update(update.player)
-                    if finished_initial_sync and updated:
+                    self._handle_update(update.player)  # type: ignore[attr-defined]
+                    if finished_initial_sync:
                         # Every update must be broadcast to subscribers,
                         # once we have finished initial syncing.
-                        self.async_set_updated_data(self.data)
+                        await self._dispatch_deferred_update()
                 elif not finished_initial_sync:
                     # We got a player update message with no player field,
                     # or a heartbeat, during the initial sync phase.
@@ -520,7 +553,7 @@ class MPRISCoordinator(DataUpdateCoordinator):
                     self._add_players_not_running()
                     self._mark_all_entities_available()
                     finished_initial_sync = True
-                    self.async_set_updated_data(self.data)
+                    await self._dispatch_deferred_update()
                 yield
         finally:
             # Whether due to error or request, we no longer get updates.
@@ -530,60 +563,38 @@ class MPRISCoordinator(DataUpdateCoordinator):
                 # The loop synced entities successfully at least once
                 # Time to mark any available entities as unavailable.
                 self._mark_all_entities_unavailable()
-                self.async_set_updated_data(self.data)
+                await self._dispatch_deferred_update()
 
     def _handle_update(
         self,
-        discovery_data: mpris_pb2.MPRISUpdateReply,
-    ) -> bool:
+        discovery_data: mpris_pb2.MPRISUpdateReply,  # type: ignore[valid-type]
+    ) -> None:
         """Handle a single player update."""
         _LOGGER.debug("Handling update:")
         for line in f"{discovery_data}".splitlines():
             _LOGGER.debug("  %s", line)
-        state = MediaPlayerState.IDLE
-        player_id = discovery_data.player_id
-        updated = False
+        player_id = discovery_data.player_id  # type: ignore[attr-defined]
 
         if player_id not in self.data:
             _LOGGER.debug("Adding player %s", player_id)
             entity = HASSMPRISEntity(
                 self,
-                self.config_entry.entry_id,
                 player_id,
+                self.config_entry.entry_id,
             )
-            self.data[player_id] = {"available": True}
+            self.data[player_id] = [AVAILABLE]
             self.async_add_entities([entity])
-            updated = True
 
-        if discovery_data.status != mpris_pb2.PlayerStatus.UNKNOWN:
-            state = PLAYER_STATE_MAP[discovery_data.status]
-            _LOGGER.debug("New state of player %s: %s", player_id, state)
-            self.data[player_id]["state"] = state
-            updated = True
+        self.data[player_id].append(discovery_data)
 
-        if discovery_data.json_metadata:
-            metadata = json.loads(discovery_data.json_metadata)
-            self.data[player_id]["metadata"] = metadata
-            updated = True
-
-        if discovery_data.HasField("properties"):
-            mpris_properties = discovery_data.properties
-            self.data[player_id]["mpris_properties"] = mpris_properties
-            updated = True
-
-        if discovery_data.HasField("seeked"):
-            position = discovery_data.seeked.position
-            self.data[player_id]["position"] = position
-            updated = True
-
-        if self._should_remove(player_id) and state == MediaPlayerState.OFF:
+        if (
+            discovery_data.status == mpris_pb2.PlayerStatus.GONE  # type: ignore[attr-defined]
+            and self._should_remove(player_id)
+        ):
             for entry in self._player_registry_entries(player_id):
                 _LOGGER.debug("Removing player %s from registry", player_id)
                 er.async_get(self.hass).async_remove(entry.entity_id)
                 del self.data[player_id]
-                return False
-
-        return updated
 
     def _player_registry_entries(
         self, player_id: str | None = None
@@ -611,16 +622,12 @@ class MPRISCoordinator(DataUpdateCoordinator):
                 if self._should_remove(player_id):
                     _LOGGER.debug("Removing player %s from registry", player_id)
                     er.async_get(self.hass).async_remove(entry.entity_id)
-                    del self.data[player_id]
                 else:
                     _LOGGER.debug("Resuscitating player %s", player_id)
                     entity = HASSMPRISEntity(
                         self,
-                        self.config_entry.entry_id,
                         player_id,
+                        self.config_entry.entry_id,
                     )
-                    self.data[player_id] = {
-                        "available": True,
-                        "state": MediaPlayerState.OFF,
-                    }
+                    self.data[player_id] = [AVAILABLE]
                     self.async_add_entities([entity])
