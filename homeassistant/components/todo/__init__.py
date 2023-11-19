@@ -11,7 +11,7 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -58,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
                     vol.Optional("rename"): vol.All(cv.string, vol.Length(min=1)),
                     vol.Optional("status"): vol.In(
-                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED}
+                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
                 }
             ),
@@ -76,6 +76,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         _async_remove_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
+    )
+    component.async_register_entity_service(
+        "get_items",
+        cv.make_entity_service_schema(
+            {
+                vol.Optional("status"): vol.All(
+                    cv.ensure_list,
+                    [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
+                ),
+            }
+        ),
+        _async_get_todo_items,
+        supports_response=SupportsResponse.ONLY,
     )
 
     await component.async_setup(config)
@@ -258,3 +271,16 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
             raise ValueError(f"Unable to find To-do item '{item}")
         uids.append(found.uid)
     await entity.async_delete_todo_items(uids=uids)
+
+
+async def _async_get_todo_items(
+    entity: TodoListEntity, call: ServiceCall
+) -> dict[str, Any]:
+    """Return items in the To-do list."""
+    return {
+        "items": [
+            dataclasses.asdict(item)
+            for item in entity.todo_items or ()
+            if not (statuses := call.data.get("status")) or item.status in statuses
+        ]
+    }

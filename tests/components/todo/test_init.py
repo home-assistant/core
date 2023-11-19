@@ -33,6 +33,16 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
+ITEM_1 = {
+    "uid": "1",
+    "summary": "Item #1",
+    "status": "needs_action",
+}
+ITEM_2 = {
+    "uid": "2",
+    "summary": "Item #2",
+    "status": "completed",
+}
 
 
 class MockFlow(ConfigFlow):
@@ -182,10 +192,61 @@ async def test_list_todo_items(
     assert resp.get("success")
     assert resp.get("result") == {
         "items": [
-            {"summary": "Item #1", "uid": "1", "status": "needs_action"},
-            {"summary": "Item #2", "uid": "2", "status": "completed"},
+            ITEM_1,
+            ITEM_2,
         ]
     }
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_items"),
+    [
+        ({}, [ITEM_1, ITEM_2]),
+        (
+            [
+                {"status": [TodoItemStatus.COMPLETED, TodoItemStatus.NEEDS_ACTION]},
+                [ITEM_1, ITEM_2],
+            ]
+        ),
+        (
+            [
+                {"status": [TodoItemStatus.NEEDS_ACTION]},
+                [ITEM_1],
+            ]
+        ),
+        (
+            [
+                {"status": [TodoItemStatus.COMPLETED]},
+                [ITEM_2],
+            ]
+        ),
+    ],
+)
+async def test_get_items_service(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+    service_data: dict[str, Any],
+    expected_items: list[dict[str, Any]],
+) -> None:
+    """Test listing items in a To-do list from a service call."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    state = hass.states.get("todo.entity1")
+    assert state
+    assert state.state == "1"
+    assert state.attributes == {"supported_features": 15}
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_items",
+        service_data,
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"todo.entity1": {"items": expected_items}}
 
 
 async def test_unsupported_websocket(

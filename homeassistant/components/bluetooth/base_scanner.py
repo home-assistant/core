@@ -334,7 +334,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 local_name = prev_name
 
             if service_uuids and service_uuids != prev_service_uuids:
-                service_uuids = list(set(service_uuids + prev_service_uuids))
+                service_uuids = list({*service_uuids, *prev_service_uuids})
             elif not service_uuids:
                 service_uuids = prev_service_uuids
 
