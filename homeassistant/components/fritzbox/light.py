@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
@@ -31,12 +31,14 @@ async def async_setup_entry(
         CONF_COORDINATOR
     ]
 
-    async def _prepare_light_entity(ain: str, device: FritzhomeDevice) -> FritzboxLight:
-        supported_color_temps = await hass.async_add_executor_job(
-            device.get_color_temps
-        )
+    def _prepare_light_entity(ain: str, device: FritzhomeDevice) -> FritzboxLight:
+        supported_color_temps = device.get_color_temps()
+        # supported_color_temps = await hass.async_add_executor_job(
+        #     device.get_color_temps
+        # )
 
-        supported_colors = await hass.async_add_executor_job(device.get_colors)
+        # supported_colors = await hass.async_add_executor_job(device.get_colors)
+        supported_colors = device.get_colors()
 
         return FritzboxLight(
             coordinator,
@@ -45,29 +47,19 @@ async def async_setup_entry(
             supported_color_temps,
         )
 
-    async def _add_new_devices(event: Event) -> None:
-        """Add newly discovered devices."""
+    def _add_entities() -> None:
+        """Add devices."""
         async_add_entities(
             [
-                await _prepare_light_entity(ain, device)
+                _prepare_light_entity(ain, device)
                 for ain, device in coordinator.data.devices.items()
-                if ain in event.data.get("ains", []) and device.has_lightbulb
+                if ain in coordinator.new_devices and device.has_lightbulb
             ]
         )
 
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            f"{DOMAIN}_{entry.entry_id}_new_devices", _add_new_devices
-        )
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    async_add_entities(
-        [
-            await _prepare_light_entity(ain, device)
-            for ain, device in coordinator.data.devices.items()
-            if device.has_lightbulb
-        ]
-    )
+    _add_entities()
 
 
 class FritzboxLight(FritzBoxDeviceEntity, LightEntity):

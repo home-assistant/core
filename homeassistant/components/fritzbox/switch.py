@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
@@ -20,29 +20,19 @@ async def async_setup_entry(
         CONF_COORDINATOR
     ]
 
-    async def _add_new_devices(event: Event) -> None:
-        """Add newly discovered devices."""
+    def _add_entities() -> None:
+        """Add devices."""
         async_add_entities(
             [
                 FritzboxSwitch(coordinator, ain)
                 for ain, device in coordinator.data.devices.items()
-                if ain in event.data.get("ains", []) and device.has_switch
+                if ain in coordinator.new_devices and device.has_switch
             ]
         )
 
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            f"{DOMAIN}_{entry.entry_id}_new_devices", _add_new_devices
-        )
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    async_add_entities(
-        [
-            FritzboxSwitch(coordinator, ain)
-            for ain, device in coordinator.data.devices.items()
-            if device.has_switch
-        ]
-    )
+    _add_entities()
 
 
 class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):

@@ -3,7 +3,7 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,21 +19,19 @@ async def async_setup_entry(
         CONF_COORDINATOR
     ]
 
-    def _add_new_templates(event: Event) -> None:
-        """Add newly discovered template."""
+    def _add_entities() -> None:
+        """Add Templaes."""
         async_add_entities(
-            [FritzBoxTemplate(coordinator, ain) for ain in event.data.get("ains", [])]
+            [
+                FritzBoxTemplate(coordinator, ain)
+                for ain in coordinator.data.templates
+                if ain in coordinator.new_templates
+            ]
         )
 
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            f"{DOMAIN}_{entry.entry_id}_new_templates", _add_new_templates
-        )
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    async_add_entities(
-        [FritzBoxTemplate(coordinator, ain) for ain in coordinator.data.templates]
-    )
+    _add_entities()
 
 
 class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):

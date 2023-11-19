@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
@@ -217,32 +217,20 @@ async def async_setup_entry(
         CONF_COORDINATOR
     ]
 
-    async def _add_new_devices(event: Event) -> None:
-        """Add newly discovered devices."""
+    def _add_entities() -> None:
+        """Add devices."""
         async_add_entities(
             [
                 FritzBoxSensor(coordinator, ain, description)
                 for ain, device in coordinator.data.devices.items()
-                if ain in event.data.get("ains", [])
                 for description in SENSOR_TYPES
-                if description.suitable(device)
+                if ain in coordinator.new_devices and description.suitable(device)
             ]
         )
 
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            f"{DOMAIN}_{entry.entry_id}_new_devices", _add_new_devices
-        )
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    async_add_entities(
-        [
-            FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.devices.items()
-            for description in SENSOR_TYPES
-            if description.suitable(device)
-        ]
-    )
+    _add_entities()
 
 
 class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
