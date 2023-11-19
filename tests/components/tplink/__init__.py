@@ -15,7 +15,7 @@ from kasa.exceptions import SmartDeviceException
 from kasa.protocol import TPLinkSmartHomeProtocol
 
 from homeassistant.components.tplink import CONF_HOST
-from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.components.tplink.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -232,5 +232,7 @@ async def initialize_config_entry_for_device(
     with _patch_discovery(device=dev), _patch_single_discovery(device=dev):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_DEVICE_TYPE] == _mocked_bulb().device_type.value
 
     return config_entry
