@@ -73,18 +73,11 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             node["type"]["endpoints"], "signal", "state"
         )
 
-        if self._command_arm_home:
-            self._attr_supported_features = (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                | AlarmControlPanelEntityFeature.ARM_HOME
-                | AlarmControlPanelEntityFeature.TRIGGER
-            )
-
-        else:
-            self._attr_supported_features = (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                | AlarmControlPanelEntityFeature.TRIGGER
-            )
+        self._attr_supported_features = (
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | (AlarmControlPanelEntityFeature.ARM_HOME if self._command_arm_home else 0)
+            | AlarmControlPanelEntityFeature.TRIGGER
+        )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
