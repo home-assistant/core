@@ -148,6 +148,20 @@
         }
       }
     },
+    "set_temperature_with_time_period": {
+      "name": "Set temperature with time period",
+      "description": "Sets the target temperature for a Netatmo climate device with time period.",
+      "fields": {
+        "target_temperature": {
+          "name": "Target temperature",
+          "description": "The target temperature for the device."
+        },
+        "time_period": {
+          "name": "Time period",
+          "description": "The time period which the temperature setting will be active for."
+        }
+      }
+    },
     "clear_temperature_setting": {
       "name": "Clear temperature setting",
       "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
