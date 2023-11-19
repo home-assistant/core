@@ -81,8 +81,7 @@ class QuotableCard extends HTMLElement {
   }
   //Uodate card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
-    if (!this.content) {
-      this.innerHTML = `
+    this.innerHTML = `
         <style>
           ha-card {
             position: relative;
@@ -119,6 +118,19 @@ class QuotableCard extends HTMLElement {
             font-size: 18px;
             font-weight: bold;
           }
+
+          .buttons {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 8px;
+          }
+
+          .button {
+            cursor: pointer;
+            color: white;
+          }
         </style>
         <ha-card>
           <img class="background-image" src="${
@@ -128,10 +140,22 @@ class QuotableCard extends HTMLElement {
             <div class="quote">${quote}</div>
             <div class="author">- ${author}</div>
           </div>
+
+          <div class="buttons">
+            <ha-icon class="button previous" icon="mdi:arrow-left"></ha-icon>
+            <ha-icon class="button next" icon="mdi:arrow-right"></ha-icon>
+         </div>
         </ha-card>
       `;
-      this.content = this.querySelector(".background-image");
-    }
+    this.updateOverlay(quote, author);
+
+    this.content = this.querySelector(".background-image");
+
+    this.prevButton = this.querySelector(".previous");
+    this.nextButton = this.querySelector(".next");
+
+    this.prevButton.addEventListener("click", () => this.showPreviousQuote());
+    this.nextButton.addEventListener("click", () => this.showNextQuote());
   }
 
   getCardSize() {
@@ -144,6 +168,33 @@ class QuotableCard extends HTMLElement {
 
   static getConfigElement() {
     return document.createElement("quotable-card-editor");
+  }
+
+  showPreviousQuote() {
+    this.quoteIndex =
+      (this.quoteIndex - 1 + this.quotes.length) % this.quotes.length;
+    const quote = this.quotes[this.quoteIndex].content;
+    const author = this.quotes[this.quoteIndex].author;
+
+    //Update quote on card
+    this.updateOverlay(quote, author);
+  }
+
+  showNextQuote() {
+    this.quoteIndex = (this.quoteIndex + 1) % this.quotes.length;
+    const quote = this.quotes[this.quoteIndex].content;
+    const author = this.quotes[this.quoteIndex].author;
+
+    //Update quote on card
+    this.updateOverlay(quote, author);
+  }
+
+  updateOverlay(quote, author) {
+    const quoteElement = this.querySelector(".quote");
+    const authorElement = this.querySelector(".author");
+
+    quoteElement.textContent = quote;
+    authorElement.textContent = `- ${author}`;
   }
 }
 customElements.define("quotable-card", QuotableCard);
