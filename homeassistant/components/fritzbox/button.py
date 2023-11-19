@@ -18,7 +18,7 @@ async def async_setup_entry(
     coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
     ]
-    added_templates: list[str] = []
+    added_templates: set[str] = set()
 
     @callback
     def _add_entities() -> None:
@@ -27,7 +27,7 @@ async def async_setup_entry(
         for ain in coordinator.data.templates:
             if ain in added_templates:
                 continue
-            added_templates.append(ain)
+            added_templates.add(ain)
             entities.append(FritzBoxTemplate(coordinator, ain))
         async_add_entities(entities)
 
