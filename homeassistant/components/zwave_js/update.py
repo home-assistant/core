@@ -333,6 +333,10 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
+        # Make sure these variables are set for the elif evaluation
+        state = None
+        latest_version = None
+
         # If we have a complete previous state, use that to set the latest version
         if (
             (state := await self.async_get_last_state())

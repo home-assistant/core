@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 EVENTS = [
@@ -365,7 +366,7 @@ def _mock_calendar(name: str, supported_components: list[str] | None = None) -> 
     calendar = Mock()
     events = []
     for idx, event in enumerate(EVENTS):
-        events.append(Event(None, "%d.ics" % idx, event, calendar, str(idx)))
+        events.append(Event(None, f"{idx}.ics", event, calendar, str(idx)))
     if supported_components is None:
         supported_components = ["VEVENT"]
     calendar.search = MagicMock(return_value=events)
@@ -1056,7 +1057,6 @@ async def test_get_events_custom_calendars(
             _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
             _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
             _mock_calendar("Calendar 3", supported_components=["VTODO"]),
-            # Fallback to allow when no components are supported to be conservative
             _mock_calendar("Calendar 4", supported_components=[]),
         ]
     ],
@@ -1069,32 +1069,28 @@ async def test_calendar_components(hass: HomeAssistant) -> None:
 
     state = hass.states.get("calendar.calendar_1")
     assert state
-    assert state.name == "Calendar 1"
-    assert state.state == STATE_OFF
 
     state = hass.states.get("calendar.calendar_2")
     assert state
-    assert state.name == "Calendar 2"
-    assert state.state == STATE_OFF
 
     # No entity created for To-do only component
     state = hass.states.get("calendar.calendar_3")
     assert not state
 
+    # No entity created when no components exist
     state = hass.states.get("calendar.calendar_4")
-    assert state
-    assert state.name == "Calendar 4"
-    assert state.state == STATE_OFF
+    assert not state
 
 
 @pytest.mark.parametrize("tz", [UTC])
 @freeze_time(_local_datetime(17, 30))
 async def test_setup_config_entry(
     hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test a calendar entity from a config entry."""
-    assert await setup_integration()
+    config_entry.add_to_hass(hass)
+    await config_entry.async_setup(hass)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -1109,3 +1105,37 @@ async def test_setup_config_entry(
         "location": "Hamburg",
         "description": "What a beautiful day",
     }
+
+
+@pytest.mark.parametrize(
+    ("calendars"),
+    [
+        [
+            _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
+            _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
+            _mock_calendar("Calendar 3", supported_components=["VTODO"]),
+            _mock_calendar("Calendar 4", supported_components=[]),
+        ]
+    ],
+)
+async def test_config_entry_supported_components(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that calendars are only created for VEVENT types when using a config entry."""
+    config_entry.add_to_hass(hass)
+    await config_entry.async_setup(hass)
+
+    state = hass.states.get("calendar.calendar_1")
+    assert state
+
+    state = hass.states.get("calendar.calendar_2")
+    assert state
+
+    # No entity created for To-do only component
+    state = hass.states.get("calendar.calendar_3")
+    assert not state
+
+    # No entity created when no components exist
+    state = hass.states.get("calendar.calendar_4")
+    assert not state
