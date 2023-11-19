@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
@@ -73,6 +73,7 @@ async def async_setup_entry(
     ]
     added_devices: list[str] = []
 
+    @callback
     def _add_entities() -> None:
         """Add devices."""
         entities: list[FritzboxBinarySensor] = []

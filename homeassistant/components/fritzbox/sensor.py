@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
@@ -218,6 +218,7 @@ async def async_setup_entry(
     ]
     added_devices: list[str] = []
 
+    @callback
     def _add_entities() -> None:
         """Add devices."""
         entities: list[FritzBoxSensor] = []

@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
@@ -43,6 +43,7 @@ async def async_setup_entry(
             supported_color_temps,
         )
 
+    @callback
     def _add_entities() -> None:
         """Add devices."""
         entities: list[FritzboxLight] = []
