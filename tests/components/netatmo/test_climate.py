@@ -27,7 +27,7 @@ from homeassistant.components.netatmo.const import (
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
-    SERVICE_SET_TEMPERATURE as NETATMO_SERVICE_SET_TEMPERATURE,
+    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -380,7 +380,7 @@ async def test_service_set_temperature_with_end_datetime(
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
         NETATMO_DOMAIN,
-        NETATMO_SERVICE_SET_TEMPERATURE,
+        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
             ATTR_TARGET_TEMPERATURE: 25,
