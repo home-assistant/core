@@ -72,15 +72,18 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
 
+            country = combined_input[CONF_COUNTRY]
+            province = combined_input.get(CONF_PROVINCE)
+
             self._async_abort_entries_match(
                 {
-                    CONF_COUNTRY: combined_input[CONF_COUNTRY],
-                    CONF_PROVINCE: combined_input[CONF_PROVINCE],
+                    CONF_COUNTRY: country,
+                    CONF_PROVINCE: province,
                 }
             )
 
             locale = Locale(self.hass.config.language)
-            name = f"{locale.territories[combined_input[CONF_COUNTRY]]}, {combined_input[CONF_PROVINCE]}"
+            name = f"{locale.territories.get(country)}, {province}"
 
             return self.async_create_entry(title=name, data=combined_input)
 
