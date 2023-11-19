@@ -205,16 +205,14 @@ def _patch_discovery(device=None, no_device=False):
 
 @contextmanager
 def _patch_single_discovery(device=None, no_device=False):
-    async def _discover_single(*args, **kwargs):
+    async def _make_device(*args, **kwargs):
         if no_device:
             raise SmartDeviceException
         return device if device else _mocked_bulb()
 
     with patch(
-        "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
-    ), patch(
-        "homeassistant.components.tplink.Discover.connect_single", new=_discover_single
-    ):
+        "homeassistant.components.tplink.Discover.discover_single", new=_make_device
+    ), patch("homeassistant.components.tplink.SmartDevice.connect", new=_make_device):
         yield
 
 

@@ -97,8 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     # Save the device class name if it is not already saved
-    # so that we can use connect_single next time instead of discover_single
-    # to avoid UDP discovery.
+    # so that we can pass it to connect which avoids an update cycle
     if not entry.data.get(CONF_DEVICE_TYPE) != device.device_type.value:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_DEVICE_TYPE: device.device_type.value}
