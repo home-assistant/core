@@ -237,6 +237,54 @@ async def test_update_item(
     assert state.state == "0"
 
 
+async def test_rename(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+) -> None:
+    """Test renaming a todo item."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "add_item",
+        {"item": "soda"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Rename item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"item": item["uid"], "rename": "water"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify item has been renamed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "water"
+    assert item["status"] == "needs_action"
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+
 @pytest.mark.parametrize(
     ("src_idx", "dst_idx", "expected_items"),
     [
