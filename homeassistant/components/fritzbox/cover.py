@@ -30,9 +30,7 @@ async def async_setup_entry(
         """Add devices."""
         entities: list[FritzboxCover] = []
         for ain in coordinator.new_devices:
-            if (
-                device := coordinator.data.devices.get(ain)
-            ) is not None and device.has_blind:
+            if coordinator.data.devices[ain].has_blind:
                 entities.append(FritzboxCover(coordinator, ain))
         async_add_entities(entities)
 

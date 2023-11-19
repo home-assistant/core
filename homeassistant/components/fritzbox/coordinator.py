@@ -67,9 +67,6 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             if self.has_templates:
                 self.fritz.update_templates()
 
-        self.new_devices.clear()
-        self.new_templates.clear()
-
         devices = self.fritz.get_devices()
         device_data = {}
         for device in devices:
@@ -87,16 +84,15 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 device.present = False
 
             device_data[device.ain] = device
-            if device.ain not in self.data.devices:
-                self.new_devices.add(device.ain)
 
         template_data = {}
         if self.has_templates:
             templates = self.fritz.get_templates()
             for template in templates:
                 template_data[template.ain] = template
-                if template.ain not in self.data.templates:
-                    self.new_templates.add(template.ain)
+
+        self.new_devices = device_data.keys() - self.data.devices.keys()
+        self.new_templates = template_data.keys() - self.data.templates.keys()
 
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 

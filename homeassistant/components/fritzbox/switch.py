@@ -25,9 +25,7 @@ async def async_setup_entry(
         """Add devices."""
         entities: list[FritzboxSwitch] = []
         for ain in coordinator.new_devices:
-            if (
-                device := coordinator.data.devices.get(ain)
-            ) is not None and device.has_switch:
+            if coordinator.data.devices[ain].has_switch:
                 entities.append(FritzboxSwitch(coordinator, ain))
         async_add_entities(entities)
 

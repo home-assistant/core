@@ -222,10 +222,8 @@ async def async_setup_entry(
         """Add devices."""
         entities: list[FritzBoxSensor] = []
         for ain in coordinator.new_devices:
-            if (device := coordinator.data.devices.get(ain)) is None:
-                continue
             for description in SENSOR_TYPES:
-                if description.suitable(device):
+                if description.suitable(coordinator.data.devices[ain]):
                     entities.append(FritzBoxSensor(coordinator, ain, description))
         async_add_entities(entities)
 
