@@ -100,7 +100,7 @@ async def async_check_ha_config_file(  # noqa: C901
         message: str,
     ) -> None:
         """Handle errors from packages."""
-        message = f"Package {package} setup failed. {message}"
+        message = f"Setup of package '{package}' failed: {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)

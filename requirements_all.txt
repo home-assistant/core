@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.6
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.17
+AIOSomecomfort==0.0.22
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.2
+aioesphomeapi==18.5.3
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -573,7 +573,7 @@ bluetooth-data-tools==1.14.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.57
+boschshcpy==0.2.75
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -985,7 +985,7 @@ hass-nabucasa==0.74.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.5.0
+hassil==1.5.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1018,7 +1018,7 @@ holidays==0.36
 home-assistant-frontend==20231030.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.11.13
+home-assistant-intents==2023.11.17
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1259,7 +1259,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.0
 
 # homeassistant.components.mopeka
-mopeka-iot-ble==0.4.1
+mopeka-iot-ble==0.5.0
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.18
@@ -2234,7 +2234,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.8
+pytrafikverket==0.3.9.1
 
 # homeassistant.components.v2c
 pytrydan==0.4.0
@@ -2670,6 +2670,9 @@ url-normalize==1.4.3
 
 # homeassistant.components.uvc
 uvcclient==0.11.0
+
+# homeassistant.components.roborock
+vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
 vallox-websocket-api==4.0.2
