@@ -363,61 +363,7 @@ async def test_service_preset_modes_thermostat(
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
 
 
-async def test_service_set_temperature_no_end(
-    hass: HomeAssistant, config_entry, netatmo_auth
-) -> None:
-    """Test service setting temperature without an end datetime."""
-    with selected_platforms(["climate"]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-        await hass.async_block_till_done()
-
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom"
-
-    assert hass.states.get(climate_entity_livingroom).state == "auto"
-
-    # Test service setting the temperature without an end datetime
-    await hass.services.async_call(
-        NETATMO_DOMAIN,
-        NETATMO_SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_TARGET_TEMPERATURE: 25},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # Test webhook room mode change to "manual"
-    response = {
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": "manual",
-                    "therm_setpoint_temperature": 25,
-                    "therm_setpoint_end_time": 1612749189,
-                }
-            ],
-            "modules": [
-                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
-            ],
-        },
-        "mode": "manual",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(climate_entity_livingroom).state == "heat"
-    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 25
-
-
-async def test_service_set_temperature_with_end(
+async def test_service_set_temperature_with_end_datetime(
     hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
     """Test service setting temperature with an end datetime."""

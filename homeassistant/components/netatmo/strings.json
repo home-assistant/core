@@ -134,9 +134,9 @@
         }
       }
     },
-    "set_temperature": {
-      "name": "Set temperature",
-      "description": "Sets the target temperature for a Netatmo climate device with an optional end date & time.",
+    "set_temperature_with_end_datetime": {
+      "name": "Set temperature with end date & time",
+      "description": "Sets the target temperature for a Netatmo climate device with an end date & time.",
       "fields": {
         "target_temperature": {
           "name": "Target temperature",
@@ -144,7 +144,7 @@
         },
         "end_datetime": {
           "name": "End date & time",
-          "description": "Date & time the target temperature will be active until. If not provided, the Netatmo default of 3 hours will be used."
+          "description": "Date & time the target temperature will be active until."
         }
       }
     },

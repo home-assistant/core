@@ -459,21 +459,21 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
         )
         _LOGGER.debug(
-            "Setting %s preset to %s with optional end datetime %s",
+            "Setting %s preset to %s with end datetime %s",
             self._room.home.entity_id,
             preset_mode,
             end_timestamp,
         )
 
-    async def _async_service_set_temperature(self, **kwargs: Any) -> None:
+    async def _async_service_set_temperature_with_end_datetime(
+        self, **kwargs: Any
+    ) -> None:
         target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
         end_datetime = kwargs[ATTR_END_DATETIME]
-        end_timestamp = (
-            int(dt_util.as_timestamp(end_datetime))
-        )
+        end_timestamp = int(dt_util.as_timestamp(end_datetime))
 
         _LOGGER.debug(
-            "Setting %s to target temperature %s with optional end datetime %s",
+            "Setting %s to target temperature %s with end datetime %s",
             self._room.entity_id,
             target_temperature,
             end_timestamp,
