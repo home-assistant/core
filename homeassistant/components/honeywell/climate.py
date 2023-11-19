@@ -500,6 +500,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
+                return
 
             self._attr_available = True
             self._retry = 0
@@ -509,13 +510,15 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except UnauthorizedError:
             await _login()
+            return
 
         except (ClientConnectionError, asyncio.TimeoutError):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
+            return
 
         except UnexpectedResponse:
-            pass
+            return
 
         self._attr_available = True
         self._retry = 0
