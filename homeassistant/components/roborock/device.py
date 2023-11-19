@@ -3,6 +3,7 @@
 from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient
+from roborock.cloud_api import RoborockMqttClient
 from roborock.command_cache import CacheableAttribute
 from roborock.containers import Consumable, Status
 from roborock.exceptions import RoborockException
@@ -81,6 +82,11 @@ class RoborockCoordinatedEntity(
         """Return the status of the device."""
         data = self.coordinator.data
         return data.status
+
+    @property
+    def cloud_api(self) -> RoborockMqttClient:
+        """Return the cloud api."""
+        return self.coordinator.cloud_api
 
     async def send(
         self,
