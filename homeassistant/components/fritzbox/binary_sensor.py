@@ -15,7 +15,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
@@ -72,24 +71,20 @@ async def async_setup_entry(
     coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
     ]
-    added_devices: set[str] = set()
 
     @callback
     def _add_entities() -> None:
         """Add devices."""
         entities: list[FritzboxBinarySensor] = []
-        for ain, device in coordinator.data.devices.items():
-            if ain in added_devices:
+        for ain in coordinator.new_devices:
+            if (device := coordinator.data.devices.get(ain)) is None:
                 continue
-            added_devices.add(ain)
             for description in BINARY_SENSOR_TYPES:
                 if description.suitable(device):
                     entities.append(FritzboxBinarySensor(coordinator, ain, description))
         async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, coordinator.new_device_signal, _add_entities)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
     _add_entities()
 

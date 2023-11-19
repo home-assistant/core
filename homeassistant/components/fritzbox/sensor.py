@@ -216,16 +216,14 @@ async def async_setup_entry(
     coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
     ]
-    added_devices: set[str] = set()
 
     @callback
     def _add_entities() -> None:
         """Add devices."""
         entities: list[FritzBoxSensor] = []
-        for ain, device in coordinator.data.devices.items():
-            if ain in added_devices:
+        for ain in coordinator.new_devices:
+            if (device := coordinator.data.devices.get(ain)) is None:
                 continue
-            added_devices.add(ain)
             for description in SENSOR_TYPES:
                 if description.suitable(device):
                     entities.append(FritzBoxSensor(coordinator, ain, description))
