@@ -9,7 +9,14 @@ from ulid_transform import (
     ulid_to_bytes,
 )
 
-__all__ = ["ulid", "ulid_hex", "ulid_at_time", "ulid_to_bytes", "bytes_to_ulid"]
+__all__ = [
+    "ulid",
+    "ulid_hex",
+    "ulid_at_time",
+    "ulid_to_bytes",
+    "bytes_to_ulid",
+    "ulid_now",
+]
 
 
 def ulid(timestamp: float | None = None) -> str:
