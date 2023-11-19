@@ -1,6 +1,7 @@
 """Test the tplink config flow."""
 from unittest.mock import patch
 
+from kasa.device_type import DeviceType
 import pytest
 
 from homeassistant import config_entries
@@ -68,7 +69,10 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == {CONF_HOST: IP_ADDRESS, CONF_DEVICE_TYPE: "Bulb"}
+    assert result3["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_DEVICE_TYPE: DeviceType.Bulb.value,
+    }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -139,7 +143,10 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         )
         assert result3["type"] == "create_entry"
         assert result3["title"] == DEFAULT_ENTRY_TITLE
-        assert result3["data"] == {CONF_HOST: IP_ADDRESS, CONF_DEVICE_TYPE: "Bulb"}
+        assert result3["data"] == {
+            CONF_HOST: IP_ADDRESS,
+            CONF_DEVICE_TYPE: DeviceType.Bulb.value,
+        }
         await hass.async_block_till_done()
 
     mock_setup_entry.assert_called_once()
@@ -204,7 +211,10 @@ async def test_manual(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
     assert result4["title"] == DEFAULT_ENTRY_TITLE
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_DEVICE_TYPE: "Bulb"}
+    assert result4["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_DEVICE_TYPE: DeviceType.Bulb.value,
+    }
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -238,7 +248,10 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_DEVICE_TYPE: "Bulb"}
+    assert result["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_DEVICE_TYPE: DeviceType.Bulb.value,
+    }
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
@@ -327,7 +340,10 @@ async def test_discovered_by_dhcp_or_discovery(
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_DEVICE_TYPE: "Bulb"}
+    assert result2["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_DEVICE_TYPE: DeviceType.Bulb.value,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
