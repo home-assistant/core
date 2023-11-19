@@ -33,11 +33,6 @@ async def async_setup_entry(
 
     def _prepare_light_entity(ain: str, device: FritzhomeDevice) -> FritzboxLight:
         supported_color_temps = device.get_color_temps()
-        # supported_color_temps = await hass.async_add_executor_job(
-        #     device.get_color_temps
-        # )
-
-        # supported_colors = await hass.async_add_executor_job(device.get_colors)
         supported_colors = device.get_colors()
 
         return FritzboxLight(
