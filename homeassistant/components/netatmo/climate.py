@@ -51,7 +51,7 @@ from .const import (
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
-    SERVICE_SET_TEMPERATURE,
+    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
 from .netatmo_entity_base import NetatmoBase
@@ -147,14 +147,14 @@ async def async_setup_entry(
         "_async_service_set_preset_mode_with_end_datetime",
     )
     platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE,
+        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
         {
             vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
                 vol.Coerce(float), vol.Range(min=7, max=30)
             ),
-            vol.Optional(ATTR_END_DATETIME): cv.datetime,
+            vol.Required(ATTR_END_DATETIME): cv.datetime,
         },
-        "_async_service_set_temperature",
+        "_async_service_set_temperature_with_end_datetime",
     )
     platform.async_register_entity_service(
         SERVICE_CLEAR_TEMPERATURE_SETTING,
@@ -467,9 +467,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     async def _async_service_set_temperature(self, **kwargs: Any) -> None:
         target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
-        end_datetime = kwargs.get(ATTR_END_DATETIME)
+        end_datetime = kwargs[ATTR_END_DATETIME]
         end_timestamp = (
-            int(dt_util.as_timestamp(end_datetime)) if end_datetime else None
+            int(dt_util.as_timestamp(end_datetime))
         )
 
         _LOGGER.debug(

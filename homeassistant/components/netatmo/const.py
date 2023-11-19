@@ -97,7 +97,7 @@ SERVICE_SET_PERSON_AWAY = "set_person_away"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
-SERVICE_SET_TEMPERATURE = "set_temperature"
+SERVICE_SET_TEMPERATURE_WITH_END_DATETIME = "set_temperature_with_end_datetime"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"

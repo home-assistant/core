@@ -46,7 +46,7 @@ set_preset_mode_with_end_datetime:
       selector:
         datetime:
 
-set_temperature:
+set_temperature_with_end_datetime:
   target:
     entity:
       integration: netatmo
@@ -61,6 +61,7 @@ set_temperature:
           max: 30
           step: 0.5
     end_datetime:
+      required: true
       example: '"2019-04-20 05:04:20"'
       selector:
         datetime:
