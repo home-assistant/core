@@ -7,6 +7,8 @@ from urllib.request import urlopen
 import aiohttp
 from smhi.smhi_lib import SmhiForecastException
 
+from .smhi_geolocation_event import SmhiGeolocationEvent
+
 APIURL_TEMPLATE = "https://opendata-download-lightning.smhi.se/api/version/latest/year/{}/month/{}/day/{}/data.json"
 
 
@@ -68,7 +70,7 @@ class LightningImpactAPI:
         """Initialise API with or without an API session."""
         self.session: Optional[aiohttp.ClientSession] = None
 
-    def get_lightning_impact_api(self, year: str, month: str, day: str) -> Any:
+    def get_lightning_impact_api(self, year: int, month: int, day: int) -> Any:
         """Get data from the API."""
         api_url = APIURL_TEMPLATE.format(year, month, day)
 
@@ -109,40 +111,38 @@ class SmhiLightning:
 
     def __init__(
         self,
-        year: int,
-        month: int,
-        day: int,
         session: Optional[aiohttp.ClientSession] = None,
         api: LightningImpactAPI = LightningImpactAPI(),
     ) -> None:
         """Set values."""
-        self._year = year
-        self._month = month
-        self._day = day
         self._api = api
 
         if session:
             self._api.session = session
 
-    def get_lightning_impact_most_recent(self) -> list[LightningImpact]:
+    def get_lightning_impact_most_recent(self) -> list[SmhiGeolocationEvent]:
         """Return the most recent day of available lightning impacts."""
+        today = date.today()
         json_data = self._api.get_lightning_impact_api(
-            str(date.year), str(date.month), str(date.day)
+            today.year, today.month, today.day
         )
         return _get_all_lightning_impacts_from_api(json_data)
 
-    async def async_get_lightning_impact_most_recent(self) -> list[LightningImpact]:
+    async def async_get_lightning_impact_most_recent(
+        self,
+    ) -> list[SmhiGeolocationEvent]:
         """Return the most recent day of available lightning impacts."""
+        today = date.today()
         json_data = await self._api.async_get_lightning_impact_api(
-            self._year, self._month, self._day
+            today.year, today.month, today.day
         )
         return _get_all_lightning_impacts_from_api(json_data)
 
 
-def _get_all_lightning_impacts_from_api(api_result: dict) -> list[LightningImpact]:
+def _get_all_lightning_impacts_from_api(api_result: dict) -> list[SmhiGeolocationEvent]:
     """Convert results from API to a List of LightningImpacts."""
 
-    lightning_impacts: list[LightningImpact] = []
+    lightning_impacts: list[SmhiGeolocationEvent] = []
 
     for impact in api_result["values"]:
         hour = int(impact["hours"])
@@ -152,9 +152,19 @@ def _get_all_lightning_impacts_from_api(api_result: dict) -> list[LightningImpac
         longitude = float(impact["lon"])
         peakCurrent = int(impact["peakCurrent"])
 
-        lightning_impact = LightningImpact(
-            latitude, longitude, hour, minute, second, peakCurrent
+        name = (
+            "Impact at: "
+            + str(hour)
+            + ":"
+            + str(minute)
+            + ":"
+            + str(second)
+            + "\nPeak Current: "
+            + str(peakCurrent)
+            + " kiloamperes"
         )
+
+        lightning_impact = SmhiGeolocationEvent(name, latitude, longitude)
 
         lightning_impacts.append(lightning_impact)
 
