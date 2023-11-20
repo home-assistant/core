@@ -1,0 +1,94 @@
+"""Fetching fire risk data."""
+
+from typing import Any
+
+import aiohttp
+
+cities = {
+    "Stockholm": {"lat": 59.3293, "lon": 18.0686},
+    "Gothenburg": {"lat": 57.7089, "lon": 11.9746},
+    "Malmö": {"lat": 55.6050, "lon": 13.0038},
+    "Uppsala": {"lat": 59.8586, "lon": 17.6389},
+    "Linköping": {"lat": 58.4109, "lon": 15.6214},
+    "Västerås": {"lat": 59.6110, "lon": 16.5448},
+    "Örebro": {"lat": 59.2753, "lon": 15.2134},
+    "Norrköping": {"lat": 58.5942, "lon": 16.1826},
+    "Helsingborg": {"lat": 56.0467, "lon": 12.6945},
+    "Jönköping": {"lat": 57.7815, "lon": 14.1562},
+    "Lund": {"lat": 55.7047, "lon": 13.1910},
+    "Umeå": {"lat": 63.8258, "lon": 20.2630},
+    "Gävle": {"lat": 60.6745, "lon": 17.1417},
+    "Borås": {"lat": 57.7210, "lon": 12.9401},
+    "Södertälje": {"lat": 59.1955, "lon": 17.6252},
+    "Eskilstuna": {"lat": 59.3666, "lon": 16.5077},
+    "Karlstad": {"lat": 59.4022, "lon": 13.5115},
+    "Halmstad": {"lat": 56.6745, "lon": 12.8578},
+    "Växjö": {"lat": 56.8777, "lon": 14.8091},
+    "Sundsvall": {"lat": 62.3908, "lon": 17.3069},
+}
+
+
+def get_api_url_from_coordinates(lat: float, lon: float) -> str:
+    """Get API url specific coordniates."""
+    return f"https://opendata-download-metfcst.smhi.se/api/category/fwif1g/version/1/daily/geotype/point/lon/{lon}/lat/{lat}/data.json"
+
+
+async def fetch_fire_risk_data(session: aiohttp.ClientSession) -> list[dict[str, Any]]:
+    """Fetch fire risk data."""
+    fire_risk_data: list[dict[str, Any]] = []
+
+    for __, city_coordinates in cities.items():
+        url = get_api_url_from_coordinates(
+            lat=city_coordinates["lat"], lon=city_coordinates["lon"]
+        )
+        try:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                data: dict[str, Any] = await response.json()
+                fire_risk_data.append(data)
+        except aiohttp.ClientError:
+            pass
+
+    return fire_risk_data
+
+
+def extract_grassfire_info_with_coords(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Extract grassfire data."""
+    grassfire_risks: list[dict[str, Any]] = []
+
+    coordinates = data.get("geometry", {}).get("coordinates", [[]])[0]
+
+    for entry in data.get("timeSeries", []):
+        valid_time = entry.get("validTime")
+        grassfire_info = next(
+            (
+                param
+                for param in entry.get("parameters", [])
+                if param["name"] == "grassfire"
+            ),
+            None,
+        )
+        if grassfire_info:
+            grassfire_risks.append(
+                {
+                    "validTime": valid_time,
+                    "grassfireRisk": grassfire_info["values"][0],
+                    "coordinates": coordinates,
+                    "levelType": grassfire_info.get("levelType"),
+                    "level": grassfire_info.get("level"),
+                    "unit": grassfire_info.get("unit"),
+                }
+            )
+
+    return grassfire_risks
+
+
+async def get_grassfire_risk() -> list[dict[str, Any]]:
+    """Get grassfire risk."""
+    cleaned_data: list[dict[str, Any]] = []
+    async with aiohttp.ClientSession() as session:
+        data = await fetch_fire_risk_data(session)
+        for city_data in data:
+            # Here we should extend the list with the new list returned from extract_grassfire_info_with_coords
+            cleaned_data.extend(extract_grassfire_info_with_coords(city_data))
+    return cleaned_data
