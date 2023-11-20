@@ -65,6 +65,9 @@ class SmhiWeatherLocations:
                 city["name"] + " - Temperature: " + temperature_text,
                 city["latitude"],
                 city["longitude"],
+                "icon_path",
+                "mdi:cloud-outline",
+                "stationary",
             )
             weather_location_entities.append(geolocation_event)
 
