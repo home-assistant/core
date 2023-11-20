@@ -5,7 +5,7 @@ from typing import Any
 from roborock.api import AttributeCache, RoborockClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.command_cache import CacheableAttribute
-from roborock.containers import Status
+from roborock.containers import Consumable, Status
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -97,3 +97,12 @@ class RoborockCoordinatedEntity(
         res = await super().send(command, params)
         await self.coordinator.async_refresh()
         return res
+
+    def _update_from_listener(self, value: Status | Consumable):
+        """Update the status or consumable data from a listener and then write the new entity state."""
+        if isinstance(value, Status):
+            self.coordinator.roborock_device_info.props.status = value
+        else:
+            self.coordinator.roborock_device_info.props.consumable = value
+        self.coordinator.data = self.coordinator.roborock_device_info.props
+        self.async_write_ha_state()
