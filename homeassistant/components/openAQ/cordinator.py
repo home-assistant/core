@@ -19,10 +19,10 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
         """Initialize OpenAQDataCoordinator."""
         self.api_key = api_key
         self.location_id = location_id
-        self.data = None
+        self.data = {}
         self.client = AQClient(
-            hass=HomeAssistant,
-            api_key="0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e",
+            hass=hass,
+            api_key=api_key,
             location_id=location_id,
         )
         super().__init__(
@@ -37,6 +37,7 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
         """Fetch data from AQClient and update."""
         _LOGGER.debug("Updating OpenAQ data")
         self.data = await self.hass.async_add_executor_job(self.client.setup_device)
+        return self.data
 
     async def async_fetch_hist_data(self, start_date, stop_date):
         """Fetch historical data from AQClient."""

@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 class AQClient:
     """AQClient class for OpenAQ integration."""
 
-    def __init__(self, hass, api_key, location_id):
+    def __init__(self, api_key, location_id):
         """Initialize AQClient."""
         self.api_key = api_key
         self.location_id = location_id
@@ -26,7 +26,7 @@ class AQClient:
     def setup_device(self):
         """Set up device information and retrieve the API response."""
         _LOGGER.debug("Setting up device")
-        response = self.client.locations(country="SE")
+        response = self.client.locations.get(self.location_id)
         if response[0] == 200:
             data = response[1]
             if isinstance(data, dict) and data:
@@ -76,13 +76,22 @@ class AQClient:
         else:
             _LOGGER.debug("Historical data API error: %s", res[1])
 
+    def get_location(self, locationid):
+        """Returns a location"""
+        res = self.client.locations(locationid)
+        if(res[0] == 200):
+            return res[1]
+        else:
+            _LOGGER.debug("Error getting location: %s", locationid)
+            return None
 
-# def api_test():
+#def api_test():
 # """Test API functionality."""
-# print("RUNNING SCRIPT!")
-# client = AQ_client(None, '0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e', 'Västra Götaland')
-# client.setup_device()
-# client.get_hist_data(datetime.datetime(2023, 11, 12), datetime.datetime.now())
+ #print("RUNNING SCRIPT!")
+ #client = AQClient('0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e', 10496)
+ #data = client.setup_device()
+ #print(data)
+ #client.get_hist_data(datetime.datetime(2023, 11, 12), datetime.datetime.now())
 # Running the test
 
-# api_test()
+#api_test()

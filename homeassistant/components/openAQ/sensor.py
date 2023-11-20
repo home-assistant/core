@@ -55,27 +55,29 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ) -> None:
     """Configure the sensor platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
 
     for metric in list(OpenAQDeviceSensors):
-        match metric.value:
-            case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
-                unit = None
-            case SensorDeviceClass.CO | SensorDeviceClass.CO2:
-                unit = CONCENTRATION_PARTS_PER_MILLION
-            case SensorDeviceClass.PM25 | SensorDeviceClass.PM10 | SensorDeviceClass.PM1 | SensorDeviceClass.OZONE | SensorDeviceClass.NITROGEN_DIOXIDE | SensorDeviceClass.NITROGEN_MONOXIDE | SensorDeviceClass.SULPHUR_DIOXIDE:
-                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-            case SensorDeviceClass.ATMOSPHERIC_PRESSURE:
-                unit = UnitOfPressure.BAR
-            case SensorDeviceClass.HUMIDITY:
-                unit = PERCENTAGE
-            case SensorDeviceClass.TEMPERATURE:
-                unit = UnitOfTemperature.CELSIUS
+        if coordinator.data.get(metric.name):
+            match metric.value:
+                case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
+                    unit = None
+                case SensorDeviceClass.CO | SensorDeviceClass.CO2:
+                    unit = CONCENTRATION_PARTS_PER_MILLION
+                case SensorDeviceClass.PM25 | SensorDeviceClass.PM10 | SensorDeviceClass.PM1 | SensorDeviceClass.OZONE | SensorDeviceClass.NITROGEN_DIOXIDE | SensorDeviceClass.NITROGEN_MONOXIDE | SensorDeviceClass.SULPHUR_DIOXIDE:
+                    unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                case SensorDeviceClass.ATMOSPHERIC_PRESSURE:
+                    unit = UnitOfPressure.BAR
+                case SensorDeviceClass.HUMIDITY:
+                    unit = PERCENTAGE
+                case SensorDeviceClass.TEMPERATURE:
+                    unit = UnitOfTemperature.CELSIUS
 
         entities.append(
-            Station(
+            OpenAQSensor(
                 hass,
-                "test",
+                coordinator.location_id,
                 OpenAQSensorDescription(
                     key=metric.name.lower(),
                     name=metric.name.replace("_", " "),
@@ -88,8 +90,8 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-class Station(SensorEntity):
-    """ASD."""
+class OpenAQSensor(SensorEntity):
+    """OpenAQ sensor"""
 
     def __init__(
         self,
@@ -97,7 +99,7 @@ class Station(SensorEntity):
         station_id,
         description: OpenAQSensorDescription,
     ) -> None:
-        """ASD."""
+        """Init"""
         self.entity_description = description
         self.station_id = station_id
         self.metric = self.entity_description.metric
