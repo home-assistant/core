@@ -1,6 +1,0 @@
-projectKey=Home-Assistant-Core-3
-serverUrl=http://localhost:9000
-serverVersion=10.2.0.77647
-dashboardUrl=http://localhost:9000/dashboard?id=Home-Assistant-Core-3
-ceTaskId=AYsUmnVx5FnW2DC9pa8u
-ceTaskUrl=http://localhost:9000/api/ce/task?id=AYsUmnVx5FnW2DC9pa8u
