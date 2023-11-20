@@ -23,12 +23,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the departure sensor."""
-    name = config.data.get(CONF_NAME, DEFAULT_NAME)
-    county = config.data[CONF_COUNTY]
+    name = config.data.get(CONF_NAME, DEFAULT_NAME + " - Sweden")
+    _county = config.data[CONF_COUNTY]
+    language = hass.config.language
 
-    crisis_alerter = CrisisAlerter(county)
+    all_news = CrisisAlerter(language=language)
 
-    sensor = CrisisAlerterSensor(config.entry_id, name, crisis_alerter)
+    sensor = CrisisAlerterSensor(config.entry_id, name, all_news)
 
     async_add_entities([sensor], False)
 
@@ -55,9 +56,9 @@ class CrisisAlerterSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            "Länk": self._web,
-            "Publicerad": self._published,
-            "Område": self._area,
+            "Link": self._web,
+            "Published": self._published,
+            "County": self._area,
         }
 
     def added_to_hass(self) -> None:
@@ -96,7 +97,11 @@ class CrisisAlerterSensor(SensorEntity):
                     news["Area"][0]["Description"] if len(news["Area"]) > 0 else None
                 )
             else:
-                self._state = "Inga larm"
+                self._state = (
+                    "Inga larm"
+                    if self._crisis_alerter.language == "sv"
+                    else "No alarms"
+                )
         except Error as error:
             _LOGGER.error("Error fetching data: %s", error)
             self._state = "Unavailable"
