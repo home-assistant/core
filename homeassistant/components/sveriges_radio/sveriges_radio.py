@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 import aiohttp
-import defusedxml
+from defusedxml import ElementTree
 
 from homeassistant.components.media_source.error import Unresolvable
 
@@ -168,7 +168,7 @@ class SverigesRadio:
                 if response.status != 200:
                     return {}
                 response_text = await response.text()
-                return defusedxml.fromstring(response_text)
+                return ElementTree.fromstring(response_text)
         except aiohttp.ClientError:
             # Handle network-related errors here
             return {}
