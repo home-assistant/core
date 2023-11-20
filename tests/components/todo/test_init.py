@@ -915,7 +915,7 @@ async def test_remove_completed_items_service(
 
     test_entity.async_delete_todo_items.reset_mock()
 
-    # call multiple times will not change et all
+    # calling service multiple times will not call the entity method
     await hass.services.async_call(
         DOMAIN,
         "remove_completed_items",
