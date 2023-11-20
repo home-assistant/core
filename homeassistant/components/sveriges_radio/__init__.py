@@ -1,14 +1,13 @@
 """The Sveriges Radio integration."""
 from __future__ import annotations
 
-from sverigesradio import SverigesRadio
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .sveriges_radio import SverigesRadio
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

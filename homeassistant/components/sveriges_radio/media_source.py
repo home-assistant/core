@@ -1,8 +1,6 @@
 """Expose Sveriges Radio as a media source."""
 from __future__ import annotations
 
-import mimetypes
-
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
@@ -16,13 +14,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 from .sveriges_radio import Channel, SverigesRadio
-
-CODEC_TO_MIMETYPE = {
-    "MP3": "audio/mpeg",
-    "AAC": "audio/aac",
-    "AAC+": "audio/aac",
-    "OGG": "application/ogg",
-}
 
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
@@ -60,7 +51,7 @@ class RadioMediaSource(MediaSource):
         if not station:
             raise Unresolvable("Radio station is no longer available")
 
-        if not (mime_type := self._async_get_station_mime_type(station)):
+        if not (mime_type := "audio/mpeg"):
             raise Unresolvable("Could not determine stream type of radio station")
 
         return PlayMedia(station.url, mime_type)
@@ -75,52 +66,36 @@ class RadioMediaSource(MediaSource):
         if radio is None:
             raise BrowseError("Sveriges Radio not initialized")
 
-        return BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=None,
-            media_class=MediaClass.CHANNEL,
-            media_content_type=MediaType.MUSIC,
-            title=self.entry.title,
-            can_play=False,
-            can_expand=True,
-            children_media_class=MediaClass.DIRECTORY,
-        )
+        # Check if the item is the root of the media source
+        if item.identifier is None:
+            # Fetch all channels
+            channels = await radio.channels()
+            return await self._async_build_stations(channels)
 
-    @callback
-    @staticmethod
-    def _async_get_station_mime_type(station: Channel) -> str | None:
-        """Determine mime type of a radio station."""
-        mime_type = CODEC_TO_MIMETYPE.get("MP3")
-        if not mime_type:
-            mime_type, _ = mimetypes.guess_type(station.url)
-        return mime_type
+        # For a specific channel, you can add more logic here
+        # ...
+
+        # Fallback for unhandled cases
+        raise BrowseError("Item not found")
 
     @callback
     async def _async_build_stations(
-        self, radios: SverigesRadio, stations: list[Channel]
+        self, channels: list[Channel]
     ) -> list[BrowseMediaSource]:
-        """Build list of media sources for a specific channel."""
-        radio = self.radio
+        """Build list of media sources for channels."""
+        media_sources = []
+        for channel in channels:
+            # Create a BrowseMediaSource object for each channel
+            channel_media = BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=str(channel.station_id),
+                media_class=MediaClass.MUSIC,
+                media_content_type=MediaType.MUSIC,
+                title=channel.name,
+                can_play=True,
+                can_expand=False,
+                thumbnail=channel.image,
+            )
+            media_sources.append(channel_media)
 
-        if radio is None:
-            raise BrowseError("Sveriges Radio not initialized")
-
-        # Fetch the specific channel (channel 164 in this case)
-        station = await radio.channel(164)
-        if not station:
-            raise BrowseError("Channel not found")
-
-        # Create a BrowseMediaSource object for the channel
-        channel_media = BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=str(station.id),
-            media_class=MediaClass.MUSIC,
-            media_content_type=MediaType.MUSIC,
-            title=station.name,
-            can_play=True,
-            can_expand=False,
-            thumbnail=station.image,
-        )
-
-        # Return a list containing only this channel
-        return [channel_media]
+        return media_sources
