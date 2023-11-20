@@ -21,14 +21,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
+from . import FritzBoxDeviceEntity
+from .common import get_coordinator
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
-    CONF_COORDINATOR,
-    DOMAIN,
 )
 from .model import ClimateExtraAttributes
 
@@ -50,9 +49,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
     @callback
     def _add_entities() -> None:

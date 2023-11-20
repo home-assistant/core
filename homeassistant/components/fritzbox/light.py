@@ -17,7 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
-from .const import COLOR_MODE, COLOR_TEMP_MODE, CONF_COORDINATOR, DOMAIN, LOGGER
+from .common import get_coordinator
+from .const import COLOR_MODE, COLOR_TEMP_MODE, LOGGER
 
 SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
@@ -26,9 +27,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome light from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
     @callback
     def _add_entities() -> None:

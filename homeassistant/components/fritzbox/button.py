@@ -7,17 +7,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzboxDataUpdateCoordinator, FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN
+from . import FritzBoxEntity
+from .common import get_coordinator
+from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome template from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
     @callback
     def _add_entities() -> None:
