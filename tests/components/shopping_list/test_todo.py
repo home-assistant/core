@@ -14,32 +14,16 @@ TEST_ENTITY = "todo.shopping_list"
 
 
 @pytest.fixture
-def ws_req_id() -> Callable[[], int]:
-    """Fixture for incremental websocket requests."""
-
-    id = 0
-
-    def next() -> int:
-        nonlocal id
-        id += 1
-        return id
-
-    return next
-
-
-@pytest.fixture
 async def ws_get_items(
-    hass_ws_client: WebSocketGenerator, ws_req_id: Callable[[], int]
+    hass_ws_client: WebSocketGenerator,
 ) -> Callable[[], Awaitable[dict[str, str]]]:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
-        id = ws_req_id()
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": id,
                 "type": "todo/item/list",
                 "entity_id": TEST_ENTITY,
             }
@@ -55,23 +39,20 @@ async def ws_get_items(
 @pytest.fixture
 async def ws_move_item(
     hass_ws_client: WebSocketGenerator,
-    ws_req_id: Callable[[], int],
 ) -> Callable[[str, str | None], Awaitable[None]]:
     """Fixture to move an item in the todo list."""
 
     async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
-        id = ws_req_id()
         data = {
-            "id": id,
             "type": "todo/item/move",
             "entity_id": TEST_ENTITY,
             "uid": uid,
         }
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
-        await client.send_json(data)
+        await client.send_json_auto_id(data)
         resp = await client.receive_json()
         assert resp.get("id") == id
         return resp
@@ -83,7 +64,6 @@ async def test_get_items(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test creating a shopping list item with the WS API and verifying with To-do API."""
@@ -94,9 +74,7 @@ async def test_get_items(
     assert state.state == "0"
 
     # Native shopping list websocket
-    await client.send_json(
-        {"id": ws_req_id(), "type": "shopping_list/items/add", "name": "soda"}
-    )
+    await client.send_json_auto_id({"type": "shopping_list/items/add", "name": "soda"})
     msg = await client.receive_json()
     assert msg["success"] is True
     data = msg["result"]
@@ -117,7 +95,6 @@ async def test_get_items(
 async def test_add_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test adding shopping_list item and listing it."""
@@ -145,7 +122,6 @@ async def test_add_item(
 async def test_remove_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test removing a todo item."""
@@ -187,7 +163,6 @@ async def test_remove_item(
 async def test_bulk_remove(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test removing a todo item."""
@@ -232,7 +207,6 @@ async def test_bulk_remove(
 async def test_update_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test updating a todo item."""
@@ -286,7 +260,6 @@ async def test_update_item(
 async def test_partial_update_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test updating a todo item with partial information."""
@@ -363,7 +336,6 @@ async def test_partial_update_item(
 async def test_update_invalid_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test updating a todo item that does not exist."""
@@ -410,7 +382,6 @@ async def test_update_invalid_item(
 async def test_move_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
     ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
     src_idx: int,
