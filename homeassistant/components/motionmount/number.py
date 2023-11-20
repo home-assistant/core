@@ -20,10 +20,10 @@ async def async_setup_entry(
     unique_id = format_mac(coordinator.mm.mac.hex())
 
     async_add_entities(
-        [
+        (
             MotionMountExtension(coordinator, unique_id),
             MotionMountTurn(coordinator, unique_id),
-        ]
+        )
     )
 
 
