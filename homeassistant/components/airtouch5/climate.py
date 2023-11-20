@@ -99,7 +99,8 @@ async def async_setup_entry(
 
     entities: list[ClimateEntity] = []
 
-    # Add each AC (and remember what zones they apply to)
+    # Add each AC (and remember what zones they apply to).
+    # Each zone is controlled by a single AC
     zone_to_ac: dict[int, AcAbility] = {}
     for ac in client.ac:
         for i in range(ac.start_zone_number, ac.start_zone_number + ac.zone_count):
