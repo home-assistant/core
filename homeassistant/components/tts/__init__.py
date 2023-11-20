@@ -278,7 +278,8 @@ def _convert_audio(
             if proc.returncode != 0:
                 _LOGGER.error(stderr.decode())
                 raise RuntimeError(
-                    f"Unexpected error while running ffmpeg with arguments: {command}. See log for details."
+                    f"Unexpected error while running ffmpeg with arguments: {command}."
+                    "See log for details."
                 )
 
         output_file.seek(0)

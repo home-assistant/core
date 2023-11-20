@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
-    MultipleTrainAnnouncementFound,
     MultipleTrainStationsFound,
     NoTrainAnnouncementFound,
     NoTrainStationFound,
@@ -176,10 +175,6 @@ async def test_flow_fails(
         (
             NoTrainAnnouncementFound,
             "no_trains",
-        ),
-        (
-            MultipleTrainAnnouncementFound,
-            "multiple_trains",
         ),
         (
             UnknownError,
@@ -370,10 +365,6 @@ async def test_reauth_flow_error(
         (
             NoTrainAnnouncementFound,
             "no_trains",
-        ),
-        (
-            MultipleTrainAnnouncementFound,
-            "multiple_trains",
         ),
         (
             UnknownError,

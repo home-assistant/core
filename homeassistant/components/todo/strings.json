@@ -6,6 +6,16 @@
     }
   },
   "services": {
+    "get_items": {
+      "name": "Get to-do list items",
+      "description": "Get items on a to-do list.",
+      "fields": {
+        "status": {
+          "name": "Status",
+          "description": "Only return to-do items with the specified statuses. Returns not completed actions by default."
+        }
+      }
+    },
     "add_item": {
       "name": "Add to-do list item",
       "description": "Add a new to-do list item.",

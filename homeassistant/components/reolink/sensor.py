@@ -24,20 +24,12 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
-@dataclass
-class ReolinkSensorEntityDescriptionMixin:
-    """Mixin values for Reolink  sensor entities for a camera channel."""
-
-    value: Callable[[Host, int], int]
-
-
-@dataclass
-class ReolinkSensorEntityDescription(
-    SensorEntityDescription, ReolinkSensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkSensorEntityDescription(SensorEntityDescription):
     """A class that describes sensor entities for a camera channel."""
 
     supported: Callable[[Host, int], bool] = lambda api, ch: True
+    value: Callable[[Host, int], int]
 
 
 @dataclass

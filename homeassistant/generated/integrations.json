@@ -1718,7 +1718,7 @@
     },
     "fints": {
       "name": "FinTS",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2886,6 +2886,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "komfovent": {
+      "name": "Komfovent",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "konnected": {
       "name": "Konnected.io",
@@ -4291,7 +4297,7 @@
     "ping": {
       "name": "Ping (ICMP)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "pioneer": {
@@ -6098,7 +6104,7 @@
       "iot_class": "cloud_polling"
     },
     "universal": {
-      "name": "Universal Media Player",
+      "name": "Universal media player",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
@@ -6153,6 +6159,12 @@
       "name": "Ubiquiti UniFi Video",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "v2c": {
+      "name": "V2C",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "vallox": {

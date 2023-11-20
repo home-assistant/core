@@ -1,16 +1,34 @@
 """API for Google Tasks bound to Home Assistant OAuth."""
 
+import json
+import logging
 from typing import Any
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
-from googleapiclient.http import HttpRequest
+from googleapiclient.errors import HttpError
+from googleapiclient.http import BatchHttpRequest, HttpRequest
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .exceptions import GoogleTasksApiError
+
+_LOGGER = logging.getLogger(__name__)
+
 MAX_TASK_RESULTS = 100
+
+
+def _raise_if_error(result: Any | dict[str, Any]) -> None:
+    """Raise a GoogleTasksApiError if the response contains an error."""
+    if not isinstance(result, dict):
+        raise GoogleTasksApiError(
+            f"Google Tasks API replied with unexpected response: {result}"
+        )
+    if error := result.get("error"):
+        message = error.get("message", "Unknown Error")
+        raise GoogleTasksApiError(f"Google Tasks API response: {message}")
 
 
 class AsyncConfigEntryAuth:
@@ -40,7 +58,7 @@ class AsyncConfigEntryAuth:
         """Get all TaskList resources."""
         service = await self._get_service()
         cmd: HttpRequest = service.tasklists().list()
-        result = await self._hass.async_add_executor_job(cmd.execute)
+        result = await self._execute(cmd)
         return result["items"]
 
     async def list_tasks(self, task_list_id: str) -> list[dict[str, Any]]:
@@ -49,7 +67,7 @@ class AsyncConfigEntryAuth:
         cmd: HttpRequest = service.tasks().list(
             tasklist=task_list_id, maxResults=MAX_TASK_RESULTS
         )
-        result = await self._hass.async_add_executor_job(cmd.execute)
+        result = await self._execute(cmd)
         return result["items"]
 
     async def insert(
@@ -63,7 +81,7 @@ class AsyncConfigEntryAuth:
             tasklist=task_list_id,
             body=task,
         )
-        await self._hass.async_add_executor_job(cmd.execute)
+        await self._execute(cmd)
 
     async def patch(
         self,
@@ -78,4 +96,43 @@ class AsyncConfigEntryAuth:
             task=task_id,
             body=task,
         )
-        await self._hass.async_add_executor_job(cmd.execute)
+        await self._execute(cmd)
+
+    async def delete(
+        self,
+        task_list_id: str,
+        task_ids: list[str],
+    ) -> None:
+        """Delete a task resources."""
+        service = await self._get_service()
+        batch: BatchHttpRequest = service.new_batch_http_request()
+
+        def response_handler(_, response, exception: HttpError) -> None:
+            if exception is not None:
+                raise GoogleTasksApiError(
+                    f"Google Tasks API responded with error ({exception.status_code})"
+                ) from exception
+            data = json.loads(response)
+            _raise_if_error(data)
+
+        for task_id in task_ids:
+            batch.add(
+                service.tasks().delete(
+                    tasklist=task_list_id,
+                    task=task_id,
+                ),
+                request_id=task_id,
+                callback=response_handler,
+            )
+        await self._execute(batch)
+
+    async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
+        try:
+            result = await self._hass.async_add_executor_job(request.execute)
+        except HttpError as err:
+            raise GoogleTasksApiError(
+                f"Google Tasks API responded with error ({err.status_code})"
+            ) from err
+        if result:
+            _raise_if_error(result)
+        return result
