@@ -3,6 +3,6 @@
 DOMAIN = "instructure"
 
 # Save data
-ANNOUNCMENTS_KEY: str = "announcements"
+ANNOUNCEMENTS_KEY: str = "announcements"
 ASSIGNMENTS_KEY: str = "assignments"
 CONVERSATIONS_KEY: str = "conversations"

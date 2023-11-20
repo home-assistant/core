@@ -9,8 +9,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, ANNOUNCMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
-from .CanvasApi import CanvasApi
+from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
+from .canvas_api import CanvasAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class CanvasUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for the Canvas integration."""
 
-    def __init__(self, hass, entry: ConfigEntry, api: CanvasApi):
+    def __init__(self, hass, entry: ConfigEntry, api: CanvasAPI):
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -28,21 +28,37 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = entry
         self.api = api
+        self.update_entities = None
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         courses = self.config_entry.options["courses"]
+        course_ids = courses.values()
 
         try:
             async with async_timeout.timeout(10):
-                print("[REDACTED]: 'Qs???' Class: '😑🙄😑😑🙄'")
-                print(f'courses: {courses.values()}')
+                assignments = await self.api.async_get_assignments(course_ids)
+                announcements = await self.api.async_get_announcements(course_ids)
+                conversations = await self.api.async_get_conversations()
 
-                self.hass.data[DOMAIN][ASSIGNMENTS_KEY] = await self.api.async_get_assignments(courses.values())
-                self.hass.data[DOMAIN][ANNOUNCMENTS_KEY] = await self.api.async_get_announcements(courses.values())
-                self.hass.data[DOMAIN][CONVERSATIONS_KEY] = await self.api.async_get_conversations(courses.values())
-                
-                # TODO: sensor.py reset_state() to delete all entities and create new ones
+                new_data = {
+                    ASSIGNMENTS_KEY: assignments,
+                    ANNOUNCEMENTS_KEY: announcements,
+                    CONVERSATIONS_KEY: conversations,
+                }
+
+                old_data = self.data or {}
+                self.data = new_data
+
+                if self.update_entities:
+                    for data_type in new_data.keys():
+                        self.update_entities(
+                            data_type,
+                            new_data.get(data_type, {}),
+                            old_data.get(data_type, {}),
+                        )
+
+                return new_data
 
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")

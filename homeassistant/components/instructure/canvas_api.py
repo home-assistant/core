@@ -1,6 +1,8 @@
 import httpx
 import urllib.parse
 import json
+from typing import Any
+
 
 class CanvasAPI:
     """
@@ -69,54 +71,63 @@ class CanvasAPI:
         list: A list of courses.
         """
         response = await self.async_make_get_request("/courses", {"per_page": "50"})
-        courses = json.loads(response.content.decode('utf-8'))
+        courses = json.loads(response.content.decode("utf-8"))
         return courses
 
-    async def async_get_assignments(self, course_ids: list[str]) -> list:
+    async def async_get_assignments(self, course_ids: list[str]) -> dict[str, Any]:
         """
-        Retrieves a list of assignments for given course IDs from the Canvas API.
+        Retrieves a dictionary of assignments for given course IDs from the Canvas API.
 
         Args:
-        course_ids (list[str]): A list of course IDs for which to retrieve assignments.
+        course_ids (list[str]): A list of course IDs to fetch assignments from.
 
         Returns:
-        list: A list of assignments.
+        dict: The response from the Canvas API.
         """
-        assignments = []
+        assignments = {}
 
         for course_id in course_ids:
-            response = await self.async_make_get_request(f"/courses/{course_id}/assignments", {"per_page": "50"})
-            course_assignments = json.loads(response.content.decode('utf-8'))
-            assignments += course_assignments
+            response = await self.async_make_get_request(
+                f"/courses/{course_id}/assignments", {"per_page": "50"}
+            )
+            course_assignments = json.loads(response.content.decode("utf-8"))
+            for assignment in course_assignments:
+                assignments[assignment["id"]] = assignment
 
         return assignments
 
-    async def async_get_announcements(self, course_ids: list[str]) -> list:
+    async def async_get_announcements(self, course_ids: list[str]) -> dict[str, Any]:
         """
-        Retrieves a list of announcements for given course IDs from the Canvas API.
+        Retrieves a dictionary of announcements for given course IDs from the Canvas API.
 
         Args:
-        course_ids (list[str]): A list of course IDs for which to retrieve announcements.
+        course_ids (list[str]): A list of course IDs to fetch assignments from.
 
         Returns:
-        list: A list of announcements.
+        dict: The response from the Canvas API.
         """
-        announcements = []
+        announcements = {}
 
         for course_id in course_ids:
-            response = await self.async_make_get_request("/announcements", {"per_page": "50", "context_codes": f"course_{course_id}"}) 
-            course_announcements = json.loads(response.content.decode('utf-8'))
-            announcements += course_announcements
+            response = await self.async_make_get_request(
+                "/announcements",
+                {"per_page": "50", "context_codes": f"course_{course_id}"},
+            )
+            course_announcements = json.loads(response.content.decode("utf-8"))
+            for announcement in course_announcements:
+                announcements[announcement["id"]] = announcement
 
         return announcements
 
-    async def async_get_conversations(self) -> list:
+    async def async_get_conversations(self) -> dict[str, Any]:
         """
-        Retrieves a list of conversations from the Canvas API.
+        Retrieves a dictionary of conversations from the Canvas API.
 
         Returns:
-        list: A list of conversations.
+        dict: The response from the Canvas API.
         """
-        response = await self.async_make_get_request("/conversations", {"per_page": "50"})
-        assignments = json.loads(response.content.decode('utf-8'))
-        return assignments
+        response = await self.async_make_get_request(
+            "/conversations", {"per_page": "50"}
+        )
+        conversations = json.loads(response.content.decode("utf-8"))
+        return {conversation["id"]: conversation for conversation in conversations}
