@@ -133,14 +133,6 @@
         Invalid config for 'iot_domain.non_adr_0007' at iot_domain/iot_domain_5.yaml, line 7: expected str for dictionary value 'option2', got 123
       ''',
     }),
-    dict({
-      'has_exc_info': True,
-      'message': "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 1: broken",
-    }),
-    dict({
-      'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator',
-    }),
   ])
 # ---
 # name: test_component_config_validation_error[include_dir_merge_list]
@@ -164,14 +156,6 @@
         Invalid config for 'iot_domain.non_adr_0007' at iot_domain/iot_domain_2.yaml, line 13: 'no_such_option' is an invalid option for 'iot_domain.non_adr_0007', check: no_such_option
         Invalid config for 'iot_domain.non_adr_0007' at iot_domain/iot_domain_2.yaml, line 14: expected str for dictionary value 'option2', got 123
       ''',
-    }),
-    dict({
-      'has_exc_info': True,
-      'message': "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 1: broken",
-    }),
-    dict({
-      'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator',
     }),
   ])
 # ---
@@ -235,26 +219,6 @@
   list([
     dict({
       'has_exc_info': False,
-      'message': "Invalid config for 'iot_domain' at integrations/iot_domain.yaml, line 6: required key 'platform' not provided",
-    }),
-    dict({
-      'has_exc_info': False,
-      'message': "Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 9: expected str for dictionary value 'option1', got 123",
-    }),
-    dict({
-      'has_exc_info': False,
-      'message': "Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 12: 'no_such_option' is an invalid option for 'iot_domain.non_adr_0007', check: no_such_option",
-    }),
-    dict({
-      'has_exc_info': False,
-      'message': '''
-        Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 18: required key 'option1' not provided
-        Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 19: 'no_such_option' is an invalid option for 'iot_domain.non_adr_0007', check: no_such_option
-        Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 20: expected str for dictionary value 'option2', got 123
-      ''',
-    }),
-    dict({
-      'has_exc_info': False,
       'message': "Invalid config for 'adr_0007_2' at integrations/adr_0007_2.yaml, line 2: required key 'host' not provided",
     }),
     dict({
@@ -274,16 +238,36 @@
       ''',
     }),
     dict({
-      'has_exc_info': False,
-      'message': "Invalid config for 'custom_validator_ok_2' at integrations/custom_validator_ok_2.yaml, line 2: required key 'host' not provided",
-    }),
-    dict({
       'has_exc_info': True,
       'message': "Invalid config for 'custom_validator_bad_1' at integrations/custom_validator_bad_1.yaml, line 2: broken",
     }),
     dict({
       'has_exc_info': True,
       'message': 'Unknown error calling custom_validator_bad_2 config validator',
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'custom_validator_ok_2' at integrations/custom_validator_ok_2.yaml, line 2: required key 'host' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain' at integrations/iot_domain.yaml, line 6: required key 'platform' not provided",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 9: expected str for dictionary value 'option1', got 123",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': "Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 12: 'no_such_option' is an invalid option for 'iot_domain.non_adr_0007', check: no_such_option",
+    }),
+    dict({
+      'has_exc_info': False,
+      'message': '''
+        Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 18: required key 'option1' not provided
+        Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 19: 'no_such_option' is an invalid option for 'iot_domain.non_adr_0007', check: no_such_option
+        Invalid config for 'iot_domain.non_adr_0007' at integrations/iot_domain.yaml, line 20: expected str for dictionary value 'option2', got 123
+      ''',
     }),
   ])
 # ---
