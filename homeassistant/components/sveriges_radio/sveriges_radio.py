@@ -1,11 +1,10 @@
 """Sveriges radio classes."""
 
 from datetime import datetime
-import json
 import re
 
 import aiohttp
-import requests
+import defusedxml
 
 from homeassistant.components.media_source.error import Unresolvable
 
@@ -90,6 +89,7 @@ class Channel:
 
     def __init__(
         self,
+        sveriges_radio,
         name=None,
         station_id=None,
         siteurl=None,
@@ -99,12 +99,13 @@ class Channel:
         **kwargs,
     ):
         """Init function for channel class."""
+        self.sveriges_radio = sveriges_radio
 
         if not station_id:
             raise Unresolvable("No such channel")
 
         self.station_id = station_id
-        self.name = name.encode("utf-8")
+        self.name = name
         self.siteurl = siteurl
         self.color = color
         self.image = image
@@ -115,9 +116,8 @@ class Channel:
 
         return "Channel(%s)" % self.name
 
-    @property
-    def song(self):
-        """Current song of the channel."""
+    async def get_song(self):
+        """Asynchronously get the current song of the channel."""
 
         payload = {"channelid": self.station_id}
         response = SverigesRadio.call("/playlists/rightnow", payload)
@@ -133,9 +133,8 @@ class Channel:
 
         return Playlist(now=song, next=nextsong)
 
-    @property
-    def program(self):
-        """Current program of the channel."""
+    async def get_program(self):
+        """Asynchronously get the current program of the channel."""
 
         payload = {"channelid": self.station_id}
         response = SverigesRadio.call("/scheduledepisodes/rightnow", payload)
@@ -153,48 +152,64 @@ class Channel:
 
 
 class SverigesRadio:
-    """Class for sveriges radio API."""
+    """Class for Sveriges Radio API."""
 
-    user_agent: str
+    def __init__(self, session: aiohttp.ClientSession, user_agent: str) -> None:
+        """Init function for Sveriges Radio."""
+        self.session = session
+        self.user_agent = user_agent
 
-    session: aiohttp.client.ClientSession | None = None
+    async def call(self, method, payload):
+        """Asynchronously call the API."""
+        url = f"http://api.sr.se/api/v2/{method}"
 
-    @classmethod
-    def call(cls, method, payload):
-        """Call the API."""
-
-        url = "http://api.sr.se/api/v2/%s" % method
-
-        payload["format"] = "json"
-
-        response = requests.get(url, params=payload, timeout=8)
-        if response.status_code != 200:
+        try:
+            async with self.session.get(url, params=payload, timeout=8) as response:
+                if response.status != 200:
+                    return {}
+                response_text = await response.text()
+                return defusedxml.fromstring(response_text)
+        except aiohttp.ClientError:
+            # Handle network-related errors here
             return {}
 
-        return json.loads(response.text)
+    async def channels(self):
+        """Asynchronously get all channels."""
+        payload = {}  # {"size": 500}
+        data = await self.call("channels", payload)
 
-    @classmethod
-    def channels(cls):
-        """Get all channels."""
+        channels = []
+        for channel_data in data.find("channels"):
+            station_id = channel_data.attrib.get("id")
+            name = channel_data.attrib.get("name")
+            siteurl = channel_data.find("siteurl").text
+            color = channel_data.find("color").text
+            image = channel_data.find("image").text
+            url = channel_data.find("liveaudio/url").text
 
-        payload = {"size": 500}
-        data = cls.call("/channels", payload)
-        channels = data.get("channels")
-        return [Channel(**channel) for channel in channels]
+            channel = Channel(
+                sveriges_radio=self,
+                name=name,
+                station_id=station_id,
+                siteurl=siteurl,
+                color=color,
+                image=image,
+                url=url,
+            )
 
-    @classmethod
-    def channel(cls, station_id):
-        """Get a specific channel."""
+            channels.append(channel)
 
-        data = cls.call("/channels/%s" % station_id)
+        return channels
+
+    async def channel(self, station_id):
+        """Asynchronously get a specific channel."""
+        data = await self.call(f"/channels/{station_id}")
         return Channel(**data.get("channel", {}))
 
-    @classmethod
-    def schedule(cls, channelid=None, programid=None):
-        """Get the schedule of a specific channel."""
-
+    async def schedule(self, channelid=None, programid=None):
+        """Asynchronously get the schedule of a specific channel."""
         payload = {"size": 500, "channelid": channelid, "programid": programid}
-        data = cls.call("/scheduledepisodes", payload)
+        data = await self.call("/scheduledepisodes", payload)
         if not data:
             return []
         schedule = data.get("schedule")
