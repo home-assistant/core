@@ -24,11 +24,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -477,6 +479,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ViCareSensorEntityDescription(
+        key="volumetric_flow",
+        name="Volumetric flow",
+        icon="mdi:gauge",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_getter=lambda api: api.getVolumetricFlowReturn() / 1000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -571,6 +582,13 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHoursLoadClass5(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="compressor_phase",
+        name="Compressor Phase",
+        icon="mdi:information",
+        value_getter=lambda api: api.getPhase(),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

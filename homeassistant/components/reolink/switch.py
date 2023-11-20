@@ -18,38 +18,22 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
-@dataclass
-class ReolinkSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink switch entities."""
-
-    value: Callable[[Host, int], bool]
-    method: Callable[[Host, int, bool], Any]
-
-
-@dataclass
-class ReolinkSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkSwitchEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes switch entities."""
 
+    method: Callable[[Host, int, bool], Any]
     supported: Callable[[Host, int], bool] = lambda api, ch: True
+    value: Callable[[Host, int], bool]
 
 
-@dataclass
-class ReolinkNVRSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink NVR switch entities."""
-
-    value: Callable[[Host], bool]
-    method: Callable[[Host, bool], Any]
-
-
-@dataclass
-class ReolinkNVRSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkNVRSwitchEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkNVRSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes NVR switch entities."""
 
+    method: Callable[[Host, bool], Any]
     supported: Callable[[Host], bool] = lambda api: True
+    value: Callable[[Host], bool]
 
 
 SWITCH_ENTITIES = (

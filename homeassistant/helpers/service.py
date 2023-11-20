@@ -549,9 +549,11 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid):
+    except (HomeAssistantError, vol.Invalid) as ex:
         _LOGGER.warning(
-            "Unable to parse services.yaml for the %s integration", integration.domain
+            "Unable to parse services.yaml for the %s integration: %s",
+            integration.domain,
+            ex,
         )
         return {}
 
