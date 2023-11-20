@@ -320,7 +320,7 @@ class Pipeline:
     wake_word_entity: str | None
     wake_word_id: str | None
 
-    id: str = field(default_factory=ulid_util.ulid)
+    id: str = field(default_factory=ulid_util.ulid_now)
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> Pipeline:
@@ -482,7 +482,7 @@ class PipelineRun:
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
 
-    id: str = field(default_factory=ulid_util.ulid)
+    id: str = field(default_factory=ulid_util.ulid_now)
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
     tts_engine: str = field(init=False, repr=False)
     tts_options: dict | None = field(init=False, default=None)
@@ -1476,7 +1476,7 @@ class PipelineStorageCollection(
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return ulid_util.ulid()
+        return ulid_util.ulid_now()
 
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
@@ -1664,7 +1664,7 @@ class DeviceAudioQueue:
     queue: asyncio.Queue[bytes | None]
     """Queue of audio chunks (None = stop signal)"""
 
-    id: str = field(default_factory=ulid_util.ulid)
+    id: str = field(default_factory=ulid_util.ulid_now)
     """Unique id to ensure the correct audio queue is cleaned up in websocket API."""
 
     overflow: bool = False
