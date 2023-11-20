@@ -62,6 +62,7 @@ from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 from .warnings import SmhiWarnings
+from .weather_locations import SmhiWeatherLocations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,13 +114,17 @@ async def async_setup_entry(
         session=session,
     )
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
-
     async_add_entities([entity], True)
 
+    # SMHI warnings
     warnings = SmhiWarnings()
-    data = await warnings.get_warnings()
+    warnings_data = await warnings.get_warnings()
+    async_add_entities(warnings_data, True)
 
-    async_add_entities(data, True)
+    # SMHI weather
+    weather_locations = SmhiWeatherLocations()
+    weather_data = await weather_locations.get_weather_locations()
+    async_add_entities(weather_data, True)
 
 
 class SmhiWeather(WeatherEntity):
