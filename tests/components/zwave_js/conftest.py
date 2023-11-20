@@ -384,6 +384,10 @@ def climate_eurotronic_spirit_z_state_fixture():
     """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
 
+@pytest.fixture(name="climate_heatit_z_trm6_state", scope="session")
+def climate_heatit_z_trm6_state_fixture():
+    """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_heatit_z_trm6_state.json"))
 
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
@@ -902,6 +906,12 @@ def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_stat
     client.driver.controller.nodes[node.node_id] = node
     return node
 
+@pytest.fixture(name="climate_heatit_z_trm6")
+def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state):
+    """Mock a climate radio HEATIT Z-TRM6 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm6_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
 
 @pytest.fixture(name="climate_heatit_z_trm3_no_value")
 def climate_heatit_z_trm3_no_value_fixture(
