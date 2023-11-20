@@ -22,5 +22,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "ebike_sensor": {
+        "name": "E-bikes"
+      },
+      "bike_sensor": {
+        "name": "Bikes"
+      }
+    }
   }
 }
