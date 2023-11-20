@@ -1363,7 +1363,7 @@ async def async_process_component_config(  # noqa: C901
     platforms: list[ConfigType] = []
     for p_name, p_config in config_per_platform(config, domain):
         # Validate component specific platform schema
-        platform_name = f"{domain}.{p_name}"
+        platform_name = f"{p_name}.{domain}"
         try:
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as exc:
