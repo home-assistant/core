@@ -3,7 +3,7 @@ from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -12,7 +12,6 @@ class ViCareEntity(Entity):
     """Base class for ViCare entities."""
 
     _attr_has_entity_name = True
-    entity_description: EntityDescription
 
     def __init__(
         self,
