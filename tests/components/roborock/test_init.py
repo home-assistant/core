@@ -14,7 +14,6 @@ from homeassistant.components.roborock.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -46,8 +45,8 @@ async def test_config_entry_not_ready(
     with patch(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data",
     ), patch(
-        "homeassistant.components.roborock.RoborockDataUpdateCoordinator._async_update_data",
-        side_effect=UpdateFailed(),
+        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
+        side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
@@ -61,8 +60,8 @@ async def test_config_entry_not_ready_home_data(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data",
         side_effect=RoborockException(),
     ), patch(
-        "homeassistant.components.roborock.RoborockDataUpdateCoordinator._async_update_data",
-        side_effect=UpdateFailed(),
+        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
+        side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
