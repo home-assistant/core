@@ -1,6 +1,7 @@
 """Weather Locations."""
 
 import json
+from typing import Any
 
 from .downloader import SmhiDownloader
 from .smhi_geolocation_event import SmhiGeolocationEvent
@@ -15,6 +16,8 @@ class SmhiWeatherLocations:
     #     {"name": "SW CORNER", "latitude": 55.13, "longitude": 10.59},
     #     {"name": "SE CORNER", "latitude": 55.13, "longitude": 24.17}
     # ]
+
+    celsius_symbol = chr(176) + "C"
 
     def get_cities(self) -> list:
         """Get the cities which will be used as weather locations."""
@@ -36,16 +39,14 @@ class SmhiWeatherLocations:
 
         return cities
 
-    async def get_weather_data(self, lat: float, lon: float) -> list:
+    async def get_weather_data(self, lat: float, lon: float) -> Any:
         """Get weather data from SMHI api."""
         weather_api_url = f"https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{lon}/lat/{lat}/data.json"
 
         smhi_downloader = SmhiDownloader()
         data = await smhi_downloader.download_json(weather_api_url)
 
-        if isinstance(data, list):
-            return list(data)
-        return []
+        return data
 
     async def get_weather_locations(self) -> list[SmhiGeolocationEvent]:
         """Get the weather location entities."""
@@ -54,9 +55,10 @@ class SmhiWeatherLocations:
             city_weather_data = await self.get_weather_data(
                 city["latitude"], city["longitude"]
             )
-            temperature_data = city_weather_data[3][0][1][10]
+            timeseries_data = city_weather_data.get("timeSeries")[0]
+            temperature_data = timeseries_data.get("parameters")[10]
             temperature_text = (
-                str(temperature_data["values"][0]) + " " + str(temperature_data["unit"])
+                str(temperature_data["values"][0]) + " " + self.celsius_symbol
             )
 
             geolocation_event = SmhiGeolocationEvent(
