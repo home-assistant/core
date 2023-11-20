@@ -141,7 +141,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
         else:
-            conversation_id = ulid.ulid()
+            conversation_id = ulid.ulid_now()
             try:
                 prompt = self._async_generate_prompt(raw_prompt)
             except TemplateError as err:
