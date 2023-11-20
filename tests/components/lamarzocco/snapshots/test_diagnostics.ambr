@@ -195,6 +195,7 @@
     }),
     'current_status': dict({
       'brew_active': False,
+      'coffee_boiler_on': True,
       'coffee_set_temp': 95,
       'coffee_temp': 93,
       'dose_k1': 1023,
@@ -235,6 +236,7 @@
       'sat_off_time': '00:00',
       'sat_on_time': '00:00',
       'steam_boiler_enable': True,
+      'steam_boiler_on': True,
       'steam_set_temp': 128,
       'steam_temp': 113,
       'sun_auto': 'Disabled',

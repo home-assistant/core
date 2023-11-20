@@ -53,7 +53,9 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         min_temp=85,
         max_temp=104,
         set_temp_fn=lambda client, temp: client.set_coffee_temp(temp),
-        current_op_fn=lambda client: client.current_status.get("power", False),
+        current_op_fn=lambda client: client.current_status.get(
+            "coffee_boiler_on", False
+        ),
         control_fn=lambda client, state: client.set_power(state),
         current_temp_fn=lambda client: client.current_status.get("coffee_temp", 0),
         target_temp_fn=lambda client: client.current_status.get("coffee_set_temp", 0),
@@ -66,11 +68,8 @@ ENTITIES: tuple[LaMarzoccoWaterHeaterEntityDescription, ...] = (
         max_temp=131,
         set_temp_fn=lambda client, temp: client.set_steam_temp(round(temp)),
         current_op_fn=lambda client: client.current_status.get(
-            "steam_boiler_enable", False
-        )
-        and client.current_status.get(
-            "power", False
-        ),  # water heater is only on if power is on
+            "steam_boiler_on", False
+        ),
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         current_temp_fn=lambda client: client.current_status.get("steam_temp", 0),
         target_temp_fn=lambda client: client.current_status.get("steam_set_temp", 0),
