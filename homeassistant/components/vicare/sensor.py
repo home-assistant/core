@@ -693,11 +693,11 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self._attr_name = name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_native_value is not None
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
