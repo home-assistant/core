@@ -24,12 +24,14 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 
 from .const import (
     AUTH,
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
+    ISSUE_ID_WEBHOOK_NOT_RECEIVING,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_CAMERA,
@@ -160,6 +162,28 @@ class NetatmoDataHandler:
             self.config_entry, PLATFORMS
         )
         await self.async_dispatch()
+
+    async def async_update_if_no_webhook(self, signal_name: str) -> None:
+        if self._webhook:
+            async_delete_issue(
+                self.hass,
+                DOMAIN,
+                ISSUE_ID_WEBHOOK_NOT_RECEIVING
+            )
+        else:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                ISSUE_ID_WEBHOOK_NOT_RECEIVING,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                learn_more_url='https://www.home-assistant.io/integrations/netatmo/#webhook-events',
+                severity=IssueSeverity.WARNING,
+                translation_key=ISSUE_ID_WEBHOOK_NOT_RECEIVING
+            )
+
+            self.async_force_update(signal_name)
+            await self.async_update(datetime.now())
 
     async def async_update(self, event_time: datetime) -> None:
         """Update device.

@@ -37,6 +37,8 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
     "write_mhs1",
 ]
 
+ISSUE_ID_WEBHOOK_NOT_RECEIVING = "webhook_not_receiving"
+
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"

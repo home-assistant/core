@@ -301,6 +301,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
+    async def _async_update_if_no_webhook(self):
+        await self.data_handler.async_update_if_no_webhook(self._signal_name)
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -340,6 +343,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
@@ -347,6 +351,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             STATE_NETATMO_MANUAL, min(kwargs[ATTR_TEMPERATURE], DEFAULT_MAX_TEMP)
         )
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
@@ -358,11 +363,13 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         elif self._attr_hvac_mode != HVACMode.OFF:
             await self._room.async_therm_set(STATE_NETATMO_OFF)
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self._room.async_therm_set(STATE_NETATMO_HOME)
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     @property
     def available(self) -> bool:
@@ -429,6 +436,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             kwargs.get(ATTR_SCHEDULE_NAME),
             schedule_id,
         )
+        await self._async_update_if_no_webhook()
 
     async def _async_service_set_preset_mode_with_end_datetime(
         self, **kwargs: Any
@@ -446,6 +454,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             preset_mode,
             end_timestamp,
         )
+        await self._async_update_if_no_webhook()
 
     @property
     def device_info(self) -> DeviceInfo:
