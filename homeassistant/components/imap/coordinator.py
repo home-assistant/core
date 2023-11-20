@@ -167,7 +167,7 @@ class ImapMessage:
             """
             try:
                 return str(part.get_payload(decode=True).decode(self._charset))
-            except (ValueError, TypeError):
+            except ValueError:
                 return str(part.get_payload())
 
         part: Message
