@@ -89,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _add_default_code(entity: LockEntity, service_call: ServiceCall) -> dict[Any, Any]:
-    code = service_call.data.get(
+    code: str = service_call.data.get(
         ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
     )
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
