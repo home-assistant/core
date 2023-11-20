@@ -75,7 +75,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         return None
 
     @property
-    def is_selected(self):
+    def is_selected(self) -> bool:
         """Return if this map is the currently selected map."""
         return self.map_flag == self.coordinator.current_map
 
