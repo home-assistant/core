@@ -27,9 +27,7 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Validate user input
-            # user_input.get(CONF_USERNAME)
-            # user_input.get(CONF_PASSWORD)
-            ip_address = user_input(CONF_HOST)
+            ip_address = user_input.get(CONF_HOST)
 
             # Now that we have the data, check and see if we can connect and get a GUID
             main_repeater = Lutron(
