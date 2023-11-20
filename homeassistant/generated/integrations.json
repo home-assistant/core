@@ -6098,7 +6098,7 @@
       "iot_class": "cloud_polling"
     },
     "universal": {
-      "name": "Universal Media Player",
+      "name": "Universal media player",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"

@@ -523,7 +523,7 @@ async def test_platform_error_slow_setup(
         result = await setup.async_setup_component(hass, "test_component1", {})
         assert len(called) == 1
         assert not result
-        assert "test_component1 is taking longer than 0.1 seconds" in caplog.text
+        assert "'test_component1' is taking longer than 0.1 seconds" in caplog.text
 
 
 async def test_when_setup_already_loaded(hass: HomeAssistant) -> None:
@@ -653,7 +653,7 @@ async def test_integration_logs_is_custom(
     ):
         result = await setup.async_setup_component(hass, "test_component1", {})
     assert not result
-    assert "Setup failed for custom integration test_component1: Boom" in caplog.text
+    assert "Setup failed for custom integration 'test_component1': Boom" in caplog.text
 
 
 async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
@@ -735,7 +735,7 @@ async def test_setup_config_entry_from_yaml(
 ) -> None:
     """Test attempting to setup an integration which only supports config_entries."""
     expected_warning = (
-        "The test_integration_only_entry integration does not support YAML setup, "
+        "The 'test_integration_only_entry' integration does not support YAML setup, "
         "please remove it from your configuration"
     )
 
