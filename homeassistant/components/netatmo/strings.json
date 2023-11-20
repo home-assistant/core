@@ -138,7 +138,7 @@
   "issues": {
     "webhook_not_receiving": {
       "title": "Webhook is not active",
-      "description": "The webhook is not registered or does not appear to be receiving events. The status of your devices and entities may not update when changed outside of Home Assistant."
+      "description": "The webhook is not registered or does not appear to be receiving events. The status of your devices and entities may not update when changed outside of Home Assistant and device triggers may not function correctly."
     }
   }
 }

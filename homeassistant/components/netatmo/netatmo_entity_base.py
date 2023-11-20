@@ -27,6 +27,7 @@ class NetatmoBase(Entity):
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
         self._publishers: list[dict[str, Any]] = []
+        self._signal_name: str | None = None
 
         self._device_name: str = ""
         self._id: str = ""
@@ -35,6 +36,9 @@ class NetatmoBase(Entity):
         self._attr_name = None
         self._attr_unique_id = None
         self._attr_extra_state_attributes = {}
+
+    async def _async_update_if_no_webhook(self):
+        await self.data_handler.async_update_if_no_webhook(self._signal_name)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""

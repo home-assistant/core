@@ -104,18 +104,19 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._quality = DEFAULT_QUALITY
         self._monitoring: bool | None = None
         self._light_state = None
+        self._signal_name = f"{HOME}-{self._home_id}"
 
         self._publishers.extend(
             [
                 {
                     "name": HOME,
                     "home_id": self._home_id,
-                    SIGNAL_NAME: f"{HOME}-{self._home_id}",
+                    SIGNAL_NAME: self._signal_name,
                 },
                 {
                     "name": EVENT,
                     "home_id": self._home_id,
-                    SIGNAL_NAME: f"{EVENT}-{self._home_id}",
+                    SIGNAL_NAME: self._signal_name,
                 },
             ]
         )
@@ -189,10 +190,12 @@ class NetatmoCamera(NetatmoBase, Camera):
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self._camera.async_monitoring_off()
+        await self._async_update_if_no_webhook()
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self._camera.async_monitoring_on()
+        await self._async_update_if_no_webhook()
 
     async def stream_source(self) -> str:
         """Return the stream source."""
@@ -280,6 +283,7 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         await self._camera.home.async_set_persons_home(person_ids=person_ids)
         _LOGGER.debug("Set %s as at home", persons)
+        await self._async_update_if_no_webhook()
 
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
@@ -295,6 +299,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             _LOGGER.debug("Set %s as away %s", person, person_id)
         else:
             _LOGGER.debug("Set home as empty")
+        await self._async_update_if_no_webhook()
 
     async def _service_set_camera_light(self, **kwargs: Any) -> None:
         """Service to set light mode."""
@@ -306,3 +311,4 @@ class NetatmoCamera(NetatmoBase, Camera):
         mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
         _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
         await self._camera.async_set_floodlight_state(mode)
+        await self._async_update_if_no_webhook()

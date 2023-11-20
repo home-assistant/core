@@ -84,20 +84,24 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         await self._cover.async_close()
         self._attr_is_closed = True
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._cover.async_open()
         self._attr_is_closed = False
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._cover.async_stop()
+        await self._async_update_if_no_webhook()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         await self._cover.async_set_target_position(kwargs[ATTR_POSITION])
+        await self._async_update_if_no_webhook()
 
     @callback
     def async_update_callback(self) -> None:

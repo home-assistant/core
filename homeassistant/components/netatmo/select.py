@@ -120,6 +120,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
                 sid,
             )
             await self._home.async_switch_schedule(schedule_id=sid)
+            await self._async_update_if_no_webhook()
             break
 
     @callback

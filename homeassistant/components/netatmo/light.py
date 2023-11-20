@@ -138,11 +138,13 @@ class NetatmoCameraLight(NetatmoBase, LightEntity):
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
         await self._camera.async_floodlight_on()
+        await self._async_update_if_no_webhook()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
         await self._camera.async_floodlight_auto()
+        await self._async_update_if_no_webhook()
 
     @callback
     def async_update_callback(self) -> None:
@@ -201,12 +203,14 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
         self._attr_is_on = True
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self._dimmer.async_off()
         self._attr_is_on = False
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     @callback
     def async_update_callback(self) -> None:

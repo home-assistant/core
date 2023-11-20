@@ -301,9 +301,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
-    async def _async_update_if_no_webhook(self):
-        await self.data_handler.async_update_if_no_webhook(self._signal_name)
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:

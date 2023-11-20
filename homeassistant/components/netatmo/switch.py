@@ -79,9 +79,11 @@ class NetatmoSwitch(NetatmoBase, SwitchEntity):
         await self._switch.async_on()
         self._attr_is_on = True
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self._switch.async_off()
         self._attr_is_on = False
         self.async_write_ha_state()
+        await self._async_update_if_no_webhook()
