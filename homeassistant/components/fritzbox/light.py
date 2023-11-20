@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyfritzhome import FritzhomeDevice
 from requests.exceptions import HTTPError
 
 from homeassistant.components.light import (
@@ -31,17 +30,6 @@ async def async_setup_entry(
         CONF_COORDINATOR
     ]
 
-    def _prepare_light_entity(ain: str, device: FritzhomeDevice) -> FritzboxLight:
-        supported_color_temps = device.get_color_temps()
-        supported_colors = device.get_colors()
-
-        return FritzboxLight(
-            coordinator,
-            ain,
-            supported_colors,
-            supported_color_temps,
-        )
-
     @callback
     def _add_entities() -> None:
         """Add devices."""
@@ -49,7 +37,12 @@ async def async_setup_entry(
             return
         async_add_entities(
             [
-                _prepare_light_entity(ain, device)
+                FritzboxLight(
+                    coordinator,
+                    ain,
+                    device.get_colors(),
+                    device.get_color_temps(),
+                )
                 for ain in coordinator.new_devices
                 if (device := coordinator.data.devices[ain]).has_lightbulb
             ]
