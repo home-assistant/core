@@ -21,7 +21,9 @@ async def async_setup_entry(
 
     @callback
     def _add_entities() -> None:
-        """Add devices."""
+        """Add templates."""
+        if not coordinator.new_templates:
+            return
         entities: list[FritzBoxTemplate] = []
         for ain in coordinator.new_templates:
             entities.append(FritzBoxTemplate(coordinator, ain))

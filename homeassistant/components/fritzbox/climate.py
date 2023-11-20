@@ -57,6 +57,8 @@ async def async_setup_entry(
     @callback
     def _add_entities() -> None:
         """Add devices."""
+        if not coordinator.new_devices:
+            return
         entities: list[FritzboxThermostat] = []
         for ain in coordinator.new_devices:
             if coordinator.data.devices[ain].has_thermostat:

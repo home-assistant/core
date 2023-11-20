@@ -220,6 +220,8 @@ async def async_setup_entry(
     @callback
     def _add_entities() -> None:
         """Add devices."""
+        if not coordinator.new_devices:
+            return
         entities: list[FritzBoxSensor] = []
         for ain in coordinator.new_devices:
             for description in SENSOR_TYPES:
