@@ -1,6 +1,7 @@
 """warnings."""
 from typing import Any
 
+from .const import smhi_warning_icons
 from .downloader import SmhiDownloader
 from .smhi_geolocation_event import SmhiGeolocationEvent
 
@@ -24,15 +25,16 @@ class SmhiWarnings:
         """Parse warning data from smhi api."""
         geo_location_entities = []
 
-        warnings = [self.parse_warning(warning) for warning in data]
-
-        for warning in warnings:
-            geo_location_entities.extend(self.create_geo_location_entities(warning))
+        for warning in data:
+            parsed_warning = self.parse_individual_warning(warning)
+            geo_location_entities.extend(
+                self.create_geo_entities_from_warning(parsed_warning)
+            )
 
         return geo_location_entities
 
-    def parse_warning(self, warning: dict[str, Any]) -> dict:
-        """Parse individual warning."""
+    def parse_individual_warning(self, warning: dict[str, Any]) -> dict:
+        """Parse individual warning and its areas."""
         parsed_warning = {
             "id": warning.get("id"),
             "normalProbability": warning.get("normalProbability"),
@@ -63,16 +65,29 @@ class SmhiWarnings:
             .get("geometry", {}),
         }
 
-    def create_geo_location_entities(self, warning: dict) -> list[SmhiGeolocationEvent]:
-        """Create geo location entities from warning."""
+    def create_geo_entities_from_warning(
+        self, warning: dict
+    ) -> list[SmhiGeolocationEvent]:
+        """Create geo location entities from a parsed warning."""
         entities = []
         name = str(warning["warningAreas"][0]["descriptions"][0]["text"]["en"])
+        icon = str(warning["warningAreas"][0]["warningLevel"]["code"])
+        icon_url = smhi_warning_icons.get(icon, "")
 
         coordinates = warning["warningAreas"][0]["geometry"].get("coordinates", [])
         if len(coordinates) == 1:
             coordinates = coordinates[0]
 
         for location in coordinates:
-            entities.append(SmhiGeolocationEvent(name, location[1], location[0]))
+            entities.append(
+                SmhiGeolocationEvent(
+                    name,
+                    location[1],
+                    location[0],
+                    icon_url,
+                    "mdi:alert",
+                    "stationary",
+                )
+            )
 
         return entities
