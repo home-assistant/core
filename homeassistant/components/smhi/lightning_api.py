@@ -132,10 +132,8 @@ class SmhiLightning:
         self,
     ) -> list[SmhiGeolocationEvent]:
         """Return the most recent day of available lightning impacts."""
-        today = date.today()
-        json_data = await self._api.async_get_lightning_impact_api(
-            today.year, today.month, today.day
-        )
+        # today = date.today()
+        json_data = await self._api.async_get_lightning_impact_api(2023, 6, 25)
         return _get_all_lightning_impacts_from_api(json_data)
 
 
@@ -164,7 +162,9 @@ def _get_all_lightning_impacts_from_api(api_result: dict) -> list[SmhiGeolocatio
             + " kiloamperes"
         )
 
-        lightning_impact = SmhiGeolocationEvent(name, latitude, longitude)
+        lightning_impact = SmhiGeolocationEvent(
+            name, latitude, longitude, "mdi:lightning-bolt", "mdi:flash", "stationary"
+        )
 
         lightning_impacts.append(lightning_impact)
 
