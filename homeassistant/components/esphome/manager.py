@@ -1,6 +1,7 @@
 """Manager for esphome devices."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -454,9 +455,11 @@ class ESPHomeManager:
                 hass, entry, entity_infos, device_info.mac_address
             )
             await _setup_services(hass, entry_data, services)
-            await cli.subscribe_states(entry_data.async_update_state)
-            await cli.subscribe_service_calls(self.async_on_service_call)
-            await cli.subscribe_home_assistant_states(self.async_on_state_subscription)
+            await asyncio.gather(
+                cli.subscribe_states(entry_data.async_update_state),
+                cli.subscribe_service_calls(self.async_on_service_call),
+                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
+            )
 
             if device_info.voice_assistant_version:
                 entry_data.disconnect_callbacks.append(
