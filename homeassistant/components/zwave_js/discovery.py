@@ -574,7 +574,8 @@ DISCOVERY_SCHEMAS = [
                     command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
-                # This mode is a hack, climate doesnt actually work - Use Internal temp. Heating is set by adjusting param 25
+                # This mode is a hack, changing climate entity does not change operating mode  - Use Internal temp.
+                # Heating is set by adjusting param 25
                 "Power regulator": ZwaveValueID(
                     property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
                     command_class=CommandClass.SENSOR_MULTILEVEL,
