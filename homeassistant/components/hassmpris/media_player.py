@@ -142,7 +142,6 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
         """
         super().__init__(coordinator, context=context)
         self._integration_id = integration_id
-        self._attr_available = True
         self._metadata: dict[str, Any] = {}
 
     def _debug(self, format_string: str, *args: Any) -> None:
