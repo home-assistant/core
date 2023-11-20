@@ -395,7 +395,6 @@ def create_mbus_entity(
             name=f"Gas consumption mbus{mbus}",
             obis_reference=obis_reference,
             is_gas=True,
-            force_update=True,
             device_class=SensorDeviceClass.GAS,
             state_class=SensorStateClass.TOTAL_INCREASING,
         )
@@ -413,7 +412,6 @@ def create_mbus_entity(
             name=f"Water consumption mbus{mbus}",
             obis_reference=obis_reference,
             is_water=True,
-            force_update=True,
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
         )
@@ -442,33 +440,31 @@ def rename_old_gas_to_mbus(
 ) -> None:
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
-    device_entry_v1 = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-    )
-    device_id = device_entry_v1.id
+    device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    if device_entry_v1 is not None:
+        device_id = device_entry_v1.id
 
-    ent_reg = er.async_get(hass)
-    entries = er.async_entries_for_device(ent_reg, device_id)
+        ent_reg = er.async_get(hass)
+        entries = er.async_entries_for_device(ent_reg, device_id)
 
-    for entity in entries:
-        if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
-            try:
-                ent_reg.async_update_entity(
-                    entity.entity_id, new_unique_id=mbus_device_id
-                )
-            except ValueError:
-                LOGGER.warning(
-                    "Skip migration of %s because it already exists",
-                    entity.entity_id,
-                )
-            else:
-                LOGGER.info(
-                    "Migrated entity %s from unique id %s to %s",
-                    entity.entity_id,
-                    entity.unique_id,
-                    mbus_device_id,
-                )
+        for entity in entries:
+            if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
+                try:
+                    ent_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=mbus_device_id
+                    )
+                except ValueError:
+                    LOGGER.warning(
+                        "Skip migration of %s because it already exists",
+                        entity.entity_id,
+                    )
+                else:
+                    LOGGER.info(
+                        "Migrated entity %s from unique id %s to %s",
+                        entity.entity_id,
+                        entity.unique_id,
+                        mbus_device_id,
+                    )
 
 
 def create_mbus_entities(
@@ -505,6 +501,7 @@ def create_mbus_entities(
                         telegram, description
                     ),  # type: ignore[arg-type]
                     serial_,
+                    idx,
                 )
             )
     return entities
@@ -716,6 +713,7 @@ class DSMREntity(SensorEntity):
         device_class: SensorDeviceClass,
         native_unit_of_measurement: str | None,
         serial_id: str = "",
+        mbus_id: int = 0,
     ) -> None:
         """Initialize entity."""
         self.entity_description = entity_description
@@ -743,7 +741,10 @@ class DSMREntity(SensorEntity):
             identifiers={(DOMAIN, device_serial)},
             name=device_name,
         )
-        self._attr_unique_id = f"{device_serial}_{entity_description.key}"
+        if mbus_id != 0:
+            self._attr_unique_id = f"{device_serial}"
+        else:
+            self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
