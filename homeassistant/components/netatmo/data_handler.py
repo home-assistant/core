@@ -24,18 +24,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 
 from .const import (
     AUTH,
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
-    ISSUE_ID_WEBHOOK_NOT_ACTIVE,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_CAMERA,
@@ -158,9 +152,6 @@ class NetatmoDataHandler:
             )
         )
 
-        self.config_entry.async_on_unload(self.async_delete_webhook_not_active_issue)
-        self.async_create_webhook_not_active_issue()
-
         self.account = pyatmo.AsyncAccount(self._auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
@@ -169,24 +160,6 @@ class NetatmoDataHandler:
             self.config_entry, PLATFORMS
         )
         await self.async_dispatch()
-
-    def async_create_webhook_not_active_issue(self) -> None:
-        """Create the issue indicating the web hook is not registered or is not receiving events."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            ISSUE_ID_WEBHOOK_NOT_ACTIVE,
-            is_fixable=False,
-            is_persistent=True,
-            issue_domain=DOMAIN,
-            learn_more_url="https://www.home-assistant.io/integrations/netatmo/#webhook-events",
-            severity=IssueSeverity.WARNING,
-            translation_key=ISSUE_ID_WEBHOOK_NOT_ACTIVE,
-        )
-
-    def async_delete_webhook_not_active_issue(self) -> None:
-        """Delete the issue indicating the web hook is not registered or not receiving events."""
-        async_delete_issue(self.hass, DOMAIN, ISSUE_ID_WEBHOOK_NOT_ACTIVE)
 
     async def async_update(self, event_time: datetime) -> None:
         """Update device.
@@ -213,18 +186,13 @@ class NetatmoDataHandler:
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
-        if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_DEACTIVATION:
-            _LOGGER.info("%s webhook unregistered", MANUFACTURER)
-            self._webhook = False
-            self.async_create_webhook_not_active_issue()
-            return
-
-        self.async_delete_webhook_not_active_issue()
-
         if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
-            self.async_delete_webhook_not_active_issue()
+
+        elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_DEACTIVATION:
+            _LOGGER.info("%s webhook unregistered", MANUFACTURER)
+            self._webhook = False
 
         elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)

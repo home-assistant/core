@@ -57,7 +57,7 @@ from .const import (
     WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import NetatmoDataHandler
-from .webhook import async_handle_webhook
+from .webhook import async_create_webhook_not_active_issue, async_handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,6 +169,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
     await data_handler.async_setup()
 
+    async_create_webhook_not_active_issue(hass)
+
     async def unregister_webhook(
         _: Any,
     ) -> None:
@@ -181,6 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        async_create_webhook_not_active_issue(hass)
         try:
             await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
         except pyatmo.ApiError:

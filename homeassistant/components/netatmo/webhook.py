@@ -6,6 +6,11 @@ from aiohttp.web import Request
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -18,6 +23,7 @@ from .const import (
     DEFAULT_PERSON,
     DOMAIN,
     EVENT_ID_MAP,
+    ISSUE_ID_WEBHOOK_NOT_ACTIVE,
     NETATMO_EVENT,
 )
 
@@ -97,3 +103,24 @@ def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
         event_type=NETATMO_EVENT,
         event_data=event_data,
     )
+    async_delete_webhook_not_active_issue(hass)
+
+
+def async_create_webhook_not_active_issue(hass: HomeAssistant) -> None:
+    """Create the issue indicating the web hook is not registered or is not receiving events."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_ID_WEBHOOK_NOT_ACTIVE,
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        learn_more_url="https://www.home-assistant.io/integrations/netatmo/#webhook-events",
+        severity=IssueSeverity.WARNING,
+        translation_key=ISSUE_ID_WEBHOOK_NOT_ACTIVE,
+    )
+
+
+def async_delete_webhook_not_active_issue(hass: HomeAssistant) -> None:
+    """Delete the issue indicating the web hook is not registered or not receiving events."""
+    async_delete_issue(hass, DOMAIN, ISSUE_ID_WEBHOOK_NOT_ACTIVE)
