@@ -59,6 +59,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         )
         self.supported_entities: set[str] = set()
         self.needed_cache_keys: list[CacheableAttribute] = []
+        self.current_map: int | None = None
 
         if mac := self.roborock_device_info.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
@@ -101,6 +102,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Update data via library."""
         try:
             await self._update_device_prop()
+            self._set_current_map()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         if (
@@ -117,3 +119,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             await self._recover()
             self.api.is_available = True
         return self.roborock_device_info.props
+
+    def _set_current_map(self) -> None:
+        if (
+            self.roborock_device_info.props.status is not None
+            and self.roborock_device_info.props.status.map_status is not None
+        ):
+            # The map status represents the map flag as flag * 4 + 3 -
+            # so we have to invert that in order to get the map flag that we can use to set the current map.
+            self.current_map = (
+                self.roborock_device_info.props.status.map_status - 3
+            ) // 4
