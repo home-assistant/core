@@ -13,6 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 class MotionMountCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for MotionMount."""
 
+    _attr_always_update = False
+
     def __init__(self, hass: HomeAssistant, mm: motionmount.MotionMount) -> None:
         """Initialize the MotionMount coordinator."""
         super().__init__(hass, _LOGGER, name="MotionMount")
