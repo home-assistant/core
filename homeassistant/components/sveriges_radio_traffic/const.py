@@ -22,8 +22,12 @@ DATE_ICON = "mdi:update"
 DESC = "description"
 DESC_NAME = "Message"
 DESC_ICON = "mdi:message"
+LOC = "title"
+LOC_NAME = "Exact Location"
+LOC_ICON = "mdi:highway"
 INFO = [
     (DESC, DESC_NAME, DESC_ICON),
     (CONF_AREA, CONF_AREA_NAME, CONF_AREA_ICON),
     (DATE, DATE_NAME, DATE_ICON),
+    (LOC, LOC_NAME, LOC_ICON),
 ]

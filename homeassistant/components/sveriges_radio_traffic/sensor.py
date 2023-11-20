@@ -86,7 +86,6 @@ class TrafficSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             configuration_url="https://api.trafikinfo.trafikverket.se/",
-            suggested_area="Sveriges Radio Traffic",
         )
 
     def update(self) -> None:
