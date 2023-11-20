@@ -9,7 +9,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilEntity, Coordinator
 
 
 async def async_setup_entry(
@@ -65,7 +66,7 @@ class Number(CoilEntity, NumberEntity):
             return
 
         try:
-            self._attr_native_value = float(data.value)
+            self._attr_native_value = float(data.value)  # type: ignore[arg-type]
         except ValueError:
             self._attr_native_value = None
 

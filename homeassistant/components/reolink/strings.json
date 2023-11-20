@@ -215,6 +215,9 @@
       },
       "auto_track_stop_time": {
         "name": "Auto track stop time"
+      },
+      "day_night_switch_threshold": {
+        "name": "Day night switch threshold"
       }
     },
     "select": {
@@ -309,6 +312,9 @@
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
+      },
+      "hdr": {
+        "name": "HDR"
       }
     }
   }

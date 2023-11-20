@@ -3,14 +3,15 @@ import asyncio
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from systembridgeconnector.const import MODEL_SYSTEM, TYPE_DATA_UPDATE
+from systembridgeconnector.const import TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.response import Response
-from systembridgeconnector.models.system import LastUpdated, System
+from systembridgemodels.const import MODEL_SYSTEM
+from systembridgemodels.response import Response
+from systembridgemodels.system import LastUpdated, System
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
