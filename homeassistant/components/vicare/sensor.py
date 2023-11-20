@@ -670,26 +670,14 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self, name, api, device_config, description: ViCareSensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config)
+        super().__init__(device_config, api, description.key)
         self.entity_description = description
         self._attr_name = name
-        self._api = api
-        self._device_config = device_config
 
     @property
     def available(self):
         """Return True if entity is available."""
         return self._attr_native_value is not None
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for this device."""
-        tmp_id = (
-            f"{self._device_config.getConfig().serial}-{self.entity_description.key}"
-        )
-        if hasattr(self._api, "id"):
-            return f"{tmp_id}-{self._api.id}"
-        return tmp_id
 
     def update(self):
         """Update state of sensor."""
