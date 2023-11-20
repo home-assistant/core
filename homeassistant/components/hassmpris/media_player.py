@@ -134,10 +134,9 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
 
         Arguments:
           coordinator: the coordinator handling this entity
-          integration_id: unique identifier of the integration
           context: the name / unique identifier of the player,
                    also used as the coordinator context
-          initial_state: the (optional) initial state of the entity
+          integration_id: unique identifier of the integration
         """
         super().__init__(coordinator, context=context)
         self._integration_id = integration_id
