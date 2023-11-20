@@ -97,7 +97,8 @@ def _add_default_code(entity: LockEntity, service_call: ServiceCall) -> dict[Any
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
     data = remove_entity_service_fields(service_call)
-    data[ATTR_CODE] = code
+    if code:
+        data[ATTR_CODE] = code
     return data
 
 
