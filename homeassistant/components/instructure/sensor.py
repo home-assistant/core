@@ -39,7 +39,7 @@ class BaseEntityDescription(SensorEntityDescription):
 class CanvasSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
     """Describe Canvas resource sensor entity"""
 
-    fetch_data: Callable = None
+    fetch_data: Callable = None # didn't use fetch data
 
 
 SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
@@ -51,7 +51,10 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         avabl_fn=lambda data: data is not None,
         name_fn=lambda data: data["name"],
         value_fn=lambda data: datetime_process(data["due_at"]),
-        attr_fn=lambda data: {},
+        attr_fn=lambda data, courses: {
+            "Course": courses[data["course_id"]],
+            "Link": data["html_url"]
+        },
         fetch_data=lambda api, course_id: api.async_get_assignments(course_id),
     ),
     ANNOUNCEMENTS_KEY: CanvasSensorEntityDescription(
@@ -61,8 +64,12 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         icon="mdi:message-alert",
         avabl_fn=lambda data: data is not None,
         name_fn=lambda data: data["title"],
-        value_fn=lambda data: data["message"][:20],
-        attr_fn=lambda data: {},
+        value_fn=lambda data: data["read_state"],
+        attr_fn=lambda data, courses: {
+            #"Course": courses[data["context_code"].split("_")[1]],
+            "Link": data["html_url"],
+            "Post Time": datetime_process(data["posted_at"])
+        },
         fetch_data=lambda api, course_id: api.async_get_announcements(course_id),
     ),
     CONVERSATIONS_KEY: CanvasSensorEntityDescription(
@@ -71,9 +78,14 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=CONVERSATIONS_KEY,
         icon="mdi:email",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["audience"],
-        value_fn=lambda data: data["subject"][:20],
-        attr_fn=lambda data: {},
+        name_fn=lambda data: data["subject"] if data["subject"] else "No Subject",
+        value_fn=lambda data: data["workflow_state"],
+        attr_fn=lambda data, courses: {
+            "Course": data["context_name"],
+            "Initial Sender": data["participants"][0]["name"],
+            "Last Message": data["last_message"],
+            "Last Message Time": datetime_process(data["last_message_at"])
+        },
         fetch_data=lambda api, _: api.async_get_conversations(),
     ),
 }
@@ -85,7 +97,7 @@ def datetime_process(date_time):
     standard_timestamp = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
     pretty_time = standard_timestamp.strftime("%d %b %H:%M")
     return pretty_time
-
+    
 
 class CanvasSensorEntity(SensorEntity):
     """Defines a Canvas sensor entity."""
@@ -139,7 +151,7 @@ class CanvasSensorEntity(SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
-        return self.entity_description.attr_fn(self.get_data())
+        return self.entity_description.attr_fn(self.get_data(), self.coordinator.selected_courses)
 
     def get_data(self):
         return self.coordinator.data[self.entity_description.key][self._attr_unique_id]
@@ -153,7 +165,7 @@ async def async_setup_entry(
     """Set up Canvas sensor based on a config entry"""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    def update_entities(data_type: str, new_data: dict, curr_data: dict):
+    def update_entities(data_type: str, new_data: dict, curr_data: dict): # why not put this in coordinator.py
         """Remove existing entities and yuhhhh my möney so big"""
         current_ids = set(curr_data.keys())
         new_ids = set(new_data.keys())
@@ -167,7 +179,7 @@ async def async_setup_entry(
 
         new_entities = []
 
-        for entity_id in to_add:
+        for entity_id in to_add:  # entity_id will be "assignment"/"announcement"/"communication", I think it's wrong
             description = SENSOR_DESCRIPTIONS[data_type]
             new_entity = CanvasSensorEntity(description, entity_id, coordinator)
             new_entities.append(new_entity)
@@ -179,4 +191,4 @@ async def async_setup_entry(
 
     coordinator.update_entities = update_entities
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh() # Why not put this in __init__

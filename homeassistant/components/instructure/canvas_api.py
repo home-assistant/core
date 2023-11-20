@@ -92,7 +92,7 @@ class CanvasAPI:
             )
             course_assignments = json.loads(response.content.decode("utf-8"))
             for assignment in course_assignments:
-                assignments[assignment["id"]] = assignment
+                assignments[f"assignment-{assignment['id']}"] = assignment
 
         return assignments
 
@@ -115,7 +115,7 @@ class CanvasAPI:
             )
             course_announcements = json.loads(response.content.decode("utf-8"))
             for announcement in course_announcements:
-                announcements[announcement["id"]] = announcement
+                announcements[f"announcement-{announcement['id']}"] = announcement
 
         return announcements
 
@@ -130,4 +130,4 @@ class CanvasAPI:
             "/conversations", {"per_page": "50"}
         )
         conversations = json.loads(response.content.decode("utf-8"))
-        return {conversation["id"]: conversation for conversation in conversations}
+        return {f"conversation-{conversation['id']}": conversation for conversation in conversations}

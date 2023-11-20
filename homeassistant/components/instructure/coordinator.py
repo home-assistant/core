@@ -29,11 +29,12 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         self.config_entry = entry
         self.api = api
         self.update_entities = None
+        self.selected_courses = entry.options["courses"]
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        courses = self.config_entry.options["courses"]
-        course_ids = courses.values()
+        courses = self.selected_courses
+        course_ids = courses.keys()
 
         try:
             async with async_timeout.timeout(10):
@@ -41,13 +42,14 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
 
+                # TODO - filtering
                 new_data = {
                     ASSIGNMENTS_KEY: assignments,
                     ANNOUNCEMENTS_KEY: announcements,
                     CONVERSATIONS_KEY: conversations,
                 }
 
-                old_data = self.data or {}
+                old_data = self.data or {} #maybe put self.data={} in __init__()
                 self.data = new_data
 
                 if self.update_entities:

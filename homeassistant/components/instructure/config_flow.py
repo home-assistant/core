@@ -125,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             selected_courses = user_input[CONF_COURSES]
             selected_courses_dict = {
-                name: self.courses_mapping[name] for name in selected_courses
+                self.courses_mapping[name]: name for name in selected_courses
             }
 
             self.config_data.update(user_input)
@@ -144,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_COURSES): cv.multi_select(
-                        sorted(self.courses_mapping)
+                        sorted(self.courses_mapping.keys())
                     )
                 }
             ),
