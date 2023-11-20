@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from reolink_aio.api import DUAL_LENS_MODELS, Host
+from reolink_aio.api import DUAL_LENS_MODELS
 
 from homeassistant.components.camera import (
     Camera,
