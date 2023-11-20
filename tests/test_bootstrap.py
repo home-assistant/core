@@ -1011,7 +1011,9 @@ async def test_bootstrap_dependencies(
     with patch(
         "homeassistant.setup.loader.async_get_integrations",
         side_effect=mock_async_get_integrations,
-    ), patch("homeassistant.config.async_process_component_config", return_value={}):
+    ), patch(
+        "homeassistant.config.async_process_component_config", return_value=({}, [])
+    ):
         bootstrap.async_set_domains_to_be_loaded(hass, {integration})
         await bootstrap.async_setup_multi_components(hass, {integration}, {})
         await hass.async_block_till_done()

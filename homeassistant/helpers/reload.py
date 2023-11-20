@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, Literal, overload
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -60,9 +60,10 @@ async def _resetup_platform(
     """Resetup a platform."""
     integration = await async_get_integration(hass, platform_domain)
 
-    conf = await conf_util.async_process_component_config(
+    conf, config_ex = await conf_util.async_process_component_config(
         hass, unprocessed_config, integration
     )
+    conf_util.async_handle_component_config_errors(hass, integration, config_ex)
 
     if not conf:
         return
@@ -136,15 +137,48 @@ async def _async_reconfig_platform(
     await asyncio.gather(*tasks)
 
 
+@overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str
 ) -> ConfigType | None:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant,
+    integration_name: str,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant,
+    integration_name: str,
+    *,
+    raise_on_failure: Literal[False] | bool,
+) -> ConfigType | None:
+    ...
+
+
+async def async_integration_yaml_config(
+    hass: HomeAssistant, integration_name: str, *, raise_on_failure: bool = False
+) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
-
-    return await conf_util.async_process_component_config(
-        hass, await conf_util.async_hass_config_yaml(hass), integration
+    config, config_ex = await conf_util.async_process_component_config(
+        hass,
+        await conf_util.async_hass_config_yaml(hass),
+        integration,
     )
+    conf_util.async_handle_component_config_errors(
+        hass, integration, config_ex, raise_on_failure=raise_on_failure
+    )
+
+    return config
 
 
 @callback
