@@ -4,6 +4,7 @@ from datetime import datetime
 import re
 
 import aiohttp
+import defusedxml
 
 from homeassistant.components.media_source.error import Unresolvable
 
@@ -104,7 +105,7 @@ class Channel:
             raise Unresolvable("No such channel")
 
         self.station_id = station_id
-        self.name = name.encode("utf-8")
+        self.name = name
         self.siteurl = siteurl
         self.color = color
         self.image = image
@@ -161,32 +162,30 @@ class SverigesRadio:
     async def call(self, method, payload):
         """Asynchronously call the API."""
         url = f"http://api.sr.se/api/v2/{method}"
-        payload["format"] = "json"
 
         try:
             async with self.session.get(url, params=payload, timeout=8) as response:
                 if response.status != 200:
                     return {}
-                return await response.json()
+                response_text = await response.text()
+                return defusedxml.fromstring(response_text)
         except aiohttp.ClientError:
             # Handle network-related errors here
             return {}
 
     async def channels(self):
         """Asynchronously get all channels."""
-        payload = {"size": 500}
-        data = await self.call("/channels", payload)
-        channels_data = data.get("channels", [])
+        payload = {}  # {"size": 500}
+        data = await self.call("channels", payload)
 
         channels = []
-        for channel_data in channels_data:
-            station_id = channel_data.get("xmltvid")
-            name = channel_data.get("name")
-            siteurl = channel_data.get("siteurl")
-            color = channel_data.get("color")
-            image = channel_data.get("image")
-            audio = channel_data.get("liveaudio")
-            url = audio.get("url")
+        for channel_data in data.find("channels"):
+            station_id = channel_data.attrib.get("id")
+            name = channel_data.attrib.get("name")
+            siteurl = channel_data.find("siteurl").text
+            color = channel_data.find("color").text
+            image = channel_data.find("image").text
+            url = channel_data.find("liveaudio/url").text
 
             channel = Channel(
                 sveriges_radio=self,

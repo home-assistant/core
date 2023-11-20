@@ -70,10 +70,19 @@ class RadioMediaSource(MediaSource):
         if item.identifier is None:
             # Fetch all channels
             channels = await radio.channels()
-            return await self._async_build_stations(channels)
+            channel_media_sources = await self._async_build_stations(channels)
 
-        # For a specific channel, you can add more logic here
-        # ...
+            # Create a root BrowseMediaSource object and include the channels as children
+            return BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=None,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaType.APP,
+                title="Sveriges Radio",
+                can_play=False,
+                can_expand=True,
+                children=channel_media_sources,
+            )
 
         # Fallback for unhandled cases
         raise BrowseError("Item not found")
