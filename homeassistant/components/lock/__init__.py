@@ -89,9 +89,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _add_default_code(entity: LockEntity, service_call: ServiceCall) -> dict[Any, Any]:
-    code: str = service_call.data.get(
-        ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
-    )
+    code: str = service_call.data.get(ATTR_CODE, "")
+    if not code:
+        code = entity._lock_option_default_code  # pylint: disable=protected-access
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
@@ -99,6 +99,8 @@ def _add_default_code(entity: LockEntity, service_call: ServiceCall) -> dict[Any
     data = remove_entity_service_fields(service_call)
     if code:
         data[ATTR_CODE] = code
+    elif ATTR_CODE in data:
+        data.pop(ATTR_CODE)
     return data
 
 

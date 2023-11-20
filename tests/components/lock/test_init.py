@@ -258,6 +258,28 @@ async def test_lock_with_illegal_code(hass: HomeAssistant) -> None:
         )
 
 
+async def test_lock_with_no_code(hass: HomeAssistant) -> None:
+    """Test lock entity with default code that does not match the code format."""
+    lock = MockLockEntity(
+        supported_features=LockEntityFeature.OPEN,
+    )
+    lock.hass = hass
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    lock.calls_open.assert_called_with({})
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    lock.calls_lock.assert_called_with({})
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+    lock.calls_unlock.assert_called_with({})
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    lock.calls_open.assert_called_with({})
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
+    lock.calls_lock.assert_called_with({})
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
+    lock.calls_unlock.assert_called_with({})
+
+
 async def test_lock_with_default_code(hass: HomeAssistant) -> None:
     """Test lock entity with default code."""
     lock = MockLockEntity(
@@ -275,6 +297,13 @@ async def test_lock_with_default_code(hass: HomeAssistant) -> None:
     await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
     lock.calls_lock.assert_called_with({ATTR_CODE: "1234"})
     await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+    lock.calls_unlock.assert_called_with({ATTR_CODE: "1234"})
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    lock.calls_open.assert_called_with({ATTR_CODE: "1234"})
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
+    lock.calls_lock.assert_called_with({ATTR_CODE: "1234"})
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
     lock.calls_unlock.assert_called_with({ATTR_CODE: "1234"})
 
 
