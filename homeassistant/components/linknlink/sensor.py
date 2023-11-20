@@ -31,7 +31,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pir_detected",
         device_class=SensorDeviceClass.ENUM,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -43,18 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the linknlink sensor."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    sensor_data = device.update_manager.coordinator.data
-    sensors = [
-        LinknLinkSensor(device, description)
-        for description in SENSOR_TYPES
-        if description.key in sensor_data
-        and (
-            # These devices have optional sensors.
-            # We don't create entities if the value is 0.
-            sensor_data[description.key] != 0
-            or device.api.type not in {"RM4PRO", "RM4MINI"}
-        )
-    ]
+    sensors = [LinknLinkSensor(device, description) for description in SENSOR_TYPES]
     async_add_entities(sensors)
 
 

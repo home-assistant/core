@@ -14,9 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 def get_update_manager(device):
     """Return an update manager for a given LinknLink device."""
     update_managers = {
-        "EHUB": LinknLinkEHUBUpdateManager,
-        "ETHS": LinknLinkEHUBUpdateManager,
-        "MOTION": LinknLinkEHUBUpdateManager,
+        "EHUB": LinknLinkSensorUpdateManager,
+        "ETHS": LinknLinkSensorUpdateManager,
+        "MOTION": LinknLinkSensorUpdateManager,
     }
     return update_managers[device.api.type](device)
 
@@ -78,7 +78,7 @@ class LinknLinkUpdateManager(ABC):
         """Fetch data from the device."""
 
 
-class LinknLinkEHUBUpdateManager(LinknLinkUpdateManager):
+class LinknLinkSensorUpdateManager(LinknLinkUpdateManager):
     """Manages updates for linknlink remotes."""
 
     async def async_fetch_data(self):
