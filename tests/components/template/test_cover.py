@@ -424,7 +424,7 @@ async def test_template_open_or_position(
 ) -> None:
     """Test that at least one of open_cover or set_position is used."""
     assert hass.states.async_all("cover") == []
-    assert "Invalid config for [cover.template]" in caplog_setup_text
+    assert "Invalid config for 'cover.template'" in caplog_setup_text
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])

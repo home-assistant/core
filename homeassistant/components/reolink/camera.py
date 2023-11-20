@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from reolink_aio.api import DUAL_LENS_MODELS
+from reolink_aio.api import DUAL_LENS_MODELS, Host
 
 from homeassistant.components.camera import (
     Camera,
@@ -94,19 +94,19 @@ async def async_setup_entry(
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ReolinkCamera] = [
-        ReolinkCamera(reolink_data, channel, entity_description)
-        for entity_description in CAMERA_ENTITIES
-        for channel in reolink_data.host.api.stream_channels
-        if entity_description.supported(reolink_data.host.api, channel)
-        and (
-            "snapshots" in entity_description.stream
-            or await reolink_data.host.api.get_stream_source(
+    entities: list[ReolinkCamera] = []
+    for entity_description in CAMERA_ENTITIES:
+        for channel in reolink_data.host.api.stream_channels:
+            if not entity_description.supported(reolink_data.host.api, channel):
+                continue
+            stream_url = await reolink_data.host.api.get_stream_source(
                 channel, entity_description.stream
             )
-            is not None
-        )
-    ]
+            if stream_url is None and "snapshots" not in entity_description.stream:
+                continue
+
+            entities.append(ReolinkCamera(reolink_data, channel, entity_description))
+
     async_add_entities(entities)
 
 
