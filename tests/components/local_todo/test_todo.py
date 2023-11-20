@@ -29,7 +29,6 @@ async def ws_get_items(
             }
         )
         resp = await client.receive_json()
-        assert resp.get("id") == id
         assert resp.get("success")
         return resp.get("result", {}).get("items", [])
 
@@ -54,7 +53,6 @@ async def ws_move_item(
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
         resp = await client.receive_json()
-        assert resp.get("id") == id
         assert resp.get("success")
 
     return move

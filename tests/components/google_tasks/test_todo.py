@@ -79,7 +79,6 @@ async def ws_get_items(
             }
         )
         resp = await client.receive_json()
-        assert resp.get("id") == id
         assert resp.get("success")
         return resp.get("result", {}).get("items", [])
 
