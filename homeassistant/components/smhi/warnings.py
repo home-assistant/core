@@ -1,6 +1,7 @@
 """warnings."""
 from typing import Any
 
+from .const import smhi_warning_icons
 from .downloader import SmhiDownloader
 from .smhi_geolocation_event import SmhiGeolocationEvent
 
@@ -56,6 +57,11 @@ class SmhiWarnings:
 
         for warning in warnings:
             name = str(warning["warningAreas"][0]["descriptions"][0]["text"]["en"])
+            icon = str(warning["warningAreas"][0]["warningLevel"]["code"])
+
+            icon_url = ""
+            if icon in smhi_warning_icons:
+                icon_url = smhi_warning_icons[icon]
 
             if "coordinates" in warning["warningAreas"][0]["geometry"]:
                 if len(warning["warningAreas"][0]["geometry"]["coordinates"]) == 1:
@@ -63,14 +69,28 @@ class SmhiWarnings:
                         "coordinates"
                     ][0]:
                         geo_location_entities.append(
-                            SmhiGeolocationEvent(name, location[1], location[0])
+                            SmhiGeolocationEvent(
+                                name,
+                                location[1],
+                                location[0],
+                                icon_url,
+                                "mdi:alert",
+                                "stationary",
+                            )
                         )
                 else:
                     for location in warning["warningAreas"][0]["geometry"][
                         "coordinates"
                     ]:
                         geo_location_entities.append(
-                            SmhiGeolocationEvent(name, location[1], location[0])
+                            SmhiGeolocationEvent(
+                                name,
+                                location[1],
+                                location[0],
+                                icon_url,
+                                "mdi:alert",
+                                "stationary",
+                            )
                         )
 
         return geo_location_entities
