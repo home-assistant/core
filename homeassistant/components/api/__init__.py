@@ -41,6 +41,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.aiohttp_compat import enable_compression
 from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -219,7 +220,7 @@ class APIStatesView(HomeAssistantView):
         response = web.Response(
             body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
         )
-        response.enable_compression()
+        enable_compression(response)
         return response
 
 

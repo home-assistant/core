@@ -9,11 +9,11 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.keyboard_key import KeyboardKey
-from systembridgeconnector.models.keyboard_text import KeyboardText
-from systembridgeconnector.models.open_path import OpenPath
-from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
+from systembridgemodels.keyboard_key import KeyboardKey
+from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.open_path import OpenPath
+from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
