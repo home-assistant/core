@@ -1,13 +1,13 @@
 """Config flow for Minecraft Server integration."""
 import logging
 
-from mcstatus import JavaServer
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
+from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DEFAULT_NAME, DOMAIN
 
 DEFAULT_ADDRESS = "localhost:25565"
@@ -27,10 +27,28 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             address = user_input[CONF_ADDRESS]
 
-            if await self._async_is_server_online(address):
-                # No error was detected, create configuration entry.
-                config_data = {CONF_NAME: user_input[CONF_NAME], CONF_ADDRESS: address}
-                return self.async_create_entry(title=address, data=config_data)
+            # Prepare config entry data.
+            config_data = {
+                CONF_NAME: user_input[CONF_NAME],
+                CONF_ADDRESS: address,
+            }
+
+            # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
+            for server_type in MinecraftServerType:
+                try:
+                    api = await self.hass.async_add_executor_job(
+                        MinecraftServer, server_type, address
+                    )
+                except MinecraftServerAddressError:
+                    pass
+                else:
+                    if await api.async_is_online():
+                        config_data[CONF_TYPE] = server_type
+                        return self.async_create_entry(title=address, data=config_data)
+
+                _LOGGER.debug(
+                    "Connection check to %s server '%s' failed", server_type, address
+                )
 
             # Host or port invalid or server not reachable.
             errors["base"] = "cannot_connect"
@@ -59,37 +77,3 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def _async_is_server_online(self, address: str) -> bool:
-        """Check server connection using a 'status' request and return result."""
-
-        # Parse and check server address.
-        try:
-            server = await JavaServer.async_lookup(address)
-        except ValueError as error:
-            _LOGGER.debug(
-                (
-                    "Error occurred while parsing server address '%s' -"
-                    " ValueError: %s"
-                ),
-                address,
-                error,
-            )
-            return False
-
-        # Send a status request to the server.
-        try:
-            await server.async_status()
-            return True
-        except OSError as error:
-            _LOGGER.debug(
-                (
-                    "Error occurred while trying to check the connection to '%s:%s' -"
-                    " OSError: %s"
-                ),
-                server.address.host,
-                server.address.port,
-                error,
-            )
-
-        return False

@@ -4,10 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Final
 
-from systembridgeconnector.models.media_control import (
-    Action as MediaAction,
-    MediaControl,
-)
+from systembridgemodels.media_control import Action as MediaAction, MediaControl
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -22,9 +19,9 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .entity import SystemBridgeEntity
 
 STATUS_CHANGING: Final[str] = "CHANGING"
 STATUS_STOPPED: Final[str] = "STOPPED"
@@ -54,6 +51,15 @@ MEDIA_SET_REPEAT_MAP: Final[dict[RepeatMode, int]] = {
     RepeatMode.ALL: 2,
 }
 
+MEDIA_PLAYER_DESCRIPTION: Final[
+    MediaPlayerEntityDescription
+] = MediaPlayerEntityDescription(
+    key="media",
+    translation_key="media",
+    icon="mdi:volume-high",
+    device_class=MediaPlayerDeviceClass.RECEIVER,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -62,19 +68,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up System Bridge media players based on a config entry."""
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    data: SystemBridgeCoordinatorData = coordinator.data
+    data = coordinator.data
 
     if data.media is not None:
         async_add_entities(
             [
                 SystemBridgeMediaPlayer(
                     coordinator,
-                    MediaPlayerEntityDescription(
-                        key="media",
-                        translation_key="media",
-                        icon="mdi:volume-high",
-                        device_class=MediaPlayerDeviceClass.RECEIVER,
-                    ),
+                    MEDIA_PLAYER_DESCRIPTION,
                     entry.data[CONF_PORT],
                 )
             ]
@@ -103,7 +104,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.media is not None
+        return super().available and self.coordinator.data.media is not None
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:

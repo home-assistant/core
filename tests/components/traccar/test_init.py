@@ -153,6 +153,7 @@ async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None
         "speed": 100,
         "bearing": "105.32",
         "altitude": 102,
+        "charge": "true",
     }
 
     req = await client.post(url, params=data)
@@ -165,6 +166,7 @@ async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None
     assert state.attributes["speed"] == 100.0
     assert state.attributes["bearing"] == 105.32
     assert state.attributes["altitude"] == 102.0
+    assert "charge" not in state.attributes
 
     data = {
         "lat": str(HOME_LATITUDE),

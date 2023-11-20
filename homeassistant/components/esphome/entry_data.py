@@ -29,18 +29,22 @@ from aioesphomeapi import (
     SensorInfo,
     SensorState,
     SwitchInfo,
+    TextInfo,
     TextSensorInfo,
     UserService,
+    build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
 from .bluetooth.device import ESPHomeBluetoothDevice
+from .const import DOMAIN
 from .dashboard import async_get_dashboard
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
@@ -65,6 +69,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     SelectInfo: Platform.SELECT,
     SensorInfo: Platform.SENSOR,
     SwitchInfo: Platform.SWITCH,
+    TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
 }
 
@@ -244,24 +249,34 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo]
+        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
         needed_platforms = set()
-
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
-        if self.device_info is not None and self.device_info.voice_assistant_version:
+        if self.device_info and self.device_info.voice_assistant_version:
             needed_platforms.add(Platform.BINARY_SENSOR)
             needed_platforms.add(Platform.SELECT)
 
+        ent_reg = er.async_get(hass)
+        registry_get_entity = ent_reg.async_get_entity_id
         for info in infos:
-            for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
-                if isinstance(info, info_type):
-                    needed_platforms.add(platform)
-                    break
+            platform = INFO_TYPE_TO_PLATFORM[type(info)]
+            needed_platforms.add(platform)
+            # If the unique id is in the old format, migrate it
+            # except if they downgraded and upgraded, there might be a duplicate
+            # so we want to keep the one that was already there.
+            if (
+                (old_unique_id := info.unique_id)
+                and (old_entry := registry_get_entity(platform, DOMAIN, old_unique_id))
+                and (new_unique_id := build_unique_id(mac, info)) != old_unique_id
+                and not registry_get_entity(platform, DOMAIN, new_unique_id)
+            ):
+                ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
+
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Make a dict of the EntityInfo by type and send

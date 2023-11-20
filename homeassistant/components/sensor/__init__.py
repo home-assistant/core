@@ -47,9 +47,11 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
@@ -146,6 +148,28 @@ class SensorEntityDescription(EntityDescription):
     suggested_display_precision: int | None = None
     suggested_unit_of_measurement: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
+
+
+def _numeric_state_expected(
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | str | None,
+    native_unit_of_measurement: str | None,
+    suggested_display_precision: int | None,
+) -> bool:
+    """Return true if the sensor must be numeric."""
+    # Note: the order of the checks needs to be kept aligned
+    # with the checks in `state` property.
+    if device_class in NON_NUMERIC_DEVICE_CLASSES:
+        return False
+    if (
+        state_class is not None
+        or native_unit_of_measurement is not None
+        or suggested_display_precision is not None
+    ):
+        return True
+    # Sensors with custom device classes will have the device class
+    # converted to None and are not considered numeric
+    return device_class is not None
 
 
 class SensorEntity(Entity):
@@ -251,6 +275,11 @@ class SensorEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+            )
+
         if not self.registry_entry:
             return
         self._async_read_entity_options()
@@ -277,20 +306,12 @@ class SensorEntity(Entity):
     @property
     def _numeric_state_expected(self) -> bool:
         """Return true if the sensor must be numeric."""
-        # Note: the order of the checks needs to be kept aligned
-        # with the checks in `state` property.
-        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
-        if device_class in NON_NUMERIC_DEVICE_CLASSES:
-            return False
-        if (
-            self.state_class is not None
-            or self.native_unit_of_measurement is not None
-            or self.suggested_display_precision is not None
-        ):
-            return True
-        # Sensors with custom device classes will have the device class
-        # converted to None and are not considered numeric
-        return device_class is not None
+        return _numeric_state_expected(
+            try_parse_enum(SensorDeviceClass, self.device_class),
+            self.state_class,
+            self.native_unit_of_measurement,
+            self.suggested_display_precision,
+        )
 
     @property
     def options(self) -> list[str] | None:
@@ -370,10 +391,8 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
-            if (
-                self.state_class != SensorStateClass.TOTAL
-                and not self._last_reset_reported
-            ):
+            state_class = self.state_class
+            if state_class != SensorStateClass.TOTAL and not self._last_reset_reported:
                 self._last_reset_reported = True
                 report_issue = self._suggest_report_issue()
                 # This should raise in Home Assistant Core 2022.5
@@ -386,11 +405,11 @@ class SensorEntity(Entity):
                     ),
                     self.entity_id,
                     type(self),
-                    self.state_class,
+                    state_class,
                     report_issue,
                 )
 
-            if self.state_class == SensorStateClass.TOTAL:
+            if state_class == SensorStateClass.TOTAL:
                 return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
@@ -463,9 +482,9 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
-            self.device_class == SensorDeviceClass.TEMPERATURE
-            and native_unit_of_measurement
+            native_unit_of_measurement
             in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+            and self.device_class == SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
@@ -583,7 +602,9 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if not self._numeric_state_expected:
+        if not _numeric_state_expected(
+            device_class, state_class, native_unit_of_measurement, suggested_precision
+        ):
             return value
 
         # From here on a numerical value is expected

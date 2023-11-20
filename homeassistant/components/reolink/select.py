@@ -27,20 +27,12 @@ from .entity import ReolinkChannelCoordinatorEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class ReolinkSelectEntityDescriptionMixin:
-    """Mixin values for Reolink select entities."""
-
-    method: Callable[[Host, int, str], Any]
-    get_options: list[str] | Callable[[Host, int], list[str]]
-
-
-@dataclass
-class ReolinkSelectEntityDescription(
-    SelectEntityDescription, ReolinkSelectEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkSelectEntityDescription(SelectEntityDescription):
     """A class that describes select entities."""
 
+    get_options: list[str] | Callable[[Host, int], list[str]]
+    method: Callable[[Host, int, str], Any]
     supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], str] | None = None
 
@@ -78,6 +70,7 @@ SELECT_ENTITIES = (
         key="auto_quick_reply_message",
         translation_key="auto_quick_reply_message",
         icon="mdi:message-reply-text-outline",
+        entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],

@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_nutrition_scope_config_entry[scopes0-unit_system0]
+  tuple(
+    '99',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes0-unit_system0].1
+  tuple(
+    '1600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories In',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes1-unit_system1]
+  tuple(
+    '99',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.FLUID_OUNCES: 'fl. oz.'>,
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes1-unit_system1].1
+  tuple(
+    '1600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories In',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+  )
+# ---
 # name: test_sensors[monitored_resources0-sensor.activity_calories-activities/activityCalories-135]
   tuple(
     '135',

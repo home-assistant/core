@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import AsyncIterable
 import logging
 from typing import final
@@ -33,6 +34,8 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+TIMEOUT_FETCH_WAKE_WORDS = 10
 
 
 @callback
@@ -86,9 +89,8 @@ class WakeWordDetectionEntity(RestoreEntity):
         """Return the state of the entity."""
         return self.__last_detected
 
-    @property
     @abstractmethod
-    def supported_wake_words(self) -> list[WakeWord]:
+    async def get_supported_wake_words(self) -> list[WakeWord]:
         """Return a list of supported wake words."""
 
     @abstractmethod
@@ -133,8 +135,9 @@ class WakeWordDetectionEntity(RestoreEntity):
         vol.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
+@websocket_api.async_response
 @callback
-def websocket_entity_info(
+async def websocket_entity_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get info about wake word entity."""
@@ -147,7 +150,16 @@ def websocket_entity_info(
         )
         return
 
+    try:
+        async with asyncio.timeout(TIMEOUT_FETCH_WAKE_WORDS):
+            wake_words = await entity.get_supported_wake_words()
+    except asyncio.TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_TIMEOUT, "Timeout fetching wake words"
+        )
+        return
+
     connection.send_result(
         msg["id"],
-        {"wake_words": entity.supported_wake_words},
+        {"wake_words": wake_words},
     )

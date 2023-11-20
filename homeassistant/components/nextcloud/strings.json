@@ -91,7 +91,7 @@
         "name": "Cache ttl"
       },
       "nextcloud_database_size": {
-        "name": "Databse size"
+        "name": "Database size"
       },
       "nextcloud_database_type": {
         "name": "Database type"

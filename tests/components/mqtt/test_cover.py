@@ -891,11 +891,9 @@ async def test_optimistic_position(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test optimistic position is not supported."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
-        "Invalid config for [mqtt]: 'set_position_topic' must be set together with 'position_topic'"
-        in caplog.text
+        "'set_position_topic' must be set together with 'position_topic'" in caplog.text
     )
 
 
@@ -2663,9 +2661,8 @@ async def test_invalid_device_class(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the setting of an invalid device class."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: expected CoverDeviceClass" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "expected CoverDeviceClass" in caplog.text
 
 
 async def test_setting_attribute_via_mqtt_json_message(
@@ -3402,8 +3399,7 @@ async def test_set_position_topic_without_get_position_topic_error(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test error when set_position_topic is used without position_topic."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
         f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
     ) in caplog.text
@@ -3429,8 +3425,7 @@ async def test_value_template_without_state_topic_error(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test error when value_template is used and state_topic is missing."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
         f"'{CONF_VALUE_TEMPLATE}' must be set together with '{CONF_STATE_TOPIC}'."
     ) in caplog.text
@@ -3456,8 +3451,7 @@ async def test_position_template_without_position_topic_error(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test error when position_template is used and position_topic is missing."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
         f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
         in caplog.text
@@ -3484,8 +3478,7 @@ async def test_set_position_template_without_set_position_topic(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test error when set_position_template is used and set_position_topic is missing."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
         f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
         in caplog.text
@@ -3512,8 +3505,7 @@ async def test_tilt_command_template_without_tilt_command_topic(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test error when tilt_command_template is used and tilt_command_topic is missing."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
         f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
         in caplog.text
@@ -3540,8 +3532,7 @@ async def test_tilt_status_template_without_tilt_status_topic_topic(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test error when tilt_status_template is used and tilt_status_topic is missing."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert (
         f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
         in caplog.text
