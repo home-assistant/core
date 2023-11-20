@@ -319,6 +319,19 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.auto_track_stop_time(ch),
         method=lambda api, ch, value: api.set_auto_tracking(ch, stop_time=int(value)),
     ),
+    ReolinkNumberEntityDescription(
+        key="day_night_switch_threshold",
+        translation_key="day_night_switch_threshold",
+        icon="mdi:theme-light-dark",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "dayNightThreshold"),
+        value=lambda api, ch: api.daynight_threshold(ch),
+        method=lambda api, ch, value: api.set_daynight_threshold(ch, int(value)),
+    ),
 )
 
 
