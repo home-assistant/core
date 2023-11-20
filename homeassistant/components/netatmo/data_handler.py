@@ -176,6 +176,7 @@ class NetatmoDataHandler:
                 DOMAIN,
                 ISSUE_ID_WEBHOOK_NOT_RECEIVING,
                 is_fixable=False,
+                is_persistent=True,
                 issue_domain=DOMAIN,
                 learn_more_url='https://www.home-assistant.io/integrations/netatmo/#webhook-events',
                 severity=IssueSeverity.WARNING,
