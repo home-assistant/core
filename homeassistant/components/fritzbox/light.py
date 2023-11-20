@@ -47,11 +47,13 @@ async def async_setup_entry(
         """Add devices."""
         if not coordinator.new_devices:
             return
-        entities: list[FritzboxLight] = []
-        for ain in coordinator.new_devices:
-            if (device := coordinator.data.devices[ain]).has_lightbulb:
-                entities.append(_prepare_light_entity(ain, device))
-        async_add_entities(entities)
+        async_add_entities(
+            [
+                _prepare_light_entity(ain, device)
+                for ain in coordinator.new_devices
+                if (device := coordinator.data.devices[ain]).has_lightbulb
+            ]
+        )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 

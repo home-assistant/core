@@ -24,10 +24,9 @@ async def async_setup_entry(
         """Add templates."""
         if not coordinator.new_templates:
             return
-        entities: list[FritzBoxTemplate] = []
-        for ain in coordinator.new_templates:
-            entities.append(FritzBoxTemplate(coordinator, ain))
-        async_add_entities(entities)
+        async_add_entities(
+            [FritzBoxTemplate(coordinator, ain) for ain in coordinator.new_templates]
+        )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 

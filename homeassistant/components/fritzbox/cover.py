@@ -30,11 +30,13 @@ async def async_setup_entry(
         """Add devices."""
         if not coordinator.new_devices:
             return
-        entities: list[FritzboxCover] = []
-        for ain in coordinator.new_devices:
-            if coordinator.data.devices[ain].has_blind:
-                entities.append(FritzboxCover(coordinator, ain))
-        async_add_entities(entities)
+        async_add_entities(
+            [
+                FritzboxCover(coordinator, ain)
+                for ain in coordinator.new_devices
+                if coordinator.data.devices[ain].has_blind
+            ]
+        )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
