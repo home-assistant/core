@@ -35,12 +35,12 @@
       "precipitation": {
         "name": "Precipitation type",
         "state": {
-          "no": "No",
+          "no": "None",
           "rain": "Rain",
           "freezing_rain": "Freezing rain",
           "snow": "Snow",
           "sleet": "Sleet",
-          "yes": "Yes"
+          "yes": "Yes (unknown)"
         }
       },
       "wind_direction": {
@@ -51,6 +51,30 @@
       },
       "measure_time": {
         "name": "Measure time"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "visible_distance": {
+        "name": "Visible distance"
+      },
+      "road_ice_depth": {
+        "name": "Ice depth on road"
+      },
+      "road_snow_depth": {
+        "name": "Snow depth on road"
+      },
+      "road_water_depth": {
+        "name": "Water depth on road"
+      },
+      "road_water_equivalent_depth": {
+        "name": "Water equivalent depth on road"
+      },
+      "wind_height": {
+        "name": "Wind measurement height"
+      },
+      "modified_time": {
+        "name": "Data modified time"
       }
     }
   }
