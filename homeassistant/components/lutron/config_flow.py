@@ -27,9 +27,9 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Validate user input
-            user_input.get(CONF_USERNAME)
-            user_input.get(CONF_PASSWORD)
-            ip_address = user_input.get(CONF_HOST)
+            # user_input.get(CONF_USERNAME)
+            # user_input.get(CONF_PASSWORD)
+            ip_address = user_input(CONF_HOST)
 
             # Now that we have the data, check and see if we can connect and get a GUID
             main_repeater = Lutron(
@@ -47,12 +47,10 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 guid = main_repeater.guid
             except UnknownConnectError:
                 errors["base"] = "config_errors"
-                guid = "failed"
             except HTTPError as ex:
                 # In a future version we can get more specific with the HTTP code
                 _LOGGER.debug("Exception Type: %s", type(ex).__name__)
                 errors["base"] = "connect_error"
-                guid = "failed"
 
             if not errors:
                 if len(guid) > 10:
@@ -62,22 +60,14 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if a configuration entry with the same unique ID already exists
             if not errors:
-                existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-                _LOGGER.debug("Entry IP: %s", ip_address)
-                for entry in existing_entries:
-                    _LOGGER.debug("Entry Data: %s", entry.data[CONF_HOST])
-                    if entry.data[CONF_HOST] == ip_address:
-                        errors["base"] = "already_configured"
-                    else:
-                        errors["base"] = "single_instance"
+                if self._async_current_entries():
+                    return self.async_abort(reason="single_instance_allowed")
 
             if not errors:
                 await self.async_set_unique_id(guid)
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title="Lutron Integration", data=user_input
-                )
+                return self.async_create_entry(title="Lutron", data=user_input)
 
         # Show the form to the user
         return self.async_show_form(
