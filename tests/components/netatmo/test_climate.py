@@ -495,6 +495,36 @@ async def test_service_clear_temperature_setting(
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
 
+    # Simulate a room thermostat change to manual boost
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 25,
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "heat"
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 25
+
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
         NETATMO_DOMAIN,
@@ -504,7 +534,7 @@ async def test_service_clear_temperature_setting(
     )
     await hass.async_block_till_done()
 
-    # Test webhook room mode change to "manual"
+    # Test webhook room mode change to "home"
     response = {
         "room_id": "2746182631",
         "home": {
@@ -517,7 +547,6 @@ async def test_service_clear_temperature_setting(
                     "name": "Livingroom",
                     "type": "livingroom",
                     "therm_setpoint_mode": "home",
-                    "therm_setpoint_end_time": 1612749189,
                 }
             ],
             "modules": [
@@ -525,7 +554,7 @@ async def test_service_clear_temperature_setting(
             ],
         },
         "mode": "home",
-        "event_type": "set_point",
+        "event_type": "cancel_set_point",
         "push_type": "display_change",
     }
     await simulate_webhook(hass, webhook_id, response)
