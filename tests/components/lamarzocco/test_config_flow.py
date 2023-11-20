@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
-    DEFAULT_CONF,
     DISCOVERED_INFO,
     HOST_SELECTION,
     LM_SERVICE_INFO,
@@ -61,7 +60,7 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
     assert result3["title"] == "GS01234"
-    assert result3["data"] == USER_INPUT | DEFAULT_CONF | MACHINE_DATA
+    assert result3["data"] == USER_INPUT | MACHINE_DATA
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
@@ -207,7 +206,7 @@ async def test_bluetooth_discovery(
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
     assert result3["title"] == "GS01234"
-    assert result3["data"] == USER_INPUT | DEFAULT_CONF | MACHINE_DATA | DISCOVERED_INFO
+    assert result3["data"] == USER_INPUT | MACHINE_DATA | DISCOVERED_INFO
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 

@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import DEFAULT_CONF, MACHINE_NAME, USER_INPUT
+from . import MACHINE_NAME, USER_INPUT
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
-        data=DEFAULT_CONF | USER_INPUT,
+        data=USER_INPUT,
         unique_id="very_unique",
     )
 

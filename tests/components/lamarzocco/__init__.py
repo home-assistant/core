@@ -1,30 +1,16 @@
 """Mock inputs for tests."""
-from homeassistant.components.lamarzocco.const import (
-    CONF_MACHINE,
-    DEFAULT_CLIENT_ID,
-    DEFAULT_CLIENT_SECRET,
-    DEFAULT_PORT_LOCAL,
-)
+from homeassistant.components.lamarzocco.const import CONF_MACHINE
 from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 MACHINE_NAME = "GS01234"
 UNIQUE_ID = "1234"
-
-DEFAULT_CONF = {
-    CONF_CLIENT_ID: DEFAULT_CLIENT_ID,
-    CONF_CLIENT_SECRET: DEFAULT_CLIENT_SECRET,
-    CONF_PORT: DEFAULT_PORT_LOCAL,
-}
 
 USER_INPUT = {
     CONF_USERNAME: "username",

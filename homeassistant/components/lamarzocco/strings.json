@@ -44,8 +44,6 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "One or more of your provided credentials are invalid.",
         "data": {
-          "client_id": "Client ID",
-          "client_secret": "Client Secret",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }

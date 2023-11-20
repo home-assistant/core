@@ -8,8 +8,6 @@ from lmcloud.exceptions import BluetoothConnectionFailed
 
 from homeassistant.components import bluetooth
 from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -20,7 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_MACHINE,
-    DEFAULT_PORT_LOCAL,
     MACHINE_NAME,
     MODEL_GS3_AV,
     MODEL_GS3_MP,
@@ -113,7 +110,7 @@ class LaMarzoccoClient(LMCloud):
         host: str = self._entry_data.get(CONF_HOST, "")
         if host:
             _LOGGER.debug("Initializing local API")
-            await self._init_local_api(host=host, port=DEFAULT_PORT_LOCAL)
+            await self._init_local_api(host)
 
     async def set_power(self, enabled: bool) -> None:
         """Set the power state of the machine."""
@@ -190,6 +187,4 @@ class LaMarzoccoClient(LMCloud):
         return {
             CONF_USERNAME: entry_data.get(CONF_USERNAME, ""),
             CONF_PASSWORD: entry_data.get(CONF_PASSWORD, ""),
-            CONF_CLIENT_SECRET: entry_data.get(CONF_CLIENT_SECRET, ""),
-            CONF_CLIENT_ID: entry_data.get(CONF_CLIENT_ID, ""),
         }

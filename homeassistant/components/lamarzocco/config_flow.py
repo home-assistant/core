@@ -10,13 +10,10 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
@@ -28,13 +25,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_MACHINE,
-    DEFAULT_CLIENT_ID,
-    DEFAULT_CLIENT_SECRET,
-    DEFAULT_PORT_LOCAL,
-    DOMAIN,
-)
+from .const import CONF_MACHINE, DOMAIN
 from .lm_client import LaMarzoccoClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,14 +34,6 @@ LOGIN_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-    },
-    extra=vol.PREVENT_EXTRA,
-)
-
-STEP_REAUTH_DATA_SCHEMA = LOGIN_DATA_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET, default=DEFAULT_CLIENT_SECRET): cv.string,
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -101,9 +84,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = {
                 **user_input,
                 **self._discovered,
-                CONF_PORT: DEFAULT_PORT_LOCAL,
-                CONF_CLIENT_ID: DEFAULT_CLIENT_ID,
-                CONF_CLIENT_SECRET: DEFAULT_CLIENT_SECRET,
             }
 
             try:
@@ -265,7 +245,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            data_schema=LOGIN_DATA_SCHEMA,
             errors=errors,
         )
 
