@@ -247,7 +247,7 @@ async def test_update_item(
         blocking=True,
     )
 
-    # Verify item is updated as completed
+    # Verify item is updated
     items = await ws_get_items()
     assert len(items) == 1
     item = items[0]
