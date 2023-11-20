@@ -1,12 +1,7 @@
 """Tests for the PubliBike component."""
 from unittest.mock import patch
 
-from homeassistant.components.publibike.const import (
-    BATTERY_LIMIT,
-    DOMAIN,
-    LATITUDE,
-    LONGITUDE,
-)
+from homeassistant.components.publibike.const import BATTERY_LIMIT, DOMAIN, STATION_ID
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -18,11 +13,9 @@ async def test_load_unload_config_entry(hass: HomeAssistant) -> None:
     """Test the Publibike configuration entry loading/unloading."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={},
+        data={STATION_ID: 123},
         options={
             BATTERY_LIMIT: 99,
-            LATITUDE: 1.0,
-            LONGITUDE: 2.0,
         },
     )
 

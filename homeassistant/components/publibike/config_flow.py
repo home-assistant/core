@@ -15,14 +15,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    BATTERY_LIMIT,
-    BATTERY_LIMIT_DEFAULT,
-    DOMAIN,
-    LATITUDE,
-    LONGITUDE,
-    STATION_ID,
-)
+from .const import BATTERY_LIMIT, BATTERY_LIMIT_DEFAULT, DOMAIN, STATION_ID
 
 _LOGGER = logging.getLogger(__name__)
 

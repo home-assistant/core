@@ -4,13 +4,7 @@ from unittest.mock import MagicMock, patch
 from requests import ConnectionError as ConnErr
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.publibike import (
-    BATTERY_LIMIT,
-    DOMAIN,
-    LATITUDE,
-    LONGITUDE,
-    STATION_ID,
-)
+from homeassistant.components.publibike import BATTERY_LIMIT, DOMAIN, STATION_ID
 
 from tests.common import MockConfigEntry
 
@@ -20,8 +14,6 @@ TEST_CONF = {
 
 TEST_OPTIONS = {
     BATTERY_LIMIT: 99,
-    LATITUDE: 1.0,
-    LONGITUDE: 1.0,
 }
 
 
@@ -195,6 +187,4 @@ async def test_options_flow(hass):
         assert configured["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {
             "battery_limit": 99,
-            "latitude": 1.0,
-            "longitude": 1.0,
         }

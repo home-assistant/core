@@ -1,13 +1,7 @@
 """Tests for PubliBike sensors."""
 from unittest.mock import patch
 
-from homeassistant.components.publibike.const import (
-    BATTERY_LIMIT,
-    DOMAIN,
-    LATITUDE,
-    LONGITUDE,
-    STATION_ID,
-)
+from homeassistant.components.publibike.const import DOMAIN, STATION_ID
 
 from tests.common import MockConfigEntry
 from tests.components.publibike.mocks import _get_mock_bike
@@ -48,47 +42,3 @@ async def test_sensors_with_station_id(hass):
         await hass.async_block_till_done()
 
     await _assert_states(hass, exp_bikes=2)
-
-
-async def test_sensors_with_location(hass):
-    """Test creation of the sensors given coordinates."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            BATTERY_LIMIT: 99,
-            LATITUDE: 1.0,
-            LONGITUDE: 2.0,
-        },
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.publibike.config_flow.PubliBike",
-        return_value=_get_mock_bike(),
-    ), patch(
-        "homeassistant.components.publibike.PubliBike", return_value=_get_mock_bike()
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    await _assert_states(hass, exp_bikes=1)
-
-
-async def test_sensors_without_location(hass):
-    """Test creation of the sensors using default coordinates."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={BATTERY_LIMIT: 99},
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.publibike.config_flow.PubliBike",
-        return_value=_get_mock_bike(),
-    ), patch(
-        "homeassistant.components.publibike.PubliBike", return_value=_get_mock_bike()
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    await _assert_states(hass, exp_bikes=1)
