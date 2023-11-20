@@ -43,7 +43,6 @@ PLAYER_STATE_MAP: dict[Any, MediaPlayerState] = {
     mpris_pb2.PlayerStatus.PAUSED: MediaPlayerState.PAUSED,  # type: ignore[attr-defined]
     mpris_pb2.PlayerStatus.STOPPED: MediaPlayerState.IDLE,  # type: ignore[attr-defined]
 }
-AVAILABLE = "available"
 UNAVAILABLE = "unavailable"
 
 SUPPORTED_MINIMAL = (
@@ -166,32 +165,19 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
             updated = True
             data = self.coordinator.data[self.coordinator_context].pop(0)
 
-            if data in (AVAILABLE, UNAVAILABLE):
-                availability = data == AVAILABLE
-                if self._attr_available != availability:
-                    self._debug(
-                        "Updating availability from %s to %s",
-                        self._attr_available,
-                        availability,
-                    )
-                    if availability:
-                        # Player has just come back from unavailability,
-                        # but we don't yet know its state.  Provisionally
-                        # consider the player off until its status update
-                        # appears here.
-                        self._attr_state = MediaPlayerState.OFF
-                        reset_player_attributes()
-                    self._attr_available = availability
-                    if not self._attr_available:
-                        # Player has stopped being available, probably
-                        # because the agent went AWOL.
-                        # Its state should be off, because that is what
-                        # its state must be while the agent is away.
-                        self._attr_state = MediaPlayerState.OFF
-                        reset_player_attributes()
+            if data == UNAVAILABLE:
+                if self._attr_available:
+                    self._debug("Now unavailable")
+                    self._attr_available = False
+                    self._attr_state = MediaPlayerState.OFF
                 continue
 
             if data.status != mpris_pb2.PlayerStatus.UNKNOWN:  # type: ignore[attr-defined]
+                if not self._attr_available:
+                    self._debug("Now available")
+                    self._attr_available = True
+                    reset_player_attributes()
+
                 state = PLAYER_STATE_MAP[data.status]  # type: ignore[attr-defined]
                 if self._attr_state != state:
                     from_playing_to_paused = (
@@ -385,7 +371,7 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
 
 class MPRISCoordinator(
     DataUpdateCoordinator[
-        dict[str, list[Union[mpris_pb2.MPRISPlayerUpdate, AVAILABLE, UNAVAILABLE]]]  # type: ignore[valid-type]
+        dict[str, list[Union[mpris_pb2.MPRISPlayerUpdate, UNAVAILABLE]]]  # type: ignore[valid-type]
     ]
 ):
     """The entity manager manages MPRIS media player entities.
@@ -414,9 +400,7 @@ class MPRISCoordinator(
           async_add_entities: callback to add entities async
         """
         super().__init__(hass, _LOGGER, name="MPRIS")
-        self.data: dict[  # type: ignore[valid-type]
-            str, list[Union[mpris_pb2.MPRISPlayerUpdate, AVAILABLE, UNAVAILABLE]]
-        ] = {}
+        self.data: dict[str, list[Union[mpris_pb2.MPRISPlayerUpdate, UNAVAILABLE]]] = {}  # type: ignore[valid-type]
         self.config_entry = config_entry
         self.async_add_entities = async_add_entities
         self._client = mpris_client
@@ -503,10 +487,6 @@ class MPRISCoordinator(
         for player_id in self.data:
             self.data[player_id].append(UNAVAILABLE)
 
-    def _mark_all_entities_available(self) -> None:
-        for player_id in self.data:
-            self.data[player_id].append(AVAILABLE)
-
     async def _dispatch_deferred_update(self) -> None:
         """Coalesce updates of data sent by the agent over the wire.
 
@@ -550,7 +530,6 @@ class MPRISCoordinator(
                     # updates for running players, and to resuscitate all players
                     # not currently known to the agent but known to Home Assistant.
                     self._add_players_not_running()
-                    self._mark_all_entities_available()
                     finished_initial_sync = True
                     await self._dispatch_deferred_update()
                 yield
@@ -581,7 +560,7 @@ class MPRISCoordinator(
                 player_id,
                 self.config_entry.entry_id,
             )
-            self.data[player_id] = [AVAILABLE]
+            self.data[player_id] = []
             self.async_add_entities([entity])
 
         self.data[player_id].append(discovery_data)
@@ -617,22 +596,23 @@ class MPRISCoordinator(
     def _add_players_not_running(self) -> None:
         for entry in self._player_registry_entries():
             player_id = _get_player_id(entry)
-            if player_id not in self.data:
-                if self._should_remove(player_id):
-                    _LOGGER.debug("Removing player %s from registry", player_id)
-                    er.async_get(self.hass).async_remove(entry.entity_id)
-                else:
-                    _LOGGER.debug("Resuscitating player %s", player_id)
-                    entity = HASSMPRISEntity(
-                        self,
-                        player_id,
-                        self.config_entry.entry_id,
-                    )
-                    self.data[player_id] = [
-                        AVAILABLE,
-                        mpris_pb2.MPRISPlayerUpdate(
-                            player_id=player_id,
-                            status=mpris_pb2.PlayerStatus.GONE,  # type: ignore[attr-defined]
-                        ),
-                    ]
+            if self._should_remove(player_id):
+                _LOGGER.debug("Removing player %s from registry", player_id)
+                if player_id in self.data:
+                    del self.data[player_id]
+                er.async_get(self.hass).async_remove(entry.entity_id)
+            else:
+                _LOGGER.debug("Resuscitating player %s", player_id)
+                entity = HASSMPRISEntity(
+                    self,
+                    player_id,
+                    self.config_entry.entry_id,
+                )
+                if player_id not in self.data:
                     self.async_add_entities([entity])
+                self.data[player_id] = [
+                    mpris_pb2.MPRISPlayerUpdate(
+                        player_id=player_id,
+                        status=mpris_pb2.PlayerStatus.GONE,  # type: ignore[attr-defined]
+                    ),
+                ]
