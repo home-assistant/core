@@ -124,8 +124,6 @@ class PubliBikeOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(BATTERY_LIMIT, default=BATTERY_LIMIT_DEFAULT): vol.All(
                         cv.positive_int, vol.Range(1, 100)
                     ),
-                    vol.Optional(LATITUDE): cv.latitude,
-                    vol.Optional(LONGITUDE): cv.longitude,
                 }
             ),
         )

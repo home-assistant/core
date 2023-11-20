@@ -31,21 +31,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PubliBike integration from a config_old entry."""
     publi_bike = PubliBike()
 
-    if station_id := entry.data.get(STATION_ID):
-        all_stations = await hass.async_add_executor_job(publi_bike.getStations)
-        station = next(
-            filter(lambda station: station.stationId == station_id, all_stations), None
-        )
-        if not station:
-            raise ConfigEntryError("Station does not exists anymore")
-    else:
-        location = Location(
-            latitude=entry.options.get(LATITUDE, hass.config.latitude),
-            longitude=entry.options.get(LONGITUDE, hass.config.longitude),
-        )
-        station = await hass.async_add_executor_job(
-            publi_bike.findNearestStationTo, location
-        )
+    all_stations = await hass.async_add_executor_job(publi_bike.getStations)
+    station = next(
+        filter(lambda station: station.stationId == entry.data[STATION_ID], all_stations), None
+    )
+    if not station:
+        raise ConfigEntryError("Station does not exists anymore")
 
     coordinator = PubliBikeDataUpdateCoordinator(
         hass, station, entry.options.get(BATTERY_LIMIT, BATTERY_LIMIT_DEFAULT)
