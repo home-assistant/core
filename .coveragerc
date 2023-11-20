@@ -673,7 +673,6 @@ omit =
     homeassistant/components/linknlink/entity.py
     homeassistant/components/linknlink/heartbeat.py
     homeassistant/components/linknlink/helpers.py
-    homeassistant/components/linknlink/remote.py
     homeassistant/components/linknlink/sensor.py
     homeassistant/components/linknlink/updater.py
     homeassistant/components/linksys_smart/device_tracker.py
