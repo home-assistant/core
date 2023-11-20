@@ -87,40 +87,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
-    """Lock the lock."""
-    code: str = service_call.data.get(
+@callback
+def _add_default_code(entity: LockEntity, service_call: ServiceCall) -> dict[Any, Any]:
+    code = service_call.data.get(
         ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
     )
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_lock(**remove_entity_service_fields(service_call))
+    data = remove_entity_service_fields(service_call)
+    data[ATTR_CODE] = code
+    return data
+
+
+async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
+    """Lock the lock."""
+    await entity.async_lock(**_add_default_code(entity, service_call))
 
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Unlock the lock."""
-    code: str = service_call.data.get(
-        ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
-    )
-    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
-        raise ValueError(
-            f"Code '{code}' for unlocking {entity.entity_id} doesn't match pattern {entity.code_format}"
-        )
-    await entity.async_unlock(**remove_entity_service_fields(service_call))
+    await entity.async_unlock(**_add_default_code(entity, service_call))
 
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
-    code: str = service_call.data.get(
-        ATTR_CODE, entity._lock_option_default_code  # pylint: disable=protected-access
-    )
-    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
-        raise ValueError(
-            f"Code '{code}' for opening {entity.entity_id} doesn't match pattern {entity.code_format}"
-        )
-    await entity.async_open(**remove_entity_service_fields(service_call))
+    await entity.async_open(**_add_default_code(entity, service_call))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

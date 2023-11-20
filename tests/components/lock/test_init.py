@@ -42,6 +42,8 @@ class MockLockEntity(LockEntity):
     ) -> None:
         """Initialize mock lock entity."""
         self._attr_supported_features = supported_features
+        self.calls_lock = MagicMock()
+        self.calls_unlock = MagicMock()
         self.calls_open = MagicMock()
         if code_format is not None:
             self._attr_code_format = code_format
@@ -49,11 +51,13 @@ class MockLockEntity(LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
+        self.calls_lock(kwargs)
         self._attr_is_locking = False
         self._attr_is_locked = True
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
+        self.calls_unlock(kwargs)
         self._attr_is_unlocking = False
         self._attr_is_locked = False
 
@@ -232,6 +236,28 @@ async def test_lock_unlock_with_code(hass: HomeAssistant) -> None:
     assert not lock.is_locked
 
 
+async def test_lock_with_illegal_code(hass: HomeAssistant) -> None:
+    """Test lock entity with default code that does not match the code format."""
+    lock = MockLockEntity(
+        code_format=r"^\d{4}$",
+        supported_features=LockEntityFeature.OPEN,
+    )
+    lock.hass = hass
+
+    with pytest.raises(ValueError):
+        await _async_open(
+            lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "123456"})
+        )
+    with pytest.raises(ValueError):
+        await _async_lock(
+            lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "123456"})
+        )
+    with pytest.raises(ValueError):
+        await _async_unlock(
+            lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "123456"})
+        )
+
+
 async def test_lock_with_default_code(hass: HomeAssistant) -> None:
     """Test lock entity with default code."""
     lock = MockLockEntity(
@@ -245,5 +271,45 @@ async def test_lock_with_default_code(hass: HomeAssistant) -> None:
     assert lock._lock_option_default_code == "1234"
 
     await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    lock.calls_open.assert_called_with({ATTR_CODE: "1234"})
     await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    lock.calls_lock.assert_called_with({ATTR_CODE: "1234"})
     await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+    lock.calls_unlock.assert_called_with({ATTR_CODE: "1234"})
+
+
+async def test_lock_with_provided_and_default_code(hass: HomeAssistant) -> None:
+    """Test lock entity with provided code when default code is set."""
+    lock = MockLockEntity(
+        code_format=r"^\d{4}$",
+        supported_features=LockEntityFeature.OPEN,
+        lock_option_default_code="1234",
+    )
+    lock.hass = hass
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "4321"}))
+    lock.calls_open.assert_called_with({ATTR_CODE: "4321"})
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "4321"}))
+    lock.calls_lock.assert_called_with({ATTR_CODE: "4321"})
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "4321"}))
+    lock.calls_unlock.assert_called_with({ATTR_CODE: "4321"})
+
+
+async def test_lock_with_illegal_default_code(hass: HomeAssistant) -> None:
+    """Test lock entity with default code that does not match the code format."""
+    lock = MockLockEntity(
+        code_format=r"^\d{4}$",
+        supported_features=LockEntityFeature.OPEN,
+        lock_option_default_code="123456",
+    )
+    lock.hass = hass
+
+    assert lock.state_attributes == {"code_format": r"^\d{4}$"}
+    assert lock._lock_option_default_code == "123456"
+
+    with pytest.raises(ValueError):
+        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    with pytest.raises(ValueError):
+        await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    with pytest.raises(ValueError):
+        await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
