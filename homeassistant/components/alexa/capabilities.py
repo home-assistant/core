@@ -857,16 +857,18 @@ class AlexaInputController(AlexaCapability):
 
     def inputs(self) -> list[dict[str, str]] | None:
         """Return the list of valid supported inputs."""
-        source_list: list[str] = self.entity.attributes.get(
+        source_list: list[str | None] = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
         return AlexaInputController.get_valid_inputs(source_list)
 
     @staticmethod
-    def get_valid_inputs(source_list: list[str]) -> list[dict[str, str]]:
+    def get_valid_inputs(source_list: list[str | None]) -> list[dict[str, str]]:
         """Return list of supported inputs."""
         input_list: list[dict[str, str]] = []
         for source in source_list:
+            if source is None:
+                continue
             formatted_source = (
                 source.lower().replace("-", "").replace("_", "").replace(" ", "")
             )
