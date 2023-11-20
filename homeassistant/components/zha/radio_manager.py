@@ -19,6 +19,7 @@ from zigpy.config import (
     CONF_DEVICE,
     CONF_DEVICE_PATH,
     CONF_NWK_BACKUP_ENABLED,
+    SCHEMA_DEVICE,
 )
 from zigpy.exceptions import NetworkNotFormed
 
@@ -204,9 +205,7 @@ class ZhaRadioManager:
         for radio in AUTOPROBE_RADIOS:
             _LOGGER.debug("Attempting to probe radio type %s", radio)
 
-            dev_config = radio.controller.SCHEMA_DEVICE(
-                {CONF_DEVICE_PATH: self.device_path}
-            )
+            dev_config = SCHEMA_DEVICE({CONF_DEVICE_PATH: self.device_path})
             probe_result = await radio.controller.probe(dev_config)
 
             if not probe_result:
@@ -357,7 +356,7 @@ class ZhaMultiPANMigrationHelper:
             migration_data["new_discovery_info"]["radio_type"]
         )
 
-        new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
+        new_device_settings = SCHEMA_DEVICE(
             migration_data["new_discovery_info"]["port"]
         )
 
