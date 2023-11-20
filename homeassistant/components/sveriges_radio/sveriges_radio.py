@@ -1,87 +1,10 @@
 """Sveriges radio classes."""
 
-from datetime import datetime
-import re
 
 import aiohttp
 from defusedxml import ElementTree
 
 from homeassistant.components.media_source.error import Unresolvable
-
-
-class Song:
-    """Class for a song."""
-
-    def __init__(
-        self,
-        artist=None,
-        title=None,
-        description=None,
-        composer=None,
-        conductor=None,
-        **kwargs,
-    ):
-        """Init function for song class."""
-
-        self.artist = artist.encode("utf-8")
-        self.title = title.encode("utf-8")
-        self.description = description.encode("utf-8")
-        self.composer = composer.encode("utf-8")
-        self.conductor = conductor.encode("utf-8")
-
-    def __repr__(self):
-        """Represent a song."""
-        return f"Song({self.artist} - {self.title})"
-
-
-class Episode:
-    """Class for an episode."""
-
-    def __init__(self, title=None, starttimeutc=None, endtimeutc=None, **kwargs):
-        """Init function for episode class."""
-
-        self.title = title.encode("utf-8")
-        self.starttimeutc = starttimeutc
-        self.endtimeutc = endtimeutc
-
-    def __repr__(self):
-        """Represent an episode."""
-        return "Episode(%s)" % self.title
-
-    @staticmethod
-    def json_to_datetime(date):
-        """Temporary method to get date and time from the json file."""
-
-        match = re.match(r"/Date\((\d+)\)/", date)
-        if not match:
-            return None
-        return datetime.fromtimestamp(int(match.group(1)) / 1000.0)
-
-    @property
-    def starttime(self):
-        """The starting time of an episode."""
-
-        return self.json_to_datetime(self.starttimeutc)
-
-    @property
-    def endtime(self):
-        """The ending time of an episode."""
-        return self.json_to_datetime(self.endtimeutc)
-
-
-class Playlist:
-    """Class for a playlist."""
-
-    def __init__(self, now=None, next_song=None, content=Song):
-        """Init function for playlist class."""
-
-        self.now = content(**now) if now else None
-        self.next_song = content(**next) if next_song else None
-
-    def __repr__(self):
-        """Represent a playlist."""
-
-        return f"Playlist({self.now}, {self.next})"
 
 
 class Channel:
@@ -116,40 +39,6 @@ class Channel:
 
         return "Channel(%s)" % self.name
 
-    async def get_song(self):
-        """Asynchronously get the current song of the channel."""
-
-        payload = {"channelid": self.station_id}
-        response = SverigesRadio.call("/playlists/rightnow", payload)
-        if not response:
-            return Playlist()
-
-        playlist = response.get("playlist")
-        if not playlist:
-            return Playlist()
-
-        song = playlist.get("song")
-        nextsong = playlist.get("nextsong")
-
-        return Playlist(now=song, next=nextsong)
-
-    async def get_program(self):
-        """Asynchronously get the current program of the channel."""
-
-        payload = {"channelid": self.station_id}
-        response = SverigesRadio.call("/scheduledepisodes/rightnow", payload)
-        if not response:
-            return Playlist()
-
-        channel = response.get("channel")
-        if not channel:
-            return Playlist()
-
-        currentepisode = channel.get("currentscheduledepisode")
-        nextepisode = channel.get("nextscheduledepisode")
-
-        return Playlist(now=currentepisode, next=nextepisode, content=Episode)
-
 
 class SverigesRadio:
     """Class for Sveriges Radio API."""
@@ -172,6 +61,20 @@ class SverigesRadio:
         except aiohttp.ClientError:
             # Handle network-related errors here
             return {}
+
+    async def resolve_station(self, station_id):
+        """Resolve whether a station is a channel or a podcast."""
+        payload = {}
+        channel_data = await self.call(f"channels/{station_id}", payload)
+        podcast_data = await self.call(f"podfiles/{station_id}", payload)
+
+        if channel_data != {}:
+            channel_id = channel_data.find("channel").attrib.get("id")
+            return await self.channel(channel_id)
+        if podcast_data != {}:
+            podcast_id = podcast_data.find("podfile").attrib.get("id")
+            return await self.podcast(podcast_id)
+        raise Unresolvable("No valid id.")
 
     async def channels(self):
         """Asynchronously get all channels."""
@@ -226,11 +129,100 @@ class SverigesRadio:
 
         return channel
 
-    async def schedule(self, channelid=None, programid=None):
-        """Asynchronously get the schedule of a specific channel."""
-        payload = {"size": 500, "channelid": channelid, "programid": programid}
-        data = await self.call("/scheduledepisodes", payload)
+    async def programs(self):
+        """Asynchronously get all programs that contains podcasts."""
+        payload = {}
+        data = await self.call("programs", payload)
+
+        if data.find("pagination/nextpage") is None:
+            return None
+
+        programs = []
+        for program_data in data.find("programs"):
+            if program_data.find("haspod").text != "true":
+                continue
+
+            station_id = program_data.attrib.get("id")
+            name = program_data.attrib.get("name")
+            siteurl = program_data.find("programurl").text
+            program_image = program_data.find("programimage").text
+
+            program = Channel(
+                sveriges_radio=self,
+                name=name,
+                station_id=station_id,
+                siteurl=siteurl,
+                image=program_image,
+            )
+
+            programs.append(program)
+
+        return programs
+
+    async def program(self, program_id):
+        """Asynchronously get a program."""
+        payload = {}
+        data = await self.call(f"programs/{program_id}", payload)
+
+        program_data = data.find("program")
+
+        station_id = program_data.attrib.get("id")
+        name = program_data.attrib.get("name")
+        siteurl = program_data.find("programurl").text
+        program_image = program_data.find("programimage").text
+
+        program = Channel(
+            sveriges_radio=self,
+            name=name,
+            station_id=station_id,
+            siteurl=siteurl,
+            image=program_image,
+        )
+
+        return program
+
+    async def podcasts(self, program_id):
+        """Asynchronously get all podcasts."""
+        payload = {}
+        data = await self.call(f"podfiles?programid=/{program_id}", payload)
+
+        podcasts = []
+
         if not data:
-            return []
-        schedule = data.get("schedule")
-        return [Episode(**episode) for episode in schedule]
+            return podcasts
+
+        for podcast_data in data.find("podfiles"):
+            station_id = podcast_data.attrib.get("id")
+            name = podcast_data.find("title").text
+            url = podcast_data.find("url").text
+
+            podcast = Channel(
+                sveriges_radio=self,
+                name=name,
+                station_id=station_id,
+                url=url,
+                image="https://static-cdn.sr.se/images/86/2efa24a7-f80c-435d-ae1c-29d060cb645d.jpg?preset=api-default-square",
+            )
+
+            podcasts.append(podcast)
+
+        return podcasts
+
+    async def podcast(self, podcast_id):
+        """Asynchronously get a podcast."""
+        payload = {}
+        data = await self.call(f"podfiles/{podcast_id}", payload)
+
+        station_id = data.attrib.get("id")
+        name = data.find("title").text
+        url = data.find("url").text
+
+        podcast = Channel(
+            sveriges_radio=self,
+            name=name,
+            station_id=station_id,
+            url=url,
+            image="https://static-cdn.sr.se/images/86/2efa24a7-f80c-435d-ae1c-29d060cb645d.jpg?preset=api-default-square",
+        )
+
+        return podcast

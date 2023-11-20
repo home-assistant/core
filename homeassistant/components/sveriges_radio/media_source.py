@@ -47,7 +47,7 @@ class RadioMediaSource(MediaSource):
         if radio is None:
             raise Unresolvable("Sveriges Radio not initialized")
 
-        station = await radio.channel(station_id=item.identifier)
+        station = await radio.resolve_station(station_id=item.identifier)
 
         if not station:
             raise Unresolvable("Radio station is no longer available")
@@ -71,31 +71,34 @@ class RadioMediaSource(MediaSource):
         if item.identifier is None:
             # Fetch all channels
             channels = await radio.channels()
-            channel_media_sources = await self._async_build_stations(channels)
+            programs = await radio.programs()
 
             # Create a root BrowseMediaSource object and include the channels as children
             return BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=None,
                 media_class=MediaClass.DIRECTORY,
-                media_content_type=MediaType.APP,
+                media_content_type=MediaType.MUSIC,
                 title="Sveriges Radio",
                 can_play=False,
                 can_expand=True,
-                children=channel_media_sources,
+                children_media_class=MediaClass.DIRECTORY,
+                children=[
+                    *await self._async_build_channels(channels),
+                    *await self._async_build_programs(programs),
+                ],
             )
 
         # Fallback for unhandled cases
         raise BrowseError("Item not found")
 
     @callback
-    async def _async_build_stations(
+    async def _async_build_channels(
         self, channels: list[Channel]
     ) -> list[BrowseMediaSource]:
-        """Build list of media sources for channels."""
+        """Build list of channels."""
         media_sources = []
         for channel in channels:
-            # Create a BrowseMediaSource object for each channel
             channel_media = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=str(channel.station_id),
@@ -107,5 +110,56 @@ class RadioMediaSource(MediaSource):
                 thumbnail=channel.image,
             )
             media_sources.append(channel_media)
+
+        return media_sources
+
+    @callback
+    async def _async_build_programs(
+        self,
+        programs: list[Channel],
+    ) -> list[BrowseMediaSource]:
+        """Build list of programs."""
+
+        media_sources = []
+        for program in programs:
+            program_media = BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"podcast/{program.name}",
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaType.MUSIC,
+                title=program.name,
+                thumbnail=program.image,
+                can_play=False,
+                can_expand=True,
+                children_media_class=MediaClass.DIRECTORY,
+                children=[*await self._async_build_podcasts(program)],
+            )
+            media_sources.append(program_media)
+
+        return media_sources
+
+    @callback
+    async def _async_build_podcasts(self, program: Channel) -> list[BrowseMediaSource]:
+        """Build list of podcasts for a program."""
+        radio = self.radio
+
+        if radio is None:
+            raise BrowseError("Sveriges Radio not initialized")
+
+        podcasts = await radio.podcasts(program.station_id)
+
+        media_sources = []
+        for podcast in podcasts:
+            podcast_media = BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"podcast/{program.name}/{podcast.station_id}",
+                media_class=MediaClass.MUSIC,
+                media_content_type=MediaType.MUSIC,
+                title=podcast.name,
+                can_play=True,
+                can_expand=False,
+                thumbnail=podcast.image,
+            )
+            media_sources.append(podcast_media)
 
         return media_sources
