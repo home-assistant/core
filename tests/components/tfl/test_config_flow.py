@@ -289,7 +289,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
     assert {} == result["errors"]
     assert result["data_schema"]({})["app_key"] == "appy_appy_app_key"
-    assert ["AAAAAAAA1"] == result["data_schema"].schema["stops"].options
+    assert ["AAAAAAAA1"] == result["data_schema"].schema[CONF_STOP_POINTS].options
 
 
 async def test_options_flow_change_app_key(hass: HomeAssistant) -> None:
@@ -322,7 +322,7 @@ async def test_options_flow_replace_stop(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
         options_form_result = await hass.config_entries.options.async_configure(
             options_form_init_result["flow_id"],
-            user_input={"stops": ["AAAAAAAA1"], CONF_STOP_POINT: "CCCCCCCC3"},
+            user_input={CONF_STOP_POINTS: ["AAAAAAAA1"], CONF_STOP_POINT: "CCCCCCCC3"},
         )
 
     assert options_form_result["type"] == FlowResultType.CREATE_ENTRY
@@ -342,7 +342,7 @@ async def test_options_flow_add_stop(hass: HomeAssistant) -> None:
         options_form_result = await hass.config_entries.options.async_configure(
             options_form_init_result["flow_id"],
             user_input={
-                "stops": ["AAAAAAAA1", "BBBBBBBB2"],
+                CONF_STOP_POINTS: ["AAAAAAAA1", "BBBBBBBB2"],
                 CONF_STOP_POINT: "CCCCCCCC3",
             },
         )
@@ -363,7 +363,7 @@ async def test_options_flow_remove_stop(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
         options_form_result = await hass.config_entries.options.async_configure(
             options_form_init_result["flow_id"],
-            user_input={"stops": ["AAAAAAAA1"]},
+            user_input={CONF_STOP_POINTS: ["AAAAAAAA1"]},
         )
 
     assert options_form_result["type"] == FlowResultType.CREATE_ENTRY

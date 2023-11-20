@@ -187,12 +187,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options for the TfL component."""
         errors: dict[str, str] = {}
 
-        config = config_from_entry(self.config_entry)
-        api_key = deepcopy(config[CONF_API_APP_KEY])
-        all_stops = deepcopy(config[CONF_STOP_POINTS])
-
         if user_input is not None:
-            updated_stops = user_input["stops"]
+            updated_stops = user_input[CONF_STOP_POINTS]
             if (
                 CONF_STOP_POINT in user_input
                 and user_input[CONF_STOP_POINT] is not None
@@ -211,12 +207,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     data=data,
                 )
 
+        config = config_from_entry(self.config_entry)
+        api_key = deepcopy(config[CONF_API_APP_KEY])
+        all_stops = deepcopy(config[CONF_STOP_POINTS])
+
         options_schema = vol.Schema(
             {
                 vol.Optional(CONF_API_APP_KEY, default=api_key): cv.string,
-                vol.Optional("stops", default=list(all_stops)): cv.multi_select(
-                    all_stops
-                ),
+                vol.Optional(
+                    CONF_STOP_POINTS, default=list(all_stops)
+                ): cv.multi_select(all_stops),
                 vol.Optional(CONF_STOP_POINT): cv.string,
                 # vol.Optional(CONF_NAME): cv.string,
             }
