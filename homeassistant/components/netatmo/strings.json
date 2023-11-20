@@ -134,5 +134,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "webhook_not_active": {
+      "title": "Netatmo webhook is not active",
+      "description": "The webhook for the Netatmo integration is not registered or does not appear to be receiving events. The status of your devices and entities may take a long time to update as a result."
+    }
   }
 }
