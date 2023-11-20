@@ -27,7 +27,7 @@ class HomeAssistantError(Exception):
 
 
 class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
-    """A validation exception occurred when validation the configuration."""
+    """A validation exception occurred when validating the configuration."""
 
     def __init__(
         self,

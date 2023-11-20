@@ -1053,6 +1053,9 @@ def async_handle_component_config_errors(
     - Raise a ConfigValidationError if raise_on_failure is set.
     """
 
+    if not config_exception_info:
+        return
+
     platform_exception: ConfigExceptionInfo
     config_error_messages: list[
         tuple[str, ConfigExceptionInfo, str, str, int | str]
@@ -1093,7 +1096,7 @@ def async_handle_component_config_errors(
             else None,
         )
 
-    if not raise_on_failure or not config_exception_info:
+    if not raise_on_failure:
         return
 
     placeholders: dict[str, str]
