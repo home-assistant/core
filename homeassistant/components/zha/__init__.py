@@ -29,6 +29,7 @@ from .core.const import (
     CONF_CUSTOM_QUIRKS_PATH,
     CONF_DEVICE_CONFIG,
     CONF_ENABLE_QUIRKS,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     CONF_ZIGPY,
@@ -265,6 +266,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             data[CONF_RADIO_TYPE] = "znp"
 
         config_entry.version = 3
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    if config_entry.version == 3:
+        data = {**config_entry.data}
+
+        if not data[CONF_DEVICE].get(CONF_BAUDRATE):
+            data[CONF_DEVICE][CONF_BAUDRATE] = {
+                "deconz": 38400,
+                "xbee": 57600,
+                "ezsp": 57600,
+                "znp": 115200,
+                "zigate": 115200,
+            }[data[CONF_RADIO_TYPE]]
+
+        if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
+            data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
+
+        config_entry.version = 4
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)

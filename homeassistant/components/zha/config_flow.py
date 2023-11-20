@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 
 from .core.const import (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
     RadioType,
@@ -42,7 +42,7 @@ from .radio_manager import (
 CONF_MANUAL_PATH = "Enter Manually"
 SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
 )
 DECONZ_DOMAIN = "deconz"
 
@@ -488,7 +488,7 @@ class BaseZhaFlow(FlowHandler):
 class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def _set_unique_id_or_update_path(
         self, unique_id: str, device_path: str

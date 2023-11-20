@@ -3,6 +3,7 @@ import copy
 from datetime import timedelta
 from ipaddress import ip_address
 import json
+import typing
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
 
@@ -22,7 +23,7 @@ from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
     EZSP_OVERWRITE_EUI64,
@@ -181,7 +182,7 @@ async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
     assert result3["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
-            CONF_FLOWCONTROL: None,
+            CONF_FLOW_CONTROL: None,
             CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
         },
         CONF_RADIO_TYPE: "znp",
@@ -287,7 +288,7 @@ async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
             CONF_BAUDRATE: 115200,
-            CONF_FLOWCONTROL: "software",
+            CONF_FLOW_CONTROL: "software",
         },
         CONF_RADIO_TYPE: "ezsp",
     }
@@ -304,7 +305,7 @@ async def test_discovery_via_zeroconf_ip_change(hass: HomeAssistant) -> None:
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "socket://192.168.1.5:6638",
                 CONF_BAUDRATE: 115200,
-                CONF_FLOWCONTROL: None,
+                CONF_FLOW_CONTROL: None,
             }
         },
     )
@@ -328,7 +329,7 @@ async def test_discovery_via_zeroconf_ip_change(hass: HomeAssistant) -> None:
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
         CONF_BAUDRATE: 115200,
-        CONF_FLOWCONTROL: None,
+        CONF_FLOW_CONTROL: None,
     }
 
 
@@ -555,7 +556,7 @@ async def test_discovery_via_usb_path_changes(hass: HomeAssistant) -> None:
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "/dev/ttyUSB1",
                 CONF_BAUDRATE: 115200,
-                CONF_FLOWCONTROL: None,
+                CONF_FLOW_CONTROL: None,
             }
         },
     )
@@ -579,7 +580,7 @@ async def test_discovery_via_usb_path_changes(hass: HomeAssistant) -> None:
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
         CONF_BAUDRATE: 115200,
-        CONF_FLOWCONTROL: None,
+        CONF_FLOW_CONTROL: None,
     }
 
 
@@ -951,31 +952,6 @@ async def test_user_port_config(probe_mock, hass: HomeAssistant) -> None:
     assert probe_mock.await_count == 1
 
 
-@pytest.mark.parametrize(
-    ("old_type", "new_type"),
-    [
-        ("ezsp", "ezsp"),
-        ("ti_cc", "znp"),  # only one that should change
-        ("znp", "znp"),
-        ("deconz", "deconz"),
-    ],
-)
-async def test_migration_ti_cc_to_znp(
-    old_type, new_type, hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test zigpy-cc to zigpy-znp config migration."""
-    config_entry.data = {**config_entry.data, CONF_RADIO_TYPE: old_type}
-    config_entry.version = 2
-    config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.version > 2
-    assert config_entry.data[CONF_RADIO_TYPE] == new_type
-
-
 @pytest.mark.parametrize("onboarded", [True, False])
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_hardware(onboarded, hass: HomeAssistant) -> None:
@@ -1022,7 +998,7 @@ async def test_hardware(onboarded, hass: HomeAssistant) -> None:
     assert result3["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
-            CONF_FLOWCONTROL: "hardware",
+            CONF_FLOW_CONTROL: "hardware",
             CONF_DEVICE_PATH: "/dev/ttyAMA1",
         },
         CONF_RADIO_TYPE: "ezsp",
@@ -1577,7 +1553,7 @@ async def test_options_flow_defaults(
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "/dev/ttyUSB0",
                 CONF_BAUDRATE: 12345,
-                CONF_FLOWCONTROL: None,
+                CONF_FLOW_CONTROL: None,
             },
             CONF_RADIO_TYPE: "znp",
         },
@@ -1645,7 +1621,7 @@ async def test_options_flow_defaults(
                 # Change everything
                 CONF_DEVICE_PATH: "/dev/new_serial_port",
                 CONF_BAUDRATE: 54321,
-                CONF_FLOWCONTROL: "software",
+                CONF_FLOW_CONTROL: "software",
             },
         )
 
@@ -1668,7 +1644,7 @@ async def test_options_flow_defaults(
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "/dev/new_serial_port",
             CONF_BAUDRATE: 54321,
-            CONF_FLOWCONTROL: "software",
+            CONF_FLOW_CONTROL: "software",
         },
         CONF_RADIO_TYPE: "znp",
     }
@@ -1697,7 +1673,7 @@ async def test_options_flow_defaults_socket(hass: HomeAssistant) -> None:
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "socket://localhost:5678",
                 CONF_BAUDRATE: 12345,
-                CONF_FLOWCONTROL: None,
+                CONF_FLOW_CONTROL: None,
             },
             CONF_RADIO_TYPE: "znp",
         },
@@ -1766,7 +1742,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "socket://localhost:5678",
                 CONF_BAUDRATE: 12345,
-                CONF_FLOWCONTROL: None,
+                CONF_FLOW_CONTROL: None,
             },
             CONF_RADIO_TYPE: "znp",
         },
@@ -1821,7 +1797,7 @@ async def test_options_flow_migration_reset_old_adapter(
             CONF_DEVICE: {
                 CONF_DEVICE_PATH: "/dev/serial/by-id/old_radio",
                 CONF_BAUDRATE: 12345,
-                CONF_FLOWCONTROL: None,
+                CONF_FLOW_CONTROL: None,
             },
             CONF_RADIO_TYPE: "znp",
         },
@@ -1954,3 +1930,75 @@ async def test_discovery_wrong_firmware_installed(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "wrong_firmware_installed"
+
+
+@pytest.mark.parametrize(
+    ("old_type", "new_type"),
+    [
+        ("ezsp", "ezsp"),
+        ("ti_cc", "znp"),  # only one that should change
+        ("znp", "znp"),
+        ("deconz", "deconz"),
+    ],
+)
+async def test_migration_ti_cc_to_znp(
+    old_type: str, new_type: str, hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test zigpy-cc to zigpy-znp config migration."""
+    config_entry.data = {**config_entry.data, CONF_RADIO_TYPE: old_type}
+    config_entry.version = 2
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version > 2
+    assert config_entry.data[CONF_RADIO_TYPE] == new_type
+
+
+@pytest.mark.parametrize(
+    (
+        "radio_type",
+        "old_baudrate",
+        "old_flow_control",
+        "new_baudrate",
+        "new_flow_control",
+    ),
+    [
+        ("znp", None, None, 115200, None),
+        ("znp", None, "software", 115200, "software"),
+        ("znp", 57600, "software", 57600, "software"),
+        ("deconz", None, None, 38400, None),
+        ("deconz", 115200, None, 115200, None),
+    ],
+)
+async def test_migration_baudrate_and_flow_control(
+    radio_type: str,
+    old_baudrate: int,
+    old_flow_control: typing.Literal["hardware", "software", None],
+    new_baudrate: int,
+    new_flow_control: typing.Literal["hardware", "software", None],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test baudrate and flow control migration."""
+    config_entry.data = {
+        **config_entry.data,
+        CONF_RADIO_TYPE: radio_type,
+        CONF_DEVICE: {
+            CONF_BAUDRATE: old_baudrate,
+            CONF_FLOW_CONTROL: old_flow_control,
+            CONF_DEVICE_PATH: "/dev/null",
+        },
+    }
+    config_entry.version = 3
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version > 3
+    assert config_entry.data[CONF_DEVICE][CONF_BAUDRATE] == new_baudrate
+    assert config_entry.data[CONF_DEVICE][CONF_FLOW_CONTROL] == new_flow_control
