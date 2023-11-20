@@ -21,20 +21,13 @@ SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class AdGuardHomeSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
+    """Describes AdGuard Home switch entity."""
 
     is_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, bool]]]
     turn_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
     turn_off_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
-
-
-@dataclass
-class AdGuardHomeSwitchEntityDescription(
-    SwitchEntityDescription, AdGuardHomeSwitchEntityDescriptionMixin
-):
-    """Describes AdGuard Home switch entity."""
 
 
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
