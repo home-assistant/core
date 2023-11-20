@@ -629,5 +629,11 @@ class MPRISCoordinator(
                         player_id,
                         self.config_entry.entry_id,
                     )
-                    self.data[player_id] = [AVAILABLE]
+                    self.data[player_id] = [
+                        AVAILABLE,
+                        mpris_pb2.MPRISPlayerUpdate(
+                            player_id=player_id,
+                            status=mpris_pb2.PlayerStatus.GONE,  # type: ignore[attr-defined]
+                        ),
+                    ]
                     self.async_add_entities([entity])
