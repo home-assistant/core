@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
+from yaml.error import MarkedYAMLError
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -393,12 +394,24 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     secrets = Secrets(Path(hass.config.config_dir))
 
     # Not using async_add_executor_job because this is an internal method.
-    config = await hass.loop.run_in_executor(
-        None,
-        load_yaml_config_file,
-        hass.config.path(YAML_CONFIG_FILE),
-        secrets,
-    )
+    try:
+        config = await hass.loop.run_in_executor(
+            None,
+            load_yaml_config_file,
+            hass.config.path(YAML_CONFIG_FILE),
+            secrets,
+        )
+    except HomeAssistantError as ex:
+        if not (base_ex := ex.__cause__) or not isinstance(base_ex, MarkedYAMLError):
+            raise
+
+        # Rewrite path to offending YAML file to be relative the hass config dir
+        if base_ex.context_mark and base_ex.context_mark.name:
+            base_ex.context_mark.name = _relpath(hass, base_ex.context_mark.name)
+        if base_ex.problem_mark and base_ex.problem_mark.name:
+            base_ex.problem_mark.name = _relpath(hass, base_ex.problem_mark.name)
+        raise
+
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
@@ -515,7 +528,7 @@ def async_log_config_validator_error(
 
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    message = format_homeassistant_error(ex, domain, config, link)
+    message = format_homeassistant_error(hass, ex, domain, config, link)
     _LOGGER.error(message, exc_info=ex)
 
 
@@ -613,9 +626,9 @@ def stringify_invalid(
     - Give a more user friendly output for unknown options
     - Give a more user friendly output for missing options
     """
-    message_prefix = f"Invalid config for [{domain}]"
+    message_prefix = f"Invalid config for '{domain}'"
     if domain != CONF_CORE and link:
-        message_suffix = f". Please check the docs at {link}"
+        message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
     if annotation := find_annotation(config, ex.path):
@@ -623,13 +636,13 @@ def stringify_invalid(
     path = "->".join(str(m) for m in ex.path)
     if ex.error_message == "extra keys not allowed":
         return (
-            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for [{domain}], "
+            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for '{domain}', "
             f"check: {path}{message_suffix}"
         )
     if ex.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{ex.path[-1]}' not provided"
-            f"{message_suffix}."
+            f"{message_suffix}"
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
@@ -644,7 +657,7 @@ def stringify_invalid(
         )
     return (
         f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
-        f"{message_suffix}."
+        f"{message_suffix}"
     )
 
 
@@ -677,13 +690,21 @@ def humanize_error(
 
 @callback
 def format_homeassistant_error(
-    ex: HomeAssistantError, domain: str, config: dict, link: str | None = None
+    hass: HomeAssistant,
+    ex: HomeAssistantError,
+    domain: str,
+    config: dict,
+    link: str | None = None,
 ) -> str:
     """Format HomeAssistantError thrown by a custom config validator."""
-    message = f"Invalid config for [{domain}]: {str(ex) or repr(ex)}"
-
+    message_prefix = f"Invalid config for '{domain}'"
+    # HomeAssistantError raised by custom config validator has no path to the
+    # offending configuration key, use the domain key as path instead.
+    if annotation := find_annotation(config, [domain]):
+        message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
+    message = f"{message_prefix}: {str(ex) or repr(ex)}"
     if domain != CONF_CORE and link:
-        message += f" Please check the docs at {link}."
+        message += f", please check the docs at {link}"
 
     return message
 
@@ -823,17 +844,11 @@ def _log_pkg_error(
     hass: HomeAssistant, package: str, component: str, config: dict, message: str
 ) -> None:
     """Log an error while merging packages."""
-    message = f"Package {package} setup failed. {message}"
+    message_prefix = f"Setup of package '{package}'"
+    if annotation := find_annotation(config, [CONF_CORE, CONF_PACKAGES, package]):
+        message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
 
-    pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
-    config_file = getattr(pack_config, "__config_file__", None)
-    if config_file:
-        config_file = _relpath(hass, config_file)
-    else:
-        config_file = "?"
-    message += f" (See {config_file}:{getattr(pack_config, '__line__', '?')})."
-
-    _LOGGER.error(message)
+    _LOGGER.error("%s failed: %s", message_prefix, message)
 
 
 def _identify_config_schema(module: ComponentProtocol) -> str | None:
@@ -977,7 +992,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} cannot be merged. Expected a dict.",
+                    f"integration '{comp_name}' cannot be merged, expected a dict",
                 )
                 continue
 
@@ -990,7 +1005,10 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} cannot be merged. Dict expected in main config.",
+                    (
+                        f"integration '{comp_name}' cannot be merged, dict expected in "
+                        "main config"
+                    ),
                 )
                 continue
 
@@ -1001,7 +1019,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} has duplicate key '{duplicate_key}'.",
+                    f"integration '{comp_name}' has duplicate key '{duplicate_key}'",
                 )
 
     return config
