@@ -175,7 +175,7 @@ class SverigesRadio:
 
     async def channels(self):
         """Asynchronously get all channels."""
-        payload = {}  # {"size": 500}
+        payload = {}
         data = await self.call("channels", payload)
 
         channels = []
@@ -203,8 +203,28 @@ class SverigesRadio:
 
     async def channel(self, station_id):
         """Asynchronously get a specific channel."""
-        data = await self.call(f"/channels/{station_id}")
-        return Channel(**data.get("channel", {}))
+        payload = {}
+        data = await self.call(f"channels/{station_id}", payload)
+
+        channel_data = data.find("channel")
+        station_id = channel_data.attrib.get("id")
+        name = channel_data.attrib.get("name")
+        siteurl = channel_data.find("siteurl").text
+        color = channel_data.find("color").text
+        image = channel_data.find("image").text
+        url = channel_data.find("liveaudio/url").text
+
+        channel = Channel(
+            sveriges_radio=self,
+            name=name,
+            station_id=station_id,
+            siteurl=siteurl,
+            color=color,
+            image=image,
+            url=url,
+        )
+
+        return channel
 
     async def schedule(self, channelid=None, programid=None):
         """Asynchronously get the schedule of a specific channel."""

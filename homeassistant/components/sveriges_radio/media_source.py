@@ -47,7 +47,8 @@ class RadioMediaSource(MediaSource):
         if radio is None:
             raise Unresolvable("Sveriges Radio not initialized")
 
-        station = await radio.channel(164)
+        station = await radio.channel(station_id=item.identifier)
+
         if not station:
             raise Unresolvable("Radio station is no longer available")
 
