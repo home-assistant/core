@@ -3,11 +3,15 @@ import logging
 
 import async_timeout
 
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+
+from datetime import datetime, timezone
 
 from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
 from .canvas_api import CanvasAPI
@@ -42,7 +46,9 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
 
-                # TODO - filtering
+                # TODO - filtering, put it in canvas_api?
+                assignments = filter_assignments(assignments)
+
                 new_data = {
                     ASSIGNMENTS_KEY: assignments,
                     ANNOUNCEMENTS_KEY: announcements,
@@ -64,3 +70,15 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
 
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
+
+def filter_assignments(assignments: dict[str, Any]) -> dict[str, Any]:
+    current_time = datetime.now()
+
+    for id, assignment in assignments.copy().items():
+        if not assignment["due_at"]:
+            continue
+        due_time = datetime.strptime(assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ")
+        if due_time < current_time:
+            del assignments[id]
+    
+    return assignments
