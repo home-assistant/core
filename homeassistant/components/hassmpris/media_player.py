@@ -146,6 +146,11 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
     def _debug(self, format_string: str, *args: Any) -> None:
         _LOGGER.debug("%s: " + format_string, self.name, *args)
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available.  Overridden from Coordinator."""
+        return self._attr_available
+
     @callback
     def _handle_coordinator_update(self) -> None:
         if self.coordinator_context not in self.coordinator.data:
@@ -169,7 +174,7 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
                 if self._attr_available:
                     self._debug("Now unavailable")
                     self._attr_available = False
-                    self._attr_state = MediaPlayerState.OFF
+                    reset_player_attributes()
                 continue
 
             if data.status != mpris_pb2.PlayerStatus.UNKNOWN:  # type: ignore[attr-defined]
@@ -444,8 +449,8 @@ class MPRISCoordinator(
                     "will occur until reauthentication",
                     cycle_update_count,
                 )
-                self.config_entry.async_start_reauth(self.hass)
                 await self.stop()
+                self.config_entry.async_start_reauth(self.hass)
             except hassmpris_client.ClientException as exc:
                 lg = _LOGGER.exception if type(exc) not in seen_excs else _LOGGER.debug
                 seen_excs[type(exc)] = True
@@ -483,10 +488,6 @@ class MPRISCoordinator(
         except asyncio.InvalidStateError:
             pass
 
-    def _mark_all_entities_unavailable(self) -> None:
-        for player_id in self.data:
-            self.data[player_id].append(UNAVAILABLE)
-
     async def _dispatch_deferred_update(self) -> None:
         """Coalesce updates of data sent by the agent over the wire.
 
@@ -513,6 +514,10 @@ class MPRISCoordinator(
                 if not started_initial_sync:
                     # First update.
                     started_initial_sync = True
+                    # Now reinitialize the updates queue for each known player.
+                    # Needed when reconnect to the agent takes place.
+                    for player_id in self.data:
+                        self.data[player_id] = []
                 if update.HasField("player"):  # type: ignore[attr-defined]
                     # There's a player update incoming.
                     self._handle_update(update.player)  # type: ignore[attr-defined]
@@ -540,7 +545,8 @@ class MPRISCoordinator(
             if started_initial_sync:
                 # The loop synced entities successfully at least once
                 # Time to mark any available entities as unavailable.
-                self._mark_all_entities_unavailable()
+                for player_id in self.data:
+                    self.data[player_id].append(UNAVAILABLE)
                 await self._dispatch_deferred_update()
 
     def _handle_update(
@@ -601,15 +607,17 @@ class MPRISCoordinator(
                 if player_id in self.data:
                     del self.data[player_id]
                 er.async_get(self.hass).async_remove(entry.entity_id)
-            else:
-                _LOGGER.debug("Resuscitating player %s", player_id)
+            elif player_id not in self.data:
+                _LOGGER.debug("Resuscitating player from registry %s", player_id)
                 entity = HASSMPRISEntity(
                     self,
                     player_id,
                     self.config_entry.entry_id,
                 )
-                if player_id not in self.data:
-                    self.async_add_entities([entity])
+                self.async_add_entities([entity])
+                self.data[player_id] = []
+            elif not self.data[player_id]:
+                _LOGGER.debug("Setting absent player %s to off", player_id)
                 self.data[player_id] = [
                     mpris_pb2.MPRISPlayerUpdate(
                         player_id=player_id,
