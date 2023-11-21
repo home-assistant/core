@@ -58,18 +58,11 @@ from .coordinator import (
 from .entity import WithingsEntity
 
 
-@dataclass
-class WithingsMeasurementSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(kw_only=True)
+class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     measurement_type: MeasurementType
-
-
-@dataclass
-class WithingsMeasurementSensorEntityDescription(
-    SensorEntityDescription, WithingsMeasurementSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 MEASUREMENT_SENSORS: dict[
@@ -243,18 +236,11 @@ MEASUREMENT_SENSORS: dict[
 }
 
 
-@dataclass
-class WithingsSleepSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(kw_only=True)
+class WithingsSleepSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[SleepSummary], StateType]
-
-
-@dataclass
-class WithingsSleepSensorEntityDescription(
-    SensorEntityDescription, WithingsSleepSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 SLEEP_SENSORS = [
@@ -410,18 +396,11 @@ SLEEP_SENSORS = [
 ]
 
 
-@dataclass
-class WithingsActivitySensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(kw_only=True)
+class WithingsActivitySensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[Activity], StateType]
-
-
-@dataclass
-class WithingsActivitySensorEntityDescription(
-    SensorEntityDescription, WithingsActivitySensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 ACTIVITY_SENSORS = [
@@ -514,18 +493,11 @@ SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
 
 
-@dataclass
-class WithingsGoalsSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(kw_only=True)
+class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[Goals], StateType]
-
-
-@dataclass
-class WithingsGoalsSensorEntityDescription(
-    SensorEntityDescription, WithingsGoalsSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
@@ -558,18 +530,11 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
-@dataclass
-class WithingsWorkoutSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(kw_only=True)
+class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[Workout], StateType]
-
-
-@dataclass
-class WithingsWorkoutSensorEntityDescription(
-    SensorEntityDescription, WithingsWorkoutSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 _WORKOUT_CATEGORY = [
