@@ -107,7 +107,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.cover.Linear.close",
         return_value=True,
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_garage_2").state == STATE_OPENING
@@ -181,7 +181,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.cover.Linear.close",
         return_value=True,
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_garage_1").state == STATE_CLOSING
