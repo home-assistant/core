@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import ReolinkData
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class ReolinkVODMediaSource(MediaSource):
         """Initialize ReolinkVODMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
-        self.data = hass.data[DOMAIN]
+        self.data: dict[str, ReolinkData] = hass.data[DOMAIN]
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
@@ -133,7 +134,7 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
 
                 device = device_reg.async_get(entity.device_id)
-                ch = entity.unique_id.split("_")[1]
+                ch = entity.unique_id.partition("_")[2]
                 if ch in channels or device is None:
                     continue
                 channels.append(ch)

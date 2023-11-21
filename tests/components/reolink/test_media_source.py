@@ -93,13 +93,14 @@ async def test_browsing(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test browsing the Reolink three."""
+    entry_id = config_entry.entry_id
     reolink_connect.api_version.return_value = 1
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(entry_id) is True
     await hass.async_block_till_done()
 
-    entries = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
     device_registry.async_update_device(entries[0].id, name_by_user="Cam new name")
 
@@ -108,7 +109,7 @@ async def test_browsing(
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
 
-    browse_root_id = f"CAM|{config_entry.entry_id}|{TEST_CHANNEL}"
+    browse_root_id = f"CAM|{entry_id}|{TEST_CHANNEL}"
     assert browse.domain == DOMAIN
     assert browse.title == "Reolink"
     assert browse.identifier is None
@@ -117,9 +118,9 @@ async def test_browsing(
     # browse resolution select
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
-    browse_resolution_id = f"RESs|{config_entry.entry_id}|{TEST_CHANNEL}"
-    browse_res_sub_id = f"RES|{config_entry.entry_id}|{TEST_CHANNEL}|sub"
-    browse_res_main_id = f"RES|{config_entry.entry_id}|{TEST_CHANNEL}|main"
+    browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
+    browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
+    browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
     assert browse.domain == DOMAIN
     assert browse.title == TEST_NVR_NAME
     assert browse.identifier == browse_resolution_id
@@ -137,9 +138,9 @@ async def test_browsing(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"
     )
 
-    browse_days_id = f"DAYS|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_day_0_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
-    browse_day_1_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+    browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_NVR_NAME} High res."
     assert browse.identifier == browse_days_id
@@ -157,9 +158,9 @@ async def test_browsing(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
-    browse_files_id = f"FILES|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+    browse_files_id = f"FILES|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
     browse_file_id = (
-        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
+        f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     assert browse.domain == DOMAIN
     assert (
@@ -175,11 +176,13 @@ async def test_browsing_unsupported_encoding(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera with unsupported stream encoding."""
+    entry_id = config_entry.entry_id
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(entry_id) is True
     await hass.async_block_till_done()
 
-    browse_root_id = f"CAM|{config_entry.entry_id}|{TEST_CHANNEL}"
+    browse_root_id = f"CAM|{entry_id}|{TEST_CHANNEL}"
 
     # browse resolution select/camera recording days when main encoding unsupported
     mock_status = MagicMock()
@@ -192,9 +195,9 @@ async def test_browsing_unsupported_encoding(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
-    browse_days_id = f"DAYS|{config_entry.entry_id}|{TEST_CHANNEL}|sub"
-    browse_day_0_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
-    browse_day_1_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|sub"
+    browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_NVR_NAME} Low res."
     assert browse.identifier == browse_days_id
