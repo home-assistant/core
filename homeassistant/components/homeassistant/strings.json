@@ -159,6 +159,9 @@
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}. Check the logs for more information."
     },
+    "platform_component_load_exc": {
+      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+    },
     "platform_config_validation_err": {
       "message": "Invalid config for integration platform {domain}.{p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
     },

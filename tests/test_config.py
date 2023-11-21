@@ -1518,6 +1518,7 @@ async def test_component_config_exceptions(
     assert str(ex.value) == "Unknown error calling test_domain CONFIG_SCHEMA"
 
     # component.PLATFORM_SCHEMA
+    caplog.clear()
     test_integration = Mock(
         domain="test_domain",
         get_platform=Mock(return_value=None),
@@ -1767,26 +1768,27 @@ async def test_component_config_exceptions(
 
 
 @pytest.mark.parametrize(
-    ("exception_info_list", "error", "messages", "show_stack_trace"),
+    ("exception_info_list", "error", "messages", "show_stack_trace", "translation_key"),
     [
         (
             [
                 config_util.ConfigExceptionInfo(
-                    ValueError("bla"),
-                    "config_error_translation_key",
+                    ImportError("bla"),
+                    "component_import_err",
                     "test_domain",
                     {"test_domain": []},
                 )
             ],
             "bla",
-            ["bla"],
+            ["Unable to import test_domain: bla", "bla"],
             False,
+            "component_import_err",
         ),
         (
             [
                 config_util.ConfigExceptionInfo(
                     HomeAssistantError("bla"),
-                    "config_error_translation_key",
+                    "config_validation_err",
                     "test_domain",
                     {"test_domain": []},
                 )
@@ -1797,13 +1799,14 @@ async def test_component_config_exceptions(
                 "please check the docs at https://example.com",
                 "bla",
             ],
-            False,
+            True,
+            "config_validation_err",
         ),
         (
             [
                 config_util.ConfigExceptionInfo(
                     vol.Invalid("bla", ["path"]),
-                    "config_error_translation_key",
+                    "config_validation_err",
                     "test_domain",
                     {"test_domain": []},
                 )
@@ -1815,12 +1818,13 @@ async def test_component_config_exceptions(
                 "bla",
             ],
             False,
+            "config_validation_err",
         ),
         (
             [
                 config_util.ConfigExceptionInfo(
                     vol.Invalid("bla", ["path"]),
-                    "config_error_translation_key",
+                    "platform_config_validation_err",
                     "test_domain",
                     {"test_domain": []},
                     integration_link="https://alt.example.com",
@@ -1833,20 +1837,21 @@ async def test_component_config_exceptions(
                 "bla",
             ],
             False,
+            "platform_config_validation_err",
         ),
         (
             [
                 config_util.ConfigExceptionInfo(
                     ImportError("bla"),
-                    "config_error_translation_key",
+                    "platform_component_load_err",
                     "test_domain",
                     {"test_domain": []},
-                    show_stack_trace=True,
                 )
             ],
             "bla",
-            ["bla"],
-            True,
+            ["Platform error: test_domain - bla", "bla"],
+            False,
+            "platform_component_load_err",
         ),
     ],
 )
@@ -1857,6 +1862,7 @@ async def test_component_config_error_processing(
     exception_info_list: list[config_util.ConfigExceptionInfo],
     messages: list[str],
     show_stack_trace: bool,
+    translation_key: str,
 ) -> None:
     """Test component config error processing."""
     test_integration = Mock(
@@ -1879,16 +1885,9 @@ async def test_component_config_error_processing(
     assert len(records) == 1
     assert (records[0].exc_info is not None) == show_stack_trace
     assert str(ex.value) == messages[0]
-    assert ex.value.translation_key == "config_error_translation_key"
+    assert ex.value.translation_key == translation_key
     assert ex.value.translation_domain == "homeassistant"
-    assert ex.value.translation_placeholders == {
-        "domain": "test_domain",
-        "p_name": "test_domain",
-        "error": error,
-        "errors": "1",
-        "config_file": "?",
-        "line": "?",
-    }
+    assert ex.value.translation_placeholders["domain"] == "test_domain"
     assert all(message in caplog.text for message in messages)
 
     caplog.clear()
