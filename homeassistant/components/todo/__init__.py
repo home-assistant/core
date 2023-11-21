@@ -70,19 +70,19 @@ TODO_ITEM_FIELDS = [
         service_field=ATTR_DUE_DATE,
         validation=cv.date,
         todo_item_field=ATTR_DUE,
-        required_feature=TodoListEntityFeature.DUE_DATE,
+        required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATE_TIME,
         validation=vol.All(cv.datetime, dt_util.as_local),
         todo_item_field=ATTR_DUE,
-        required_feature=TodoListEntityFeature.DUE_DATETIME,
+        required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DESCRIPTION,
         validation=cv.string,
         todo_item_field=ATTR_DESCRIPTION,
-        required_feature=TodoListEntityFeature.DESCRIPTION,
+        required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
     ),
 ]
 

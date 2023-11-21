@@ -90,9 +90,9 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
-        | TodoListEntityFeature.DUE_DATETIME
-        | TodoListEntityFeature.DUE_DATE
-        | TodoListEntityFeature.DESCRIPTION
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
     _attr_should_poll = False
 

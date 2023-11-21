@@ -386,7 +386,7 @@ async def test_add_item_service_invalid_input(
     ("supported_entity_feature", "item_data", "expected_item"),
     (
         (
-            TodoListEntityFeature.DUE_DATE,
+            TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
             {"item": "New item", "due_date": "2023-11-13"},
             TodoItem(
                 summary="New item",
@@ -395,7 +395,7 @@ async def test_add_item_service_invalid_input(
             ),
         ),
         (
-            TodoListEntityFeature.DUE_DATETIME,
+            TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
             {"item": "New item", "due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"},
             TodoItem(
                 summary="New item",
@@ -404,7 +404,7 @@ async def test_add_item_service_invalid_input(
             ),
         ),
         (
-            TodoListEntityFeature.DUE_DATETIME,
+            TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
             {"item": "New item", "due_date_time": "2023-11-13T17:00:00+00:00"},
             TodoItem(
                 summary="New item",
@@ -413,7 +413,7 @@ async def test_add_item_service_invalid_input(
             ),
         ),
         (
-            TodoListEntityFeature.DUE_DATETIME,
+            TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
             {"item": "New item", "due_date_time": "2023-11-13"},
             TodoItem(
                 summary="New item",
@@ -422,7 +422,7 @@ async def test_add_item_service_invalid_input(
             ),
         ),
         (
-            TodoListEntityFeature.DESCRIPTION,
+            TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
             {"item": "New item", "description": "Submit revised draft"},
             TodoItem(
                 summary="New item",
@@ -691,12 +691,12 @@ async def test_update_todo_item_field_unsupported(
     ("supported_entity_feature", "update_data", "expected_update"),
     (
         (
-            TodoListEntityFeature.DUE_DATE,
+            TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
             {"due_date": "2023-11-13"},
             TodoItem(uid="1", due=datetime.date(2023, 11, 13)),
         ),
         (
-            TodoListEntityFeature.DUE_DATETIME,
+            TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
             {"due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"},
             TodoItem(
                 uid="1",
@@ -704,7 +704,7 @@ async def test_update_todo_item_field_unsupported(
             ),
         ),
         (
-            TodoListEntityFeature.DESCRIPTION,
+            TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
             {"description": "Submit revised draft"},
             TodoItem(uid="1", description="Submit revised draft"),
         ),
