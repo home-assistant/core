@@ -161,7 +161,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     def update_entities(data_type: str, new_data: dict, curr_data: dict):
-        """Remove existing entities and yuhhhh my möney so big"""
+        """Add or remove sensor entities based on new data"""
         current_ids = set(curr_data.keys())
         new_ids = set(new_data.keys())
 
@@ -186,4 +186,4 @@ async def async_setup_entry(
 
     coordinator.update_entities = update_entities
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
