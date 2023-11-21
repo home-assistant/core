@@ -45,7 +45,7 @@ PlexAPI==4.15.4
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==13.0.7
+PyChromecast==13.0.8
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -356,7 +356,7 @@ aiovlc==0.1.0
 aiovodafone==0.4.2
 
 # homeassistant.components.waqi
-aiowaqi==3.0.0
+aiowaqi==3.0.1
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
