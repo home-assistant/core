@@ -384,10 +384,12 @@ def climate_eurotronic_spirit_z_state_fixture():
     """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
 
+
 @pytest.fixture(name="climate_heatit_z_trm6_state", scope="session")
 def climate_heatit_z_trm6_state_fixture():
     """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm6_state.json"))
+
 
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
