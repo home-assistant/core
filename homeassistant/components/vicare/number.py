@@ -88,30 +88,6 @@ def _build_entity(
     return None
 
 
-async def _entities_from_descriptions(
-    hass: HomeAssistant,
-    entities: list[ViCareNumber],
-    entity_descriptions: tuple[ViCareNumberEntityDescription, ...],
-    iterables: list[PyViCareHeatingDeviceWithComponent],
-    config_entry: ConfigEntry,
-) -> None:
-    """Create entities from descriptions and list of burners/circuits."""
-    for description in entity_descriptions:
-        for current in iterables:
-            suffix = ""
-            if len(iterables) > 1:
-                suffix = f" {current.id}"
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                f"{description.name}{suffix}",
-                current,
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-                description,
-            )
-            if entity is not None:
-                entities.append(entity)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -122,9 +98,20 @@ async def async_setup_entry(
 
     entities: list[ViCareNumber] = []
     try:
-        await _entities_from_descriptions(
-            hass, entities, CIRCUIT_ENTITY_DESCRIPTIONS, api.circuits, config_entry
-        )
+        for current in api.circuits:
+            suffix = ""
+            if len(api.circuits) > 1:
+                suffix = f" {current.id}"
+            for description in CIRCUIT_ENTITY_DESCRIPTIONS:
+                entity = await hass.async_add_executor_job(
+                    _build_entity,
+                    f"{description.name}{suffix}",
+                    current,
+                    hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+                    description,
+                )
+                if entity is not None:
+                    entities.append(entity)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No circuits found")
 
