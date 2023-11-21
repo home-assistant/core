@@ -48,15 +48,6 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-def _as_local_timezone(value: datetime.datetime) -> datetime.datetime:
-    """Convert a datetime values to the local timezone."""
-
-    if not isinstance(value, datetime.datetime):
-        raise vol.Invalid(f"Invalid datetime specified: {value}")
-
-    return dt_util.as_local(value)
-
-
 @dataclasses.dataclass
 class TodoItemFieldDescription:
     """A description of To-do item fields and validation requirements."""
@@ -83,7 +74,7 @@ TODO_ITEM_FIELDS = [
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATE_TIME,
-        validation=vol.All(cv.datetime, _as_local_timezone),
+        validation=vol.All(cv.datetime, dt_util.as_local),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.DUE_DATETIME,
     ),
