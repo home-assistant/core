@@ -1,6 +1,6 @@
 """Test Linear Garage Door cover."""
 
-from datetime import datetime as dt, timedelta
+from datetime import datetime as timedelta
 from unittest.mock import patch
 
 from homeassistant.components.cover import (
@@ -16,6 +16,7 @@ from homeassistant.components.linear_garage_door.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 from .util import async_init_integration
 
@@ -106,7 +107,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.cover.Linear.close",
         return_value=True,
     ):
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_garage_2").state == STATE_OPENING
@@ -180,7 +181,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         "homeassistant.components.linear_garage_door.cover.Linear.close",
         return_value=True,
     ):
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_garage_1").state == STATE_CLOSING
