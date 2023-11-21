@@ -1,5 +1,5 @@
 """Test Roborock config flow."""
-from copy import copy
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
@@ -205,7 +205,7 @@ async def test_reauth_flow(
     # Enter a new code
     assert result["step_id"] == "code"
     assert result["type"] == FlowResultType.FORM
-    new_user_data = copy(USER_DATA)
+    new_user_data = deepcopy(USER_DATA)
     new_user_data.rriot.s = "new_password_hash"
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
