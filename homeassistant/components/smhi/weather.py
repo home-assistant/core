@@ -62,7 +62,6 @@ from homeassistant.util import Throttle, slugify
 
 from .additionaldatahandler import AdditionalDataHandler
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
-from .smhi_geolocation_event import SmhiGeolocationEvent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,53 +94,40 @@ RETRY_TIMEOUT = 5 * 60
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
-# List for referencing entities
-warning_entities: list[SmhiGeolocationEvent] = []
-
 
 @callback
 async def input_select_changed(event: Any) -> None:
     """Handle the input select state change."""
 
+    additional_data_handler = AdditionalDataHandler()
+
     if event.data.get("entity_id") == "input_boolean.display_lightning":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            if new_state.state == "on":
-                # add lightning entities to map
-                _ = new_state
-            else:
-                # remove lighting entities from map
-                _ = new_state
+            additional_data_handler.set_state("lightning", new_state.state == "on")
 
     elif event.data.get("entity_id") == "input_boolean.display_fire_risk":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            if new_state.state == "on":
-                # add fire entities to map
-                _ = new_state
-            else:
-                # remove fire entities from map
-                _ = new_state
+            additional_data_handler.set_state("fire_risk", new_state.state == "on")
 
     elif event.data.get("entity_id") == "input_boolean.display_weather":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            if new_state.state == "on":
-                # add weather entities to map
-                _ = new_state
-            else:
-                # remove weather entities from map
-                _ = new_state
+            additional_data_handler.set_state("weather", new_state.state == "on")
 
     elif event.data.get("entity_id") == "input_boolean.display_warnings":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            if new_state.state == "on":
-                # add warnings entities to map
-                _ = new_state
-            else:
-                # remove warnings entities from map
-                _ = new_state
+            additional_data_handler.set_state("warnings", new_state.state == "on")
+
+    await additional_data_handler.get_additional_data()
+    additional_data_handler.add_entity_callback(
+        additional_data_handler.warning_data, True
+    )
+    additional_data_handler.add_entity_callback(
+        additional_data_handler.fire_risk_data, True
+    )
 
 
 async def async_setup_entry(
