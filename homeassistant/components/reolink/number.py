@@ -183,6 +183,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
+        cmd_key="GetAiAlarm",
         translation_key="ai_animal_sensititvity",
         icon="mdi:paw",
         entity_category=EntityCategory.CONFIG,
@@ -267,6 +268,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
+        cmd_key="GetAiAlarm",
         translation_key="ai_animal_delay",
         icon="mdi:paw",
         entity_category=EntityCategory.CONFIG,
@@ -355,6 +357,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="day_night_switch_threshold",
+        cmd_key="GetIsp",
         translation_key="day_night_switch_threshold",
         icon="mdi:theme-light-dark",
         entity_category=EntityCategory.CONFIG,
