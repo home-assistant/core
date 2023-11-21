@@ -99,15 +99,15 @@ async def async_setup_entry(
 
     entities: list[ViCareNumber] = []
     try:
-        for current in api.circuits:
+        for circuit in api.circuits:
             suffix = ""
             if len(api.circuits) > 1:
-                suffix = f" {current.id}"
+                suffix = f" {circuit.id}"
             for description in CIRCUIT_ENTITY_DESCRIPTIONS:
                 entity = await hass.async_add_executor_job(
                     _build_entity,
                     f"{description.name}{suffix}",
-                    current,
+                    circuit,
                     hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                     description,
                 )
