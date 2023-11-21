@@ -128,7 +128,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
-            cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATE_TIME),
             *TODO_ITEM_FIELD_VALIDATIONS,
         ),
         _async_add_todo_item,
