@@ -32,20 +32,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    Should fix: Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self) -> None:
-        """Initialize."""
-
-    async def authenticate(self) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
-
-
 async def validate_input(_, __) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -72,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
+        """Handle initial setup."""
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
@@ -102,19 +88,20 @@ class InvalidAuth(HomeAssistantError):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
-    """Handle SR area options."""
+    """Handle Sveriges Radio traffic area options."""
 
     def __init__(self, config_entry) -> None:
-        """Init stuff."""
+        """Initialize the config flow handler."""
         super().__init__(config_entry=config_entry)
         self._attr_config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage SR area options."""
+        """Manage Sveriges Radio traffic area options."""
         errors: dict[str, Any] = {}
 
+        # Check that input area is valid
         if user_input is not None:
             if not (_filter := user_input.get(CONF_AREA)) or _filter == "":
                 user_input[CONF_AREA] = None
