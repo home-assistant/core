@@ -57,11 +57,9 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
         async_add_entities(
-            [
-                FritzboxThermostat(coordinator, ain)
-                for ain in coordinator.new_devices
-                if coordinator.data.devices[ain].has_thermostat
-            ]
+            FritzboxThermostat(coordinator, ain)
+            for ain in coordinator.new_devices
+            if coordinator.data.devices[ain].has_thermostat
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))

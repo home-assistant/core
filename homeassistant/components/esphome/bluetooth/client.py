@@ -136,7 +136,7 @@ class ESPHomeClientData:
     api_version: APIVersion
     title: str
     scanner: ESPHomeScanner | None
-    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    disconnect_callbacks: set[Callable[[], None]] = field(default_factory=set)
 
 
 class ESPHomeClient(BaseBleakClient):
@@ -215,6 +215,7 @@ class ESPHomeClient(BaseBleakClient):
             if not future.done():
                 future.set_result(None)
         self._disconnected_futures.clear()
+        self._disconnect_callbacks.discard(self._async_esp_disconnected)
         self._unsubscribe_connection_state()
 
     def _async_ble_device_disconnected(self) -> None:
@@ -228,7 +229,9 @@ class ESPHomeClient(BaseBleakClient):
     def _async_esp_disconnected(self) -> None:
         """Handle the esp32 client disconnecting from us."""
         _LOGGER.debug("%s: ESP device disconnected", self._description)
-        self._disconnect_callbacks.remove(self._async_esp_disconnected)
+        # Calling _async_ble_device_disconnected calls
+        # _async_disconnected_cleanup which will also remove
+        # the disconnect callbacks
         self._async_ble_device_disconnected()
 
     def _async_call_bleak_disconnected_callback(self) -> None:
@@ -289,7 +292,7 @@ class ESPHomeClient(BaseBleakClient):
             "%s: connected, registering for disconnected callbacks",
             self._description,
         )
-        self._disconnect_callbacks.append(self._async_esp_disconnected)
+        self._disconnect_callbacks.add(self._async_esp_disconnected)
         connected_future.set_result(connected)
 
     @api_error_as_bleak_error

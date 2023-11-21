@@ -44,6 +44,10 @@
         }
       }
     },
+    "remove_completed_items": {
+      "name": "Remove all completed to-do list items",
+      "description": "Remove all to-do list items that have been completed."
+    },
     "remove_item": {
       "name": "Remove a to-do list item",
       "description": "Remove an existing to-do list item by its name.",
