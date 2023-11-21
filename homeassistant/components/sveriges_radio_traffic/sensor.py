@@ -60,7 +60,6 @@ class TrafficSensor(SensorEntity):
     """A class for the Sveriges Radio traffic sensor."""
 
     _attr_has_entity_name = True
-    # _attr_name = "Message"
     _attr_device_class = None
 
     def __init__(
@@ -130,8 +129,8 @@ class TrafficSensor(SensorEntity):
         for areas in tree.findall(".//areas"):
             for area in areas.findall(".//area"):
                 area_names.append(area.attrib["name"])
-        allAreasString = ", ".join(area_names)
-        return allAreasString
+        all_areas_string = ", ".join(area_names)
+        return all_areas_string
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

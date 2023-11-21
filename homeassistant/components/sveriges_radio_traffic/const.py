@@ -1,5 +1,7 @@
 """Constants for the Sveriges Radio Traffic integration."""
 
+TITLE = "Sveriges Radio Traffic"
+
 DOMAIN = "sveriges_radio_traffic"
 AREAS = [
     "Norrbotten",
