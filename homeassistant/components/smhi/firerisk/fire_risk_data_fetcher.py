@@ -4,6 +4,8 @@ from typing import Any
 
 import aiohttp
 
+from ..smhi_geolocation_event import SmhiGeolocationEvent
+
 cities = {
     "Stockholm": {"lat": 59.3293, "lon": 18.0686},
     "Gothenburg": {"lat": 57.7089, "lon": 11.9746},
@@ -53,8 +55,8 @@ async def fetch_fire_risk_data(session: aiohttp.ClientSession) -> list[dict[str,
 
 
 def extract_grassfire_info_with_coords(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Extract grassfire data."""
-    grassfire_risks: list[dict[str, Any]] = []
+    """Extract grassfire data, combining entries with the same coordinates."""
+    grassfire_risks_dict = {}
 
     coordinates = data.get("geometry", {}).get("coordinates", [[]])[0]
 
@@ -69,26 +71,55 @@ def extract_grassfire_info_with_coords(data: dict[str, Any]) -> list[dict[str, A
             None,
         )
         if grassfire_info:
-            grassfire_risks.append(
-                {
+            coord_key = tuple(coordinates)
+            level_info = (
+                str(grassfire_info.get("levelType", "")).capitalize()
+                + ": "
+                + str(grassfire_info.get("level", ""))
+            )
+
+            if coord_key not in grassfire_risks_dict:
+                # If coordinates are new, create a new entry.
+                grassfire_risks_dict[coord_key] = {
                     "validTime": valid_time,
                     "grassfireRisk": grassfire_info["values"][0],
                     "coordinates": coordinates,
-                    "levelType": grassfire_info.get("levelType"),
-                    "level": grassfire_info.get("level"),
+                    "combinedLevelInfo": level_info,
                     "unit": grassfire_info.get("unit"),
                 }
-            )
+            else:
+                # If coordinates already exist, combine the levelType and level information.
+                existing_entry = grassfire_risks_dict[coord_key]
+                existing_entry["combinedLevelInfo"] += " | " + level_info
 
-    return grassfire_risks
+    # Convert the dictionary back to a list before returning.
+    return list(grassfire_risks_dict.values())
 
 
-async def get_grassfire_risk() -> list[dict[str, Any]]:
+def create_smhi_geolocation_events(
+    grassfire_risks: list[dict[str, Any]]
+) -> list[SmhiGeolocationEvent]:
+    """Convert a list of grassfire risk data to a list of SmhiGeolocationEvent objects."""
+    events = []
+    for risk in grassfire_risks:
+        name = "Grassfire risk: " + risk["combinedLevelInfo"]
+        event = SmhiGeolocationEvent(
+            name=name,
+            latitude=risk["coordinates"][1],
+            longitude=risk["coordinates"][0],
+            map_icon_url="https://opendata.smhi.se/apidocs/IBWwarnings/res/fire-outline-56x56@2x.png",
+            card_icon="https://opendata.smhi.se/apidocs/IBWwarnings/res/fire-outline-56x56@2x.png",
+            state=risk["combinedLevelInfo"],
+        )
+        events.append(event)
+    return events
+
+
+async def get_grassfire_risk() -> list[SmhiGeolocationEvent]:
     """Get grassfire risk."""
     cleaned_data: list[dict[str, Any]] = []
     async with aiohttp.ClientSession() as session:
         data = await fetch_fire_risk_data(session)
         for city_data in data:
-            # Here we should extend the list with the new list returned from extract_grassfire_info_with_coords
             cleaned_data.extend(extract_grassfire_info_with_coords(city_data))
-    return cleaned_data
+    return create_smhi_geolocation_events(cleaned_data)

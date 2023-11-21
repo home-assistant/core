@@ -62,6 +62,7 @@ from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 from .smhi_geolocation_event import SmhiGeolocationEvent
+from .firerisk.fire_risk_data_fetcher import get_grassfire_risk
 from .warnings import SmhiWarnings
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +161,10 @@ async def async_setup_entry(
 
     warnings = SmhiWarnings()
     data = await warnings.get_warnings()
+    
     warning_entities.extend(data)
+
+    data.extend(await get_grassfire_risk())
     async_add_entities(data, True)
 
     hass.bus.async_listen("state_changed", input_select_changed)
