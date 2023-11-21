@@ -12,7 +12,7 @@ from homeassistant.components.media_source.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN
+from .const import DOMAIN, FOLDERNAME
 from .sveriges_radio import Channel, SverigesRadio
 
 
@@ -68,75 +68,118 @@ class RadioMediaSource(MediaSource):
             raise BrowseError("Sveriges Radio not initialized")
 
         # Check if the item is the root of the media source
-        if item.identifier is None:
-            # Fetch all channels
-            channels = await radio.channels()
-            programs = await radio.programs()
+        # if item.identifier is None:
+        # Fetch all channels
+        programs = await radio.programs()
+        channels = await radio.channels()
 
-            # Create a root BrowseMediaSource object and include the channels as children
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=None,
-                media_class=MediaClass.DIRECTORY,
-                media_content_type=MediaType.MUSIC,
-                title="Sveriges Radio",
-                can_play=False,
-                can_expand=True,
-                children_media_class=MediaClass.DIRECTORY,
-                children=[
-                    *await self._async_build_channels(channels),
-                    *await self._async_build_programs(programs),
-                ],
-            )
+        category, _, program_info = (item.identifier or "").partition("/")
+
+        if category == FOLDERNAME and program_info:
+            program = await radio.program(program_info)
+            title = program.name
+        elif category == FOLDERNAME:
+            title = FOLDERNAME
+        else:
+            title = "Sveriges Radio"
+
+        # Create a root BrowseMediaSource object and include the channels as children
+        return BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=None,
+            media_class=MediaClass.DIRECTORY,
+            media_content_type=MediaType.MUSIC,
+            title=title,
+            can_play=False,
+            can_expand=True,
+            children_media_class=MediaClass.DIRECTORY,
+            children=[
+                *await self._async_build_channels(channels, item),
+                *await self._async_build_programs(programs, item),
+            ],
+        )
 
         # Fallback for unhandled cases
-        raise BrowseError("Item not found")
+        # raise BrowseError("Item not found")
 
     @callback
     async def _async_build_channels(
-        self, channels: list[Channel]
+        self,
+        channels: list[Channel],
+        item: MediaSourceItem,
     ) -> list[BrowseMediaSource]:
         """Build list of channels."""
-        media_sources = []
-        for channel in channels:
-            channel_media = BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=str(channel.station_id),
-                media_class=MediaClass.MUSIC,
-                media_content_type=MediaType.MUSIC,
-                title=channel.name,
-                can_play=True,
-                can_expand=False,
-                thumbnail=channel.image,
-            )
-            media_sources.append(channel_media)
+        category, _, _ = (item.identifier or "").partition("/")
 
-        return media_sources
+        if not category:
+            media_sources = []
+            for channel in channels:
+                channel_media = BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=str(channel.station_id),
+                    media_class=MediaClass.MUSIC,
+                    media_content_type=MediaType.MUSIC,
+                    title=channel.name,
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=channel.image,
+                )
+                media_sources.append(channel_media)
+
+            return media_sources
+
+        return []
 
     @callback
     async def _async_build_programs(
         self,
         programs: list[Channel],
+        item: MediaSourceItem,
     ) -> list[BrowseMediaSource]:
         """Build list of programs."""
+        radio = self.radio
 
+        if radio is None:
+            raise BrowseError("Sveriges Radio not initialized")
+
+        category, _, program_code = (item.identifier or "").partition("/")
         media_sources = []
-        for program in programs:
-            program_media = BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"podcast/{program.name}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type=MediaType.MUSIC,
-                title=program.name,
-                thumbnail=program.image,
-                can_play=False,
-                can_expand=True,
-                children_media_class=MediaClass.DIRECTORY,
-                children=[*await self._async_build_podcasts(program)],
-            )
-            media_sources.append(program_media)
 
-        return media_sources
+        if program_code and category == FOLDERNAME:
+            program = await radio.program(program_code)
+            return await self._async_build_podcasts(program)
+
+        if category == FOLDERNAME:
+            for program in programs:
+                program_media = BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{FOLDERNAME}/{program.station_id}",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
+                    title=program.name,
+                    can_play=False,
+                    can_expand=True,
+                    thumbnail=program.image,
+                )
+                media_sources.append(program_media)
+
+            return media_sources
+
+        if not item.identifier:
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=FOLDERNAME,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
+                    title=FOLDERNAME,
+                    can_play=False,
+                    can_expand=True,
+                    thumbnail="https://www.pngarts.com/files/7/Podcast-Symbol-Transparent-Background-PNG.png",
+                )
+            ]
+
+        return []
 
     @callback
     async def _async_build_podcasts(self, program: Channel) -> list[BrowseMediaSource]:
@@ -152,7 +195,7 @@ class RadioMediaSource(MediaSource):
         for podcast in podcasts:
             podcast_media = BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"podcast/{program.name}/{podcast.station_id}",
+                identifier=podcast.station_id,
                 media_class=MediaClass.MUSIC,
                 media_content_type=MediaType.MUSIC,
                 title=podcast.name,
