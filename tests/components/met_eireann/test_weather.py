@@ -9,10 +9,12 @@ from homeassistant.components.met_eireann import UPDATE_INTERVAL
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -29,6 +31,33 @@ async def setup_config_entry(hass: HomeAssistant) -> ConfigEntry:
     await hass.config_entries.async_setup(mock_data.entry_id)
     await hass.async_block_till_done()
     return mock_data
+
+
+async def test_new_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_weather
+) -> None:
+    """Test the expected entities are created."""
+    await setup_config_entry(hass)
+    assert len(hass.states.async_entity_ids("weather")) == 1
+
+    entry = hass.config_entries.async_entries()[0]
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
+
+
+async def test_legacy_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_weather
+) -> None:
+    """Test the expected entities are created."""
+    entity_registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        "10-20-hourly",
+    )
+    await setup_config_entry(hass)
+    assert len(hass.states.async_entity_ids("weather")) == 2
+
+    entry = hass.config_entries.async_entries()[0]
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 2
 
 
 async def test_weather(hass: HomeAssistant, mock_weather) -> None:
@@ -49,10 +78,18 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 0
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     mock_weather,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
     mock_weather.get_forecast.return_value = [
@@ -74,7 +111,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": entity_id,
             "type": "daily",
@@ -86,7 +123,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": entity_id,
             "type": "hourly",

@@ -27,6 +27,21 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "rain": {
+        "name": "Rain"
+      }
+    },
+    "switch": {
+      "standby": {
+        "name": "Standby"
+      },
+      "rain_delay": {
+        "name": "Rain delay"
+      }
+    }
+  },
   "services": {
     "set_zone_moisture_percent": {
       "name": "Set zone moisture percent",

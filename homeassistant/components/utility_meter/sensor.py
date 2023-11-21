@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.components.sensor.recorder import _suggest_report_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -484,6 +485,12 @@ class UtilityMeterSensor(RestoreSensor):
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                if self._unit_of_measurement is None:
+                    _LOGGER.warning(
+                        "Source sensor %s has no unit of measurement. Please %s",
+                        self._sensor_source_id,
+                        _suggest_report_issue(self.hass, self._sensor_source_id),
+                    )
 
         if (
             adjustment := self.calculate_adjustment(old_state, new_state)
@@ -491,6 +498,7 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
@@ -526,16 +534,25 @@ class UtilityMeterSensor(RestoreSensor):
 
         self.async_write_ha_state()
 
-    async def _async_reset_meter(self, event):
-        """Determine cycle - Helper function for larger than daily cycles."""
+    async def _program_reset(self):
+        """Program the reset of the utility meter."""
         if self._cron_pattern is not None:
+            tz = dt_util.get_time_zone(self.hass.config.time_zone)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
                     self._async_reset_meter,
-                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+                    croniter(self._cron_pattern, dt_util.now(tz)).get_next(
+                        datetime
+                    ),  # we need timezone for DST purposes (see issue #102984)
                 )
             )
+
+    async def _async_reset_meter(self, event):
+        """Reset the utility meter status."""
+
+        await self._program_reset()
+
         await self.async_reset_meter(self._tariff_entity)
 
     async def async_reset_meter(self, entity_id):
@@ -558,14 +575,7 @@ class UtilityMeterSensor(RestoreSensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._cron_pattern is not None:
-            self.async_on_remove(
-                async_track_point_in_time(
-                    self.hass,
-                    self._async_reset_meter,
-                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
-                )
-            )
+        await self._program_reset()
 
         self.async_on_remove(
             async_dispatcher_connect(

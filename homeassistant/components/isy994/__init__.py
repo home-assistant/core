@@ -5,7 +5,6 @@ import asyncio
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
 import voluptuous as vol
@@ -101,7 +100,7 @@ async def async_setup_entry(
     )
 
     try:
-        async with async_timeout.timeout(60):
+        async with asyncio.timeout(60):
             await isy.initialize()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(

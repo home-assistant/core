@@ -24,7 +24,6 @@ PARALLEL_UPDATES = 1
 
 UPDATE_ENTITY_TYPES = UpdateEntityDescription(
     key="version",
-    translation_key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
 

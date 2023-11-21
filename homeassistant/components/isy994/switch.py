@@ -112,6 +112,8 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
 class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     """A representation of an ISY program switch."""
 
+    _attr_icon = "mdi:script-text-outline"  # Matches isy program icon
+
     @property
     def is_on(self) -> bool:
         """Get whether the ISY switch program is on."""
@@ -130,11 +132,6 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
             raise HomeAssistantError(
                 f"Unable to run 'else' clause on program switch {self._actions.address}"
             )
-
-    @property
-    def icon(self) -> str:
-        """Get the icon for programs."""
-        return "mdi:script-text-outline"  # Matches isy program icon
 
 
 class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
@@ -159,6 +156,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         self._attr_name = description.name  # Override super
         self._change_handler: EventListener = None
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.isy.nodes.status_events.subscribe(

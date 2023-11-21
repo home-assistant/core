@@ -30,6 +30,7 @@ base_platforms: &base_platforms
   - homeassistant/components/humidifier/**
   - homeassistant/components/image/**
   - homeassistant/components/image_processing/**
+  - homeassistant/components/lawn_mower/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**
   - homeassistant/components/media_player/**
@@ -44,6 +45,7 @@ base_platforms: &base_platforms
   - homeassistant/components/switch/**
   - homeassistant/components/text/**
   - homeassistant/components/time/**
+  - homeassistant/components/todo/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
@@ -54,6 +56,7 @@ base_platforms: &base_platforms
 components: &components
   - homeassistant/components/alexa/**
   - homeassistant/components/application_credentials/**
+  - homeassistant/components/assist_pipeline/**
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
@@ -94,8 +97,8 @@ components: &components
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**
   - homeassistant/components/recorder/**
+  - homeassistant/components/recovery_mode/**
   - homeassistant/components/repairs/**
-  - homeassistant/components/safe_mode/**
   - homeassistant/components/script/**
   - homeassistant/components/shopping_list/**
   - homeassistant/components/ssdp/**

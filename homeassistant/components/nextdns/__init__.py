@@ -7,7 +7,6 @@ import logging
 from typing import TypeVar
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from nextdns import (
     AnalyticsDnssec,
     AnalyticsEncryption,
@@ -75,7 +74,7 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
     async def _async_update_data(self) -> CoordinatorDataT:
         """Update data via internal method."""
         try:
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 return await self._async_update_data_internal()
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -162,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = async_get_clientsession(hass)
     try:
-        async with timeout(10):
+        async with asyncio.timeout(10):
             nextdns = await NextDns.create(websession, api_key)
     except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err

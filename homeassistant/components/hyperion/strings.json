@@ -50,5 +50,33 @@
         }
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "all": {
+        "name": "Component all"
+      },
+      "smoothing": {
+        "name": "Component smoothing"
+      },
+      "blackbar_detection": {
+        "name": "Component blackbar detection"
+      },
+      "forwarder": {
+        "name": "Component forwarder"
+      },
+      "boblight_server": {
+        "name": "Component boblight server"
+      },
+      "platform_capture": {
+        "name": "Component platform capture"
+      },
+      "led_device": {
+        "name": "Component LED device"
+      },
+      "usb_capture": {
+        "name": "Component USB capture"
+      }
+    }
   }
 }

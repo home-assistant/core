@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 from dataclasses import asdict as dataclass_asdict, dataclass
 from datetime import datetime
 from typing import Any
 import uuid
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
@@ -313,7 +313,7 @@ class Analytics:
             )
 
         try:
-            async with async_timeout.timeout(30):
+            async with timeout(30):
                 response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(

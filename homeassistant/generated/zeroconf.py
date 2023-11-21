@@ -20,10 +20,6 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "819LMB": {
-        "always_discover": True,
-        "domain": "myq",
-    },
     "AC02": {
         "always_discover": True,
         "domain": "tado",
@@ -44,7 +40,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "EB-*": {
+    "EB": {
         "always_discover": True,
         "domain": "ecobee",
     },
@@ -56,7 +52,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "hive",
     },
-    "Healty Home Coach": {
+    "Healthy Home Coach": {
         "always_discover": True,
         "domain": "netatmo",
     },
@@ -143,10 +139,6 @@ HOMEKIT = {
     "LIFX Z": {
         "always_discover": True,
         "domain": "lifx",
-    },
-    "MYQ": {
-        "always_discover": True,
-        "domain": "myq",
     },
     "NL29": {
         "always_discover": False,
@@ -384,6 +376,11 @@ ZEROCONF = {
         {
             "domain": "modern_forms",
             "name": "wac*",
+        },
+    ],
+    "_ecobee._tcp.local.": [
+        {
+            "domain": "ecobee",
         },
     ],
     "_elg._tcp.local.": [
@@ -681,6 +678,12 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
         },
     ],
     "_viziocast._tcp.local.": [

@@ -150,6 +150,7 @@ ROUTER_DISCOVERY_HASS_MISSING_DATA = {
     "properties": {
         b"rv": b"1",
         b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
+        # vn is missing
         b"mn": b"OpenThreadBorderRouter",
         b"nn": b"OpenThread HC",
         b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
@@ -167,7 +168,7 @@ ROUTER_DISCOVERY_HASS_MISSING_DATA = {
 }
 
 
-ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA = {
+ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA_XA = {
     "type_": "_meshcop._udp.local.",
     "name": "HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
     "addresses": [b"\xc0\xa8\x00s"],
@@ -183,6 +184,34 @@ ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA = {
         b"nn": b"OpenThread HC",
         b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
         b"tv": b"1.3.0",
+        b"sb": b"\x00\x00\x01\xb1",
+        b"at": b"\x00\x00\x00\x00\x00\x01\x00\x00",
+        b"pt": b"\x8f\x06Q~",
+        b"sq": b"3",
+        b"bb": b"\xf0\xbf",
+        b"dn": b"DefaultDomain",
+        b"omr": b"@\xfd \xbe\x89IZ\x00\x01",
+    },
+    "interface_index": None,
+}
+
+
+ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA_XP = {
+    "type_": "_meshcop._udp.local.",
+    "name": "HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
+    "addresses": [b"\xc0\xa8\x00s"],
+    "port": 49153,
+    "weight": 0,
+    "priority": 0,
+    "server": "core-silabs-multiprotocol.local.",
+    "properties": {
+        b"rv": b"1",
+        b"id": b"#\x0cj\x1a\xc5\x7foK\xe2b\xac\xf3.^\xf5,",
+        b"vn": b"HomeAssistant",
+        b"mn": b"OpenThreadBorderRouter",
+        b"nn": b"OpenThread HC",
+        b"tv": b"1.3.0",
+        b"xa": b"\xae\xeb/YKW\x0b\xbf",
         b"sb": b"\x00\x00\x01\xb1",
         b"at": b"\x00\x00\x00\x00\x00\x01\x00\x00",
         b"pt": b"\x8f\x06Q~",

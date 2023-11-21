@@ -350,8 +350,6 @@ async def async_setup_entry(
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
-    envoy_serial_num = config_entry.unique_id
-    assert envoy_serial_num is not None
     _LOGGER.debug("Envoy data: %s", envoy_data)
 
     entities: list[Entity] = [
@@ -565,16 +563,14 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
     ) -> None:
         """Initialize Enpower entity."""
         super().__init__(coordinator, description)
-        assert coordinator.envoy.data is not None
-        enpower_data = coordinator.envoy.data.enpower
+        enpower_data = self.data.enpower
         assert enpower_data is not None
-        self._serial_number = enpower_data.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
+        self._attr_unique_id = f"{enpower_data.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, enpower_data.serial_number)},
             manufacturer="Enphase",
             model="Enpower",
-            name=f"Enpower {self._serial_number}",
+            name=f"Enpower {enpower_data.serial_number}",
             sw_version=str(enpower_data.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
         )

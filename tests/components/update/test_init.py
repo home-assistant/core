@@ -1,4 +1,5 @@
 """The tests for the Update component."""
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,6 +25,7 @@ from homeassistant.components.update.const import (
     ATTR_TITLE,
     UpdateEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -34,11 +36,23 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
 from tests.typing import WebSocketGenerator
+
+TEST_DOMAIN = "test"
 
 
 class MockUpdateEntity(UpdateEntity):
@@ -752,3 +766,101 @@ async def test_release_notes_entity_does_not_support_release_notes(
     result = await client.receive_json()
     assert result["error"]["code"] == "not_supported"
     assert result["error"]["message"] == "Entity does not support release notes"
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
+        yield
+
+
+async def test_name(hass: HomeAssistant) -> None:
+    """Test update name."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed update entity without device class -> no name
+    entity1 = UpdateEntity()
+    entity1.entity_id = "update.test1"
+
+    # Unnamed update entity with device class but has_entity_name False -> no name
+    entity2 = UpdateEntity()
+    entity2.entity_id = "update.test2"
+    entity2._attr_device_class = UpdateDeviceClass.FIRMWARE
+
+    # Unnamed update entity with device class and has_entity_name True -> named
+    entity3 = UpdateEntity()
+    entity3.entity_id = "update.test3"
+    entity3._attr_device_class = UpdateDeviceClass.FIRMWARE
+    entity3._attr_has_entity_name = True
+
+    # Unnamed update entity with device class and has_entity_name True -> named
+    entity4 = UpdateEntity()
+    entity4.entity_id = "update.test4"
+    entity4.entity_description = UpdateEntityDescription(
+        "test",
+        UpdateDeviceClass.FIRMWARE,
+        has_entity_name=True,
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test update platform via config entry."""
+        async_add_entities([entity1, entity2, entity3, entity4])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state
+    assert "device_class" not in state.attributes
+    assert "friendly_name" not in state.attributes
+
+    state = hass.states.get(entity2.entity_id)
+    assert state
+    assert state.attributes.get("device_class") == "firmware"
+    assert "friendly_name" not in state.attributes
+
+    expected = {
+        "device_class": "firmware",
+        "friendly_name": "Firmware",
+    }
+    state = hass.states.get(entity3.entity_id)
+    assert state
+    assert expected.items() <= state.attributes.items()
+
+    state = hass.states.get(entity4.entity_id)
+    assert state
+    assert expected.items() <= state.attributes.items()

@@ -1,6 +1,11 @@
 """Test the CO2 Signal config flow."""
 from unittest.mock import patch
 
+from aioelectricitymaps.exceptions import (
+    ElectricityMapsDecodeError,
+    ElectricityMapsError,
+    InvalidToken,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -21,7 +26,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "CO2Signal.get_latest",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -63,7 +68,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch(
-        "CO2Signal.get_latest",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -107,7 +112,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch(
-        "CO2Signal.get_latest",
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
         return_value=VALID_PAYLOAD,
     ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -131,24 +136,32 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("err_str", "err_code"),
+    ("side_effect", "err_code"),
     [
-        ("Invalid authentication credentials", "invalid_auth"),
-        ("API rate limit exceeded.", "api_ratelimit"),
-        ("Something else", "unknown"),
+        (
+            InvalidToken,
+            "invalid_auth",
+        ),
+        (ElectricityMapsError("Something else"), "unknown"),
+        (ElectricityMapsDecodeError("Boom"), "unknown"),
+    ],
+    ids=[
+        "invalid auth",
+        "generic error",
+        "json decode error",
     ],
 )
-async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> None:
+async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "CO2Signal.get_latest",
-        side_effect=ValueError(err_str),
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
+        side_effect=side_effect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "location": config_flow.TYPE_USE_HOME,
@@ -156,49 +169,24 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": err_code}
-
-
-async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
-    """Test we handle unexpected error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": err_code}
 
     with patch(
-        "CO2Signal.get_latest",
-        side_effect=Exception("Boom"),
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
+        return_value=VALID_PAYLOAD,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "location": config_flow.TYPE_USE_HOME,
                 "api_key": "api_key",
             },
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
-    """Test we handle unexpected data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value={"status": "error"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "CO2 Signal"
+    assert result["data"] == {
+        "api_key": "api_key",
+    }

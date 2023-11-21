@@ -90,11 +90,15 @@ async def test_import_share_radio_channel_collision(
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
     ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    ), patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex(), None)
+    mock_add.assert_called_once_with(
+        otbr.DOMAIN, DATASET_CH16.hex(), TEST_BORDER_AGENT_ID.hex()
+    )
     assert issue_registry.async_get_issue(
         domain=otbr.DOMAIN,
         issue_id=f"otbr_zha_channel_collision_{config_entry.entry_id}",
@@ -123,11 +127,15 @@ async def test_import_share_radio_no_channel_collision(
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset
     ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    ), patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex(), None)
+    mock_add.assert_called_once_with(
+        otbr.DOMAIN, dataset.hex(), TEST_BORDER_AGENT_ID.hex()
+    )
     assert not issue_registry.async_get_issue(
         domain=otbr.DOMAIN,
         issue_id=f"otbr_zha_channel_collision_{config_entry.entry_id}",
@@ -154,11 +162,15 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset
     ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    ), patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex(), None)
+    mock_add.assert_called_once_with(
+        otbr.DOMAIN, dataset.hex(), TEST_BORDER_AGENT_ID.hex()
+    )
     assert issue_registry.async_get_issue(
         domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
     )
@@ -186,6 +198,25 @@ async def test_config_entry_not_ready(hass: HomeAssistant, error) -> None:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
+async def test_border_agent_id_not_supported(hass: HomeAssistant) -> None:
+    """Test border router does not support border agent ID."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id",
+        side_effect=python_otbr_api.GetBorderAgentIdNotSupportedError,
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+
 async def test_config_entry_update(hass: HomeAssistant) -> None:
     """Test update config entry settings."""
     config_entry = MockConfigEntry(
@@ -197,6 +228,7 @@ async def test_config_entry_update(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     mock_api = MagicMock()
     mock_api.get_active_dataset_tlvs = AsyncMock(return_value=None)
+    mock_api.get_border_agent_id = AsyncMock(return_value=TEST_BORDER_AGENT_ID)
     with patch("python_otbr_api.OTBR", return_value=mock_api) as mock_otrb_api:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 

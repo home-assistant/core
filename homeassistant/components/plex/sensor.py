@@ -129,6 +129,11 @@ class PlexSensor(SensorEntity):
 class PlexLibrarySectionSensor(SensorEntity):
     """Representation of a Plex library section sensor."""
 
+    _attr_available = True
+    _attr_entity_registry_enabled_default = False
+    _attr_should_poll = False
+    _attr_native_unit_of_measurement = "Items"
+
     def __init__(self, hass, plex_server, plex_library_section):
         """Initialize the sensor."""
         self._server = plex_server
@@ -137,14 +142,10 @@ class PlexLibrarySectionSensor(SensorEntity):
         self.library_section = plex_library_section
         self.library_type = plex_library_section.type
 
-        self._attr_available = True
-        self._attr_entity_registry_enabled_default = False
         self._attr_extra_state_attributes = {}
         self._attr_icon = LIBRARY_ICON_LOOKUP.get(self.library_type, "mdi:plex")
         self._attr_name = f"{self.server_name} Library - {plex_library_section.title}"
-        self._attr_should_poll = False
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
-        self._attr_native_unit_of_measurement = "Items"
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""

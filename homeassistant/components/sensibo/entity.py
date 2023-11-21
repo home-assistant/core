@@ -1,10 +1,10 @@
 """Base entity for Sensibo integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
-import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.exceptions import HomeAssistantError
@@ -27,7 +27,7 @@ def async_handle_api_call(
         """Wrap services for api calls."""
         res: bool = False
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 res = await function(*args, **kwargs)
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
@@ -86,6 +86,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             sw_version=self.device_data.fw_ver,
             hw_version=self.device_data.fw_type,
             suggested_area=self.device_data.name,
+            serial_number=self.device_data.serial,
         )
 
 

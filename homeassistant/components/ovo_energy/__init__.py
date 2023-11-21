@@ -1,11 +1,11 @@
 """Support for OVO Energy."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import asyncio
+from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             try:
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME],
@@ -58,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(exception) from exception
             if not authenticated:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
-            return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
+            return await client.get_daily_usage(dt_util.utcnow().strftime("%Y-%m"))
 
     coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,
@@ -97,6 +98,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
     """Defines a base OVO Energy entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

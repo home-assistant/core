@@ -20,6 +20,7 @@ from homeassistant.util.percentage import (
 
 from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyData
 
 SPEED_RANGE = (1, 255)  # off is not included
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY fan platform."""
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 

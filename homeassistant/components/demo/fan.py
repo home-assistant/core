@@ -7,7 +7,6 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
@@ -20,13 +19,12 @@ FULL_SUPPORT = (
 LIMITED_SUPPORT = FanEntityFeature.SET_SPEED
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the demo fan platform."""
+    """Set up the Demo config entry."""
     async_add_entities(
         [
             DemoPercentageFan(
@@ -86,15 +84,6 @@ async def async_setup_platform(
             ),
         ]
     )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class BaseDemoFan(FanEntity):

@@ -108,10 +108,11 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         self._cached_image = None
         self._attr_image_url = result
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute("_url", self._url_template, None, self._update_url)
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
 
 class TriggerImageEntity(TriggerEntity, ImageEntity):

@@ -25,6 +25,25 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "last_activity": {
+        "name": "Last activity"
+      },
+      "recording_mode": {
+        "name": "Recording mode"
+      },
+      "wifi_signal_category": {
+        "name": "Wi-Fi signal category"
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      },
+      "streaming_mode": {
+        "name": "Streaming mode"
+      }
+    }
+  },
   "services": {
     "set_config": {
       "name": "Set config",

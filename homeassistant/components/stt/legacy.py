@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -20,8 +19,8 @@ from .const import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    SpeechResultState,
 )
+from .models import SpeechMetadata, SpeechResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,32 +85,6 @@ def async_setup_legacy(
         async_setup_platform(p_type, p_config)
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
-
-
-@dataclass
-class SpeechMetadata:
-    """Metadata of audio stream."""
-
-    language: str
-    format: AudioFormats
-    codec: AudioCodecs
-    bit_rate: AudioBitRates
-    sample_rate: AudioSampleRates
-    channel: AudioChannels
-
-    def __post_init__(self) -> None:
-        """Finish initializing the metadata."""
-        self.bit_rate = AudioBitRates(int(self.bit_rate))
-        self.sample_rate = AudioSampleRates(int(self.sample_rate))
-        self.channel = AudioChannels(int(self.channel))
-
-
-@dataclass
-class SpeechResult:
-    """Result of audio Speech."""
-
-    text: str | None
-    result: SpeechResultState
 
 
 class Provider(ABC):

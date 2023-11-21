@@ -31,7 +31,6 @@ _OPTION_TO_MODE: dict[str, OperationMode] = {
 
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
-    name="Inverter operation mode",
     icon="mdi:solar-power",
     entity_category=EntityCategory.CONFIG,
     translation_key="operation_mode",
@@ -72,6 +71,7 @@ class InverterOperationModeEntity(SelectEntity):
     """Entity representing the inverter operation mode."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,

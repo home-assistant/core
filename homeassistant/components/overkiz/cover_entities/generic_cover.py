@@ -1,7 +1,6 @@
 """Base class for Overkiz covers, shutters, awnings, etc."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -114,17 +113,6 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
             and execution.get("command_name") in commands
             for execution in self.coordinator.executions.values()
         )
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the device state attributes."""
-        attr = super().extra_state_attributes or {}
-
-        # Obstruction Detected attribute is used by HomeKit
-        if self.executor.has_state(OverkizState.IO_PRIORITY_LOCK_LEVEL):
-            return {**attr, **{ATTR_OBSTRUCTION_DETECTED: True}}
-
-        return attr
 
     @property
     def supported_features(self) -> CoverEntityFeature:

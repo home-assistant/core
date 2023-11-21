@@ -1,12 +1,12 @@
 """Binary sensor platform for hvv_departures."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectorError
-import async_timeout
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.binary_sensor import (
@@ -90,7 +90,7 @@ async def async_setup_entry(
         payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return get_elevator_entities_from_station_information(
                     station_name, await hub.gti.stationInformation(payload)
                 )
@@ -191,16 +191,3 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
             for k, v in self.coordinator.data[self.idx]["attributes"].items()
             if v is not None
         }
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

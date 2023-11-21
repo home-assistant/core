@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import attr
 from yarl import URL
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -35,7 +36,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -78,6 +79,7 @@ class DeviceInfo(TypedDict, total=False):
     manufacturer: str | None
     model: str | None
     name: str | None
+    serial_number: str | None
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
@@ -101,6 +103,7 @@ DEVICE_INFO_TYPES = {
         "manufacturer",
         "model",
         "name",
+        "serial_number",
         "suggested_area",
         "sw_version",
         "via_device",
@@ -211,7 +214,7 @@ def _validate_configuration_url(value: Any) -> str | None:
     return str(value)
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -228,13 +231,12 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    serial_number: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
-
-    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
 
     @property
     def disabled(self) -> bool:
@@ -258,19 +260,17 @@ class DeviceEntry:
             "model": self.model,
             "name_by_user": self.name_by_user,
             "name": self.name,
+            "serial_number": self.serial_number,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
         }
 
-    @property
+    @cached_property
     def json_repr(self) -> str | None:
         """Return a cached JSON representation of the entry."""
-        if self._json_repr is not None:
-            return self._json_repr
-
         try:
             dict_repr = self.dict_repr
-            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+            return JSON_DUMP(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -279,7 +279,7 @@ class DeviceEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        return self._json_repr
+        return None
 
 
 @attr.s(slots=True, frozen=True)
@@ -363,6 +363,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
+            if old_minor_version < 4:
+                # Introduced in 2023.11
+                for device in old_data["devices"]:
+                    device["serial_number"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -392,14 +396,14 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
+        data = self.data
+        if key in data:
+            old_entry = data[key]
             for connection in old_entry.connections:
                 del self._connections[connection]
             for identifier in old_entry.identifiers:
                 del self._identifiers[identifier]
-        # type ignore linked to mypy issue: https://github.com/python/mypy/issues/13596
-        super().__setitem__(key, entry)  # type: ignore[assignment]
+        data[key] = entry
         for connection in entry.connections:
             self._connections[connection] = entry
         for identifier in entry.identifiers:
@@ -494,6 +498,7 @@ class DeviceRegistry:
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
@@ -518,6 +523,7 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
+            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device", via_device),
@@ -595,6 +601,7 @@ class DeviceRegistry:
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
+            serial_number=serial_number,
             suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
@@ -624,6 +631,7 @@ class DeviceRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
@@ -713,6 +721,7 @@ class DeviceRegistry:
             ("model", model),
             ("name", name),
             ("name_by_user", name_by_user),
+            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
@@ -806,6 +815,7 @@ class DeviceRegistry:
                     model=device["model"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
+                    serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
@@ -813,15 +823,8 @@ class DeviceRegistry:
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={
-                        tuple(conn)  # type: ignore[misc]
-                        for conn in device["connections"]
-                    },
-                    identifiers={
-                        tuple(iden)  # type: ignore[misc]
-                        for iden in device["identifiers"]
-                    },
+                    connections={tuple(conn) for conn in device["connections"]},
+                    identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
@@ -855,6 +858,7 @@ class DeviceRegistry:
                 "model": entry.model,
                 "name_by_user": entry.name_by_user,
                 "name": entry.name,
+                "serial_number": entry.serial_number,
                 "sw_version": entry.sw_version,
                 "via_device_id": entry.via_device_id,
             }
