@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -15,6 +16,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -181,7 +183,10 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await self.entity_description.method(self._host.api, self._channel)
+        try:
+            await self.entity_description.method(self._host.api, self._channel)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
@@ -202,4 +207,7 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await self.entity_description.method(self._host.api)
+        try:
+            await self.entity_description.method(self._host.api)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
