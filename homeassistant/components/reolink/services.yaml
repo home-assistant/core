@@ -1,6 +1,6 @@
 # Describes the format for available reolink services
 
-set_ptz_speed:
+ptz_move:
   target:
     entity:
       integration: reolink
@@ -8,6 +8,7 @@ set_ptz_speed:
   fields:
     speed:
       required: true
+      default: 10
       selector:
         number:
           min: 1

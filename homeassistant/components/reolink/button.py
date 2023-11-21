@@ -174,9 +174,9 @@ async def async_setup_entry(
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
-        "set_ptz_speed",
+        "ptz_move",
         {vol.Required(ATTR_SPEED): cv.positive_int},
-        "async_ptz_speed",
+        "async_ptz_move",
         [SUPPORT_PTZ_SPEED],
     )
 
@@ -217,7 +217,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
 
-    async def async_ptz_speed(self, **kwargs) -> None:
+    async def async_ptz_move(self, **kwargs) -> None:
         """PTZ move with speed."""
         speed = kwargs[ATTR_SPEED]
         try:

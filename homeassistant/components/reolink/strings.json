@@ -62,7 +62,7 @@
     }
   },
   "services": {
-    "set_ptz_speed": {
+    "ptz_move": {
       "name": "PTZ move",
       "description": "Move the camera with a specific speed.",
       "fields": {
