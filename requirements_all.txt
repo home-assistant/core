@@ -155,7 +155,7 @@ adb-shell[async]==0.4.4
 adext==0.4.2
 
 # homeassistant.components.adguard
-adguardhome==0.6.2
+adguardhome==0.6.3
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.4
+aioesphomeapi==18.5.5
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -529,7 +529,7 @@ beautifulsoup4==4.12.2
 bellows==0.36.8
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.14.2
+bimmer-connected==0.14.3
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -724,7 +724,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.3.0
+easyenergy==1.0.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -736,7 +736,7 @@ ecoaliface==0.4.0
 electrickiwi-api==0.8.5
 
 # homeassistant.components.elgato
-elgato==5.1.0
+elgato==5.1.1
 
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
@@ -757,7 +757,7 @@ emulated-roku==0.2.1
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==0.5.0
+energyzero==1.0.0
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -1517,7 +1517,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.1.0
+pvo==2.1.1
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1949,7 +1949,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.2
+pyoverkiz==1.13.3
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1994,7 +1994,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==4.0.0
+pyrainbird==4.0.1
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2678,7 +2678,7 @@ vacuum-map-parser-roborock==0.1.1
 vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
-vehicle==2.2.0
+vehicle==2.2.1
 
 # homeassistant.components.velbus
 velbus-aio==2023.11.0
@@ -2799,7 +2799,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2023.10.13
+yt-dlp==2023.11.16
 
 # homeassistant.components.zamg
 zamg==0.3.0

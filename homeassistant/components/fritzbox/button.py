@@ -24,7 +24,7 @@ async def async_setup_entry(
         if not coordinator.new_templates:
             return
         async_add_entities(
-            [FritzBoxTemplate(coordinator, ain) for ain in coordinator.new_templates]
+            FritzBoxTemplate(coordinator, ain) for ain in coordinator.new_templates
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))

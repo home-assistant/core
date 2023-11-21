@@ -35,16 +35,14 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
         async_add_entities(
-            [
-                FritzboxLight(
-                    coordinator,
-                    ain,
-                    device.get_colors(),
-                    device.get_color_temps(),
-                )
-                for ain in coordinator.new_devices
-                if (device := coordinator.data.devices[ain]).has_lightbulb
-            ]
+            FritzboxLight(
+                coordinator,
+                ain,
+                device.get_colors(),
+                device.get_color_temps(),
+            )
+            for ain in coordinator.new_devices
+            if (device := coordinator.data.devices[ain]).has_lightbulb
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
