@@ -24,7 +24,6 @@ from zigpy.config import (
 )
 import zigpy.device
 import zigpy.endpoint
-from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 import zigpy.group
 from zigpy.types.named import EUI64
 
@@ -32,7 +31,6 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -66,8 +64,6 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    STARTUP_FAILURE_DELAY_S,
-    STARTUP_RETRIES,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -147,6 +143,7 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+        self.shutting_down = False
 
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
@@ -196,6 +193,8 @@ class ZHAGateway:
         discovery.PROBE.initialize(self.hass)
         discovery.GROUP_PROBE.initialize(self.hass)
 
+        self.shutting_down = False
+
         app_controller_cls, app_config = self.get_application_controller_data()
         self.application_controller = await app_controller_cls.new(
             config=app_config,
@@ -204,28 +203,7 @@ class ZHAGateway:
         )
 
         try:
-            for attempt in range(STARTUP_RETRIES):
-                try:
-                    await self.application_controller.startup(auto_form=True)
-                except TransientConnectionError as exc:
-                    raise ConfigEntryNotReady from exc
-                except NetworkSettingsInconsistent:
-                    raise
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug(
-                        "Couldn't start %s coordinator (attempt %s of %s)",
-                        self.radio_description,
-                        attempt + 1,
-                        STARTUP_RETRIES,
-                        exc_info=exc,
-                    )
-
-                    if attempt == STARTUP_RETRIES - 1:
-                        raise exc
-
-                    await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
-                else:
-                    break
+            await self.application_controller.startup(auto_form=True)
         except Exception:
             # Explicitly shut down the controller application on failure
             await self.application_controller.shutdown()
@@ -243,6 +221,17 @@ class ZHAGateway:
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
+
+    def connection_lost(self, exc: Exception) -> None:
+        """Handle connection lost event."""
+        if self.shutting_down:
+            return
+
+        _LOGGER.warning("Connection to the radio was lost: %s", exc)
+
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        )
 
     def _find_coordinator_device(self) -> zigpy.device.Device:
         zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
@@ -758,6 +747,8 @@ class ZHAGateway:
     async def shutdown(self) -> None:
         """Stop ZHA Controller Application."""
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
+        self.shutting_down = True
+
         for unsubscribe in self._unsubs:
             unsubscribe()
         for device in self.devices.values():

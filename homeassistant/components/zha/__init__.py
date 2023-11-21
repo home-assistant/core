@@ -173,18 +173,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise HomeAssistantError(
             "Network settings do not match most recent backup"
         ) from exc
-    except Exception:
+    except Exception as exc:
         if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
             try:
                 await warn_on_wrong_silabs_firmware(
                     hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
                 )
-            except AlreadyRunningEZSP as exc:
+                raise
+            except AlreadyRunningEZSP:
                 # If connecting fails but we somehow probe EZSP (e.g. stuck in the
                 # bootloader), reconnect, it should work
-                raise ConfigEntryNotReady from exc
+                pass
 
-        raise
+        raise ConfigEntryNotReady from exc
 
     repairs.async_delete_blocking_issues(hass)
 
