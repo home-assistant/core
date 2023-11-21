@@ -1234,8 +1234,8 @@ build.json @home-assistant/supervisor
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
-/homeassistant/components/stt/ @home-assistant/core @pvizeli
-/tests/components/stt/ @home-assistant/core @pvizeli
+/homeassistant/components/stt/ @home-assistant/core
+/tests/components/stt/ @home-assistant/core
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii
@@ -1342,8 +1342,8 @@ build.json @home-assistant/supervisor
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
-/homeassistant/components/tts/ @home-assistant/core @pvizeli
-/tests/components/tts/ @home-assistant/core @pvizeli
+/homeassistant/components/tts/ @home-assistant/core
+/tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
 /tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
