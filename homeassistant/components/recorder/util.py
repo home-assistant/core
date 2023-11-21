@@ -858,7 +858,7 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
 
 
 def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
-    """Break *collection* into lists of length *n*.
+    """Break *collection* into iterables of length *n*.
 
     Returns the collection if its length is less than *n*.
 
