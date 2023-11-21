@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -45,12 +45,6 @@ class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
             model=self._lm_client.true_model_name,
             sw_version=self._lm_client.firmware_version,
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._lm_client = self.coordinator.data
-        self.async_write_ha_state()
 
     async def _update_ha_state(self) -> None:
         """Write the intermediate value returned from the action to HA state before actually refreshing."""

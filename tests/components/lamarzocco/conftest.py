@@ -71,6 +71,7 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
         lamarzocco.latest_gateway_version = "v3.1-rc4"
 
         lamarzocco.connect.return_value = None
+        lamarzocco.update_machine_status.return_value = None
         lamarzocco.websocket_connect.return_value = None
         lamarzocco.update_local_machine_status.return_value = None
 

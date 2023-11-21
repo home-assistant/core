@@ -1,5 +1,6 @@
 """La Marzocco Cloud API client."""
-from collections.abc import Mapping
+from asyncio import Task
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -7,77 +8,38 @@ from lmcloud import LMCloud
 from lmcloud.exceptions import BluetoothConnectionFailed
 
 from homeassistant.components import bluetooth
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_MACHINE,
-    MACHINE_NAME,
-    MODEL_GS3_AV,
-    MODEL_GS3_MP,
-    MODEL_LM,
-    MODEL_LMU,
-    SERIAL_NUMBER,
-)
+from .const import CONF_MACHINE
 
 _LOGGER = logging.getLogger(__name__)
-
-MODELS = [MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU]
 
 
 class LaMarzoccoClient(LMCloud):
     """Keep data for La Marzocco entities."""
 
+    _initialized = False
+    _websocket_initialized = False
+    _websocket_task: Task | None = None
+    _bt_disconnected = False
+
+    @property
+    def initialized(self) -> bool:
+        """Return whether the client has been initialized."""
+        return self._initialized
+
     def __init__(self, hass: HomeAssistant, entry_data: Mapping[str, Any]) -> None:
         """Initialise the LaMarzocco entity data."""
         super().__init__()
-
-        self._device_version: str | None = None
         self._entry_data = entry_data
         self.hass = hass
-        self._brew_active = False
-        self._bt_disconnected = False
-
-    @property
-    def model_name(self) -> str:
-        """Return model name."""
-        if super().model_name not in MODELS:
-            _LOGGER.exception(
-                "Unsupported model, falling back to all entities and services %s",
-                super().model_name,
-            )
-        return super().model_name if super().model_name in MODELS else MODEL_GS3_AV
-
-    @property
-    def true_model_name(self) -> str:
-        """Return the model name from the cloud, even if it's not one we know about. Used for display only."""
-        if self.model_name == MODEL_LMU:
-            return f"Linea {MODEL_LMU}"
-        if self.model_name in MODELS:
-            return self.model_name
-        return f"Unsupported Model ({self.model_name})"
-
-    @property
-    def machine_name(self) -> str:
-        """Return the name of the machine."""
-        return self.machine_info[MACHINE_NAME]
-
-    @property
-    def serial_number(self) -> str:
-        """Return serial number."""
-        return self.machine_info[SERIAL_NUMBER]
 
     async def connect(self) -> None:
         """Connect to the machine."""
         _LOGGER.debug("Initializing Cloud API")
         await self._init_cloud_api(
-            credentials=self.get_credentials_from_entry_data(self._entry_data),
+            credentials=self._entry_data,
             machine_serial=self._entry_data.get(CONF_MACHINE),
         )
         _LOGGER.debug("Model name: %s", self.model_name)
@@ -112,6 +74,24 @@ class LaMarzoccoClient(LMCloud):
             _LOGGER.debug("Initializing local API")
             await self._init_local_api(host)
 
+    async def update_machine_status(
+        self, callback: Callable[[str, Any], None] | None = None
+    ) -> None:
+        """Update the machine status."""
+        if not self._initialized:
+            await self.connect()
+            self._initialized = True
+
+        elif self._initialized and not self._websocket_initialized:
+            # only initialize websockets after the first update
+            _LOGGER.debug("Initializing WebSockets")
+            self._websocket_task = self.hass.async_create_task(
+                self.websocket_connect(callback=callback, use_sigterm_handler=False)
+            )
+            self._websocket_initialized = True
+
+            await self.update_local_machine_status(force_update=True)
+
     async def set_power(self, enabled: bool) -> None:
         """Set the power state of the machine."""
         await self.get_hass_bt_client()
@@ -121,22 +101,6 @@ class LaMarzoccoClient(LMCloud):
         """Set the steam boiler state of the machine."""
         await self.get_hass_bt_client()
         await self.set_steam(enable)
-
-    async def set_auto_on_off_global(self, enable: bool) -> None:
-        """Set the auto on/off state of the machine."""
-        await self.configure_schedule(enable, self.schedule)
-
-    async def set_prebrew_times(
-        self, key: int, seconds_on: float, seconds_off: float
-    ) -> None:
-        """Set the prebrew times of the machine."""
-        await self.configure_prebrew(
-            on_time=seconds_on * 1000, off_time=seconds_off * 1000, key=key
-        )
-
-    async def set_preinfusion_time(self, key: int, seconds: float) -> None:
-        """Set the preinfusion time of the machine."""
-        await self.configure_prebrew(on_time=0, off_time=seconds * 1000, key=key)
 
     async def set_coffee_temp(self, temperature: float) -> None:
         """Set the coffee temperature of the machine."""
@@ -180,11 +144,9 @@ class LaMarzoccoClient(LMCloud):
         except BluetoothConnectionFailed as ex:
             _LOGGER.warning(ex)
 
-    def get_credentials_from_entry_data(
-        self, entry_data: Mapping[str, Any]
-    ) -> dict[str, str]:
-        """Get credentials from entry data."""
-        return {
-            CONF_USERNAME: entry_data.get(CONF_USERNAME, ""),
-            CONF_PASSWORD: entry_data.get(CONF_PASSWORD, ""),
-        }
+    def terminate_websocket(self) -> None:
+        """Terminate the websocket connection."""
+        self.websocket_terminating = True
+        if self._websocket_task:
+            self._websocket_task.cancel()
+            self._websocket_task = None
