@@ -159,9 +159,7 @@ async def test_browsing(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
     browse_files_id = f"FILES|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_file_id = (
-        f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
-    )
+    browse_file_id = f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     assert browse.domain == DOMAIN
     assert (
         browse.title == f"{TEST_NVR_NAME} High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY}"
@@ -196,8 +194,12 @@ async def test_browsing_unsupported_encoding(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|sub"
-    browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
-    browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    browse_day_0_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    )
+    browse_day_1_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    )
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_NVR_NAME} Low res."
     assert browse.identifier == browse_days_id

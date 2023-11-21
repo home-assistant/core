@@ -134,7 +134,7 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
 
                 device = device_reg.async_get(entity.device_id)
-                ch = entity.unique_id.partition("_")[2]
+                ch = entity.unique_id.split("_")[1]
                 if ch in channels or device is None:
                     continue
                 channels.append(ch)
