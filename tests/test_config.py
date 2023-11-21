@@ -1709,19 +1709,10 @@ async def test_component_config_validation_error(
     )
     config = await config_util.async_hass_config_yaml(hass)
 
-    for domain in [
-        "iot_domain",
-        "adr_0007_1",
-        "adr_0007_2",
-        "adr_0007_3",
-        "adr_0007_4",
-        "adr_0007_5",
-        "custom_validator_ok_1",
-        "custom_validator_ok_2",
-        "custom_validator_bad_1",
-        "custom_validator_bad_2",
-    ]:
-        integration = await async_get_integration(hass, domain)
+    for domain_with_label in config:
+        integration = await async_get_integration(
+            hass, domain_with_label.partition(" ")[0]
+        )
         await config_util.async_process_component_config(
             hass,
             config,
@@ -1763,19 +1754,10 @@ async def test_component_config_validation_error_with_docs(
     )
     config = await config_util.async_hass_config_yaml(hass)
 
-    for domain in [
-        "iot_domain",
-        "adr_0007_1",
-        "adr_0007_2",
-        "adr_0007_3",
-        "adr_0007_4",
-        "adr_0007_5",
-        "custom_validator_ok_1",
-        "custom_validator_ok_2",
-        "custom_validator_bad_1",
-        "custom_validator_bad_2",
-    ]:
-        integration = await async_get_integration(hass, domain)
+    for domain_with_label in config:
+        integration = await async_get_integration(
+            hass, domain_with_label.partition(" ")[0]
+        )
         await config_util.async_process_component_config(
             hass,
             config,
