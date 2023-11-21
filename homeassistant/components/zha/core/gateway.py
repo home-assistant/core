@@ -25,6 +25,7 @@ from zigpy.config import (
 import zigpy.device
 import zigpy.endpoint
 import zigpy.group
+from zigpy.state import State
 from zigpy.types.named import EUI64
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
@@ -510,9 +511,9 @@ class ZHAGateway:
             entity_registry.async_remove(entry.entity_id)
 
     @property
-    def coordinator_ieee(self) -> EUI64:
-        """Return the active coordinator's IEEE address."""
-        return self.application_controller.state.node_info.ieee
+    def state(self) -> State:
+        """Return the active coordinator's network state."""
+        return self.application_controller.state
 
     @property
     def devices(self) -> dict[EUI64, ZHADevice]:

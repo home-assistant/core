@@ -189,13 +189,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     repairs.async_delete_blocking_issues(hass)
 
+    manufacturer = zha_gateway.state.node_info.manufacturer
+    model = zha_gateway.state.node_info.model
+
+    if manufacturer is None and model is None:
+        manufacturer = "Unknown"
+        model = "Unknown"
+
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.coordinator_ieee))},
-        identifiers={(DOMAIN, str(zha_gateway.coordinator_ieee))},
+        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
         name="Zigbee Coordinator",
-        manufacturer="ZHA",
-        model=zha_gateway.radio_description,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=zha_gateway.state.node_info.version,
     )
 
     websocket_api.async_load_api(hass)
