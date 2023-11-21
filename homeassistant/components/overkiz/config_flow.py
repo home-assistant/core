@@ -181,9 +181,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                LOGGER.exception(exception)
+                LOGGER.exception("Unknown error")
             else:
                 if self._config_entry:
                     if self._config_entry.unique_id != self.unique_id:
@@ -264,9 +264,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                LOGGER.exception(exception)
+                LOGGER.exception("Unknown error")
             else:
                 if self._config_entry:
                     if self._config_entry.unique_id != self.unique_id:
