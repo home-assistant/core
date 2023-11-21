@@ -132,3 +132,6 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+# sonarqube
+homeassistant/components/smhi/.scannerwork
