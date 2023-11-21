@@ -51,8 +51,10 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
                 self.hass, DATA_UPDATED, self._schedule_immediate_update
             )
         )
-        # Initial run to get data
-        self.update()
+
+        if not (state := await self.async_get_last_state()):
+            return
+        self._attr_native_value = state.state
 
     def update(self) -> None:
         """Get the latest data and update the states."""
