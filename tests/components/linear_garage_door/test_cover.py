@@ -1,6 +1,6 @@
 """Test Linear Garage Door cover."""
 
-from datetime import datetime as timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.cover import (
