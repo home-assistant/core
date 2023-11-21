@@ -60,10 +60,11 @@ class ReolinkVODMediaSource(MediaSource):
 
         host = self.data[config_entry_id].host
         mime_type, url = await host.api.get_vod_source(channel, filename, stream_res)
-        url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-        _LOGGER.debug(
-            "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+            _LOGGER.debug(
+                "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
+            )
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
@@ -218,12 +219,13 @@ class ReolinkVODMediaSource(MediaSource):
         end = now
 
         children: Sequence[BrowseMediaSource] = []
-        _LOGGER.debug(
-            "Requesting recording days of %s from %s to %s",
-            host.api.camera_name(channel),
-            start,
-            end,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Requesting recording days of %s from %s to %s",
+                host.api.camera_name(channel),
+                start,
+                end,
+            )
         statuses, _ = await host.api.request_vod_files(
             channel, start, end, status_only=True, stream=stream
         )
@@ -268,13 +270,14 @@ class ReolinkVODMediaSource(MediaSource):
         end = dt.datetime(year, month, day, hour=23, minute=59, second=59)
 
         children: Sequence[BrowseMediaSource] = []
-        _LOGGER.debug(
-            "Requesting VODs of %s on %s/%s/%s",
-            host.api.camera_name(channel),
-            year,
-            month,
-            day,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Requesting VODs of %s on %s/%s/%s",
+                host.api.camera_name(channel),
+                year,
+                month,
+                day,
+            )
         _, vod_files = await host.api.request_vod_files(
             channel, start, end, stream=stream
         )
