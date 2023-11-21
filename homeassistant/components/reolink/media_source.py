@@ -29,6 +29,11 @@ async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
     return ReolinkVODMediaSource(hass)
 
 
+def res_name(stream: str) -> str:
+    """Return the user friendly name for a stream"""
+    return "High res." if stream == "main" else "Low res."
+
+
 class ReolinkVODMediaSource(MediaSource):
     """Provide Reolink camera VODs as media sources."""
 
@@ -236,13 +241,12 @@ class ReolinkVODMediaSource(MediaSource):
                     )
                 )
 
-        res_name = "High res." if stream == "main" else "Low res."
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"DAYS+{config_entry_id}+{channel}+{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=f"{host.api.camera_name(channel)} {res_name}",
+            title=f"{host.api.camera_name(channel)} {res_name(stream)}",
             can_play=False,
             can_expand=True,
             children=children,
@@ -295,13 +299,12 @@ class ReolinkVODMediaSource(MediaSource):
                 )
             )
 
-        res_name = "High res." if stream == "main" else "Low res."
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"FILES+{config_entry_id}+{channel}+{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=f"{host.api.camera_name(channel)} {res_name} {year}/{month}/{day}",
+            title=f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}",
             can_play=False,
             can_expand=True,
             children=children,
