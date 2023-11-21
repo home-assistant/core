@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
+import httpx
+import urllib.parse
 import json
 from typing import Any
-import urllib.parse
-
-import httpx
+from datetime import datetime, timedelta
 
 
 class CanvasAPI:
@@ -84,11 +83,15 @@ class CanvasAPI:
 
         for course_id in course_ids:
             response = await self.async_make_get_request(
-                f"/courses/{course_id}/assignments", {"per_page": "50"}
+                f"/courses/{course_id}/assignments", {"per_page": "50", "bucket": "future"}
             )
             course_assignments = json.loads(response.content.decode("utf-8"))
             for assignment in course_assignments:
-                assignments[f"assignment-{assignment['id']}"] = assignment
+                if assignment['due_at'] is not None:
+                    due_date = datetime.strptime(assignment['due_at'], "%Y-%m-%dT%H:%M:%SZ")
+                    next_two_weeks = datetime.utcnow() + timedelta(days=14)
+                    if due_date <= next_two_weeks:
+                        assignments[f"assignment-{assignment['id']}"] = assignment
 
         return assignments
 
@@ -101,12 +104,16 @@ class CanvasAPI:
         Returns:
         dict: The response from the Canvas API.
         """
+
+        start_date = datetime.now() - timedelta(days=7)
+        start_date_str = start_date.isoformat()
+        end_date = datetime.now().isoformat()
         announcements = {}
 
         for course_id in course_ids:
             response = await self.async_make_get_request(
                 "/announcements",
-                {"per_page": "50", "context_codes": f"course_{course_id}"},
+                {"per_page": "50", "context_codes": f"course_{course_id}", "start_date": start_date_str, "end_date": end_date},
             )
             course_announcements = json.loads(response.content.decode("utf-8"))
             for announcement in course_announcements:
@@ -120,14 +127,17 @@ class CanvasAPI:
         Returns:
         dict: The response from the Canvas API.
         """
-        response = await self.async_make_get_request(
+        response_unread = await self.async_make_get_request(
             "/conversations", {"per_page": "50"}
         )
-        conversations = json.loads(response.content.decode("utf-8"))
-        return {
-            f"conversation-{conversation['id']}": conversation
-            for conversation in conversations
-        }
+        conversations = json.loads(response_unread.content.decode("utf-8"))
+        #get unreads and 5 latest reads
+        read_conversations = [conv for conv in conversations if conv['workflow_state'] == 'read']
+        unread_conversations = [conv for conv in conversations if conv['workflow_state'] == 'unread']
+        read_conversations = read_conversations = sorted(read_conversations, key=lambda x: datetime.strptime(x['last_message_at'], "%Y-%m-%dT%H:%M:%SZ"), reverse=True)[:5]
+        merged_conversations = read_conversations + unread_conversations
+
+        return {f"conversation-{conversation['id']}": conversation for conversation in merged_conversations}
 
     async def async_get_grades(self, course_ids: list[str]) -> dict[str, Any]:
         """Retrieves a dictionary of submissions from the Canvas API.
@@ -146,10 +156,8 @@ class CanvasAPI:
             course_submissions = json.loads(response.content.decode("utf-8"))
             course_submissions = json.loads(response.content.decode("utf-8"))
             for submission in course_submissions:
-                if submission["graded_at"] is not None:
-                    graded_at = datetime.strptime(
-                        submission["graded_at"], "%Y-%m-%dT%H:%M:%SZ"
-                    )
+                if submission['graded_at'] is not None:
+                    graded_at = datetime.strptime(submission['graded_at'], "%Y-%m-%dT%H:%M:%SZ")
                     past_one_month = datetime.utcnow() - timedelta(days=30)
                     if graded_at >= past_one_month:
                         submissions[f"submission-{submission['id']}"] = submission
