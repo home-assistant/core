@@ -1,34 +1,26 @@
 """Sensor platform for the Instructure-Canvas integration"""
 from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 from datetime import datetime
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-
-from .const import DOMAIN
-
-from .canvas_api import CanvasAPI
-
-ANNOUNCMENTS_KEY: str = "announcements"
-ASSIGNMENTS_KEY: str = "assignments"
-CONVERSATIONS_KEY: str = "conversations"
+from .const import DOMAIN, ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
+from .coordinator import CanvasUpdateCoordinator
 
 
 @dataclass
 class BaseEntityDescriptionMixin:
     """Mixin for required Canvas base description keys."""
+
     value_fn: Callable[[dict[str, Any]], StateType]
     name_fn: Callable[[dict[str, Any]], StateType]
     device_name: str
@@ -46,69 +38,83 @@ class BaseEntityDescription(SensorEntityDescription):
 @dataclass
 class CanvasSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
     """Describe Canvas resource sensor entity"""
-    fetch_data: Callable = None
+
+    fetch_data: Callable = None # didn't use fetch data
 
 
 SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
     ASSIGNMENTS_KEY: CanvasSensorEntityDescription(
         device_name="Upcoming Assignments",
-        key="temp1",
-        translation_key="temp1",
+        key=ASSIGNMENTS_KEY,
+        translation_key=ASSIGNMENTS_KEY,
         icon="mdi:note-outline",
         avabl_fn=lambda data: data is not None,
         name_fn=lambda data: data["name"],
-        value_fn= lambda data: datetime_process(data["due_at"]),
-        attr_fn=lambda data: {},
+        value_fn=lambda data: datetime_process(data["due_at"]),
+        attr_fn=lambda data, courses: {
+            "Course": courses[data["course_id"]],
+            "Link": data["html_url"]
+        },
         fetch_data=lambda api, course_id: api.async_get_assignments(course_id),
     ),
-    ANNOUNCMENTS_KEY: CanvasSensorEntityDescription(
+    ANNOUNCEMENTS_KEY: CanvasSensorEntityDescription(
         device_name="Announcements",
-        key="temp2",
-        translation_key="temp2",
+        key=ANNOUNCEMENTS_KEY,
+        translation_key=ANNOUNCEMENTS_KEY,
         icon="mdi:message-alert",
         avabl_fn=lambda data: data is not None,
         name_fn=lambda data: data["title"],
-        value_fn= lambda data: data["message"][:20],
-        attr_fn=lambda data: {},
+        value_fn=lambda data: data["read_state"],
+        attr_fn=lambda data, courses: {
+            #"Course": courses[data["context_code"].split("_")[1]],
+            "Link": data["html_url"],
+            "Post Time": datetime_process(data["posted_at"])
+        },
         fetch_data=lambda api, course_id: api.async_get_announcements(course_id),
     ),
     CONVERSATIONS_KEY: CanvasSensorEntityDescription(
         device_name="Inbox",
-        key="temp2",
-        translation_key="temp2",
+        key=CONVERSATIONS_KEY,
+        translation_key=CONVERSATIONS_KEY,
         icon="mdi:email",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["audience"],
-        value_fn= lambda data: data["subject"][:20],
-        attr_fn=lambda data: {},
+        name_fn=lambda data: data["subject"] if data["subject"] else "No Subject",
+        value_fn=lambda data: data["workflow_state"],
+        attr_fn=lambda data, courses: {
+            "Course": data["context_name"],
+            "Initial Sender": data["participants"][0]["name"],
+            "Last Message": data["last_message"],
+            "Last Message Time": datetime_process(data["last_message_at"])
+        },
         fetch_data=lambda api, _: api.async_get_conversations(),
-    )
+    ),
 }
 
 
 def datetime_process(date_time):
+    if not date_time:
+        return None
     standard_timestamp = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
     pretty_time = standard_timestamp.strftime("%d %b %H:%M")
     return pretty_time
-
+    
 
 class CanvasSensorEntity(SensorEntity):
     """Defines a Canvas sensor entity."""
+
     _attr_attribution = "Data provided by Canvas API"
-    data: dict[str, Any] | None = None
     entity_description: CanvasSensorEntityDescription
 
     def __init__(
         self,
         entity_description: CanvasSensorEntityDescription,
-        data: dict[str, Any],
-        api: CanvasAPI,
+        unique_id: str,
+        coordinator: CanvasUpdateCoordinator,
     ) -> None:
         """Initialize a Canvas sensor."""
         self.entity_description = entity_description
-        self.data = data
-        self.api = api
-        self._attr_unique_id = f"{self.entity_description.name_fn(self.data)}"
+        self.coordinator = coordinator
+        self._attr_unique_id = unique_id
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.entity_description.device_name)},
@@ -123,15 +129,15 @@ class CanvasSensorEntity(SensorEntity):
         if not self.available:
             return None
 
-        return f"{self.entity_description.name_fn(self.data)}"
+        return f"{self.entity_description.name_fn(self.get_data())}"
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
             super().available
-            and self.data is not None
-            and self.entity_description.avabl_fn(self.data)
+            and self.get_data() is not None
+            and self.entity_description.avabl_fn(self.get_data())
         )
 
     @property
@@ -140,12 +146,16 @@ class CanvasSensorEntity(SensorEntity):
         if not self.available:
             return None
 
-        return self.entity_description.value_fn(self.data)
+        return self.entity_description.value_fn(self.get_data())
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
-        return self.entity_description.attr_fn(self.data)
+        return self.entity_description.attr_fn(self.get_data(), self.coordinator.selected_courses)
+
+    def get_data(self):
+        return self.coordinator.data[self.entity_description.key][self._attr_unique_id]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -153,107 +163,32 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Canvas sensor based on a config entry"""
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    hass.data[DOMAIN][ASSIGNMENTS_KEY] = [
-        {
-            "id": 76160,
-            "due_at": "2023-08-30T21:59:59Z",
-            "course_id": 25271,
-            "name": "First Assignment",
-            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
-        },
-        {
-            "id": 76161,
-            "due_at": "2023-09-30T21:59:59Z",
-            "course_id": 25271,
-            "name": "Second Assignment",
-            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
-        },
-        {
-            "id": 76162,
-            "due_at": "2023-10-30T21:59:59Z",
-            "course_id": 25271,
-            "name": "Third Assignment",
-            "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
-        }
-    ]
+    def update_entities(data_type: str, new_data: dict, curr_data: dict): # why not put this in coordinator.py
+        """Remove existing entities and yuhhhh my möney so big"""
+        current_ids = set(curr_data.keys())
+        new_ids = set(new_data.keys())
 
-    hass.data[DOMAIN][ANNOUNCMENTS_KEY] = [
-        {
-            "title": "Hello!",
-            "posted_at": "2023-10-30T21:59:59Z",
-            "user_name": "Farnaz Fotrousi",
-            "message": "Oh noooooooo"
-        },
-        {
-            "title": "Hello again, my name is Farnaz! 😜",
-            "posted_at": "2023-10-30T21:59:59Z",
-            "user_name": "Farnaz Fotrousi",
-            "message": "I am FARNAZZZZZZ"
-        }
-    ]
+        to_add = new_ids - current_ids
+        to_remove = current_ids - new_ids
 
-    hass.data[DOMAIN][CONVERSATIONS_KEY] = [
-    {
-        "id": 2424059,
-        "subject": "",
-        "workflow_state": "unread",
-        "last_message": "Reminder that lecture tomorrow Tuesday 14/11 is cancelled due to illness. See you on Friday inste...",
-        "last_message_at": "2023-11-13T21:40:39Z",
-        "last_authored_message": None,
-        "last_authored_message_at": None,
-        "message_count": 1,
-        "subscribed": True,
-        "private": False,
-        "starred": False,
-        "properties": [],
-        "audience": [
-            1439
-        ],
-        "audience_contexts": {
-            "courses": {
-                "26488": [
-                    "TeacherEnrollment"
-                ]
-            },
-            "groups": {}
-        },
-        "avatar_url": "https://chalmers.instructure.com/images/messages/avatar-50.png",
-        "participants": [
-            {
-                "id": 1439,
-                "name": "Ulf Assarsson",
-                "full_name": "Ulf Assarsson",
-                "pronouns": None
-            },
-            {
-                "id": 26768,
-                "name": "Theo Wiik",
-                "full_name": "Theo Wiik",
-                "pronouns": None
-            }
-        ],
-        "visible": True,
-        "context_code": "course_26488",
-        "context_name": "TDA362 / DIT224 Computer graphics"
-    },
-    ]
+        for entity_id in to_remove:
+            entity = hass.data[DOMAIN][entry.entry_id]["entities"][data_type][entity_id]
+            entity.async_remove(force_remove=True)
 
-    api = hass.data[DOMAIN][entry.entry_id]
+        new_entities = []
 
-    assignment_entities = [create_entity(ASSIGNMENTS_KEY, assignment, api) for assignment in hass.data[DOMAIN][ASSIGNMENTS_KEY]]
-    announcement_entities = [create_entity(ANNOUNCMENTS_KEY, announcement, api) for announcement in hass.data[DOMAIN][ANNOUNCMENTS_KEY]]
-    inbox_entities = [create_entity(CONVERSATIONS_KEY, conversation, api) for conversation in hass.data[DOMAIN][CONVERSATIONS_KEY]]
+        for entity_id in to_add:  # entity_id will be "assignment"/"announcement"/"communication", I think it's wrong
+            description = SENSOR_DESCRIPTIONS[data_type]
+            new_entity = CanvasSensorEntity(description, entity_id, coordinator)
+            new_entities.append(new_entity)
 
-    entities = assignment_entities + announcement_entities + inbox_entities
+            hass.data[DOMAIN][entry.entry_id]["entities"][data_type][entity_id] = new_entity
 
-    async_add_entities(
-        tuple(entities)
-    )
+        if new_entities:
+            async_add_entities(tuple(new_entities))
 
+    coordinator.update_entities = update_entities
 
-def create_entity(data_type: str, data: dict[str, Any], api: CanvasAPI) -> CanvasSensorEntity:
-    entity_description = SENSOR_DESCRIPTIONS[data_type]
-    entity = CanvasSensorEntity(entity_description, data, api)
-
-    return entity
+    await coordinator.async_config_entry_first_refresh() # Why not put this in __init__

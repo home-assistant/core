@@ -16,7 +16,7 @@ from .canvas_api import CanvasAPI
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-HOST_PREFIX = "host_prefix" # consider adding a CONF prefix
+HOST_PREFIX = "host_prefix"  # consider adding a CONF prefix
 ACCESS_TOKEN = "access_token"
 CONF_COURSES = "courses"
 
@@ -27,7 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(ACCESS_TOKEN): str,
     }
 )
-
 
 
 class PlaceholderHub:
@@ -45,13 +44,14 @@ class PlaceholderHub:
         return await api.async_test_authentication()
 
     async def get_courses(self, access_token: str) -> list[{str, Any}]:
-        api = CanvasAPI(self.host, access_token) # maybe self.api?
+        api = CanvasAPI(self.host, access_token)  # maybe self.api?
         courses = await api.async_get_courses()
         return courses
 
 
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any] | None:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any] | None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -76,6 +76,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     # Return info that you want to store in the config entry.
     # return {"title": "Canvas"}
+
 
 async def get_courses_names(data: dict[str, Any]) -> dict[str, int]:
     """Get a mapping of course names to their IDs."""
@@ -117,19 +118,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_courses(
-    self,
-    user_input: dict[str, Any] | None = None,
+        self,
+        user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle courses step."""
         if user_input is not None:
             selected_courses = user_input[CONF_COURSES]
-            selected_courses_dict = {name: self.courses_mapping[name] for name in selected_courses}
+            selected_courses_dict = {
+                self.courses_mapping[name]: name for name in selected_courses
+            }
 
             self.config_data.update(user_input)
             return self.async_create_entry(
                 title="Canvas",
-                data={HOST_PREFIX: self.config_data[HOST_PREFIX], ACCESS_TOKEN: self.config_data[ACCESS_TOKEN]},
-                options={CONF_COURSES: selected_courses_dict}
+                data={
+                    HOST_PREFIX: self.config_data[HOST_PREFIX],
+                    ACCESS_TOKEN: self.config_data[ACCESS_TOKEN],
+                },
+                options={CONF_COURSES: selected_courses_dict},
             )
 
         self.courses_mapping = await get_courses_names(self.config_data)
@@ -137,9 +143,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="courses",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_COURSES): cv.multi_select(sorted(self.courses_mapping))
+                    vol.Required(CONF_COURSES): cv.multi_select(
+                        sorted(self.courses_mapping.keys())
+                    )
                 }
-            )
+            ),
         )
 
 
