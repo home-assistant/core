@@ -1758,6 +1758,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "flaktgroup": {
+      "name": "flaktgroup",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "fleetgo": {
       "name": "FleetGO",
       "integration_type": "hub",
