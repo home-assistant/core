@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.9.0b0;python_version>='3.12'",
+    "aiohttp==3.9.0;python_version>='3.12'",
     "aiohttp==3.8.5;python_version<'3.12'",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.1.0",
@@ -505,8 +505,6 @@ filterwarnings = [
     "ignore:python-telegram-bot is using upstream urllib3:UserWarning:telegram.utils.request",
     # https://github.com/ludeeus/pytraccar/pull/15 - >1.0.0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytraccar.client",
-    # https://github.com/zopefoundation/RestrictedPython/pull/259 - >7.0a1.dev0
-    "ignore:ast\\.(Str|Num) is deprecated and will be removed in Python 3.14:DeprecationWarning:RestrictedPython.transformer",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
     # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/59 - >0.21.1

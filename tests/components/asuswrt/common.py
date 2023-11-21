@@ -1,10 +1,13 @@
 """Test code shared between test files."""
 
 from aioasuswrt.asuswrt import Device as LegacyDevice
+from pyasuswrt.asuswrt import Device as HttpDevice
 
 from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
     MODE_ROUTER,
+    PROTOCOL_HTTP,
+    PROTOCOL_HTTPS,
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
@@ -40,6 +43,14 @@ CONFIG_DATA_SSH = {
     CONF_MODE: MODE_ROUTER,
 }
 
+CONFIG_DATA_HTTP = {
+    CONF_HOST: HOST,
+    CONF_PORT: 80,
+    CONF_PROTOCOL: PROTOCOL_HTTPS,
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pwd",
+}
+
 MOCK_MACS = [
     "A1:B1:C1:D1:E1:F1",
     "A2:B2:C2:D2:E2:F2",
@@ -48,6 +59,8 @@ MOCK_MACS = [
 ]
 
 
-def new_device(mac, ip, name):
+def new_device(protocol, mac, ip, name):
     """Return a new device for specific protocol."""
+    if protocol in [PROTOCOL_HTTP, PROTOCOL_HTTPS]:
+        return HttpDevice(mac, ip, name, ROUTER_MAC_ADDR, None)
     return LegacyDevice(mac, ip, name)

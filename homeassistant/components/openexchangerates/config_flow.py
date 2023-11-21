@@ -66,7 +66,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._reauth_entry.data if self._reauth_entry else {}
             )
             return self.async_show_form(
-                step_id="user", data_schema=get_data_schema(currencies, existing_data)
+                step_id="user",
+                data_schema=get_data_schema(currencies, existing_data),
+                description_placeholders={
+                    "signup": "https://openexchangerates.org/signup"
+                },
             )
 
         errors = {}
