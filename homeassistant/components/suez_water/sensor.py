@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -45,7 +46,7 @@ def setup_platform(
     password = config[CONF_PASSWORD]
     counter_id = config[CONF_COUNTER_ID]
     try:
-        client = SuezClient(username, password, counter_id)
+        client = SuezClient(username, password, counter_id, provider=None)
 
         if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")
@@ -65,6 +66,7 @@ class SuezSensor(SensorEntity):
     _attr_icon = "mdi:water-pump"
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
     _attr_device_class = SensorDeviceClass.WATER
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
 
     def __init__(self, client: SuezClient) -> None:
         """Initialize the data object."""
