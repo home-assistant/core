@@ -53,7 +53,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -95,9 +95,53 @@ RETRY_TIMEOUT = 5 * 60
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
-FIRE_RISK_DATA: list[SmhiGeolocationEvent] = []
-WARNINGS_DATA: list[SmhiGeolocationEvent] = []
-ADD_ETITIES_CALLBACK: AddEntitiesCallback
+# List for referencing entities
+warning_entities: list[SmhiGeolocationEvent] = []
+
+
+@callback
+async def input_select_changed(event: Any) -> None:
+    """Handle the input select state change."""
+
+    if event.data.get("entity_id") == "input_boolean.display_lightning":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            if new_state.state == "on":
+                # add lightning entities to map
+                _ = new_state
+            else:
+                # remove lighting entities from map
+                _ = new_state
+
+    elif event.data.get("entity_id") == "input_boolean.display_fire_risk":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            if new_state.state == "on":
+                # add fire entities to map
+                _ = new_state
+            else:
+                # remove fire entities from map
+                _ = new_state
+
+    elif event.data.get("entity_id") == "input_boolean.display_weather":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            if new_state.state == "on":
+                # add weather entities to map
+                _ = new_state
+            else:
+                # remove weather entities from map
+                _ = new_state
+
+    elif event.data.get("entity_id") == "input_boolean.display_warnings":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            if new_state.state == "on":
+                # add warnings entities to map
+                _ = new_state
+            else:
+                # remove warnings entities from map
+                _ = new_state
 
 
 async def async_setup_entry(
@@ -112,7 +156,6 @@ async def async_setup_entry(
 
     location = config_entry.data
     name = slugify(location[CONF_NAME])
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     entity = SmhiWeather(
@@ -132,6 +175,8 @@ async def async_setup_entry(
     additional_data_handler.add_entity_callback(
         additional_data_handler.fire_risk_data, True
     )
+
+    hass.bus.async_listen("state_changed", input_select_changed)
 
 
 class SmhiWeather(WeatherEntity):
