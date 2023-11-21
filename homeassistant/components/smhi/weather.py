@@ -53,18 +53,16 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
+from .additionaldatahandler import AdditionalDataHandler
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
-from .firerisk.fire_risk_data_fetcher import get_grassfire_risk
 from .smhi_geolocation_event import SmhiGeolocationEvent
-from .warnings import SmhiWarnings
-from .weather_locations import SmhiWeatherLocations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,46 +95,9 @@ RETRY_TIMEOUT = 5 * 60
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
-# List for referencing entities
-warning_entities: list[SmhiGeolocationEvent] = []
-
-
-@callback
-def input_select_changed(event: Any) -> None:
-    """Handle the input select state change."""
-
-    # State
-    state: str = ""
-    if event.data.get("entity_id") == "input_boolean.display_lightning":
-        new_state = event.data.get("new_state")
-        if new_state is not None:
-            # Handle the new state of the input select here
-            state = new_state
-
-    elif event.data.get("entity_id") == "input_boolean.display_fire_risk":
-        new_state = event.data.get("new_state")
-        if new_state is not None:
-            # Handle the new state of the input select here
-            state = new_state
-
-    elif event.data.get("entity_id") == "input_boolean.display_weather":
-        new_state = event.data.get("new_state")
-        if new_state is not None:
-            # Handle the new state of the input select here
-            state = new_state
-
-    elif event.data.get("entity_id") == "input_boolean.display_warnings":
-        new_state = event.data.get("new_state")
-        if new_state is not None:
-            # Handle the new state of the input select here
-            # print(f"Input select changed to: {new_state.state}")
-            state = new_state
-            # for entity in warning_entities:
-            # print(entity)
-            # entity.remove_self()
-
-    # Temporary use of state variable to bypass linting error
-    _ = state  # This line effectively uses the state variable
+FIRE_RISK_DATA: list[SmhiGeolocationEvent] = []
+WARNINGS_DATA: list[SmhiGeolocationEvent] = []
+ADD_ETITIES_CALLBACK: AddEntitiesCallback
 
 
 async def async_setup_entry(
@@ -145,6 +106,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from map location."""
+
+    additional_data_handler = AdditionalDataHandler()
+    additional_data_handler.init_add_entities_callback(async_add_entities)
+
     location = config_entry.data
     name = slugify(location[CONF_NAME])
 
@@ -157,19 +122,16 @@ async def async_setup_entry(
         session=session,
     )
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
+
     async_add_entities([entity], True)
 
-    warnings = SmhiWarnings()
-    weather_locations = SmhiWeatherLocations()
-    data = await warnings.get_warnings()
-
-    warning_entities.extend(data)
-
-    data.extend(await get_grassfire_risk())
-    data.extend(await weather_locations.get_weather_locations())
-    async_add_entities(data, True)
-
-    hass.bus.async_listen("state_changed", input_select_changed)
+    await additional_data_handler.get_additional_data()
+    additional_data_handler.add_entity_callback(
+        additional_data_handler.warning_data, True
+    )
+    additional_data_handler.add_entity_callback(
+        additional_data_handler.fire_risk_data, True
+    )
 
 
 class SmhiWeather(WeatherEntity):
@@ -245,6 +207,15 @@ class SmhiWeather(WeatherEntity):
             self._attr_cloud_coverage = self._forecast_daily[0].cloudiness
             self._attr_condition = CONDITION_MAP.get(self._forecast_daily[0].symbol)
         await self.async_update_listeners(("daily", "hourly"))
+
+        additional_data_handler = AdditionalDataHandler()
+        await additional_data_handler.get_additional_data()
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.warning_data, True
+        )
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.fire_risk_data, True
+        )
 
     async def retry_update(self, _: datetime) -> None:
         """Retry refresh weather forecast."""
