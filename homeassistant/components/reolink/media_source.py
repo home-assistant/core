@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 import datetime as dt
 import logging
 
@@ -10,7 +9,6 @@ from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamS
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
-    BrowseMedia,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -32,7 +30,7 @@ async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
 
 
 def res_name(stream: str) -> str:
-    """Return the user friendly name for a stream"""
+    """Return the user friendly name for a stream."""
     return "High res." if stream == "main" else "Low res."
 
 
@@ -85,21 +83,38 @@ class ReolinkVODMediaSource(MediaSource):
 
         if item_type == "CAM":
             _, config_entry_id, channel_str = identifier
-            return await self._async_generate_resolution_select(config_entry_id, int(channel_str))
+            return await self._async_generate_resolution_select(
+                config_entry_id, int(channel_str)
+            )
         if item_type == "RES":
             _, config_entry_id, channel_str, stream = identifier
-            return await self._async_generate_camera_days(config_entry_id, int(channel_str), stream)
+            return await self._async_generate_camera_days(
+                config_entry_id, int(channel_str), stream
+            )
         if item_type == "DAY":
-            _, config_entry_id, channel_str, stream, year_str, month_str, day_str = identifier
+            (
+                _,
+                config_entry_id,
+                channel_str,
+                stream,
+                year_str,
+                month_str,
+                day_str,
+            ) = identifier
             return await self._async_generate_camera_files(
-                config_entry_id, int(channel_str), stream, int(year_str), int(month_str), int(day_str)
+                config_entry_id,
+                int(channel_str),
+                stream,
+                int(year_str),
+                int(month_str),
+                int(day_str),
             )
 
         raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
 
     async def _async_generate_root(self) -> BrowseMediaSource:
         """Return all available reolink cameras as root browsing structure."""
-        children: Sequence[BrowseMediaSource] = []
+        children: list[BrowseMediaSource] = []
 
         entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
@@ -173,7 +188,9 @@ class ReolinkVODMediaSource(MediaSource):
                 "playback only possible using sub stream",
                 host.api.camera_name(channel),
             )
-            return await self._generate_camera_days(config_entry_id, channel, "sub")
+            return await self._async_generate_camera_days(
+                config_entry_id, channel, "sub"
+            )
 
         children = [
             BrowseMediaSource(
@@ -218,7 +235,7 @@ class ReolinkVODMediaSource(MediaSource):
         start = now - dt.timedelta(days=31)
         end = now
 
-        children: Sequence[BrowseMediaSource] = []
+        children: list[BrowseMediaSource] = []
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Requesting recording days of %s from %s to %s",
@@ -269,7 +286,7 @@ class ReolinkVODMediaSource(MediaSource):
         start = dt.datetime(year, month, day, hour=0, minute=0, second=0)
         end = dt.datetime(year, month, day, hour=23, minute=59, second=59)
 
-        children: Sequence[BrowseMediaSource] = []
+        children: list[BrowseMediaSource] = []
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Requesting VODs of %s on %s/%s/%s",
