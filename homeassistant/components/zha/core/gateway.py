@@ -128,7 +128,7 @@ class ZHAGateway:
         self._config = config
         self._devices: dict[EUI64, ZHADevice] = {}
         self._groups: dict[int, ZHAGroup] = {}
-        self.application_controller: ControllerApplication = None  # type: ignore[assignment]
+        self.application_controller: ControllerApplication = None
         self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
         self._device_registry: collections.defaultdict[
             EUI64, list[EntityReference]
