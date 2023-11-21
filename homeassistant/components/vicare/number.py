@@ -75,7 +75,6 @@ def _build_entity(
     vicare_api: PyViCareHeatingDeviceWithComponent,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
-    hass: HomeAssistant,
 ) -> ViCareNumber | None:
     """Create a ViCare number entity."""
     _LOGGER.debug("Found device %s", name)
@@ -85,7 +84,6 @@ def _build_entity(
             vicare_api,
             device_config,
             entity_description,
-            hass,
         )
     return None
 
@@ -109,7 +107,6 @@ async def _entities_from_descriptions(
                 current,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
-                hass,
             )
             if entity is not None:
                 entities.append(entity)
@@ -145,13 +142,11 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         api: PyViCareHeatingDeviceWithComponent,
         device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
-        hass: HomeAssistant,
     ) -> None:
         """Initialize the number."""
         super().__init__(device_config, api, description.key)
         self.entity_description = description
         self._attr_name = name
-        self._hass = hass
 
     @property
     def available(self) -> bool:
@@ -161,7 +156,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.value_setter:
-            await self._hass.async_add_executor_job(
+            await self.hass.async_add_executor_job(
                 self.entity_description.value_setter, self._api, value
             )
         self.async_write_ha_state()
