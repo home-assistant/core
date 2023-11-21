@@ -62,10 +62,7 @@ class ReolinkVODMediaSource(MediaSource):
         stream.add_provider("hls", timeout=3600)
         stream_url: str = stream.endpoint_url("hls")
         stream_url = stream_url.replace("master_", "")
-        return PlayMedia(
-            stream_url,
-            mime_type,
-        )
+        return PlayMedia(stream_url, mime_type)
 
     async def async_browse_media(
         self,
@@ -100,7 +97,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
 
-    async def _generate_root(self) -> BrowseMediaSource:
+    async def _async_generate_root(self) -> BrowseMediaSource:
         """Return all available reolink cameras as root browsing structure."""
         children = []
 
@@ -219,9 +216,7 @@ class ReolinkVODMediaSource(MediaSource):
         host = self.data[config_entry_id].host
 
         # We want today of the camera, not necessarily today of the server
-        now = host.api.time()
-        if not now:
-            now = await host.api.async_get_time()
+        now = host.api.time() or await host.api.async_get_time()
         start = now - dt.timedelta(days=31)
         end = now
 
@@ -232,7 +227,7 @@ class ReolinkVODMediaSource(MediaSource):
             start,
             end,
         )
-        (statuses, _) = await host.api.request_vod_files(
+        statuses, _ = await host.api.request_vod_files(
             channel, start, end, status_only=True, stream=stream
         )
         for status in statuses:
@@ -284,7 +279,7 @@ class ReolinkVODMediaSource(MediaSource):
             month,
             day,
         )
-        (_, vod_files) = await host.api.request_vod_files(
+        _, vod_files = await host.api.request_vod_files(
             channel, start, end, stream=stream
         )
         for file in vod_files:
