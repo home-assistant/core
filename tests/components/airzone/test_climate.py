@@ -1,4 +1,5 @@
 """The climate tests for the Airzone platform."""
+import copy
 from unittest.mock import patch
 
 from aioairzone.const import (
@@ -222,7 +223,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.8
 
-    HVAC_MOCK_CHANGED = {**HVAC_MOCK}
+    HVAC_MOCK_CHANGED = copy.deepcopy(HVAC_MOCK)
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MAX_TEMP] = 25
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MIN_TEMP] = 10
 
@@ -437,7 +438,7 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.salon")
     assert state.state == HVACMode.FAN_ONLY
 
-    HVAC_MOCK_NO_SET_POINT = {**HVAC_MOCK}
+    HVAC_MOCK_NO_SET_POINT = copy.deepcopy(HVAC_MOCK)
     del HVAC_MOCK_NO_SET_POINT[API_SYSTEMS][0][API_DATA][0][API_SET_POINT]
 
     with patch(
@@ -535,6 +536,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
                 API_SYSTEM_ID: 1,
                 API_ZONE_ID: 5,
                 API_SET_POINT: 20.5,
+                API_ON: 1,
             }
         ]
     }
@@ -550,12 +552,14 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.dorm_2",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.5,
             },
             blocking=True,
         )
 
     state = hass.states.get("climate.dorm_2")
+    assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_TEMPERATURE) == 20.5
 
 
@@ -614,5 +618,5 @@ async def test_airzone_climate_set_temp_range(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.dkn_plus")
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 20.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 25.0

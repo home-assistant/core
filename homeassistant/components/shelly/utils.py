@@ -26,7 +26,10 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
+    DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -72,26 +75,26 @@ def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
     description: str | None = None,
-) -> str | None:
+) -> str:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
-    if description and channel_name:
-        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return description
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
 
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
+    entity_name = device.name
+
     if (
         not block
         or block.type == "device"
         or get_number_of_channels(device, block) == 1
     ):
-        return None
+        return entity_name
 
     assert block.channel
 
@@ -108,7 +111,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     else:
         base = ord("1")
 
-    return f"Channel {chr(int(block.channel)+base)}"
+    return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
 def is_block_momentary_input(
@@ -285,32 +288,33 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
-    if device.config.get("switch:0"):
-        key = key.replace("input", "switch")
+    key = key.replace("em1data", "em1")
+    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
-        entity_name = device.config[key].get("name")
+        entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
         if key.startswith(("input:", "light:", "switch:")):
-            return key.replace(":", " ").capitalize()
+            return f"{device_name} {key.replace(':', '_')}"
+        if key.startswith("em1"):
+            return f"{device_name} EM{key.split(':')[-1]}"
+        return device_name
 
     return entity_name
 
 
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
-) -> str | None:
+) -> str:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description and channel_name:
-        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return description
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
@@ -374,13 +378,10 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 
 @callback
-def device_update_info(
+def update_device_fw_info(
     hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
 ) -> None:
-    """Update device registry info."""
-
-    LOGGER.debug("Updating device registry info for %s", entry.title)
-
+    """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
     dev_reg = dr_async_get(hass)
@@ -388,6 +389,11 @@ def device_update_info(
         identifiers={(DOMAIN, entry.entry_id)},
         connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
+        if device.sw_version == shellydevice.firmware_version:
+            return
+
+        LOGGER.debug("Updating device registry info for %s", entry.title)
+
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 
@@ -407,6 +413,9 @@ def mac_address_from_name(name: str) -> str | None:
     return mac.upper() if len(mac) == 12 else None
 
 
-def uncapitalize(description: str) -> str:
-    """Uncapitalize the first letter of a description."""
-    return description[:1].lower() + description[1:]
+def get_release_url(gen: int, model: str, beta: bool) -> str | None:
+    """Return release URL or None."""
+    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+        return None
+
+    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL

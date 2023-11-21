@@ -28,22 +28,14 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
 
-@dataclass
-class ReolinkBinarySensorEntityDescriptionMixin:
-    """Mixin values for Reolink binary sensor entities."""
-
-    value: Callable[[Host, int | None], bool]
-
-
-@dataclass
-class ReolinkBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ReolinkBinarySensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes binary sensor entities."""
 
-    icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    supported: Callable[[Host, int | None], bool] = lambda host, ch: True
+    icon: str = "mdi:motion-sensor"
+    supported: Callable[[Host, int], bool] = lambda host, ch: True
+    value: Callable[[Host, int], bool]
 
 
 BINARY_SENSORS = (
@@ -79,7 +71,16 @@ BINARY_SENSORS = (
         icon="mdi:dog-side",
         icon_off="mdi:dog-side-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
-        supported=lambda api, ch: api.ai_supported(ch, PET_DETECTION_TYPE),
+        supported=lambda api, ch: api.ai_supported(ch, PET_DETECTION_TYPE)
+        and not api.supported(ch, "ai_animal"),
+    ),
+    ReolinkBinarySensorEntityDescription(
+        key=PET_DETECTION_TYPE,
+        translation_key="animal",
+        icon="mdi:paw",
+        icon_off="mdi:paw-off",
+        value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
+        supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",
@@ -169,6 +170,6 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
             )
         )
 
-    async def _async_handle_event(self, event):
+    async def _async_handle_event(self, event: str) -> None:
         """Handle incoming event for motion detection."""
         self.async_write_ha_state()

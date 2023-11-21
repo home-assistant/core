@@ -74,52 +74,22 @@ class SenseDevice(BinarySensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_available = False
+    _attr_device_class = BinarySensorDeviceClass.POWER
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
-        self._name = device["name"]
+        self._attr_name = device["name"]
         self._id = device["id"]
         self._sense_monitor_id = sense_monitor_id
-        self._unique_id = f"{sense_monitor_id}-{self._id}"
-        self._icon = sense_to_mdi(device["icon"])
+        self._attr_unique_id = f"{sense_monitor_id}-{self._id}"
+        self._attr_icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
-        self._state = None
-        self._available = False
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return the availability of the binary sensor."""
-        return self._available
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the binary sensor."""
-        return self._unique_id
 
     @property
     def old_unique_id(self):
         """Return the old not so unique id of the binary sensor."""
         return self._id
-
-    @property
-    def icon(self):
-        """Return the icon of the binary sensor."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the binary sensor."""
-        return BinarySensorDeviceClass.POWER
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -135,8 +105,8 @@ class SenseDevice(BinarySensorEntity):
     def _async_update_from_data(self):
         """Get the latest data, update state. Must not do I/O."""
         new_state = bool(self._sense_devices_data.get_device_by_id(self._id))
-        if self._available and self._state == new_state:
+        if self._attr_available and self._attr_is_on == new_state:
             return
-        self._available = True
-        self._state = new_state
+        self._attr_available = True
+        self._attr_is_on = new_state
         self.async_write_ha_state()

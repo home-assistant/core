@@ -385,25 +385,25 @@ async def test_rpc_device_switch_type_lights_mode(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_name_test_switch_0"},
+        {ATTR_ENTITY_ID: "light.test_switch_0"},
         blocking=True,
     )
-    assert hass.states.get("light.test_name_test_switch_0").state == STATE_ON
+    assert hass.states.get("light.test_switch_0").state == STATE_ON
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "output", False)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_name_test_switch_0"},
+        {ATTR_ENTITY_ID: "light.test_switch_0"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get("light.test_name_test_switch_0").state == STATE_OFF
+    assert hass.states.get("light.test_switch_0").state == STATE_OFF
 
 
 async def test_rpc_light(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
     """Test RPC light."""
-    entity_id = f"{LIGHT_DOMAIN}.test_name_test_light_0"
+    entity_id = f"{LIGHT_DOMAIN}.test_light_0"
     monkeypatch.delitem(mock_rpc_device.status, "switch:0")
     await init_integration(hass, 2)
 

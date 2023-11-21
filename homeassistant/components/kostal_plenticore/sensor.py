@@ -745,16 +745,16 @@ class PlenticoreDataSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self.entry_id = entry_id
-        self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
 
-        self._sensor_name = description.name
         self._formatter: Callable[[str], Any] = PlenticoreDataFormatter.get_method(
             description.formatter
         )
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{entry_id}_{self.module_id}_{self.data_id}"
+        self._attr_name = f"{platform_name} {description.name}"
 
     @property
     def available(self) -> bool:
@@ -777,21 +777,6 @@ class PlenticoreDataSensor(
         """Unregister this entity from the Update Coordinator."""
         self.coordinator.stop_fetch_data(self.module_id, self.data_id)
         await super().async_will_remove_from_hass()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this Sensor Entity."""
-        return f"{self.entry_id}_{self.module_id}_{self.data_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of this Sensor Entity."""
-        return f"{self.platform_name} {self._sensor_name}"
 
     @property
     def native_value(self) -> StateType:

@@ -122,6 +122,8 @@ def async_create_preview_media_player(
 class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
+
     _attr_available: bool = False
     _attr_should_poll = False
 

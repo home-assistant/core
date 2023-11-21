@@ -10,6 +10,9 @@
       },
       "credentials": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
           "password": "Password of the Smart Home Controller"
         }
       },

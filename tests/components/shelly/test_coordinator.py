@@ -23,8 +23,10 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
+    format_mac,
 )
 import homeassistant.helpers.issue_registry as ir
 
@@ -347,14 +349,14 @@ async def test_rpc_reload_on_cfg_change(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_test_switch_0") is not None
+    assert hass.states.get("switch.test_switch_0") is not None
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_test_switch_0") is None
+    assert hass.states.get("switch.test_switch_0") is None
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -577,7 +579,7 @@ async def test_rpc_reconnect_error(
     """Test RPC reconnect error."""
     await init_integration(hass, 2)
 
-    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_ON
+    assert hass.states.get("switch.test_switch_0").state == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(
@@ -593,7 +595,7 @@ async def test_rpc_reconnect_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.test_switch_0").state == STATE_UNAVAILABLE
 
 
 async def test_rpc_polling_connection_error(
@@ -632,3 +634,34 @@ async def test_rpc_polling_disconnected(
     await mock_polling_rpc_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_rpc_update_entry_fw_ver(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC update entry firmware version."""
+    entry = await init_integration(hass, 2, sleep_period=600)
+    dev_reg = async_get_dev_reg(hass)
+
+    # Make device online
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+    )
+
+    assert device.sw_version == "some fw string"
+
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", "99.0.0")
+
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+    )
+
+    assert device.sw_version == "99.0.0"

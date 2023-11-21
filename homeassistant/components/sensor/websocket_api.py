@@ -8,13 +8,19 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DEVICE_CLASS_UNITS, UNIT_CONVERTERS
+from .const import (
+    DEVICE_CLASS_UNITS,
+    NON_NUMERIC_DEVICE_CLASSES,
+    UNIT_CONVERTERS,
+    SensorDeviceClass,
+)
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the sensor websocket API."""
     websocket_api.async_register_command(hass, ws_device_class_units)
+    websocket_api.async_register_command(hass, ws_numeric_device_classes)
 
 
 @callback
@@ -36,3 +42,19 @@ def ws_device_class_units(
             key=lambda s: str.casefold(str(s)),
         )
     connection.send_result(msg["id"], {"units": convertible_units})
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "sensor/numeric_device_classes",
+    }
+)
+def ws_numeric_device_classes(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return numeric sensor device classes."""
+    numeric_device_classes = set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES
+    connection.send_result(
+        msg["id"], {"numeric_device_classes": list(numeric_device_classes)}
+    )

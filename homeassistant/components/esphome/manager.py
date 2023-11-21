@@ -1,6 +1,7 @@
 """Manager for esphome devices."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -16,6 +17,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    VoiceAssistantAudioSettings,
     VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
@@ -293,7 +295,7 @@ class ESPHomeManager:
                 event.data["entity_id"], attribute, new_state
             )
 
-        self.entry_data.disconnect_callbacks.append(
+        self.entry_data.disconnect_callbacks.add(
             async_track_state_change_event(
                 hass, [entity_id], send_home_assistant_state_event
             )
@@ -319,27 +321,34 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, flags: int
+        self,
+        conversation_id: str,
+        flags: int,
+        audio_settings: VoiceAssistantAudioSettings,
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
-            return None
+            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            self.voice_assistant_udp_server.stop()
+            self.voice_assistant_udp_server.close()
+            self.voice_assistant_udp_server = None
 
         hass = self.hass
-        voice_assistant_udp_server = VoiceAssistantUDPServer(
+        self.voice_assistant_udp_server = VoiceAssistantUDPServer(
             hass,
             self.entry_data,
             self._handle_pipeline_event,
             self._handle_pipeline_finished,
         )
-        port = await voice_assistant_udp_server.start_server()
+        port = await self.voice_assistant_udp_server.start_server()
 
         assert self.device_id is not None, "Device ID must be set"
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(
+            self.voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
                 flags=flags,
+                audio_settings=audio_settings,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
@@ -431,7 +440,7 @@ class ESPHomeManager:
             reconnect_logic.name = device_info.name
 
         if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
-            entry_data.disconnect_callbacks.append(
+            entry_data.disconnect_callbacks.add(
                 await async_connect_scanner(
                     hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
                 )
@@ -442,14 +451,18 @@ class ESPHomeManager:
 
         try:
             entity_infos, services = await cli.list_entities_services()
-            await entry_data.async_update_static_infos(hass, entry, entity_infos)
+            await entry_data.async_update_static_infos(
+                hass, entry, entity_infos, device_info.mac_address
+            )
             await _setup_services(hass, entry_data, services)
-            await cli.subscribe_states(entry_data.async_update_state)
-            await cli.subscribe_service_calls(self.async_on_service_call)
-            await cli.subscribe_home_assistant_states(self.async_on_state_subscription)
+            await asyncio.gather(
+                cli.subscribe_states(entry_data.async_update_state),
+                cli.subscribe_service_calls(self.async_on_service_call),
+                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
+            )
 
             if device_info.voice_assistant_version:
-                entry_data.disconnect_callbacks.append(
+                entry_data.disconnect_callbacks.add(
                     await cli.subscribe_voice_assistant(
                         self._handle_pipeline_start,
                         self._handle_pipeline_stop,
@@ -477,10 +490,7 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        for disconnect_cb in entry_data.disconnect_callbacks:
-            disconnect_cb()
-        entry_data.disconnect_callbacks = []
-        entry_data.available = False
+        entry_data.async_on_disconnect()
         entry_data.expected_disconnect = expected_disconnect
         # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
@@ -530,13 +540,16 @@ class ESPHomeManager:
             on_connect=self.on_connect,
             on_disconnect=self.on_disconnect,
             zeroconf_instance=self.zeroconf_instance,
-            name=self.host,
+            name=entry.data.get(CONF_DEVICE_NAME, self.host),
             on_connect_error=self.on_connect_error,
         )
         self.reconnect_logic = reconnect_logic
 
         infos, services = await entry_data.async_load_from_store()
-        await entry_data.async_update_static_infos(hass, entry, infos)
+        if entry.unique_id:
+            await entry_data.async_update_static_infos(
+                hass, entry, infos, entry.unique_id.upper()
+            )
         await _setup_services(hass, entry_data, services)
 
         if entry_data.device_info is not None and entry_data.device_info.name:
@@ -583,6 +596,10 @@ def _async_setup_device_registry(
         model = project_name[1]
         hw_version = device_info.project_version
 
+    suggested_area = None
+    if device_info.suggested_area:
+        suggested_area = device_info.suggested_area
+
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -593,6 +610,7 @@ def _async_setup_device_registry(
         model=model,
         sw_version=sw_version,
         hw_version=hw_version,
+        suggested_area=suggested_area,
     )
     return device_entry.id
 
@@ -737,10 +755,7 @@ async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEn
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
-    data.available = False
-    for disconnect_cb in data.disconnect_callbacks:
-        disconnect_cb()
-    data.disconnect_callbacks = []
+    data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.async_cleanup()
