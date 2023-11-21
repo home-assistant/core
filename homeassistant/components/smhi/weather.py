@@ -117,19 +117,12 @@ async def async_setup_entry(
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
     async_add_entities([entity], True)
 
-    # WARNINGS
     warnings = SmhiWarnings()
-    warnings_data = await warnings.get_warnings()
-    async_add_entities(warnings_data, True)
-
-    # FIRE RISK
-    fire_risk_data = await get_grassfire_risk()
-    async_add_entities(fire_risk_data, True)
-
-    # WEATHER LOCATIONS
     weather_locations = SmhiWeatherLocations()
-    weather_data = await weather_locations.get_weather_locations()
-    async_add_entities(weather_data, True)
+    data = await warnings.get_warnings()
+    data.extend(await get_grassfire_risk())
+    data.extend(await weather_locations.get_weather_locations())
+    async_add_entities(data, True)
 
 
 class SmhiWeather(WeatherEntity):
