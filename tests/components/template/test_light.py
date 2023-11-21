@@ -1417,7 +1417,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.RGB
-    assert "color_temp" not in state.attributes
+    assert state.attributes["color_temp"] is None
     assert state.attributes["rgb_color"] == (160, 78, 192)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -1447,7 +1447,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.RGBW
-    assert "color_temp" not in state.attributes
+    assert state.attributes["color_temp"] is None
     assert state.attributes["rgbw_color"] == (160, 78, 192, 25)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -1478,7 +1478,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.RGBWW
-    assert "color_temp" not in state.attributes
+    assert state.attributes["color_temp"] is None
     assert state.attributes["rgbww_color"] == (160, 78, 192, 25, 55)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,

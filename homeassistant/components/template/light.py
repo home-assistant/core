@@ -454,6 +454,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Optimistically setting color temperature to %s",
                 kwargs[ATTR_COLOR_TEMP],
             )
+            self._color_mode = ColorMode.COLOR_TEMP
             self._temperature = kwargs[ATTR_COLOR_TEMP]
             if self._hs_template is None and self._color_template is None:
                 self._hs_color = None
@@ -474,6 +475,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Optimistically setting hs color to %s",
                 kwargs[ATTR_HS_COLOR],
             )
+            self._color_mode = ColorMode.HS
             self._hs_color = kwargs[ATTR_HS_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
@@ -490,6 +492,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Optimistically setting rgb color to %s",
                 kwargs[ATTR_RGB_COLOR],
             )
+            self._color_mode = ColorMode.RGB
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
@@ -506,6 +509,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Optimistically setting rgbw color to %s",
                 kwargs[ATTR_RGBW_COLOR],
             )
+            self._color_mode = ColorMode.RGBW
             self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
@@ -522,6 +526,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Optimistically setting rgbww color to %s",
                 kwargs[ATTR_RGBWW_COLOR],
             )
+            self._color_mode = ColorMode.RGBWW
             self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
@@ -549,7 +554,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 run_variables=common_params,
                 context=self._context,
             )
-            self._color_mode = ColorMode.COLOR_TEMP
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
             if effect not in self._effect_list:
@@ -575,7 +579,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 self._color_script, run_variables=common_params, context=self._context
             )
-            self._color_mode = ColorMode.HS
         elif ATTR_HS_COLOR in kwargs and self._hs_script:
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
@@ -585,7 +588,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 self._hs_script, run_variables=common_params, context=self._context
             )
-            self._color_mode = ColorMode.HS
         elif ATTR_RGBWW_COLOR in kwargs and self._rgbww_script:
             rgbww_value = kwargs[ATTR_RGBWW_COLOR]
             common_params["rgbww"] = rgbww_value
@@ -603,7 +605,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 self._rgbww_script, run_variables=common_params, context=self._context
             )
-            self._color_mode = ColorMode.RGBWW
         elif ATTR_RGBW_COLOR in kwargs and self._rgbw_script:
             rgbw_value = kwargs[ATTR_RGBW_COLOR]
             common_params["rgbw"] = rgbw_value
@@ -620,7 +621,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 self._rgbw_script, run_variables=common_params, context=self._context
             )
-            self._color_mode = ColorMode.RGBW
         elif ATTR_RGB_COLOR in kwargs and self._rgb_script:
             rgb_value = kwargs[ATTR_RGB_COLOR]
             common_params["rgb"] = rgb_value
@@ -631,7 +631,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 self._rgb_script, run_variables=common_params, context=self._context
             )
-            self._color_mode = ColorMode.RGB
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
             await self.async_run_script(
                 self._level_script, run_variables=common_params, context=self._context
