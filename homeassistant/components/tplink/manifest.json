@@ -1,7 +1,7 @@
 {
   "domain": "tplink",
   "name": "TP-Link Kasa Smart",
-  "codeowners": ["@rytilahti", "@thegardenmonkey"],
+  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [

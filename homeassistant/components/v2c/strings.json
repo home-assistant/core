@@ -13,6 +13,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected"
+      },
+      "charging": {
+        "name": "Charging"
+      },
+      "ready": {
+        "name": "Ready"
+      }
+    },
     "number": {
       "intensity": {
         "name": "Intensity"
