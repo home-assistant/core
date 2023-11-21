@@ -47,14 +47,12 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        identifier = item.identifier.split("|")
+        identifier = item.identifier.split("|", 5)
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
-        config_entry_id = identifier[1]
-        channel = int(identifier[2])
-        stream_res = identifier[3]
-        filename = identifier[4]
+        _, config_entry_id, channel_str, stream_res, filename = identifier
+        channel = int(channel_str)
 
         host = self.data[config_entry_id].host
         mime_type, url = await host.api.get_vod_source(channel, filename, stream_res)
