@@ -11,7 +11,7 @@ import itertools
 import logging
 import re
 import time
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 from zigpy.application import ControllerApplication
 from zigpy.config import (
@@ -128,8 +128,8 @@ class ZHAGateway:
         self._config = config
         self._devices: dict[EUI64, ZHADevice] = {}
         self._groups: dict[int, ZHAGroup] = {}
-        self.application_controller: ControllerApplication | None = None
-        self.coordinator_zha_device: ZHADevice | None = None
+        self.application_controller: ControllerApplication = None  # type: ignore[assignment]
+        self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
         self._device_registry: collections.defaultdict[
             EUI64, list[EntityReference]
         ] = collections.defaultdict(list)
@@ -183,6 +183,15 @@ class ZHAGateway:
 
         return radio_type.controller, radio_type.controller.SCHEMA(app_config)
 
+    @classmethod
+    async def async_from_config(
+        cls, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
+    ) -> Self:
+        """Create an instance of a gateway from config objects."""
+        instance = cls(hass, config, config_entry)
+        await instance.async_initialize()
+        return instance
+
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
         discovery.PROBE.initialize(self.hass)
@@ -224,14 +233,13 @@ class ZHAGateway:
         if self.shutting_down:
             return
 
-        _LOGGER.warning("Connection to the radio was lost: %s", exc)
+        _LOGGER.debug("Connection to the radio was lost: %r", exc)
 
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
 
     def _find_coordinator_device(self) -> zigpy.device.Device:
-        assert self.application_controller is not None
         zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
 
         if last_backup := self.application_controller.backups.most_recent_backup():
@@ -245,7 +253,6 @@ class ZHAGateway:
     @callback
     def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
-        assert self.application_controller is not None
 
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
@@ -269,7 +276,6 @@ class ZHAGateway:
     @callback
     def async_load_groups(self) -> None:
         """Initialize ZHA groups."""
-        assert self.application_controller is not None
 
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
@@ -514,7 +520,6 @@ class ZHAGateway:
     @property
     def state(self) -> State:
         """Return the active coordinator's network state."""
-        assert self.application_controller is not None
         return self.application_controller.state
 
     @property
@@ -703,7 +708,6 @@ class ZHAGateway:
         group_id: int | None = None,
     ) -> ZHAGroup | None:
         """Create a new Zigpy Zigbee group."""
-        assert self.application_controller is not None
 
         # we start with two to fill any gaps from a user removing existing groups
 
@@ -738,8 +742,6 @@ class ZHAGateway:
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
-        assert self.application_controller is not None
-
         if not (group := self.groups.get(group_id)):
             _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
@@ -760,12 +762,7 @@ class ZHAGateway:
             unsubscribe()
         for device in self.devices.values():
             device.async_cleanup_handles()
-        # shutdown is called when the config entry unloads are processed
-        # there are cases where unloads are processed because of a failure of
-        # some sort and the application controller may not have been
-        # created yet
-        if self.application_controller is not None:
-            await self.application_controller.shutdown()
+        await self.application_controller.shutdown()
 
     def handle_message(
         self,

@@ -163,10 +163,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Retry setup a few times before giving up to deal with missing serial ports in VMs
     for attempt in range(STARTUP_RETRIES):
-        zha_gateway = ZHAGateway(hass, zha_data.yaml_config, config_entry)
-
         try:
-            await zha_gateway.async_initialize()
+            zha_gateway = await ZHAGateway.async_from_config(
+                hass=hass,
+                config=zha_data.yaml_config,
+                config_entry=config_entry,
+            )
             break
         except NetworkSettingsInconsistent as exc:
             await warn_on_inconsistent_network_settings(
