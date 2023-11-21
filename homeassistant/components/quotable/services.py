@@ -93,8 +93,8 @@ async def _fetch_all_authors_service(
 ) -> ServiceResponse:
     response = await session.get(GET_AUTHORS_URL, timeout=HTTP_CLIENT_TIMEOUT)
     if response.status == HTTPStatus.OK:
-        authorslist = await response.json()
-        if authorslist:
+        data = await response.json()
+        if authorslist := data.get("results"):
             authorslist = {
                 author.get("slug"): author.get("name") for author in authorslist
             }
