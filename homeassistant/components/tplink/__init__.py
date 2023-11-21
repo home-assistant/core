@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from kasa import DeviceType, SmartDevice, SmartDeviceException
+from kasa import DeviceType, SmartDevice, SmartDeviceException, TPLinkKlap
 from kasa.discover import Discover
 
 from homeassistant import config_entries
@@ -60,7 +60,11 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     discovered_devices: dict[str, SmartDevice] = {}
     for device_list in await asyncio.gather(*tasks):
         for device in device_list.values():
-            discovered_devices[dr.format_mac(device.mac)] = device
+            # We have no way to configure Klap devices yet
+            # so we do not want to discover them since the
+            # user will not be able to do anything with them
+            if not isinstance(device.protocol, TPLinkKlap):
+                discovered_devices[dr.format_mac(device.mac)] = device
     return discovered_devices
 
 
