@@ -184,7 +184,7 @@ class SverigesRadio:
     async def podcasts(self, program_id):
         """Asynchronously get all podcasts."""
         payload = {}
-        data = await self.call(f"podfiles?programid=/{program_id}", payload)
+        data = await self.call(f"podfiles?programid={program_id}", payload)
 
         podcasts = []
 
@@ -201,7 +201,6 @@ class SverigesRadio:
                 name=name,
                 station_id=station_id,
                 url=url,
-                image="https://static-cdn.sr.se/images/86/2efa24a7-f80c-435d-ae1c-29d060cb645d.jpg?preset=api-default-square",
             )
 
             podcasts.append(podcast)
@@ -213,16 +212,16 @@ class SverigesRadio:
         payload = {}
         data = await self.call(f"podfiles/{podcast_id}", payload)
 
-        station_id = data.attrib.get("id")
-        name = data.find("title").text
-        url = data.find("url").text
+        podcast_data = data.find("podfile")
+        station_id = podcast_data.attrib.get("id")
+        name = podcast_data.find("title").text
+        url = podcast_data.find("url").text
 
         podcast = Channel(
             sveriges_radio=self,
             name=name,
             station_id=station_id,
             url=url,
-            image="https://static-cdn.sr.se/images/86/2efa24a7-f80c-435d-ae1c-29d060cb645d.jpg?preset=api-default-square",
         )
 
         return podcast

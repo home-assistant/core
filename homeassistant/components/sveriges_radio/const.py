@@ -5,3 +5,5 @@ from typing import Final
 DOMAIN: Final = "sveriges_radio"
 
 LOGGER = logging.getLogger(__package__)
+
+FOLDERNAME: Final = "Podcasts"
