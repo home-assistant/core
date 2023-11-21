@@ -19,16 +19,12 @@ smhi_warning_icons = {
     "RED": "https://opendata.smhi.se/apidocs/IBWwarnings/res/red-weather-warning-56x56.png",
 }
 
-# SOURCES
-# SUN: https://www.flaticon.com/free-icon/sun_6974833
-# CLOUD: https://www.flaticon.com/free-icon/cloud-computing_3208676
-# RAIN: https://uxwing.com/water-droplet-icon/
-# SNOWFLAKE: https://uxwing.com/snowflake-color-icon/
+# SOURCE: https://www.smhi.se/kunskapsbanken/meteorologi/vaderprognoser/vad-betyder-smhis-vadersymboler-1.12109
 weather_icons = {
-    "SUN": "https://cdn-icons-png.flaticon.com/512/6974/6974833.png",
-    "CLOUD": "https://cdn-icons-png.flaticon.com/512/3208/3208676.png",
-    "RAIN": "https://uxwing.com/wp-content/themes/uxwing/download/weather/water-droplet-icon.png",
-    "SNOWFLAKE": "https://uxwing.com/wp-content/themes/uxwing/download/weather/snowflake-color-icon.png",
+    "SUN": "https://www.smhi.se/polopoly_fs/1.27958.1518507527!/image/2.png_gen/derivatives/Original_259px/image/2.png",
+    "CLOUD": "https://www.smhi.se/polopoly_fs/1.12114.1518507791!/image/6.png_gen/derivatives/Original_259px/image/6.png",
+    "RAIN": "https://www.smhi.se/polopoly_fs/1.130680.1518509884!/image/20.png_gen/derivatives/Original_259px/image/20.png",
+    "SNOWFLAKE": "https://www.smhi.se/polopoly_fs/1.130694.1518510246!/image/27.png_gen/derivatives/Original_259px/image/27.png",
 }
 
 # SOURCE: https://opendata.smhi.se/apidocs/metfcst/parameters.html#parameter-wsymb
