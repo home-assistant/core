@@ -38,3 +38,11 @@ class SmhiGeolocationEvent(GeolocationEvent):
     def longitude(self) -> float:
         """Return longitude value of the event."""
         return self._longitude
+
+    def remove_self(self) -> None:
+        """Mark this entity for removal."""
+        if self.hass:
+            self.hass.async_create_task(self.async_remove())
+        else:
+            # Handle the case where hass is None, maybe log a warning
+            pass

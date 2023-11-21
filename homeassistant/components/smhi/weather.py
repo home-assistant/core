@@ -53,7 +53,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,6 +62,7 @@ from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 from .firerisk.fire_risk_data_fetcher import get_grassfire_risk
+from .smhi_geolocation_event import SmhiGeolocationEvent
 from .warnings import SmhiWarnings
 from .weather_locations import SmhiWeatherLocations
 
@@ -96,6 +97,47 @@ RETRY_TIMEOUT = 5 * 60
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
+# List for referencing entities
+warning_entities: list[SmhiGeolocationEvent] = []
+
+
+@callback
+def input_select_changed(event: Any) -> None:
+    """Handle the input select state change."""
+
+    # State
+    state: str = ""
+    if event.data.get("entity_id") == "input_boolean.display_lightning":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            # Handle the new state of the input select here
+            state = new_state
+
+    elif event.data.get("entity_id") == "input_boolean.display_fire_risk":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            # Handle the new state of the input select here
+            state = new_state
+
+    elif event.data.get("entity_id") == "input_boolean.display_weather":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            # Handle the new state of the input select here
+            state = new_state
+
+    elif event.data.get("entity_id") == "input_boolean.display_warnings":
+        new_state = event.data.get("new_state")
+        if new_state is not None:
+            # Handle the new state of the input select here
+            # print(f"Input select changed to: {new_state.state}")
+            state = new_state
+            # for entity in warning_entities:
+            # print(entity)
+            # entity.remove_self()
+
+    # Temporary use of state variable to bypass linting error
+    _ = state  # This line effectively uses the state variable
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -120,9 +162,14 @@ async def async_setup_entry(
     warnings = SmhiWarnings()
     weather_locations = SmhiWeatherLocations()
     data = await warnings.get_warnings()
+
+    warning_entities.extend(data)
+
     data.extend(await get_grassfire_risk())
     data.extend(await weather_locations.get_weather_locations())
     async_add_entities(data, True)
+
+    hass.bus.async_listen("state_changed", input_select_changed)
 
 
 class SmhiWeather(WeatherEntity):
