@@ -61,6 +61,18 @@
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     }
   },
+  "services": {
+    "set_ptz_speed": {
+      "name": "PTZ move",
+      "description": "Move the camera with a specific speed.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "PTZ move speed."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "face": {

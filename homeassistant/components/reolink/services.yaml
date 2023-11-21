@@ -11,3 +11,5 @@ set_ptz_speed:
       selector:
         number:
           min: 1
+          max: 64
+          step: 1

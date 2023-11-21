@@ -7,6 +7,7 @@ from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
 from reolink_aio.exceptions import ReolinkError
+import voluptuous as vol
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -17,7 +18,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, async_get_current_platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -199,7 +204,10 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
                 entity_description.enabled_default(self._host.api, self._channel)
             )
 
-        if self._host.api.supported(channel, "ptz_speed") and entity_description.ptz_cmd is not None:
+        if (
+            self._host.api.supported(channel, "ptz_speed")
+            and entity_description.ptz_cmd is not None
+        ):
             self._attr_supported_features = SUPPORT_PTZ_SPEED
 
     async def async_press(self) -> None:
@@ -213,7 +221,9 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         """PTZ move with speed."""
         speed = kwargs[ATTR_SPEED]
         try:
-            await self._host.api.set_ptz_command(self._channel, command=ptz_cmd, speed=speed)
+            await self._host.api.set_ptz_command(
+                self._channel, command=self.entity_description.ptz_cmd, speed=speed
+            )
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
 
