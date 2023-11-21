@@ -112,24 +112,33 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=LOGIN_DATA_SCHEMA, errors=errors
         )
 
+    async def async_validate_host(
+        self, serial_number: str, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Validate the host input."""
+        errors: dict[str, str] = {}
+        # if host is set, check if we can connect to it
+        if user_input.get(CONF_HOST):
+            lm = LaMarzoccoClient(self.hass, self._config)
+            if not await lm.check_local_connection(
+                credentials=self._config,
+                host=user_input[CONF_HOST],
+                serial=serial_number,
+            ):
+                errors[CONF_HOST] = "cannot_connect"
+        return errors
+
     async def async_step_host_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Machine was discovered, only enter host."""
         errors: dict[str, str] = {}
+        serial_number = self._discovered[CONF_MACHINE]
         if user_input:
-            # if host is set, check if we can connect to it
-            if user_input.get(CONF_HOST):
-                lm = LaMarzoccoClient(self.hass, self._config)
-                if not await lm.check_local_connection(
-                    credentials=self._config,
-                    host=user_input[CONF_HOST],
-                    serial=self._discovered[CONF_MACHINE],
-                ):
-                    errors[CONF_HOST] = "cannot_connect"
+            errors = await self.async_validate_host(serial_number, user_input)
             if not errors:
                 return self.async_create_entry(
-                    title=self._discovered[CONF_MACHINE],
+                    title=serial_number,
                     data=self._config | user_input,
                 )
         return self.async_show_form(
@@ -148,18 +157,12 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
 
-            # if host is set, check if we can connect to it
-            if user_input.get(CONF_HOST):
-                lm = LaMarzoccoClient(self.hass, self._config)
-                if not await lm.check_local_connection(
-                    credentials=self._config,
-                    host=user_input[CONF_HOST],
-                    serial=serial_number,
-                ):
-                    errors[CONF_HOST] = "cannot_connect"
+            errors = await self.async_validate_host(serial_number, user_input)
+
             if not errors:
                 return self.async_create_entry(
-                    title=serial_number, data=self._config | user_input
+                    title=serial_number,
+                    data=self._config | user_input,
                 )
 
         machine_options = [
