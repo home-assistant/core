@@ -200,6 +200,7 @@ class TodoListEntity(Entity):
         return unsubscribe
 
     @final
+    @callback
     def async_update_listeners(self) -> None:
         """Push updated To-do items to all listeners."""
         if not self._update_listeners:

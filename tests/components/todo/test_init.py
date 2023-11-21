@@ -980,7 +980,7 @@ async def test_subscribe(
         TodoItem(summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION),
     ]
 
-    test_entity.async_update_listeners()
+    test_entity.async_write_ha_state()
     msg = await client.receive_json()
     event_message = msg["event"]
     assert event_message == {
@@ -992,7 +992,7 @@ async def test_subscribe(
     }
 
     test_entity._attr_todo_items = None
-    test_entity.async_update_listeners()
+    test_entity.async_write_ha_state()
     msg = await client.receive_json()
     event_message = msg["event"]
     assert event_message == {
