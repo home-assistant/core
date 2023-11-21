@@ -45,11 +45,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
-        *build_setup_functions(hass, device_map, user_data, product_info)
+        *build_setup_functions(hass, device_map, user_data, product_info),
+        return_exceptions=True,
     )
     # Valid coordinators are those where we had networking cached or we could get networking
     valid_coordinators: list[RoborockDataUpdateCoordinator] = [
-        coord for coord in coordinators if coord is not None
+        coord
+        for coord in coordinators
+        if isinstance(coord, RoborockDataUpdateCoordinator)
     ]
     if len(valid_coordinators) == 0:
         raise ConfigEntryNotReady("No coordinators were able to successfully setup.")
@@ -98,7 +101,7 @@ async def setup_device(
             device.name,
         )
         _LOGGER.debug(err)
-        return None
+        raise err
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
     )
@@ -119,6 +122,7 @@ async def setup_device(
             # but in case if it isn't, the error can be included in debug logs for the user to grab.
             if coordinator.last_exception:
                 _LOGGER.debug(coordinator.last_exception)
+                raise coordinator.last_exception
         elif coordinator.last_exception:
             # If this is reached, we have verified that we can communicate with the Vacuum locally,
             # so if there is an error here - it is not a communication issue but some other problem
@@ -129,7 +133,7 @@ async def setup_device(
                 device.name,
                 extra_error,
             )
-        return None
+            raise coordinator.last_exception
     return coordinator
 
 
