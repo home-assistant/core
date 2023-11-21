@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import datetime as dt
 import logging
 
@@ -9,6 +10,7 @@ from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamS
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
+    BrowseMedia,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -96,14 +98,14 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def _async_generate_root(self) -> BrowseMediaSource:
         """Return all available reolink cameras as root browsing structure."""
-        children = []
+        children: Sequence[BrowseMediaSource] = []
 
         entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
         for config_entry in self.hass.config_entries.async_entries(DOMAIN):
             if config_entry.state != ConfigEntryState.LOADED:
                 continue
-            channels = []
+            channels: list[str] = []
             host = self.data[config_entry.entry_id].host
             entities = er.async_entries_for_config_entry(
                 entity_reg, config_entry.entry_id
@@ -215,7 +217,7 @@ class ReolinkVODMediaSource(MediaSource):
         start = now - dt.timedelta(days=31)
         end = now
 
-        children = []
+        children: Sequence[BrowseMediaSource] = []
         _LOGGER.debug(
             "Requesting recording days of %s from %s to %s",
             host.api.camera_name(channel),
@@ -265,7 +267,7 @@ class ReolinkVODMediaSource(MediaSource):
         start = dt.datetime(year, month, day, hour=0, minute=0, second=0)
         end = dt.datetime(year, month, day, hour=23, minute=59, second=59)
 
-        children = []
+        children: Sequence[BrowseMediaSource] = []
         _LOGGER.debug(
             "Requesting VODs of %s on %s/%s/%s",
             host.api.camera_name(channel),
