@@ -474,9 +474,6 @@ class ControllerEvents:
                 "Device Was Factory Reset!",
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
 
         self.remove_device(device)
 

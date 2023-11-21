@@ -1663,18 +1663,14 @@ async def test_factory_reset_node(
     dev_id = get_device_id(client.driver, multisensor_6)
     msg_id = f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}"
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_reload:
-        client.driver.controller.receive_event(remove_event)
-        assert mock_reload.called
-        notifications = async_get_persistent_notifications(hass)
-        assert len(notifications) == 1
-        assert list(notifications)[0] == msg_id
-        assert notifications[msg_id]["message"].startswith("`Multisensor 6`")
-        assert "with the home ID" not in notifications[msg_id]["message"]
-        async_dismiss(hass, msg_id)
-        await hass.async_block_till_done()
+    client.driver.controller.receive_event(remove_event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert notifications[msg_id]["message"].startswith("`Multisensor 6`")
+    assert "with the home ID" not in notifications[msg_id]["message"]
+    async_dismiss(hass, msg_id)
+    await hass.async_block_till_done()
 
     # Add mock config entry to simulate having multiple entries
     new_entry = MockConfigEntry(domain=DOMAIN)
@@ -1703,7 +1699,6 @@ async def test_factory_reset_node(
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
-    await hass.async_block_till_done()
 
     # Test case where config entry title and home ID do match
     hass.config_entries.async_update_entry(integration, title="3245146787")
@@ -1724,4 +1719,3 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
-    await hass.async_block_till_done()
