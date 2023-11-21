@@ -10,6 +10,7 @@ from aioesphomeapi import (
     APIConnectionError,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
+    EntityInfo,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
@@ -372,12 +373,19 @@ class ESPHomeManager:
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         try:
-            device_info = await cli.device_info()
+            results = await asyncio.gather(
+                cli.device_info(),
+                cli.list_entities_services(),
+            )
         except APIConnectionError as err:
             _LOGGER.warning("Error getting device info for %s: %s", self.host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
             return
+
+        device_info: EsphomeDeviceInfo = results[0]
+        entity_infos_services: tuple[list[EntityInfo], list[UserService]] = results[1]
+        entity_infos, services = entity_infos_services
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
@@ -450,7 +458,6 @@ class ESPHomeManager:
         entry_data.async_update_device_state(hass)
 
         try:
-            entity_infos, services = await cli.list_entities_services()
             await entry_data.async_update_static_infos(
                 hass, entry, entity_infos, device_info.mac_address
             )
@@ -468,15 +475,15 @@ class ESPHomeManager:
                         self._handle_pipeline_stop,
                     )
                 )
-
-            hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
-        else:
-            _async_check_firmware_version(hass, device_info, entry_data.api_version)
-            _async_check_using_api_password(hass, device_info, bool(self.password))
+            return
+
+        hass.async_create_task(entry_data.async_save_to_store())
+        _async_check_firmware_version(hass, device_info, entry_data.api_version)
+        _async_check_using_api_password(hass, device_info, bool(self.password))
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
