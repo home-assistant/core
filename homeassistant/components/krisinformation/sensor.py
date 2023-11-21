@@ -27,7 +27,9 @@ async def async_setup_entry(
 
     crisis_alerter = CrisisAlerter(county)
 
-    sensor = CrisisAlerterSensor(config.entry_id, name, crisis_alerter)
+    sensor = CrisisAlerterSensor(
+        hass, config.entry_id, name, crisis_alerter, async_add_entities
+    )
 
     async_add_entities([sensor], False)
 
@@ -39,7 +41,12 @@ class CrisisAlerterSensor(SensorEntity):
     _attr_icon = "mdi:alert"
 
     def __init__(
-        self, unique_id: str, name: str, crisis_alerter: CrisisAlerter
+        self,
+        hass: HomeAssistant,
+        unique_id: str,
+        name: str,
+        crisis_alerter: CrisisAlerter,
+        async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = unique_id
@@ -47,8 +54,10 @@ class CrisisAlerterSensor(SensorEntity):
         self._crisis_alerter = crisis_alerter
         self._state: str | None = None
         self._web: str | None = None
+        self.hass = hass
         self._published: str | None = None
         self._area: str | None = None
+        self._async_add_entities = async_add_entities
 
     @property
     def extra_state_attributes(self):
@@ -85,7 +94,7 @@ class CrisisAlerterSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest alerts."""
         try:
-            response = self._crisis_alerter.news()
+            response = self._crisis_alerter.vmas(is_test=True)
             if len(response) > 0:
                 news = response[0]
                 self._state = news["PushMessage"]
@@ -94,6 +103,7 @@ class CrisisAlerterSensor(SensorEntity):
                 self._area = (
                     news["Area"][0]["Description"] if len(news["Area"]) > 0 else None
                 )
+
             else:
                 self._state = "Inga larm"
         except Error as error:
