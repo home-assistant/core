@@ -69,6 +69,7 @@ def reolink_connect_class(
         host_mock.model = "RLC-123"
         host_mock.camera_model.return_value = "RLC-123"
         host_mock.camera_name.return_value = TEST_NVR_NAME
+        host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600

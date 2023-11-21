@@ -24,6 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
@@ -83,6 +84,7 @@ async def test_browsing(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test browsing the Reolink three."""
     reolink_connect.api_version.return_value = 1
@@ -90,6 +92,10 @@ async def test_browsing(
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
+
+    entries = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert len(entries) > 0
+    device_registry.async_update_device(entries[0].id, name_by_user="Cam new name")
 
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
