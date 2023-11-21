@@ -6,7 +6,13 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .canvas_api import CanvasAPI
-from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY, DOMAIN
+from .const import (
+    ANNOUNCEMENTS_KEY,
+    ASSIGNMENTS_KEY,
+    CONVERSATIONS_KEY,
+    DOMAIN,
+    GRADES_KEY,
+)
 from .coordinator import CanvasUpdateCoordinator
 
 # TODO List the platforms that you want to support.
@@ -26,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(ASSIGNMENTS_KEY, {})
     hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(ANNOUNCEMENTS_KEY, {})
     hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(CONVERSATIONS_KEY, {})
+    hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(GRADES_KEY, {})
 
     api = CanvasAPI(
         f"https://{entry.data['host_prefix']}.instructure.com/api/v1",

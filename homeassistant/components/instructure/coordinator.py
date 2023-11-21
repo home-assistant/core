@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .canvas_api import CanvasAPI
-from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
+from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY, GRADES_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                 assignments = await self.api.async_get_assignments(course_ids)
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
+                grades = await self.api.async_get_grades(course_ids)
 
                 # TODO - filtering, put it in canvas_api?
                 assignments = filter_assignments(assignments)
@@ -47,6 +48,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                     ASSIGNMENTS_KEY: assignments,
                     ANNOUNCEMENTS_KEY: announcements,
                     CONVERSATIONS_KEY: conversations,
+                    GRADES_KEY: grades,
                 }
 
                 old_data = self.data or {}  # maybe put self.data={} in __init__()

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import json
 from typing import Any
 import urllib.parse
@@ -127,3 +128,30 @@ class CanvasAPI:
             f"conversation-{conversation['id']}": conversation
             for conversation in conversations
         }
+
+    async def async_get_grades(self, course_ids: list[str]) -> dict[str, Any]:
+        """Retrieves a dictionary of submissions from the Canvas API.
+
+        Returns:
+        dict: The response from the Canvas API.
+        """
+        submissions = {}
+        # Grades entity is right now meaningless because we dont get assignment description neither course name etc.
+        # Check GRADES_KEY: CanvasSensorEntityDescription(.... (name_fn and value_fn))
+        for course_id in course_ids:
+            response = await self.async_make_get_request(
+                f"/courses/{course_id}/students/submissions",
+                {"per_page": "50"},
+            )
+            course_submissions = json.loads(response.content.decode("utf-8"))
+            course_submissions = json.loads(response.content.decode("utf-8"))
+            for submission in course_submissions:
+                if submission["graded_at"] is not None:
+                    graded_at = datetime.strptime(
+                        submission["graded_at"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
+                    past_one_month = datetime.utcnow() - timedelta(days=30)
+                    if graded_at >= past_one_month:
+                        submissions[f"submission-{submission['id']}"] = submission
+
+        return submissions
