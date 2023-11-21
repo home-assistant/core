@@ -1,0 +1,30 @@
+"""Constants for the DROP integration."""
+
+# Keys for values used in the config_entry data dictionary
+CONF_COMMAND_TOPIC = "drop_command_topic"
+CONF_COORDINATOR = "drop_coordinator"
+CONF_DATA_TOPIC = "drop_data_topic"
+CONF_DEVICE_DESC = "device_desc"
+CONF_DEVICE_ID = "device_id"
+CONF_DEVICE_TYPE = "device_type"
+CONF_HUB_ID = "drop_hub_id"
+CONF_DEVICE_NAME = "name"
+CONF_UNIQUE_ID = "unique_id"
+
+# Values for DROP device types
+DEV_FILTER = "filt"
+DEV_HUB = "hub"
+DEV_LEAK_DETECTOR = "leak"
+DEV_PROTECTION_VALVE = "pv"
+DEV_PUMP_CONTROLLER = "pc"
+DEV_RO_FILTER = "ro"
+DEV_SALT_SENSOR = "salt"
+DEV_SOFTENER = "soft"
+
+DISCOVERY_TOPIC = "drop/discovery/#"
+
+DOMAIN = "drop"
+
+KEY_STATUS = "stat"
+
+PROTECT_MODE_OPTIONS = ["AWAY", "HOME", "SCHEDULE"]

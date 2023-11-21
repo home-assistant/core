@@ -109,6 +109,7 @@ FLOWS = {
         "doorbird",
         "dormakaba_dkey",
         "dremel_3d_printer",
+        "drop",
         "dsmr",
         "dsmr_reader",
         "dunehd",

@@ -293,6 +293,8 @@ build.json @home-assistant/supervisor
 /tests/components/dormakaba_dkey/ @emontnemery
 /homeassistant/components/dremel_3d_printer/ @tkdrob
 /tests/components/dremel_3d_printer/ @tkdrob
+/homeassistant/components/drop/ @ChandlerSystems @pfrazer
+/tests/components/drop/ @ChandlerSystems @pfrazer
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
