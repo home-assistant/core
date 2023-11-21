@@ -356,7 +356,7 @@ aiovlc==0.1.0
 aiovodafone==0.4.2
 
 # homeassistant.components.waqi
-aiowaqi==3.0.0
+aiowaqi==3.0.1
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
