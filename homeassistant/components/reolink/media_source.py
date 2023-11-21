@@ -47,7 +47,7 @@ class ReolinkVODMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        identifier = item.identifier.split("+")
+        identifier = item.identifier.split("|")
         if identifier[0] != "FILE":
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
@@ -78,7 +78,7 @@ class ReolinkVODMediaSource(MediaSource):
         if item.identifier is None:
             return await self._async_generate_root()
 
-        identifier = item.identifier.split("+", 7)
+        identifier = item.identifier.split("|", 7)
         item_type = identifier[0]
 
         if item_type == "CAM":
@@ -154,7 +154,7 @@ class ReolinkVODMediaSource(MediaSource):
                 children.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"CAM+{config_entry.entry_id}+{ch}",
+                        identifier=f"CAM|{config_entry.entry_id}|{ch}",
                         media_class=MediaClass.CHANNEL,
                         media_content_type=MediaType.PLAYLIST,
                         title=device_name,
@@ -195,7 +195,7 @@ class ReolinkVODMediaSource(MediaSource):
         children = [
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"RES+{config_entry_id}+{channel}+sub",
+                identifier=f"RES|{config_entry_id}|{channel}|sub",
                 media_class=MediaClass.CHANNEL,
                 media_content_type=MediaType.PLAYLIST,
                 title="Low resolution",
@@ -204,7 +204,7 @@ class ReolinkVODMediaSource(MediaSource):
             ),
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"RES+{config_entry_id}+{channel}+main",
+                identifier=f"RES|{config_entry_id}|{channel}|main",
                 media_class=MediaClass.CHANNEL,
                 media_content_type=MediaType.PLAYLIST,
                 title="High resolution",
@@ -215,7 +215,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"RESs+{config_entry_id}+{channel}",
+            identifier=f"RESs|{config_entry_id}|{channel}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
             title=host.api.camera_name(channel),
@@ -251,7 +251,7 @@ class ReolinkVODMediaSource(MediaSource):
                 children.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"DAY+{config_entry_id}+{channel}+{stream}+{status.year}+{status.month}+{day}",
+                        identifier=f"DAY|{config_entry_id}|{channel}|{stream}|{status.year}|{status.month}|{day}",
                         media_class=MediaClass.DIRECTORY,
                         media_content_type=MediaType.PLAYLIST,
                         title=f"{status.year}/{status.month}/{day}",
@@ -262,7 +262,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"DAYS+{config_entry_id}+{channel}+{stream}",
+            identifier=f"DAYS|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
             title=f"{host.api.camera_name(channel)} {res_name(stream)}",
@@ -310,7 +310,7 @@ class ReolinkVODMediaSource(MediaSource):
             children.append(
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"FILE+{config_entry_id}+{channel}+{stream}+{file.file_name}",
+                    identifier=f"FILE|{config_entry_id}|{channel}|{stream}|{file.file_name}",
                     media_class=MediaClass.VIDEO,
                     media_content_type=MediaType.VIDEO,
                     title=file_name,
@@ -321,7 +321,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"FILES+{config_entry_id}+{channel}+{stream}",
+            identifier=f"FILES|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
             title=f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}",

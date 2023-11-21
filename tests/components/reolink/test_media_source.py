@@ -72,7 +72,7 @@ async def test_resolve(
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
     file_id = (
-        f"FILE+{config_entry.entry_id}+{TEST_CHANNEL}+{TEST_STREAM}+{TEST_FILE_NAME}"
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
 
     play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/{file_id}")
@@ -100,7 +100,7 @@ async def test_browsing(
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
 
-    browse_root_id = f"CAM+{config_entry.entry_id}+{TEST_CHANNEL}"
+    browse_root_id = f"CAM|{config_entry.entry_id}|{TEST_CHANNEL}"
     assert browse.domain == DOMAIN
     assert browse.title == "Reolink"
     assert browse.identifier is None
@@ -109,9 +109,9 @@ async def test_browsing(
     # browse resolution select
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
-    browse_resolution_id = f"RESs+{config_entry.entry_id}+{TEST_CHANNEL}"
-    browse_res_sub_id = f"RES+{config_entry.entry_id}+{TEST_CHANNEL}+sub"
-    browse_res_main_id = f"RES+{config_entry.entry_id}+{TEST_CHANNEL}+main"
+    browse_resolution_id = f"RESs|{config_entry.entry_id}|{TEST_CHANNEL}"
+    browse_res_sub_id = f"RES|{config_entry.entry_id}|{TEST_CHANNEL}|sub"
+    browse_res_main_id = f"RES|{config_entry.entry_id}|{TEST_CHANNEL}|main"
     assert browse.domain == DOMAIN
     assert browse.title == TEST_NVR_NAME
     assert browse.identifier == browse_resolution_id
@@ -129,9 +129,9 @@ async def test_browsing(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"
     )
 
-    browse_days_id = f"DAYS+{config_entry.entry_id}+{TEST_CHANNEL}+{TEST_STREAM}"
-    browse_day_0_id = f"DAY+{config_entry.entry_id}+{TEST_CHANNEL}+{TEST_STREAM}+{TEST_YEAR}+{TEST_MONTH}+{TEST_DAY}"
-    browse_day_1_id = f"DAY+{config_entry.entry_id}+{TEST_CHANNEL}+{TEST_STREAM}+{TEST_YEAR}+{TEST_MONTH}+{TEST_DAY2}"
+    browse_days_id = f"DAYS|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+    browse_day_0_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    browse_day_1_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_NVR_NAME} High res."
     assert browse.identifier == browse_days_id
@@ -149,9 +149,9 @@ async def test_browsing(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
-    browse_files_id = f"FILES+{config_entry.entry_id}+{TEST_CHANNEL}+{TEST_STREAM}"
+    browse_files_id = f"FILES|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
     browse_file_id = (
-        f"FILE+{config_entry.entry_id}+{TEST_CHANNEL}+{TEST_STREAM}+{TEST_FILE_NAME}"
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     assert browse.domain == DOMAIN
     assert (
@@ -171,7 +171,7 @@ async def test_browsing_unsupported_encoding(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
 
-    browse_root_id = f"CAM+{config_entry.entry_id}+{TEST_CHANNEL}"
+    browse_root_id = f"CAM|{config_entry.entry_id}|{TEST_CHANNEL}"
 
     # browse resolution select/camera recording days when main encoding unsupported
     mock_status = MagicMock()
@@ -184,9 +184,9 @@ async def test_browsing_unsupported_encoding(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
-    browse_days_id = f"DAYS+{config_entry.entry_id}+{TEST_CHANNEL}+sub"
-    browse_day_0_id = f"DAY+{config_entry.entry_id}+{TEST_CHANNEL}+sub+{TEST_YEAR}+{TEST_MONTH}+{TEST_DAY}"
-    browse_day_1_id = f"DAY+{config_entry.entry_id}+{TEST_CHANNEL}+sub+{TEST_YEAR}+{TEST_MONTH}+{TEST_DAY2}"
+    browse_days_id = f"DAYS|{config_entry.entry_id}|{TEST_CHANNEL}|sub"
+    browse_day_0_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    browse_day_1_id = f"DAY|{config_entry.entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_NVR_NAME} Low res."
     assert browse.identifier == browse_days_id
