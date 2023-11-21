@@ -100,34 +100,46 @@ async def input_select_changed(event: Any) -> None:
     """Handle the input select state change."""
 
     additional_data_handler = AdditionalDataHandler()
+    update_map = False
 
     if event.data.get("entity_id") == "input_boolean.display_lightning":
         new_state = event.data.get("new_state")
         if new_state is not None:
             additional_data_handler.set_state("lightning", new_state.state == "on")
+            update_map = update_map or new_state.state == "on"
 
     elif event.data.get("entity_id") == "input_boolean.display_fire_risk":
         new_state = event.data.get("new_state")
         if new_state is not None:
             additional_data_handler.set_state("fire_risk", new_state.state == "on")
+            update_map = update_map or new_state.state == "on"
 
     elif event.data.get("entity_id") == "input_boolean.display_weather":
         new_state = event.data.get("new_state")
         if new_state is not None:
             additional_data_handler.set_state("weather", new_state.state == "on")
+            update_map = update_map or new_state.state == "on"
 
     elif event.data.get("entity_id") == "input_boolean.display_warnings":
         new_state = event.data.get("new_state")
         if new_state is not None:
             additional_data_handler.set_state("warnings", new_state.state == "on")
+            update_map = update_map or new_state.state == "on"
 
-    await additional_data_handler.get_additional_data()
-    additional_data_handler.add_entity_callback(
-        additional_data_handler.warning_data, True
-    )
-    additional_data_handler.add_entity_callback(
-        additional_data_handler.fire_risk_data, True
-    )
+    if update_map:
+        await additional_data_handler.get_additional_data()
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.warning_data, True
+        )
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.fire_risk_data, True
+        )
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.weather_data, True
+        )
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.lightning_data, True
+        )
 
 
 async def async_setup_entry(
@@ -153,14 +165,6 @@ async def async_setup_entry(
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
 
     async_add_entities([entity], True)
-
-    await additional_data_handler.get_additional_data()
-    additional_data_handler.add_entity_callback(
-        additional_data_handler.warning_data, True
-    )
-    additional_data_handler.add_entity_callback(
-        additional_data_handler.fire_risk_data, True
-    )
 
     hass.bus.async_listen("state_changed", input_select_changed)
 
@@ -240,6 +244,7 @@ class SmhiWeather(WeatherEntity):
         await self.async_update_listeners(("daily", "hourly"))
 
         additional_data_handler = AdditionalDataHandler()
+
         await additional_data_handler.get_additional_data()
         additional_data_handler.add_entity_callback(
             additional_data_handler.warning_data, True
