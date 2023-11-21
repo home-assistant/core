@@ -13,6 +13,26 @@
       "population_proper": "978770"
     },
     {
+      "city": "Värnamo",
+      "lat": "57.1831",
+      "lng": "14.0478"
+    },
+    {
+      "city": "Sälen",
+      "lat": "61.1546",
+      "lng": "13.2680"
+    },
+    {
+      "city": "Kiruna",
+      "lat": "67.8557",
+      "lng": "20.2252"
+    },
+    {
+      "city": "Arjeplog",
+      "lat": "66.0515",
+      "lng": "17.8866"
+    },
+    {
       "city": "Gothenburg",
       "lat": "57.7075",
       "lng": "11.9675",
@@ -354,17 +374,6 @@
       "population_proper": "38780"
     },
     {
-      "city": "Tumba",
-      "lat": "59.2000",
-      "lng": "17.8167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "37852",
-      "population_proper": "37852"
-    },
-    {
       "city": "Falun",
       "lat": "60.6072",
       "lng": "15.6311",
@@ -420,17 +429,6 @@
       "population_proper": "33372"
     },
     {
-      "city": "Lidingö",
-      "lat": "59.3667",
-      "lng": "18.1500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "31561",
-      "population_proper": "31561"
-    },
-    {
       "city": "Ystad",
       "lat": "55.4167",
       "lng": "13.8333",
@@ -462,17 +460,6 @@
       "capital": "admin",
       "population": "24951",
       "population_proper": "24951"
-    },
-    {
-      "city": "Boo",
-      "lat": "59.3167",
-      "lng": "18.2500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "24052",
-      "population_proper": "24052"
     },
     {
       "city": "Kungsbacka",
@@ -574,50 +561,6 @@
       "population_proper": "17258"
     },
     {
-      "city": "Höganäs",
-      "lat": "56.2000",
-      "lng": "12.5667",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "minor",
-      "population": "16001",
-      "population_proper": "16001"
-    },
-    {
-      "city": "Tullinge",
-      "lat": "59.2000",
-      "lng": "17.9000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "16000",
-      "population_proper": "16000"
-    },
-    {
-      "city": "Mölnlycke",
-      "lat": "57.6667",
-      "lng": "12.1167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "minor",
-      "population": "15608",
-      "population_proper": "15608"
-    },
-    {
-      "city": "Staffanstorp",
-      "lat": "55.6333",
-      "lng": "13.2000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "minor",
-      "population": "14808",
-      "population_proper": "14808"
-    },
-    {
       "city": "Arvika",
       "lat": "59.6542",
       "lng": "12.5914",
@@ -627,17 +570,6 @@
       "capital": "minor",
       "population": "14244",
       "population_proper": "14244"
-    },
-    {
-      "city": "Lomma",
-      "lat": "55.6667",
-      "lng": "13.0833",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "minor",
-      "population": "13772",
-      "population_proper": "13772"
     },
     {
       "city": "Nynäshamn",
@@ -673,28 +605,6 @@
       "population_proper": "11761"
     },
     {
-      "city": "Ekerö",
-      "lat": "59.2833",
-      "lng": "17.8000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "11524",
-      "population_proper": "11524"
-    },
-    {
-      "city": "Höllviken",
-      "lat": "55.4167",
-      "lng": "12.9500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "10607",
-      "population_proper": "10607"
-    },
-    {
       "city": "Jordbro",
       "lat": "59.1500",
       "lng": "18.1333",
@@ -704,28 +614,6 @@
       "capital": "",
       "population": "10291",
       "population_proper": "10291"
-    },
-    {
-      "city": "Billdal",
-      "lat": "57.5833",
-      "lng": "11.9333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "10289",
-      "population_proper": "10289"
-    },
-    {
-      "city": "Älta",
-      "lat": "59.2500",
-      "lng": "18.1833",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "9989",
-      "population_proper": "9989"
     },
     {
       "city": "Stenungsund",
@@ -739,39 +627,6 @@
       "population_proper": "9987"
     },
     {
-      "city": "Bjärred",
-      "lat": "55.7167",
-      "lng": "13.0167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "9542",
-      "population_proper": "9542"
-    },
-    {
-      "city": "Saltsjöbaden",
-      "lat": "59.2861",
-      "lng": "18.2872",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "9491",
-      "population_proper": "9491"
-    },
-    {
-      "city": "Åstorp",
-      "lat": "56.1347",
-      "lng": "12.9472",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "minor",
-      "population": "9488",
-      "population_proper": "9488"
-    },
-    {
       "city": "Älmhult",
       "lat": "56.5500",
       "lng": "14.1333",
@@ -781,17 +636,6 @@
       "capital": "minor",
       "population": "8955",
       "population_proper": "8955"
-    },
-    {
-      "city": "Brevik",
-      "lat": "59.3500",
-      "lng": "18.2000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "8772",
-      "population_proper": "8772"
     },
     {
       "city": "Sölvesborg",
@@ -816,28 +660,6 @@
       "population_proper": "8000"
     },
     {
-      "city": "Torshälla",
-      "lat": "59.4167",
-      "lng": "16.4667",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Södermanland",
-      "capital": "",
-      "population": "7612",
-      "population_proper": "7612"
-    },
-    {
-      "city": "Fisksätra",
-      "lat": "59.2917",
-      "lng": "18.2528",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "7475",
-      "population_proper": "7475"
-    },
-    {
       "city": "Kållered",
       "lat": "57.6000",
       "lng": "12.0500",
@@ -847,72 +669,6 @@
       "capital": "",
       "population": "7456",
       "population_proper": "7456"
-    },
-    {
-      "city": "Vendelsö",
-      "lat": "59.1805",
-      "lng": "18.1804",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "7192",
-      "population_proper": "7192"
-    },
-    {
-      "city": "Skanör med Falsterbo",
-      "lat": "55.4000",
-      "lng": "12.8500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "6937",
-      "population_proper": "6937"
-    },
-    {
-      "city": "Vega",
-      "lat": "59.1903",
-      "lng": "18.1275",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "6590",
-      "population_proper": "6590"
-    },
-    {
-      "city": "Surte",
-      "lat": "57.8167",
-      "lng": "12.0167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "5798",
-      "population_proper": "5798"
-    },
-    {
-      "city": "Åkarp",
-      "lat": "55.6500",
-      "lng": "13.1167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "5617",
-      "population_proper": "5617"
-    },
-    {
-      "city": "Hönö",
-      "lat": "57.7667",
-      "lng": "11.7000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "5110",
-      "population_proper": "5110"
     },
     {
       "city": "Lindö",
@@ -937,61 +693,6 @@
       "population_proper": "4857"
     },
     {
-      "city": "Sjöberg",
-      "lat": "59.4333",
-      "lng": "18.0000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "4310",
-      "population_proper": "4310"
-    },
-    {
-      "city": "Viken",
-      "lat": "56.1500",
-      "lng": "12.5667",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "4227",
-      "population_proper": "4227"
-    },
-    {
-      "city": "Oskarström",
-      "lat": "56.8016",
-      "lng": "12.9763",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Halland",
-      "capital": "",
-      "population": "4157",
-      "population_proper": "4157"
-    },
-    {
-      "city": "Hjuvik",
-      "lat": "57.7000",
-      "lng": "11.7167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "3928",
-      "population_proper": "3928"
-    },
-    {
-      "city": "Kummelnäs",
-      "lat": "59.3500",
-      "lng": "18.2833",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "3848",
-      "population_proper": "3848"
-    },
-    {
       "city": "Karlsborg",
       "lat": "58.5333",
       "lng": "14.5167",
@@ -1001,17 +702,6 @@
       "capital": "minor",
       "population": "3749",
       "population_proper": "3749"
-    },
-    {
-      "city": "Öjersjö",
-      "lat": "57.7000",
-      "lng": "12.1167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "3543",
-      "population_proper": "3543"
     },
     {
       "city": "Öckerö",
@@ -1025,28 +715,6 @@
       "population_proper": "3488"
     },
     {
-      "city": "Hällbybrunn",
-      "lat": "59.3922",
-      "lng": "16.4203",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Södermanland",
-      "capital": "",
-      "population": "3296",
-      "population_proper": "3296"
-    },
-    {
-      "city": "Särö",
-      "lat": "57.5000",
-      "lng": "11.9333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Halland",
-      "capital": "",
-      "population": "3165",
-      "population_proper": "3165"
-    },
-    {
       "city": "Borgholm",
       "lat": "56.8792",
       "lng": "16.6558",
@@ -1056,149 +724,6 @@
       "capital": "minor",
       "population": "3071",
       "population_proper": "3071"
-    },
-    {
-      "city": "Johannedal",
-      "lat": "62.4333",
-      "lng": "17.3667",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västernorrland",
-      "capital": "",
-      "population": "2754",
-      "population_proper": "2754"
-    },
-    {
-      "city": "Frösakull",
-      "lat": "56.6833",
-      "lng": "12.7333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Halland",
-      "capital": "",
-      "population": "2699",
-      "population_proper": "2699"
-    },
-    {
-      "city": "Ljunghusen",
-      "lat": "55.4000",
-      "lng": "12.9167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "2555",
-      "population_proper": "2555"
-    },
-    {
-      "city": "Pershagen",
-      "lat": "59.1667",
-      "lng": "17.6500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "2216",
-      "population_proper": "2216"
-    },
-    {
-      "city": "Hyllinge",
-      "lat": "56.1000",
-      "lng": "12.8500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "",
-      "population": "2204",
-      "population_proper": "2204"
-    },
-    {
-      "city": "Andalen",
-      "lat": "57.7000",
-      "lng": "11.7500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "2188",
-      "population_proper": "2188"
-    },
-    {
-      "city": "Sundsbruk",
-      "lat": "62.4500",
-      "lng": "17.3500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västernorrland",
-      "capital": "",
-      "population": "2137",
-      "population_proper": "2137"
-    },
-    {
-      "city": "Svinningeudd",
-      "lat": "59.4500",
-      "lng": "18.2833",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "",
-      "population": "1636",
-      "population_proper": "1636"
-    },
-    {
-      "city": "Ekeby",
-      "lat": "59.2583",
-      "lng": "15.3333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Örebro",
-      "capital": "",
-      "population": "1271",
-      "population_proper": "1271"
-    },
-    {
-      "city": "Marieberg",
-      "lat": "59.2256",
-      "lng": "15.1592",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Örebro",
-      "capital": "",
-      "population": "1181",
-      "population_proper": "1181"
-    },
-    {
-      "city": "Nolvik",
-      "lat": "57.7833",
-      "lng": "11.8333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Västra Götaland",
-      "capital": "",
-      "population": "1025",
-      "population_proper": "1025"
-    },
-    {
-      "city": "Sundbyberg",
-      "lat": "59.3607",
-      "lng": "17.9717",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Solna",
-      "lat": "59.3667",
-      "lng": "18.0167",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
     },
     {
       "city": "Lund",
@@ -1215,50 +740,6 @@
       "city": "Jakobsberg",
       "lat": "59.4167",
       "lng": "17.8333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Sollentuna",
-      "lat": "59.4667",
-      "lng": "17.9000",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Nacka",
-      "lat": "59.3100",
-      "lng": "18.1639",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Djursholm",
-      "lat": "59.4000",
-      "lng": "18.0833",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Huddinge",
-      "lat": "59.2333",
-      "lng": "17.9833",
       "country": "Sweden",
       "iso2": "SE",
       "admin_name": "Stockholm",
@@ -1284,28 +765,6 @@
       "country": "Sweden",
       "iso2": "SE",
       "admin_name": "Västra Götaland",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Ängelholm",
-      "lat": "56.2500",
-      "lng": "12.8500",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Skåne",
-      "capital": "minor",
-      "population": "",
-      "population_proper": ""
-    },
-    {
-      "city": "Rönninge",
-      "lat": "59.2000",
-      "lng": "17.7333",
-      "country": "Sweden",
-      "iso2": "SE",
-      "admin_name": "Stockholm",
       "capital": "minor",
       "population": "",
       "population_proper": ""
