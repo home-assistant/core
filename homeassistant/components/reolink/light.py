@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
-from reolink_aio.exceptions import ReolinkError, InvalidParameterError
+from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,8 +17,8 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN

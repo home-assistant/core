@@ -13,14 +13,14 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
-from reolink_aio.exceptions import ReolinkError, InvalidParameterError
+from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
