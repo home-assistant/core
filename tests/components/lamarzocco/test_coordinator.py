@@ -18,7 +18,5 @@ async def test_data_pushed(
 ) -> None:
     """Test the La Marzocco Coffee Boiler."""
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    assert coordinator.lm
-
-    coordinator._on_data_received(None, None)
-    coordinator._on_data_received("current_temp", 93.0)
+    assert coordinator.data
+    coordinator._on_data_received()

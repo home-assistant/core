@@ -1,5 +1,4 @@
 """La Marzocco Cloud API client."""
-from asyncio import Task
 from collections.abc import Callable, Mapping
 import logging
 from typing import Any
@@ -19,21 +18,19 @@ _LOGGER = logging.getLogger(__name__)
 class LaMarzoccoClient(LMCloud):
     """Keep data for La Marzocco entities."""
 
-    _initialized = False
-    _websocket_initialized = False
-    _websocket_task: Task | None = None
     _bt_disconnected = False
 
-    @property
-    def initialized(self) -> bool:
-        """Return whether the client has been initialized."""
-        return self._initialized
-
-    def __init__(self, hass: HomeAssistant, entry_data: Mapping[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_data: Mapping[str, Any],
+        callback: Callable[[], None] | None = None,
+    ) -> None:
         """Initialise the LaMarzocco entity data."""
         super().__init__()
         self._entry_data = entry_data
         self.hass = hass
+        self._callback_websocket_notify = callback
 
     async def connect(self) -> None:
         """Connect to the machine."""
@@ -74,9 +71,7 @@ class LaMarzoccoClient(LMCloud):
             _LOGGER.debug("Initializing local API")
             await self._init_local_api(host)
 
-    async def update_machine_status(
-        self, callback: Callable[[str, Any], None] | None = None
-    ) -> None:
+    async def update_machine_status(self) -> None:
         """Update the machine status."""
         if not self._initialized:
             await self.connect()
@@ -84,11 +79,7 @@ class LaMarzoccoClient(LMCloud):
 
         elif self._initialized and not self._websocket_initialized:
             # only initialize websockets after the first update
-            _LOGGER.debug("Initializing WebSockets")
-            self._websocket_task = self.hass.async_create_task(
-                self.websocket_connect(callback=callback, use_sigterm_handler=False)
-            )
-            self._websocket_initialized = True
+            await self._init_websocket()
 
             await self.update_local_machine_status(force_update=True)
 
@@ -143,10 +134,3 @@ class LaMarzoccoClient(LMCloud):
             await self._lm_bluetooth.new_bleak_client_from_ble_device(ble_device)
         except BluetoothConnectionFailed as ex:
             _LOGGER.warning(ex)
-
-    def terminate_websocket(self) -> None:
-        """Terminate the websocket connection."""
-        self.websocket_terminating = True
-        if self._websocket_task:
-            self._websocket_task.cancel()
-            self._websocket_task = None

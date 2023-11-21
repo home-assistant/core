@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_close_connection(event: Event) -> None:
         """Close WebSocket connection on HA Stop."""
-        coordinator.lm.terminate_websocket()
+        coordinator.data.terminate_websocket()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
