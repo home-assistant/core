@@ -1,13 +1,13 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 from __future__ import annotations
 
+import asyncio
 from collections import OrderedDict
 from datetime import timedelta
 import logging
 from typing import Final
 
 from apcaccess import status
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -121,7 +121,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         integration uses lower cases as keys internally.
         """
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             try:
                 raw = await self.hass.async_add_executor_job(
                     status.get, self._host, self._port
