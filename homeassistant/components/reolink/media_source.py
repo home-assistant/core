@@ -129,11 +129,9 @@ class ReolinkVODMediaSource(MediaSource):
                     # playback stream not supported by this camera or no storage installed
                     continue
 
-                device_name = (
-                    device.name_by_user
-                    if device.name_by_user is not None
-                    else device.name
-                )
+                device_name = device.name
+                if device.name_by_user is not None:
+                    device_name = device.name_by_user
 
                 children.append(
                     BrowseMediaSource(
