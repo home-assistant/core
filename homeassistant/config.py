@@ -13,7 +13,7 @@ from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
@@ -1123,16 +1123,15 @@ async def async_process_component_and_handle_errors(
                 log_message = format_schema_error(hass, ex, p_name, p_config, link)
                 if annotation := find_annotation(p_config, ex.path):
                     config_file, line = annotation
-            elif isinstance(ex, HomeAssistantError):
+            else:
+                if TYPE_CHECKING:
+                    assert isinstance(ex, HomeAssistantError)
                 log_message = format_homeassistant_error(
                     hass, ex, p_name, p_config, link
                 )
                 if annotation := find_annotation(p_config, [p_name]):
                     config_file, line = annotation
                 show_stack_trace = True
-            else:
-                log_message = str(ex)
-                annotation = find_annotation(p_config, [p_name])
             config_error_messages.append(
                 (domain, platform_exception, log_message, config_file, line)
             )
