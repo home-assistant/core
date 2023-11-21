@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import CONF_COORDINATOR, DOMAIN
-from .services import _product_search
+from .services import product_search
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,11 +86,11 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add item to shopping cart."""
         product_id = await self.hass.async_add_executor_job(
-            _product_search, self.coordinator.picnic_api_client, item.summary
+            product_search, self.coordinator.picnic_api_client, item.summary
         )
 
         if not product_id:
-            raise ValueError("No product found or no product ID given!")
+            raise ValueError("No product found or no product ID given")
 
         await self.hass.async_add_executor_job(
             self.coordinator.picnic_api_client.add_product, product_id, 1
