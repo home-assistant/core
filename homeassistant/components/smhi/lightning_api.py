@@ -5,6 +5,7 @@ from .downloader import SmhiDownloader
 from .smhi_geolocation_event import SmhiGeolocationEvent
 
 APIURL_TEMPLATE = "https://opendata-download-lightning.smhi.se/api/version/latest/year/{}/month/{}/day/{}/data.json"
+ICON_URL = "https://www.smhi.se/polopoly_fs/1.184284.1654612976!/image/blixt%20logo.png_gen/derivatives/Original_126px/image/blixt%20logo.png"
 
 
 class SmhiLightning:
@@ -64,7 +65,7 @@ def parse_lightning_impacts(api_result: dict) -> list[SmhiGeolocationEvent]:
         )
 
         lightning_impact = SmhiGeolocationEvent(
-            name, latitude, longitude, "mdi:lightning-bolt", "mdi:flash", "stationary"
+            name, latitude, longitude, ICON_URL, ICON_URL, "stationary"
         )
 
         lightning_impacts.append(lightning_impact)
