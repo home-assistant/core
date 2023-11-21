@@ -70,29 +70,21 @@ class ReolinkVODMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if item.identifier is None:
-            return await self._generate_root()
+            return await self._async_generate_root()
 
         identifier = item.identifier.split("+")
         item_type = identifier[0]
 
         if item_type == "CAM":
-            config_entry_id = identifier[1]
-            channel = int(identifier[2])
-            return await self._generate_resolution_select(config_entry_id, channel)
+            _, config_entry_id, channel_str = identifier
+            return await self._async_generate_resolution_select(config_entry_id, int(channel_str))
         if item_type == "RES":
-            config_entry_id = identifier[1]
-            channel = int(identifier[2])
-            stream = identifier[3]
-            return await self._generate_camera_days(config_entry_id, channel, stream)
+            _, config_entry_id, channel_str, stream = identifier
+            return await self._async_generate_camera_days(config_entry_id, int(channel_str), stream)
         if item_type == "DAY":
-            config_entry_id = identifier[1]
-            channel = int(identifier[2])
-            stream = identifier[3]
-            year = int(identifier[4])
-            month = int(identifier[5])
-            day = int(identifier[6])
-            return await self._generate_camera_files(
-                config_entry_id, channel, stream, year, month, day
+            _, config_entry_id, channel_str, stream, year_str, month_str, day_str = identifier
+            return await self._async_generate_camera_files(
+                config_entry_id, int(channel_str), stream, int(year_str), int(month_str), int(day_str)
             )
 
         raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
@@ -162,7 +154,7 @@ class ReolinkVODMediaSource(MediaSource):
             children=children,
         )
 
-    async def _generate_resolution_select(
+    async def _async_generate_resolution_select(
         self, config_entry_id: str, channel: int
     ) -> BrowseMediaSource:
         """Allow the user to select the high or low playback resolution, (low loads faster)."""
@@ -209,7 +201,7 @@ class ReolinkVODMediaSource(MediaSource):
             children=children,
         )
 
-    async def _generate_camera_days(
+    async def _async_generate_camera_days(
         self, config_entry_id: str, channel: int, stream: str
     ) -> BrowseMediaSource:
         """Return all days on which recordings are available for a reolink camera."""
@@ -256,7 +248,7 @@ class ReolinkVODMediaSource(MediaSource):
             children=children,
         )
 
-    async def _generate_camera_files(
+    async def _async_generate_camera_files(
         self,
         config_entry_id: str,
         channel: int,
