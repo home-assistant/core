@@ -100,8 +100,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception(ex)
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
-                    assert self.reauth_entry is not None
+                if self.reauth_entry is not None:
                     self.hass.config_entries.async_update_entry(
                         self.reauth_entry,
                         data={
