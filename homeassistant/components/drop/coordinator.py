@@ -5,14 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .const import (
-    CONF_COMMAND_TOPIC,
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
     CONF_DEVICE_ID,
@@ -138,36 +136,6 @@ class DROP_DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self.getIntVal(KEY_STATUS, "psiLow")
 
     @property
-    def leak(self) -> int | None:
-        """Return leak sensor status."""
-        return self.getIntVal(KEY_STATUS, "leak")
-
-    @property
-    def pending_notification(self) -> int | None:
-        """Return pending notification sensor status."""
-        return self.getIntVal(KEY_STATUS, "notif")
-
-    @property
-    def reserve_in_use(self) -> int | None:
-        """Return reserve in use sensor status."""
-        return self.getIntVal(KEY_STATUS, "resInUse")
-
-    @property
-    def salt(self) -> int | None:
-        """Return salt sensor status."""
-        return self.getIntVal(KEY_STATUS, "salt")
-
-    @property
-    def pump(self) -> int | None:
-        """Return pump status."""
-        return self.getIntVal(KEY_STATUS, "pump")
-
-    @property
-    def protect_mode(self) -> str | None:
-        """Return Protect Mode status."""
-        return self.getStrVal(KEY_STATUS, "pMode")
-
-    @property
     def temperature_c(self) -> float | None:
         """Return temperature in Celsius."""
         return self.getFloatVal(KEY_STATUS, "temp")
@@ -205,26 +173,7 @@ class DROP_DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Return cartridge 3 life remaining."""
         return self.getIntVal(KEY_STATUS, "cart3")
 
-    @property
-    def last_known_water_state(self) -> str | None:
-        """Return the last known water state for the system."""
-        return self.getStrVal(KEY_STATUS, "water")
-
-    @property
-    def last_known_bypass_state(self) -> str | None:
-        """Return the last known bypass state for a filter or softener."""
-        return self.getStrVal(KEY_STATUS, "bypass")
-
     # Helper functions for above API endpoints
-    def getStrVal(self, structure: str, key: str) -> str | None:
-        """Return the specified API value as a string or None if it is unknown."""
-        if (
-            structure in self._device_information
-            and key in self._device_information[structure]
-        ):
-            return self._device_information[structure][key]
-        return None
-
     def getIntVal(self, structure: str, key: str) -> int | None:
         """Return return the specified API value as an int or None if it is unknown."""
         if (
@@ -242,54 +191,3 @@ class DROP_DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         ):
             return float(self._device_information[structure][key])
         return None
-
-    # Functions to change Controls
-    async def set_water_on(self):
-        """Set water supply ON."""
-        await mqtt.async_publish(
-            self.hass,
-            self.config_entry.data[CONF_COMMAND_TOPIC],
-            '{"water":1}',
-            qos=0,
-            retain=False,
-        )
-
-    async def set_water_off(self):
-        """Set water supply OFF."""
-        await mqtt.async_publish(
-            self.hass,
-            self.config_entry.data[CONF_COMMAND_TOPIC],
-            '{"water":0}',
-            qos=0,
-            retain=False,
-        )
-
-    async def set_bypass_on(self):
-        """Set bypass ON."""
-        await mqtt.async_publish(
-            self.hass,
-            self.config_entry.data[CONF_COMMAND_TOPIC],
-            '{"bypass":1}',
-            qos=0,
-            retain=False,
-        )
-
-    async def set_bypass_off(self):
-        """Set bypass OFF."""
-        await mqtt.async_publish(
-            self.hass,
-            self.config_entry.data[CONF_COMMAND_TOPIC],
-            '{"bypass":0}',
-            qos=0,
-            retain=False,
-        )
-
-    async def set_protect_mode(self, pMode: str):
-        """Set Protect Mode value."""
-        await mqtt.async_publish(
-            self.hass,
-            self.config_entry.data[CONF_COMMAND_TOPIC],
-            f'{{"pMode":"{pMode}"}}',
-            qos=0,
-            retain=False,
-        )

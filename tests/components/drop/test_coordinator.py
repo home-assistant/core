@@ -1,7 +1,6 @@
 """Test DROP coordinator."""
 
 from homeassistant.components.drop.const import DOMAIN as DROP_DOMAIN
-from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -20,22 +19,17 @@ async def test_bad_json(
     assert await async_setup_component(hass, DROP_DOMAIN, {})
     await hass.async_block_till_done()
 
-    protectModeSelectName = "select.hub_drop_1_c0ffee_protect_mode"
-    protectModeSelect = hass.states.get(protectModeSelectName)
-    assert protectModeSelect
-    assert protectModeSelect.attributes.get(ATTR_OPTIONS) == [
-        "AWAY",
-        "HOME",
-        "SCHEDULE",
-    ]
-    assert protectModeSelect.state == STATE_UNKNOWN
+    currentFlowSensorName = "sensor.hub_drop_1_c0ffee_water_flow_rate"
+    currentFlowSensor = hass.states.get(currentFlowSensorName)
+    assert currentFlowSensor
+    assert currentFlowSensor.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, "{BAD JSON}")
     await hass.async_block_till_done()
 
-    protectModeSelect = hass.states.get(protectModeSelectName)
-    assert protectModeSelect
-    assert protectModeSelect.state == STATE_UNKNOWN
+    currentFlowSensor = hass.states.get(currentFlowSensorName)
+    assert currentFlowSensor
+    assert currentFlowSensor.state == STATE_UNKNOWN
 
 
 async def test_no_mqtt(hass: HomeAssistant, config_entry_hub) -> None:
