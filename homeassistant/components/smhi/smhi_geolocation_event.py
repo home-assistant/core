@@ -1,4 +1,6 @@
 """Smhi geolocation event."""
+import uuid
+
 from homeassistant.components.geo_location import GeolocationEvent
 
 
@@ -15,7 +17,7 @@ class SmhiGeolocationEvent(GeolocationEvent):
         state: str,
     ) -> None:
         """Initialize the geolocation event."""
-        self._attr_unique_id = f"{latitude}_{longitude}"
+        self._attr_unique_id = str(uuid.uuid4())
         self._attr_source = "smhi_warning"
         self._name = name
         self._latitude = latitude
