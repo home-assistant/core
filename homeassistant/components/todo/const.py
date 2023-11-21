@@ -4,10 +4,10 @@ from enum import IntFlag, StrEnum
 
 DOMAIN = "todo"
 
-CONF_DUE = "due"
-CONF_DUE_DATE = "due_date"
-CONF_DUE_DATE_TIME = "due_date_time"
-CONF_DESCRIPTION = "description"
+ATTR_DUE = "due"
+ATTR_DUE_DATE = "due_date"
+ATTR_DUE_DATE_TIME = "due_date_time"
+ATTR_DESCRIPTION = "description"
 
 
 class TodoListEntityFeature(IntFlag):

@@ -34,7 +34,7 @@ add_item:
       selector:
         datetime:
     description:
-      example: "A more complete description of than that provided by the summary."
+      example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
 update_item:
@@ -70,7 +70,7 @@ update_item:
       selector:
         datetime:
     description:
-      example: "A more complete description of than that provided by the summary."
+      example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
 remove_item:

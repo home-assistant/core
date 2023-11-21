@@ -48,7 +48,7 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-def _as_local_timezone(value: Any) -> datetime.datetime:
+def _as_local_timezone(value: datetime.datetime) -> datetime.datetime:
     """Convert a datetime values to the local timezone."""
 
     if not isinstance(value, datetime.datetime):
@@ -469,7 +469,7 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
             summary=call.data["item"],
             status=TodoItemStatus.NEEDS_ACTION,
             **{
-                desc.todo_item_field: call.data.get(desc.service_field)
+                desc.todo_item_field: call.data[desc.service_field]
                 for desc in TODO_ITEM_FIELDS
                 if desc.service_field in call.data
             },
@@ -492,7 +492,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
             summary=call.data.get("rename"),
             status=call.data.get("status"),
             **{
-                desc.todo_item_field: call.data.get(desc.service_field)
+                desc.todo_item_field: call.data[desc.service_field]
                 for desc in TODO_ITEM_FIELDS
                 if desc.service_field in call.data
             },
