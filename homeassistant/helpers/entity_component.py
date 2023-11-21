@@ -355,11 +355,8 @@ class EntityComponent(Generic[_EntityT]):
 
         integration = await async_get_integration(self.hass, self.domain)
 
-        processed_conf, config_ex = await conf_util.async_process_component_config(
+        processed_conf = await conf_util.async_process_component_and_handle_errors(
             self.hass, conf, integration
-        )
-        conf_util.async_handle_component_config_errors(
-            self.hass, integration, config_ex
         )
 
         if processed_conf is None:

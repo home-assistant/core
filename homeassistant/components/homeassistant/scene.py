@@ -194,10 +194,9 @@ async def async_setup_platform(
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
 
-        conf, config_ex = await conf_util.async_process_component_config(
+        conf = await conf_util.async_process_component_and_handle_errors(
             hass, config, integration
         )
-        conf_util.async_handle_component_config_errors(hass, integration, config_ex)
 
         if not (conf and platform):
             return

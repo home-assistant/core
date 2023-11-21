@@ -984,9 +984,10 @@ def assert_setup_component(count, domain=None):
     async def mock_psc(hass, config_input, integration):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
-        res, exceptions = await async_process_component_config(
+        integration_config_info = await async_process_component_config(
             hass, config_input, integration
         )
+        res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug(
             "Configuration for %s, Validated: %s, Original %s",
@@ -994,7 +995,7 @@ def assert_setup_component(count, domain=None):
             config[domain_input],
             config_input.get(domain_input),
         )
-        return res, exceptions
+        return integration_config_info
 
     assert isinstance(config, dict)
     with patch("homeassistant.config.async_process_component_config", mock_psc):

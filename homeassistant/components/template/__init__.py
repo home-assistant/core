@@ -35,10 +35,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         integration = await async_get_integration(hass, DOMAIN)
-        conf, config_ex = await conf_util.async_process_component_config(
+        conf = await conf_util.async_process_component_and_handle_errors(
             hass, unprocessed_conf, integration
         )
-        conf_util.async_handle_component_config_errors(hass, integration, config_ex)
 
         if conf is None:
             return

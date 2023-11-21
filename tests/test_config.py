@@ -372,16 +372,9 @@ async def help_async_integration_yaml_config(
     raise_on_failure: bool = False,
 ) -> ConfigType | None:
     """Help process component config and errors."""
-    config, config_ex = await config_util.async_process_component_config(
-        hass,
-        config,
-        integration,
+    return await config_util.async_process_component_and_handle_errors(
+        hass, config, integration, raise_on_failure=raise_on_failure
     )
-    config_util.async_handle_component_config_errors(
-        hass, integration, config_ex, raise_on_failure=raise_on_failure
-    )
-
-    return config
 
 
 async def test_create_default_config(hass: HomeAssistant) -> None:
@@ -1875,12 +1868,12 @@ async def test_component_config_error_processing(
             )
         ),
     )
-    with pytest.raises(ConfigValidationError) as ex:
-        config_util.async_handle_component_config_errors(
-            hass,
-            test_integration,
-            exception_info_list,
-            raise_on_failure=True,
+    with patch(
+        "homeassistant.config.async_process_component_config",
+        return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
+    ), pytest.raises(ConfigValidationError) as ex:
+        await config_util.async_process_component_and_handle_errors(
+            hass, {}, test_integration, raise_on_failure=True
         )
     records = [record for record in caplog.records if record.msg == messages[0]]
     assert len(records) == 1
@@ -1899,11 +1892,13 @@ async def test_component_config_error_processing(
     assert all(message in caplog.text for message in messages)
 
     caplog.clear()
-    config_util.async_handle_component_config_errors(
-        hass,
-        test_integration,
-        exception_info_list,
-    )
+    with patch(
+        "homeassistant.config.async_process_component_config",
+        return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
+    ):
+        await config_util.async_process_component_and_handle_errors(
+            hass, {}, test_integration
+        )
     assert all(message in caplog.text for message in messages)
 
 

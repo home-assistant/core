@@ -5,9 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.config import (
-    async_handle_component_config_errors,
     async_hass_config_yaml,
-    async_process_component_config,
+    async_process_component_and_handle_errors,
 )
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -89,10 +88,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         integration = await async_get_integration(hass, DOMAIN)
 
-        config, config_ex = await async_process_component_config(
+        config = await async_process_component_and_handle_errors(
             hass, conf, integration
         )
-        async_handle_component_config_errors(hass, integration, config_ex)
 
         if config is None:
             raise HomeAssistantError("Config validation failed")
