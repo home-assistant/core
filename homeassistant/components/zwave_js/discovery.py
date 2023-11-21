@@ -664,7 +664,14 @@ DISCOVERY_SCHEMAS = [
     # locks
     # Door Lock CC
     ZWaveDiscoverySchema(
-        platform=Platform.LOCK, primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA
+        platform=Platform.LOCK,
+        primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA,
+        allow_multi=True,
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SELECT,
+        primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA,
+        hint="door_lock",
     ),
     # Only discover the Lock CC if the Door Lock CC isn't also present on the node
     ZWaveDiscoverySchema(
