@@ -141,7 +141,9 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch.object(
-        config, "async_process_component_config", return_value=(None, [])
+        config,
+        "async_process_component_config",
+        return_value=config.IntegrationConfigInfo(None, []),
     ):
         await hass.services.async_call(
             PLATFORM,
