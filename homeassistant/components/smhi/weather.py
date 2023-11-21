@@ -61,6 +61,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
+from .firerisk.fire_risk_data_fetcher import get_grassfire_risk
 from .warnings import SmhiWarnings
 from .weather_locations import SmhiWeatherLocations
 
@@ -116,12 +117,16 @@ async def async_setup_entry(
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
     async_add_entities([entity], True)
 
-    # SMHI warnings
+    # WARNINGS
     warnings = SmhiWarnings()
     warnings_data = await warnings.get_warnings()
     async_add_entities(warnings_data, True)
 
-    # SMHI weather
+    # FIRE RISK
+    fire_risk_data = await get_grassfire_risk()
+    async_add_entities(fire_risk_data, True)
+
+    # WEATHER LOCATIONS
     weather_locations = SmhiWeatherLocations()
     weather_data = await weather_locations.get_weather_locations()
     async_add_entities(weather_data, True)
