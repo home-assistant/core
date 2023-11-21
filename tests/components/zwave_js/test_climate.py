@@ -427,13 +427,14 @@ async def test_thermostat_heatit_z_trm6(
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.OFF,
         HVACMode.HEAT,
+        HVACMode.COOL,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_TEMPERATURE] == 19
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE
+        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 40
