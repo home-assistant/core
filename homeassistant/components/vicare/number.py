@@ -80,6 +80,18 @@ PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         max_value_getter=lambda api: api.getProgramMaxTemperature("comfort"),
         stepping_getter=lambda api: api.getProgramStepping("comfort"),
     ),
+    ViCareNumberEntityDescription(
+        key="eco_temperature",
+        translation_key="eco_temperature",
+        icon="mdi:thermometer",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram("eco"),
+        value_setter=lambda api, value: api.setProgramTemperature("eco", value),
+        min_value_getter=lambda api: api.getProgramMinTemperature("eco"),
+        max_value_getter=lambda api: api.getProgramMaxTemperature("eco"),
+        stepping_getter=lambda api: api.getProgramStepping("eco"),
+    ),
 )
 
 
