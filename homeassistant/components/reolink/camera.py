@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from reolink_aio.api import DUAL_LENS_MODELS, Host
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.camera import (
     Camera,
@@ -15,6 +16,7 @@ from homeassistant.components.camera import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -147,6 +149,9 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        return await self._host.api.get_snapshot(
-            self._channel, self.entity_description.stream
-        )
+        try:
+            return await self._host.api.get_snapshot(
+                self._channel, self.entity_description.stream
+            )
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err

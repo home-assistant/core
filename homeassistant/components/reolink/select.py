@@ -13,12 +13,14 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
+from reolink_aio.exceptions import ReolinkError, InvalidParameterError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -161,5 +163,10 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.entity_description.method(self._host.api, self._channel, option)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, option)
+        except InvalidParameterError as err:
+            raise ValueError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()

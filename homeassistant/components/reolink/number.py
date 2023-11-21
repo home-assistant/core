@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
+from reolink_aio.exceptions import ReolinkError, InvalidParameterError
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -16,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -365,5 +367,10 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self.entity_description.method(self._host.api, self._channel, value)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, value)
+        except InvalidParameterError as err:
+            raise ValueError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
