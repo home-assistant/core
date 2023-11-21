@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -27,7 +28,14 @@ import voluptuous as vol
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -447,39 +455,52 @@ class ESPHomeManager:
         if device_info.name:
             reconnect_logic.name = device_info.name
 
+        setup_coros_with_disconnect_callbacks: list[
+            Coroutine[Any, Any, CALLBACK_TYPE]
+        ] = []
         if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
-            entry_data.disconnect_callbacks.add(
-                await async_connect_scanner(
+            setup_coros_with_disconnect_callbacks.append(
+                async_connect_scanner(
                     hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
                 )
             )
 
+        if device_info.voice_assistant_version:
+            setup_coros_with_disconnect_callbacks.append(
+                cli.subscribe_voice_assistant(
+                    self._handle_pipeline_start,
+                    self._handle_pipeline_stop,
+                )
+            )
+
+        setup_coros = [
+            cli.subscribe_states(entry_data.async_update_state),
+            cli.subscribe_service_calls(self.async_on_service_call),
+            cli.subscribe_home_assistant_states(self.async_on_state_subscription),
+        ]
+
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
         entry_data.async_update_device_state(hass)
+        await asyncio.gather(
+            entry_data.async_update_static_infos(
+                hass, entry, entity_infos, device_info.mac_address
+            ),
+            _setup_services(hass, entry_data, services),
+        )
 
         try:
-            await entry_data.async_update_static_infos(
-                hass, entry, entity_infos, device_info.mac_address
+            setup_results = await asyncio.gather(
+                *setup_coros_with_disconnect_callbacks, *setup_coros
             )
-            await _setup_services(hass, entry_data, services)
-            await asyncio.gather(
-                cli.subscribe_states(entry_data.async_update_state),
-                cli.subscribe_service_calls(self.async_on_service_call),
-                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
-            )
-
-            if device_info.voice_assistant_version:
-                entry_data.disconnect_callbacks.add(
-                    await cli.subscribe_voice_assistant(
-                        self._handle_pipeline_start,
-                        self._handle_pipeline_stop,
-                    )
-                )
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
             return
+
+        for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
+            cancel_callback: CALLBACK_TYPE = setup_results[result_idx]
+            entry_data.disconnect_callbacks.add(cancel_callback)
 
         hass.async_create_task(entry_data.async_save_to_store())
         _async_check_firmware_version(hass, device_info, entry_data.api_version)
