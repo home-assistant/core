@@ -32,10 +32,10 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    CONF_DESCRIPTION,
-    CONF_DUE,
-    CONF_DUE_DATE,
-    CONF_DUE_DATE_TIME,
+    ATTR_DESCRIPTION,
+    ATTR_DUE,
+    ATTR_DUE_DATE,
+    ATTR_DUE_DATE_TIME,
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
@@ -76,21 +76,21 @@ class TodoItemFieldDescription:
 
 TODO_ITEM_FIELDS = [
     TodoItemFieldDescription(
-        service_field=CONF_DUE_DATE,
+        service_field=ATTR_DUE_DATE,
         validation=cv.date,
-        todo_item_field=CONF_DUE,
+        todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.DUE_DATE,
     ),
     TodoItemFieldDescription(
-        service_field=CONF_DUE_DATE_TIME,
+        service_field=ATTR_DUE_DATE_TIME,
         validation=vol.All(cv.datetime, _as_local_timezone),
-        todo_item_field=CONF_DUE,
+        todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.DUE_DATETIME,
     ),
     TodoItemFieldDescription(
-        service_field=CONF_DESCRIPTION,
+        service_field=ATTR_DESCRIPTION,
         validation=cv.string,
-        todo_item_field=CONF_DESCRIPTION,
+        todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.DESCRIPTION,
     ),
 ]
@@ -99,7 +99,7 @@ TODO_ITEM_FIELD_SCHEMA = {
     vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
 }
 TODO_ITEM_FIELD_VALIDATIONS = [
-    cv.has_at_most_one_key(CONF_DUE_DATE, CONF_DUE_DATE_TIME)
+    cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATE_TIME)
 ]
 
 
@@ -137,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
-            cv.has_at_most_one_key(CONF_DUE_DATE, CONF_DUE_DATE_TIME),
+            cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATE_TIME),
             *TODO_ITEM_FIELD_VALIDATIONS,
         ),
         _async_add_todo_item,
