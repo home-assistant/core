@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-PLATFORMS = [Platform.WEATHER]
+PLATFORMS = [Platform.WEATHER, Platform.IMAGE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
