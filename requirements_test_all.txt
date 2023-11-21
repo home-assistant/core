@@ -1994,7 +1994,7 @@ vacuum-map-parser-roborock==0.1.1
 vallox-websocket-api==4.0.2
 
 # homeassistant.components.rdw
-vehicle==2.2.0
+vehicle==2.2.1
 
 # homeassistant.components.velbus
 velbus-aio==2023.11.0
