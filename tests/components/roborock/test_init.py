@@ -1,6 +1,8 @@
 """Test for Roborock init."""
 from unittest.mock import patch
 
+from roborock import RoborockInvalidCredentials
+
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -38,3 +40,15 @@ async def test_config_entry_not_ready(
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reauth_started(
+    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reauth flow started."""
+    with patch(
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
+        side_effect=RoborockInvalidCredentials(),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR

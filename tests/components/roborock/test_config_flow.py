@@ -1,4 +1,5 @@
 """Test Roborock config flow."""
+from copy import copy
 from unittest.mock import patch
 
 import pytest
@@ -6,18 +7,15 @@ from roborock.exceptions import (
     RoborockAccountDoesNotExist,
     RoborockException,
     RoborockInvalidCode,
-    RoborockInvalidCredentials,
     RoborockInvalidEmail,
     RoborockUrlException,
 )
 
 from homeassistant import config_entries
 from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from ...common import MockConfigEntry
 from .mock_data import MOCK_CONFIG, USER_DATA, USER_EMAIL
@@ -189,25 +187,14 @@ async def test_reauth_flow(
     hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow."""
-    # Fail authenticating on an already created entry.
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
-        side_effect=RoborockInvalidCredentials(),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR
     # Start reauth
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_roborock_entry.unique_id,
-            "entry_id": mock_roborock_entry.entry_id,
-        },
-        data={CONF_USERNAME: USER_EMAIL},
-    )
+    result = mock_roborock_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+
     # Request a new code
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
@@ -218,12 +205,15 @@ async def test_reauth_flow(
     # Enter a new code
     assert result["step_id"] == "code"
     assert result["type"] == FlowResultType.FORM
+    new_user_data = copy(USER_DATA)
+    new_user_data.rriot.s = "new_password_hash"
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
-        return_value=USER_DATA,
+        return_value=new_user_data,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"

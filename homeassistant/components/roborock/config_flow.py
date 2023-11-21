@@ -17,7 +17,7 @@ from roborock.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
@@ -30,6 +30,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roborock."""
 
     VERSION = 1
+    reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -100,19 +101,17 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if self.source == SOURCE_REAUTH:
-                    entry = self.hass.config_entries.async_get_entry(
-                        self.context["entry_id"]
-                    )
-                    assert entry is not None
+                    assert self.reauth_entry is not None
                     self.hass.config_entries.async_update_entry(
-                        entry,
+                        self.reauth_entry,
                         data={
-                            **entry.data,
-                            CONF_USERNAME: self._username,
+                            **self.reauth_entry.data,
                             CONF_USER_DATA: login_data.as_dict(),
                         },
                     )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
+                    await self.hass.config_entries.async_reload(
+                        self.reauth_entry.entry_id
+                    )
                     return self.async_abort(reason="reauth_successful")
                 return self._create_entry(self._client, self._username, login_data)
 
@@ -127,6 +126,9 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         assert self._username
         self._client = RoborockApiClient(self._username)
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
