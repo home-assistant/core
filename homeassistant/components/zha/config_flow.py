@@ -10,7 +10,7 @@ import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding, usb, zeroconf
@@ -281,7 +281,7 @@ class BaseZhaFlow(FlowHandler):
         for (
             param,
             value,
-        ) in self._radio_mgr.radio_type.controller.SCHEMA_DEVICE.schema.items():
+        ) in SCHEMA_DEVICE.schema.items():
             if param not in SUPPORTED_PORT_SETTINGS:
                 continue
 
@@ -648,9 +648,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         radio_type = self._radio_mgr.parse_radio_type(discovery_data["radio_type"])
 
         try:
-            device_settings = radio_type.controller.SCHEMA_DEVICE(
-                discovery_data["port"]
-            )
+            device_settings = SCHEMA_DEVICE(discovery_data["port"])
         except vol.Invalid:
             return self.async_abort(reason="invalid_hardware_data")
 

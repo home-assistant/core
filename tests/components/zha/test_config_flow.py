@@ -3,7 +3,6 @@ import copy
 from datetime import timedelta
 from ipaddress import ip_address
 import json
-import typing
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
 
@@ -11,7 +10,7 @@ import pytest
 import serial.tools.list_ports
 from zigpy.backups import BackupManager
 import zigpy.config
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
 import zigpy.device
 from zigpy.exceptions import NetworkNotFormed
 import zigpy.types
@@ -119,9 +118,7 @@ def mock_detect_radio_type(
 
     async def detect(self):
         self.radio_type = radio_type
-        self.device_settings = radio_type.controller.SCHEMA_DEVICE(
-            {CONF_DEVICE_PATH: self.device_path}
-        )
+        self.device_settings = SCHEMA_DEVICE({CONF_DEVICE_PATH: self.device_path})
 
         return ret
 
@@ -239,6 +236,8 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> Non
     assert result4["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: None,
         },
         CONF_RADIO_TYPE: "zigate",
     }
@@ -288,7 +287,7 @@ async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
             CONF_BAUDRATE: 115200,
-            CONF_FLOW_CONTROL: "software",
+            CONF_FLOW_CONTROL: None,
         },
         CONF_RADIO_TYPE: "ezsp",
     }
@@ -484,6 +483,8 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
     assert result4["data"] == {
         "device": {
             "path": "/dev/ttyZIGBEE",
+            "baudrate": 115200,
+            "flow_control": None,
         },
         CONF_RADIO_TYPE: "zigate",
     }
@@ -755,6 +756,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "device": {
             "path": port.device,
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: None,
         },
         CONF_RADIO_TYPE: "deconz",
     }
@@ -774,7 +777,11 @@ async def test_user_flow_not_detected(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
-        data={zigpy.config.CONF_DEVICE_PATH: port_select},
+        data={
+            zigpy.config.CONF_DEVICE_PATH: port_select,
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: None,
+        },
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -1955,50 +1962,3 @@ async def test_migration_ti_cc_to_znp(
 
     assert config_entry.version > 2
     assert config_entry.data[CONF_RADIO_TYPE] == new_type
-
-
-@pytest.mark.parametrize(
-    (
-        "radio_type",
-        "old_baudrate",
-        "old_flow_control",
-        "new_baudrate",
-        "new_flow_control",
-    ),
-    [
-        ("znp", None, None, 115200, None),
-        ("znp", None, "software", 115200, "software"),
-        ("znp", 57600, "software", 57600, "software"),
-        ("deconz", None, None, 38400, None),
-        ("deconz", 115200, None, 115200, None),
-    ],
-)
-async def test_migration_baudrate_and_flow_control(
-    radio_type: str,
-    old_baudrate: int,
-    old_flow_control: typing.Literal["hardware", "software", None],
-    new_baudrate: int,
-    new_flow_control: typing.Literal["hardware", "software", None],
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test baudrate and flow control migration."""
-    config_entry.data = {
-        **config_entry.data,
-        CONF_RADIO_TYPE: radio_type,
-        CONF_DEVICE: {
-            CONF_BAUDRATE: old_baudrate,
-            CONF_FLOW_CONTROL: old_flow_control,
-            CONF_DEVICE_PATH: "/dev/null",
-        },
-    }
-    config_entry.version = 3
-    config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.version > 3
-    assert config_entry.data[CONF_DEVICE][CONF_BAUDRATE] == new_baudrate
-    assert config_entry.data[CONF_DEVICE][CONF_FLOW_CONTROL] == new_flow_control

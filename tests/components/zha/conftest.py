@@ -83,8 +83,8 @@ class _FakeApp(ControllerApplication):
     async def permit_ncp(self, time_s: int = 60):
         pass
 
-    async def permit_with_key(
-        self, node: zigpy.types.EUI64, code: bytes, time_s: int = 60
+    async def permit_with_link_key(
+        self, node: zigpy.types.EUI64, link_key: zigpy.types.KeyData, time_s: int = 60
     ):
         pass
 
