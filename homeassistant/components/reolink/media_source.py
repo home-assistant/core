@@ -72,7 +72,7 @@ class ReolinkVODMediaSource(MediaSource):
         if item.identifier is None:
             return await self._async_generate_root()
 
-        identifier = item.identifier.split("+")
+        identifier = item.identifier.split("+", 7)
         item_type = identifier[0]
 
         if item_type == "CAM":
