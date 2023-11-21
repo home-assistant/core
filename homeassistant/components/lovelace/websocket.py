@@ -60,6 +60,9 @@ async def websocket_lovelace_resources(
     """Send Lovelace UI resources over WebSocket configuration."""
     resources = hass.data[DOMAIN]["resources"]
 
+    if hass.config.safe_mode:
+        connection.send_result(msg["id"], [])
+
     if not resources.loaded:
         await resources.async_load()
         resources.loaded = True

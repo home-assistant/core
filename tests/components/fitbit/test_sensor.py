@@ -9,7 +9,7 @@ import pytest
 from requests_mock.mocker import Mocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fitbit.const import DOMAIN
+from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,6 +23,7 @@ from homeassistant.util.unit_system import (
 from .conftest import (
     DEVICES_API_URL,
     PROFILE_USER_ID,
+    SERVER_ACCESS_TOKEN,
     TIMESERIES_API_URL_FORMAT,
     timeseries_response,
 )
@@ -53,6 +54,18 @@ DEVICE_RESPONSE_ARIA_AIR = {
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
     return [Platform.SENSOR]
+
+
+@pytest.fixture(autouse=True)
+def mock_token_refresh(requests_mock: Mocker) -> None:
+    """Test that platform configuration is imported successfully."""
+
+    requests_mock.register_uri(
+        "POST",
+        OAUTH2_TOKEN,
+        status_code=HTTPStatus.OK,
+        json=SERVER_ACCESS_TOKEN,
+    )
 
 
 @pytest.mark.parametrize(

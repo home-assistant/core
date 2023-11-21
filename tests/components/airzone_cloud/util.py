@@ -101,6 +101,7 @@ GET_INSTALLATION_MOCK = {
                     API_WS_ID: WS_ID,
                 },
                 {
+                    API_CONFIG: {},
                     API_DEVICE_ID: "zone1",
                     API_NAME: "Salon",
                     API_TYPE: API_AZ_ZONE,
@@ -111,6 +112,7 @@ GET_INSTALLATION_MOCK = {
                     API_WS_ID: WS_ID,
                 },
                 {
+                    API_CONFIG: {},
                     API_DEVICE_ID: "zone2",
                     API_NAME: "Dormitorio",
                     API_TYPE: API_AZ_ZONE,

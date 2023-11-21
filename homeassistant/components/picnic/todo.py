@@ -40,7 +40,10 @@ async def async_setup_entry(
 class PicnicCart(TodoListEntity, CoordinatorEntity):
     """A Picnic Shopping Card TodoListEntity."""
 
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:cart"
     _attr_supported_features = TodoListEntityFeature.CREATE_TODO_ITEM
+    _attr_translation_key = "shopping_cart"
 
     def __init__(
         self,
@@ -58,8 +61,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
         )
         self.hass = hass
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
-        self._attr_name = "Picnic Shopping cart"
-        self._attr_icon = "mdi:cart"
 
     @property
     def todo_items(self) -> list[TodoItem] | None:
@@ -74,7 +75,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
             for article in item["items"]:
                 items.append(
                     TodoItem(
-                        summary=f"{article['name']} ({article['unit_quantity']}) - €{article['price'] / 100}",
+                        summary=f"{article['name']} ({article['unit_quantity']})",
                         uid=f"{item['id']}-{article['id']}",
                         status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
                     )

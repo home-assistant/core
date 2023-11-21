@@ -57,10 +57,10 @@ async def ws_get_items(
 async def ws_move_item(
     hass_ws_client: WebSocketGenerator,
     ws_req_id: Callable[[], int],
-) -> Callable[[str, int | None], Awaitable[None]]:
+) -> Callable[[str, str | None], Awaitable[None]]:
     """Fixture to move an item in the todo list."""
 
-    async def move(uid: str, pos: int | None) -> dict[str, Any]:
+    async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
         id = ws_req_id()
@@ -70,8 +70,8 @@ async def ws_move_item(
             "entity_id": TEST_ENTITY,
             "uid": uid,
         }
-        if pos is not None:
-            data["pos"] = pos
+        if previous_uid is not None:
+            data["previous_uid"] = previous_uid
         await client.send_json(data)
         resp = await client.receive_json()
         assert resp.get("id") == id
@@ -406,10 +406,10 @@ async def test_update_invalid_item(
     ("src_idx", "dst_idx", "expected_items"),
     [
         # Move any item to the front of the list
-        (0, 0, ["item 1", "item 2", "item 3", "item 4"]),
-        (1, 0, ["item 2", "item 1", "item 3", "item 4"]),
-        (2, 0, ["item 3", "item 1", "item 2", "item 4"]),
-        (3, 0, ["item 4", "item 1", "item 2", "item 3"]),
+        (0, None, ["item 1", "item 2", "item 3", "item 4"]),
+        (1, None, ["item 2", "item 1", "item 3", "item 4"]),
+        (2, None, ["item 3", "item 1", "item 2", "item 4"]),
+        (3, None, ["item 4", "item 1", "item 2", "item 3"]),
         # Move items right
         (0, 1, ["item 2", "item 1", "item 3", "item 4"]),
         (0, 2, ["item 2", "item 3", "item 1", "item 4"]),
@@ -417,15 +417,15 @@ async def test_update_invalid_item(
         (1, 2, ["item 1", "item 3", "item 2", "item 4"]),
         (1, 3, ["item 1", "item 3", "item 4", "item 2"]),
         # Move items left
-        (2, 1, ["item 1", "item 3", "item 2", "item 4"]),
-        (3, 1, ["item 1", "item 4", "item 2", "item 3"]),
-        (3, 2, ["item 1", "item 2", "item 4", "item 3"]),
+        (2, 0, ["item 1", "item 3", "item 2", "item 4"]),
+        (3, 0, ["item 1", "item 4", "item 2", "item 3"]),
+        (3, 1, ["item 1", "item 2", "item 4", "item 3"]),
         # No-ops
         (0, 0, ["item 1", "item 2", "item 3", "item 4"]),
-        (1, 1, ["item 1", "item 2", "item 3", "item 4"]),
+        (2, 1, ["item 1", "item 2", "item 3", "item 4"]),
         (2, 2, ["item 1", "item 2", "item 3", "item 4"]),
+        (3, 2, ["item 1", "item 2", "item 3", "item 4"]),
         (3, 3, ["item 1", "item 2", "item 3", "item 4"]),
-        (3, 4, ["item 1", "item 2", "item 3", "item 4"]),
     ],
 )
 async def test_move_item(
@@ -433,7 +433,7 @@ async def test_move_item(
     sl_setup: None,
     ws_req_id: Callable[[], int],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, int | None], Awaitable[dict[str, Any]]],
+    ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -457,7 +457,12 @@ async def test_move_item(
     summaries = [item["summary"] for item in items]
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
-    resp = await ws_move_item(uids[src_idx], dst_idx)
+    # Prepare items for moving
+    previous_uid: str | None = None
+    if dst_idx is not None:
+        previous_uid = uids[dst_idx]
+
+    resp = await ws_move_item(uids[src_idx], previous_uid)
     assert resp.get("success")
 
     items = await ws_get_items()

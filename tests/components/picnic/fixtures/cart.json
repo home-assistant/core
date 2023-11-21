@@ -318,5 +318,20 @@
         }
       ]
     }
-  ]
+  ],
+  "delivery_slots": [
+    {
+      "slot_id": "611a3b074872b23576bef456a",
+      "window_start": "2021-03-03T14:45:00.000+01:00",
+      "window_end": "2021-03-03T15:45:00.000+01:00",
+      "cut_off_time": "2021-03-02T22:00:00.000+01:00",
+      "minimum_order_value": 3500
+    }
+  ],
+  "selected_slot": {
+    "slot_id": "611a3b074872b23576bef456a",
+    "state": "EXPLICIT"
+  },
+  "total_count": 10,
+  "total_price": 2535
 }

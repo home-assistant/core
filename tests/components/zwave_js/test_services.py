@@ -224,7 +224,16 @@ async def test_set_config_parameter(
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
-    await Group.async_create_group(hass, "test", [AIR_TEMPERATURE_SENSOR])
+    await Group.async_create_group(
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=[AIR_TEMPERATURE_SENSOR],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_CONFIG_PARAMETER,
@@ -594,7 +603,16 @@ async def test_bulk_set_config_parameters(
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
-    await Group.async_create_group(hass, "test", [AIR_TEMPERATURE_SENSOR])
+    await Group.async_create_group(
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=[AIR_TEMPERATURE_SENSOR],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -728,7 +746,16 @@ async def test_refresh_value(
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
-    await Group.async_create_group(hass, "test", [CLIMATE_RADIO_THERMOSTAT_ENTITY])
+    await Group.async_create_group(
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=[CLIMATE_RADIO_THERMOSTAT_ENTITY],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
@@ -848,7 +875,16 @@ async def test_set_value(
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
-    await Group.async_create_group(hass, "test", [CLIMATE_DANFOSS_LC13_ENTITY])
+    await Group.async_create_group(
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=[CLIMATE_DANFOSS_LC13_ENTITY],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
@@ -1150,7 +1186,14 @@ async def test_multicast_set_value(
     # Test groups get expanded for multicast call
     assert await async_setup_component(hass, "group", {})
     await Group.async_create_group(
-        hass, "test", [CLIMATE_DANFOSS_LC13_ENTITY, CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY]
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=[CLIMATE_DANFOSS_LC13_ENTITY, CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1516,7 +1559,14 @@ async def test_ping(
     # Test groups get expanded for multicast call
     assert await async_setup_component(hass, "group", {})
     await Group.async_create_group(
-        hass, "test", [CLIMATE_DANFOSS_LC13_ENTITY, CLIMATE_RADIO_THERMOSTAT_ENTITY]
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=[CLIMATE_DANFOSS_LC13_ENTITY, CLIMATE_RADIO_THERMOSTAT_ENTITY],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
     await hass.services.async_call(
         DOMAIN,

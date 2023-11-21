@@ -1,16 +1,14 @@
 """Test Hydrawise switch."""
 
-from datetime import timedelta
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.hydrawise.const import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_states(
@@ -19,11 +17,6 @@ async def test_states(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch states."""
-    # Make the coordinator refresh data.
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     watering1 = hass.states.get("switch.zone_one_manual_watering")
     assert watering1 is not None
     assert watering1.state == "off"

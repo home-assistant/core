@@ -142,7 +142,6 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneEntity, ClimateEntity):
     """Define an Airzone Cloud climate."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -387,4 +386,6 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
         await self._async_update_params(params)
 
         if slave_raise:
-            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )
