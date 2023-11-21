@@ -61,6 +61,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
+from .firerisk.fire_risk_data_fetcher import get_grassfire_risk
 from .warnings import SmhiWarnings
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,6 +119,7 @@ async def async_setup_entry(
 
     warnings = SmhiWarnings()
     data = await warnings.get_warnings()
+    data.extend(await get_grassfire_risk())
 
     async_add_entities(data, True)
 
