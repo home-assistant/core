@@ -24,11 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import async_get_calendars
 from .const import DOMAIN
 from .coordinator import CalDavUpdateCoordinator
 
@@ -43,7 +44,8 @@ CONF_DAYS = "days"
 # Number of days to look ahead for next event when configured by ConfigEntry
 CONFIG_ENTRY_DEFAULT_DAYS = 7
 
-OFFSET = "!!"
+# Only allow VCALENDARs that support this component type
+SUPPORTED_COMPONENT = "VEVENT"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -69,10 +71,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     disc_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the WebDav Calendar platform."""
@@ -85,9 +87,9 @@ def setup_platform(
         url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
     )
 
-    calendars = client.principal().calendars()
+    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
 
-    calendar_devices = []
+    entities = []
     device_id: str | None
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
@@ -104,7 +106,7 @@ def setup_platform(
 
             name = cust_calendar[CONF_NAME]
             device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
-            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 calendar=calendar,
@@ -112,26 +114,16 @@ def setup_platform(
                 include_all_day=True,
                 search=cust_calendar[CONF_SEARCH],
             )
-            calendar_devices.append(
+            entities.append(
                 WebDavCalendarEntity(name, entity_id, coordinator, supports_offset=True)
             )
 
         # Create a default calendar if there was no custom one for all calendars
         # that support events.
         if not config[CONF_CUSTOM_CALENDARS]:
-            if (
-                supported_components := calendar.get_supported_components()
-            ) and "VEVENT" not in supported_components:
-                _LOGGER.debug(
-                    "Ignoring calendar '%s' (components=%s)",
-                    calendar.name,
-                    supported_components,
-                )
-                continue
-
             name = calendar.name
             device_id = calendar.name
-            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 calendar=calendar,
@@ -139,11 +131,11 @@ def setup_platform(
                 include_all_day=False,
                 search=None,
             )
-            calendar_devices.append(
+            entities.append(
                 WebDavCalendarEntity(name, entity_id, coordinator, supports_offset=True)
             )
 
-    add_entities(calendar_devices, True)
+    async_add_entities(entities, True)
 
 
 async def async_setup_entry(
@@ -153,12 +145,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
     client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
-    calendars = await hass.async_add_executor_job(client.principal().calendars)
+    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavCalendarEntity(
                 calendar.name,
-                generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
+                async_generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
                 CalDavUpdateCoordinator(
                     hass,
                     calendar=calendar,

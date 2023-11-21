@@ -307,8 +307,11 @@ def async_mock_service(
         calls.append(call)
         return response
 
-    if supports_response is None and response is not None:
-        supports_response = SupportsResponse.OPTIONAL
+    if supports_response is None:
+        if response is not None:
+            supports_response = SupportsResponse.OPTIONAL
+        else:
+            supports_response = SupportsResponse.NONE
 
     hass.services.async_register(
         domain,
@@ -1334,18 +1337,6 @@ def mock_integration(
     module_cache[module.DOMAIN] = module
 
     return integration
-
-
-def mock_entity_platform(
-    hass: HomeAssistant, platform_path: str, module: MockPlatform | None
-) -> None:
-    """Mock a entity platform.
-
-    platform_path is in form light.hue. Will create platform
-    hue.light.
-    """
-    domain, platform_name = platform_path.split(".")
-    mock_platform(hass, f"{platform_name}.{domain}", module)
 
 
 def mock_platform(

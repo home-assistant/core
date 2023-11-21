@@ -23,8 +23,8 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
@@ -327,7 +327,7 @@ async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
             partial_manifest={"after_dependencies": ["after_dep_of_platform_int"]},
         ),
     )
-    mock_entity_platform(hass, "light.platform_int", MockPlatform())
+    mock_platform(hass, "platform_int.light", MockPlatform())
 
     @callback
     def continue_loading(_):

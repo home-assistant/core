@@ -147,6 +147,62 @@
         "name": "Guard set current position"
       }
     },
+    "camera": {
+      "sub": {
+        "name": "Fluent"
+      },
+      "main": {
+        "name": "Clear"
+      },
+      "snapshots_sub": {
+        "name": "Snapshots fluent"
+      },
+      "snapshots_main": {
+        "name": "Snapshots clear"
+      },
+      "ext": {
+        "name": "Balanced"
+      },
+      "sub_lens_0": {
+        "name": "Fluent lens 0"
+      },
+      "main_lens_0": {
+        "name": "Clear lens 0"
+      },
+      "snapshots_sub_lens_0": {
+        "name": "Snapshots fluent lens 0"
+      },
+      "snapshots_main_lens_0": {
+        "name": "Snapshots clear lens 0"
+      },
+      "ext_lens_0": {
+        "name": "Balanced lens 0"
+      },
+      "sub_lens_1": {
+        "name": "Fluent lens 1"
+      },
+      "main_lens_1": {
+        "name": "Clear lens 1"
+      },
+      "snapshots_sub_lens_1": {
+        "name": "Snapshots fluent lens 1"
+      },
+      "snapshots_main_lens_1": {
+        "name": "Snapshots clear lens 1"
+      },
+      "ext_lens_1": {
+        "name": "Balanced lens 1"
+      },
+      "autotrack_sub": {
+        "name": "Autotrack fluent"
+      },
+      "autotrack_snapshots_sub": {
+        "name": "Autotrack snapshots fluent"
+      },
+      "autotrack_snapshots_main": {
+        "name": "Autotrack snapshots clear"
+      }
+    },
     "light": {
       "floodlight": {
         "name": "Floodlight"
@@ -215,6 +271,9 @@
       },
       "auto_track_stop_time": {
         "name": "Auto track stop time"
+      },
+      "day_night_switch_threshold": {
+        "name": "Day night switch threshold"
       }
     },
     "select": {
@@ -234,7 +293,7 @@
         "state": {
           "auto": "Auto",
           "color": "Color",
-          "blackwhite": "Black&White"
+          "blackwhite": "Black & white"
         }
       },
       "ptz_preset": {
@@ -309,6 +368,9 @@
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
+      },
+      "hdr": {
+        "name": "HDR"
       }
     }
   }
