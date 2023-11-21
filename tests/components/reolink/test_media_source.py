@@ -1,5 +1,6 @@
 """Tests for the Reolink media_source platform."""
 from datetime import datetime, timedelta
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -63,13 +64,17 @@ async def setup_component(hass: HomeAssistant) -> None:
 
 
 async def test_resolve(
-    hass: HomeAssistant, reolink_connect: MagicMock, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test resolving Reolink media items."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
+    caplog.set_level(logging.DEBUG)
 
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
@@ -85,6 +90,7 @@ async def test_browsing(
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test browsing the Reolink three."""
     reolink_connect.api_version.return_value = 1
@@ -96,6 +102,8 @@ async def test_browsing(
     entries = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(entries) > 0
     device_registry.async_update_device(entries[0].id, name_by_user="Cam new name")
+
+    caplog.set_level(logging.DEBUG)
 
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
