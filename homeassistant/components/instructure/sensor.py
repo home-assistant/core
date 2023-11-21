@@ -13,13 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    ANNOUNCEMENTS_KEY,
-    ASSIGNMENTS_KEY,
-    CONVERSATIONS_KEY,
-    DOMAIN,
-    GRADES_KEY,
-)
+from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY, DOMAIN
 from .coordinator import CanvasUpdateCoordinator
 
 
@@ -56,8 +50,8 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         name_fn=lambda data: data["name"],
         value_fn=lambda data: datetime_process(data["due_at"]),
         attr_fn=lambda data, courses: {
-            # "Course": courses[data["course_id"]],
-            "Link": data["html_url"]
+            "Course": courses[data["course_id"]],
+            "Link": data["html_url"],
         },
     ),
     ANNOUNCEMENTS_KEY: CanvasSensorEntityDescription(
@@ -87,19 +81,6 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
             "Initial Sender": data["participants"][0]["name"],
             "Last Message": data["last_message"],
             "Last Message Time": datetime_process(data["last_message_at"]),
-        },
-    ),
-    GRADES_KEY: CanvasSensorEntityDescription(
-        device_name="Grades",
-        key=GRADES_KEY,
-        translation_key=GRADES_KEY,
-        icon="mdi:message-alert",
-        avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["assignment_id"],
-        value_fn=lambda data: data["grade"],
-        attr_fn=lambda data, courses: {
-            "Score": data["score"],
-            "Submission Type": data["submission_type"],
         },
     ),
 }
