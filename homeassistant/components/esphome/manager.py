@@ -455,6 +455,15 @@ class ESPHomeManager:
         if device_info.name:
             reconnect_logic.name = device_info.name
 
+        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
+        entry_data.async_update_device_state(hass)
+        await asyncio.gather(
+            entry_data.async_update_static_infos(
+                hass, entry, entity_infos, device_info.mac_address
+            ),
+            _setup_services(hass, entry_data, services),
+        )
+
         setup_coros_with_disconnect_callbacks: list[
             Coroutine[Any, Any, CALLBACK_TYPE]
         ] = []
@@ -473,24 +482,12 @@ class ESPHomeManager:
                 )
             )
 
-        setup_coros = [
-            cli.subscribe_states(entry_data.async_update_state),
-            cli.subscribe_service_calls(self.async_on_service_call),
-            cli.subscribe_home_assistant_states(self.async_on_state_subscription),
-        ]
-
-        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
-        entry_data.async_update_device_state(hass)
-        await asyncio.gather(
-            entry_data.async_update_static_infos(
-                hass, entry, entity_infos, device_info.mac_address
-            ),
-            _setup_services(hass, entry_data, services),
-        )
-
         try:
             setup_results = await asyncio.gather(
-                *setup_coros_with_disconnect_callbacks, *setup_coros
+                *setup_coros_with_disconnect_callbacks,
+                cli.subscribe_states(entry_data.async_update_state),
+                cli.subscribe_service_calls(self.async_on_service_call),
+                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
             )
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
@@ -499,7 +496,9 @@ class ESPHomeManager:
             return
 
         for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
-            cancel_callback: CALLBACK_TYPE = setup_results[result_idx]
+            cancel_callback = setup_results[result_idx]
+            if TYPE_CHECKING:
+                assert cancel_callback is not None
             entry_data.disconnect_callbacks.add(cancel_callback)
 
         hass.async_create_task(entry_data.async_save_to_store())
