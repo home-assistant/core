@@ -1,19 +1,25 @@
-"""Sensor platform for the Instructure-Canvas integration"""
+"""Sensor platform for the Instructure-Canvas integration."""
 from __future__ import annotations
+
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
 from datetime import datetime
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorEntityDescription,
-)
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from .const import DOMAIN, ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
+
+from .const import (
+    ANNOUNCEMENTS_KEY,
+    ASSIGNMENTS_KEY,
+    CONVERSATIONS_KEY,
+    DOMAIN,
+    GRADES_KEY,
+)
 from .coordinator import CanvasUpdateCoordinator
 
 
@@ -28,7 +34,7 @@ class BaseEntityDescriptionMixin:
 
 @dataclass
 class BaseEntityDescription(SensorEntityDescription):
-    """Describe Canvas sensor entity default overrides"""
+    """Describe Canvas sensor entity default overrides."""
 
     icon: str = "mdi:school"
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
@@ -37,7 +43,7 @@ class BaseEntityDescription(SensorEntityDescription):
 
 @dataclass
 class CanvasSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
-    """Describe Canvas resource sensor entity"""
+    """Describe Canvas resource sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
@@ -50,9 +56,9 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         name_fn=lambda data: data["name"],
         value_fn=lambda data: datetime_process(data["due_at"]),
         attr_fn=lambda data, courses: {
-            "Course": courses[data["course_id"]],
+            # "Course": courses[data["course_id"]],
             "Link": data["html_url"]
-        }
+        },
     ),
     ANNOUNCEMENTS_KEY: CanvasSensorEntityDescription(
         device_name="Announcements",
@@ -65,8 +71,8 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         attr_fn=lambda data, courses: {
             # "Course": courses[data["context_code"].split("_")[1]],
             "Link": data["html_url"],
-            "Post Time": datetime_process(data["posted_at"])
-        }
+            "Post Time": datetime_process(data["posted_at"]),
+        },
     ),
     CONVERSATIONS_KEY: CanvasSensorEntityDescription(
         device_name="Inbox",
@@ -80,8 +86,21 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
             "Course": data["context_name"],
             "Initial Sender": data["participants"][0]["name"],
             "Last Message": data["last_message"],
-            "Last Message Time": datetime_process(data["last_message_at"])
-        }
+            "Last Message Time": datetime_process(data["last_message_at"]),
+        },
+    ),
+    GRADES_KEY: CanvasSensorEntityDescription(
+        device_name="Grades",
+        key=GRADES_KEY,
+        translation_key=GRADES_KEY,
+        icon="mdi:message-alert",
+        avabl_fn=lambda data: data is not None,
+        name_fn=lambda data: data["assignment_id"],
+        value_fn=lambda data: data["grade"],
+        attr_fn=lambda data, courses: {
+            "Score": data["score"],
+            "Submission Type": data["submission_type"],
+        },
     ),
 }
 
@@ -146,7 +165,9 @@ class CanvasSensorEntity(SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
-        return self.entity_description.attr_fn(self.get_data(), self.coordinator.selected_courses)
+        return self.entity_description.attr_fn(
+            self.get_data(), self.coordinator.selected_courses
+        )
 
     def get_data(self):
         return self.coordinator.data[self.entity_description.key][self._attr_unique_id]
@@ -157,11 +178,11 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Canvas sensor based on a config entry"""
+    """Set up Canvas sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     def update_entities(data_type: str, new_data: dict, curr_data: dict):
-        """Remove existing entities and yuhhhh my möney so big"""
+        """Remove existing entities and yuhhhh my möney so big."""
         current_ids = set(curr_data.keys())
         new_ids = set(new_data.keys())
 
@@ -179,7 +200,9 @@ async def async_setup_entry(
             new_entity = CanvasSensorEntity(description, entity_id, coordinator)
             new_entities.append(new_entity)
 
-            hass.data[DOMAIN][entry.entry_id]["entities"][data_type][entity_id] = new_entity
+            hass.data[DOMAIN][entry.entry_id]["entities"][data_type][
+                entity_id
+            ] = new_entity
 
         if new_entities:
             async_add_entities(tuple(new_entities))

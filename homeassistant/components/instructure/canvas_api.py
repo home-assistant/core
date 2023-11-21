@@ -1,12 +1,13 @@
-import httpx
-import urllib.parse
+from datetime import datetime, timedelta
 import json
 from typing import Any
+import urllib.parse
+
+import httpx
 
 
 class CanvasAPI:
-    """
-    A wrapper for the Canvas API.
+    """A wrapper for the Canvas API.
 
     This class provides methods to interact with the Canvas Learning Management System API.
     It supports various operations such as retrieving courses, assignments, announcements,
@@ -18,8 +19,7 @@ class CanvasAPI:
     """
 
     def __init__(self, host: str, access_token: str) -> None:
-        """
-        Initializes the CanvasAPI object with the host URL and access token.
+        """Initializes the CanvasAPI object with the host URL and access token.
 
         Args:
         host (str): The base URL of the Canvas instance.
@@ -31,8 +31,7 @@ class CanvasAPI:
     async def async_make_get_request(
         self, endpoint: str, parameters: dict = {}
     ) -> dict:
-        """
-        Makes an asynchronous GET request to a specified Canvas API endpoint.
+        """Makes an asynchronous GET request to a specified Canvas API endpoint.
 
         Args:
         endpoint (str): The API endpoint to make the request to.
@@ -53,8 +52,7 @@ class CanvasAPI:
         return response
 
     async def async_test_authentication(self) -> bool:
-        """
-        Tests if the provided access token is valid by making a dummy request to the Canvas API.
+        """Tests if the provided access token is valid by making a dummy request to the Canvas API.
 
         Returns:
         bool: True if the authentication is successful, False otherwise.
@@ -64,8 +62,7 @@ class CanvasAPI:
         return response.status_code == 200
 
     async def async_get_courses(self) -> list:
-        """
-        Retrieves a list of courses from the Canvas API.
+        """Retrieves a list of courses from the Canvas API.
 
         Returns:
         list: A list of courses.
@@ -75,8 +72,7 @@ class CanvasAPI:
         return courses
 
     async def async_get_assignments(self, course_ids: list[str]) -> dict[str, Any]:
-        """
-        Retrieves a dictionary of assignments for given course IDs from the Canvas API.
+        """Retrieves a dictionary of assignments for given course IDs from the Canvas API.
 
         Args:
         course_ids (list[str]): A list of course IDs to fetch assignments from.
@@ -97,8 +93,7 @@ class CanvasAPI:
         return assignments
 
     async def async_get_announcements(self, course_ids: list[str]) -> dict[str, Any]:
-        """
-        Retrieves a dictionary of announcements for given course IDs from the Canvas API.
+        """Retrieves a dictionary of announcements for given course IDs from the Canvas API.
 
         Args:
         course_ids (list[str]): A list of course IDs to fetch assignments from.
@@ -120,8 +115,7 @@ class CanvasAPI:
         return announcements
 
     async def async_get_conversations(self) -> dict[str, Any]:
-        """
-        Retrieves a dictionary of conversations from the Canvas API.
+        """Retrieves a dictionary of conversations from the Canvas API.
 
         Returns:
         dict: The response from the Canvas API.
@@ -130,4 +124,34 @@ class CanvasAPI:
             "/conversations", {"per_page": "50"}
         )
         conversations = json.loads(response.content.decode("utf-8"))
-        return {f"conversation-{conversation['id']}": conversation for conversation in conversations}
+        return {
+            f"conversation-{conversation['id']}": conversation
+            for conversation in conversations
+        }
+
+    async def async_get_grades(self, course_ids: list[str]) -> dict[str, Any]:
+        """Retrieves a dictionary of submissions from the Canvas API.
+
+        Returns:
+        dict: The response from the Canvas API.
+        """
+        submissions = {}
+        # Grades entity is right now meaningless because we dont get assignment description neither course name etc.
+        # Check GRADES_KEY: CanvasSensorEntityDescription(.... (name_fn and value_fn))
+        for course_id in course_ids:
+            response = await self.async_make_get_request(
+                f"/courses/{course_id}/students/submissions",
+                {"per_page": "50"},
+            )
+            course_submissions = json.loads(response.content.decode("utf-8"))
+            course_submissions = json.loads(response.content.decode("utf-8"))
+            for submission in course_submissions:
+                if submission["graded_at"] is not None:
+                    graded_at = datetime.strptime(
+                        submission["graded_at"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
+                    past_one_month = datetime.utcnow() - timedelta(days=30)
+                    if graded_at >= past_one_month:
+                        submissions[f"submission-{submission['id']}"] = submission
+
+        return submissions
