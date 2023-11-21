@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -150,7 +150,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
                     self._host.api, self._channel, brightness_pct
                 )
             except InvalidParameterError as err:
-                raise ValueError(err) from err
+                raise ServiceValidationError(err) from err
             except ReolinkError as err:
                 raise HomeAssistantError(err) from err
 

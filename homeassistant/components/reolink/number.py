@@ -16,7 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -370,7 +370,7 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         try:
             await self.entity_description.method(self._host.api, self._channel, value)
         except InvalidParameterError as err:
-            raise ValueError(err) from err
+            raise ServiceValidationError(err) from err
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
         self.async_write_ha_state()

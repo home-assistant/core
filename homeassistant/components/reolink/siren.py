@@ -17,7 +17,7 @@ from homeassistant.components.siren import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -89,14 +89,14 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
             try:
                 await self._host.api.set_volume(self._channel, int(volume * 100))
             except InvalidParameterError as err:
-                raise ValueError(err) from err
+                raise ServiceValidationError(err) from err
             except ReolinkError as err:
                 raise HomeAssistantError(err) from err
         duration = kwargs.get(ATTR_DURATION)
         try:
             await self._host.api.set_siren(self._channel, True, duration)
         except InvalidParameterError as err:
-            raise ValueError(err) from err
+            raise ServiceValidationError(err) from err
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
 
