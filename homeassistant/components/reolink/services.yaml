@@ -1,0 +1,13 @@
+# Describes the format for available reolink services
+
+set_ptz_speed:
+  target:
+    entity:
+      integration: reolink
+      domain: button
+  fields:
+    speed:
+      required: true
+      selector:
+        number:
+          min: 1
