@@ -79,12 +79,20 @@ async def async_setup_entry(
             case SensorDeviceClass.TEMPERATURE:
                 unit = UnitOfTemperature.CELSIUS
 
+        metric_name = metric.name
+        metric_val = metric.value
+
+        val_list = list(OPENAQ_PARAMETERS.values())
+        key_list = list(OPENAQ_PARAMETERS.keys())
+
+        metric_index = val_list.index(metric)
+
         entities.append(
             OpenAQSensor(
                 hass,
                 coordinator.location_id,
                 OpenAQSensorDescription(
-                    key=metric.name.lower(),
+                    key=key_list[metric_index],
                     name=metric.name.replace("_", " "),
                     metric=metric,
                     entity_category=EntityCategory.DIAGNOSTIC,
