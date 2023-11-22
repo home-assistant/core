@@ -26,6 +26,65 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure Roborock options.",
+        "menu_options": {
+          "roborock": "Roborock",
+          "maps": "Maps"
+        }
+      },
+      "roborock": {
+        "description": "Configure setting options for all Roborock devices.",
+        "data": {
+          "include_shared": "Include shared devices"
+        }
+      },
+      "maps": {
+        "description": "Configure setting options for all of your Roborock map's images.",
+        "menu_options": {
+          "drawables": "Drawables",
+          "sizes": "Sizes"
+        }
+      },
+      "sizes": {
+        "description": "Configure setting options for all of your Roborock map's sizes.",
+        "data": {
+          "charger_radius": "Charger radius",
+          "ignored_obstacle_radius": "Ignored obstacle radius",
+          "ignored_obstacle_with_photo_radius": "Ignored obstacle with photo radius",
+          "mop_path_width": "Mop path width",
+          "obstacle_radius": "Obstacle radius",
+          "obstacle_with_photo_radius": "Obstacle with photo radius",
+          "vacuum_radius": "Vacuum radius",
+          "path_width": "Path width"
+        }
+      },
+      "drawables": {
+        "description": "Configure setting options for all of your Roborock map's drawables.",
+        "data": {
+          "charger": "Charger",
+          "cleaned_area": "Cleaned area",
+          "goto_path": "Go-to path",
+          "ignored_obstacles": "Ignored obstacles",
+          "ignored_obstacles_with_photo": "Ignored obstacles with photo",
+          "mop_path": "Mop path",
+          "no_carpet_zones": "No carpet zones",
+          "no_go_zones": "No-go zones",
+          "no_mopping_zones": "No mopping zones",
+          "obstacles": "Obstacles",
+          "obstacles_with_photo": "Obstacles with photo",
+          "path": "Path",
+          "predicted_path": "Predicted path",
+          "room_names": "Room names",
+          "vacuum_position": "Vacuum position",
+          "virtual_walls": "Virtual walls",
+          "zones": "Zones"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "in_cleaning": {

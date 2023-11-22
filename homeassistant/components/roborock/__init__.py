@@ -14,7 +14,14 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
+from .const import (
+    CONF_BASE_URL,
+    CONF_INCLUDE_SHARED,
+    CONF_USER_DATA,
+    DEFAULT_INCLUDE_SHARED,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import RoborockDataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -25,14 +32,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)
+    all_devices: list[HomeDataDevice] = (
+        home_data.devices + home_data.received_devices
+        if entry.options.get(CONF_INCLUDE_SHARED, DEFAULT_INCLUDE_SHARED)
+        else home_data.devices
+    )
     device_map: dict[str, HomeDataDevice] = {
-        device.duid: device for device in home_data.devices + home_data.received_devices
+        device.duid: device for device in all_devices
     }
     product_info = {product.id: product for product in home_data.products}
     # Create a mqtt_client, which is needed to get the networking information of the device for local connection and in the future, get the map.
@@ -102,3 +115,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    # Reload entry to update data
+    await hass.config_entries.async_reload(entry.entry_id)

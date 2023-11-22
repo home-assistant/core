@@ -5,8 +5,9 @@ from itertools import chain
 
 from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
+from vacuum_map_parser_base.config.drawable import Drawable
 from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_base.config.size import Size, Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
@@ -18,7 +19,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
+from .const import (
+    DEFAULT_DRAWABLES,
+    DEFAULT_SIZES,
+    DOMAIN,
+    DRAWABLES,
+    IMAGE_CACHE_INTERVAL,
+    MAP_SLEEP,
+    SIZES,
+)
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
@@ -33,10 +42,19 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
+    sizes = {**DEFAULT_SIZES, **config_entry.options.get(SIZES, {})}
+    drawables = [
+        drawable
+        for drawable, default_value in DEFAULT_DRAWABLES.items()
+        if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
+    ]
     entities = list(
         chain.from_iterable(
             await asyncio.gather(
-                *(create_coordinator_maps(coord) for coord in coordinators.values())
+                *(
+                    create_coordinator_maps(coord, sizes, drawables)
+                    for coord in coordinators.values()
+                )
             )
         )
     )
@@ -55,13 +73,15 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         map_flag: int,
         starting_map: bytes,
         map_name: str,
+        sizes: dict[Size, float],
+        drawables: list[Drawable],
     ) -> None:
         """Initialize a Roborock map."""
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
         self.parser = RoborockMapDataParser(
-            ColorsPalette(), Sizes(), IMAGE_DRAWABLES, ImageConfig(), []
+            ColorsPalette(), Sizes(sizes), drawables, ImageConfig(), []
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
@@ -116,7 +136,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
 
 
 async def create_coordinator_maps(
-    coord: RoborockDataUpdateCoordinator,
+    coord: RoborockDataUpdateCoordinator, sizes: dict, drawables: list[Drawable]
 ) -> list[RoborockMap]:
     """Get the starting map information for all maps for this device. The following steps must be done synchronously.
 
@@ -152,6 +172,8 @@ async def create_coordinator_maps(
                     roborock_map.mapFlag,
                     api_data,
                     roborock_map.name,
+                    sizes,
+                    drawables,
                 )
             )
         if len(maps.map_info) != 1:
