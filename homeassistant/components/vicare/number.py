@@ -47,8 +47,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveShift(),
-        value_setter=lambda api, shift: api.setHeatingCurve(
-            shift, api.getHeatingCurveSlope()
+        value_setter=lambda api, shift: (
+            api.setHeatingCurve(shift, api.getHeatingCurveSlope())
         ),
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=-13,
@@ -61,8 +61,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         icon="mdi:slope-uphill",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveSlope(),
-        value_setter=lambda api, slope: api.setHeatingCurve(
-            api.getHeatingCurveShift(), slope
+        value_setter=lambda api, slope: (
+            api.setHeatingCurve(api.getHeatingCurveShift(), slope)
         ),
         native_min_value=0.2,
         native_max_value=3.5,
