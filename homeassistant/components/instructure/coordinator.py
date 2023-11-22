@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY
 from .canvas_api import CanvasAPI
@@ -33,6 +33,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         self.config_entry = entry
         self.api = api
         self.update_entities = None
+        self.old_data = {}
         self.selected_courses = entry.options["courses"]
 
     async def _async_update_data(self):
@@ -55,16 +56,14 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                     CONVERSATIONS_KEY: conversations,
                 }
 
-                old_data = self.data or {} #maybe put self.data={} in __init__()
-                self.data = new_data
-
                 if self.update_entities:
                     for data_type in new_data.keys():
                         self.update_entities(
                             data_type,
                             new_data.get(data_type, {}),
-                            old_data.get(data_type, {}),
+                            self.old_data.get(data_type, {})
                         )
+                    self.old_data = new_data
 
                 return new_data
 
@@ -80,5 +79,5 @@ def filter_assignments(assignments: dict[str, Any]) -> dict[str, Any]:
         due_time = datetime.strptime(assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ")
         if due_time < current_time:
             del assignments[id]
-    
+
     return assignments

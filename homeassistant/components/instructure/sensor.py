@@ -185,5 +185,4 @@ async def async_setup_entry(
             async_add_entities(tuple(new_entities))
 
     coordinator.update_entities = update_entities
-
     await coordinator.async_refresh()

@@ -1,4 +1,5 @@
 import datetime
+from datetime import timezone
 from homeassistant.core import HomeAssistant
 from homeassistant.components.calendar import ENTITY_ID_FORMAT, CalendarEntity, CalendarEvent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,14 +28,23 @@ class CanvasCalendarEntity(CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        assignments = self.get_assignments()
+        assignments = self.get_assignments_with_due_date()
 
-        current_time = datetime.datetime.now()
-        return min((item for item in assignments if self.parse_date(item["due_at"]) > current_time),
+        current_time = datetime.datetime.now(timezone.utc)
+
+        next_assignment = min((item for item in assignments if self.parse_date(item["due_at"]) > current_time),
                key=lambda item: self.parse_date(item["due_at"]), default=None)
 
-    def get_assignments(self):
-        return self.coordinator.data[ASSIGNMENTS_KEY].values()
+        return CalendarEvent(
+            start=self.parse_date(next_assignment["due_at"]),
+            end=self.parse_date(next_assignment["due_at"]) + datetime.timedelta(hours=1),
+            summary=next_assignment["name"],
+            description=next_assignment["html_url"]
+        )
+
+    def get_assignments_with_due_date(self):
+        assignments = self.coordinator.data[ASSIGNMENTS_KEY].values()
+        return [i for i in assignments if i['due_at']]
 
     def parse_date(self, date_str):
         return datetime.datetime.fromisoformat(date_str)
@@ -46,18 +56,17 @@ class CanvasCalendarEntity(CalendarEntity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        assignments = self.get_assignments()
+        assignments = self.get_assignments_with_due_date()
         filtered_assignments = [item for item in assignments if start_date <= self.parse_date(item["due_at"]) <= end_date]
 
         event_list = []
         for assignment in filtered_assignments:
-            event = CalendarEvent(
+            event_list.append(CalendarEvent(
                 start=self.parse_date(assignment["due_at"]),
-                end=self.parse_date(assignment["due_at"]),
+                end=self.parse_date(assignment["due_at"]) + datetime.timedelta(hours=1),
                 summary=assignment["name"],
-                description=assignment["description"]
-            )
-            event_list.append(event)
+                description=assignment["html_url"]
+            ))
 
         return event_list
 
