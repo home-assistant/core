@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 # Define the update interval for fetching data (e.g., 5 minutes)
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -37,5 +37,5 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Updating OpenAQ data")
         prev_fetch = datetime.utcnow - SCAN_INTERVAL
         data = await self.hass.async_add_executor_job(self.client.get_metrices(prev_fetch_date=prev_fetch))
+        print(data)
         return data
-

@@ -55,7 +55,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ) -> None:
     """Configure the sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     entities = []
 
     for metric in list(OpenAQDeviceSensors):
@@ -136,4 +136,4 @@ class OpenAQSensor(SensorEntity):
         """Return the state of the sensor, rounding if a number."""
         if self.metric == SensorDeviceClass.TIMESTAMP:
             return None
-        return 1
+        return self.coordinator["data"][self.metric]

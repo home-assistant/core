@@ -16,7 +16,7 @@ class AQClient:
         self.api_key = api_key
         self.location_id = location_id
         self.client = openaq.OpenAQ(api_key=self.api_key)
-        
+
         if setup_device:
             self.setup_device()
 
@@ -25,8 +25,8 @@ class AQClient:
         device = self.get_device()
         self.sensors = device.sensors
         #Get metrices from last 24h
-        res = self.client.measurements.list(locations_id=self.location_id, date_from=datetime.utcnow - timedelta(hours=24))
-        return res[0]
+        res = self.get_history()
+        return res
 
     def get_device(self):
         """Get device by id"""
@@ -39,10 +39,15 @@ class AQClient:
             _LOGGER.debug("Locations API error: %s", response[1])
         return None
 
+    def get_history(self):
+        """Get the last 24 hours of metrices"""
+        res = self.client.measurements.list(locations_id=self.location_id, date_from=datetime.utcnow - timedelta(hours=24))
+        return res[0]
+
     def get_metrices(self, prev_fetch_date, num_parameters):
         """Get latest measurements"""
 
-        response = self.client.measurements.list(locations_id=self.location_id, page=1, limit=num_parameters, date_from=prev_fetch_date)
+        response = self.client.measurements.list(locations_id=self.location_id, page=1, limit=len(self.sensors), date_from=prev_fetch_date)
         return response
 
 
