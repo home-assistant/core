@@ -10,7 +10,7 @@ from .const import API_KEY_ID, DOMAIN, LOCATION_ID
 
 STEP_LOCATION_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(LOCATION_ID, default="10496"): str,
+        vol.Required(LOCATION_ID): str,
         vol.Required(API_KEY_ID): str,
     }
 )

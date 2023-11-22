@@ -4,13 +4,17 @@ import logging
 
 import openaq
 
+from homeassistant.core import HomeAssistant
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class AQClient:
     """AQClient class for OpenAQ integration."""
 
-    def __init__(self, api_key, location_id, setup_device=True, hass=None):
+    def __init__(
+        self, api_key, location_id, setup_device=True, hass: HomeAssistant | None = None
+    ) -> None:
         """Initialize AQClient."""
         self.api_key = api_key
         self.location_id = location_id
@@ -23,26 +27,26 @@ class AQClient:
         """Set sensors and metrices."""
         device = self.get_device()
         self.sensors = device.sensors
+        self.last_updated = device.datetime_last
         # Get metrices from last 24h
-        res = self.get_history()
-        return res
+
+        # res = self.get_history()
+        # return res
 
     def get_device(self):
         """Get device by id."""
-
         response = self.client.locations.get(self.location_id)
 
         if len(response.results) == 1:
             return response.results[0]
-        else:
-            _LOGGER.debug("Locations API error: %s", response[1])
+        _LOGGER.debug("Locations API error: %s", response[1])
         return None
 
     def get_history(self):
         """Get the last 24 hours of metrices."""
         res = self.client.measurements.list(
             locations_id=self.location_id,
-            date_from=datetime.utcnow() - timedelta(hours=24),
+            date_from=datetime.now(tz="utc") - timedelta(hours=24),
         )
         return res.results[0]
 

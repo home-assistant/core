@@ -1,17 +1,16 @@
 {
-    "config": {
-        "step": {
-          "location": {
-            "title": "OpenAQ",
-            "description": "To generate API key go to https://api.openaq.org/register",
-            "data": {
-              "locationid": "[%key:common::config_flow::data::locationid%]",
-              "apiid": "[%key:common::config_flow::data::apiid%]"
-            }
-          }
-        },
-        "error": {
-          "not_found": "No location with that ID exist."
+  "config": {
+    "step": {
+      "location": {
+        "description": "To generate API key go to https://api.openaq.org/register",
+        "data": {
+          "location_id": "Location id",
+          "api_id": "API key"
         }
       }
+    },
+    "error": {
+      "not_found": "No location with that ID exist."
+    }
+  }
 }

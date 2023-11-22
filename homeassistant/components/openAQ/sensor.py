@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 import homeassistant
-from homeassistant.components.openAQ.coordinator import OpenAQDataCoordinator
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -24,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ICON, OPENAQ_PARAMETERS
+from .coordinator import OpenAQDataCoordinator
 
 
 class OpenAQDeviceSensors(str, Enum):
@@ -55,19 +55,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ) -> None:
     """Configure the sensor platform."""
-    print("SETUP ENTRY SENSOR")
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = coordinator.get_sensors()
-    sensors_metrics = [
-        OPENAQ_PARAMETERS[j] for j in [sensor.parameter.name for sensor in sensors]
-    ]
-
-    print(sensors_metrics)
+    sensor_names = [sensor.parameter.name for sensor in sensors]
+    sensor_names.append("last_update")
+    sensors_metrics = [OPENAQ_PARAMETERS[j] for j in sensor_names]
 
     entities = []
 
     for metric in sensors_metrics:
-        print(f"FOUND {metric} IN SENSOR!!!!")
         match metric:
             case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
                 unit = None
@@ -115,7 +111,6 @@ class OpenAQSensor(SensorEntity):
         self.metric = self.entity_description.metric
         self._hass = hass
         self.coordinator = coordinator
-
         self._last_reset = homeassistant.util.dt.utc_from_timestamp(0)
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]

@@ -1,15 +1,15 @@
 """Define constants for OpenAQ integration."""
 
-from homeassistant.components.sensor.const import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import Platform
 
 DOMAIN = "openAQ"
 SENSOR_ID = "sensorid"
 DEFAULT_SENSOR_ID = "1234"
 
-API_KEY_ID = "apiid"
-CITY_ID = "cityid"
-LOCATION_ID = "locationid"
+API_KEY_ID = "api_id"
+CITY_ID = "city_id"
+LOCATION_ID = "location_id"
 
 SENSOR = "sensor"
 OPENAQ_PARAMETERS = {
@@ -25,6 +25,7 @@ OPENAQ_PARAMETERS = {
     "co": SensorDeviceClass.CO,
     "co2": SensorDeviceClass.CO2,
     "so2": SensorDeviceClass.SULPHUR_DIOXIDE,
+    "last_update": SensorDeviceClass.TIMESTAMP,
 }
 
 

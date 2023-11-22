@@ -1,16 +1,10 @@
 """The OpenAQ Integration."""
 
-from homeassistant.components.openAQ.coordinator import OpenAQDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from .const import API_KEY_ID, DOMAIN, LOCATION_ID, PLATFORMS
-
-# async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-#     """Read configuration from yaml."""
-
-#     pass
+from .coordinator import OpenAQDataCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -28,20 +22,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    device_registry = dr.async_get(hass)
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "test")},
-        name=entry.data.get(
-            "name"
-        ),  # needs to be the same as in sensor.py Station name
-        model="Unknown",  # Add later from api
-    )
+    # device_registry = dr.async_get(hass)
+    # device_registry.async_get_or_create(
+    #     config_entry_id=entry.entry_id,
+    #     identifiers={(DOMAIN, "test")},
+    #     name=coordinator.location_id,  # needs to be the same as in sensor.py Station name
+    #     model="Unknown",  # Add later from api
+    # )
 
     return True
-
-
-# async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-#     """Handle removal of an entry."""
-#     return True
