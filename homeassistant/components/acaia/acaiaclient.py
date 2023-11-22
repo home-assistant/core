@@ -2,14 +2,17 @@
 from collections.abc import Awaitable, Callable
 import logging
 import time
+from typing import Any
 
 from bleak import BleakGATTCharacteristic
 from pyacaia_async import AcaiaScale
+from pyacaia_async.decode import Message, Settings, decode
 from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components import bluetooth
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
+
+from .const import BATTERY_LEVEL, GRAMS, UNITS, WEIGHT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,19 +21,21 @@ class AcaiaClient(AcaiaScale):
     """Client to interact with Acaia Scales."""
 
     def __init__(
-        self, hass: HomeAssistant, mac: str, name: str, is_new_style_scale: bool = True
+        self,
+        hass: HomeAssistant,
+        mac: str,
+        name: str,
+        is_new_style_scale: bool = True,
+        notify_callback: Callable[[], None] | None = None,
     ) -> None:
         """Initialize the client."""
         self._last_action_timestamp: float | None = None
         self.hass: HomeAssistant = hass
         self._name: str = name
+        self._device_available: bool = False
+        self._data: dict[str, Any] = {BATTERY_LEVEL: None, UNITS: GRAMS, WEIGHT: 0.0}
+        self._notify_callback: Callable[[], None] | None = notify_callback
         super().__init__(mac=mac, is_new_style_scale=is_new_style_scale)
-
-    @property
-    def mac(self) -> str:
-        """Return the mac address of the scale in upper case."""
-        assert self._mac
-        return self._mac.upper()
 
     @property
     def name(self) -> str:
@@ -38,28 +43,15 @@ class AcaiaClient(AcaiaScale):
         return self._name
 
     @property
-    def timer_running(self) -> bool:
-        """Return whether the timer is running."""
-        return self._timer_running
-
-    @timer_running.setter
-    def timer_running(self, value: bool) -> None:
-        """Set timer running state."""
-        self._timer_running = value
-
-    @property
-    def connected(self) -> bool:
-        """Return whether the scale is connected."""
-        return self._connected
-
-    @connected.setter
-    def connected(self, value: bool) -> None:
-        """Set connected state."""
-        self._connected = value
+    def data(self) -> dict[str, Any]:
+        """Return the data of the scale."""
+        return self._data
 
     async def connect(
         self,
-        callback: Callable[[BleakGATTCharacteristic, bytearray], Awaitable[None] | None]
+        callback_fn: Callable[
+            [BleakGATTCharacteristic, bytearray], Awaitable[None] | None
+        ]
         | None = None,
     ) -> None:
         """Connect to the scale."""
@@ -74,7 +66,7 @@ class AcaiaClient(AcaiaScale):
                     raise AcaiaDeviceNotFound(f"Device with MAC {self._mac} not found")
                 self.new_client_from_ble_device(ble_device)
 
-                await super().connect(callback=callback)
+                await super().connect(callback=callback_fn)
                 interval = 1 if self._is_new_style_scale else 5
                 self.hass.async_create_task(
                     self._send_heartbeats(
@@ -90,26 +82,66 @@ class AcaiaClient(AcaiaScale):
             )
             _LOGGER.debug("Full error: %s", str(ex))
 
+    async def async_update(self) -> None:
+        """Update the data from the scale."""
+        scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
+        if scanner_count == 0:
+            self.acaia_client.connected = False
+            _LOGGER.debug("Update coordinator: No bluetooth scanner available")
+            return
+
+        self._device_available = bluetooth.async_address_present(
+            self.hass, self.mac, connectable=True
+        )
+
+        if not self.connected and self._device_available:
+            _LOGGER.debug("Acaia Client: Connecting")
+            await self.connect(callback_fn=self._on_data_received)
+
+        elif not self._device_available:
+            self.acaia_client.connected = False
+            self.acaia_client.timer_running = False
+            _LOGGER.debug(
+                "Acaia Client: Device with MAC %s not available",
+                self._acaia_client.mac,
+            )
+        else:
+            # send auth to get the battery level and units
+            await self._acaia_client.auth()
+            await self._acaia_client.send_weight_notification_request()
+
+    @callback
+    async def bluetooth_data_received(
+        self, characteristic: BleakGATTCharacteristic, data: bytearray
+    ) -> None:
+        """Receive data from scale."""
+        msg = decode(data)[0]
+
+        if isinstance(msg, Settings):
+            self._data[BATTERY_LEVEL] = msg.battery
+            self._data[UNITS] = msg.units
+            _LOGGER.debug(
+                "Got battery level %s, units %s", str(msg.battery), str(msg.units)
+            )
+
+        elif isinstance(msg, Message):
+            self._data[WEIGHT] = msg.value
+            _LOGGER.debug("Got weight %s", str(msg.value))
+
+        if self._notify_callback is not None:
+            self._notify_callback()
+
     async def tare(self) -> None:
         """Tare the scale."""
         await self.connect()
-        try:
-            await super().tare()
-        except Exception as ex:
-            raise HomeAssistantError("Error taring device") from ex
+        await super().tare()
 
     async def start_stop_timer(self) -> None:
         """Start/Stop the timer."""
         await self.connect()
-        try:
-            await super().start_stop_timer()
-        except Exception as ex:
-            raise HomeAssistantError("Error starting/stopping timer") from ex
+        await super().start_stop_timer()
 
     async def reset_timer(self) -> None:
         """Reset the timer."""
         await self.connect()
-        try:
-            await super().reset_timer()
-        except Exception as ex:
-            raise HomeAssistantError("Error resetting timer") from ex
+        await super().reset_timer()
