@@ -33,7 +33,7 @@ def is_supported(
 def get_burners(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
     """Return the list of burners."""
     try:
-        return device.circuits
+        return device.burners
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No burners found")
     return []
@@ -51,7 +51,7 @@ def get_circuits(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]
 def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
     """Return the list of compressors."""
     try:
-        return device.circuits
+        return device.compressors
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No compressors found")
     return []
