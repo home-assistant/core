@@ -120,4 +120,11 @@ def requests_mock_fixture():
             status_code=200,
             json={"url": "http://127.0.0.1/foo"},
         )
+        # Mocks the response for setting properties in settings (i.e. motion_detection)
+        mock.patch(
+            re.compile(
+                r"https:\/\/api\.ring\.com\/devices\/v1\/devices\/\d+\/settings"
+            ),
+            text="ok",
+        )
         yield mock
