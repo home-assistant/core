@@ -16,8 +16,13 @@ SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
-class AcaiaApiCoordinator(DataUpdateCoordinator):
+class AcaiaApiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to handle fetching data from the La Marzocco API centrally."""
+
+    @property
+    def acaia_client(self) -> AcaiaClient:
+        """Return the acaia client."""
+        return self._acaia_client
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -38,11 +43,6 @@ class AcaiaApiCoordinator(DataUpdateCoordinator):
             is_new_style_scale=is_new_style_scale,
             notify_callback=self.async_update_listeners,
         )
-
-    @property
-    def acaia_client(self) -> AcaiaClient:
-        """Return the acaia client."""
-        return self._acaia_client
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data."""

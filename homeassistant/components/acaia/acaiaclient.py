@@ -10,7 +10,7 @@ from pyacaia_async.decode import Message, Settings, decode
 from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components import bluetooth
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback as callback_decorator
 
 from .const import BATTERY_LEVEL, GRAMS, UNITS, WEIGHT
 
@@ -49,9 +49,7 @@ class AcaiaClient(AcaiaScale):
 
     async def connect(
         self,
-        callback_fn: Callable[
-            [BleakGATTCharacteristic, bytearray], Awaitable[None] | None
-        ]
+        callback: Callable[[BleakGATTCharacteristic, bytearray], Awaitable[None] | None]
         | None = None,
     ) -> None:
         """Connect to the scale."""
@@ -66,7 +64,7 @@ class AcaiaClient(AcaiaScale):
                     raise AcaiaDeviceNotFound(f"Device with MAC {self._mac} not found")
                 self.new_client_from_ble_device(ble_device)
 
-                await super().connect(callback=callback_fn)
+                await super().connect(callback=callback)
                 interval = 1 if self._is_new_style_scale else 5
                 self.hass.async_create_task(
                     self._send_heartbeats(
@@ -86,7 +84,7 @@ class AcaiaClient(AcaiaScale):
         """Update the data from the scale."""
         scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
         if scanner_count == 0:
-            self.acaia_client.connected = False
+            self.connected = False
             _LOGGER.debug("Update coordinator: No bluetooth scanner available")
             return
 
@@ -96,21 +94,21 @@ class AcaiaClient(AcaiaScale):
 
         if not self.connected and self._device_available:
             _LOGGER.debug("Acaia Client: Connecting")
-            await self.connect(callback_fn=self._on_data_received)
+            await self.connect(callback=self.bluetooth_data_received)
 
         elif not self._device_available:
-            self.acaia_client.connected = False
-            self.acaia_client.timer_running = False
+            self.connected = False
+            self.timer_running = False
             _LOGGER.debug(
                 "Acaia Client: Device with MAC %s not available",
-                self._acaia_client.mac,
+                self.mac,
             )
         else:
             # send auth to get the battery level and units
-            await self._acaia_client.auth()
-            await self._acaia_client.send_weight_notification_request()
+            await self.auth()
+            await self.send_weight_notification_request()
 
-    @callback
+    @callback_decorator
     async def bluetooth_data_received(
         self, characteristic: BleakGATTCharacteristic, data: bytearray
     ) -> None:
