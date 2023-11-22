@@ -1,7 +1,7 @@
 """Test for Roborock init."""
 from unittest.mock import patch
 
-from roborock import RoborockException
+from roborock import RoborockException, RoborockInvalidCredentials
 
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -101,6 +101,33 @@ async def test_local_client_fails_props(
     """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, fail."""
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        side_effect=RoborockException(),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reauth_started(
+    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reauth flow started."""
+    with patch(
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
+        side_effect=RoborockInvalidCredentials(),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_config_entry_not_ready_home_data(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test that when we fail to get home data, entry retries."""
+    with patch(
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
         side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})

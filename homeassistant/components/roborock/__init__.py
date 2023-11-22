@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from roborock import RoborockException
+from roborock import RoborockException, RoborockInvalidCredentials
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
@@ -15,7 +15,7 @@ from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, Use
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator
@@ -34,6 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Getting home data")
     try:
         home_data = await api_client.get_home_data(user_data)
+    except RoborockInvalidCredentials as err:
+        raise ConfigEntryAuthFailed("Invalid credentials.") from err
     except RoborockException as err:
         raise ConfigEntryNotReady("Failed getting Roborock home_data.") from err
     _LOGGER.debug("Got home data %s", home_data)
