@@ -16,6 +16,7 @@ class AQClient:
         self, api_key, location_id, setup_device=True, hass: HomeAssistant | None = None
     ) -> None:
         """Initialize AQClient."""
+        self.time = datetime.now()
         self.api_key = api_key
         self.location_id = location_id
         self.client = openaq.OpenAQ(api_key=self.api_key)
@@ -44,31 +45,20 @@ class AQClient:
 
     def get_history(self):
         """Get the last 24 hours of metrices."""
-        res = self.client.measurements.list(
+        response = self.client.measurements.list(
             locations_id=self.location_id,
-            date_from=datetime.now(tz="utc") - timedelta(hours=24),
+            date_from=datetime.now() - timedelta(hours=24),
         )
-        return res.results[0]
+        return response.results[0]
 
-    def get_metrices(self, prev_fetch_date):
+    def get_latest_metrices(self):
         """Get latest measurements."""
 
         response = self.client.measurements.list(
             locations_id=self.location_id,
             page=1,
             limit=len(self.sensors),
-            date_from=prev_fetch_date,
+            date_from=self.time,
         )
+        self.time = datetime.now()
         return response
-
-
-# def api_test():
-# """Test API functionality."""
-# print("RUNNING SCRIPT!")
-# client = AQClient('0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e', 10496)
-# data = client.get_device()
-# print(data)
-# client.get_hist_data(datetime.datetime(2023, 11, 12), datetime.datetime.now())
-# Running the test
-
-# api_test()

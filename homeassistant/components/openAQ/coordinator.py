@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for OpenAQ."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -33,14 +34,13 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from AQClient and update."""
-        # _LOGGER.debug("Updating OpenAQ data")
-        # datetime.utcnow() - SCAN_INTERVAL
-        # data = self.client.get_metrices(prev_fetch_date=prev_fetch)
-        device = self.client.get_device()
-        data = [sensor.parameter for sensor in device.sensors]
-        data.append(device.datetime_last)
-        # print("Updated")
-        return data
+        async with asyncio.timeout(10):
+            self.client.get_device()
+            metrics = self.client.get_latest_metrices().results
+            self.data = {}
+            for metric in metrics:
+                self.data[metric.parameter.name] = metric.value
+            return self.data
 
     def get_sensors(self):
         """Get all available sensors."""
