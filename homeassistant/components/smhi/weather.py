@@ -252,6 +252,9 @@ class SmhiWeather(WeatherEntity):
         additional_data_handler.add_entity_callback(
             additional_data_handler.fire_risk_data, True
         )
+        additional_data_handler.add_entity_callback(
+            additional_data_handler.weather_data, True
+        )
 
     async def retry_update(self, _: datetime) -> None:
         """Retry refresh weather forecast."""
