@@ -16,7 +16,7 @@ class AQClient:
         self, api_key, location_id, setup_device=True, hass: HomeAssistant | None = None
     ) -> None:
         """Initialize AQClient."""
-        self.time = datetime.now()
+        self.time = datetime.now() - timedelta(hours=24)
         self.api_key = api_key
         self.location_id = location_id
         self.client = openaq.OpenAQ(api_key=self.api_key)
@@ -29,10 +29,6 @@ class AQClient:
         device = self.get_device()
         self.sensors = device.sensors
         self.last_updated = device.datetime_last
-        # Get metrices from last 24h
-
-        # res = self.get_history()
-        # return res
 
     def get_device(self):
         """Get device by id."""
