@@ -50,7 +50,10 @@ async def setup_evil_genius_labs(
     ), patch(
         "pyevilgenius.EvilGeniusDevice.get_product",
         return_value=product_fixture,
-    ), patch("homeassistant.components.evil_genius_labs.PLATFORMS", platforms):
+    ), patch(
+        "homeassistant.components.evil_genius_labs.PLATFORMS",
+        platforms,
+    ):
         assert await async_setup_component(hass, "evil_genius_labs", {})
         await hass.async_block_till_done()
         yield

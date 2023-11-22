@@ -74,7 +74,9 @@ def test_run_executor_shutdown_throws(
     ), patch(
         "homeassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
         side_effect=RuntimeError,
-    ) as mock_shutdown, patch("homeassistant.core.HomeAssistant.async_run") as mock_run:
+    ) as mock_shutdown, patch(
+        "homeassistant.core.HomeAssistant.async_run",
+    ) as mock_run:
         runner.run(default_config)
 
     assert mock_shutdown.called

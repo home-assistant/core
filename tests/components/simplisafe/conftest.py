@@ -105,7 +105,10 @@ async def setup_simplisafe_fixture(hass, api, config):
         return_value=api,
     ), patch(
         "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-    ), patch("homeassistant.components.simplisafe.PLATFORMS", []):
+    ), patch(
+        "homeassistant.components.simplisafe.PLATFORMS",
+        [],
+    ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield

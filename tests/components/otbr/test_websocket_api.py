@@ -188,7 +188,9 @@ async def test_create_network_fails_3(
         side_effect=[None, python_otbr_api.OTBRError],
     ), patch(
         "python_otbr_api.OTBR.create_active_dataset",
-    ), patch("python_otbr_api.OTBR.factory_reset"):
+    ), patch(
+        "python_otbr_api.OTBR.factory_reset",
+    ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
@@ -208,7 +210,9 @@ async def test_create_network_fails_4(
     ), patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs",
         side_effect=python_otbr_api.OTBRError,
-    ), patch("python_otbr_api.OTBR.factory_reset"):
+    ), patch(
+        "python_otbr_api.OTBR.factory_reset",
+    ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 

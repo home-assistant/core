@@ -91,7 +91,10 @@ async def test_load_backups(hass: HomeAssistant) -> None:
             "name": TEST_BACKUP.name,
             "date": TEST_BACKUP.date,
         },
-    ), patch("pathlib.Path.stat", return_value=MagicMock(st_size=TEST_BACKUP.size)):
+    ), patch(
+        "pathlib.Path.stat",
+        return_value=MagicMock(st_size=TEST_BACKUP.size),
+    ):
         await manager.load_backups()
     backups = await manager.get_backups()
     assert backups == {TEST_BACKUP.slug: TEST_BACKUP}

@@ -130,8 +130,11 @@ async def setup_guardian_fixture(
     ), patch(
         "aioguardian.commands.wifi.WiFiCommands.status",
         return_value=data_wifi_status,
-    ), patch("aioguardian.client.Client.disconnect"), patch(
-        "homeassistant.components.guardian.PLATFORMS", []
+    ), patch(
+        "aioguardian.client.Client.disconnect",
+    ), patch(
+        "homeassistant.components.guardian.PLATFORMS",
+        [],
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

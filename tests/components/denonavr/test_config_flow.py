@@ -64,7 +64,10 @@ def denonavr_connect_fixture():
     ), patch(
         "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
         TEST_RECEIVER_TYPE,
-    ), patch("homeassistant.components.denonavr.async_setup_entry", return_value=True):
+    ), patch(
+        "homeassistant.components.denonavr.async_setup_entry",
+        return_value=True,
+    ):
         yield
 
 

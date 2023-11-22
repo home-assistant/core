@@ -99,7 +99,10 @@ async def test_update_entity(
         "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=False
     ) as mock_compile, patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
-    ) as mock_upload, pytest.raises(HomeAssistantError, match="compiling"):
+    ) as mock_upload, pytest.raises(
+        HomeAssistantError,
+        match="compiling",
+    ):
         await hass.services.async_call(
             "update",
             "install",
@@ -117,7 +120,10 @@ async def test_update_entity(
         "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
     ) as mock_compile, patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
-    ) as mock_upload, pytest.raises(HomeAssistantError, match="OTA"):
+    ) as mock_upload, pytest.raises(
+        HomeAssistantError,
+        match="OTA",
+    ):
         await hass.services.async_call(
             "update",
             "install",

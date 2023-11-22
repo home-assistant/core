@@ -364,7 +364,9 @@ async def test_install_with_wheels_index(hass: HomeAssistant) -> None:
         "homeassistant.util.package.is_docker_env", return_value=True
     ), patch("homeassistant.util.package.install_package") as mock_inst, patch.dict(
         os.environ, {"WHEELS_LINKS": "https://wheels.hass.io/test"}
-    ), patch("os.path.dirname") as mock_dir:
+    ), patch(
+        "os.path.dirname",
+    ) as mock_dir:
         mock_dir.return_value = "ha_package_path"
         assert await setup.async_setup_component(hass, "comp", {})
         assert "comp" in hass.config.components

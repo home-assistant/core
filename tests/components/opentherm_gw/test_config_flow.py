@@ -210,8 +210,12 @@ async def test_options_migration(hass: HomeAssistant) -> None:
         "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
         return_value=True,
     ), patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True
-    ), patch("pyotgw.status.StatusManager._process_updates", return_value=None):
+        "homeassistant.components.opentherm_gw.async_setup",
+        return_value=True,
+    ), patch(
+        "pyotgw.status.StatusManager._process_updates",
+        return_value=None,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

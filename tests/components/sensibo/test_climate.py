@@ -741,7 +741,9 @@ async def test_climate_set_timer(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
-    ), pytest.raises(MultipleInvalid):
+    ), pytest.raises(
+        MultipleInvalid,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ENABLE_TIMER,
@@ -758,7 +760,9 @@ async def test_climate_set_timer(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
-    ), pytest.raises(HomeAssistantError):
+    ), pytest.raises(
+        HomeAssistantError,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ENABLE_TIMER,
@@ -840,7 +844,9 @@ async def test_climate_pure_boost(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
-    ), pytest.raises(MultipleInvalid):
+    ), pytest.raises(
+        MultipleInvalid,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ENABLE_PURE_BOOST,
@@ -940,7 +946,9 @@ async def test_climate_climate_react(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_climate_react",
-    ), pytest.raises(MultipleInvalid):
+    ), pytest.raises(
+        MultipleInvalid,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ENABLE_PURE_BOOST,
@@ -1245,7 +1253,9 @@ async def test_climate_full_ac_state(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_states",
-    ), pytest.raises(MultipleInvalid):
+    ), pytest.raises(
+        MultipleInvalid,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_FULL_STATE,

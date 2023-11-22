@@ -59,7 +59,10 @@ async def test_bridge_import_flow(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry, patch(
         "homeassistant.components.lutron_caseta.async_setup", return_value=True
-    ), patch.object(Smartbridge, "create_tls") as create_tls:
+    ), patch.object(
+        Smartbridge,
+        "create_tls",
+    ) as create_tls:
         create_tls.return_value = MockBridge(can_connect=True)
 
         result = await hass.config_entries.flow.async_init(

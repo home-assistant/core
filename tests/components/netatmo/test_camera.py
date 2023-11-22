@@ -387,7 +387,9 @@ async def test_camera_reconnect_webhook(hass: HomeAssistant, config_entry) -> No
         "homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook:
+    ), patch(
+        "homeassistant.components.netatmo.webhook_generate_url",
+    ) as mock_webhook:
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
@@ -479,7 +481,9 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         "homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
+    ), patch(
+        "homeassistant.components.netatmo.webhook_generate_url",
+    ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_no_data
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
@@ -517,7 +521,9 @@ async def test_camera_image_raises_exception(
         "homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
+    ), patch(
+        "homeassistant.components.netatmo.webhook_generate_url",
+    ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_get_image.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()

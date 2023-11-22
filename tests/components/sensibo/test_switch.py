@@ -195,7 +195,9 @@ async def test_switch_command_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
-    ), pytest.raises(HomeAssistantError):
+    ), pytest.raises(
+        HomeAssistantError,
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -211,7 +213,9 @@ async def test_switch_command_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
         return_value={"status": "failure"},
-    ), pytest.raises(HomeAssistantError):
+    ), pytest.raises(
+        HomeAssistantError,
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

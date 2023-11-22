@@ -179,7 +179,9 @@ async def test_get_tts_audio_audio_oserror(
         mock_client,
     ), patch.object(
         mock_client, "read_event", side_effect=OSError("Boom!")
-    ), pytest.raises(HomeAssistantError):
+    ), pytest.raises(
+        HomeAssistantError,
+    ):
         await tts.async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(

@@ -76,8 +76,10 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
         "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
         return_value=return_value,
         side_effect=side_effect,
-    ), patch("pathlib.Path.mkdir") as mkdir_mock, patch(
-        "shutil.move"
+    ), patch(
+        "pathlib.Path.mkdir",
+    ) as mkdir_mock, patch(
+        "shutil.move",
     ) as shutil_move_mock:
         file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value

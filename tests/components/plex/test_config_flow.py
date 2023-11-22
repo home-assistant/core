@@ -850,7 +850,9 @@ async def test_client_header_issues(
         "plexauth.PlexAuth.token", return_value=None
     ), patch(
         "homeassistant.components.http.current_request.get", return_value=MockRequest()
-    ), pytest.raises(RuntimeError):
+    ), pytest.raises(
+        RuntimeError,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

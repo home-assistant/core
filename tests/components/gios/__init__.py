@@ -42,7 +42,10 @@ async def init_integration(
     ), patch(
         "homeassistant.components.gios.Gios._get_all_sensors",
         return_value=sensors,
-    ), patch("homeassistant.components.gios.Gios._get_indexes", return_value=indexes):
+    ), patch(
+        "homeassistant.components.gios.Gios._get_indexes",
+        return_value=indexes,
+    ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

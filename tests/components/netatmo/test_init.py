@@ -204,7 +204,9 @@ async def test_setup_with_cloud(hass: HomeAssistant, config_entry) -> None:
         "homeassistant.components.netatmo.data_handler.PLATFORMS", []
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
+    ), patch(
+        "homeassistant.components.netatmo.webhook_generate_url",
+    ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
@@ -268,7 +270,9 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         "homeassistant.components.netatmo.data_handler.PLATFORMS", []
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
+    ), patch(
+        "homeassistant.components.netatmo.webhook_generate_url",
+    ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()

@@ -351,7 +351,9 @@ async def test_removing_entry_with_cloud_unavailable(
     ), patch(
         "homeassistant.components.cloud.async_delete_cloudhook",
         side_effect=CloudNotAvailable(),
-    ), patch("homeassistant.components.withings.webhook_generate_url"):
+    ), patch(
+        "homeassistant.components.withings.webhook_generate_url",
+    ):
         await setup_integration(hass, cloudhook_config_entry)
         assert hass.components.cloud.async_active_subscription() is True
 
@@ -466,8 +468,10 @@ async def test_cloud_disconnect(
         return_value="https://hooks.nabu.casa/ABCD",
     ), patch(
         "homeassistant.components.withings.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.cloud.async_delete_cloudhook"), patch(
-        "homeassistant.components.withings.webhook_generate_url"
+    ), patch(
+        "homeassistant.components.cloud.async_delete_cloudhook",
+    ), patch(
+        "homeassistant.components.withings.webhook_generate_url",
     ):
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)

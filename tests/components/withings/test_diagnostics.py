@@ -66,8 +66,10 @@ async def test_diagnostics_cloudhook_instance(
         return_value="https://hooks.nabu.casa/ABCD",
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.cloud.async_delete_cloudhook"), patch(
-        "homeassistant.components.withings.webhook_generate_url"
+    ), patch(
+        "homeassistant.components.cloud.async_delete_cloudhook",
+    ), patch(
+        "homeassistant.components.withings.webhook_generate_url",
     ):
         await setup_integration(hass, webhook_config_entry)
         await prepare_webhook_setup(hass, freezer)
