@@ -700,6 +700,8 @@ build.json @home-assistant/supervisor
 /tests/components/life360/ @pnbruckner
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
+/homeassistant/components/linear_garage_door/ @IceBotYT
+/tests/components/linear_garage_door/ @IceBotYT
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
@@ -1053,7 +1055,7 @@ build.json @home-assistant/supervisor
 /tests/components/reolink/ @starkillerOG
 /homeassistant/components/repairs/ @home-assistant/core
 /tests/components/repairs/ @home-assistant/core
-/homeassistant/components/repetier/ @MTrab @ShadowBr0ther
+/homeassistant/components/repetier/ @ShadowBr0ther
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
