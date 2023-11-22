@@ -378,3 +378,29 @@ async def test_failed_login_attempts_counter(
     resp = await client.get("/auth_true")
     assert resp.status == HTTPStatus.OK
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_single_ban_file_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test that only one item is added to ban file."""
+    app = web.Application()
+    app["hass"] = hass
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 2)
+    mock_real_ip(app)("200.201.202.204")
+
+    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    m_open = mock_open()
+
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        remote_ip = ip_address("200.201.202.204")
+        await manager.async_add_ban(remote_ip)
+        await manager.async_add_ban(remote_ip)
+
+    assert m_open.call_count == 1

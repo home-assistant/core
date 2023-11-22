@@ -107,7 +107,7 @@ class RuntimeEntryData:
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
-    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    disconnect_callbacks: set[Callable[[], None]] = field(default_factory=set)
     state_subscriptions: dict[
         tuple[type[EntityState], int], Callable[[], None]
     ] = field(default_factory=dict)
@@ -427,3 +427,19 @@ class RuntimeEntryData:
         if self.original_options == entry.options:
             return
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+    @callback
+    def async_on_disconnect(self) -> None:
+        """Call when the entry has been disconnected.
+
+        Safe to call multiple times.
+        """
+        self.available = False
+        # Make a copy since calling the disconnect callbacks
+        # may also try to discard/remove themselves.
+        for disconnect_cb in self.disconnect_callbacks.copy():
+            disconnect_cb()
+        # Make sure to clear the set to give up the reference
+        # to it and make sure all the callbacks can be GC'd.
+        self.disconnect_callbacks.clear()
+        self.disconnect_callbacks = set()
