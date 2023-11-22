@@ -1,11 +1,14 @@
 """Entities for the ViCare integration."""
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareFuelCell import FuelCellBurner
 from PyViCare.PyViCareGazBoiler import GazBurner
 from PyViCare.PyViCareHeatingDevice import (
     HeatingCircuit,
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
+from PyViCare.PyViCareHeatPump import Compressor
+from PyViCare.PyViCareOilBoiler import OilBurner
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -36,9 +39,13 @@ class ViCareEntity(Entity):
             self._attr_device_info = self._get_info_for_component(
                 device_config, device, "Circuit"
             )
-        elif isinstance(device, GazBurner):
+        elif isinstance(device, FuelCellBurner | GazBurner | OilBurner):
             self._attr_device_info = self._get_info_for_component(
                 device_config, device, "Burner"
+            )
+        elif isinstance(device, Compressor):
+            self._attr_device_info = self._get_info_for_component(
+                device_config, device, "Compressor"
             )
         else:
             self._attr_device_info = self._get_info_for_device(device_config)
