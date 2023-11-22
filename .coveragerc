@@ -67,9 +67,6 @@ omit =
     homeassistant/components/android_ip_webcam/switch.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
-    homeassistant/components/apcupsd/__init__.py
-    homeassistant/components/apcupsd/binary_sensor.py
-    homeassistant/components/apcupsd/sensor.py
     homeassistant/components/apple_tv/__init__.py
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
@@ -368,7 +365,8 @@ omit =
     homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/faa_delays/coordinator.py
     homeassistant/components/familyhub/camera.py
-    homeassistant/components/fastdotcom/*
+    homeassistant/components/fastdotcom/sensor.py
+    homeassistant/components/fastdotcom/__init__.py
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/__init__.py
     homeassistant/components/fibaro/binary_sensor.py
