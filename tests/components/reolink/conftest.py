@@ -75,7 +75,7 @@ def reolink_connect_class(
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
-        host_mock.wifi_connection = "LAN"
+        host_mock.wifi_connection = False
         host_mock.wifi_signal = None
         host_mock.whiteled_mode_list.return_value = []
         host_mock.zoom_range.return_value = {

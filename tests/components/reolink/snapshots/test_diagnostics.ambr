@@ -12,7 +12,7 @@
     'ONVIF enabled': True,
     'RTMP enabled': True,
     'RTSP enabled': True,
-    'WiFi connection': 'LAN',
+    'WiFi connection': False,
     'WiFi signal': None,
     'abilities': dict({
       'abilityChn': list([
