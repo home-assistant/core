@@ -49,12 +49,6 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Add config entry in Home Assistant."""
-    return create_entry(hass)
-
-
 async def set_aioclient_responses(aioclient_mock: AiohttpClientMocker) -> None:
     """Set AioClient responses."""
     aioclient_mock.get(
