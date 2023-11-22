@@ -7,7 +7,6 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.holiday import calendar
 from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
@@ -84,29 +83,55 @@ async def test_default_language(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity = calendar.HolidayCalendarEntity(
-        hass, "United States, AK", "US", "AK", config_entry.entry_id
-    )
-    assert entity._default_language == "en_US"
-
-    # holidays has only "en" translations for Canada
-    hass.config.language = "en"
-    entity = calendar.HolidayCalendarEntity(
-        hass, "Canada, AB", "CA", "AB", config_entry.entry_id
-    )
-    assert entity._default_language == "en"
-
     # Test French calendar with English language
-    entity = calendar.HolidayCalendarEntity(
-        hass, "France, BL", "FR", "BL", config_entry.entry_id
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.france_bl",
+            "end_date_time": dt_util.now(),
+        },
+        blocking=True,
+        return_response=True,
     )
-    events = await entity.async_get_events(hass, dt_util.now(), dt_util.now())
-    assert events[0].summary == "New Year's Day"
+    assert response == {
+        "calendar.france_bl": {
+            "events": [
+                {
+                    "start": "2023-01-01",
+                    "end": "2023-01-02",
+                    "summary": "New Year's Day",
+                    "location": "France, BL",
+                }
+            ]
+        }
+    }
 
     # Test French calendar with French language
     hass.config.language = "fr"
-    entity = calendar.HolidayCalendarEntity(
-        hass, "France, BL", "FR", "BL", config_entry.entry_id
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.france_bl",
+            "end_date_time": dt_util.now(),
+        },
+        blocking=True,
+        return_response=True,
     )
-    events = await entity.async_get_events(hass, dt_util.now(), dt_util.now())
-    assert events[0].summary == "Jour de l'an"
+    assert response == {
+        "calendar.france_bl": {
+            "events": [
+                {
+                    "start": "2023-01-01",
+                    "end": "2023-01-02",
+                    "summary": "Jour de l'an",
+                    "location": "France, BL",
+                }
+            ]
+        }
+    }
