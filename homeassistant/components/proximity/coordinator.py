@@ -195,7 +195,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         """Calculate Proximity data."""
         if (zone_state := self.hass.states.get(f"zone.{self.proximity_zone}")) is None:
             _LOGGER.debug(
-                "%s: zone %s not exists -> reset",
+                "%s: zone %s does not exist -> reset",
                 self.friendly_name,
                 self.proximity_zone,
             )
@@ -208,7 +208,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if (device_state := self.hass.states.get(device)) is None:
                 if entities_data.pop(device, None) is not None:
                     _LOGGER.debug(
-                        "%s: %s not exists -> remove", self.friendly_name, device
+                        "%s: %s does not exist -> remove", self.friendly_name, device
                     )
                 continue
 
@@ -231,7 +231,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             if entities_data[device][ATTR_DIST_TO] is None:
                 _LOGGER.debug(
-                    "%s: %s distance got unknown -> direction_of_travel=None",
+                    "%s: %s has unknown distance got -> direction_of_travel=None",
                     self.friendly_name,
                     device,
                 )
@@ -296,7 +296,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 continue
 
             if float(nearest_distance_to) == float(distance_to):
-                _LOGGER.debug("set same close entity_data: %s", entity_data)
+                _LOGGER.debug("set equally close entity_data: %s", entity_data)
                 proximity_data[
                     ATTR_NEAREST
                 ] = f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
