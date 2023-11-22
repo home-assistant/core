@@ -118,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Importing Tado from configuration.yaml")
         username = import_config[CONF_USERNAME]
         password = import_config[CONF_PASSWORD]
-        home_id = import_config.get(CONF_HOME_ID, None)
+        home_id = import_config.get(CONF_HOME_ID)
 
         self._async_abort_entries_match(
             {
