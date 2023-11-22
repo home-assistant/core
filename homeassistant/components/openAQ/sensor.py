@@ -1,5 +1,6 @@
 """Sensor platform for OpenAQ."""
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 
 import homeassistant
@@ -57,7 +58,6 @@ async def async_setup_entry(
     """Configure the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = coordinator.get_sensors()
-    # print(sensors)
     sensor_names = [sensor.parameter.name for sensor in sensors]
     sensor_names.append("last_update")
     sensors_metrics = [OPENAQ_PARAMETERS[j] for j in sensor_names]
@@ -142,8 +142,10 @@ class OpenAQSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor, rounding if a number."""
-        if self.metric == SensorDeviceClass.TIMESTAMP:
-            return None
-
         name = self.entity_description.key
+        if self.metric == SensorDeviceClass.TIMESTAMP:
+            return datetime.strptime(
+                self.coordinator.data.get(name), "%Y-%m-%dT%H:%M:%S%z"
+            )
+
         return self.coordinator.data.get(name)
