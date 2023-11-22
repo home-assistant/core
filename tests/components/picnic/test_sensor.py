@@ -213,7 +213,6 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Test the default sensor setup behaviour."""
         await self._setup_platform(use_default_responses=True)
 
-        self._assert_sensor("sensor.mock_title_cart_items_count", "10")
         self._assert_sensor(
             "sensor.mock_title_cart_total_price",
             "25.35",
@@ -289,7 +288,6 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Test that some sensors are disabled by default."""
         await self._setup_platform(use_default_responses=True, enable_all_sensors=False)
 
-        self._assert_sensor("sensor.mock_title_cart_items_count", disabled=True)
         self._assert_sensor(
             "sensor.mock_title_start_of_last_order_s_slot", disabled=True
         )

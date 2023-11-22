@@ -27,9 +27,6 @@
       }
     },
     "sensor": {
-      "cart_items_count": {
-        "name": "Cart items count"
-      },
       "cart_total_price": {
         "name": "Cart total price"
       },

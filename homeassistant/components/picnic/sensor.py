@@ -27,7 +27,6 @@ from .const import (
     ATTRIBUTION,
     CONF_COORDINATOR,
     DOMAIN,
-    SENSOR_CART_ITEMS_COUNT,
     SENSOR_CART_TOTAL_PRICE,
     SENSOR_LAST_ORDER_DELIVERY_TIME,
     SENSOR_LAST_ORDER_MAX_ORDER_TIME,
@@ -64,13 +63,6 @@ class PicnicSensorEntityDescription(SensorEntityDescription, PicnicRequiredKeysM
 
 
 SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
-    PicnicSensorEntityDescription(
-        key=SENSOR_CART_ITEMS_COUNT,
-        translation_key=SENSOR_CART_ITEMS_COUNT,
-        icon="mdi:format-list-numbered",
-        data_type="cart_data",
-        value_fn=lambda cart: cart.get("total_count", 0),
-    ),
     PicnicSensorEntityDescription(
         key=SENSOR_CART_TOTAL_PRICE,
         translation_key=SENSOR_CART_TOTAL_PRICE,

@@ -23,7 +23,6 @@ SLOT_DATA = "slot_data"
 NEXT_DELIVERY_DATA = "next_delivery_data"
 LAST_ORDER_DATA = "last_order_data"
 
-SENSOR_CART_ITEMS_COUNT = "cart_items_count"
 SENSOR_CART_TOTAL_PRICE = "cart_total_price"
 SENSOR_SELECTED_SLOT_START = "selected_slot_start"
 SENSOR_SELECTED_SLOT_END = "selected_slot_end"
