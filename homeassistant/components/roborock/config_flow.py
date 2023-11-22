@@ -176,12 +176,8 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return RoborockOptionsFlowHandler(config_entry)
 
 
-class RoborockOptionsFlowHandler(config_entries.OptionsFlow):
+class RoborockOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle an option flow for Roborock."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
