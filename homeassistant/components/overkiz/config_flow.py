@@ -48,21 +48,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _config_entry: ConfigEntry | None
-    _api_type: APIType
-    _user: None | str
-    _server: str
-    _host: str
-
-    def __init__(self) -> None:
-        """Initialize Overkiz Config Flow."""
-        super().__init__()
-
-        self._config_entry = None
-        self._api_type = APIType.CLOUD
-        self._user = None
-        self._server = DEFAULT_SERVER
-        self._host = "gateway-xxxx-xxxx-xxxx.local:8443"
+    _reauth_entry: ConfigEntry | None = None
+    _api_type: APIType = APIType.CLOUD
+    _user: str | None = None
+    _server: str = DEFAULT_SERVER
+    _host: str = "gateway-xxxx-xxxx-xxxx.local:8443"
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
@@ -185,22 +175,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self._config_entry:
-                    if self._config_entry.unique_id != self.unique_id:
+                if self._reauth_entry:
+                    if self._reauth_entry.unique_id != self.unique_id:
                         return self.async_abort(reason="reauth_wrong_account")
 
                     # Update existing entry during reauth
                     self.hass.config_entries.async_update_entry(
-                        self._config_entry,
+                        self._reauth_entry,
                         data={
-                            **self._config_entry.data,
+                            **self._reauth_entry.data,
                             **user_input,
                         },
                     )
 
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(
-                            self._config_entry.entry_id
+                            self._reauth_entry.entry_id
                         )
                     )
 
@@ -268,22 +258,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self._config_entry:
-                    if self._config_entry.unique_id != self.unique_id:
+                if self._reauth_entry:
+                    if self._reauth_entry.unique_id != self.unique_id:
                         return self.async_abort(reason="reauth_wrong_account")
 
                     # Update existing entry during reauth
                     self.hass.config_entries.async_update_entry(
-                        self._config_entry,
+                        self._reauth_entry,
                         data={
-                            **self._config_entry.data,
+                            **self._reauth_entry.data,
                             **user_input,
                         },
                     )
 
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(
-                            self._config_entry.entry_id
+                            self._reauth_entry.entry_id
                         )
                     )
 
@@ -353,21 +343,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
-        self._config_entry = cast(
+        self._reauth_entry = cast(
             ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
 
         self.context["title_placeholders"] = {
-            "gateway_id": self._config_entry.unique_id
+            "gateway_id": self._reauth_entry.unique_id
         }
 
-        self._user = self._config_entry.data[CONF_USERNAME]
-        self._server = self._config_entry.data[CONF_HUB]
-        self._api_type = self._config_entry.data[CONF_API_TYPE]
+        self._user = self._reauth_entry.data[CONF_USERNAME]
+        self._server = self._reauth_entry.data[CONF_HUB]
+        self._api_type = self._reauth_entry.data[CONF_API_TYPE]
 
-        if self._config_entry.data[CONF_API_TYPE] == APIType.LOCAL:
-            self._host = self._config_entry.data[CONF_HOST]
+        if self._reauth_entry.data[CONF_API_TYPE] == APIType.LOCAL:
+            self._host = self._reauth_entry.data[CONF_HOST]
 
         return await self.async_step_user(dict(entry_data))
 
