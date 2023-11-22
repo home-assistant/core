@@ -101,13 +101,11 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def __init__(self, name, api, circuit, device_config) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config)
+        super().__init__(device_config, api, circuit.id)
         self._attr_name = name
-        self._api = api
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_mode = None
-        self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""

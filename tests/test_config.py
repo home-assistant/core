@@ -1709,19 +1709,10 @@ async def test_component_config_validation_error(
     )
     config = await config_util.async_hass_config_yaml(hass)
 
-    for domain in [
-        "iot_domain",
-        "adr_0007_1",
-        "adr_0007_2",
-        "adr_0007_3",
-        "adr_0007_4",
-        "adr_0007_5",
-        "custom_validator_ok_1",
-        "custom_validator_ok_2",
-        "custom_validator_bad_1",
-        "custom_validator_bad_2",
-    ]:
-        integration = await async_get_integration(hass, domain)
+    for domain_with_label in config:
+        integration = await async_get_integration(
+            hass, domain_with_label.partition(" ")[0]
+        )
         await config_util.async_process_component_config(
             hass,
             config,
@@ -1730,7 +1721,7 @@ async def test_component_config_validation_error(
 
     error_records = [
         {
-            "message": record.message.replace(base_path, "<BASE_PATH>"),
+            "message": record.message,
             "has_exc_info": bool(record.exc_info),
         }
         for record in caplog.get_records("call")
@@ -1763,19 +1754,10 @@ async def test_component_config_validation_error_with_docs(
     )
     config = await config_util.async_hass_config_yaml(hass)
 
-    for domain in [
-        "iot_domain",
-        "adr_0007_1",
-        "adr_0007_2",
-        "adr_0007_3",
-        "adr_0007_4",
-        "adr_0007_5",
-        "custom_validator_ok_1",
-        "custom_validator_ok_2",
-        "custom_validator_bad_1",
-        "custom_validator_bad_2",
-    ]:
-        integration = await async_get_integration(hass, domain)
+    for domain_with_label in config:
+        integration = await async_get_integration(
+            hass, domain_with_label.partition(" ")[0]
+        )
         await config_util.async_process_component_config(
             hass,
             config,
@@ -1783,7 +1765,7 @@ async def test_component_config_validation_error_with_docs(
         )
 
     error_records = [
-        record.message.replace(base_path, "<BASE_PATH>")
+        record.message
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]
@@ -1811,7 +1793,47 @@ async def test_package_merge_error(
     await config_util.async_hass_config_yaml(hass)
 
     error_records = [
-        record.message.replace(base_path, "<BASE_PATH>")
+        record.message
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        FileNotFoundError("No such file or directory: b'liblibc.a'"),
+        ImportError(
+            ("ModuleNotFoundError: No module named 'not_installed_something'"),
+            name="not_installed_something",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "config_dir",
+    ["packages", "packages_include_dir_named"],
+)
+async def test_package_merge_exception(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    error: Exception,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test exception when merging packages."""
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "package_exceptions", config_dir
+    )
+    with patch(
+        "homeassistant.config.async_get_integration_with_requirements",
+        side_effect=error,
+    ):
+        await config_util.async_hass_config_yaml(hass)
+
+    error_records = [
+        record.message
         for record in caplog.get_records("call")
         if record.levelno == logging.ERROR
     ]

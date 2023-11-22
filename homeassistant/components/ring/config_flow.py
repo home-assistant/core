@@ -8,10 +8,16 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, __version__ as ha_version
+from homeassistant.const import (
+    APPLICATION_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    __version__ as ha_version,
+)
 from homeassistant.data_entry_flow import FlowResult
 
-from . import DOMAIN
+from .const import CONF_2FA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,14 +30,14 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    auth = ring_doorbell.Auth(f"HomeAssistant/{ha_version}")
+    auth = ring_doorbell.Auth(f"{APPLICATION_NAME}/{ha_version}")
 
     try:
         token = await hass.async_add_executor_job(
             auth.fetch_token,
-            data["username"],
-            data["password"],
-            data.get("2fa"),
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            data.get(CONF_2FA),
         )
     except ring_doorbell.Requires2FAError as err:
         raise Require2FA from err
@@ -65,10 +71,10 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input["username"])
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
                 return self.async_create_entry(
-                    title=user_input["username"],
-                    data={"username": user_input["username"], "token": token},
+                    title=user_input[CONF_USERNAME],
+                    data={CONF_USERNAME: user_input[CONF_USERNAME], CONF_TOKEN: token},
                 )
 
         return self.async_show_form(
@@ -87,7 +93,7 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema({vol.Required("2fa"): str}),
+            data_schema=vol.Schema({vol.Required(CONF_2FA): str}),
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
@@ -119,7 +125,7 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 data = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
-                    "token": token,
+                    CONF_TOKEN: token,
                 }
                 self.hass.config_entries.async_update_entry(
                     self.reauth_entry, data=data
