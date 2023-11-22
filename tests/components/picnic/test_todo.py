@@ -71,6 +71,8 @@ async def test_create_todo_list_item(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_picnic_api: MagicMock
 ) -> None:
     """Test for creating a picnic cart item."""
+    assert len(mock_picnic_api.get_cart.mock_calls) == 1
+
     mock_picnic_api.search = Mock()
     mock_picnic_api.search.return_value = [
         {
@@ -88,8 +90,8 @@ async def test_create_todo_list_item(
 
     await hass.services.async_call(
         DOMAIN,
-        "create_item",
-        {"summary": "Melk"},
+        "add_item",
+        {"item": "Melk"},
         target={"entity_id": ENTITY_ID},
         blocking=True,
     )
@@ -103,6 +105,8 @@ async def test_create_todo_list_item(
     assert args[0][0] == "321"
     assert args[0][1] == 1
 
+    assert len(mock_picnic_api.get_cart.mock_calls) == 2
+
 
 async def test_create_todo_list_item_not_found(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_picnic_api: MagicMock
@@ -114,8 +118,8 @@ async def test_create_todo_list_item_not_found(
     with pytest.raises(ValueError):
         await hass.services.async_call(
             DOMAIN,
-            "create_item",
-            {"summary": "Melk"},
+            "add_item",
+            {"item": "Melk"},
             target={"entity_id": ENTITY_ID},
             blocking=True,
         )
