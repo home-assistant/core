@@ -14,6 +14,7 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -29,7 +30,7 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 ATTR_SPEED = "speed"
-SUPPORT_PTZ_SPEED = 1024
+SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
 
 
 @dataclass(kw_only=True)

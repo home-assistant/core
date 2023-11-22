@@ -5,6 +5,8 @@ ptz_move:
     entity:
       integration: reolink
       domain: button
+      supported_features:
+        - camera.CameraEntityFeature.STREAM
   fields:
     speed:
       required: true
