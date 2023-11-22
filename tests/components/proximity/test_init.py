@@ -872,9 +872,9 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
 
     entity_base_name = f"sensor.home_{slugify('device_tracker.test2')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "1364567"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "away_from"
 
 
 def config_zones(hass):

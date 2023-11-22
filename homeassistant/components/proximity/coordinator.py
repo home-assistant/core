@@ -21,6 +21,7 @@ from homeassistant.util.unit_conversion import DistanceConverter
 from .const import (
     ATTR_DIR_OF_TRAVEL,
     ATTR_DIST_TO,
+    ATTR_IN_IGNORED_ZONE,
     ATTR_NEAREST,
     CONF_IGNORED_ZONES,
     CONF_TOLERANCE,
@@ -120,14 +121,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             return None
 
-        if device.state.lower() in self.ignored_zones:
-            _LOGGER.debug(
-                "%s: %s in ignored zone -> distance=None",
-                self.friendly_name,
-                device.entity_id,
-            )
-            return None
-
         distance_to_zone = distance(
             zone.attributes[ATTR_LATITUDE],
             zone.attributes[ATTR_LONGITUDE],
@@ -148,14 +141,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         new_latitude: float | None,
         new_longitude: float | None,
     ) -> str | None:
-        if device.state.lower() in self.ignored_zones:
-            _LOGGER.debug(
-                "%s: %s in ignored zone -> direction_of_travel=None",
-                self.friendly_name,
-                device.entity_id,
-            )
-            return None
-
         if device.state.lower() == self.proximity_zone.lower():
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
@@ -225,7 +210,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     ATTR_DIST_TO: None,
                     ATTR_DIR_OF_TRAVEL: None,
                     ATTR_NAME: device_state.name,
+                    ATTR_IN_IGNORED_ZONE: False,
                 }
+            entities_data[device][ATTR_IN_IGNORED_ZONE] = (
+                device_state.state.lower() in self.ignored_zones
+            )
             entities_data[device][ATTR_DIST_TO] = self._calc_distance_to_zone(
                 zone_state,
                 device_state,
@@ -282,7 +271,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             else:
                 distance_to = entity_data[ATTR_DIST_TO]
 
-            if distance_to is None:
+            if distance_to is None or entity_data[ATTR_IN_IGNORED_ZONE]:
                 continue
 
             if isinstance((nearest_distance_to := proximity_data[ATTR_DIST_TO]), str):
