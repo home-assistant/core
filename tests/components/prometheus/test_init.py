@@ -466,6 +466,12 @@ async def test_light(client, light_entities) -> None:
         'friendly_name="PC"} 70.58823529411765' in body
     )
 
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.hallway",'
+        'friendly_name="Hallway"} 100.0' in body
+    )
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_lock(client, lock_entities) -> None:
@@ -1492,6 +1498,19 @@ async def light_fixture(
     data["light_4"] = light_4
     data["light_4_attributes"] = light_4_attributes
 
+    light_5 = entity_registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_5",
+        suggested_object_id="hallway",
+        original_name="Hallway",
+    )
+    # Light is on, but brightness is unset; expect metrics to report
+    # brightness of 100%.
+    light_5_attributes = {light.ATTR_BRIGHTNESS: None}
+    set_state_with_entry(hass, light_5, STATE_ON, light_5_attributes)
+    data["light_5"] = light_5
+    data["light_5_attributes"] = light_5_attributes
     await hass.async_block_till_done()
     return data
 

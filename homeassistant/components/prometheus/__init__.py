@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
+from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -323,14 +324,14 @@ class PrometheusMetrics:
         }
 
     def _battery(self, state):
-        if "battery_level" in state.attributes:
+        if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is not None:
             metric = self._metric(
                 "battery_level_percent",
                 self.prometheus_cli.Gauge,
                 "Battery level as a percentage of its capacity",
             )
             try:
-                value = float(state.attributes[ATTR_BATTERY_LEVEL])
+                value = float(battery_level)
                 metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass
@@ -434,8 +435,9 @@ class PrometheusMetrics:
         )
 
         try:
-            if "brightness" in state.attributes and state.state == STATE_ON:
-                value = state.attributes["brightness"] / 255.0
+            brightness = state.attributes.get(ATTR_BRIGHTNESS)
+            if state.state == STATE_ON and brightness is not None:
+                value = brightness / 255.0
             else:
                 value = self.state_as_number(state)
             value = value * 100

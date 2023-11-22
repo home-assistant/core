@@ -134,6 +134,17 @@ def _water_unit(unit_system: FitbitUnitSystem) -> UnitOfVolume:
     return UnitOfVolume.MILLILITERS
 
 
+def _int_value_or_none(field: str) -> Callable[[dict[str, Any]], int | None]:
+    """Value function that will parse the specified field if present."""
+
+    def convert(result: dict[str, Any]) -> int | None:
+        if (value := result["value"].get(field)) is not None:
+            return int(value)
+        return None
+
+    return convert
+
+
 @dataclass
 class FitbitSensorEntityDescription(SensorEntityDescription):
     """Describes Fitbit sensor entity."""
@@ -206,7 +217,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Resting Heart Rate",
         native_unit_of_measurement="bpm",
         icon="mdi:heart-pulse",
-        value_fn=lambda result: int(result["value"]["restingHeartRate"]),
+        value_fn=_int_value_or_none("restingHeartRate"),
         scope=FitbitScope.HEART_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
