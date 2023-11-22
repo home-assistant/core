@@ -70,6 +70,25 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     }
 
 
+async def test_form_translated_title(hass: HomeAssistant) -> None:
+    """Test the title gets translated."""
+    hass.config.language = "de"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "SE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["title"] == "Schweden"
+
+
 async def test_single_instance(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     data_de = {
