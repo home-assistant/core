@@ -33,12 +33,11 @@ async def async_setup_entry(
     """Set up the Picnic shopping cart todo platform config entry."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
-    # Add an entity shopping card
     async_add_entities([PicnicCart(hass, picnic_coordinator, config_entry)])
 
 
 class PicnicCart(TodoListEntity, CoordinatorEntity):
-    """A Picnic Shopping Card TodoListEntity."""
+    """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:cart"
