@@ -141,12 +141,10 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         """Return True if entity is available."""
         return self._attr_native_value is not None
 
-    async def async_set_native_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.value_setter:
-            await self.hass.async_add_executor_job(
-                self.entity_description.value_setter, self._api, value
-            )
+            self.entity_description.value_setter(self._api, value)
         self.async_write_ha_state()
 
     def update(self) -> None:
