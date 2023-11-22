@@ -18,7 +18,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up La Marzocco as config entry."""
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator = LmApiCoordinator(
+    coordinator = LmApiCoordinator(
         hass, entry
     )
 
