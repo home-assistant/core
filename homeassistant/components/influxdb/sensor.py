@@ -246,9 +246,8 @@ class InfluxSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
-        if (value := self.data.value) is None:
-            value = None
-        if self._value_template is not None:
+        value = self.data.value
+        if value is not None and self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
                 str(value), None
             )
