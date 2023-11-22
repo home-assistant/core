@@ -1,6 +1,11 @@
 """Entities for the ViCare integration."""
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareGazBoiler import GazBurner
+from PyViCare.PyViCareHeatingDevice import HeatingCircuit
+from PyViCare.PyViCareHeatingDevice import (
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
+)
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -16,7 +21,7 @@ class ViCareEntity(Entity):
     def __init__(
         self,
         device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: PyViCareDevice | PyViCareHeatingDeviceComponent,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the entity."""
@@ -27,7 +32,25 @@ class ViCareEntity(Entity):
         if hasattr(device, "id"):
             self._attr_unique_id += f"-{device.id}"
 
-        self._attr_device_info = DeviceInfo(
+        if isinstance(device, HeatingCircuit):
+            self._attr_device_info = self._get_component_info(device_config, "circuit")
+        elif isinstance(device, GazBurner):
+            self._attr_device_info = self._get_component_info(device_config, "burner")
+        else:
+            self._attr_device_info = self._get_device_info(device_config)
+
+    def _get_component_info(self, device_config: PyViCareDeviceConfig, component_type: str) -> DeviceInfo:
+        return DeviceInfo(
+            via_device=(DOMAIN, device_config.getConfig().serial),
+            identifiers={(DOMAIN, f"{device_config.getConfig().serial}-{component_type}-{device.id}")},
+            name=f"{component_type} {device.id + 1}",
+            manufacturer="Viessmann",
+            configuration_url="https://developer.viessmann.com/",
+        )
+
+
+    def _get_device_info(self, device_config: PyViCareDeviceConfig) -> DeviceInfo:
+        return DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
             serial_number=device_config.getConfig().serial,
             name=device_config.getModel(),
