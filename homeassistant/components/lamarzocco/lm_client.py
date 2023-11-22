@@ -24,13 +24,12 @@ class LaMarzoccoClient(LMCloud):
         self,
         hass: HomeAssistant,
         entry_data: Mapping[str, Any],
-        callback: Callable[[], None] | None = None,
+        callback_websocket_notify: Callable[[], None] | None = None,
     ) -> None:
         """Initialise the LaMarzocco entity data."""
-        super().__init__()
+        super().__init__(callback_websocket_notify)
         self._entry_data = entry_data
         self.hass = hass
-        self._callback_websocket_notify = callback
 
     async def connect(self) -> None:
         """Connect to the machine."""

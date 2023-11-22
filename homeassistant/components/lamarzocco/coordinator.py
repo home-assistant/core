@@ -5,7 +5,7 @@ import logging
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,7 +24,9 @@ class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
         """Initialize coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self._lm = LaMarzoccoClient(
-            hass=hass, entry_data=entry.data, callback=self._on_data_received
+            hass=hass,
+            entry_data=entry.data,
+            callback_websocket_notify=self.async_update_listeners,
         )
         self.data = self._lm
 
@@ -45,9 +47,3 @@ class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
 
         _LOGGER.debug("Current status: %s", str(self._lm.current_status))
         return self._lm
-
-    @callback
-    def _on_data_received(self) -> None:
-        """Handle data received from websocket."""
-        self.data = self._lm
-        self.async_update_listeners()
