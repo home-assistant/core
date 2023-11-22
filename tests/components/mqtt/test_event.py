@@ -224,11 +224,13 @@ async def test_default_availability_list_payload_any(
 
 
 async def test_default_availability_list_single(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
-        hass, caplog, event.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, event.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -271,11 +273,8 @@ async def test_invalid_device_class(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: expected EventDeviceClass or one of" in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "expected EventDeviceClass or one of" in caplog.text
 
 
 async def test_setting_attribute_via_mqtt_json_message(
@@ -501,14 +500,15 @@ async def test_entity_id_update_discovery_update(
 
 
 async def test_entity_device_info_with_hub(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test MQTT event device registry integration."""
     await mqtt_mock_entry()
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)
-    registry = dr.async_get(hass)
-    hub = registry.async_get_or_create(
+    hub = device_registry.async_get_or_create(
         config_entry_id=other_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
@@ -528,7 +528,7 @@ async def test_entity_device_info_with_hub(
     async_fire_mqtt_message(hass, "homeassistant/event/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.via_device_id == hub.id
 

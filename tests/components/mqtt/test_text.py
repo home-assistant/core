@@ -205,11 +205,13 @@ async def test_controlling_validation_state_via_topic(
     ],
 )
 async def test_attribute_validation_max_greater_then_min(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the validation of min and max configuration attributes."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "text length min must be >= max" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -228,11 +230,13 @@ async def test_attribute_validation_max_greater_then_min(
     ],
 )
 async def test_attribute_validation_max_not_greater_then_max_state_length(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the max value of of max configuration attribute."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "max text length must be <= 255" in caplog.text
 
 
 @pytest.mark.parametrize(

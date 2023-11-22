@@ -7,27 +7,33 @@ from mcstatus.status_response import (
     JavaStatusPlayers,
     JavaStatusResponse,
     JavaStatusVersion,
+    RawJavaResponse,
+    RawJavaResponsePlayer,
+    RawJavaResponsePlayers,
+    RawJavaResponseVersion,
 )
 
 from homeassistant.components.minecraft_server.api import MinecraftServerData
 
+TEST_CONFIG_ENTRY_ID: str = "01234567890123456789012345678901"
 TEST_HOST = "mc.dummyserver.com"
 TEST_PORT = 25566
 TEST_ADDRESS = f"{TEST_HOST}:{TEST_PORT}"
 
-TEST_JAVA_STATUS_RESPONSE_RAW = {
-    "description": {"text": "Dummy MOTD"},
-    "version": {"name": "Dummy Version", "protocol": 123},
-    "players": {
-        "online": 3,
-        "max": 10,
-        "sample": [
-            {"name": "Player 1", "id": "1"},
-            {"name": "Player 2", "id": "2"},
-            {"name": "Player 3", "id": "3"},
+TEST_JAVA_STATUS_RESPONSE_RAW = RawJavaResponse(
+    description="Dummy MOTD",
+    players=RawJavaResponsePlayers(
+        online=3,
+        max=10,
+        sample=[
+            RawJavaResponsePlayer(id="1", name="Player 1"),
+            RawJavaResponsePlayer(id="2", name="Player 2"),
+            RawJavaResponsePlayer(id="3", name="Player 3"),
         ],
-    },
-}
+    ),
+    version=RawJavaResponseVersion(name="Dummy Version", protocol=123),
+    favicon="Dummy Icon",
+)
 
 TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
     raw=TEST_JAVA_STATUS_RESPONSE_RAW,

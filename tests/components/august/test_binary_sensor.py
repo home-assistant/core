@@ -293,12 +293,12 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
 
-async def test_doorbell_device_registry(hass: HomeAssistant) -> None:
+async def test_doorbell_device_registry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
-
-    device_registry = dr.async_get(hass)
 
     reg_device = device_registry.async_get_device(identifiers={("august", "tmt100")})
     assert reg_device.model == "hydra1"

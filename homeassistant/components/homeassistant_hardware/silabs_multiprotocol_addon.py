@@ -588,9 +588,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         serial_device = (await self._async_serial_port_settings()).device
         if addon_info.options.get(CONF_ADDON_DEVICE) != serial_device:
             return await self.async_step_addon_installed_other_device()
-        return await self.async_step_show_addon_menu()
+        return await self.async_step_addon_menu()
 
-    async def async_step_show_addon_menu(
+    async def async_step_addon_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show menu options for the addon."""

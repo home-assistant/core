@@ -11,12 +11,13 @@ from tests.common import MockConfigEntry
 
 
 async def test_switches(
-    hass: HomeAssistant, mock_fully_kiosk: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_fully_kiosk: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test Fully Kiosk switches."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     entity = hass.states.get("switch.amazon_fire_screensaver")
     assert entity
     assert entity.state == "off"

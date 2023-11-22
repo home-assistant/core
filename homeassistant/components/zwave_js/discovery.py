@@ -162,6 +162,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     any_available_states: set[tuple[int, str]] | None = None
     # [optional] the value's value must match this value
     value: Any | None = None
+    # [optional] the value's metadata_stateful must match this value
+    stateful: bool | None = None
 
 
 @dataclass
@@ -1045,6 +1047,15 @@ DISCOVERY_SCHEMAS = [
             any_available_states={(0, "idle")},
         ),
     ),
+    # event
+    # stateful = False
+    ZWaveDiscoverySchema(
+        platform=Platform.EVENT,
+        hint="stateless",
+        primary_value=ZWaveValueDiscoverySchema(
+            stateful=False,
+        ),
+    ),
 ]
 
 
@@ -1293,6 +1304,9 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check value
     if schema.value is not None and value.value not in schema.value:
+        return False
+    # check metadata_stateful
+    if schema.stateful is not None and value.metadata.stateful != schema.stateful:
         return False
     return True
 

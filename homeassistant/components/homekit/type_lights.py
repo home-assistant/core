@@ -274,8 +274,11 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
+            elif hue_sat := attributes.get(ATTR_HS_COLOR):
+                hue, saturation = hue_sat
             else:
-                hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
+                hue = None
+                saturation = None
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))

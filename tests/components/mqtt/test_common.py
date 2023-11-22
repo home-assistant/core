@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+import voluptuous as vol
 import yaml
 
 from homeassistant import config as module_hass_config
@@ -363,6 +364,7 @@ async def help_test_default_availability_list_payload_any(
 
 async def help_test_default_availability_list_single(
     hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     domain: str,
     config: ConfigType,
@@ -378,10 +380,10 @@ async def help_test_default_availability_list_single(
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-    entry.add_to_hass(hass)
-    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
-        await entry.async_setup(hass)
+    with patch(
+        "homeassistant.config.load_yaml_config_file", return_value=config
+    ), suppress(vol.MultipleInvalid):
+        await mqtt_mock_entry()
 
     assert (
         "two or more values in the same group of exclusion 'availability'"

@@ -13,8 +13,14 @@ from homeassistant.components.zha.core.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.components.zha.core.helpers import get_zha_data
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    MAJOR_VERSION,
+    MINOR_VERSION,
+    Platform,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 
@@ -203,3 +209,26 @@ async def test_zha_retry_unique_ids(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_shutdown_on_ha_stop(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that the ZHA gateway is stopped when HA is shut down."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    zha_data = get_zha_data(hass)
+
+    with patch.object(
+        zha_data.gateway, "shutdown", wraps=zha_data.gateway.shutdown
+    ) as mock_shutdown:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.state = CoreState.stopping
+        await hass.async_block_till_done()
+
+    assert len(mock_shutdown.mock_calls) == 1
