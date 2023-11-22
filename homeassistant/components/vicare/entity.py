@@ -2,8 +2,8 @@
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareGazBoiler import GazBurner
-from PyViCare.PyViCareHeatingDevice import HeatingCircuit
 from PyViCare.PyViCareHeatingDevice import (
+    HeatingCircuit,
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 
@@ -33,23 +33,36 @@ class ViCareEntity(Entity):
             self._attr_unique_id += f"-{device.id}"
 
         if isinstance(device, HeatingCircuit):
-            self._attr_device_info = self._get_component_info(device_config, "circuit")
+            self._attr_device_info = self._get_info_for_component(
+                device_config, device, "circuit"
+            )
         elif isinstance(device, GazBurner):
-            self._attr_device_info = self._get_component_info(device_config, "burner")
+            self._attr_device_info = self._get_info_for_component(
+                device_config, device, "burner"
+            )
         else:
-            self._attr_device_info = self._get_device_info(device_config)
+            self._attr_device_info = self._get_info_for_device(device_config)
 
-    def _get_component_info(self, device_config: PyViCareDeviceConfig, component_type: str) -> DeviceInfo:
+    def _get_info_for_component(
+        self,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component_type: str,
+    ) -> DeviceInfo:
         return DeviceInfo(
             via_device=(DOMAIN, device_config.getConfig().serial),
-            identifiers={(DOMAIN, f"{device_config.getConfig().serial}-{component_type}-{device.id}")},
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{device_config.getConfig().serial}-{component_type}-{device.id}",
+                )
+            },
             name=f"{component_type} {device.id + 1}",
             manufacturer="Viessmann",
             configuration_url="https://developer.viessmann.com/",
         )
 
-
-    def _get_device_info(self, device_config: PyViCareDeviceConfig) -> DeviceInfo:
+    def _get_info_for_device(self, device_config: PyViCareDeviceConfig) -> DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
             serial_number=device_config.getConfig().serial,
