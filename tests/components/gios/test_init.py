@@ -100,11 +100,11 @@ async def test_migrate_device_and_config_entry(
         assert device_entry.id == migrated_device_entry.id
 
 
-async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
+async def test_remove_air_quality_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test remove air_quality entities from registry."""
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "123",
@@ -114,5 +114,5 @@ async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    entry = registry.async_get("air_quality.home")
+    entry = entity_registry.async_get("air_quality.home")
     assert entry is None

@@ -213,7 +213,9 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass: HomeAssistant) -
     )
 
 
-async def test_registered_devices(hass: HomeAssistant) -> None:
+async def test_registered_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test discovery flows are created for registered devices."""
     integration_matchers = [
         {"domain": "not-matching", "registered_devices": True},
@@ -222,10 +224,9 @@ async def test_registered_devices(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
-    registry = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="mock-domain", data={})
     config_entry.add_to_hass(hass)
-    registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
         name="name",
@@ -233,7 +234,7 @@ async def test_registered_devices(hass: HomeAssistant) -> None:
     # Not enabled should not get flows
     config_entry2 = MockConfigEntry(domain="mock-domain-2", data={})
     config_entry2.add_to_hass(hass)
-    registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
         name="name",
