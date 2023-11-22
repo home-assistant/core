@@ -25,14 +25,17 @@
   },
   "entity": {
     "sensor": {
-      "assignments": {
-        "name": "Upcoming assignments"
-      },
       "announcements": {
         "name": "Announcements"
       },
-      "inbox": {
+      "assignments": {
+        "name": "Upcoming Assignments"
+      },
+      "conversations": {
         "name": "Inbox"
+      },
+      "grades": {
+        "name": "Grades"
       }
     }
   }

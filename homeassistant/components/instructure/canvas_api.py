@@ -3,7 +3,12 @@ import urllib.parse
 import json
 from typing import Any
 from datetime import datetime, timedelta
-
+from .const import (
+    ANNOUNCEMENT_ENTITY_CONSTANT,
+    ASSIGNMENT__ENTITY_CONSTANT,
+    CONVERSATION_ENTITY_CONSTANT,
+    GRADES_ENTITY_CONSTANT,
+)
 
 class CanvasAPI:
     """A wrapper for the Canvas API.
@@ -93,7 +98,11 @@ class CanvasAPI:
                     if due_date <= next_two_weeks:
                         assignments[f"assignment-{assignment['id']}"] = assignment
 
-        return assignments
+        if len(assignments) != 0:
+            return assignments
+        else:
+            return {f"assignment-{ASSIGNMENT__ENTITY_CONSTANT}": {}}
+
 
     async def async_get_announcements(self, course_ids: list[str]) -> dict[str, Any]:
         """Retrieves a dictionary of announcements for given course IDs from the Canvas API.
@@ -119,7 +128,10 @@ class CanvasAPI:
             for announcement in course_announcements:
                 announcements[f"announcement-{announcement['id']}"] = announcement
 
-        return announcements
+        if len(announcements) != 0:
+            return announcements
+        else:
+            return {f"announcement-{ANNOUNCEMENT_ENTITY_CONSTANT}": {}}
 
     async def async_get_conversations(self) -> dict[str, Any]:
         """Retrieves a dictionary of conversations from the Canvas API.
@@ -136,8 +148,10 @@ class CanvasAPI:
         unread_conversations = [conv for conv in conversations if conv['workflow_state'] == 'unread']
         read_conversations = read_conversations = sorted(read_conversations, key=lambda x: datetime.strptime(x['last_message_at'], "%Y-%m-%dT%H:%M:%SZ"), reverse=True)[:5]
         merged_conversations = read_conversations + unread_conversations
-
-        return {f"conversation-{conversation['id']}": conversation for conversation in merged_conversations}
+        if len(merged_conversations) != 0:
+            return {f"conversation-{conversation['id']}": conversation for conversation in merged_conversations}
+        else:
+            return {f"conversation-{CONVERSATION_ENTITY_CONSTANT}": {}}
 
     async def async_get_grades(self, course_ids: list[str]) -> dict[str, Any]:
         """Retrieves a dictionary of submissions from the Canvas API.
@@ -161,5 +175,10 @@ class CanvasAPI:
                     past_one_month = datetime.utcnow() - timedelta(days=30)
                     if graded_at >= past_one_month:
                         submissions[f"submission-{submission['id']}"] = submission
+
+        if len(submissions) != 0:
+            return submissions
+        else:
+            return {f"submission-{GRADES_ENTITY_CONSTANT}": {}}
 
         return submissions
