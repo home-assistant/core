@@ -576,7 +576,7 @@ DISCOVERY_SCHEMAS = [
                 ),
                 # PWER - Power regulator mode (no sensor used).
                 # This mode is not supported by the climate entity.
-                # Heating is set by adjusting parameter 25. 
+                # Heating is set by adjusting parameter 25.
                 # P25: Set % of time the relay should be active when using PWER mode.
                 # (30-minute duty cycle)
                 # Use the air temperature as current temperature in the climate entity
