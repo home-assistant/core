@@ -65,7 +65,9 @@ class HolidayCalendarEntity(CalendarEntity):
         )
 
         obj_holidays = country_holidays(self._country, subdiv=self._province)
-        available_languages = obj_holidays.supported_languages
+        available_languages = [
+            lang.replace("en_US", "en") for lang in obj_holidays.supported_languages
+        ]
 
         if hass.config.language in available_languages:
             self._default_language = hass.config.language
