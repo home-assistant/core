@@ -481,6 +481,26 @@ def test_config_entry_selector_schema(
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            ("NL", "DE"),
+            (None, True, 1),
+        ),
+        (
+            {"countries": ["NL", "DE"]},
+            ("NL", "DE"),
+            (None, True, 1, "sv", "en"),
+        ),
+    ),
+)
+def test_country_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test country selector."""
+    _test_selector("country", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("00:00:00",), ("blah", None)),),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -654,6 +674,11 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections) -> N
             {"options": [], "custom_value": True, "multiple": True, "mode": "list"},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "sort": True},
+            ("red", "blue"),
+            (0, None, ["red"]),
         ),
     ),
 )
@@ -1049,3 +1074,27 @@ def test_condition_selector_schema(
 ) -> None:
     """Test condition sequence selector."""
     _test_selector("condition", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            (
+                [
+                    {
+                        "platform": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
+                [],
+            ),
+            ("abc"),
+        ),
+    ),
+)
+def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test trigger sequence selector."""
+    _test_selector("trigger", schema, valid_selections, invalid_selections)

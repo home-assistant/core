@@ -4,13 +4,32 @@
       "user": {
         "description": "Fill in the location to track.",
         "data": {
-          "name": "[%key:common::config_flow::data::api_key%]",
           "radius": "Radius",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "altitude": "Altitude"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "You can login to your OpenSky account to increase the update frequency.",
+        "data": {
+          "radius": "[%key:component::opensky::config::step::user::data::radius%]",
+          "altitude": "[%key:component::opensky::config::step::user::data::altitude%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "contributing_user": "I'm contributing to OpenSky"
+        }
+      }
+    },
+    "error": {
+      "username_missing": "Username is missing",
+      "password_missing": "Password is missing",
+      "no_authentication": "You need to authenticate to be contributing",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

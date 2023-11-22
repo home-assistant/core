@@ -1158,7 +1158,7 @@ async def test_server_reconnect_event(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": False,
+            "reason": 0,
             "node": lock_schlage_be469_state,
         },
     )
@@ -1238,7 +1238,7 @@ async def test_server_reconnect_value_updated(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": False,
+            "reason": 0,
             "node": lock_schlage_be469_state,
         },
     )

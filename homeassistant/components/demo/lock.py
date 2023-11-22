@@ -15,26 +15,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 LOCK_UNLOCK_DELAY = 2  # Used to give a realistic lock/unlock experience in frontend
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Demo lock platform."""
-    async_add_entities(
-        [
-            DemoLock("Front Door", STATE_LOCKED),
-            DemoLock("Kitchen Door", STATE_UNLOCKED),
-            DemoLock("Poorly Installed Door", STATE_UNLOCKED, False, True),
-            DemoLock("Openable Lock", STATE_LOCKED, True),
-        ]
-    )
 
 
 async def async_setup_entry(
@@ -43,7 +25,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+    async_add_entities(
+        [
+            DemoLock("Front Door", STATE_LOCKED),
+            DemoLock("Kitchen Door", STATE_UNLOCKED),
+            DemoLock("Poorly Installed Door", STATE_UNLOCKED, False, True),
+            DemoLock("Openable Lock", STATE_LOCKED, True),
+        ]
+    )
 
 
 class DemoLock(LockEntity):

@@ -68,7 +68,9 @@ async def test_switch_power_restore_state(hass: HomeAssistant) -> None:
     )
 
 
-async def test_power_restored_unique_id(hass: HomeAssistant) -> None:
+async def test_power_restored_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a select unique id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -82,14 +84,15 @@ async def test_power_restored_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "select.bulb_rgbcw_ddeeff_power_restored"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id
         == f"{MAC_ADDRESS}_power_restored"
     )
 
 
-async def test_power_restored_unique_id_no_discovery(hass: HomeAssistant) -> None:
+async def test_power_restored_unique_id_no_discovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a select unique id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -102,7 +105,6 @@ async def test_power_restored_unique_id_no_discovery(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     entity_id = "select.bulb_rgbcw_ddeeff_power_restored"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id
         == f"{config_entry.entry_id}_power_restored"

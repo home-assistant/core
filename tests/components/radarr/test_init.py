@@ -1,5 +1,4 @@
 """Test Radarr integration."""
-from aiopyarr import exceptions
 import pytest
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
@@ -7,7 +6,12 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import create_entry, mock_connection, patch_radarr, setup_integration
+from . import (
+    create_entry,
+    mock_connection,
+    mock_connection_invalid_auth,
+    setup_integration,
+)
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -41,12 +45,11 @@ async def test_async_setup_entry_auth_failed(
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     mock_connection(aioclient_mock)
     entry = create_entry(hass)
-    with patch_radarr() as radarrmock:
-        radarrmock.side_effect = exceptions.ArrAuthenticationException
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-        assert entry.state == ConfigEntryState.SETUP_ERROR
-        assert not hass.data.get(DOMAIN)
+    mock_connection_invalid_auth(aioclient_mock)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")

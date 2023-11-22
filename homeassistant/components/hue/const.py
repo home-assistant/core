@@ -43,11 +43,11 @@ REQUEST_REFRESH_DELAY = 0.3
 # V2 API SPECIFIC CONSTANTS ##################
 
 DEFAULT_BUTTON_EVENT_TYPES = (
-    # I have never ever seen the `DOUBLE_SHORT_RELEASE`
-    # or `DOUBLE_SHORT_RELEASE` events so leave them out here
+    # I have never ever seen the `DOUBLE_SHORT_RELEASE` event so leave it out here
     ButtonEvent.INITIAL_PRESS,
     ButtonEvent.REPEAT,
     ButtonEvent.SHORT_RELEASE,
+    ButtonEvent.LONG_PRESS,
     ButtonEvent.LONG_RELEASE,
 )
 

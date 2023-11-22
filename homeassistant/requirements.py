@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, cast
 
-import pkg_resources
+from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -85,11 +85,8 @@ def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
     is_docker = pkg_util.is_docker_env()
     kwargs = {
         "constraints": os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE),
-        "no_cache_dir": is_docker,
         "timeout": PIP_TIMEOUT,
     }
-    if "WHEELS_LINKS" in os.environ:
-        kwargs["find_links"] = os.environ["WHEELS_LINKS"]
     if not (config_dir is None or pkg_util.is_virtual_env()) and not is_docker:
         kwargs["target"] = os.path.join(config_dir, "deps")
     return kwargs
@@ -232,8 +229,7 @@ class RequirementsManager:
             skipped_requirements = [
                 req
                 for req in requirements
-                if pkg_resources.Requirement.parse(req).project_name
-                in self.hass.config.skip_pip_packages
+                if Requirement(req).name in self.hass.config.skip_pip_packages
             ]
 
             for req in skipped_requirements:

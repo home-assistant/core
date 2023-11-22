@@ -16,8 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -25,12 +25,13 @@ from .coordinator import (
     DiskSpaceDataUpdateCoordinator,
     HealthDataUpdateCoordinator,
     MoviesDataUpdateCoordinator,
+    QueueDataUpdateCoordinator,
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
     T,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
         "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
         "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
+        "queue": QueueDataUpdateCoordinator(hass, host_configuration, radarr),
         "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
     }
     for coordinator in coordinators.values():
@@ -74,15 +76,12 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
     def __init__(
         self,
         coordinator: RadarrDataUpdateCoordinator[T],
-        description: EntityDescription | None = None,
-        name: str | None = None,
+        description: EntityDescription,
     ) -> None:
         """Create Radarr entity."""
         super().__init__(coordinator)
-        if description:
-            self.entity_description = description
-        name = description.key if description else name
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{name}"
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:

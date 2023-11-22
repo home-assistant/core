@@ -134,6 +134,10 @@ class HumidifierEntityDescription(ToggleEntityDescription):
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_AVAILABLE_MODES}
+    )
+
     entity_description: HumidifierEntityDescription
     _attr_action: HumidifierAction | None = None
     _attr_available_modes: list[str] | None

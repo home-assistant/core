@@ -226,6 +226,21 @@ class TodSensor(BinarySensorEntity):
         self._time_after += self._after_offset
         self._time_before += self._before_offset
 
+    def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
+        """Add 24 hours (1 day) but account for DST."""
+        tentative_new_date = a_date + timedelta(days=1)
+        tentative_new_date = dt_util.as_local(tentative_new_date)
+        tentative_new_date = tentative_new_date.replace(
+            hour=target_time.hour, minute=target_time.minute
+        )
+        # The following call addresses missing time during DST jumps
+        return dt_util.find_next_time_expression_time(
+            tentative_new_date,
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 23),
+        )
+
     def _turn_to_next_day(self) -> None:
         """Turn to to the next day."""
         if TYPE_CHECKING:
@@ -238,7 +253,9 @@ class TodSensor(BinarySensorEntity):
             self._time_after += self._after_offset
         else:
             # Offset is already there
-            self._time_after += timedelta(days=1)
+            self._time_after = self._add_one_dst_aware_day(
+                self._time_after, self._after
+            )
 
         if _is_sun_event(self._before):
             self._time_before = get_astral_event_next(
@@ -247,7 +264,9 @@ class TodSensor(BinarySensorEntity):
             self._time_before += self._before_offset
         else:
             # Offset is already there
-            self._time_before += timedelta(days=1)
+            self._time_before = self._add_one_dst_aware_day(
+                self._time_before, self._before
+            )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""

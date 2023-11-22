@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 async def test_camera(hass: HomeAssistant, init_integration) -> None:
     """Test prosegur get_image."""
 
-    image = await camera.async_get_image(hass, "camera.test_cam")
+    image = await camera.async_get_image(hass, "camera.contract_1234abcd_test_cam")
 
     assert image == Image(content_type="image/jpeg", content=b"ABC")
 
@@ -36,7 +36,7 @@ async def test_camera_fail(
     with caplog.at_level(
         logging.ERROR, logger="homeassistant.components.prosegur"
     ), pytest.raises(HomeAssistantError) as exc:
-        await camera.async_get_image(hass, "camera.test_cam")
+        await camera.async_get_image(hass, "camera.contract_1234abcd_test_cam")
 
         assert "Unable to get image" in str(exc.value)
 
@@ -51,7 +51,7 @@ async def test_request_image(
     await hass.services.async_call(
         DOMAIN,
         "request_image",
-        {ATTR_ENTITY_ID: "camera.test_cam"},
+        {ATTR_ENTITY_ID: "camera.contract_1234abcd_test_cam"},
     )
     await hass.async_block_till_done()
 
@@ -72,7 +72,7 @@ async def test_request_image_fail(
         await hass.services.async_call(
             DOMAIN,
             "request_image",
-            {ATTR_ENTITY_ID: "camera.test_cam"},
+            {ATTR_ENTITY_ID: "camera.contract_1234abcd_test_cam"},
         )
         await hass.async_block_till_done()
 

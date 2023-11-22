@@ -507,8 +507,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # Please use Dry and Fan HVAC modes instead.
         if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
             LOGGER.warning(
-                "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. "
-                "Please use the corresponding Dry and Fan HVAC modes instead"
+                "Dry and Fan preset modes are deprecated and will be removed in Home "
+                "Assistant 2024.2. Please use the corresponding Dry and Fan HVAC "
+                "modes instead"
             )
             async_create_issue(
                 self.hass,

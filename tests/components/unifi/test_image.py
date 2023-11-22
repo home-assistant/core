@@ -9,17 +9,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import (
-    EntityCategory,
-)
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
-from .test_controller import (
-    setup_unifi_integration,
-)
+from .test_controller import setup_unifi_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -68,6 +64,7 @@ async def test_wlan_qr_code(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_unifi_websocket,
+    websocket_mock,
 ) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
@@ -106,7 +103,7 @@ async def test_wlan_qr_code(
     image_state_2 = hass.states.get("image.ssid_1_qr_code")
     assert image_state_1.state == image_state_2.state
 
-    # Update state object - changeed password - new state
+    # Update state object - changed password - new state
     data = deepcopy(WLAN)
     data["x_passphrase"] = "new password"
     mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=data)
@@ -120,3 +117,26 @@ async def test_wlan_qr_code(
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == snapshot
+
+    # Availability signalling
+
+    # Controller disconnects
+    await websocket_mock.disconnect()
+    assert hass.states.get("image.ssid_1_qr_code").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    await websocket_mock.reconnect()
+    assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE
+
+    # WLAN gets disabled
+    wlan_1 = deepcopy(WLAN)
+    wlan_1["enabled"] = False
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("image.ssid_1_qr_code").state == STATE_UNAVAILABLE
+
+    # WLAN gets re-enabled
+    wlan_1["enabled"] = True
+    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE

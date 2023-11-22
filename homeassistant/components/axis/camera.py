@@ -71,18 +71,30 @@ class AxisCamera(AxisEntity, MjpegCamera):
         Additionally used when device change IP address.
         """
         image_options = self.generate_options(skip_stream_profile=True)
-        self._still_image_url = f"http://{self.device.host}:{self.device.port}/axis-cgi/jpg/image.cgi{image_options}"
+        self._still_image_url = (
+            f"http://{self.device.host}:{self.device.port}/axis-cgi"
+            f"/jpg/image.cgi{image_options}"
+        )
 
         mjpeg_options = self.generate_options()
-        self._mjpeg_url = f"http://{self.device.host}:{self.device.port}/axis-cgi/mjpg/video.cgi{mjpeg_options}"
+        self._mjpeg_url = (
+            f"http://{self.device.host}:{self.device.port}/axis-cgi"
+            f"/mjpg/video.cgi{mjpeg_options}"
+        )
 
         stream_options = self.generate_options(add_video_codec_h264=True)
-        self._stream_source = f"rtsp://{self.device.username}:{self.device.password}@{self.device.host}/axis-media/media.amp{stream_options}"
+        self._stream_source = (
+            f"rtsp://{self.device.username}:{self.device.password}"
+            f"@{self.device.host}/axis-media/media.amp{stream_options}"
+        )
 
         self.device.additional_diagnostics["camera_sources"] = {
             "Image": self._still_image_url,
             "MJPEG": self._mjpeg_url,
-            "Stream": f"rtsp://user:pass@{self.device.host}/axis-media/media.amp{stream_options}",
+            "Stream": (
+                f"rtsp://user:pass@{self.device.host}/axis-media"
+                f"/media.amp{stream_options}"
+            ),
         }
 
     @property

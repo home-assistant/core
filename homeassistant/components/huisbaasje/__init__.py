@@ -1,9 +1,9 @@
 """The Huisbaasje integration."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from energyflip import EnergyFlip, EnergyFlipException
 
 from homeassistant.config_entries import ConfigEntry
@@ -86,7 +86,7 @@ async def async_update_huisbaasje(energyflip: EnergyFlip) -> dict[str, dict[str,
     try:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
-        async with async_timeout.timeout(FETCH_TIMEOUT):
+        async with asyncio.timeout(FETCH_TIMEOUT):
             if not energyflip.is_authenticated():
                 _LOGGER.warning("Huisbaasje is unauthenticated. Reauthenticating")
                 await energyflip.authenticate()

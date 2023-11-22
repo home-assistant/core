@@ -30,7 +30,7 @@ async def async_setup_entry(
     data: AbodeSystem = hass.data[DOMAIN]
 
     async_add_entities(
-        AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE)  # pylint: disable=no-member
+        AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE)
         for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA)
     )
 

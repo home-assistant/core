@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_registry import (
 
 from .const import (
     _LOGGER,
+    CONF_AREA_FILTER,
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -262,6 +263,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_HEADLINE_FILTER,
                         default=self.data[CONF_HEADLINE_FILTER],
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_AREA_FILTER,
+                        default=self.data[CONF_AREA_FILTER],
                     ): cv.string,
                 }
             ),

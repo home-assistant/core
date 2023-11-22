@@ -1,5 +1,5 @@
 """The tests for the datetime component."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_PLATFOR
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=UTC)
 
 
 class MockDateTimeEntity(DateTimeEntity):

@@ -5,13 +5,12 @@ from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -39,14 +38,7 @@ class IPWebcamCamera(MjpegCamera):
 
     def __init__(self, coordinator: AndroidIPCamDataUpdateCoordinator) -> None:
         """Initialize the camera."""
-        name = None
-        # keep imported name until YAML is removed
-        if CONF_NAME in coordinator.config_entry.data:
-            name = coordinator.config_entry.data[CONF_NAME]
-            self._attr_has_entity_name = False
-
         super().__init__(
-            name=name,
             mjpeg_url=coordinator.cam.mjpeg_url,
             still_image_url=coordinator.cam.image_url,
             authentication=HTTP_BASIC_AUTHENTICATION,
@@ -56,5 +48,5 @@ class IPWebcamCamera(MjpegCamera):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-camera"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=name or coordinator.config_entry.data[CONF_HOST],
+            name=coordinator.config_entry.data[CONF_HOST],
         )

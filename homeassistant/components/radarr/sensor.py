@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Generic
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation
@@ -82,13 +83,22 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
+    "queue": RadarrSensorEntityDescription[int](
+        key="queue",
+        translation_key="queue",
+        native_unit_of_measurement="Movies",
+        icon="mdi:download",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data, _: data,
+    ),
     "status": RadarrSensorEntityDescription[SystemStatus](
         key="start_time",
         translation_key="start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data, _: data.startTime.replace(tzinfo=timezone.utc),
+        value_fn=lambda data, _: data.startTime.replace(tzinfo=UTC),
     ),
 }
 

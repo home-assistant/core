@@ -7,7 +7,7 @@ from typing import Any, Final, TypedDict
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 
 @dataclass

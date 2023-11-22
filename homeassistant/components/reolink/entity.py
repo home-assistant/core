@@ -5,8 +5,7 @@ from typing import TypeVar
 
 from reolink_aio.api import DUAL_LENS_MODELS
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -88,5 +87,6 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
+                sw_version=self._host.api.camera_sw_version(dev_ch),
                 configuration_url=self._conf_url,
             )

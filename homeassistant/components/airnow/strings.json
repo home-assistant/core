@@ -21,10 +21,26 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "radius": "Station Radius (miles)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "o3": {
         "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "station": {
+        "name": "PM2.5 reporting station",
+        "state_attributes": {
+          "lat": { "name": "[%key:common::config_flow::data::latitude%]" },
+          "long": { "name": "[%key:common::config_flow::data::longitude%]" }
+        }
       }
     }
   }

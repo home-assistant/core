@@ -8,6 +8,7 @@ import os
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
@@ -260,6 +261,27 @@ async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> b
     hassio = hass.data[DOMAIN]
     command = f"/resolution/suggestion/{suggestion_uuid}"
     return await hassio.send_command(command, timeout=None)
+
+
+@api_data
+async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
+    """Return settings specific to Home Assistant Green."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/os/boards/green", method="get")
+
+
+@api_data
+async def async_set_green_settings(
+    hass: HomeAssistant, settings: dict[str, bool]
+) -> dict:
+    """Set settings specific to Home Assistant Green.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command(
+        "/os/boards/green", method="post", payload=settings
+    )
 
 
 @api_data
@@ -530,6 +552,11 @@ class HassIO:
 
         This method is a coroutine.
         """
+        url = f"http://{self._ip}{command}"
+        if url != str(URL(url)):
+            _LOGGER.error("Invalid request %s", command)
+            raise HassioAPIError()
+
         try:
             request = await self.websession.request(
                 method,

@@ -24,7 +24,12 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="XXXXXXX", data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="6a2b3770e53c28dc1eeb2515e906b0ce",
+        unique_id="XXXXXXX",
+        data=config,
+    )
     entry.add_to_hass(hass)
     return entry
 

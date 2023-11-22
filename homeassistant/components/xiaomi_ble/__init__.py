@@ -15,10 +15,15 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry, async_get
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    DeviceRegistry,
+    async_get,
+)
 
 from .const import (
     CONF_DISCOVERED_EVENT_CLASSES,
+    CONF_SLEEPY_DEVICE,
     DOMAIN,
     XIAOMI_BLE_EVENT,
     XiaomiBleEvent,
@@ -43,12 +48,18 @@ def process_service_info(
         entry.entry_id
     ]
     discovered_device_classes = coordinator.discovered_device_classes
+    if entry.data.get(CONF_SLEEPY_DEVICE, False) != data.sleepy_device:
+        hass.config_entries.async_update_entry(
+            entry,
+            data=entry.data | {CONF_SLEEPY_DEVICE: data.sleepy_device},
+        )
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
             sensor_device_info = update.devices[device_key.device_id]
             device = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
+                connections={(CONNECTION_BLUETOOTH, address)},
                 identifiers={(BLUETOOTH_DOMAIN, address)},
                 manufacturer=sensor_device_info.manufacturer,
                 model=sensor_device_info.model,
@@ -157,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # since we will trade the BLEDevice for a connectable one
         # if we need to poll it
         connectable=False,
+        entry=entry,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

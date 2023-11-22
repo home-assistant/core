@@ -1,7 +1,7 @@
 {
   "domain": "twinkly",
   "name": "Twinkly",
-  "codeowners": ["@dr1rrb", "@Robbie1221"],
+  "codeowners": ["@dr1rrb", "@Robbie1221", "@Olen"],
   "config_flow": true,
   "dhcp": [
     {

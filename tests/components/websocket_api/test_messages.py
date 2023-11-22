@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.websocket_api.messages import (
-    _cached_event_message as lru_event_cache,
+    _partial_cached_event_message as lru_event_cache,
     _state_diff_event,
     cached_event_message,
     message_to_json,

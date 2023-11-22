@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
 from yarl import URL
@@ -22,7 +23,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -58,6 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self.discovery_schema = None
         self._user_input = None
+        self._sessions: list[aiohttp.ClientSession] = []
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -260,14 +261,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _get_octoprint_client(self, user_input: dict) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
         verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
-        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
-        return OctoprintClient(
-            user_input[CONF_HOST],
-            session,
-            user_input[CONF_PORT],
-            user_input[CONF_SSL],
-            user_input[CONF_PATH],
+
+        connector = aiohttp.TCPConnector(
+            force_close=True,
+            ssl=False if not verify_ssl else None,
         )
+        session = aiohttp.ClientSession(connector=connector)
+        self._sessions.append(session)
+
+        return OctoprintClient(
+            host=user_input[CONF_HOST],
+            session=session,
+            port=user_input[CONF_PORT],
+            ssl=user_input[CONF_SSL],
+            path=user_input[CONF_PATH],
+        )
+
+    def async_remove(self):
+        """Detach the session."""
+        for session in self._sessions:
+            session.detach()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

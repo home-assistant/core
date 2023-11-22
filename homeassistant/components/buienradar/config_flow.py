@@ -32,8 +32,8 @@ from .const import (
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_COUNTRY, default=DEFAULT_COUNTRY): vol.In(
-            SUPPORTED_COUNTRY_CODES
+        vol.Optional(CONF_COUNTRY, default=DEFAULT_COUNTRY): selector.CountrySelector(
+            selector.CountrySelectorConfig(countries=SUPPORTED_COUNTRY_CODES)
         ),
         vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
             selector.NumberSelectorConfig(
