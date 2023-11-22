@@ -59,10 +59,13 @@ class SmhiWeatherLocations:
             timeseries_data = city_weather_data.get("timeSeries")[0]
 
             # TEMPERATURE
-            temperature_data = timeseries_data.get("parameters")[10]
-            temperature_text = (
-                str(temperature_data["values"][0]) + " " + self.celsius_symbol
-            )
+            temperature_data = timeseries_data.get("parameters")
+            for data in temperature_data:
+                if data["name"] == "t":
+                    temperature_text = (
+                        str(data["values"][0]) + " " + self.celsius_symbol
+                    )
+                    break
 
             # WEATHER CONDITION
             weather_condtion_data = timeseries_data.get("parameters")[18]
