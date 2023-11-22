@@ -64,10 +64,10 @@ class NoboGlobalSelector(SelectEntity):
     def __init__(self, hub: nobo, override_type) -> None:
         """Initialize the global override selector."""
         self._nobo = hub
-        self._attr_unique_id = f"{hub.hub_serial}"
+        self._attr_unique_id = hub.hub_serial
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{hub.hub_serial}")},
+            identifiers={(DOMAIN, hub.hub_serial)},
             name=hub.hub_info[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
             model=f"Nobø Ecohub ({hub.hub_info[ATTR_HARDWARE_VERSION]})",
@@ -101,6 +101,7 @@ class NoboGlobalSelector(SelectEntity):
         for override in self._nobo.overrides.values():
             if override["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
                 self._attr_current_option = self._modes[override["mode"]]
+                break
 
     @callback
     def _after_update(self, hub) -> None:
