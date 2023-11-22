@@ -575,11 +575,12 @@ DISCOVERY_SCHEMAS = [
                     endpoint=3,
                 ),
                 # PWER - Power regulator mode (no sensor used).
-                # This mode does not does not support climate entity.
-                # Heating is set by adjusting parameter 25 
-                # P25: Set the % of time the relay should be active when using PWER mode.
+                # This mode is not supported by the climate entity.
+                # Heating is set by adjusting parameter 25. 
+                # P25: Set % of time the relay should be active when using PWER mode.
                 # (30-minute duty cycle)
-                # Set Sensor to use Air: To indicate the temperature in the room as we have nothing else
+                # Use the air temperature as current temperature in the climate entity
+                # as we have nothing else.
                 "Power regulator": ZwaveValueID(
                     property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
                     command_class=CommandClass.SENSOR_MULTILEVEL,
