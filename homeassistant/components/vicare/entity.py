@@ -34,11 +34,11 @@ class ViCareEntity(Entity):
 
         if isinstance(device, HeatingCircuit):
             self._attr_device_info = self._get_info_for_component(
-                device_config, device, "circuit"
+                device_config, device, "Circuit"
             )
         elif isinstance(device, GazBurner):
             self._attr_device_info = self._get_info_for_component(
-                device_config, device, "burner"
+                device_config, device, "Burner"
             )
         else:
             self._attr_device_info = self._get_info_for_device(device_config)
@@ -54,7 +54,7 @@ class ViCareEntity(Entity):
             identifiers={
                 (
                     DOMAIN,
-                    f"{device_config.getConfig().serial}-{component_type}-{device.id}",
+                    f"{device_config.getConfig().serial}-{component_type.lower()}-{device.id}",
                 )
             },
             name=f"{component_type} {device.id + 1}",
