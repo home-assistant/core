@@ -20,6 +20,7 @@ TEST_PASSWORD = "password"
 TEST_PASSWORD2 = "new_password"
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
 TEST_MAC2 = "12:34:56:78:9a:bc"
+TEST_UID = "ABC1234567D89EFG"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_NVR_NAME2 = "test2_reolink_name"
@@ -53,6 +54,7 @@ def reolink_connect_class(
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
         host_mock.mac_address = TEST_MAC
+        host_mock.uid = TEST_UID
         host_mock.onvif_enabled = True
         host_mock.rtmp_enabled = True
         host_mock.rtsp_enabled = True
