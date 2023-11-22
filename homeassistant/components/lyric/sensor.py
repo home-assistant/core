@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricRoom, LyricAccessories
+from aiolyric.objects.priority import LyricAccessories, LyricRoom
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import LyricDeviceEntity, LyricAccessoryEntity
+from . import LyricAccessoryEntity, LyricDeviceEntity
 from .const import (
     DOMAIN,
     PRESET_HOLD_UNTIL,
@@ -180,38 +180,58 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
-
-    entities = []
+    entities: list[SensorEntity] = []
 
     for location in coordinator.data.locations:
         for device in location.devices:
-            for device_sensor in DEVICE_SENSORS:
-                if device_sensor.suitable_fn(device):
+            entities.extend(__create_device_entities(device, location, coordinator))
+            entities.extend(__create_accessory_entities(device, location, coordinator))
+
+    async_add_entities(entities)
+
+
+def __create_device_entities(
+    device: LyricDevice,
+    location: LyricLocation,
+    coordinator: DataUpdateCoordinator[Lyric],
+):
+    entities = []
+    for device_sensor in DEVICE_SENSORS:
+        if device_sensor.suitable_fn(device):
+            entities.append(
+                LyricSensor(
+                    coordinator,
+                    device_sensor,
+                    location,
+                    device,
+                )
+            )
+
+    return entities
+
+
+def __create_accessory_entities(
+    device: LyricDevice,
+    location: LyricLocation,
+    coordinator: DataUpdateCoordinator[Lyric],
+):
+    entities = []
+    for room in coordinator.data.rooms_dict.get(device.macID, {}).values():
+        for accessory in room.accessories:
+            for accessory_sensor in ACCESSORY_SENSORS:
+                if accessory_sensor.suitable_fn(room, accessory):
                     entities.append(
-                        LyricSensor(
+                        LyricAccessorySensor(
                             coordinator,
-                            device_sensor,
+                            accessory_sensor,
                             location,
                             device,
+                            room,
+                            accessory,
                         )
                     )
 
-            for room in coordinator.data.rooms_dict.get(device.macID, {}).values():
-                for accessory in room.accessories:
-                    for accessory_sensor in ACCESSORY_SENSORS:
-                        if accessory_sensor.suitable_fn(room, accessory):
-                            entities.append(
-                                LyricAccessorySensor(
-                                    coordinator,
-                                    accessory_sensor,
-                                    location,
-                                    device,
-                                    room,
-                                    accessory,
-                                )
-                            )
-
-    async_add_entities(entities)
+    return entities
 
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):

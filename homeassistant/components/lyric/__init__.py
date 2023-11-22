@@ -11,7 +11,7 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricRoom, LyricAccessories
+from aiolyric.objects.priority import LyricAccessories, LyricRoom
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -174,6 +174,8 @@ class LyricDeviceEntity(LyricEntity):
 
 
 class LyricAccessoryEntity(LyricDeviceEntity):
+    """Defines a Honeywell Lyric accessory entity."""
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Lyric],
@@ -183,6 +185,7 @@ class LyricAccessoryEntity(LyricDeviceEntity):
         accessory: LyricAccessories,
         key: str,
     ) -> None:
+        """Initialize the Honeywell Lyric accessory entity."""
         super().__init__(coordinator, location, device, key)
         self._room = room
         self._accessory = accessory
