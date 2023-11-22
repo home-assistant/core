@@ -22,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, ICON, OPENAQ_PARAMETERS
 
@@ -59,14 +58,15 @@ async def async_setup_entry(
     print("SETUP ENTRY SENSOR")
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = coordinator.get_sensors()
-    sensors_metrics = [OPENAQ_PARAMETERS[j] for j in [sensor.parameter.name for sensor in sensors]]
+    sensors_metrics = [
+        OPENAQ_PARAMETERS[j] for j in [sensor.parameter.name for sensor in sensors]
+    ]
 
     print(sensors_metrics)
 
     entities = []
 
     for metric in sensors_metrics:
-
         print(f"FOUND {metric} IN SENSOR!!!!")
         match metric:
             case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
@@ -93,23 +93,23 @@ async def async_setup_entry(
                     entity_category=EntityCategory.DIAGNOSTIC,
                     native_unit_of_measurement=unit,
                 ),
-                coordinator
+                coordinator,
             ),
         )
     async_add_devices(entities)
 
 
 class OpenAQSensor(SensorEntity):
-    """OpenAQ sensor"""
+    """OpenAQ sensor."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         station_id,
         description: OpenAQSensorDescription,
-        coordinator: OpenAQDataCoordinator
+        coordinator: OpenAQDataCoordinator,
     ) -> None:
-        """Init"""
+        """Init."""
         self.entity_description = description
         self.station_id = station_id
         self.metric = self.entity_description.metric
@@ -149,5 +149,4 @@ class OpenAQSensor(SensorEntity):
         if self.metric == SensorDeviceClass.TIMESTAMP:
             return None
 
-        
         return 1

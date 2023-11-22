@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import API_KEY_ID, LOCATION_ID, DOMAIN, PLATFORMS
+from .const import API_KEY_ID, DOMAIN, LOCATION_ID, PLATFORMS
 
 # async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 #     """Read configuration from yaml."""
@@ -19,11 +19,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[API_KEY_ID]
     location_id = entry.data[LOCATION_ID]
 
-    coordinator = OpenAQDataCoordinator(hass,api_key,location_id)
+    coordinator = OpenAQDataCoordinator(hass, api_key, location_id)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    #await coordinator.async_config_entry_first_refresh()
+    # await coordinator.async_config_entry_first_refresh()
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -33,7 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "test")},
-        name=entry.data.get("name"),  # needs to be the same as in sensor.py Station name
+        name=entry.data.get(
+            "name"
+        ),  # needs to be the same as in sensor.py Station name
         model="Unknown",  # Add later from api
     )
 
