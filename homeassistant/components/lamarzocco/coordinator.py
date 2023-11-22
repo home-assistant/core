@@ -13,7 +13,6 @@ from .const import DOMAIN
 from .lm_client import LaMarzoccoClient
 
 SCAN_INTERVAL = timedelta(seconds=30)
-UPDATE_DELAY = 2
 
 _LOGGER = logging.getLogger(__name__)
 
