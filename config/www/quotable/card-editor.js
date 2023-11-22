@@ -3,6 +3,7 @@ class QuotableCardEditor extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._tags = [];
+    this._authors = [];
     this._selectedItems = [];
   }
 
@@ -32,7 +33,7 @@ class QuotableCardEditor extends HTMLElement {
         entity_id: this._config.entity,
       };
 
-      const message = {
+      const message_author = {
         domain: "quotable",
         service: "fetch_all_authors",
         type: "call_service",
@@ -41,12 +42,12 @@ class QuotableCardEditor extends HTMLElement {
       };
 
       // Call quotable service to fetch all tags
-      const response = await this._hass.callWS(message);
+      const response_author = await this._hass.callWS(message_author);
 
-      if (response && response.response) {
+      if (response_author && response_author.response) {
         // Update the _tags property with the fetched tags
-        this._tags = Object.values(response.response);
-        console.log(this._tags);
+        this._authors = Object.values(response_author.response);
+        console.log(this._authors);
       }
     } catch (error) {
       console.error("Error fetching options:", error);
@@ -115,53 +116,34 @@ class QuotableCardEditor extends HTMLElement {
     <div>
     <label for="multiselect">Select Categories:</label>
 
-      <input type="text" id="selectedTags" readonly>
-      <select id="multiselect" multiple>
-        ${this._tags
-          .map((tag) => `<option value="${tag}">${tag}</option>`)
+      <input type="text" id="selectedTags" list="multiselect">
+      <datalist id="multiselect" multiple value="Search..." autocomplete="on">
+        ${this._authors
+          .map((author) => `<option value="${author}">${author}</option>`)
           .join("")}
-      </select>
+      </datalist>
     </div>
     <div>
-      <label for="slider">Select Update Interval:</label>
-      <input type="range" id="slider" min="0" max="100" value="50">
-      <span id="updateIntervalLabel">50</span> <!-- Add the label for update interval -->
-
     </div>
    `;
 
     // Add references to the input and multiselect elements
-    const selectedTagsInput = this.shadowRoot.getElementById("selectedTags");
+    const selectedAuthorsInput = this.shadowRoot.getElementById("selectedTags");
     const multiselect = this.shadowRoot.getElementById("multiselect");
-    const updateIntervalSlider = this.shadowRoot.getElementById("slider");
-    const updateIntervalLabel = this.shadowRoot.getElementById(
-      "updateIntervalLabel"
-    );
-
-    // Add input event listener to update interval slider
-    updateIntervalSlider.addEventListener("input", () => {
-      updateIntervalLabel.textContent = updateIntervalSlider.value;
-    });
 
     // Add click event listener to each option
     multiselect.addEventListener("click", (event) => {
-      const selectedOption = event.target;
-      if (selectedOption.tagName === "OPTION") {
-        // Toggle the background color of the selected option
-        selectedOption.style.backgroundColor =
-          selectedOption.style.backgroundColor === "#007BFF" ? "" : "#007BFF";
-        selectedOption.style.color =
-          selectedOption.style.color === "#fff" ? "" : "#fff";
-
+      const selectedOptionAuthors = event.target;
+      if (selectedOptionAuthors.AuthorName === "OPTION") {
         // Add or remove the selected item from the list
-        const index = this._selectedItems.indexOf(selectedOption.value);
+        const index = this._selectedItems.indexOf(selectedOptionAuthors.value);
         if (index === -1) {
-          this._selectedItems.push(selectedOption.value);
+          this._selectedItems.push(selectedOptionAuthors.value);
         } else {
-          this._selectedItems.splice(index, 1);
+          this._selectedItems.pop(selectedOptionAuthors.value);
         }
-        // Update the selected tags input
-        selectedTagsInput.value = this._selectedItems.join(", ");
+        // Update the selected author input
+        selectedAuthorsInput.value = this._selectedItems.join(", ");
         // Add input event listener to update interval slider
       }
     });
