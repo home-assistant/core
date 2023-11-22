@@ -23,11 +23,11 @@ class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize coordinator."""
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self._lm = LaMarzoccoClient(
             hass=hass, entry_data=entry.data, callback=self._on_data_received
         )
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        self.data = self._lm
 
     async def _async_update_data(self) -> LaMarzoccoClient:
         """Fetch data from API endpoint."""
