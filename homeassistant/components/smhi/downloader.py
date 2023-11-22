@@ -55,3 +55,20 @@ class SmhiDownloader:
         """
         async with aiohttp.ClientSession() as session:
             return await self.fetch(session, url)
+
+    async def fetch_binary(
+        self, session: aiohttp.ClientSession, url: str
+    ) -> Optional[bytes]:
+        """Asynchronously fetches binary data from a specified URL using a given aiohttp ClientSession.
+
+        Args:
+            session (aiohttp.ClientSession): The aiohttp session to be used for making the request.
+            url (str): The URL to fetch the data from.
+
+        Returns:
+            Optional[bytes]: Binary data from the response if the status is 200, otherwise None.
+        """
+        async with session.get(url) as response:
+            if response.status == 200:
+                return await response.read()
+            return None
