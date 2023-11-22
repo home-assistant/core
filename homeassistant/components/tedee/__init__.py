@@ -25,11 +25,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Integration setup."""
 
-    hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = coordinator = TedeeApiCoordinator(hass, entry)
+    coordinator = TedeeApiCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     home_assistant_token = entry.data.get(CONF_HOME_ASSISTANT_ACCESS_TOKEN, "")
     # Setup webhook if long lived access token
