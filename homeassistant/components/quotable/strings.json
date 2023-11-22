@@ -4,6 +4,10 @@
       "name": "Fetch all tags",
       "description": "Fetches a list of all the available tags."
     },
+    "fetch_all_authors": {
+      "name": "Fetch all authors",
+      "description": "Fetches a list of all the available authors."
+    },
     "fetch_a_quote": {
       "name": "Fetch a quote",
       "description": "Fetches a random quote and persists it in state."

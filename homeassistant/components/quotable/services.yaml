@@ -2,6 +2,8 @@ fetch_all_tags:
 
 fetch_a_quote:
 
+fetch_all_authors:
+
 search_authors:
   fields:
     query:

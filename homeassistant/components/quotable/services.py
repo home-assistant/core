@@ -21,10 +21,12 @@ from .const import (
     DOMAIN,
     EVENT_NEW_QUOTE_FETCHED,
     FETCH_A_QUOTE_URL,
+    GET_AUTHORS_URL,
     GET_TAGS_URL,
     HTTP_CLIENT_TIMEOUT,
     SEARCH_AUTHORS_URL,
     SERVICE_FETCH_A_QUOTE,
+    SERVICE_FETCH_ALL_AUTHORS,
     SERVICE_FETCH_ALL_TAGS,
     SERVICE_SEARCH_AUTHORS,
     SERVICE_UPDATE_CONFIGURATION,
@@ -42,6 +44,13 @@ def register_services(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         service=SERVICE_FETCH_ALL_TAGS,
         service_func=partial(_fetch_all_tags_service, session),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_FETCH_ALL_AUTHORS,
+        service_func=partial(_fetch_all_authors_service, session),
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -75,6 +84,21 @@ async def _fetch_all_tags_service(
         if tags:
             tags = {tag.get("slug"): tag.get("name") for tag in tags}
             return tags
+
+    return None
+
+
+async def _fetch_all_authors_service(
+    session: aiohttp.ClientSession, service: ServiceCall
+) -> ServiceResponse:
+    response = await session.get(GET_AUTHORS_URL, timeout=HTTP_CLIENT_TIMEOUT)
+    if response.status == HTTPStatus.OK:
+        data = await response.json()
+        if authorslist := data.get("results"):
+            authorslist = {
+                author.get("slug"): author.get("name") for author in authorslist
+            }
+            return authorslist
 
     return None
 
