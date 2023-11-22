@@ -89,6 +89,27 @@ class QuotableCardEditor extends HTMLElement {
         margin-bottom: 10px;
       }
 
+      /* Style the slider input */
+      input[type="range"] {
+        width: 80%;
+        height: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fdd835;
+        outline: none; /* Remove the default focus outline */
+      }
+
+      /* Style the slider thumb */
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; /* Remove the default appearance */
+        width: 20px;
+        height: 20px;
+        background-color: #007BFF; /* Change the color of the thumb */
+        border: 1px solid #007BFF;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+
     </style>
     <div>
     <label for="multiselect">Select Categories:</label>
@@ -99,11 +120,24 @@ class QuotableCardEditor extends HTMLElement {
           .join("")}
       </select>
     </div>
+
+    <div>
+    <label for="slider">Select Update Interval:</label>
+      <input type="range" id="slider" min="0" max="100" value="50">
+      <span id="updateIntervalLabel">50</span>
+    </div>
    `;
 
     // Add references to the input and multiselect elements
     const selectedTagsInput = this.shadowRoot.getElementById("selectedTags");
     const multiselect = this.shadowRoot.getElementById("multiselect");
+
+    // Add references to the input and interval values
+    const updateIntervalSlider = this.shadowRoot.getElementById("slider");
+    const updateIntervalLabel = this.shadowRoot.getElementById(
+      "updateIntervalLabel"
+    );
+
     // Add click event listener to each option
     multiselect.addEventListener("click", (event) => {
       const selectedOption = event.target;
@@ -126,6 +160,11 @@ class QuotableCardEditor extends HTMLElement {
         // Update the selected tags input
         selectedTagsInput.value = this._selectedItems.join(", ");
       }
+    });
+
+    // Add input event listener to update interval slider
+    updateIntervalSlider.addEventListener("input", () => {
+      updateIntervalLabel.textContent = updateIntervalSlider.value;
     });
   }
 }
