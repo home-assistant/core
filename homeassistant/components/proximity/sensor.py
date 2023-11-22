@@ -19,11 +19,13 @@ from .coordinator import ProximityDataUpdateCoordinator
 SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_DIST_TO,
+        name="Distance",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
     SensorEntityDescription(
         key=ATTR_DIR_OF_TRAVEL,
+        name="Direction of travel",
         translation_key=ATTR_DIR_OF_TRAVEL,
         icon="mdi:compass-outline",
         device_class=SensorDeviceClass.ENUM,
@@ -38,7 +40,10 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
 
 SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        key=ATTR_NEAREST, translation_key=ATTR_NEAREST, icon="mdi:near-me"
+        key=ATTR_NEAREST,
+        name="Nearest",
+        translation_key=ATTR_NEAREST,
+        icon="mdi:near-me",
     ),
 ]
 
@@ -86,7 +91,9 @@ class ProximitySensor(SensorEntity, CoordinatorEntity[ProximityDataUpdateCoordin
 
         self.entity_description = description
 
-        self._attr_name = f"{coordinator.friendly_name} {description.key}"
+        # entity name will be removed as soon as we have a config entry
+        # and can follow the entity naming guidelines
+        self._attr_name = f"{coordinator.friendly_name} {description.name}"
 
     @property
     def native_value(self) -> str | float | None:
@@ -117,8 +124,10 @@ class ProximityTrackedEntitySensor(
         self.entity_description = description
         self.tracked_entity_id = tracked_entity_id
 
+        # entity name will be removed as soon as we have a config entry
+        # and can follow the entity naming guidelines
         self._attr_name = (
-            f"{coordinator.friendly_name} {tracked_entity_id} {description.key}"
+            f"{coordinator.friendly_name} {tracked_entity_id} {description.name}"
         )
 
     @property
