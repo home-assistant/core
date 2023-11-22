@@ -113,6 +113,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         latitude: float | None,
         longitude: float | None,
     ) -> int | None:
+        if device.state.lower() == self.proximity_zone.lower():
+            _LOGGER.debug(
+                "%s: %s in zone -> distance=0",
+                self.friendly_name,
+                device.entity_id,
+            )
+            return 0
+
         if latitude is None or longitude is None:
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
@@ -264,33 +272,25 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             ATTR_NEAREST: DEFAULT_NEAREST,
         }
         for entity_data in entities_data.values():
-            # keep distance 0 in case arrived for legacy entity
-            distance_to: str | int | None = None
-            if (dir_of_travel := entity_data[ATTR_DIR_OF_TRAVEL]) == "arrived":
-                distance_to = 0
-            else:
-                distance_to = entity_data[ATTR_DIST_TO]
-
-            if distance_to is None or entity_data[ATTR_IN_IGNORED_ZONE]:
+            if (distance_to := entity_data[ATTR_DIST_TO]) is None or entity_data[
+                ATTR_IN_IGNORED_ZONE
+            ]:
                 continue
 
             if isinstance((nearest_distance_to := proximity_data[ATTR_DIST_TO]), str):
                 _LOGGER.debug("set first entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: dir_of_travel or "unknown",
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
-                continue
-
-            if not isinstance(distance_to, (int, float)):
                 continue
 
             if float(nearest_distance_to) > float(distance_to):
                 _LOGGER.debug("set closer entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: dir_of_travel or "unknown",
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
                 continue

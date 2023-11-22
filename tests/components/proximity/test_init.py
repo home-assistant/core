@@ -106,7 +106,7 @@ async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
 
     entity_base_name = f"sensor.home_{slugify('device_tracker.test1')}"
     state = hass.states.get(f"{entity_base_name}_dist_to_zone")
-    assert state.state == "12491361"
+    assert state.state == "0"
     state = hass.states.get(f"{entity_base_name}_dir_of_travel")
     assert state.state == "arrived"
 
@@ -447,7 +447,7 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
     for device in ["device_tracker.test1", "device_tracker.test2"]:
         entity_base_name = f"sensor.home_{slugify(device)}"
         state = hass.states.get(f"{entity_base_name}_dist_to_zone")
-        assert state.state == "12491361"
+        assert state.state == "0"
         state = hass.states.get(f"{entity_base_name}_dir_of_travel")
         assert state.state == "arrived"
 
