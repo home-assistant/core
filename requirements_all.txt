@@ -1177,6 +1177,9 @@ lightwave==0.24
 # homeassistant.components.limitlessled
 limitlessled==1.1.3
 
+# homeassistant.components.linear_garage_door
+linear-garage-door==0.2.7
+
 # homeassistant.components.linode
 linode-api==4.1.9b1
 
