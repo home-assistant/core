@@ -139,9 +139,7 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda _, accessory: accessory.temperature,
-        suitable_fn=lambda _, accessory: accessory.temperature
-        if accessory.type == "IndoorAirSensor"
-        else False,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
     LyricSensorAccessoryEntityDescription(
         key="room_humidity",
@@ -150,9 +148,7 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda room, _: room.roomAvgHumidity,
-        suitable_fn=lambda room, accessory: room.roomAvgHumidity
-        if accessory.type == "IndoorAirSensor"
-        else False,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
 ]
 

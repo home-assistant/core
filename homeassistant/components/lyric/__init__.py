@@ -174,7 +174,7 @@ class LyricDeviceEntity(LyricEntity):
 
 
 class LyricAccessoryEntity(LyricDeviceEntity):
-    """Defines a Honeywell Lyric accessory entity."""
+    """Defines a Honeywell Lyric accessory entity, a sub-device of a thermostat."""
 
     def __init__(
         self,
