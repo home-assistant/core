@@ -26,8 +26,9 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
 from .mock_data import MOCK_CONFIG, USER_DATA, USER_EMAIL
+
+from tests.common import MockConfigEntry
 
 
 async def test_config_flow_success(
@@ -286,6 +287,7 @@ async def test_options_flow_sizes(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert setup_entry.options[SIZES][Size.PATH_WIDTH] == 3.2
     assert len(mock_setup.mock_calls) == 1
+
 
 async def test_reauth_flow(
     hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
