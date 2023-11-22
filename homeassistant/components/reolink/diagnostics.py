@@ -24,12 +24,6 @@ async def async_get_config_entry_diagnostics(
         IPC_cam[ch]["model"] = api.camera_model(ch)
         IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
 
-    event_connection = "fast poll"
-    if host._long_poll_received:
-        event_connection = "onvif long poll"
-    if host._webhook_reachable:
-        event_connection = "onvif push"
-
     return {
         "model": api.model,
         "hardware version": api.hardware_version,
@@ -41,12 +35,12 @@ async def async_get_config_entry_diagnostics(
         "RTMP enabled": api.rtmp_enabled,
         "RTSP enabled": api.rtsp_enabled,
         "ONVIF enabled": api.onvif_enabled,
-        "event connection": event_connection,
+        "event connection": host.event_connection,
         "stream protocol": api.protocol,
         "channels": api.channels,
         "stream channels": api.stream_channels,
         "IPC cams": IPC_cam,
-        "capabilities": api._capabilities,
-        "api versions": api._api_version,
-        "abilities": api._abilities,
+        "capabilities": api.capabilities,
+        "api versions": api.checked_api_versions,
+        "abilities": api.abilities,
     }
