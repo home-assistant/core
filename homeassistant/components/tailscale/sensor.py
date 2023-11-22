@@ -21,18 +21,11 @@ from . import TailscaleEntity
 from .const import DOMAIN
 
 
-@dataclass
-class TailscaleSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class TailscaleSensorEntityDescription(SensorEntityDescription):
+    """Describes a Tailscale sensor entity."""
 
     value_fn: Callable[[TailscaleDevice], datetime | str | None]
-
-
-@dataclass
-class TailscaleSensorEntityDescription(
-    SensorEntityDescription, TailscaleSensorEntityDescriptionMixin
-):
-    """Describes a Tailscale sensor entity."""
 
 
 SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (

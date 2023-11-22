@@ -428,20 +428,20 @@ async def test_media_player_television_supports_source_select_no_sources(
     assert acc.support_select_source is False
 
 
-async def test_tv_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_tv_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "media_player",
         "generic",
         "1234",
         suggested_object_id="simple",
         original_device_class=MediaPlayerDeviceClass.TV,
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "media_player",
         "generic",
         "9012",

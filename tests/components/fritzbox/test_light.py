@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceLightMock, setup_config_entry
+from . import FritzDeviceLightMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -262,3 +262,38 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert fritz().update_devices.call_count == 4
     assert fritz().login.call_count == 4
+
+
+async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test adding new discovered devices during runtime."""
+    device = FritzDeviceLightMock()
+    device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
+    device.color_mode = COLOR_TEMP_MODE
+    device.color_temp = 2700
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    new_device = FritzDeviceLightMock()
+    new_device.ain = "7890 1234"
+    new_device.name = "new_light"
+    new_device.get_color_temps.return_value = [2700, 6500]
+    new_device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
+    new_device.color_mode = COLOR_TEMP_MODE
+    new_device.color_temp = 2700
+    set_devices(fritz, devices=[device, new_device])
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DOMAIN}.new_light")
+    assert state

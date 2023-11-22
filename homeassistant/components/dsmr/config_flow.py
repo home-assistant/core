@@ -53,6 +53,8 @@ class DSMRConnection:
         self._protocol = protocol
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
+        if dsmr_version == "5B":
+            self._equipment_identifier = obis_ref.BELGIUM_EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
         if dsmr_version == "Q3D":
