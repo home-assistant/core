@@ -61,6 +61,8 @@ def reolink_connect_class(
         host_mock.use_https = TEST_USE_HTTPS
         host_mock.is_admin = True
         host_mock.user_level = "admin"
+        host_mock.protocol = "rtsp"
+        host_mock.channels = [0]
         host_mock.stream_channels = [0]
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
@@ -73,6 +75,16 @@ def reolink_connect_class(
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
+        host_mock.wifi_connection = "LAN"
+        host_mock.wifi_signal = None
+        host_mock.whiteled_mode_list.return_value = []
+        host_mock.zoom_range.return_value = {
+            "zoom": {"pos": {"min": 0, "max": 100}},
+            "focus": {"pos": {"min": 0, "max": 100}},
+        }
+        host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
+        host_mock.checked_api_versions = {"GetEvents": 1}
+        host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}
         yield host_mock_class
 
 
