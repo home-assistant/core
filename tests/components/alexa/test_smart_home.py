@@ -1439,6 +1439,8 @@ async def test_media_player_inputs(hass: HomeAssistant) -> None:
                 "aux",
                 "input 1",
                 "tv",
+                0,
+                None,
             ],
         },
     )

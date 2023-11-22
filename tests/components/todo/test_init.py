@@ -13,11 +13,13 @@ from homeassistant.components.todo import (
     TodoItemStatus,
     TodoListEntity,
     TodoListEntityFeature,
+    intent as todo_intent,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -31,10 +33,41 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
+ITEM_1 = {
+    "uid": "1",
+    "summary": "Item #1",
+    "status": "needs_action",
+}
+ITEM_2 = {
+    "uid": "2",
+    "summary": "Item #2",
+    "status": "completed",
+}
 
 
 class MockFlow(ConfigFlow):
     """Test flow."""
+
+
+class MockTodoListEntity(TodoListEntity):
+    """Test todo list entity."""
+
+    def __init__(self, items: list[TodoItem] | None = None) -> None:
+        """Initialize entity."""
+        self._attr_todo_items = items or []
+
+    @property
+    def items(self) -> list[TodoItem]:
+        """Return the items in the To-do list."""
+        return self._attr_todo_items
+
+    async def async_create_todo_item(self, item: TodoItem) -> None:
+        """Add an item to the To-do list."""
+        self._attr_todo_items.append(item)
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Delete an item in the To-do list."""
+        self._attr_todo_items = [item for item in self.items if item.uid not in uids]
 
 
 @pytest.fixture(autouse=True)
@@ -106,7 +139,12 @@ async def create_mock_platform(
 @pytest.fixture(name="test_entity")
 def mock_test_entity() -> TodoListEntity:
     """Fixture that creates a test TodoList entity with mock service calls."""
-    entity1 = TodoListEntity()
+    entity1 = MockTodoListEntity(
+        [
+            TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
+        ]
+    )
     entity1.entity_id = "todo.entity1"
     entity1._attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -114,13 +152,9 @@ def mock_test_entity() -> TodoListEntity:
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
     )
-    entity1._attr_todo_items = [
-        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
-    ]
-    entity1.async_create_todo_item = AsyncMock()
+    entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
     entity1.async_update_todo_item = AsyncMock()
-    entity1.async_delete_todo_items = AsyncMock()
+    entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
     entity1.async_move_todo_item = AsyncMock()
     return entity1
 
@@ -168,10 +202,61 @@ async def test_list_todo_items(
     assert resp.get("success")
     assert resp.get("result") == {
         "items": [
-            {"summary": "Item #1", "uid": "1", "status": "needs_action"},
-            {"summary": "Item #2", "uid": "2", "status": "completed"},
+            ITEM_1,
+            ITEM_2,
         ]
     }
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_items"),
+    [
+        ({}, [ITEM_1, ITEM_2]),
+        (
+            [
+                {"status": [TodoItemStatus.COMPLETED, TodoItemStatus.NEEDS_ACTION]},
+                [ITEM_1, ITEM_2],
+            ]
+        ),
+        (
+            [
+                {"status": [TodoItemStatus.NEEDS_ACTION]},
+                [ITEM_1],
+            ]
+        ),
+        (
+            [
+                {"status": [TodoItemStatus.COMPLETED]},
+                [ITEM_2],
+            ]
+        ),
+    ],
+)
+async def test_get_items_service(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+    service_data: dict[str, Any],
+    expected_items: list[dict[str, Any]],
+) -> None:
+    """Test listing items in a To-do list from a service call."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    state = hass.states.get("todo.entity1")
+    assert state
+    assert state.state == "1"
+    assert state.attributes == {"supported_features": 15}
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_items",
+        service_data,
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"todo.entity1": {"items": expected_items}}
 
 
 async def test_unsupported_websocket(
@@ -688,12 +773,16 @@ async def test_move_todo_item_service_invalid_input(
                 "rename": "Updated item",
             },
         ),
+        (
+            "remove_completed_items",
+            None,
+        ),
     ],
 )
 async def test_unsupported_service(
     hass: HomeAssistant,
     service_name: str,
-    payload: dict[str, Any],
+    payload: dict[str, Any] | None,
 ) -> None:
     """Test a To-do list that does not support features."""
 
@@ -737,3 +826,118 @@ async def test_move_item_unsupported(
     resp = await client.receive_json()
     assert resp.get("id") == 1
     assert resp.get("error", {}).get("code") == "not_supported"
+
+
+async def test_add_item_intent(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test adding items to lists using an intent."""
+    await todo_intent.async_setup_intents(hass)
+
+    entity1 = MockTodoListEntity()
+    entity1._attr_name = "List 1"
+    entity1.entity_id = "todo.list_1"
+
+    entity2 = MockTodoListEntity()
+    entity2._attr_name = "List 2"
+    entity2.entity_id = "todo.list_2"
+
+    await create_mock_platform(hass, [entity1, entity2])
+
+    # Add to first list
+    response = await intent.async_handle(
+        hass,
+        "test",
+        todo_intent.INTENT_LIST_ADD_ITEM,
+        {"item": {"value": "beer"}, "name": {"value": "list 1"}},
+    )
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert len(entity1.items) == 1
+    assert len(entity2.items) == 0
+    assert entity1.items[0].summary == "beer"
+    entity1.items.clear()
+
+    # Add to second list
+    response = await intent.async_handle(
+        hass,
+        "test",
+        todo_intent.INTENT_LIST_ADD_ITEM,
+        {"item": {"value": "cheese"}, "name": {"value": "List 2"}},
+    )
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert len(entity1.items) == 0
+    assert len(entity2.items) == 1
+    assert entity2.items[0].summary == "cheese"
+
+    # List name is case insensitive
+    response = await intent.async_handle(
+        hass,
+        "test",
+        todo_intent.INTENT_LIST_ADD_ITEM,
+        {"item": {"value": "wine"}, "name": {"value": "lIST 2"}},
+    )
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert len(entity1.items) == 0
+    assert len(entity2.items) == 2
+    assert entity2.items[1].summary == "wine"
+
+    # Missing list
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
+        )
+
+
+async def test_remove_completed_items_service(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test remove completed todo items service."""
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "remove_completed_items",
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_delete_todo_items.call_args
+    assert args
+    assert args.kwargs.get("uids") == ["2"]
+
+    test_entity.async_delete_todo_items.reset_mock()
+
+    # calling service multiple times will not call the entity method
+    await hass.services.async_call(
+        DOMAIN,
+        "remove_completed_items",
+        target={"entity_id": "todo.entity1"},
+        blocking=True,
+    )
+    test_entity.async_delete_todo_items.assert_not_called()
+
+
+async def test_remove_completed_items_service_raises(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test removing all completed item from a To-do list that raises an error."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    test_entity.async_delete_todo_items.side_effect = HomeAssistantError("Ooops")
+    with pytest.raises(HomeAssistantError, match="Ooops"):
+        await hass.services.async_call(
+            DOMAIN,
+            "remove_completed_items",
+            target={"entity_id": "todo.entity1"},
+            blocking=True,
+        )
