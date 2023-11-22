@@ -35,6 +35,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
@@ -213,6 +214,7 @@ class SmhiWeather(WeatherEntity):
         if self._forecast_daily:
             return {
                 ATTR_SMHI_THUNDER_PROBABILITY: self._forecast_daily[0].thunder,
+                ATTR_FORECAST_PRECIPITATION: self._forecast_daily[0].mean_precipitation,
             }
         return None
 
