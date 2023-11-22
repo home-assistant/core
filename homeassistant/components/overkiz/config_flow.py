@@ -256,7 +256,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
             except NotSuchTokenException:
-                errors["base"] = "not_such_token"
+                errors["base"] = "no_such_token"
             except DeveloperModeDisabled:
                 errors["base"] = "developer_mode_disabled"
             except UnknownUserException:
