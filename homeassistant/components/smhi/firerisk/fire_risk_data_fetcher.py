@@ -2,8 +2,7 @@
 
 from typing import Any
 
-import aiohttp
-
+from ..downloader import SmhiDownloader
 from ..smhi_geolocation_event import SmhiGeolocationEvent
 
 cities = {
@@ -35,21 +34,18 @@ def get_api_url_from_coordinates(lat: float, lon: float) -> str:
     return f"https://opendata-download-metfcst.smhi.se/api/category/fwif1g/version/1/daily/geotype/point/lon/{lon}/lat/{lat}/data.json"
 
 
-async def fetch_fire_risk_data(session: aiohttp.ClientSession) -> list[dict[str, Any]]:
-    """Fetch fire risk data."""
+async def fetch_fire_risk_data() -> list[dict[str, Any]]:
+    """Fetch fire risk data using SmhiDownloader."""
     fire_risk_data: list[dict[str, Any]] = []
+    downloader = SmhiDownloader()
 
     for __, city_coordinates in cities.items():
         url = get_api_url_from_coordinates(
             lat=city_coordinates["lat"], lon=city_coordinates["lon"]
         )
-        try:
-            async with session.get(url) as response:
-                response.raise_for_status()
-                data: dict[str, Any] = await response.json()
-                fire_risk_data.append(data)
-        except aiohttp.ClientError:
-            pass
+        data = await downloader.download_json(url)
+        if data:
+            fire_risk_data.append(data)
 
     return fire_risk_data
 
@@ -116,10 +112,9 @@ def create_smhi_geolocation_events(
 
 
 async def get_grassfire_risk() -> list[SmhiGeolocationEvent]:
-    """Get grassfire risk."""
+    """Get grassfire risk using the updated fetch_fire_risk_data function."""
     cleaned_data: list[dict[str, Any]] = []
-    async with aiohttp.ClientSession() as session:
-        data = await fetch_fire_risk_data(session)
-        for city_data in data:
-            cleaned_data.extend(extract_grassfire_info_with_coords(city_data))
+    data = await fetch_fire_risk_data()
+    for city_data in data:
+        cleaned_data.extend(extract_grassfire_info_with_coords(city_data))
     return create_smhi_geolocation_events(cleaned_data)
