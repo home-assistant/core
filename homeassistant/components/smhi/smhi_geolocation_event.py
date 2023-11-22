@@ -25,6 +25,7 @@ class SmhiGeolocationEvent(GeolocationEvent):
         self._attr_icon = card_icon
         self._state = state
         self._attr_entity_picture = map_icon_url
+        self.removed = False
 
     @property
     def name(self) -> str:
@@ -44,7 +45,9 @@ class SmhiGeolocationEvent(GeolocationEvent):
     def remove_self(self) -> None:
         """Mark this entity for removal."""
         if self.hass:
-            self.hass.async_create_task(self.async_remove())
+            if not self.removed:
+                self.hass.async_create_task(self.async_remove())
+                self.removed = True
         else:
             # Handle the case where hass is None, maybe log a warning
             pass
