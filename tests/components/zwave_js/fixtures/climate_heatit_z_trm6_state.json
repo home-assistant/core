@@ -56,10 +56,7 @@
   "interviewAttempts": 1,
   "isFrequentListening": false,
   "maxDataRate": 100000,
-  "supportedDataRates": [
-    40000,
-    100000
-  ],
+  "supportedDataRates": [40000, 100000],
   "protocolVersion": 3,
   "supportsBeaming": true,
   "supportsSecurity": false,
@@ -79,13 +76,7 @@
       "key": 6,
       "label": "General Thermostat V2"
     },
-    "mandatorySupportedCCs": [
-      32,
-      114,
-      64,
-      67,
-      134
-    ],
+    "mandatorySupportedCCs": [32, 114, 64, 67, 134],
     "mandatoryControlledCCs": []
   },
   "interviewStage": "Complete",
@@ -941,10 +932,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": [
-        "1.0",
-        "2.5"
-      ]
+      "value": ["1.0", "2.5"]
     },
     {
       "endpoint": 0,
@@ -1666,13 +1654,7 @@
           "key": 6,
           "label": "General Thermostat V2"
         },
-        "mandatorySupportedCCs": [
-          32,
-          114,
-          64,
-          67,
-          134
-        ],
+        "mandatorySupportedCCs": [32, 114, 64, 67, 134],
         "mandatoryControlledCCs": []
       },
       "commandClasses": [
@@ -1834,13 +1816,7 @@
           "key": 6,
           "label": "General Thermostat V2"
         },
-        "mandatorySupportedCCs": [
-          32,
-          114,
-          64,
-          67,
-          134
-        ],
+        "mandatorySupportedCCs": [32, 114, 64, 67, 134],
         "mandatoryControlledCCs": []
       },
       "commandClasses": [
@@ -1942,10 +1918,7 @@
           "key": 1,
           "label": "Routing Multilevel Sensor"
         },
-        "mandatorySupportedCCs": [
-          32,
-          49
-        ],
+        "mandatorySupportedCCs": [32, 49],
         "mandatoryControlledCCs": []
       },
       "commandClasses": [
@@ -2017,10 +1990,7 @@
           "key": 1,
           "label": "Routing Multilevel Sensor"
         },
-        "mandatorySupportedCCs": [
-          32,
-          49
-        ],
+        "mandatorySupportedCCs": [32, 49],
         "mandatoryControlledCCs": []
       },
       "commandClasses": [
@@ -2092,10 +2062,7 @@
           "key": 1,
           "label": "Routing Multilevel Sensor"
         },
-        "mandatorySupportedCCs": [
-          32,
-          49
-        ],
+        "mandatorySupportedCCs": [32, 49],
         "mandatoryControlledCCs": []
       },
       "commandClasses": [
