@@ -1,5 +1,5 @@
 """DataUpdateCoordinator for OpenAQ."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 
 from aq_client import AQClient
@@ -19,7 +19,6 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
         """Initialize OpenAQDataCoordinator."""
         self.api_key = api_key
         self.location_id = location_id
-        self.data = {}
         self.client = AQClient(
             hass=hass,
             api_key=api_key,
@@ -36,12 +35,7 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
     async def async_update(self):
         """Fetch data from AQClient and update."""
         _LOGGER.debug("Updating OpenAQ data")
-        self.data = await self.hass.async_add_executor_job(self.client.setup_device)
-        return self.data
+        prev_fetch = datetime.utcnow - SCAN_INTERVAL
+        data = await self.hass.async_add_executor_job(self.client.get_metrices(prev_fetch_date=prev_fetch))
+        return data
 
-    async def async_fetch_hist_data(self, start_date, stop_date):
-        """Fetch historical data from AQClient."""
-        _LOGGER.debug("Fetching historical data")
-        await self.hass.async_add_executor_job(
-            self.client.get_hist_data, start_date, stop_date
-        )

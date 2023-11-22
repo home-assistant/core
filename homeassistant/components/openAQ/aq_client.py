@@ -1,6 +1,5 @@
 """aq_client for OpenAQ."""
-import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 
 import openaq
@@ -17,81 +16,42 @@ class AQClient:
         self.api_key = api_key
         self.location_id = location_id
         self.client = openaq.OpenAQ(api_key=self.api_key)
-        self.name = None  # Initialize attributes in __init__
-        self.sensors = None
-        self.coordinates = None
-        self.lastUpdated = None
-        self.firstUpdated = None
+        #Make optional
+        self.setup_device()
 
     def setup_device(self):
-        """Set up device information and retrieve the API response."""
-        _LOGGER.debug("Setting up device")
+        """Set sensors and metrices"""
+        device = self.get_device()
+        self.sensors = device.sensors
+        #Get metrices from last 24h
+        res = self.client.measurements.list(locations_id=self.location_id, date_from=datetime.utcnow - timedelta(hours=24))
+        return res[0]
+
+    def get_device(self):
+        """Get device by id"""
+
         response = self.client.locations.get(self.location_id)
-        if response[0] == 200:
-            data = response[1]
-            if isinstance(data, dict) and data:
-                # Check if data is a non-empty dictionary
-                # Assuming the necessary keys are present in the dictionary
-                self.name = data.get("name")
-                self.sensors = data.get("sensors")
-                self.coordinates = data.get("coordinates")
-                self.lastUpdated = data.get("lastUpdated", {}).get("local")
-                self.firstUpdated = data.get("firstUpdated", {}).get("local")
-                _LOGGER.debug("Getting last measurements")
-                _LOGGER.debug(self.lastUpdated)
-                _LOGGER.debug(datetime.datetime.now())
-                measurements = self.client.latest(
-                    city=self.location_id,
-                    date_from=self.lastUpdated,
-                    date_to=datetime.datetime.now(),
-                )
-                if measurements[0] == 200:
-                    latest_measurements_data = measurements[1]
-                    if latest_measurements_data:
-                        _LOGGER.debug(
-                            "Latest measurements data: %s", latest_measurements_data
-                        )
-                        return latest_measurements_data
-                    _LOGGER.debug("No measurements found")
-                _LOGGER.debug("Measurements API error: %s", measurements[1])
-            else:
-                _LOGGER.debug("Invalid or empty response")
+
+        if len(response.results) == 1:
+            return response.results[0]
         else:
             _LOGGER.debug("Locations API error: %s", response[1])
         return None
 
-    def get_hist_data(self, startDate, stopDate):
-        """Retrieve historical data."""
-        _LOGGER.debug("Getting historical data from device")
-        res = self.client.measurements(
-            city=self.location_id, date_from=startDate, date_to=stopDate
-        )
-        if res[0] == 200:
-            res_data = res[1]
-            if res_data:
-                _LOGGER.debug("Historical data: %s", res_data)
-                _LOGGER.debug("Successfully got historical data")
-            else:
-                _LOGGER.debug("No historical data found")
-        else:
-            _LOGGER.debug("Historical data API error: %s", res[1])
+    def get_metrices(self, prev_fetch_date, num_parameters):
+        """Get latest measurements"""
 
-    def get_location(self, locationid):
-        """Returns a location"""
-        res = self.client.locations(locationid)
-        if(res[0] == 200):
-            return res[1]
-        else:
-            _LOGGER.debug("Error getting location: %s", locationid)
-            return None
+        response = self.client.measurements.list(locations_id=self.location_id, page=1, limit=num_parameters, date_from=prev_fetch_date)
+        return response
 
-#def api_test():
+
+def api_test():
 # """Test API functionality."""
- #print("RUNNING SCRIPT!")
- #client = AQClient('0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e', 10496)
- #data = client.setup_device()
- #print(data)
+ print("RUNNING SCRIPT!")
+ client = AQClient('0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e', 10496)
+ data = client.get_device()
+ print(data)
  #client.get_hist_data(datetime.datetime(2023, 11, 12), datetime.datetime.now())
 # Running the test
 
-#api_test()
+api_test()
