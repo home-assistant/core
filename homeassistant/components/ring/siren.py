@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RING_DEVICES
+from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .entity import RingEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,10 +22,11 @@ async def async_setup_entry(
 ) -> None:
     """Create the sirens for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES_COORDINATOR]
     sirens = []
 
     for device in devices["chimes"]:
-        sirens.append(RingChimeSiren(config_entry, device))
+        sirens.append(RingChimeSiren(device, coordinator))
 
     async_add_entities(sirens)
 
@@ -37,9 +38,9 @@ class RingChimeSiren(RingEntityMixin, SirenEntity):
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
     _attr_translation_key = "siren"
 
-    def __init__(self, config_entry: ConfigEntry, device) -> None:
+    def __init__(self, device, coordinator) -> None:
         """Initialize a Ring Chime siren."""
-        super().__init__(config_entry.entry_id, device)
+        super().__init__(device, coordinator)
         # Entity class attributes
         self._attr_unique_id = f"{self._device.id}-siren"
 

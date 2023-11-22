@@ -55,9 +55,12 @@ async def async_setup_entry(
     """Set up the Ring binary sensors from a config entry."""
     ring = hass.data[DOMAIN][config_entry.entry_id][RING_API]
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
+    notifications_coordinator = hass.data[DOMAIN][config_entry.entry_id][
+        RING_NOTIFICATIONS_COORDINATOR
+    ]
 
     entities = [
-        RingBinarySensor(config_entry.entry_id, ring, device, description)
+        RingBinarySensor(ring, device, notifications_coordinator, description)
         for device_type in ("doorbots", "authorized_doorbots", "stickup_cams")
         for description in BINARY_SENSOR_TYPES
         if device_type in description.category
@@ -75,35 +78,23 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry_id,
         ring,
         device,
+        coordinator,
         description: RingBinarySensorEntityDescription,
     ) -> None:
         """Initialize a sensor for Ring device."""
-        super().__init__(config_entry_id, device)
+        super().__init__(
+            device,
+            coordinator,
+        )
         self.entity_description = description
         self._ring = ring
         self._attr_unique_id = f"{device.id}-{description.key}"
         self._update_alert()
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        self.ring_objects[RING_NOTIFICATIONS_COORDINATOR].async_add_listener(
-            self._dings_update_callback
-        )
-        self._dings_update_callback()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks."""
-        await super().async_will_remove_from_hass()
-        self.ring_objects[RING_NOTIFICATIONS_COORDINATOR].async_remove_listener(
-            self._dings_update_callback
-        )
-
     @callback
-    def _dings_update_callback(self):
+    def _handle_coordinator_update(self, _=None):
         """Call update method."""
         self._update_alert()
         self.async_write_ha_state()
