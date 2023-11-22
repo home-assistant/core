@@ -37,11 +37,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
@@ -64,18 +59,32 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
-        vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
-        vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
-        vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
-        vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
-    }
+
+def _validate_min_max(data: dict[str, Any]) -> dict[str, Any]:
+    if (
+        CONF_MIN_SAMPLES in data
+        and CONF_MAX_SAMPLES in data
+        and data[CONF_MAX_SAMPLES] < data[CONF_MIN_SAMPLES]
+    ):
+        raise vol.Invalid("min_samples must be smaller than max_samples")
+    return data
+
+
+SENSOR_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ATTRIBUTE): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_INVERT, default=False): cv.boolean,
+            vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
+            vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
+            vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
+            vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+        }
+    ),
+    _validate_min_max,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -105,47 +114,21 @@ async def async_setup_platform(
         sample_duration = device_config[CONF_SAMPLE_DURATION]
         min_samples = device_config[CONF_MIN_SAMPLES]
 
-        # check if min_samples is smaller than max_samples
-        issue = f"min_samples_larger_max_samples_{device_id}"
-        if min_samples > max_samples:
-            _LOGGER.error(
-                "Configured min_sample (%d) is larger then max_samples (%d), skip binary sensor %s",
-                min_samples,
-                max_samples,
-                device_id,
-            )
-
-            async_create_issue(
+        sensors.append(
+            SensorTrend(
                 hass,
-                DOMAIN,
-                issue,
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="min_samples_larger_max_samples",
-                translation_placeholders={
-                    "device_id": device_id,
-                    "min_samples": min_samples,
-                    "max_samples": max_samples,
-                },
+                device_id,
+                friendly_name,
+                entity_id,
+                attribute,
+                device_class,
+                invert,
+                max_samples,
+                min_gradient,
+                sample_duration,
+                min_samples,
             )
-        else:
-            async_delete_issue(hass, DOMAIN, issue)
-
-            sensors.append(
-                SensorTrend(
-                    hass,
-                    device_id,
-                    friendly_name,
-                    entity_id,
-                    attribute,
-                    device_class,
-                    invert,
-                    max_samples,
-                    min_gradient,
-                    sample_duration,
-                    min_samples,
-                )
-            )
+        )
 
     if not sensors:
         _LOGGER.error("No sensors added")

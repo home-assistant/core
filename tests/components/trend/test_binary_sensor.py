@@ -8,7 +8,6 @@ from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
-import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -485,31 +484,3 @@ async def test_restore_state(
 
     # sensor should detect an upwards trend and turn on
     assert hass.states.get("binary_sensor.test_trend_sensor").state == "on"
-
-
-async def test_issue_creation(hass: HomeAssistant) -> None:
-    """Test if issue gets created for miss-configuration."""
-
-    assert await setup.async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "trend",
-                "sensors": {
-                    "issue_test_trend_sensor": {
-                        "entity_id": "sensor.test_state",
-                        "max_samples": 25,
-                        "min_samples": 30,
-                    }
-                },
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="min_samples_larger_max_samples_issue_test_trend_sensor"
-    )
