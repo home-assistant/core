@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricRoom, LyricAccessories
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,7 +24,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import LyricDeviceEntity
+from . import LyricDeviceEntity, LyricAccessoryEntity
 from .const import (
     DOMAIN,
     PRESET_HOLD_UNTIL,
@@ -54,6 +55,21 @@ class LyricSensorEntityDescription(
     SensorEntityDescription, LyricSensorEntityDescriptionMixin
 ):
     """Class describing Honeywell Lyric sensor entities."""
+
+
+@dataclass
+class LyricSensorAccessoryEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[LyricRoom, LyricAccessories], StateType | datetime]
+    suitable_fn: Callable[[LyricRoom, LyricAccessories], bool]
+
+
+@dataclass
+class LyricSensorAccessoryEntityDescription(
+    SensorEntityDescription, LyricSensorAccessoryEntityDescriptionMixin
+):
+    """Class describing Honeywell Lyric room sensor entities."""
 
 
 DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
@@ -116,6 +132,30 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     ),
 ]
 
+ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
+    LyricSensorAccessoryEntityDescription(
+        key="room_temperature",
+        translation_key="room_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda _, accessory: accessory.temperature,
+        suitable_fn=lambda _, accessory: accessory.temperature
+        if accessory.type == "IndoorAirSensor"
+        else False,
+    ),
+    LyricSensorAccessoryEntityDescription(
+        key="room_humidity",
+        translation_key="room_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda room, _: room.roomAvgHumidity,
+        suitable_fn=lambda room, accessory: room.roomAvgHumidity
+        if accessory.type == "IndoorAirSensor"
+        else False,
+    ),
+]
+
 
 def get_setpoint_status(status: str, time: str) -> str | None:
     """Get status of the setpoint."""
@@ -156,6 +196,21 @@ async def async_setup_entry(
                         )
                     )
 
+            for room in coordinator.data.rooms_dict.get(device.macID, {}).values():
+                for accessory in room.accessories:
+                    for accessory_sensor in ACCESSORY_SENSORS:
+                        if accessory_sensor.suitable_fn(room, accessory):
+                            entities.append(
+                                LyricAccessorySensor(
+                                    coordinator,
+                                    accessory_sensor,
+                                    location,
+                                    device,
+                                    room,
+                                    accessory,
+                                )
+                            )
+
     async_add_entities(entities)
 
 
@@ -189,3 +244,40 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.device)
+
+
+class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
+    """Define a Honeywell Lyric sensor."""
+
+    entity_description: LyricSensorAccessoryEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Lyric],
+        description: LyricSensorAccessoryEntityDescription,
+        location: LyricLocation,
+        parentDevice: LyricDevice,
+        room: LyricRoom,
+        accessory: LyricAccessories,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            parentDevice,
+            room,
+            accessory,
+            f"{parentDevice.macID}_room{room.id}_acc{accessory.id}_{description.key}",
+        )
+        self.room = room
+        self.entity_description = description
+        if description.device_class == SensorDeviceClass.TEMPERATURE:
+            if parentDevice.units == "Fahrenheit":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+            else:
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state."""
+        return self.entity_description.value_fn(self._room, self._accessory)

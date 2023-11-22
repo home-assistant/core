@@ -11,6 +11,7 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricRoom, LyricAccessories
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -76,6 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with asyncio.timeout(60):
                 await lyric.get_locations()
+                for location in lyric.locations:
+                    for device in location.devices:
+                        if device.deviceClass == "Thermostat":
+                            await lyric.get_thermostat_rooms(
+                                location.locationID, device.deviceID
+                            )
             return lyric
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
@@ -158,8 +165,40 @@ class LyricDeviceEntity(LyricEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
         return DeviceInfo(
+            identifiers={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             manufacturer="Honeywell",
             model=self.device.deviceModel,
-            name=self.device.name,
+            name=f"{self.device.name} Thermostat",
+        )
+
+
+class LyricAccessoryEntity(LyricDeviceEntity):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Lyric],
+        location: LyricLocation,
+        device: LyricDevice,
+        room: LyricRoom,
+        accessory: LyricAccessories,
+        key: str,
+    ) -> None:
+        super().__init__(coordinator, location, device, key)
+        self._room = room
+        self._accessory = accessory
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this Honeywell Lyric instance."""
+        return DeviceInfo(
+            identifiers={
+                (
+                    f"{dr.CONNECTION_NETWORK_MAC}_room_accessory",
+                    f"{self._mac_id}_room{self._room.id}_accessory{self._accessory.id}",
+                )
+            },
+            manufacturer="Honeywell",
+            model="RCHTSENSOR",
+            name=f"{self._room.roomName} Sensor",
+            via_device=(dr.CONNECTION_NETWORK_MAC, self._mac_id),
         )
