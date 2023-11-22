@@ -29,9 +29,11 @@ from .sensor_types.total import TOTAL_SENSOR_TYPES
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device_list(api: APIHelper, config: MappingProxyType[str, Any]):
+def get_device_list(
+    api: APIHelper, config: MappingProxyType[str, Any]
+) -> tuple[list[Inverter], int]:
     """Retrieve the device list for the selected plant."""
-    plant_id = config[CONF_PLANT_ID]
+    plant_id = int(config[CONF_PLANT_ID])
 
     if plant_id == DEFAULT_PLANT_ID:
         plant_info: list[Plant] = api.listPlants()
@@ -42,7 +44,7 @@ def get_device_list(api: APIHelper, config: MappingProxyType[str, Any]):
     for inverter in api.plant(plant_id).inverters:
         api.complete_inverter(inverter)
         devices.append(inverter)
-    return [devices, plant_id]
+    return (devices, plant_id)
 
 
 async def async_setup_entry(
@@ -71,53 +73,55 @@ async def async_setup_entry(
     ]
 
     # Add sensors for each device in the specified plant.
-    for device in devices:
-        entities.extend(
-            [
-                SunWEGInverter(
-                    probe,
-                    name=f"{device.name}",
-                    unique_id=f"{device.sn}-{description.key}",
-                    description=description,
-                    device_type="inverter",
-                    inverter_id=device.id,
-                )
-                for description in INVERTER_SENSOR_TYPES
-            ]
-        )
-
-        for phase in device.phases:
-            entities.extend(
-                [
-                    SunWEGInverter(
-                        probe,
-                        name=f"{device.name} {phase.name}",
-                        unique_id=f"{device.sn}-{phase.name}-{description.key}",
-                        description=description,
-                        inverter_id=device.id,
-                        device_type="phase",
-                        deep_name=phase.name,
-                    )
-                    for description in PHASE_SENSOR_TYPES
-                ]
+    entities.extend(
+        [
+            SunWEGInverter(
+                probe,
+                name=f"{device.name}",
+                unique_id=f"{device.sn}-{description.key}",
+                description=description,
+                device_type="inverter",
+                inverter_id=device.id,
             )
+            for device in devices
+            for description in INVERTER_SENSOR_TYPES
+        ]
+    )
 
-        for mppt in device.mppts:
-            for string in mppt.strings:
-                entities.extend(
-                    [
-                        SunWEGInverter(
-                            probe,
-                            name=f"{device.name} {string.name}",
-                            unique_id=f"{device.sn}-{string.name}-{description.key}",
-                            description=description,
-                            inverter_id=device.id,
-                            device_type="string",
-                            deep_name=string.name,
-                        )
-                        for description in STRING_SENSOR_TYPES
-                    ]
-                )
+    entities.extend(
+        [
+            SunWEGInverter(
+                probe,
+                name=f"{device.name} {phase.name}",
+                unique_id=f"{device.sn}-{phase.name}-{description.key}",
+                description=description,
+                inverter_id=device.id,
+                device_type="phase",
+                deep_name=phase.name,
+            )
+            for device in devices
+            for phase in device.phases
+            for description in PHASE_SENSOR_TYPES
+        ]
+    )
+
+    entities.extend(
+        [
+            SunWEGInverter(
+                probe,
+                name=f"{device.name} {string.name}",
+                unique_id=f"{device.sn}-{string.name}-{description.key}",
+                description=description,
+                inverter_id=device.id,
+                device_type="string",
+                deep_name=string.name,
+            )
+            for device in devices
+            for mppt in device.mppts
+            for string in mppt.strings
+            for description in STRING_SENSOR_TYPES
+        ]
+    )
 
     async_add_entities(entities, True)
 
