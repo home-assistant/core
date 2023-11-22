@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Group",
+        "description": "Some description",
+        "data": {
+          "entities": "Entities"
+        },
+        "data_description": {
+          "entities": "The entities to add to the group"
+        }
+      }
+    }
+  }
+}

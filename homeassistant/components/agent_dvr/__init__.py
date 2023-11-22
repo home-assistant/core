@@ -17,7 +17,7 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def aasync_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Agent component."""
     hass.data.setdefault(AGENT_DOMAIN, {})
 
