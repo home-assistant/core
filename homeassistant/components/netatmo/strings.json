@@ -143,7 +143,7 @@
           "description": "The target temperature for the device."
         },
         "end_datetime": {
-          "name": "End date & time",
+          "name": "[%key:component::netatmo::services::set_preset_mode_with_end_datetime::fields::end_datetime::name%]",
           "description": "Date & time the target temperature will be active until."
         }
       }
@@ -153,8 +153,8 @@
       "description": "Sets the target temperature for a Netatmo climate device with time period.",
       "fields": {
         "target_temperature": {
-          "name": "Target temperature",
-          "description": "The target temperature for the device."
+          "name": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::name%]",
+          "description": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::description%]"
         },
         "time_period": {
           "name": "Time period",
