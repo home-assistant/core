@@ -54,9 +54,7 @@ async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.gios.Gios._get_station",
         return_value=json.loads(load_fixture("gios/station.json")),
-    ), patch(
-        "homeassistant.components.gios.Gios._get_sensor", return_value={}
-    ):
+    ), patch("homeassistant.components.gios.Gios._get_sensor", return_value={}):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
         flow.context = {}

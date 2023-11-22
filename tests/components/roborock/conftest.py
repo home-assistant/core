@@ -54,13 +54,9 @@ def bypass_api_fixture() -> None:
         "homeassistant.components.roborock.RoborockMqttClient._wait_response"
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
-    ), patch(
-        "roborock.api.AttributeCache.async_value"
-    ), patch(
+    ), patch("roborock.api.AttributeCache.async_value"), patch(
         "roborock.api.AttributeCache.value"
-    ), patch(
-        "homeassistant.components.roborock.image.MAP_SLEEP", 0
-    ):
+    ), patch("homeassistant.components.roborock.image.MAP_SLEEP", 0):
         yield
 
 

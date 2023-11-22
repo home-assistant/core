@@ -259,7 +259,8 @@ class KrakenSensor(
             return
         try:
             self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator, self.tracked_asset_pair_wsname  # type: ignore[arg-type]
+                self.coordinator,
+                self.tracked_asset_pair_wsname,  # type: ignore[arg-type]
             )
             self._received_data_at_least_once = True
         except KeyError:

@@ -104,9 +104,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call when Node attribute(s) changed."""
 
     @callback
-    def _on_matter_node_event(
-        self, event: EventType, data: MatterNodeEvent
-    ) -> None:  # noqa: F821
+    def _on_matter_node_event(self, event: EventType, data: MatterNodeEvent) -> None:  # noqa: F821
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return

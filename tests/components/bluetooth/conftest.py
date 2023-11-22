@@ -51,9 +51,7 @@ def macos_adapter():
     ), patch(
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Darwin",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Darwin"
-    ):
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Darwin"):
         yield
 
 
@@ -75,9 +73,7 @@ def no_adapter_fixture():
     ), patch(
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -94,9 +90,7 @@ def one_adapter_fixture():
     ), patch(
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -124,9 +118,7 @@ def two_adapters_fixture():
     ), patch(
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -166,9 +158,7 @@ def one_adapter_old_bluez():
     ), patch(
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
-    ), patch(
-        "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",

@@ -53,9 +53,7 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     ), patch(
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": []},
-    ), patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup"
-    ), patch(
+    ), patch("homeassistant.components.hassio.issues.SupervisorIssues.setup"), patch(
         "homeassistant.components.hassio.HassIO.refresh_updates"
     ):
         hass.state = CoreState.starting

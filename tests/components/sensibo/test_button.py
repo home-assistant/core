@@ -99,9 +99,7 @@ async def test_button_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
         return_value={"status": "failure"},
-    ), pytest.raises(
-        HomeAssistantError
-    ):
+    ), pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

@@ -75,9 +75,7 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
         insteon, "async_connect", new=mock_successful_connection
     ), patch.object(insteon, "close_insteon_connection"), patch.object(
         insteon, "devices", new=MockDevices()
-    ), patch(
-        PATCH_CONNECTION, new=mock_successful_connection
-    ):
+    ), patch(PATCH_CONNECTION, new=mock_successful_connection):
         assert await async_setup_component(
             hass,
             insteon.DOMAIN,

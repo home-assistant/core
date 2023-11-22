@@ -127,9 +127,8 @@ class Fan(HomeAccessory):
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
                     CHAR_ON,
                     value=False,
-                    setter_callback=lambda value, preset_mode=preset_mode: self.set_preset_mode(
-                        value, preset_mode
-                    ),
+                    setter_callback=lambda value,
+                    preset_mode=preset_mode: self.set_preset_mode(value, preset_mode),
                 )
 
         if CHAR_SWING_MODE in self.chars:

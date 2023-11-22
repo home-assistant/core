@@ -23,9 +23,7 @@ async def test_user(hass: HomeAssistant) -> None:
         "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
     ), patch(
         "homeassistant.components.vodafone_station.async_setup_entry"
-    ) as mock_setup_entry, patch(
-        "requests.get"
-    ) as mock_request_get:
+    ) as mock_setup_entry, patch("requests.get") as mock_request_get:
         mock_request_get.return_value.status_code = 200
 
         result = await hass.config_entries.flow.async_init(
@@ -89,9 +87,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
             "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.login",
         ), patch(
             "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
-        ), patch(
-            "homeassistant.components.vodafone_station.async_setup_entry"
-        ):
+        ), patch("homeassistant.components.vodafone_station.async_setup_entry"):
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
@@ -121,9 +117,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.login",
     ), patch(
         "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
-    ), patch(
-        "homeassistant.components.vodafone_station.async_setup_entry"
-    ), patch(
+    ), patch("homeassistant.components.vodafone_station.async_setup_entry"), patch(
         "requests.get"
     ) as mock_request_get:
         mock_request_get.return_value.status_code = 200
@@ -169,9 +163,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         side_effect=side_effect,
     ), patch(
         "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
-    ), patch(
-        "homeassistant.components.vodafone_station.async_setup_entry"
-    ):
+    ), patch("homeassistant.components.vodafone_station.async_setup_entry"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
@@ -203,9 +195,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
             "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.login",
         ), patch(
             "homeassistant.components.vodafone_station.config_flow.VodafoneStationSercommApi.logout",
-        ), patch(
-            "homeassistant.components.vodafone_station.async_setup_entry"
-        ):
+        ), patch("homeassistant.components.vodafone_station.async_setup_entry"):
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={

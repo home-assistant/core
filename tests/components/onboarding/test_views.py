@@ -100,9 +100,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
     ), patch(
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
-    ), patch.dict(
-        os.environ, {"SUPERVISOR_TOKEN": "123456"}
-    ):
+    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
         yield
 
 

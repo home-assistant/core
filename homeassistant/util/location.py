@@ -138,11 +138,7 @@ def vincenty(
             / 4
             * (
                 cosSigma * (-1 + 2 * cos2SigmaM**2)
-                - B
-                / 6
-                * cos2SigmaM
-                * (-3 + 4 * sinSigma**2)
-                * (-3 + 4 * cos2SigmaM**2)
+                - B / 6 * cos2SigmaM * (-3 + 4 * sinSigma**2) * (-3 + 4 * cos2SigmaM**2)
             )
         )
     )

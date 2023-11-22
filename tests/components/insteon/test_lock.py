@@ -46,9 +46,7 @@ def patch_setup_and_devices():
         insteon, "async_close"
     ), patch.object(insteon, "devices", devices), patch.object(
         insteon_utils, "devices", devices
-    ), patch.object(
-        insteon_entity, "devices", devices
-    ):
+    ), patch.object(insteon_entity, "devices", devices):
         yield
 
 

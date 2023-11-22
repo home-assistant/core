@@ -119,9 +119,7 @@ async def test_form_2fa_connect_error(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
         side_effect=BlinkSetupError,
-    ), patch(
-        "homeassistant.components.blink.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.blink.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"pin": "1234"}
         )
@@ -160,9 +158,7 @@ async def test_form_2fa_invalid_key(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
         return_value=True,
-    ), patch(
-        "homeassistant.components.blink.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.blink.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"pin": "1234"}
         )
@@ -199,9 +195,7 @@ async def test_form_2fa_unknown_error(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.blink.config_flow.Blink.setup_urls",
         side_effect=KeyError,
-    ), patch(
-        "homeassistant.components.blink.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.blink.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"pin": "1234"}
         )

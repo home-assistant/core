@@ -118,7 +118,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     push_coordinator = LookinPushCoordinator(entry.title)
 
     if lookin_device.model >= 2:
-        meteo_coordinator = LookinDataUpdateCoordinator[MeteoSensor](
+        meteo_coordinator = LookinDataUpdateCoordinator[
+            MeteoSensor
+        ](
             hass,
             push_coordinator,
             name=entry.title,

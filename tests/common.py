@@ -266,9 +266,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
         ), patch(
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
-        ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start"
-        ):
+        ), patch("homeassistant.helpers.restore_state.start.async_at_start"):
             await asyncio.gather(
                 ar.async_load(hass),
                 dr.async_load(hass),

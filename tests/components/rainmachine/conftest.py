@@ -133,9 +133,7 @@ async def setup_rainmachine_fixture(hass, client, config):
         "homeassistant.components.rainmachine.Client", return_value=client
     ), patch(
         "homeassistant.components.rainmachine.config_flow.Client", return_value=client
-    ), patch(
-        "homeassistant.components.rainmachine.PLATFORMS", []
-    ):
+    ), patch("homeassistant.components.rainmachine.PLATFORMS", []):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield

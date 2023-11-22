@@ -30,9 +30,7 @@ def run_driver(hass, event_loop, iid_storage):
         "pyhap.accessory_driver.AccessoryEncoder"
     ), patch("pyhap.accessory_driver.HAPServer"), patch(
         "pyhap.accessory_driver.AccessoryDriver.publish"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist"
-    ):
+    ), patch("pyhap.accessory_driver.AccessoryDriver.persist"):
         yield HomeDriver(
             hass,
             pincode=b"123-45-678",
@@ -52,9 +50,7 @@ def hk_driver(hass, event_loop, iid_storage):
         "pyhap.accessory_driver.AccessoryEncoder"
     ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
         "pyhap.accessory_driver.HAPServer.async_start"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
-    ), patch(
+    ), patch("pyhap.accessory_driver.AccessoryDriver.publish"), patch(
         "pyhap.accessory_driver.AccessoryDriver.persist"
     ):
         yield HomeDriver(
@@ -76,13 +72,9 @@ def mock_hap(hass, event_loop, iid_storage, mock_zeroconf):
         "pyhap.accessory_driver.AccessoryEncoder"
     ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
         "pyhap.accessory_driver.HAPServer.async_start"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
-    ), patch(
+    ), patch("pyhap.accessory_driver.AccessoryDriver.publish"), patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_stop"
-    ), patch(
+    ), patch("pyhap.accessory_driver.AccessoryDriver.async_stop"), patch(
         "pyhap.accessory_driver.AccessoryDriver.persist"
     ):
         yield HomeDriver(

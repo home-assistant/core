@@ -54,9 +54,7 @@ async def test_one_time_password(hass: HomeAssistant):
     ), patch(
         "electrasmart.api.ElectraAPI.validate_one_time_password",
         return_value=mock_otp_response,
-    ), patch(
-        "electrasmart.api.ElectraAPI.fetch_devices", return_value=[]
-    ):
+    ), patch("electrasmart.api.ElectraAPI.fetch_devices", return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

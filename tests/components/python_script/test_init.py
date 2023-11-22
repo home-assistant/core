@@ -366,9 +366,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         "homeassistant.components.python_script.glob.iglob", return_value=scripts1
     ), patch(
         "homeassistant.components.python_script.os.path.exists", return_value=True
-    ), patch_yaml_files(
-        services_yaml1
-    ):
+    ), patch_yaml_files(services_yaml1):
         await async_setup_component(hass, DOMAIN, {})
 
         descriptions = await async_get_all_descriptions(hass)
@@ -415,9 +413,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         "homeassistant.components.python_script.glob.iglob", return_value=scripts2
     ), patch(
         "homeassistant.components.python_script.os.path.exists", return_value=True
-    ), patch_yaml_files(
-        services_yaml2
-    ):
+    ), patch_yaml_files(services_yaml2):
         await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
         descriptions = await async_get_all_descriptions(hass)
 

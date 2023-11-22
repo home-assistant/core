@@ -1202,9 +1202,7 @@ async def test_homekit_reset_accessories_not_supported(
         "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
     ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch.object(
-        homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
-    ):
+    ), patch.object(homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0):
         await async_init_entry(hass, entry)
 
         acc_mock = MagicMock()
@@ -1247,9 +1245,7 @@ async def test_homekit_reset_accessories_state_missing(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch.object(
-        homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
-    ):
+    ), patch.object(homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0):
         await async_init_entry(hass, entry)
 
         acc_mock = MagicMock()
@@ -1291,9 +1287,7 @@ async def test_homekit_reset_accessories_not_bridged(
         "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
     ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch.object(
-        homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
-    ):
+    ), patch.object(homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0):
         await async_init_entry(hass, entry)
 
         assert hk_driver_async_update_advertisement.call_count == 0
@@ -1337,9 +1331,7 @@ async def test_homekit_reset_single_accessory(
         "pyhap.accessory_driver.AccessoryDriver.async_update_advertisement"
     ) as hk_driver_async_update_advertisement, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch(
-        f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
-    ) as mock_run:
+    ), patch(f"{PATH_HOMEKIT}.accessories.HomeAccessory.run") as mock_run:
         await async_init_entry(hass, entry)
         homekit.status = STATUS_RUNNING
         homekit.driver.aio_stop_event = MagicMock()
@@ -2070,9 +2062,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         f"{PATH_HOMEKIT}.HomeKit"
     ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
         f"{PATH_HOMEKIT}.async_show_setup_message"
-    ), patch(
-        f"{PATH_HOMEKIT}.get_accessory"
-    ), patch(
+    ), patch(f"{PATH_HOMEKIT}.get_accessory"), patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch(
         "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
