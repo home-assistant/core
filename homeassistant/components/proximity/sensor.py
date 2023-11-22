@@ -32,7 +32,6 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
             "away_from",
             "stationary",
             "towards",
-            "unknown",
         ],
     ),
 ]

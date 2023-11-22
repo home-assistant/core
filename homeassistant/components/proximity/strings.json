@@ -8,8 +8,7 @@
           "arrived": "Arrived",
           "away_from": "Away from",
           "stationary": "Stationary",
-          "towards": "Towards",
-          "unknown": "Unknown"
+          "towards": "Towards"
         }
       },
       "nearest": { "name": "Nearest device" }
