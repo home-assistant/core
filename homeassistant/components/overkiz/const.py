@@ -5,7 +5,13 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from pyoverkiz.enums import MeasuredValueType, OverkizCommandParam, UIClass, UIWidget
+from pyoverkiz.enums import (
+    MeasuredValueType,
+    OverkizCommandParam,
+    Server,
+    UIClass,
+    UIWidget,
+)
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -31,8 +37,10 @@ from homeassistant.const import (
 DOMAIN: Final = "overkiz"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
-DEFAULT_HUB: Final = "somfy_europe"
+DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
