@@ -48,7 +48,7 @@ def parse_lightning_impacts(api_result: dict) -> list[SmhiGeolocationEvent]:
         second = int(impact["seconds"])
         latitude = float(impact["lat"])
         longitude = float(impact["lon"])
-        peakCurrent = int(impact["peakCurrent"])
+        peak_current = int(impact["peakCurrent"])
 
         name = (
             "Impact at: "
@@ -58,7 +58,7 @@ def parse_lightning_impacts(api_result: dict) -> list[SmhiGeolocationEvent]:
             + ":"
             + str(second)
             + "\nPeak Current: "
-            + str(peakCurrent)
+            + str(peak_current)
             + " kiloamperes"
         )
 
