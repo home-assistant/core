@@ -70,7 +70,7 @@ async def async_setup_platform(
     entities += [
         ProximityTrackedEntitySensor(description, coordinator, tracked_entity_id)
         for description in SENSORS_PER_ENTITY
-        for tracked_entity_id in coordinator.proximity_devices
+        for tracked_entity_id in coordinator.tracked_entities
     ]
 
     async_add_entities(entities)

@@ -68,7 +68,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     ) -> None:
         """Initialize the Proximity coordinator."""
         self.ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
-        self.proximity_devices: list[str] = config[CONF_DEVICES]
+        self.tracked_entities: list[str] = config[CONF_DEVICES]
         self.tolerance: int = config[CONF_TOLERANCE]
         self.proximity_zone: str = config[CONF_ZONE]
         self.unit_of_measurement: str = config.get(
@@ -204,7 +204,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         entities_data = self.data.entities
 
         # calculate distance for all tracked entities
-        for device in self.proximity_devices:
+        for device in self.tracked_entities:
             if (device_state := self.hass.states.get(device)) is None:
                 if entities_data.pop(device, None) is not None:
                     _LOGGER.debug(
