@@ -11,13 +11,14 @@ _LOGGER = logging.getLogger(__name__)
 class AQClient:
     """AQClient class for OpenAQ integration."""
 
-    def __init__(self, api_key, location_id):
+    def __init__(self, api_key, location_id, setup_device=True):
         """Initialize AQClient."""
         self.api_key = api_key
         self.location_id = location_id
         self.client = openaq.OpenAQ(api_key=self.api_key)
-        #Make optional
-        self.setup_device()
+        
+        if setup_device:
+            self.setup_device()
 
     def setup_device(self):
         """Set sensors and metrices"""
