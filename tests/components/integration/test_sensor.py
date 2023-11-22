@@ -679,11 +679,12 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     assert round(float(state.state)) == 0 if method != "right" else 1
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for source entity device for Riemann sum integral."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     source_config_entry = MockConfigEntry()
     source_config_entry.add_to_hass(hass)
     source_device_entry = device_registry.async_get_or_create(

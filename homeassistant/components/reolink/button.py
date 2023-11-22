@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -15,6 +16,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -22,36 +24,22 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
-@dataclass
-class ReolinkButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities for a camera channel."""
-
-    method: Callable[[Host, int], Any]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkButtonEntityDescription(
-    ButtonEntityDescription, ReolinkButtonEntityDescriptionMixin
+    ButtonEntityDescription,
 ):
     """A class that describes button entities for a camera channel."""
 
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     enabled_default: Callable[[Host, int], bool] | None = None
+    method: Callable[[Host, int], Any]
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-@dataclass
-class ReolinkHostButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities for the host."""
-
-    method: Callable[[Host], Any]
-
-
-@dataclass
-class ReolinkHostButtonEntityDescription(
-    ButtonEntityDescription, ReolinkHostButtonEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkHostButtonEntityDescription(ButtonEntityDescription):
     """A class that describes button entities for the host."""
 
+    method: Callable[[Host], Any]
     supported: Callable[[Host], bool] = lambda api: True
 
 
@@ -61,8 +49,9 @@ BUTTON_ENTITIES = (
         translation_key="ptz_stop",
         icon="mdi:pan",
         enabled_default=lambda api, ch: api.supported(ch, "pan_tilt"),
-        supported=lambda api, ch: api.supported(ch, "pan_tilt")
-        or api.supported(ch, "zoom_basic"),
+        supported=lambda api, ch: (
+            api.supported(ch, "pan_tilt") or api.supported(ch, "zoom_basic")
+        ),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.stop.value),
     ),
     ReolinkButtonEntityDescription(
@@ -195,7 +184,10 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await self.entity_description.method(self._host.api, self._channel)
+        try:
+            await self.entity_description.method(self._host.api, self._channel)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
@@ -216,4 +208,7 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await self.entity_description.method(self._host.api)
+        try:
+            await self.entity_description.method(self._host.api)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err

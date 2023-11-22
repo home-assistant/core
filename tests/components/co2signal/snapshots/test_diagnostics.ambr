@@ -19,14 +19,14 @@
       'version': 1,
     }),
     'data': dict({
-      'countryCode': 'FR',
+      'country_code': 'FR',
       'data': dict({
-        'carbonIntensity': 45.98623190095805,
-        'fossilFuelPercentage': 5.461182741937103,
+        'carbon_intensity': 45.98623190095805,
+        'fossil_fuel_percentage': 5.461182741937103,
       }),
       'status': 'ok',
       'units': dict({
-        'carbonIntensity': 'gCO2eq/kWh',
+        'carbon_intensity': 'gCO2eq/kWh',
       }),
     }),
   })

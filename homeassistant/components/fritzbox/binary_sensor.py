@@ -14,12 +14,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
-from .coordinator import FritzboxDataUpdateCoordinator
+from .common import get_coordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
@@ -49,7 +48,7 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         key="lock",
         translation_key="lock",
         device_class=BinarySensorDeviceClass.LOCK,
-        entity_category=EntityCategory.CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.lock is not None,
         is_on=lambda device: not device.lock,
     ),
@@ -57,7 +56,7 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         key="device_lock",
         translation_key="device_lock",
         device_class=BinarySensorDeviceClass.LOCK,
-        entity_category=EntityCategory.CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.device_lock is not None,
         is_on=lambda device: not device.device_lock,
     ),
@@ -68,18 +67,23 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities() -> None:
+        """Add devices."""
+        if not coordinator.new_devices:
+            return
+        async_add_entities(
             FritzboxBinarySensor(coordinator, ain, description)
-            for ain, device in coordinator.data.devices.items()
+            for ain in coordinator.new_devices
             for description in BINARY_SENSOR_TYPES
-            if description.suitable(device)
-        ]
-    )
+            if description.suitable(coordinator.data.devices[ain])
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class FritzboxBinarySensor(FritzBoxDeviceEntity, BinarySensorEntity):

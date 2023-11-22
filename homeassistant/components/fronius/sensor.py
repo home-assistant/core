@@ -661,7 +661,7 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         if new_value is None:
             return self.entity_description.default_value
         if self.entity_description.invalid_when_falsy and not new_value:
-            raise ValueError(f"Ignoring zero value for {self.entity_id}.")
+            return None
         if isinstance(new_value, float):
             return round(new_value, 4)
         return new_value
@@ -671,10 +671,9 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         """Handle updated data from the coordinator."""
         try:
             self._attr_native_value = self._get_entity_value()
-        except (KeyError, ValueError):
+        except KeyError:
             # sets state to `None` if no default_value is defined in entity description
             # KeyError: raised when omitted in response - eg. at night when no production
-            # ValueError: raised when invalid zero value received
             self._attr_native_value = self.entity_description.default_value
         self.async_write_ha_state()
 
