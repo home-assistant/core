@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 
@@ -78,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 user_input[CONF_MAC] = info["mac"]
-                await self.async_set_unique_id(info["mac"])
+                await self.async_set_unique_id(dr.format_mac(info["mac"]))
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title="Rabbit Air", data=user_input)
 
@@ -102,8 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        mac = discovery_info.properties["id"]
-        mac = ":".join(mac[i : i + 2] for i in range(0, 12, 2))
+        mac = dr.format_mac(discovery_info.properties["id"])
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
         self._discovered_host = discovery_info.hostname.rstrip(".")
