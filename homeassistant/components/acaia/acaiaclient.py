@@ -2,17 +2,13 @@
 from collections.abc import Awaitable, Callable
 import logging
 import time
-from typing import Any
 
 from bleak import BleakGATTCharacteristic
 from pyacaia_async import AcaiaScale
-from pyacaia_async.decode import Message, Settings, decode
 from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant, callback as callback_decorator
-
-from .const import BATTERY_LEVEL, GRAMS, UNITS, WEIGHT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,19 +29,17 @@ class AcaiaClient(AcaiaScale):
         self.hass: HomeAssistant = hass
         self._name: str = name
         self._device_available: bool = False
-        self._data: dict[str, Any] = {BATTERY_LEVEL: None, UNITS: GRAMS, WEIGHT: 0.0}
-        self._notify_callback: Callable[[], None] | None = notify_callback
-        super().__init__(mac=mac, is_new_style_scale=is_new_style_scale)
+
+        super().__init__(
+            mac=mac,
+            is_new_style_scale=is_new_style_scale,
+            notify_callback=notify_callback,
+        )
 
     @property
     def name(self) -> str:
         """Return the name of the scale."""
         return self._name
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return the data of the scale."""
-        return self._data
 
     async def connect(
         self,
@@ -94,7 +88,7 @@ class AcaiaClient(AcaiaScale):
 
         if not self.connected and self._device_available:
             _LOGGER.debug("Acaia Client: Connecting")
-            await self.connect(callback=self.bluetooth_data_received)
+            await self.connect()
 
         elif not self._device_available:
             self.connected = False
@@ -109,26 +103,6 @@ class AcaiaClient(AcaiaScale):
             await self.send_weight_notification_request()
 
     @callback_decorator
-    async def bluetooth_data_received(
-        self, characteristic: BleakGATTCharacteristic, data: bytearray
-    ) -> None:
-        """Receive data from scale."""
-        msg = decode(data)[0]
-
-        if isinstance(msg, Settings):
-            self._data[BATTERY_LEVEL] = msg.battery
-            self._data[UNITS] = msg.units
-            _LOGGER.debug(
-                "Got battery level %s, units %s", str(msg.battery), str(msg.units)
-            )
-
-        elif isinstance(msg, Message):
-            self._data[WEIGHT] = msg.value
-            _LOGGER.debug("Got weight %s", str(msg.value))
-
-        if self._notify_callback is not None:
-            self._notify_callback()
-
     async def tare(self) -> None:
         """Tare the scale."""
         await self.connect()
