@@ -49,8 +49,9 @@ BUTTON_ENTITIES = (
         translation_key="ptz_stop",
         icon="mdi:pan",
         enabled_default=lambda api, ch: api.supported(ch, "pan_tilt"),
-        supported=lambda api, ch: api.supported(ch, "pan_tilt")
-        or api.supported(ch, "zoom_basic"),
+        supported=lambda api, ch: (
+            api.supported(ch, "pan_tilt") or api.supported(ch, "zoom_basic")
+        ),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.stop.value),
     ),
     ReolinkButtonEntityDescription(
