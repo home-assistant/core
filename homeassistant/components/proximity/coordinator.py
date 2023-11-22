@@ -201,7 +201,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             return DEFAULT_DATA
 
-        entities_data: dict[str, dict[str, str | int | None]] = self.data.entities
+        entities_data = self.data.entities
 
         # calculate distance for all tracked entities
         for device in self.proximity_devices:
