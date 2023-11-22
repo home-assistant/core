@@ -53,21 +53,24 @@ class MockValveEntity(ValveEntity):
         features: ValveEntityFeature = ValveEntityFeature(0),
         current_position: int = None,
         device_class: ValveDeviceClass = None,
+        reports_position: bool = True,
     ) -> None:
         """Initialize the valve."""
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
         self._attr_current_valve_position = current_position
+        if reports_position is not None:
+            self._attr_reports_position = reports_position
         if device_class is not None:
             self._attr_device_class = device_class
 
-    def close_valve(self) -> None:
-        """Mock implementantion for sync close function."""
-        self._attr_current_valve_position = 0
+    def set_valve_position(self, position: int) -> None:
+        """Mock implementantion for setting the valve's position."""
+        self._attr_current_valve_position = position
 
 
-class MockValveWithIsClosedEntity(ValveEntity):
+class MockBinaryValveEntity(ValveEntity):
     """Mock valve device to use in tests."""
 
     def __init__(
@@ -82,6 +85,7 @@ class MockValveWithIsClosedEntity(ValveEntity):
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
         self._attr_is_closed = is_closed
+        self._attr_reports_position = False
 
     def close_valve(self) -> None:
         """Mock implementantion for sync close function."""
@@ -185,21 +189,23 @@ async def test_services(hass: HomeAssistant) -> None:
     # entities without stop should be closed and with stop should be closing
     assert is_closed(hass, ent1)
     assert is_closing(hass, ent2)
+    await ent2.finish_movement()
+    assert is_closed(hass, ent2)
 
     # call basic toggle services and set different valve position states
     await call_service(hass, SERVICE_TOGGLE, ent1)
-    set_valve_position(ent2, 0)
     await call_service(hass, SERVICE_TOGGLE, ent2)
+    await hass.async_block_till_done()
 
     # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
     assert is_open(hass, ent1)
-    assert is_closed(hass, ent2)
+    assert is_opening(hass, ent2)
 
-    # call basic toggle services
+    #     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
     await call_service(hass, SERVICE_TOGGLE, ent2)
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
+    #     # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
     assert is_closed(hass, ent1)
     assert is_opening(hass, ent2)
 
@@ -225,6 +231,26 @@ async def test_valve_device_class(hass: HomeAssistant) -> None:
     assert water_valve.device_class is ValveDeviceClass.WATER
 
 
+async def test_valve_report_position(hass: HomeAssistant) -> None:
+    """Test valve entity with defaults."""
+    default_valve = MockValveEntity(reports_position=None)
+    default_valve.hass = hass
+
+    with pytest.raises(ValueError):
+        default_valve.reports_position
+
+    second_valve = MockValveEntity(reports_position=True)
+    second_valve.hass = hass
+
+    assert second_valve.reports_position is True
+
+    entity_description = ValveEntityDescription("test")
+    entity_description.reports_position = True
+    third_valve = MockValveEntity(reports_position=None)
+    third_valve.entity_description = entity_description
+    assert third_valve.reports_position is True
+
+
 async def test_is_closed(hass: HomeAssistant) -> None:
     """Test different criteria for closeness."""
     valve = MockValveEntity(current_position=0)
@@ -234,12 +260,33 @@ async def test_is_closed(hass: HomeAssistant) -> None:
     valve._attr_current_valve_position = 100
     assert valve.is_closed is False
 
-    valve_with_is_closed_attr = MockValveWithIsClosedEntity(is_closed=True)
+    valve_with_position_none = MockValveEntity(current_position=None)
+    valve_with_position_none.hass = hass
+
+    assert valve_with_position_none.is_closed is None
+
+    valve_with_is_closed_attr = MockBinaryValveEntity(is_closed=True)
     valve_with_is_closed_attr.hass = hass
 
     assert valve_with_is_closed_attr.is_closed is True
     valve_with_is_closed_attr._attr_is_closed = False
     assert valve_with_is_closed_attr.is_closed is False
+
+    valve_with_none_is_closed_attr = MockBinaryValveEntity(is_closed=None)
+    valve_with_none_is_closed_attr.hass = hass
+
+    assert valve_with_none_is_closed_attr.is_closed is None
+
+
+async def test_none_state(hass: HomeAssistant) -> None:
+    """Test different criteria for closeness."""
+    valve = MockValveEntity(current_position=0)
+    valve.hass = hass
+
+    valve_with_none_is_closed_attr = MockBinaryValveEntity(is_closed=None)
+    valve_with_none_is_closed_attr.hass = hass
+
+    assert valve_with_none_is_closed_attr.state is None
 
 
 async def test_supported_features(hass: HomeAssistant) -> None:

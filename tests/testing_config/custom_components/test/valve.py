@@ -3,7 +3,6 @@
 Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 
 from tests.common import MockEntity
 
@@ -18,17 +17,16 @@ def init(empty=False):
         []
         if empty
         else [
-            MockValve(
+            MockBinaryValve(
                 name="Simple valve",
                 is_on=True,
                 unique_id="unique_valve",
                 supported_features=ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
             ),
-            MockValve(
+            MockPositionValve(
                 name="Set position valve",
                 is_on=True,
                 unique_id="unique_set_pos_valve",
-                current_valve_position=50,
                 supported_features=ValveEntityFeature.OPEN
                 | ValveEntityFeature.CLOSE
                 | ValveEntityFeature.STOP
@@ -45,61 +43,43 @@ async def async_setup_platform(
     async_add_entities_callback(ENTITIES)
 
 
-class MockValve(MockEntity, ValveEntity):
-    """Mock Valve class."""
+class MockBinaryValve(MockEntity, ValveEntity):
+    """Mock binary Valve class."""
 
-    @property
-    def is_closed(self):
-        """Return if the valve is closed or not."""
-        if self.supported_features & ValveEntityFeature.STOP:
-            return self.current_valve_position == 0
-
-        if "state" in self._values:
-            return self._values["state"] == STATE_CLOSED
-        return False
-
-    @property
-    def is_opening(self):
-        """Return if the valve is opening or not."""
-        if self.supported_features & ValveEntityFeature.STOP:
-            if "state" in self._values:
-                return self._values["state"] == STATE_OPENING
-
-        return False
-
-    @property
-    def is_closing(self):
-        """Return if the valve is closing or not."""
-        if self.supported_features & ValveEntityFeature.STOP:
-            if "state" in self._values:
-                return self._values["state"] == STATE_CLOSING
-
-        return False
+    _attr_reports_position = False
+    _attr_is_closed = False
 
     def open_valve(self) -> None:
-        """Open valve."""
-        if self.supported_features & ValveEntityFeature.STOP:
-            self._values["state"] = STATE_OPENING
-        else:
-            self._values["state"] = STATE_OPEN
+        """Open the valve."""
+        self._attr_is_closed = False
 
     def close_valve(self) -> None:
-        """Close valve."""
-        if self.supported_features & ValveEntityFeature.STOP:
-            self._values["state"] = STATE_CLOSING
+        """Close the valve."""
+        self._attr_is_closed = True
+
+
+class MockPositionValve(MockEntity, ValveEntity):
+    """Mock Valve class."""
+
+    _attr_reports_position = True
+    _attr_current_valve_position = 50
+
+    _target_valve_position: int
+
+    def set_valve_position(self, position: int) -> None:
+        """Set the valve to opening or closing towards a target percentage."""
+        if position > self._attr_current_valve_position:
+            self._attr_is_closing = False
+            self._attr_is_opening = True
         else:
-            self._values["state"] = STATE_CLOSED
+            self._attr_is_closing = True
+            self._attr_is_opening = False
+        self._target_valve_position = position
+        self.async_write_ha_state()
 
-    def stop_valve(self) -> None:
-        """Stop valve."""
-        self._values["state"] = STATE_CLOSED if self.is_closed else STATE_OPEN
-
-    @property
-    def state(self):
-        """Fake State."""
-        return ValveEntity.state.fget(self)
-
-    @property
-    def current_valve_position(self):
-        """Return current position of valve."""
-        return self._handle("current_valve_position")
+    async def finish_movement(self):
+        """Set the value to the saved target and removes intermediate states."""
+        self._attr_current_valve_position = self._target_valve_position
+        self._attr_is_closing = False
+        self._attr_is_opening = False
+        return self.async_write_ha_state()
