@@ -46,7 +46,7 @@ class ProximityData:
     """ProximityCoordinatorData class."""
 
     proximity: dict[str, str | float]
-    entities: dict[str, dict[str, str | float | None]]
+    entities: dict[str, dict[str, str | int | None]]
 
 
 DEFAULT_DATA = ProximityData(
@@ -111,7 +111,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         device: State,
         latitude: float | None,
         longitude: float | None,
-    ) -> float | None:
+    ) -> int | None:
         if latitude is None or longitude is None:
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
@@ -208,7 +208,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             return DEFAULT_DATA
 
-        entities_data: dict[str, dict[str, str | float | None]] = self.data.entities
+        entities_data: dict[str, dict[str, str | int | None]] = self.data.entities
 
         # calculate distance for all tracked entities
         for device in self.proximity_devices:
@@ -275,23 +275,33 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             ATTR_NEAREST: DEFAULT_NEAREST,
         }
         for entity_data in entities_data.values():
-            if (distance_to := entity_data[ATTR_DIST_TO]) is None:
+            # keep distance 0 in case arrived for legacy entity
+            distance_to: str | int | None = None
+            if (dir_of_travel := entity_data[ATTR_DIR_OF_TRAVEL]) == "arrived":
+                distance_to = 0
+            else:
+                distance_to = entity_data[ATTR_DIST_TO]
+
+            if distance_to is None:
                 continue
 
             if isinstance((nearest_distance_to := proximity_data[ATTR_DIST_TO]), str):
                 _LOGGER.debug("set first entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_DIR_OF_TRAVEL: dir_of_travel or "unknown",
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
+                continue
+
+            if not isinstance(distance_to, (int, float)):
                 continue
 
             if float(nearest_distance_to) > float(distance_to):
                 _LOGGER.debug("set closer entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_DIR_OF_TRAVEL: dir_of_travel or "unknown",
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
                 continue

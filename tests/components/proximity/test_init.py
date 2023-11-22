@@ -96,7 +96,7 @@ async def test_device_tracker_test1_in_zone(hass: HomeAssistant) -> None:
 
     # proximity entity
     state = hass.states.get("proximity.home")
-    assert state.state == "12491"
+    assert state.state == "0"
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "arrived"
 
@@ -434,7 +434,7 @@ async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
 
     # proximity entity
     state = hass.states.get("proximity.home")
-    assert state.state == "12491"
+    assert state.state == "0"
     assert (state.attributes.get("nearest") == "test1, test2") or (
         state.attributes.get("nearest") == "test2, test1"
     )
