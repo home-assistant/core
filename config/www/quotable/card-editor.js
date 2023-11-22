@@ -2,15 +2,131 @@ class QuotableCardEditor extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this._tags = [];
+    this._selectedItems = [];
+  }
+
+  set hass(hass) {
+    this._hass = hass;
   }
 
   setConfig(config) {
     this._config = config;
+  }
+
+  async connectedCallback() {
+    this.loadOptions();
+  }
+
+  async loadOptions() {
+    try {
+      if (!this._config.entity) {
+        console.error("Entity not defined in configuration.");
+        return;
+      }
+
+      //Data payload that is transmitted as part of the service call
+      const serviceData = {
+        entity_id: this._config.entity,
+      };
+
+      //Message object used when calling quotable service
+      const message = {
+        domain: "quotable",
+        service: "fetch_all_tags",
+        type: "call_service",
+        return_response: true,
+        service_data: serviceData,
+      };
+
+      // Call quotable service to fetch all tags
+      const response = await this._hass.callWS(message);
+
+      if (response && response.response) {
+        // Update the _tags property with the fetched tags
+        this._tags = Object.values(response.response);
+      }
+    } catch (error) {
+      console.error("Error fetching options:", error);
+    }
     this.renderForm();
   }
 
+  //Render the visual representation
   renderForm() {
-    this.shadowRoot.innerHTML = "Multiselects and slider here";
+    // Add the container to the shadow DOM
+    this.shadowRoot.innerHTML = `
+    <style>
+      div {
+        margin: 20px;
+      }
+
+      select[multiple] {
+        width: 100%;
+        height: 100px; /* Set a fixed height or adjust as needed */
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+        padding: 5px;
+        overflow-y: auto; /* Add vertical scrollbar if needed */
+      }
+
+      /* Style the multiselect options */
+      option {
+        padding: 5px;
+        cursor: pointer;
+      }
+
+      /* Style the selected options */
+      option:checked {
+        background-color: #007BFF;
+        color: #fff;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+      }
+
+    </style>
+    <div>
+    <label for="multiselect">Select Categories:</label>
+      <input type="text" id="selectedTags" readonly>
+      <select id="multiselect" multiple>
+        ${this._tags
+          .map((tag) => `<option value="${tag}">${tag}</option>`)
+          .join("")}
+      </select>
+    </div>
+   `;
+
+    // Add references to the input and multiselect elements
+    const selectedTagsInput = this.shadowRoot.getElementById("selectedTags");
+    const multiselect = this.shadowRoot.getElementById("multiselect");
+    // Add click event listener to each option
+    multiselect.addEventListener("click", (event) => {
+      const selectedOption = event.target;
+
+      if (selectedOption.tagName === "OPTION") {
+        // Toggle the background color of the selected option
+        selectedOption.style.backgroundColor =
+          selectedOption.style.backgroundColor === "#007BFF" ? "" : "#007BFF";
+        selectedOption.style.color =
+          selectedOption.style.color === "#fff" ? "" : "#fff";
+
+        // Add or remove the selected item from the list
+        const index = this._selectedItems.indexOf(selectedOption.value);
+        if (index === -1) {
+          this._selectedItems.push(selectedOption.value);
+        } else {
+          this._selectedItems.splice(index, 1);
+        }
+
+        // Update the selected tags input
+        selectedTagsInput.value = this._selectedItems.join(", ");
+      }
+    });
   }
 }
 
