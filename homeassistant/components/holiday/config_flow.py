@@ -83,7 +83,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             locale = Locale(self.hass.config.language)
-            name = f"{locale.territories.get(country)}, {province}"
+            name = f"{locale.territories.get(country)}{', ' + province if province else ''}"
 
             return self.async_create_entry(title=name, data=combined_input)
 
