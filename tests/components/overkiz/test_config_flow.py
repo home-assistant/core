@@ -254,7 +254,7 @@ async def test_form_invalid_auth_cloud(
         (MaintenanceException, "server_in_maintenance"),
         (TooManyAttemptsBannedException, "too_many_attempts"),
         (UnknownUserException, "unsupported_hardware"),
-        (NotSuchTokenException, "not_such_token"),
+        (NotSuchTokenException, "no_such_token"),
         (Exception, "unknown"),
     ],
 )
