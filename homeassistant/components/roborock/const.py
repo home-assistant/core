@@ -1,4 +1,6 @@
 """Constants for Roborock."""
+from vacuum_map_parser_base.config.drawable import Drawable
+
 from homeassistant.const import Platform
 
 DOMAIN = "roborock"
@@ -7,11 +9,23 @@ CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
 PLATFORMS = [
-    Platform.VACUUM,
+    Platform.BUTTON,
+    Platform.BINARY_SENSOR,
+    Platform.IMAGE,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
-    Platform.NUMBER,
-    Platform.BINARY_SENSOR,
+    Platform.VACUUM,
 ]
+
+IMAGE_DRAWABLES: list[Drawable] = [
+    Drawable.PATH,
+    Drawable.CHARGER,
+    Drawable.VACUUM_POSITION,
+]
+
+IMAGE_CACHE_INTERVAL = 90
+
+MAP_SLEEP = 3

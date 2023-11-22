@@ -5,5 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecoforest",
   "iot_class": "local_polling",
+  "loggers": ["pyecoforest"],
   "requirements": ["pyecoforest==0.4.0"]
 }

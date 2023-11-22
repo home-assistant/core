@@ -44,7 +44,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import (
-    BELGIUM_5MIN_GAS_METER_READING,
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_PROTOCOL,
@@ -68,21 +67,13 @@ EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass
-class DSMRSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    obis_reference: str
-
-
-@dataclass
-class DSMRSensorEntityDescription(
-    SensorEntityDescription, DSMRSensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
     dsmr_versions: set[str] | None = None
     is_gas: bool = False
+    obis_reference: str
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
@@ -91,7 +82,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="current_electricity_usage",
         obis_reference=obis_references.CURRENT_ELECTRICITY_USAGE,
         device_class=SensorDeviceClass.POWER,
-        force_update=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
@@ -99,7 +89,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="current_electricity_delivery",
         obis_reference=obis_references.CURRENT_ELECTRICITY_DELIVERY,
         device_class=SensorDeviceClass.POWER,
-        force_update=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
@@ -117,7 +106,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.ELECTRICITY_USED_TARIFF_1,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENERGY,
-        force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
@@ -125,7 +113,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="electricity_used_tariff_2",
         obis_reference=obis_references.ELECTRICITY_USED_TARIFF_2,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -134,7 +121,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="electricity_delivered_tariff_1",
         obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_1,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -143,7 +129,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="electricity_delivered_tariff_2",
         obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_2,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -343,7 +328,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="electricity_imported_total",
         obis_reference=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         dsmr_versions={"5L", "5S", "Q3D"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -352,7 +336,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="electricity_exported_total",
         obis_reference=obis_references.ELECTRICITY_EXPORTED_TOTAL,
         dsmr_versions={"5L", "5S", "Q3D"},
-        force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -361,7 +344,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="current_average_demand",
         obis_reference=obis_references.BELGIUM_CURRENT_AVERAGE_DEMAND,
         dsmr_versions={"5B"},
-        force_update=True,
         device_class=SensorDeviceClass.POWER,
     ),
     DSMRSensorEntityDescription(
@@ -369,7 +351,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         translation_key="maximum_demand_current_month",
         obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_MONTH,
         dsmr_versions={"5B"},
-        force_update=True,
         device_class=SensorDeviceClass.POWER,
     ),
     DSMRSensorEntityDescription(
@@ -378,17 +359,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.HOURLY_GAS_METER_READING,
         dsmr_versions={"4", "5", "5L"},
         is_gas=True,
-        force_update=True,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
-        key="belgium_5min_gas_meter_reading",
-        translation_key="gas_meter_reading",
-        obis_reference=BELGIUM_5MIN_GAS_METER_READING,
-        dsmr_versions={"5B"},
-        is_gas=True,
-        force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -398,11 +368,34 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.GAS_METER_READING,
         dsmr_versions={"2.2"},
         is_gas=True,
-        force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
+
+
+def add_gas_sensor_5B(telegram: dict[str, DSMRObject]) -> DSMRSensorEntityDescription:
+    """Return correct entity for 5B Gas meter."""
+    ref = None
+    if obis_references.BELGIUM_MBUS1_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS1_METER_READING2
+    elif obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS2_METER_READING2
+    elif obis_references.BELGIUM_MBUS3_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS3_METER_READING2
+    elif obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
+        ref = obis_references.BELGIUM_MBUS4_METER_READING2
+    elif ref is None:
+        ref = obis_references.BELGIUM_MBUS1_METER_READING2
+    return DSMRSensorEntityDescription(
+        key="belgium_5min_gas_meter_reading",
+        translation_key="gas_meter_reading",
+        obis_reference=ref,
+        dsmr_versions={"5B"},
+        is_gas=True,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    )
 
 
 async def async_setup_entry(
@@ -438,6 +431,10 @@ async def async_setup_entry(
                 return (entity_description.device_class, UNIT_CONVERSION[uom])
             return (entity_description.device_class, uom)
 
+        all_sensors = SENSORS
+        if dsmr_version == "5B":
+            all_sensors += (add_gas_sensor_5B(telegram),)
+
         entities.extend(
             [
                 DSMREntity(
@@ -448,7 +445,7 @@ async def async_setup_entry(
                         telegram, description
                     ),  # type: ignore[arg-type]
                 )
-                for description in SENSORS
+                for description in all_sensors
                 if (
                     description.dsmr_versions is None
                     or dsmr_version in description.dsmr_versions
