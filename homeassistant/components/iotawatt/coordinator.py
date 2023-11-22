@@ -76,5 +76,9 @@ class IotawattUpdater(DataUpdateCoordinator):
         await self.api.update(lastUpdate=self._last_run)
         self._last_run = None
         # remove _last sensors as they are not needed and are not true SensorStateClass.TOTAL
-        sensors = {k: v for k, v in self.api.getSensors()["sensors"].items() if not v.getName().endswith("_last")}
+        sensors = {
+            k: v
+            for k, v in self.api.getSensors()["sensors"].items()
+            if not v.getName().endswith("_last")
+        }
         return {"sensors": sensors}
