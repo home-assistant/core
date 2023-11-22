@@ -168,9 +168,6 @@
     "platform_schema_validator_err": {
       "message": "Unknown error validating config for {p_name} platform for {domain} component with PLATFORM_SCHEMA"
     },
-    "platform_validator_unknown_err": {
-      "message": "Unknown error validating {p_name} platform config with {domain} component platform schema."
-    },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
     }

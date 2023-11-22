@@ -1527,8 +1527,8 @@ async def test_component_config_exceptions(
     ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
-        "Unknown error validating test_platform platform config "
-        "with test_domain component platform schema"
+        "Unknown error validating config for test_platform platform "
+        "for test_domain component with PLATFORM_SCHEMA"
     ) in caplog.text
     caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
@@ -1539,12 +1539,12 @@ async def test_component_config_exceptions(
             raise_on_failure=True,
         )
     assert (
-        "Unknown error validating test_platform platform config "
-        "with test_domain component platform schema"
+        "Unknown error validating config for test_platform platform "
+        "for test_domain component with PLATFORM_SCHEMA"
     ) in caplog.text
     assert str(ex.value) == (
-        "Unknown error validating test_platform platform config "
-        "with test_domain component platform schema"
+        "Unknown error validating config for test_platform platform "
+        "for test_domain component with PLATFORM_SCHEMA"
     )
 
     # platform.PLATFORM_SCHEMA

@@ -1281,7 +1281,7 @@ async def async_process_component_config(  # noqa: C901
             continue
         except Exception as ex:  # pylint: disable=broad-except
             ex_info = ConfigExceptionInfo(
-                ex, "platform_validator_unknown_err", str(p_name), config
+                ex, "platform_schema_validator_err", str(p_name), config
             )
             config_exceptions.append(ex_info)
             continue
