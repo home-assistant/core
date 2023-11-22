@@ -31,9 +31,7 @@ class SmhiLightning:
                 yesterday = 30
 
         smhi_downloader = SmhiDownloader()
-        data = await smhi_downloader.download_json(
-            APIURL_TEMPLATE.format(year, month, yesterday)
-        )
+        data = await smhi_downloader.download_json(APIURL_TEMPLATE.format(2023, 8, 25))
         if isinstance(data, dict):
             return parse_lightning_impacts(data)
         return []

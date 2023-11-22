@@ -253,6 +253,9 @@ class SmhiWeather(WeatherEntity):
             additional_data_handler.fire_risk_data, True
         )
         additional_data_handler.add_entity_callback(
+            additional_data_handler.lightning_data, True
+        )
+        additional_data_handler.add_entity_callback(
             additional_data_handler.weather_data, True
         )
 

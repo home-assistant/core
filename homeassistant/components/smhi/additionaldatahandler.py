@@ -65,9 +65,7 @@ class AdditionalDataHandler:
         if self.states["lightning"]:
             self.remove_smhi_events(self.lightning_data)
             lightning = SmhiLightning()
-            self.lightning_data = (
-                await lightning.async_get_lightning_impact_most_recent()
-            )
+            self.lightning_data = await lightning.get_lightning_impacts()
 
     def init_add_entities_callback(
         self, async_add_entities: AddEntitiesCallback
