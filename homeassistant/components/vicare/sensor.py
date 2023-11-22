@@ -45,7 +45,7 @@ from .const import (
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
 from .entity import ViCareEntity
-from .utils import is_supported
+from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -641,7 +641,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    api: Device = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    device_config: PyViCareDeviceConfig = hass.data[DOMAIN][config_entry.entry_id][
+        VICARE_DEVICE_CONFIG
+    ]
 
     entities = []
     for description in GLOBAL_SENSORS:
@@ -649,32 +652,23 @@ async def async_setup_entry(
             _build_entity,
             description.name,
             api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            device_config,
             description,
         )
         if entity is not None:
             entities.append(entity)
 
-    try:
-        await _entities_from_descriptions(
-            hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
-        )
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No circuits found")
+    await _entities_from_descriptions(
+        hass, entities, CIRCUIT_SENSORS, get_circuits(api), config_entry
+    )
 
-    try:
-        await _entities_from_descriptions(
-            hass, entities, BURNER_SENSORS, api.burners, config_entry
-        )
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No burners found")
+    await _entities_from_descriptions(
+        hass, entities, BURNER_SENSORS, get_burners(api), config_entry
+    )
 
-    try:
-        await _entities_from_descriptions(
-            hass, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
-        )
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No compressors found")
+    await _entities_from_descriptions(
+        hass, entities, COMPRESSOR_SENSORS, get_compressors(api), config_entry
+    )
 
     async_add_entities(entities)
 
