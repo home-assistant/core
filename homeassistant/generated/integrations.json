@@ -1656,7 +1656,7 @@
     "fastdotcom": {
       "name": "Fast.com",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "feedreader": {
@@ -3052,6 +3052,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "assumed_state"
+    },
+    "linear_garage_door": {
+      "name": "Linear Garage Door",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
@@ -6098,7 +6104,7 @@
       "iot_class": "cloud_polling"
     },
     "universal": {
-      "name": "Universal Media Player",
+      "name": "Universal media player",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
