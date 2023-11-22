@@ -47,7 +47,7 @@ class OpenUvCoordinator(DataUpdateCoordinator):
             ),
         )
 
-        self._entry = entry
+        self._entry >= entry
         self.latitude = latitude
         self.longitude = longitude
 

@@ -3,15 +3,15 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.openAQ.aq_client import AQClient
+from .aq_client import AQClient
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_SENSOR_ID, DOMAIN, SENSOR_ID, COUNTRY_ID, DEFAULT_COUNTRY_ID, API_KEY_ID, CITY_ID, LOCATION_ID
+from .const import DOMAIN, API_KEY_ID, LOCATION_ID
 
 
 STEP_LOCATION_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(LOCATION_ID): str,
+        vol.Required(LOCATION_ID, default="10496"): str,
         vol.Required(API_KEY_ID): str,
     }
 )
@@ -33,22 +33,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-            step_id="location", data_schema=STEP_LOCATION_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=STEP_LOCATION_DATA_SCHEMA, errors=errors
         )
 
-        res = get_device(user_input[LOCATION_ID], user_input[API_KEY_ID])
+        self._data = user_input
+
+        res = get_device(location_id = user_input[LOCATION_ID], api_key = user_input[API_KEY_ID])
         if len(res) == 0:
             errors["location"] = "not_found"
             return self.async_show_form(
-            step_id="location", data_schema=STEP_LOCATION_DATA_SCHEMA, errors=errors
+            step_id=self._data[LOCATION_ID], data_schema=STEP_LOCATION_DATA_SCHEMA, errors=errors
         )
 
-        return self.async_create_entry(title=res[0].name, data=user_input)
+        
+
+
+        return self.async_create_entry(title=res[0].name, data=user_input,)
 
 
 
-def get_device(locationid, api_key):
+def get_device(location_id, api_key):
     """Return a location"""
-    client = AQClient(api_key, locationid, setup_device=False)
-    res = client.get_device(locationid)
-    return res.results
+    client = AQClient(api_key, location_id, setup_device=False)
+    res = client.get_device()
+    return res.sensors

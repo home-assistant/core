@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 import homeassistant
+from homeassistant.components.openAQ.coordinator import OpenAQDataCoordinator
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -21,15 +22,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ICON
+from .const import DOMAIN, ICON, OPENAQ_PARAMETERS
 
 
 class OpenAQDeviceSensors(str, Enum):
     """Sensors to report in home assistant."""
 
     Last_Update = SensorDeviceClass.TIMESTAMP
-    Air_Quality_index = SensorDeviceClass.AQI
     Particle_Matter_25 = SensorDeviceClass.PM25
     Particle_Matter_10 = SensorDeviceClass.PM10
     Particle_Matter_1 = SensorDeviceClass.PM1
@@ -55,24 +56,31 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ) -> None:
     """Configure the sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    print("SETUP ENTRY SENSOR")
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    sensors = coordinator.get_sensors()
+    sensors_metrics = [OPENAQ_PARAMETERS[j] for j in [sensor.parameter.name for sensor in sensors]]
+
+    print(sensors_metrics)
+
     entities = []
 
-    for metric in list(OpenAQDeviceSensors):
-        if coordinator.data.get(metric.name):
-            match metric.value:
-                case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
-                    unit = None
-                case SensorDeviceClass.CO | SensorDeviceClass.CO2:
-                    unit = CONCENTRATION_PARTS_PER_MILLION
-                case SensorDeviceClass.PM25 | SensorDeviceClass.PM10 | SensorDeviceClass.PM1 | SensorDeviceClass.OZONE | SensorDeviceClass.NITROGEN_DIOXIDE | SensorDeviceClass.NITROGEN_MONOXIDE | SensorDeviceClass.SULPHUR_DIOXIDE:
-                    unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-                case SensorDeviceClass.ATMOSPHERIC_PRESSURE:
-                    unit = UnitOfPressure.BAR
-                case SensorDeviceClass.HUMIDITY:
-                    unit = PERCENTAGE
-                case SensorDeviceClass.TEMPERATURE:
-                    unit = UnitOfTemperature.CELSIUS
+    for metric in sensors_metrics:
+
+        print(f"FOUND {metric} IN SENSOR!!!!")
+        match metric:
+            case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
+                unit = None
+            case SensorDeviceClass.CO | SensorDeviceClass.CO2:
+                unit = CONCENTRATION_PARTS_PER_MILLION
+            case SensorDeviceClass.PM25 | SensorDeviceClass.PM10 | SensorDeviceClass.PM1 | SensorDeviceClass.OZONE | SensorDeviceClass.NITROGEN_DIOXIDE | SensorDeviceClass.NITROGEN_MONOXIDE | SensorDeviceClass.SULPHUR_DIOXIDE:
+                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+            case SensorDeviceClass.ATMOSPHERIC_PRESSURE:
+                unit = UnitOfPressure.BAR
+            case SensorDeviceClass.HUMIDITY:
+                unit = PERCENTAGE
+            case SensorDeviceClass.TEMPERATURE:
+                unit = UnitOfTemperature.CELSIUS
 
         entities.append(
             OpenAQSensor(
@@ -85,6 +93,7 @@ async def async_setup_entry(
                     entity_category=EntityCategory.DIAGNOSTIC,
                     native_unit_of_measurement=unit,
                 ),
+                coordinator
             ),
         )
     async_add_devices(entities)
@@ -98,12 +107,15 @@ class OpenAQSensor(SensorEntity):
         hass: HomeAssistant,
         station_id,
         description: OpenAQSensorDescription,
+        coordinator: OpenAQDataCoordinator
     ) -> None:
         """Init"""
         self.entity_description = description
         self.station_id = station_id
         self.metric = self.entity_description.metric
         self._hass = hass
+        self.coordinator = coordinator
+
         self._last_reset = homeassistant.util.dt.utc_from_timestamp(0)
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]
@@ -136,4 +148,6 @@ class OpenAQSensor(SensorEntity):
         """Return the state of the sensor, rounding if a number."""
         if self.metric == SensorDeviceClass.TIMESTAMP:
             return None
-        return self.coordinator["data"][self.metric]
+
+        
+        return 1

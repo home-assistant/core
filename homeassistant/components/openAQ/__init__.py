@@ -1,6 +1,6 @@
 """The OpenAQ Integration."""
 
-from homeassistant.components.openAQ.cordinator import OpenAQDataCoordinator
+from homeassistant.components.openAQ.coordinator import OpenAQDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,15 +23,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+    #await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "test")},
-        name="test",  # needs to be the same as in sensor.py Station name
+        name=entry.data.get("name"),  # needs to be the same as in sensor.py Station name
         model="Unknown",  # Add later from api
     )
 
