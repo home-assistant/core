@@ -79,9 +79,6 @@ async def async_setup_entry(
             case SensorDeviceClass.TEMPERATURE:
                 unit = UnitOfTemperature.CELSIUS
 
-        metric_name = metric.name
-        metric_val = metric.value
-
         val_list = list(OPENAQ_PARAMETERS.values())
         key_list = list(OPENAQ_PARAMETERS.keys())
 
