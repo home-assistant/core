@@ -93,8 +93,8 @@ class GoogleTaskTodoListEntity(
                 summary=item["title"],
                 uid=item["id"],
                 status=TODO_STATUS_MAP.get(
-                    item.get("status"),
-                    TodoItemStatus.NEEDS_ACTION,  # type: ignore[arg-type]
+                    item.get("status"),  # type: ignore[arg-type]
+                    TodoItemStatus.NEEDS_ACTION,
                 ),
             )
             for item in _order_tasks(self.coordinator.data)

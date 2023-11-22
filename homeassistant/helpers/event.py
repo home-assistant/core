@@ -252,7 +252,7 @@ def async_track_state_change(
 
     return hass.bus.async_listen(
         EVENT_STATE_CHANGED,
-        state_change_dispatcher,
+        state_change_dispatcher,  # type: ignore[arg-type]
         event_filter=state_change_filter,  # type: ignore[arg-type]
     )
 
