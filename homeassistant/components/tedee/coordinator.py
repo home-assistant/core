@@ -28,7 +28,7 @@ STALE_DATA_INTERVAL = 300
 _LOGGER = logging.getLogger(__name__)
 
 
-class TedeeApiCoordinator(DataUpdateCoordinator):
+class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
