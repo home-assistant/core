@@ -765,7 +765,7 @@
     "caldav": {
       "name": "CalDAV",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "canary": {
@@ -1270,7 +1270,7 @@
     },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1656,7 +1656,7 @@
     "fastdotcom": {
       "name": "Fast.com",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "feedreader": {
@@ -1718,7 +1718,7 @@
     },
     "fints": {
       "name": "FinTS",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2881,6 +2881,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "komfovent": {
+      "name": "Komfovent",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "konnected": {
       "name": "Konnected.io",
       "integration_type": "hub",
@@ -3046,6 +3052,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "assumed_state"
+    },
+    "linear_garage_door": {
+      "name": "Linear Garage Door",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
@@ -3625,12 +3637,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "myq": {
-      "name": "MyQ",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "mysensors": {
       "name": "MySensors",
       "integration_type": "hub",
@@ -4150,7 +4156,7 @@
       "name": "Overkiz",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "local_polling"
     },
     "ovo_energy": {
       "name": "OVO Energy",
@@ -4291,7 +4297,7 @@
     "ping": {
       "name": "Ping (ICMP)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "pioneer": {
@@ -6104,7 +6110,7 @@
       "iot_class": "cloud_polling"
     },
     "universal": {
-      "name": "Universal Media Player",
+      "name": "Universal media player",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
@@ -6159,6 +6165,12 @@
       "name": "Ubiquiti UniFi Video",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "v2c": {
+      "name": "V2C",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "vallox": {
