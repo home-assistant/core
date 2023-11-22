@@ -87,7 +87,7 @@ async def async_setup_entry(
         entities.append(
             OpenAQSensor(
                 hass,
-                coordinator.location_id,
+                str(coordinator.client.get_device().id),
                 OpenAQSensorDescription(
                     key=key_list[metric_index],
                     name=metric.name.replace("_", " "),
