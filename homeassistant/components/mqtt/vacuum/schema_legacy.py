@@ -17,14 +17,12 @@ from homeassistant.components.vacuum import (
     VacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
@@ -201,26 +199,20 @@ _COMMANDS = {
 }
 
 
-async def async_setup_entity_legacy(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None,
-) -> None:
-    """Set up a MQTT Vacuum Legacy."""
-    async_add_entities([MqttVacuum(hass, config, config_entry, discovery_data)])
-
-
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
 
+    _attr_battery_level = 0
+    _attr_is_on = False
+    _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
+    _charging: bool = False
+    _cleaning: bool = False
+    _command_topic: str | None
+    _docked: bool = False
     _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
-    _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
-
-    _command_topic: str | None
     _encoding: str | None
+    _error: str | None = None
     _qos: bool
     _retain: bool
     _payloads: dict[str, str]
@@ -230,25 +222,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _templates: dict[
         str, Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     ]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the vacuum."""
-        self._attr_battery_level = 0
-        self._attr_is_on = False
-        self._attr_fan_speed = "unknown"
-
-        self._charging = False
-        self._cleaning = False
-        self._docked = False
-        self._error: str | None = None
-
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:

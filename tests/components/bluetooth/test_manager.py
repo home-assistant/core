@@ -1011,6 +1011,7 @@ async def test_debug_logging(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test debug logging."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
     await hass.services.async_call(
         "logger",
         "set_level",

@@ -257,7 +257,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
 
-    async def async_step_accessory(self, accessory_input: dict) -> FlowResult:
+    async def async_step_accessory(self, accessory_input: dict[str, Any]) -> FlowResult:
         """Handle creation a single accessory in accessory mode."""
         entity_id = accessory_input[CONF_ENTITY_ID]
         port = accessory_input[CONF_PORT]
@@ -283,7 +283,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
-    async def async_step_import(self, user_input: dict) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import from yaml."""
         if not self._async_is_unique_name_port(user_input):
             return self.async_abort(reason="port_name_in_use")
@@ -318,7 +318,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return suggested_name
 
     @callback
-    def _async_is_unique_name_port(self, user_input: dict[str, str]) -> bool:
+    def _async_is_unique_name_port(self, user_input: dict[str, Any]) -> bool:
         """Determine is a name or port is already used."""
         name = user_input[CONF_NAME]
         port = user_input[CONF_PORT]

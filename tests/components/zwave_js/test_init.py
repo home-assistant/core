@@ -1,6 +1,7 @@
 """Test the Z-Wave JS init module."""
 import asyncio
 from copy import deepcopy
+import logging
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -11,6 +12,7 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
@@ -23,6 +25,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
@@ -1546,6 +1549,155 @@ async def test_identify_event(
     # Test case where config entry title and home ID do match
     hass.config_entries.async_update_entry(integration, title="3245146787")
     client.driver.controller.receive_event(event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+
+
+async def test_server_logging(hass: HomeAssistant, client) -> None:
+    """Test automatic server logging functionality."""
+
+    def _reset_mocks():
+        client.async_send_command.reset_mock()
+        client.enable_server_logging.reset_mock()
+        client.disable_server_logging.reset_mock()
+
+    # Set server logging to disabled
+    client.server_logging_enabled = False
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup logger and set log level to debug to trigger event listener
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.INFO
+    client.async_send_command.reset_mock()
+    await hass.services.async_call(
+        LOGGER_DOMAIN, SERVICE_SET_LEVEL, {"zwave_js_server": "debug"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
+
+    # Validate that the server logging was enabled
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.update_log_config",
+        "config": {"level": "debug"},
+    }
+    assert client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # Emulate server by setting log level to debug
+    event = Event(
+        type="log config updated",
+        data={
+            "source": "driver",
+            "event": "log config updated",
+            "config": {
+                "enabled": False,
+                "level": "debug",
+                "logToFile": True,
+                "filename": "test",
+                "forceConsole": True,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    # "Enable" server logging and unload the entry
+    client.server_logging_enabled = True
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # Validate that the server logging was disabled
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.update_log_config",
+        "config": {"level": "info"},
+    }
+    assert not client.enable_server_logging.called
+    assert client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # Validate that the server logging doesn't get enabled because HA thinks it already
+    # is enabled
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(client.async_send_command.call_args_list) == 0
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+    _reset_mocks()
+
+    # "Disable" server logging and unload the entry
+    client.server_logging_enabled = False
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # Validate that the server logging was not disabled because HA thinks it is already
+    # is disabled
+    assert len(client.async_send_command.call_args_list) == 0
+    assert not client.enable_server_logging.called
+    assert not client.disable_server_logging.called
+
+
+async def test_factory_reset_node(
+    hass: HomeAssistant, client, multisensor_6, multisensor_6_state, integration
+) -> None:
+    """Test when a node is removed because it was reset."""
+    # One config entry scenario
+    remove_event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "reason": 5,
+            "node": deepcopy(multisensor_6_state),
+        },
+    )
+    dev_id = get_device_id(client.driver, multisensor_6)
+    msg_id = f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}"
+
+    client.driver.controller.receive_event(remove_event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert notifications[msg_id]["message"].startswith("`Multisensor 6`")
+    assert "with the home ID" not in notifications[msg_id]["message"]
+    async_dismiss(hass, msg_id)
+
+    # Add mock config entry to simulate having multiple entries
+    new_entry = MockConfigEntry(domain=DOMAIN)
+    new_entry.add_to_hass(hass)
+
+    # Re-add the node then remove it again
+    client.driver.controller.nodes[multisensor_6_state["nodeId"]] = Node(
+        client, deepcopy(multisensor_6_state)
+    )
+    remove_event.data["node"] = deepcopy(multisensor_6_state)
+    client.driver.controller.receive_event(remove_event)
+    # Test case where config entry title and home ID don't match
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert list(notifications)[0] == msg_id
+    assert (
+        "network `Mock Title`, with the home ID `3245146787`."
+        in notifications[msg_id]["message"]
+    )
+    async_dismiss(hass, msg_id)
+
+    # Test case where config entry title and home ID do match
+    hass.config_entries.async_update_entry(integration, title="3245146787")
+    client.driver.controller.nodes[multisensor_6_state["nodeId"]] = Node(
+        client, deepcopy(multisensor_6_state)
+    )
+    remove_event.data["node"] = deepcopy(multisensor_6_state)
+    client.driver.controller.receive_event(remove_event)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id

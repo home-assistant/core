@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import json
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
@@ -13,10 +13,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import migration
-from homeassistant.components.recorder.const import (
-    SQLITE_MAX_BIND_VARS,
-    SupportedDialect,
-)
+from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.services import (
@@ -30,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    async_attach_db_engine,
     async_recorder_block_till_done,
     async_wait_purge_done,
     async_wait_recording_done,
@@ -67,25 +65,12 @@ def mock_use_sqlite(request):
         yield
 
 
-async def _async_attach_db_engine(hass: HomeAssistant) -> None:
-    """Attach a database engine to the recorder."""
-    instance = recorder.get_instance(hass)
-
-    def _mock_setup_recorder_connection():
-        with instance.engine.connect() as connection:
-            instance._setup_recorder_connection(
-                connection._dbapi_connection, MagicMock()
-            )
-
-    await instance.async_add_executor_job(_mock_setup_recorder_connection)
-
-
 async def test_purge_old_states(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test deleting old states."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
 
@@ -181,7 +166,7 @@ async def test_purge_old_states_encouters_database_corruption(
         return
 
     await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
     await async_wait_recording_done(hass)
@@ -214,7 +199,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
 ) -> None:
     """Test retry on specific mysql operational errors."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
     await async_wait_recording_done(hass)
@@ -246,7 +231,7 @@ async def test_purge_old_states_encounters_operational_error(
 ) -> None:
     """Test error on operational errors that are not mysql does not retry."""
     await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
     await async_wait_recording_done(hass)
@@ -271,7 +256,7 @@ async def test_purge_old_events(
 ) -> None:
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_events(hass)
 
@@ -309,7 +294,7 @@ async def test_purge_old_recorder_runs(
 ) -> None:
     """Test deleting old recorder runs keeps current run."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_recorder_runs(hass)
 
@@ -346,7 +331,7 @@ async def test_purge_old_statistics_runs(
 ) -> None:
     """Test deleting old statistics runs keeps the latest run."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_statistics_runs(hass)
 
@@ -387,7 +372,7 @@ async def test_purge_method(
         assert run1.start == run2.start
 
     await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     service_data = {"keep_days": 4}
     await _add_test_events(hass)
@@ -525,7 +510,7 @@ async def test_purge_edge_case(
             )
 
     await async_setup_recorder_instance(hass, None)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_purge_done(hass)
 
@@ -624,14 +609,14 @@ async def test_purge_cutoff_date(
                 )
 
     instance = await async_setup_recorder_instance(hass, None)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_purge_done(hass)
 
     service_data = {"keep_days": 2}
 
     # Force multiple purge batches to be run
-    rows = SQLITE_MAX_BIND_VARS + 1
+    rows = 999
     cutoff = dt_util.utcnow() - timedelta(days=service_data["keep_days"])
     await _add_db_entries(hass, cutoff, rows)
 
@@ -718,21 +703,22 @@ async def _add_test_states(hass: HomeAssistant):
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
 
-    for event_id in range(6):
-        if event_id < 2:
-            timestamp = eleven_days_ago
-            state = f"autopurgeme_{event_id}"
-            attributes = {"autopurgeme": True, **base_attributes}
-        elif event_id < 4:
-            timestamp = five_days_ago
-            state = f"purgeme_{event_id}"
-            attributes = {"purgeme": True, **base_attributes}
-        else:
-            timestamp = utcnow
-            state = f"dontpurgeme_{event_id}"
-            attributes = {"dontpurgeme": True, **base_attributes}
+    with freeze_time() as freezer:
+        for event_id in range(6):
+            if event_id < 2:
+                timestamp = eleven_days_ago
+                state = f"autopurgeme_{event_id}"
+                attributes = {"autopurgeme": True, **base_attributes}
+            elif event_id < 4:
+                timestamp = five_days_ago
+                state = f"purgeme_{event_id}"
+                attributes = {"purgeme": True, **base_attributes}
+            else:
+                timestamp = utcnow
+                state = f"dontpurgeme_{event_id}"
+                attributes = {"dontpurgeme": True, **base_attributes}
 
-        with freeze_time(timestamp):
+            freezer.move_to(timestamp)
             await set_state("test.recorder2", state, attributes=attributes)
 
 
@@ -950,48 +936,52 @@ async def test_purge_many_old_events(
 ) -> None:
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
-    await _add_test_events(hass, SQLITE_MAX_BIND_VARS)
+    old_events_count = 5
+    with patch.object(instance, "max_bind_vars", old_events_count), patch.object(
+        instance.database_engine, "max_bind_vars", old_events_count
+    ):
+        await _add_test_events(hass, old_events_count)
 
-    with session_scope(hass=hass) as session:
-        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
-        assert events.count() == SQLITE_MAX_BIND_VARS * 6
+        with session_scope(hass=hass) as session:
+            events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+            assert events.count() == old_events_count * 6
 
-        purge_before = dt_util.utcnow() - timedelta(days=4)
+            purge_before = dt_util.utcnow() - timedelta(days=4)
 
-        # run purge_old_data()
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-            states_batch_size=3,
-            events_batch_size=3,
-        )
-        assert not finished
-        assert events.count() == SQLITE_MAX_BIND_VARS * 3
+            # run purge_old_data()
+            finished = purge_old_data(
+                instance,
+                purge_before,
+                repack=False,
+                states_batch_size=3,
+                events_batch_size=3,
+            )
+            assert not finished
+            assert events.count() == old_events_count * 3
 
-        # we should only have 2 groups of events left
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-            states_batch_size=3,
-            events_batch_size=3,
-        )
-        assert finished
-        assert events.count() == SQLITE_MAX_BIND_VARS * 2
+            # we should only have 2 groups of events left
+            finished = purge_old_data(
+                instance,
+                purge_before,
+                repack=False,
+                states_batch_size=3,
+                events_batch_size=3,
+            )
+            assert finished
+            assert events.count() == old_events_count * 2
 
-        # we should now purge everything
-        finished = purge_old_data(
-            instance,
-            dt_util.utcnow(),
-            repack=False,
-            states_batch_size=20,
-            events_batch_size=20,
-        )
-        assert finished
-        assert events.count() == 0
+            # we should now purge everything
+            finished = purge_old_data(
+                instance,
+                dt_util.utcnow(),
+                repack=False,
+                states_batch_size=20,
+                events_batch_size=20,
+            )
+            assert finished
+            assert events.count() == 0
 
 
 async def test_purge_can_mix_legacy_and_new_format(
@@ -999,7 +989,7 @@ async def test_purge_can_mix_legacy_and_new_format(
 ) -> None:
     """Test purging with legacy and new events."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_recording_done(hass)
     # New databases are no longer created with the legacy events index
@@ -1112,7 +1102,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
         return pytest.skip("This tests disables foreign key checks on SQLite")
 
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_recording_done(hass)
     # New databases are no longer created with the legacy events index
@@ -1252,7 +1242,7 @@ async def test_purge_entities_keep_days(
 ) -> None:
     """Test purging states with an entity filter and keep_days."""
     instance = await async_setup_recorder_instance(hass, {})
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)

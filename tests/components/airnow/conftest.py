@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.airnow import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -60,8 +59,6 @@ def mock_api_get_fixture(data):
 async def setup_airnow_fixture(hass, config, mock_api_get):
     """Define a fixture to set up AirNow."""
     with patch("pyairnow.WebServiceAPI._get", mock_api_get), patch(
-        "homeassistant.components.airnow.config_flow.WebServiceAPI._get", mock_api_get
-    ), patch("homeassistant.components.airnow.PLATFORMS", []):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        "homeassistant.components.airnow.PLATFORMS", []
+    ):
         yield

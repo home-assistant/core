@@ -26,7 +26,7 @@ from .device import RoborockCoordinatedEntity
 class RoborockBinarySensorDescriptionMixin:
     """A class that describes binary sensor entities."""
 
-    value_fn: Callable[[DeviceProp], bool]
+    value_fn: Callable[[DeviceProp], bool | int | None]
 
 
 @dataclass
@@ -68,6 +68,14 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_shortage_status,
+    ),
+    RoborockBinarySensorDescription(
+        key="in_cleaning",
+        translation_key="in_cleaning",
+        icon="mdi:vacuum",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.in_cleaning,
     ),
 ]
 

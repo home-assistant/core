@@ -16,5 +16,17 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "start_irrigation": {
+      "name": "Start irrigation",
+      "description": "Starts the irrigation.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration for the target to be turned on."
+        }
+      }
+    }
   }
 }

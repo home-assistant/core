@@ -96,9 +96,8 @@ async def test_fail_setup_if_no_command_topic(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test if command fails with command topic."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1584,7 +1583,7 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize(
-    ("name", "hass_config", "success", "features"),
+    ("name", "hass_config", "success", "features", "error_message"),
     [
         (
             "test1",
@@ -1598,6 +1597,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature(0),
+            None,
         ),
         (
             "test2",
@@ -1612,6 +1612,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.OSCILLATE,
+            None,
         ),
         (
             "test3",
@@ -1626,6 +1627,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test4",
@@ -1640,6 +1642,7 @@ async def test_attributes(
             },
             False,
             None,
+            "some but not all values in the same group of inclusion 'preset_modes'",
         ),
         (
             "test5",
@@ -1655,6 +1658,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test6",
@@ -1670,6 +1674,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test7",
@@ -1684,6 +1689,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test8",
@@ -1699,6 +1705,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.OSCILLATE | fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test9",
@@ -1714,6 +1721,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test10",
@@ -1729,6 +1737,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test11",
@@ -1745,6 +1754,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE | fan.FanEntityFeature.OSCILLATE,
+            None,
         ),
         (
             "test12",
@@ -1761,6 +1771,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test13",
@@ -1777,6 +1788,7 @@ async def test_attributes(
             },
             False,
             None,
+            "speed_range_max must be > speed_range_min",
         ),
         (
             "test14",
@@ -1793,13 +1805,14 @@ async def test_attributes(
             },
             False,
             None,
+            "speed_range_min must be > 0",
         ),
         (
             "test15",
             {
                 mqtt.DOMAIN: {
                     fan.DOMAIN: {
-                        "name": "test7reset_payload_in_preset_modes_a",
+                        "name": "test15",
                         "command_topic": "command-topic",
                         "preset_mode_command_topic": "preset-mode-command-topic",
                         "preset_modes": ["auto", "smart", "normal", "None"],
@@ -1808,6 +1821,7 @@ async def test_attributes(
             },
             False,
             None,
+            "preset_modes must not contain payload_reset_preset_mode",
         ),
         (
             "test16",
@@ -1824,6 +1838,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            "some error",
         ),
         (
             "test17",
@@ -1838,25 +1853,27 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.DIRECTION,
+            "some error",
         ),
     ],
 )
 async def test_supported_features(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     name: str,
     success: bool,
-    features,
+    features: fan.FanEntityFeature | None,
+    error_message: str | None,
 ) -> None:
     """Test optimistic mode without state topic."""
+    await mqtt_mock_entry()
+    state = hass.states.get(f"fan.{name}")
+    assert (state is not None) == success
     if success:
-        await mqtt_mock_entry()
-
-        state = hass.states.get(f"fan.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
         return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert error_message in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

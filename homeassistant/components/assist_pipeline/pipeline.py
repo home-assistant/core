@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import array
 import asyncio
-from collections import deque
+from collections import defaultdict, deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -12,11 +12,13 @@ from pathlib import Path
 from queue import Queue
 from threading import Thread
 import time
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 import wave
 
 import voluptuous as vol
-from webrtc_noise_gain import AudioProcessor
+
+if TYPE_CHECKING:
+    from webrtc_noise_gain import AudioProcessor
 
 from homeassistant.components import (
     conversation,
@@ -32,6 +34,7 @@ from homeassistant.components.tts.media_source import (
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.collection import (
+    CHANGE_UPDATED,
     CollectionError,
     ItemNotFound,
     SerializedStorageCollection,
@@ -47,13 +50,20 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .const import DATA_CONFIG, DOMAIN
+from .const import (
+    CONF_DEBUG_RECORDING_DIR,
+    DATA_CONFIG,
+    DATA_LAST_WAKE_UP,
+    DEFAULT_WAKE_WORD_COOLDOWN,
+    DOMAIN,
+)
 from .error import (
     IntentRecognitionError,
     PipelineError,
     PipelineNotFound,
     SpeechToTextError,
     TextToSpeechError,
+    WakeWordDetectionAborted,
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
@@ -310,7 +320,7 @@ class Pipeline:
     wake_word_entity: str | None
     wake_word_id: str | None
 
-    id: str = field(default_factory=ulid_util.ulid)
+    id: str = field(default_factory=ulid_util.ulid_now)
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> Pipeline:
@@ -397,6 +407,9 @@ class WakeWordSettings:
     audio_seconds_to_buffer: float = 0
     """Seconds of audio to buffer before detection and forward to STT."""
 
+    cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
+    """Seconds after a wake word detection where other detections are ignored."""
+
 
 @dataclass(frozen=True)
 class AudioSettings:
@@ -469,12 +482,14 @@ class PipelineRun:
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
 
-    id: str = field(default_factory=ulid_util.ulid)
-    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
-    tts_engine: str = field(init=False)
+    id: str = field(default_factory=ulid_util.ulid_now)
+    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
+    tts_engine: str = field(init=False, repr=False)
     tts_options: dict | None = field(init=False, default=None)
-    wake_word_entity_id: str = field(init=False)
-    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False)
+    wake_word_entity_id: str | None = field(init=False, default=None, repr=False)
+    wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False, repr=False)
+
+    abort_wake_word_detection: bool = field(init=False, default=False)
 
     debug_recording_thread: Thread | None = None
     """Thread that records audio to debug_recording_dir"""
@@ -485,8 +500,11 @@ class PipelineRun:
     audio_processor: AudioProcessor | None = None
     """VAD/noise suppression/auto gain"""
 
-    audio_processor_buffer: AudioBuffer = field(init=False)
+    audio_processor_buffer: AudioBuffer = field(init=False, repr=False)
     """Buffer used when splitting audio into chunks for audio processing"""
+
+    _device_id: str | None = None
+    """Optional device id set during run start."""
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
@@ -504,14 +522,28 @@ class PipelineRun:
                 size_limit=STORED_PIPELINE_RUNS
             )
         pipeline_data.pipeline_debug[self.pipeline.id][self.id] = PipelineRunDebug()
+        pipeline_data.pipeline_runs.add_run(self)
 
         # Initialize with audio settings
         self.audio_processor_buffer = AudioBuffer(AUDIO_PROCESSOR_BYTES)
         if self.audio_settings.needs_processor:
+            # Delay import of webrtc so HA start up is not crashing
+            # on older architectures (armhf).
+            #
+            # pylint: disable=import-outside-toplevel
+            from webrtc_noise_gain import AudioProcessor
+
             self.audio_processor = AudioProcessor(
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
             )
+
+    def __eq__(self, other: Any) -> bool:
+        """Compare pipeline runs by id."""
+        if isinstance(other, PipelineRun):
+            return self.id == other.id
+
+        return False
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -525,7 +557,8 @@ class PipelineRun:
 
     def start(self, device_id: str | None) -> None:
         """Emit run start event."""
-        self._start_debug_recording_thread(device_id)
+        self._device_id = device_id
+        self._start_debug_recording_thread()
 
         data = {
             "pipeline": self.pipeline.id,
@@ -538,6 +571,9 @@ class PipelineRun:
 
     async def end(self) -> None:
         """Emit run end event."""
+        # Signal end of stream to listeners
+        self._capture_chunk(None)
+
         # Stop the recording thread before emitting run-end.
         # This ensures that files are properly closed if the event handler reads them.
         await self._stop_debug_recording_thread()
@@ -547,6 +583,9 @@ class PipelineRun:
                 PipelineEventType.RUN_END,
             )
         )
+
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data.pipeline_runs.remove_run(self)
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
@@ -588,6 +627,8 @@ class PipelineRun:
             )
         )
 
+        wake_word_settings = self.wake_word_settings or WakeWordSettings()
+
         # Remove language since it doesn't apply to wake words yet
         metadata_dict.pop("language", None)
 
@@ -597,14 +638,13 @@ class PipelineRun:
                 {
                     "entity_id": self.wake_word_entity_id,
                     "metadata": metadata_dict,
+                    "timeout": wake_word_settings.timeout or 0,
                 },
             )
         )
 
         if self.debug_recording_queue is not None:
             self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
-
-        wake_word_settings = self.wake_word_settings or WakeWordSettings()
 
         wake_word_vad: VoiceActivityTimeout | None = None
         if (wake_word_settings.timeout is not None) and (
@@ -638,6 +678,8 @@ class PipelineRun:
                 # All audio kept from right before the wake word was detected as
                 # a single chunk.
                 audio_chunks_for_stt.extend(stt_audio_buffer)
+        except WakeWordDetectionAborted:
+            raise
         except WakeWordTimeoutError:
             _LOGGER.debug("Timeout during wake word detection")
             raise
@@ -653,6 +695,18 @@ class PipelineRun:
         if result is None:
             wake_word_output: dict[str, Any] = {}
         else:
+            # Avoid duplicate detections by checking cooldown
+            wake_up_key = f"{self.wake_word_entity_id}.{result.wake_word_id}"
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_up_key)
+            if last_wake_up is not None:
+                sec_since_last_wake_up = time.monotonic() - last_wake_up
+                if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
+                    _LOGGER.debug("Duplicate wake word detection occurred")
+                    raise WakeWordDetectionAborted
+
+            # Record last wake up time to block duplicate detections
+            self.hass.data[DATA_LAST_WAKE_UP][wake_up_key] = time.monotonic()
+
             if result.queued_audio:
                 # Add audio that was pending at detection.
                 #
@@ -696,9 +750,10 @@ class PipelineRun:
         """
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         async for chunk in audio_stream:
-            if self.debug_recording_queue is not None:
-                self.debug_recording_queue.put_nowait(chunk.audio)
+            if self.abort_wake_word_detection:
+                raise WakeWordDetectionAborted
 
+            self._capture_chunk(chunk.audio)
             yield chunk.audio, chunk.timestamp_ms
 
             # Wake-word-detection occurs *after* the wake word was actually
@@ -820,8 +875,7 @@ class PipelineRun:
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         sent_vad_start = False
         async for chunk in audio_stream:
-            if self.debug_recording_queue is not None:
-                self.debug_recording_queue.put_nowait(chunk.audio)
+            self._capture_chunk(chunk.audio)
 
             if stt_vad is not None:
                 if not stt_vad.process(chunk_seconds, chunk.is_speech):
@@ -921,12 +975,16 @@ class PipelineRun:
         # pipeline.tts_engine can't be None or this function is not called
         engine = cast(str, self.pipeline.tts_engine)
 
-        tts_options = {}
+        tts_options: dict[str, Any] = {}
         if self.pipeline.tts_voice is not None:
             tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
 
         if self.tts_audio_output is not None:
-            tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
+            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
+            if self.tts_audio_output == "wav":
+                # 16 Khz, 16-bit mono
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = 16000
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = 1
 
         try:
             options_supported = await tts.async_support_options(
@@ -1003,7 +1061,28 @@ class PipelineRun:
 
         return tts_media.url
 
-    def _start_debug_recording_thread(self, device_id: str | None) -> None:
+    def _capture_chunk(self, audio_bytes: bytes | None) -> None:
+        """Forward audio chunk to various capturing mechanisms."""
+        if self.debug_recording_queue is not None:
+            # Forward to debug WAV file recording
+            self.debug_recording_queue.put_nowait(audio_bytes)
+
+        if self._device_id is None:
+            return
+
+        # Forward to device audio capture
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        audio_queue = pipeline_data.device_audio_queues.get(self._device_id)
+        if audio_queue is None:
+            return
+
+        try:
+            audio_queue.queue.put_nowait(audio_bytes)
+        except asyncio.QueueFull:
+            audio_queue.overflow = True
+            _LOGGER.warning("Audio queue full for device %s", self._device_id)
+
+    def _start_debug_recording_thread(self) -> None:
         """Start thread to record wake/stt audio if debug_recording_dir is set."""
         if self.debug_recording_thread is not None:
             # Already started
@@ -1012,9 +1091,9 @@ class PipelineRun:
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
         if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
-            "debug_recording_dir"
+            CONF_DEBUG_RECORDING_DIR
         ):
-            if device_id is None:
+            if self._device_id is None:
                 # <debug_recording_dir>/<pipeline.name>/<run.id>
                 run_recording_dir = (
                     Path(debug_recording_dir)
@@ -1025,7 +1104,7 @@ class PipelineRun:
                 # <debug_recording_dir>/<device_id>/<pipeline.name>/<run.id>
                 run_recording_dir = (
                     Path(debug_recording_dir)
-                    / device_id
+                    / self._device_id
                     / self.pipeline.name
                     / str(time.monotonic_ns())
                 )
@@ -1046,8 +1125,8 @@ class PipelineRun:
             # Not running
             return
 
-        # Signal thread to stop gracefully
-        self.debug_recording_queue.put(None)
+        # NOTE: Expecting a None to have been put in self.debug_recording_queue
+        # in self.end() to signal the thread to stop.
 
         # Wait until the thread has finished to ensure that files are fully written
         await self.hass.async_add_executor_job(self.debug_recording_thread.join)
@@ -1126,21 +1205,14 @@ class PipelineRun:
 
 def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
     """Multiplies 16-bit PCM samples by a constant."""
+
+    def _clamp(val: float) -> float:
+        """Clamp to signed 16-bit."""
+        return max(-32768, min(32767, val))
+
     return array.array(
         "h",
-        [
-            int(
-                # Clamp to signed 16-bit range
-                max(
-                    -32767,
-                    min(
-                        32767,
-                        value * volume_multiplier,
-                    ),
-                )
-            )
-            for value in array.array("h", chunk)
-        ],
+        (int(_clamp(value * volume_multiplier)) for value in array.array("h", chunk)),
     ).tobytes()
 
 
@@ -1404,7 +1476,7 @@ class PipelineStorageCollection(
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return ulid_util.ulid()
+        return ulid_util.ulid_now()
 
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
@@ -1554,13 +1626,61 @@ class PipelineStorageCollectionWebsocket(
         connection.send_result(msg["id"])
 
 
+class PipelineRuns:
+    """Class managing pipelineruns."""
+
+    def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
+        """Initialize."""
+        self._pipeline_runs: dict[str, dict[str, PipelineRun]] = defaultdict(dict)
+        self._pipeline_store = pipeline_store
+        pipeline_store.async_add_listener(self._change_listener)
+
+    def add_run(self, pipeline_run: PipelineRun) -> None:
+        """Add pipeline run."""
+        pipeline_id = pipeline_run.pipeline.id
+        self._pipeline_runs[pipeline_id][pipeline_run.id] = pipeline_run
+
+    def remove_run(self, pipeline_run: PipelineRun) -> None:
+        """Remove pipeline run."""
+        pipeline_id = pipeline_run.pipeline.id
+        self._pipeline_runs[pipeline_id].pop(pipeline_run.id)
+
+    async def _change_listener(
+        self, change_type: str, item_id: str, change: dict
+    ) -> None:
+        """Handle pipeline store changes."""
+        if change_type != CHANGE_UPDATED:
+            return
+        if pipeline_runs := self._pipeline_runs.get(item_id):
+            # Create a temporary list in case the list is modified while we iterate
+            for pipeline_run in list(pipeline_runs.values()):
+                pipeline_run.abort_wake_word_detection = True
+
+
 @dataclass
+class DeviceAudioQueue:
+    """Audio capture queue for a satellite device."""
+
+    queue: asyncio.Queue[bytes | None]
+    """Queue of audio chunks (None = stop signal)"""
+
+    id: str = field(default_factory=ulid_util.ulid_now)
+    """Unique id to ensure the correct audio queue is cleaned up in websocket API."""
+
+    overflow: bool = False
+    """Flag to be set if audio samples were dropped because the queue was full."""
+
+
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
-    pipeline_store: PipelineStorageCollection
-    pipeline_devices: set[str] = field(default_factory=set, init=False)
+    def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
+        """Initialize."""
+        self.pipeline_store = pipeline_store
+        self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
+        self.pipeline_devices: set[str] = set()
+        self.pipeline_runs = PipelineRuns(pipeline_store)
+        self.device_audio_queues: dict[str, DeviceAudioQueue] = {}
 
 
 @dataclass
@@ -1612,4 +1732,4 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
         PIPELINE_FIELDS,
         PIPELINE_FIELDS,
     ).async_setup(hass)
-    return PipelineData({}, pipeline_store)
+    return PipelineData(pipeline_store)
