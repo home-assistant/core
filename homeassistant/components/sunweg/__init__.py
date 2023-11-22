@@ -29,15 +29,18 @@ async def async_setup_entry(
     if not await hass.async_add_executor_job(api.authenticate):
         _LOGGER.error("Username or Password may be incorrect!")
         return False
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = SunWEGData(api, entry.data[CONF_PLANT_ID])
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SunWEGData(
+        api, entry.data[CONF_PLANT_ID]
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    hass.data[DOMAIN].pop(entry.entry_id)
+    if len(hass.data[DOMAIN]) == 0:
+        hass.data.pop(DOMAIN)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
