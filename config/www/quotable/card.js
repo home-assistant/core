@@ -6,6 +6,7 @@ class QuotableCard extends HTMLElement {
       "https://cdn.pixabay.com/photo/2016/11/29/05/45/astronomy-1867616_1280.jpg",
     ];
     this.updateInProgress = false;
+    this.renderCalled = false;
     this.DEFAULT_AUTHOR = "Quotable";
     this.DEFAULT_QUOTE =
       "Today is a gift, that's why they call it the present. Make the most of it!";
@@ -72,7 +73,6 @@ class QuotableCard extends HTMLElement {
         "fetch_a_quote",
         serviceData
       );
-
       // Render the response directly
       this.render(response.content, response.author);
     } catch (error) {
@@ -81,6 +81,11 @@ class QuotableCard extends HTMLElement {
   }
   //Uodate card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
+    if (this.renderCalled) {
+      this.updateOverlay(quote, author);
+
+      return;
+    }
     this.innerHTML = `
         <style>
           ha-card {
@@ -142,20 +147,26 @@ class QuotableCard extends HTMLElement {
           </div>
 
           <div class="buttons">
+
             <ha-icon class="button previous" icon="mdi:arrow-left"></ha-icon>
             <ha-icon class="button next" icon="mdi:arrow-right"></ha-icon>
+            <ha-icon class="button refresh" icon="mdi:refresh"></ha-icon>
+
          </div>
         </ha-card>
       `;
-    this.updateOverlay(quote, author);
 
     this.content = this.querySelector(".background-image");
 
     this.prevButton = this.querySelector(".previous");
     this.nextButton = this.querySelector(".next");
+    this.refreshButton = this.querySelector(".refresh");
 
     this.prevButton.addEventListener("click", () => this.showPreviousQuote());
     this.nextButton.addEventListener("click", () => this.showNextQuote());
+    this.refreshButton.addEventListener("click", () => this.refreshQuote());
+
+    this.renderCalled = true;
   }
 
   getCardSize() {
@@ -187,6 +198,10 @@ class QuotableCard extends HTMLElement {
 
     //Update quote on card
     this.updateOverlay(quote, author);
+  }
+
+  refreshQuote() {
+    this.fetchNewQuote();
   }
 
   updateOverlay(quote, author) {
