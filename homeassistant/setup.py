@@ -248,9 +248,18 @@ async def _async_setup_component(
         log_error(f"Unable to import component: {err}", err)
         return False
 
-    processed_config = await conf_util.async_process_component_and_handle_errors(
+    integration_config_info = await conf_util.async_process_component_config(
         hass, config, integration
     )
+    processed_config = conf_util.async_handle_component_errors(
+        hass, integration_config_info, integration
+    )
+    for platform_exception in integration_config_info.exception_info_list:
+        if not platform_exception.notify:
+            continue
+        async_notify_setup_error(
+            hass, platform_exception.platform_name, platform_exception.integration_link
+        )
     if processed_config is None:
         log_error("Invalid config.")
         return False
