@@ -719,17 +719,19 @@ async def test_setup_hass_invalid_core_config(
     event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
-    hass = await bootstrap.async_setup_hass(
-        runner.RuntimeConfig(
-            config_dir=get_test_config_dir(),
-            verbose=False,
-            log_rotate_days=10,
-            log_file="",
-            log_no_color=False,
-            skip_pip=True,
-            recovery_mode=False,
-        ),
-    )
+    with patch("homeassistant.config.async_notify_setup_error") as mock_notify:
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=False,
+            ),
+        )
+        assert len(mock_notify.mock_calls) == 1
 
     assert "recovery_mode" in hass.config.components
 

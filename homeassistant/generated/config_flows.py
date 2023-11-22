@@ -262,6 +262,7 @@ FLOWS = {
         "lidarr",
         "life360",
         "lifx",
+        "linear_garage_door",
         "litejet",
         "litterrobot",
         "livisi",
