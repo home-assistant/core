@@ -1767,6 +1767,7 @@ async def test_component_config_exceptions(
                     "component_import_err",
                     "test_domain",
                     {"test_domain": []},
+                    "https://example.com",
                 )
             ],
             "bla",
@@ -1781,6 +1782,7 @@ async def test_component_config_exceptions(
                     "config_validation_err",
                     "test_domain",
                     {"test_domain": []},
+                    "https://example.com",
                 )
             ],
             "bla",
@@ -1799,6 +1801,7 @@ async def test_component_config_exceptions(
                     "config_validation_err",
                     "test_domain",
                     {"test_domain": []},
+                    "https://example.com",
                 )
             ],
             "bla @ data['path']",
@@ -1817,7 +1820,7 @@ async def test_component_config_exceptions(
                     "platform_config_validation_err",
                     "test_domain",
                     {"test_domain": []},
-                    integration_link="https://alt.example.com",
+                    "https://alt.example.com",
                 )
             ],
             "bla @ data['path']",
@@ -1836,6 +1839,7 @@ async def test_component_config_exceptions(
                     "platform_component_load_err",
                     "test_domain",
                     {"test_domain": []},
+                    "https://example.com",
                 )
             ],
             "bla",

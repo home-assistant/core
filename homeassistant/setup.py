@@ -57,6 +57,11 @@ DATA_DEPS_REQS = "deps_reqs_processed"
 
 DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
 
+NOTIFY_FOR_TRANSLATION_KEYS = [
+    "config_validation_err",
+    "platform_config_validation_err",
+]
+
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 300
 
@@ -255,7 +260,7 @@ async def _async_setup_component(
         hass, integration_config_info, integration
     )
     for platform_exception in integration_config_info.exception_info_list:
-        if not platform_exception.notify:
+        if platform_exception.translation_key not in NOTIFY_FOR_TRANSLATION_KEYS:
             continue
         async_notify_setup_error(
             hass, platform_exception.platform_name, platform_exception.integration_link

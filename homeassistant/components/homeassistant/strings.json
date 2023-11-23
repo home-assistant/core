@@ -154,7 +154,7 @@
       "message": "Unknown error calling {domain} CONFIG_SCHEMA. Check the logs for more information."
     },
     "integration_config_error": {
-      "message": "Failed to process component config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
+      "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}. Check the logs for more information."
