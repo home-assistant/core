@@ -26,7 +26,7 @@ class CanvasCalendarEntity(CalendarEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "calendar_canvas_assignments")},
             entry_type=DeviceEntryType.SERVICE,
-            name="Calendar Canvas Assignments",
+            name="Assignment Calendar",
             manufacturer="Canvas",
         )
 
