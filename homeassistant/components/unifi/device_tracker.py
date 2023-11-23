@@ -222,7 +222,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> No
         if entity_id := ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, unique_id):
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    for obj_id in controller.api.clients_all:
+    for obj_id in list(controller.api.clients) + list(controller.api.clients_all):
         update_unique_id(obj_id)
 
 
