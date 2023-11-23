@@ -135,7 +135,7 @@ def async_create_issue_webhook_registration_error(hass: HomeAssistant):
         ISSUE_ID_WEBHOOK_REGISTRATION_ERROR,
         is_fixable=False,
         learn_more_url=WEBHOOK_HELP_LINK,
-        severity=IssueSeverity.WARNING,
+        severity=IssueSeverity.ERROR,
         translation_key=ISSUE_ID_WEBHOOK_REGISTRATION_ERROR,
     )
 
