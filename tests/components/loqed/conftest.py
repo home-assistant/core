@@ -75,6 +75,10 @@ def lock_fixture() -> loqed.Lock:
     mock_lock.getWebhooks = AsyncMock(return_value=webhooks_fixture)
     mock_lock.bolt_state = "locked"
     mock_lock.battery_percentage = 90
+    mock_lock.battery_voltage = 3.1415
+    mock_lock.battery_type = "UNKNOWN"
+    mock_lock.wifi_strength = 12
+    mock_lock.ble_strength = 34
     return mock_lock
 
 

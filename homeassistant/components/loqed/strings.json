@@ -22,6 +22,21 @@
     "sensor": {
       "ble_strength": {
         "name": "Bluetooth signal"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi signal"
+      },
+      "battery_type": {
+        "name": "Battery type",
+        "state": {
+          "alkaline": "Alkaline",
+          "nickel_metal_hydride": "Ni-MH",
+          "lithium": "Lithium",
+          "unknown": "Unknown"
+        }
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
       }
     }
   }
