@@ -61,6 +61,14 @@ CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UN
 
 
 @callback
+def async_block_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if client is allowed."""
+    if obj_id in controller.option_supported_clients:
+        return True
+    return obj_id in controller.option_block_clients
+
+
+@callback
 def async_dpi_group_is_on_fn(
     controller: UniFiController, dpi_group: DPIRestrictionGroup
 ) -> bool:
@@ -191,6 +199,12 @@ class UnifiSwitchEntityDescription(
     only_event_for_state_change: bool = False
 
 
+def _make_unique_id(obj_id: str, type_name: str) -> str:
+    """Split an object id by the first underscore and interpose the given type."""
+    prefix, _, suffix = obj_id.partition("_")
+    return f"{prefix}-{type_name}-{suffix}"
+
+
 ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     UnifiSwitchEntityDescription[Clients, Client](
         key="Block client",
@@ -198,7 +212,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         icon="mdi:ethernet",
-        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
+        allowed_fn=async_block_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_block_client_control_fn,
@@ -248,7 +262,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=False,
         supported_fn=async_outlet_supports_switching_fn,
-        unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
+        unique_id_fn=lambda controller, obj_id: _make_unique_id(obj_id, "outlet"),
     ),
     UnifiSwitchEntityDescription[PortForwarding, PortForward](
         key="Port forward control",
@@ -289,7 +303,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.ports[obj_id],
         should_poll=False,
         supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
-        unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
+        unique_id_fn=lambda controller, obj_id: _make_unique_id(obj_id, "poe"),
     ),
     UnifiSwitchEntityDescription[Wlans, Wlan](
         key="WLAN control",

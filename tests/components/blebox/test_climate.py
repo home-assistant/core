@@ -76,7 +76,9 @@ def thermobox_fixture():
     return (feature, "climate.thermobox_thermostat")
 
 
-async def test_init(saunabox, hass: HomeAssistant) -> None:
+async def test_init(
+    saunabox, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test default state."""
 
     _, entity_id = saunabox
@@ -102,7 +104,6 @@ async def test_init(saunabox, hass: HomeAssistant) -> None:
 
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My sauna"

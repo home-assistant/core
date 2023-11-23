@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from aiovodafone import VodafoneStationApi, VodafoneStationDevice, exceptions
+from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
 from homeassistant.core import HomeAssistant
@@ -48,7 +48,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Initialize the scanner."""
 
         self._host = host
-        self.api = VodafoneStationApi(host, username, password)
+        self.api = VodafoneStationSercommApi(host, username, password)
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry_unique_id
@@ -95,15 +95,19 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
         try:
-            logged = await self.api.login()
-        except exceptions.CannotConnect as err:
-            _LOGGER.warning("Connection error for %s", self._host)
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
-        except exceptions.CannotAuthenticate as err:
-            raise ConfigEntryAuthFailed from err
-
-        if not logged:
-            raise ConfigEntryAuthFailed
+            try:
+                await self.api.login()
+            except exceptions.CannotAuthenticate as err:
+                raise ConfigEntryAuthFailed from err
+            except (
+                exceptions.CannotConnect,
+                exceptions.AlreadyLogged,
+                exceptions.GenericLoginError,
+            ) as err:
+                raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        except (ConfigEntryAuthFailed, UpdateFailed):
+            await self.api.close()
+            raise
 
         utc_point_in_time = dt_util.utcnow()
         data_devices = {

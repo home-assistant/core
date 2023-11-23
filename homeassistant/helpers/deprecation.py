@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import functools
 import inspect
 import logging
 from typing import Any, ParamSpec, TypeVar
 
-from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
+from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
+
+from .frame import MissingIntegrationFrame, get_integration_frame
 
 _ObjectT = TypeVar("_ObjectT", bound=object)
 _R = TypeVar("_R")
@@ -134,16 +139,24 @@ def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> 
     try:
         integration_frame = get_integration_frame()
         if integration_frame.custom_integration:
+            hass: HomeAssistant | None = None
+            with suppress(HomeAssistantError):
+                hass = async_get_hass()
+            report_issue = async_suggest_report_issue(
+                hass,
+                integration_domain=integration_frame.integration,
+                module=integration_frame.module,
+            )
             logger.warning(
                 (
                     "%s was called from %s, this is a deprecated %s. Use %s instead,"
-                    " please report this to the maintainer of %s"
+                    " please %s"
                 ),
                 obj.__name__,
                 integration_frame.integration,
                 description,
                 replacement,
-                integration_frame.integration,
+                report_issue,
             )
         else:
             logger.warning(

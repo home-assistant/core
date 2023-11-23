@@ -961,6 +961,21 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x44\x54\x0C\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x21",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_raw",
+                    "friendly_name": "Test Device 18B2 Raw",
+                    "expected_state": "48656c6c6f20576f726c6421",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x02\xca\x09\x02\xcf\x09",
             ),
             None,

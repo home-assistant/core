@@ -445,11 +445,14 @@ async def test_config_virtual_binary_sensor(hass: HomeAssistant, mock_modbus) ->
     ],
 )
 async def test_virtual_binary_sensor(
-    hass: HomeAssistant, expected, slaves, mock_do_cycle
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    expected,
+    slaves,
+    mock_do_cycle,
 ) -> None:
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
-    entity_registry = er.async_get(hass)
 
     for i, slave in enumerate(slaves):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")

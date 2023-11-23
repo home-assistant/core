@@ -55,6 +55,7 @@ from .const import (
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
     QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY,
+    SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
     STATES_META_SCHEMA_VERSION,
     STATISTICS_ROWS_SCHEMA_VERSION,
@@ -241,6 +242,13 @@ class Recorder(threading.Thread):
         self._nightly_listener: CALLBACK_TYPE | None = None
         self._dialect_name: SupportedDialect | None = None
         self.enabled = True
+
+        # For safety we default to the lowest value for max_bind_vars
+        # of all the DB types (SQLITE_MAX_BIND_VARS).
+        #
+        # We update the value once we connect to the DB
+        # and determine what is actually supported.
+        self.max_bind_vars = SQLITE_MAX_BIND_VARS
 
     @property
     def backlog(self) -> int:
@@ -1351,6 +1359,7 @@ class Recorder(threading.Thread):
             not self._completed_first_database_setup,
         ):
             self.database_engine = database_engine
+            self.max_bind_vars = database_engine.max_bind_vars
         self._completed_first_database_setup = True
 
     def _setup_connection(self) -> None:

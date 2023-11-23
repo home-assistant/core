@@ -6,11 +6,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -18,38 +20,22 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
-@dataclass
-class ReolinkSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink switch entities."""
-
-    value: Callable[[Host, int], bool]
-    method: Callable[[Host, int, bool], Any]
-
-
-@dataclass
-class ReolinkSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkSwitchEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes switch entities."""
 
+    method: Callable[[Host, int, bool], Any]
     supported: Callable[[Host, int], bool] = lambda api, ch: True
+    value: Callable[[Host, int], bool]
 
 
-@dataclass
-class ReolinkNVRSwitchEntityDescriptionMixin:
-    """Mixin values for Reolink NVR switch entities."""
-
-    value: Callable[[Host], bool]
-    method: Callable[[Host, bool], Any]
-
-
-@dataclass
-class ReolinkNVRSwitchEntityDescription(
-    SwitchEntityDescription, ReolinkNVRSwitchEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkNVRSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes NVR switch entities."""
 
+    method: Callable[[Host, bool], Any]
     supported: Callable[[Host], bool] = lambda api: True
+    value: Callable[[Host], bool]
 
 
 SWITCH_ENTITIES = (
@@ -129,6 +115,7 @@ SWITCH_ENTITIES = (
         key="record",
         translation_key="record",
         icon="mdi:record-rec",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "recording") and api.is_nvr,
         value=lambda api, ch: api.recording_enabled(ch),
         method=lambda api, ch, value: api.set_recording(ch, value),
@@ -150,6 +137,16 @@ SWITCH_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
         value=lambda api, ch: api.doorbell_button_sound(ch),
         method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="hdr",
+        translation_key="hdr",
+        icon="mdi:hdr",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "HDR"),
+        value=lambda api, ch: api.HDR_on(ch) is True,
+        method=lambda api, ch, value: api.set_HDR(ch, value),
     ),
 )
 
@@ -185,6 +182,7 @@ NVR_SWITCH_ENTITIES = (
         key="record",
         translation_key="record",
         icon="mdi:record-rec",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "recording"),
         value=lambda api: api.recording_enabled(),
         method=lambda api, value: api.set_recording(None, value),
@@ -251,12 +249,18 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.method(self._host.api, self._channel, True)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, True)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_description.method(self._host.api, self._channel, False)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, False)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
 
 
@@ -283,10 +287,16 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.method(self._host.api, True)
+        try:
+            await self.entity_description.method(self._host.api, True)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_description.method(self._host.api, False)
+        try:
+            await self.entity_description.method(self._host.api, False)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()

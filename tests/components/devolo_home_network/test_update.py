@@ -3,22 +3,18 @@ from devolo_plc_api.device_api import UPDATE_NOT_AVAILABLE, UpdateFirmwareCheck
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     FIRMWARE_UPDATE_INTERVAL,
 )
-from homeassistant.components.update import (
-    DOMAIN as PLATFORM,
-    SERVICE_INSTALL,
-    UpdateDeviceClass,
-)
+from homeassistant.components.update import DOMAIN as PLATFORM, SERVICE_INSTALL
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import configure_integration
 from .const import FIRMWARE_UPDATE_AVAILABLE
@@ -43,8 +39,10 @@ async def test_update_setup(hass: HomeAssistant) -> None:
 async def test_update_firmware(
     hass: HomeAssistant,
     mock_device: MockDevice,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test updating a device."""
     entry = configure_integration(hass)
@@ -54,17 +52,8 @@ async def test_update_firmware(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes["device_class"] == UpdateDeviceClass.FIRMWARE
-    assert state.attributes["installed_version"] == mock_device.firmware_version
-    assert (
-        state.attributes["latest_version"]
-        == FIRMWARE_UPDATE_AVAILABLE.new_firmware_version.split("_")[0]
-    )
-
-    assert entity_registry.async_get(state_key).entity_category == EntityCategory.CONFIG
+    assert hass.states.get(state_key) == snapshot
+    assert entity_registry.async_get(state_key) == snapshot
 
     await hass.services.async_call(
         PLATFORM,
@@ -75,6 +64,9 @@ async def test_update_firmware(
     assert mock_device.device.async_start_firmware_update.call_count == 1
 
     # Emulate state change
+    mock_device.firmware_version = FIRMWARE_UPDATE_AVAILABLE.new_firmware_version.split(
+        "_"
+    )[0]
     mock_device.device.async_check_firmware_available.return_value = (
         UpdateFirmwareCheck(result=UPDATE_NOT_AVAILABLE)
     )
@@ -85,6 +77,12 @@ async def test_update_firmware(
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_OFF
+
+    device_info = device_registry.async_get_device(
+        {(DOMAIN, mock_device.serial_number)}
+    )
+    assert device_info is not None
+    assert device_info.sw_version == mock_device.firmware_version
 
     await hass.config_entries.async_unload(entry.entry_id)
 

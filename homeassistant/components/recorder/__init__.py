@@ -6,7 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_STATE_CHANGED,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -25,8 +30,6 @@ from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
     DOMAIN,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
     SQLITE_URL_PREFIX,

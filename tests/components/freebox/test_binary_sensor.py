@@ -1,4 +1,4 @@
-"""Tests for the Freebox sensors."""
+"""Tests for the Freebox binary sensors."""
 from copy import deepcopy
 from unittest.mock import Mock
 
@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
-from .const import DATA_HOME_GET_VALUES, DATA_STORAGE_GET_RAIDS
+from .const import DATA_HOME_PIR_GET_VALUE, DATA_STORAGE_GET_RAIDS
 
 from tests.common import async_fire_time_changed
 
@@ -73,7 +73,7 @@ async def test_home(
     assert hass.states.get("binary_sensor.ouverture_porte_couvercle").state == "off"
 
     # Now simulate a changed status
-    data_home_get_values_changed = deepcopy(DATA_HOME_GET_VALUES)
+    data_home_get_values_changed = deepcopy(DATA_HOME_PIR_GET_VALUE)
     data_home_get_values_changed["value"] = True
     router().home.get_home_endpoint_value.return_value = data_home_get_values_changed
 

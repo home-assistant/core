@@ -3,12 +3,15 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
     deprecated_class,
     deprecated_function,
     deprecated_substitute,
     get_deprecated,
 )
+
+from tests.common import MockModule, mock_integration
 
 
 class MockBaseClassDeprecatedProperty:
@@ -173,12 +176,15 @@ def test_deprecated_function_called_from_built_in_integration(
 
 
 def test_deprecated_function_called_from_custom_integration(
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deprecated_function decorator.
 
     This tests the behavior when the calling integration is custom.
     """
+
+    mock_integration(hass, MockModule("hue"), built_in=False)
 
     @deprecated_function("new_function")
     def mock_deprecated_function():
@@ -207,6 +213,6 @@ def test_deprecated_function_called_from_custom_integration(
         mock_deprecated_function()
     assert (
         "mock_deprecated_function was called from hue, this is a deprecated function. "
-        "Use new_function instead, please report this to the maintainer of hue"
-        in caplog.text
+        "Use new_function instead, please report it to the author of the 'hue' custom "
+        "integration" in caplog.text
     )

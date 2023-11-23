@@ -240,7 +240,7 @@ class AbstractConfig(ABC):
     async def async_sync_notification(
         self, agent_user_id: str, event_id: str, payload: dict[str, Any]
     ) -> HTTPStatus:
-        """Sync notification to Google."""
+        """Sync notifications to Google."""
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self.async_report_state(payload, agent_user_id, event_id)

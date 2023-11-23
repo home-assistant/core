@@ -396,6 +396,24 @@ def hubs_music_library_fixture():
     return load_fixture("plex/hubs_library_section.xml")
 
 
+@pytest.fixture(name="update_check_nochange", scope="session")
+def update_check_fixture_nochange() -> str:
+    """Load a no-change update resource payload and return it."""
+    return load_fixture("plex/release_nochange.xml")
+
+
+@pytest.fixture(name="update_check_new", scope="session")
+def update_check_fixture_new() -> str:
+    """Load a changed update resource payload and return it."""
+    return load_fixture("plex/release_new.xml")
+
+
+@pytest.fixture(name="update_check_new_not_updatable", scope="session")
+def update_check_fixture_new_not_updatable() -> str:
+    """Load a changed update resource payload (not updatable) and return it."""
+    return load_fixture("plex/release_new_not_updatable.xml")
+
+
 @pytest.fixture(name="entry")
 async def mock_config_entry():
     """Return the default mocked config entry."""
@@ -452,6 +470,7 @@ def mock_plex_calls(
     plex_server_clients,
     plex_server_default,
     security_token,
+    update_check_nochange,
 ):
     """Mock Plex API calls."""
     requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
@@ -519,6 +538,8 @@ def mock_plex_calls(
     requests_mock.get(f"{url}/playlists", text=playlists)
     requests_mock.get(f"{url}/playlists/500/items", text=playlist_500)
     requests_mock.get(f"{url}/security/token", text=security_token)
+    requests_mock.put(f"{url}/updater/check")
+    requests_mock.get(f"{url}/updater/status", text=update_check_nochange)
 
 
 @pytest.fixture

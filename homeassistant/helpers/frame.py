@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import functools
 import logging
@@ -10,7 +11,9 @@ import sys
 from traceback import FrameSummary, extract_stack
 from typing import Any, TypeVar, cast
 
+from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,23 +121,25 @@ def _report_integration(
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    if integration_frame.custom_integration:
-        extra = " to the custom integration author"
-    else:
-        extra = ""
+    hass: HomeAssistant | None = None
+    with suppress(HomeAssistantError):
+        hass = async_get_hass()
+    report_issue = async_suggest_report_issue(
+        hass,
+        integration_domain=integration_frame.integration,
+        module=integration_frame.module,
+    )
 
     _LOGGER.log(
         level,
-        (
-            "Detected integration that %s. "
-            "Please report issue%s for %s using this method at %s, line %s: %s"
-        ),
-        what,
-        extra,
+        "Detected that %sintegration '%s' %s at %s, line %s: %s, please %s",
+        "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
+        what,
         integration_frame.relative_filename,
         found_frame.lineno,
         (found_frame.line or "?").strip(),
+        report_issue,
     )
 
 

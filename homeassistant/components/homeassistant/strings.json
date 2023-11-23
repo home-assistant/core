@@ -68,7 +68,13 @@
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
-      "description": "Restarts Home Assistant."
+      "description": "Restarts Home Assistant.",
+      "fields": {
+        "safe_mode": {
+          "name": "Safe mode",
+          "description": "Disable custom integrations and custom cards."
+        }
+      }
     },
     "set_location": {
       "name": "Set location",
@@ -129,6 +135,11 @@
     "reload_all": {
       "name": "Reload all",
       "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+    }
+  },
+  "exceptions": {
+    "service_not_found": {
+      "message": "Service {domain}.{service} not found."
     }
   }
 }
