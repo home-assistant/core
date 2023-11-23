@@ -1,5 +1,6 @@
 """Crisis Alerter from Krisinformation."""
 import json
+from typing import Any
 
 import requests
 
@@ -26,7 +27,7 @@ class CrisisAlerter:
         number_of_news_articles: int | None = None,
         use_centralized_no_of_articles: bool = False,
         include_test: bool = False,
-    ):
+    ) -> list:
         """Fetch news from Krisinformation."""
         return self.request_builder(
             "news",
@@ -44,7 +45,7 @@ class CrisisAlerter:
         counties: str | None = None,
         all_counties: bool = False,
         is_test: bool = False,
-    ):
+    ) -> list:
         """Fetch VMA from Krisinformation."""
         if is_test:
             # Return a test example of a VMA
@@ -60,7 +61,7 @@ class CrisisAlerter:
         self,
         include_draft_notifications: bool = False,
         include_test_notifications: bool = False,
-    ):
+    ) -> list:
         """Retrieve editorial notifications (push notifications in the app) from Krisinformation."""
         return self.request_builder(
             "notifications",
@@ -68,7 +69,7 @@ class CrisisAlerter:
             includeTestNotifications=include_test_notifications,
         )
 
-    def right_nows(self, counties: str | None = None):
+    def right_nows(self, counties: str | None = None) -> list:
         """Retrieve 'Current News' blocks from crisis information."""
         return self.request_builder(
             "rightnows",
@@ -76,7 +77,7 @@ class CrisisAlerter:
             counties=counties,
         )
 
-    def custom_feeds(self, feeds: str | None = None, days: int = 7):
+    def custom_feeds(self, feeds: str | None = None, days: int = 7) -> list:
         """Retrieve custom feeds from Krisinformation, SMHI (1) and Travikverket (2)."""
         return self.request_builder(
             "customfeeds",
@@ -84,7 +85,7 @@ class CrisisAlerter:
             days=days,
         )
 
-    def features(self, counties: str | None = None):
+    def features(self, counties: str | None = None) -> list:
         """Retrieve 'Prepare yourself'-pages from Krisinformation."""
         return self.request_builder(
             "features",
@@ -94,7 +95,7 @@ class CrisisAlerter:
 
     def top_stories(
         self, counties: str | None = None, all_counties: bool | None = None
-    ):
+    ) -> list:
         """Retrieve 'Top Stories' from Krisinformation."""
         return self.request_builder(
             "topstories",
@@ -103,7 +104,7 @@ class CrisisAlerter:
             allCounties=all_counties,
         )
 
-    def request_builder(self, service, **parameters):
+    def request_builder(self, service, **parameters) -> Any:
         """Request builder."""
         urlformat = "{baseurl}/{service}?{parameters}&format=json"
         url = urlformat.format(
@@ -117,3 +118,7 @@ class CrisisAlerter:
         if res.status_code == 200:
             return json.loads(res.content.decode("UTF-8"))
         raise Error("Error: " + str(res.status_code) + str(res.content))
+
+    def get_location_user(self):
+        """Return county selected by user."""
+        return self.county
