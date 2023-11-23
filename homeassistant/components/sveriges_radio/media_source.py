@@ -12,7 +12,7 @@ from homeassistant.components.media_source.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, FOLDERNAME
+from .const import DOMAIN, ERROR_MESSAGE_NOT_INITIALIZED, FOLDERNAME
 from .sveriges_radio import Channel, SverigesRadio
 
 
@@ -45,7 +45,7 @@ class RadioMediaSource(MediaSource):
         radio = self.radio
 
         if radio is None:
-            raise Unresolvable("Sveriges Radio not initialized")
+            raise Unresolvable(ERROR_MESSAGE_NOT_INITIALIZED)
 
         station = await radio.resolve_station(station_id=item.identifier)
 
@@ -65,7 +65,7 @@ class RadioMediaSource(MediaSource):
         radio = self.radio
 
         if radio is None:
-            raise BrowseError("Sveriges Radio not initialized")
+            raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
         # Check if the item is the root of the media source
         # if item.identifier is None:
@@ -140,7 +140,7 @@ class RadioMediaSource(MediaSource):
         radio = self.radio
 
         if radio is None:
-            raise BrowseError("Sveriges Radio not initialized")
+            raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
         category, _, program_code = (item.identifier or "").partition("/")
         media_sources = []
@@ -187,7 +187,7 @@ class RadioMediaSource(MediaSource):
         radio = self.radio
 
         if radio is None:
-            raise BrowseError("Sveriges Radio not initialized")
+            raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
         podcasts = await radio.podcasts(program.station_id)
 
