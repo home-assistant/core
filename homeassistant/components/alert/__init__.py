@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import voluptuous as vol
@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -25,7 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.core import Event, HassJob, HomeAssistant
 from homeassistant.exceptions import ServiceNotFound
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -184,10 +185,13 @@ class Alert(Entity):
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
         self.entity_id = f"{DOMAIN}.{entity_id}"
+        self.watched_entity_id = watched_entity_id
 
         async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change
         )
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, self.alert_on_start)
 
     @property
     def state(self) -> str:
@@ -197,6 +201,15 @@ class Alert(Entity):
                 return STATE_OFF
             return STATE_ON
         return STATE_IDLE
+
+    async def alert_on_start(self, _: datetime | Event) -> None:
+        """Determine if the alert should start or stop."""
+        if (to_state := self.hass.states.get(self.watched_entity_id)) is None:
+            return
+        if to_state.state == self._alert_state and not self._firing:
+            await self.begin_alerting()
+        if to_state.state != self._alert_state and self._firing:
+            await self.end_alerting()
 
     async def watched_entity_change(
         self, event: EventType[EventStateChangedData]
