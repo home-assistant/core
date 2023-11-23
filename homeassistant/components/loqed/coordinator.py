@@ -49,7 +49,7 @@ class TransitionMessage(TypedDict):
 
 
 class StatusMessage(TypedDict):
-    """Properties returned by the status endpoint of the bridhge."""
+    """Properties returned by the status endpoint of the bridge."""
 
     battery_percentage: int
     battery_type: str
