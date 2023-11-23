@@ -163,10 +163,10 @@
       "message": "Platform error: {domain} - {error}. Check the logs for more information."
     },
     "platform_config_validation_err": {
-      "message": "Invalid config for integration platform {domain}.{p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
+      "message": "Invalid config for {domain} from integration {p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
     },
     "platform_schema_validator_err": {
-      "message": "Unknown error validating config for {p_name} platform for {domain} component with PLATFORM_SCHEMA"
+      "message": "Unknown error when validating config for {domain} from integration {p_name}"
     },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."

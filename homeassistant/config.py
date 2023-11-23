@@ -126,7 +126,7 @@ class ConfigExceptionInfo:
     translation_key: str
     platform_name: str
     config: ConfigType
-    integration_link: str | None = None
+    integration_link: str | None
     notify: bool = False
 
 
