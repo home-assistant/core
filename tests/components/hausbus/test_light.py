@@ -293,7 +293,7 @@ async def test_rgbdimmer_turned_on(hass: HomeAssistant) -> None:
 
     # Add the dimmer channel to the gateways channel list
     with patch(
-        "homeassistant.components.hausbus.light.Dimmer.getStatus", return_value=True
+        "homeassistant.components.hausbus.light.RGBDimmer.getStatus", return_value=True
     ):
         gateway, channel = await create_light_channel(hass, rgbdimmer)
 
@@ -343,7 +343,7 @@ async def test_rgbdimmer_status_received(inputs, expected, hass: HomeAssistant) 
 
     # Add the dimmer channel to the gateways channel list
     with patch(
-        "homeassistant.components.hausbus.light.Dimmer.getStatus", return_value=True
+        "homeassistant.components.hausbus.light.RGBDimmer.getStatus", return_value=True
     ):
         gateway, channel = await create_light_channel(hass, rgbdimmer)
 
@@ -375,7 +375,7 @@ async def test_led_turned_on(hass: HomeAssistant) -> None:
 
     # Add the dimmer channel to the gateways channel list
     with patch(
-        "homeassistant.components.hausbus.light.Dimmer.getStatus", return_value=True
+        "homeassistant.components.hausbus.light.Led.getStatus", return_value=True
     ):
         gateway, channel = await create_light_channel(hass, led)
 
@@ -410,7 +410,7 @@ async def test_led_status_received(inputs, expected, hass: HomeAssistant) -> Non
 
     # Add the dimmer channel to the gateways channel list
     with patch(
-        "homeassistant.components.hausbus.light.Dimmer.getStatus", return_value=True
+        "homeassistant.components.hausbus.light.Led.getStatus", return_value=True
     ):
         gateway, channel = await create_light_channel(hass, led)
 
@@ -463,6 +463,82 @@ async def test_turn_on_led(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hausbus.light.Led.on", return_value=True
-    ) as mock_set_brightness:
+    ) as mock_turn_on:
         await channel.async_turn_on(**kwargs)
-        mock_set_brightness.assert_called_with(50, 0, 0)
+        mock_turn_on.assert_called_with(50, 0, 0)
+
+
+async def test_turn_on_rgbdimmer(hass: HomeAssistant) -> None:
+    """Test turning a rgb dimmer on and set color."""
+    rgbdimmer = RGBDimmer.create(1, 1)
+
+    # Add the dimmer channel to the gateways channel list
+    with patch(
+        "homeassistant.components.hausbus.light.RGBDimmer.getStatus", return_value=True
+    ):
+        gateway, channel = await create_light_channel(hass, rgbdimmer)
+
+    kwargs = {ATTR_BRIGHTNESS: 76, ATTR_HS_COLOR: (210, 67)}
+
+    with patch(
+        "homeassistant.components.hausbus.light.RGBDimmer.setColor", return_value=True
+    ) as mock_set_color:
+        await channel.async_turn_on(**kwargs)
+        mock_set_color.assert_called_with(10, 20, 30, 0)
+
+
+async def test_turn_off_dimmer(hass: HomeAssistant) -> None:
+    """Test turning a dimmer off."""
+    dimmer = Dimmer.create(1, 1)
+
+    # Add the dimmer channel to the gateways channel list
+    with patch(
+        "homeassistant.components.hausbus.light.Dimmer.getStatus", return_value=True
+    ):
+        gateway, channel = await create_light_channel(hass, dimmer)
+
+    kwargs = {}
+
+    with patch(
+        "homeassistant.components.hausbus.light.Dimmer.setBrightness", return_value=True
+    ) as mock_set_brightness:
+        await channel.async_turn_off(**kwargs)
+        mock_set_brightness.assert_called_with(0, 0)
+
+
+async def test_turn_off_led(hass: HomeAssistant) -> None:
+    """Test turning a led off."""
+    led = Led.create(1, 1)
+
+    # Add the led channel to the gateways channel list
+    with patch(
+        "homeassistant.components.hausbus.light.Led.getStatus", return_value=True
+    ):
+        gateway, channel = await create_light_channel(hass, led)
+
+    kwargs = {}
+
+    with patch(
+        "homeassistant.components.hausbus.light.Led.off", return_value=True
+    ) as mock_turn_off:
+        await channel.async_turn_off(**kwargs)
+        mock_turn_off.assert_called_with(0)
+
+
+async def test_turn_off_rgbdimmer(hass: HomeAssistant) -> None:
+    """Test turning a rgb dimmer off."""
+    rgbdimmer = RGBDimmer.create(1, 1)
+
+    # Add the dimmer channel to the gateways channel list
+    with patch(
+        "homeassistant.components.hausbus.light.RGBDimmer.getStatus", return_value=True
+    ):
+        gateway, channel = await create_light_channel(hass, rgbdimmer)
+
+    kwargs = {}
+
+    with patch(
+        "homeassistant.components.hausbus.light.RGBDimmer.setColor", return_value=True
+    ) as mock_set_color:
+        await channel.async_turn_off(**kwargs)
+        mock_set_color.assert_called_with(0, 0, 0, 0)
