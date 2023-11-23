@@ -67,6 +67,7 @@ from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     CONF_BRIGHTNESS_SCALE,
+    CONF_BRIGHTNESS_SCALE_MIN,
     CONF_WHITE_SCALE,
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
@@ -86,6 +87,7 @@ DEFAULT_RGB = False
 DEFAULT_XY = False
 DEFAULT_HS = False
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_BRIGHTNESS_SCALE_MIN = 1
 DEFAULT_WHITE_SCALE = 255
 
 CONF_COLOR_MODE = "color_mode"
@@ -108,12 +110,32 @@ def valid_color_configuration(config: ConfigType) -> ConfigType:
     return config
 
 
+def generate_brightness_scale_map(
+    min_default: int, max_default: int, min_device: int, max_device: int
+) -> dict[int, int]:
+    """Generate a mapping from the default brightness scale to the device brightness scale."""
+    mapping = {}
+    for value in range(min_default, max_default + 1):
+        scaled_value = round(
+            (value - min_default)
+            / (max_default - min_default)
+            * (max_device - min_device)
+            + min_device
+        )
+        mapping[scaled_value] = value
+
+    return mapping
+
+
 _PLATFORM_SCHEMA_BASE = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
             vol.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
+            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Optional(
+                CONF_BRIGHTNESS_SCALE_MIN, default=DEFAULT_BRIGHTNESS_SCALE_MIN
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Inclusive(
                 CONF_COLOR_MODE, "color_mode", default=DEFAULT_COLOR_MODE
@@ -175,6 +197,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
+    _brightness_scale_map: dict[int, int] | None = None
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -367,13 +390,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if brightness_supported(self.supported_color_modes):
                 try:
                     if brightness := values["brightness"]:
-                        self._attr_brightness = min(
-                            int(
-                                brightness  # type: ignore[operator]
-                                / float(self._config[CONF_BRIGHTNESS_SCALE])
-                                * 255
-                            ),
-                            255,
+                        self._attr_brightness = self._scale_brightness_to_hass(
+                            int(brightness)  # type: ignore[arg-type]
                         )
                     else:
                         _LOGGER.debug(
@@ -491,6 +509,43 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         return tuple(round(i / 255 * brightness) for i in rgbxx)
 
+    def _scale_brightness_to_device(self, brightness: int) -> int:
+        brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
+        brightness_scale_min = self._config[CONF_BRIGHTNESS_SCALE_MIN]
+        device_brightness: int = round(
+            (brightness - DEFAULT_BRIGHTNESS_SCALE_MIN)
+            / (DEFAULT_BRIGHTNESS_SCALE - DEFAULT_BRIGHTNESS_SCALE_MIN)
+            * (brightness_scale - brightness_scale_min)
+            + brightness_scale_min
+        )
+        # Make sure the brightness is not rounded down to 0
+        device_brightness = max(device_brightness, brightness_scale_min)
+        device_brightness = min(device_brightness, brightness_scale)
+
+        # Let's update mapping to in case multiple brightness values map to the same device value
+        if self._brightness_scale_map is None:
+            self._brightness_scale_map = generate_brightness_scale_map(
+                DEFAULT_BRIGHTNESS_SCALE_MIN,
+                DEFAULT_BRIGHTNESS_SCALE,
+                self._config[CONF_BRIGHTNESS_SCALE_MIN],
+                self._config[CONF_BRIGHTNESS_SCALE],
+            )
+
+            self._brightness_scale_map[device_brightness] = brightness
+
+        return device_brightness
+
+    def _scale_brightness_to_hass(self, device_brightness: int) -> int:
+        if self._brightness_scale_map is None:
+            self._brightness_scale_map = generate_brightness_scale_map(
+                DEFAULT_BRIGHTNESS_SCALE_MIN,
+                DEFAULT_BRIGHTNESS_SCALE,
+                self._config[CONF_BRIGHTNESS_SCALE_MIN],
+                self._config[CONF_BRIGHTNESS_SCALE],
+            )
+
+        return self._brightness_scale_map.get(device_brightness, 255)
+
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
         """Return True if the light natively supports a color mode."""
         return (
@@ -594,14 +649,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._set_flash_and_transition(message, **kwargs)
 
         if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
-            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
-            brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
-            device_brightness = min(
-                round(brightness_normalized * brightness_scale), brightness_scale
+            message["brightness"] = self._scale_brightness_to_device(
+                kwargs[ATTR_BRIGHTNESS]
             )
-            # Make sure the brightness is not rounded down to 0
-            device_brightness = max(device_brightness, 1)
-            message["brightness"] = device_brightness
 
             if self._optimistic:
                 self._attr_brightness = kwargs[ATTR_BRIGHTNESS]

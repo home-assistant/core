@@ -72,6 +72,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_BRIGHTNESS_COMMAND_TEMPLATE = "brightness_command_template"
 CONF_BRIGHTNESS_COMMAND_TOPIC = "brightness_command_topic"
 CONF_BRIGHTNESS_SCALE = "brightness_scale"
+CONF_BRIGHTNESS_SCALE_MIN = "brightness_scale_min"
 CONF_BRIGHTNESS_STATE_TOPIC = "brightness_state_topic"
 CONF_BRIGHTNESS_VALUE_TEMPLATE = "brightness_value_template"
 CONF_COLOR_MODE_STATE_TOPIC = "color_mode_state_topic"

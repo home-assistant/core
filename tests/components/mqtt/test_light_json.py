@@ -88,6 +88,10 @@ from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.light.schema_basic import (
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
+from homeassistant.components.mqtt.light.schema_json import (
+    DEFAULT_BRIGHTNESS_SCALE,
+    DEFAULT_BRIGHTNESS_SCALE_MIN,
+)
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -1752,6 +1756,99 @@ async def test_transition(
                     "state_topic": "test_light_bright_scale",
                     "command_topic": "test_light_bright_scale/set",
                     "brightness": True,
+                    "brightness_scale": 254,
+                }
+            }
+        }
+    ],
+)
+async def test_brightness_scale_254_range(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test for brightness scaling."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("brightness") is None
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Turn on the light
+    async_fire_mqtt_message(hass, "test_light_bright_scale", '{"state":"ON"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") is None
+
+    # Turn on the light with brightness
+    async_fire_mqtt_message(
+        hass, "test_light_bright_scale", '{"state":"ON", "brightness": 254}'
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 255
+
+    # Turn on the light with 204 which by math is 203 brightness
+    async_fire_mqtt_message(
+        hass, "test_light_bright_scale", '{"state":"ON", "brightness": 203}'
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 204
+
+    # Turn on the light with 128 which by math is 129 brightness
+    async_fire_mqtt_message(
+        hass, "test_light_bright_scale", '{"state":"ON", "brightness": 128}'
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 129
+
+    # Test limmiting max brightness
+    async_fire_mqtt_message(
+        hass, "test_light_bright_scale", '{"state":"ON", "brightness": 256}'
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 255
+
+    # Test whole range to make sure that set value is the same as read value
+    for i in [1, 10, 50, 100, 150, 200, 254]:
+        await common.async_turn_on(hass, "light.test", brightness=i)
+
+        z2m_value = round(
+            (i - DEFAULT_BRIGHTNESS_SCALE_MIN)
+            / (DEFAULT_BRIGHTNESS_SCALE - DEFAULT_BRIGHTNESS_SCALE_MIN)
+            * (254 - 1)
+            + 1
+        )
+
+        async_fire_mqtt_message(
+            hass,
+            "test_light_bright_scale",
+            f'{{"state":"ON", "brightness": {z2m_value}}}',
+        )
+
+        state = hass.states.get("light.test")
+        assert state.state == STATE_ON
+        assert state.attributes.get("brightness") == i
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "state_topic": "test_light_bright_scale",
+                    "command_topic": "test_light_bright_scale/set",
+                    "brightness": True,
                     "brightness_scale": 99,
                 }
             }
@@ -1792,7 +1889,7 @@ async def test_brightness_scale(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("brightness") == 129
 
     # Test limmiting max brightness
     async_fire_mqtt_message(
@@ -1862,7 +1959,7 @@ async def test_white_scale(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("brightness") == 129
 
 
 @pytest.mark.parametrize(

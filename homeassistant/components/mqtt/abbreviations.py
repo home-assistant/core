@@ -18,6 +18,7 @@ ABBREVIATIONS = {
     "bri_cmd_tpl": "brightness_command_template",
     "bri_cmd_t": "brightness_command_topic",
     "bri_scl": "brightness_scale",
+    "bri_scl_m": "brightness_scale_min",
     "bri_stat_t": "brightness_state_topic",
     "bri_tpl": "brightness_template",
     "bri_val_tpl": "brightness_value_template",
