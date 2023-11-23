@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -65,6 +66,7 @@ class SuezSensor(SensorEntity):
     _attr_icon = "mdi:water-pump"
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
     _attr_device_class = SensorDeviceClass.WATER
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
 
     def __init__(self, client: SuezClient) -> None:
         """Initialize the data object."""
