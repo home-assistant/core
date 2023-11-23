@@ -80,6 +80,7 @@ def mock_connection(
         f"{url}/api/v3/calendar",
         text=load_fixture("radarr/calendar.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
+        # params={'unmonitored': 'True', 'start': '2023-11-22', 'end': '2023-11-23'},
     )
 
     aioclient_mock.get(
@@ -126,6 +127,7 @@ def mock_connection_invalid_auth(
     aioclient_mock.get(f"{url}/api/v3/queue", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/rootfolder", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/calendar", status=HTTPStatus.UNAUTHORIZED)
 
 
 def mock_connection_server_error(
@@ -141,6 +143,9 @@ def mock_connection_server_error(
     )
     aioclient_mock.get(
         f"{url}/api/v3/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{url}/api/v3/calendar", status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
