@@ -37,13 +37,40 @@ _LOGGER = logging.getLogger(__name__)
 class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare number entity."""
 
-    value_setter: Callable[[PyViCareDevice, float], Any | None] | None = None
+    value_setter: Callable[[PyViCareDevice, float], Any] | None = None
     min_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     max_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
-PROGRAM_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
+CIRCUIT_ENTITIES: tuple[ViCareNumberEntityDescription, ...] = (
+    ViCareNumberEntityDescription(
+        key="heating curve shift",
+        name="Heating curve shift",
+        icon="mdi:plus-minus-variant",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHeatingCurveShift(),
+        value_setter=lambda api, shift: (
+            api.setHeatingCurve(shift, api.getHeatingCurveSlope())
+        ),
+        native_min_value=-13,
+        native_max_value=40,
+        native_step=1,
+    ),
+    ViCareNumberEntityDescription(
+        key="heating curve slope",
+        name="Heating curve slope",
+        icon="mdi:slope-uphill",
+        entity_category=EntityCategory.CONFIG,
+        value_getter=lambda api: api.getHeatingCurveSlope(),
+        value_setter=lambda api, slope: (
+            api.setHeatingCurve(api.getHeatingCurveShift(), slope)
+        ),
+        native_min_value=0.2,
+        native_max_value=3.5,
+        native_step=0.1,
+    ),
     ViCareNumberEntityDescription(
         key="normal_temperature",
         translation_key="normal_temperature",
@@ -113,30 +140,6 @@ def _build_entity(
     return None
 
 
-async def _entities_from_descriptions(
-    hass: HomeAssistant,
-    entities: list[ViCareNumber],
-    iterables: list[PyViCareHeatingDeviceWithComponent],
-    config_entry: ConfigEntry,
-) -> None:
-    """Create entities from descriptions and list of circuits."""
-    for current in iterables:
-        suffix = ""
-        if len(iterables) > 1:
-            suffix = f" {current.id}"
-
-        for description in PROGRAM_ENTITY_DESCRIPTIONS:
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                f"{description.name}{suffix}",
-                current,
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-                description,
-            )
-            if entity is not None:
-                entities.append(entity)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -144,10 +147,24 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare number devices."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
 
     entities: list[ViCareNumber] = []
     try:
-        await _entities_from_descriptions(hass, entities, api.circuits, config_entry)
+        for circuit in api.circuits:
+            suffix = ""
+            if len(api.circuits) > 1:
+                suffix = f" {circuit.id}"
+            for description in CIRCUIT_ENTITIES:
+                entity = await hass.async_add_executor_job(
+                    _build_entity,
+                    f"{description.name}{suffix}",
+                    circuit,
+                    device_config,
+                    description,
+                )
+                if entity is not None:
+                    entities.append(entity)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No circuits found")
 
@@ -176,21 +193,19 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         """Return True if entity is available."""
         return self._attr_native_value is not None
 
-    async def async_set_native_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.value_setter:
-            await self.hass.async_add_executor_job(
-                self.entity_description.value_setter, self._api, value
-            )
+            self.entity_description.value_setter(self._api, value)
         self.async_write_ha_state()
 
     def update(self) -> None:
         """Update state of number."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                value = self.entity_description.value_getter(self._api)
-                if value is not None:
-                    self._attr_native_value = float(value)
+                self._attr_native_value = float(
+                    self.entity_description.value_getter(self._api)
+                )
 
                 if self.entity_description.min_value_getter:
                     min_value = self.entity_description.min_value_getter(self._api)
