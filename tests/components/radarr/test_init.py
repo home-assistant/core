@@ -6,12 +6,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import (
-    create_entry,
-    mock_connection,
-    mock_connection_invalid_auth,
-    setup_integration,
-)
+from . import create_entry, mock_connection_invalid_auth, setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -43,7 +38,6 @@ async def test_async_setup_entry_auth_failed(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
-    mock_connection(aioclient_mock)
     entry = create_entry(hass)
     mock_connection_invalid_auth(aioclient_mock)
     await hass.config_entries.async_setup(entry.entry_id)

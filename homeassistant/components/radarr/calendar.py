@@ -10,6 +10,7 @@ from aiopyarr import RadarrCalendarItem
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
@@ -32,21 +33,28 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
+CALENDAR_TYPE = EntityDescription(
+    key="calendar",
+    name=None,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Radarr calendar entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["disk_space"]
-    async_add_entities([RadarrCalendarEntity(coordinator)], True)
+    async_add_entities([RadarrCalendarEntity(coordinator, CALENDAR_TYPE)], True)
 
 
 class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
     """A Radarr calendar entity."""
 
-    def __init__(self, coordinator: RadarrDataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: RadarrDataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Create the Calendar event device."""
-        super().__init__(coordinator, name=DOMAIN)
-        self.coordinator = coordinator
+        super().__init__(coordinator, description)
         self._event: RadarrEvent | None = None
         self._events: list[RadarrEvent] = []
 
@@ -55,6 +63,7 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
+    # pylint: disable-next=hass-return-type
     async def async_get_events(  # type:ignore[override]
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[RadarrEvent]:
