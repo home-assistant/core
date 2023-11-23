@@ -50,6 +50,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -57,6 +58,8 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
+    BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
+    BUTTON_KEY_RESTART,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -127,6 +130,7 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -524,12 +528,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            create_issue(
+                hass,
+                DOMAIN,
+                "service_clear_traffic_statistics_moved_to_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_changed_to_button",
+                translation_placeholders={
+                    "service": service.service,
+                    "button": BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
+                },
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            create_issue(
+                hass,
+                DOMAIN,
+                "service_reboot_moved_to_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_changed_to_button",
+                translation_placeholders={
+                    "service": service.service,
+                    "button": BUTTON_KEY_RESTART,
+                },
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return

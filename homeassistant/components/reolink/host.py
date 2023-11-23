@@ -661,3 +661,12 @@ class ReolinkHost:
 
         for channel in channels:
             async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
+
+    @property
+    def event_connection(self) -> str:
+        """Type of connection to receive events."""
+        if self._webhook_reachable:
+            return "ONVIF push"
+        if self._long_poll_received:
+            return "ONVIF long polling"
+        return "Fast polling"
