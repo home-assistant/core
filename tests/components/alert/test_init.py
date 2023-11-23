@@ -348,7 +348,9 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     assert entity._send_done_message is False
 
 
-async def test_alert_fires_on_startup(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
+async def test_alert_fires_on_startup(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test that the alert fires on startup of hass."""
     config = deepcopy(TEST_CONFIG)
     assert await async_setup_component(hass, DOMAIN, config)
@@ -363,7 +365,9 @@ async def test_alert_fires_on_startup(hass: HomeAssistant, mock_notifier: list[S
     assert len(mock_notifier) == 1
 
 
-async def test_alert_does_not_fire_on_startup(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
+async def test_alert_does_not_fire_on_startup(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test that the alert does not fire on startup of hass."""
     config = deepcopy(TEST_CONFIG)
     assert await async_setup_component(hass, DOMAIN, config)
