@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import time
 
 from ibeacon_ble import (
@@ -32,7 +33,10 @@ from .const import (
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
     UNAVAILABLE_TIMEOUT,
     UPDATE_INTERVAL,
+    WHITELISTED_MINORS,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
 
@@ -296,12 +300,19 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
-        # Reject creating new trackers if the name is not set
-        if new and (
-            service_info.device.name is None
-            or service_info.device.name.replace("-", ":") == service_info.device.address
+        # Reject creating new trackers if the name is not set (unless the minor is whitelisted).
+        if (
+            new
+            and ibeacon_advertisement.minor not in WHITELISTED_MINORS
+            and (
+                service_info.device.name is None
+                or service_info.device.name.replace("-", ":")
+                == service_info.device.address
+            )
         ):
+            _LOGGER.debug("ignoring new beacon %s due to empty name", unique_id)
             return
+
         previously_tracked = address in self._unique_ids_by_address
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)

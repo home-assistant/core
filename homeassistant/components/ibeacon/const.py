@@ -44,5 +44,8 @@ MIN_SEEN_TRANSIENT_NEW = (
     + 1
 )
 
+# Beacons with the following minors are processed even if they have empty name.
+WHITELISTED_MINORS = [40004]
+
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
 CONF_IGNORE_UUIDS = "ignore_uuids"
