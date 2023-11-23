@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -345,3 +346,33 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     hass.async_add_job(entity.end_alerting)
     await hass.async_block_till_done()
     assert entity._send_done_message is False
+
+
+async def test_alert_fires_on_startup(hass: HomeAssistant) -> None:
+    """Test that the alert fires on startup of hass."""
+    config = deepcopy(TEST_CONFIG)
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_notifier) == 0
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert len(mock_notifier) == 1
+
+
+async def test_alert_does_not_fire_on_startup(hass: HomeAssistant) -> None:
+    """Test that the alert does not fire on startup of hass."""
+    config = deepcopy(TEST_CONFIG)
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_notifier) == 0
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert len(mock_notifier) == 0
