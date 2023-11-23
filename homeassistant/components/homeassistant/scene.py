@@ -291,7 +291,10 @@ async def async_setup_platform(
         if scene is None:
             _LOGGER.error("The scene %s does not exist", entity_id)
             return
-        if not isinstance(scene, HomeAssistantScene) or not scene.from_service:
+        if not isinstance(scene, HomeAssistantScene):
+            _LOGGER.error("Entity %s is not a scene", entity_id)
+            return
+        if not scene.from_service:
             _LOGGER.error(
                 "The scene %s is not created with service `scene.create`", entity_id
             )
