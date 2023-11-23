@@ -20,7 +20,6 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
     is_registered as is_webhook_registered,
-    DOMAIN as WEBHOOK_DOMAIN
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,7 +29,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -224,7 +227,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             message = "Webhook not registered - HTTPS and port 443 are required to register the webhook"
             _LOGGER.warning(message)
             async_create_issue_webhook_registration_error(hass)
-            raise HomeAssistantError(message, translation_domain=DOMAIN, translation_key=EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED)
+            raise HomeAssistantError(
+                message,
+                translation_domain=DOMAIN,
+                translation_key=EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED
+            )
         if not is_webhook_registered(hass, entry.data[CONF_WEBHOOK_ID]):
             webhook_register(
                 hass,
@@ -244,13 +251,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"Error during webhook registration - {err}",
                 translation_domain=DOMAIN,
                 translation_key=EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED,
-                translation_placeholders={
-                    "error": err
-                }) from err
-        else:
-            entry.async_on_unload(
-                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-            )
+                translation_placeholders={"error": str(err)}
+            ) from err
+
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        )
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
