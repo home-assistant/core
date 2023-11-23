@@ -33,18 +33,5 @@ async def test_load_unload_config_entry(
     assert not hass.data.get(DOMAIN)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-
-# async def test_config_entry_not_ready(
-#     hass: HomeAssistant,
-#     mock_config_entry: MockConfigEntry,
-#     mock_elgato: MagicMock,
-# ) -> None:
-#     """Test the Elgato configuration entry not ready."""
-#     mock_elgato.state.side_effect = ElgatoConnectionError
-
-#     mock_config_entry.add_to_hass(hass)
-#     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     assert len(mock_elgato.state.mock_calls) == 1
-#     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    ## Calls both ctor and 'init' method
+    assert len(mock_iotty.mock_calls) == 2
