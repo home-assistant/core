@@ -32,7 +32,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError
+    HomeAssistantError,
 )
 from homeassistant.helpers import (
     aiohttp_client,
@@ -230,7 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise HomeAssistantError(
                 message,
                 translation_domain=DOMAIN,
-                translation_key=EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED
+                translation_key=EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED,
             )
         if not is_webhook_registered(hass, entry.data[CONF_WEBHOOK_ID]):
             webhook_register(
@@ -251,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"Error during webhook registration - {err}",
                 translation_domain=DOMAIN,
                 translation_key=EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED,
-                translation_placeholders={"error": str(err)}
+                translation_placeholders={"error": str(err)},
             ) from err
 
         entry.async_on_unload(
