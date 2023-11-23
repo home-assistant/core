@@ -237,7 +237,7 @@ class HausbusLight(HausbusChannel, LightEntity):
             light.setBrightness(0, 0)
         elif isinstance(light, Led):
             light = cast(Led, light)
-            light.setBrightness(0, 0)
+            light.off(0)
         elif isinstance(light, RGBDimmer):
             light = cast(RGBDimmer, light)
             light.setColor(0, 0, 0, 0)
