@@ -183,7 +183,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
 
 
 def _get_calendar_event(event: RadarrCalendarItem) -> RadarrEvent:
-    """Return a CalendarEvent from an API event."""
+    """Return a RadarrEvent from an API event."""
     _date, _type = event.releaseDateType()
     return RadarrEvent(
         summary=event.title,

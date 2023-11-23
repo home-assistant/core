@@ -80,7 +80,6 @@ def mock_connection(
         f"{url}/api/v3/calendar",
         text=load_fixture("radarr/calendar.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
-        # params={'unmonitored': 'True', 'start': '2023-11-22', 'end': '2023-11-23'},
     )
 
     aioclient_mock.get(
