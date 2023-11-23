@@ -34,7 +34,7 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_mqtt_message,
-    mock_entity_platform,
+    mock_platform,
 )
 from tests.typing import (
     MqttMockHAClientGenerator,
@@ -1499,7 +1499,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 ) -> None:
     """Check MQTT integration discovery subscribe and unsubscribe."""
     mqtt_mock = await mqtt_mock_entry()
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True
@@ -1523,18 +1523,20 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             return self.async_abort(reason="already_configured")
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
         assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
         assert not mqtt_client_mock.unsubscribe.called
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
         mqtt_client_mock.unsubscribe.reset_mock()
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert not mqtt_client_mock.unsubscribe.called
 
@@ -1550,7 +1552,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 ) -> None:
     """Check MQTT integration discovery unsubscribe once."""
     mqtt_mock = await mqtt_mock_entry()
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True

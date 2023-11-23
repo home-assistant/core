@@ -17,6 +17,7 @@ from greeclimate.device import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -157,6 +158,9 @@ class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateE
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Missing parameter {ATTR_TEMPERATURE}")
+
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(hvac_mode)
 
         temperature = kwargs[ATTR_TEMPERATURE]
         _LOGGER.debug(

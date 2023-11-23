@@ -117,9 +117,10 @@ async def test_switch_read_lock_state(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "unlocking"
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a lock unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     lock_entry = entity_registry.async_get_or_create(
         "lock",

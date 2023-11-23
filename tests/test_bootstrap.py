@@ -23,8 +23,8 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
@@ -327,7 +327,7 @@ async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
             partial_manifest={"after_dependencies": ["after_dep_of_platform_int"]},
         ),
     )
-    mock_entity_platform(hass, "light.platform_int", MockPlatform())
+    mock_platform(hass, "platform_int.light", MockPlatform())
 
     @callback
     def continue_loading(_):
@@ -642,6 +642,72 @@ async def test_setup_hass_recovery_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+async def test_setup_hass_safe_mode(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test it works."""
+    with patch("homeassistant.components.browser.setup"), patch(
+        "homeassistant.config_entries.ConfigEntries.async_domains",
+        return_value=["browser"],
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=False,
+                safe_mode=True,
+            ),
+        )
+
+    assert "recovery_mode" not in hass.config.components
+    assert "Starting in recovery mode" not in caplog.text
+    assert "Starting in safe mode" in caplog.text
+
+
+async def test_setup_hass_recovery_mode_and_safe_mode(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test it works."""
+    with patch("homeassistant.components.browser.setup"), patch(
+        "homeassistant.config_entries.ConfigEntries.async_domains",
+        return_value=["browser"],
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=True,
+                safe_mode=True,
+            ),
+        )
+
+    assert "recovery_mode" in hass.config.components
+    assert "Starting in recovery mode" in caplog.text
+    assert "Starting in safe mode" not in caplog.text
+
+
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 async def test_setup_hass_invalid_core_config(
     mock_hass_config: None,
@@ -653,17 +719,19 @@ async def test_setup_hass_invalid_core_config(
     event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
-    hass = await bootstrap.async_setup_hass(
-        runner.RuntimeConfig(
-            config_dir=get_test_config_dir(),
-            verbose=False,
-            log_rotate_days=10,
-            log_file="",
-            log_no_color=False,
-            skip_pip=True,
-            recovery_mode=False,
-        ),
-    )
+    with patch("homeassistant.config.async_notify_setup_error") as mock_notify:
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=False,
+            ),
+        )
+        assert len(mock_notify.mock_calls) == 1
 
     assert "recovery_mode" in hass.config.components
 

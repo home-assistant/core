@@ -65,14 +65,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             desk = Desk(None, monitor_height=False)
             try:
                 await desk.connect(discovery_info.device, auto_reconnect=False)
-            except AuthFailedError as err:
-                _LOGGER.exception("AuthFailedError", exc_info=err)
+            except AuthFailedError:
                 errors["base"] = "auth_failed"
-            except TimeoutError as err:
-                _LOGGER.exception("TimeoutError", exc_info=err)
+            except TimeoutError:
                 errors["base"] = "cannot_connect"
-            except BleakError as err:
-                _LOGGER.exception("BleakError", exc_info=err)
+            except BleakError:
+                _LOGGER.exception("Unexpected Bluetooth error")
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")

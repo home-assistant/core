@@ -77,6 +77,17 @@ def mock_config_entry(hass) -> MockConfigEntry:
     return config_entry
 
 
+class BaseMockReconnectLogic(ReconnectLogic):
+    """Mock ReconnectLogic."""
+
+    def stop_callback(self) -> None:
+        """Stop the reconnect logic."""
+        # For the purposes of testing, we don't want to wait
+        # for the reconnect logic to finish trying to connect
+        self._cancel_connect("forced disconnect from test")
+        self._is_stopped = True
+
+
 @pytest.fixture
 def mock_device_info() -> DeviceInfo:
     """Return the default mocked device info."""
@@ -132,7 +143,10 @@ def mock_client(mock_device_info) -> APIClient:
     mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
 
-    with patch("homeassistant.components.esphome.APIClient", mock_client), patch(
+    with patch(
+        "homeassistant.components.esphome.manager.ReconnectLogic",
+        BaseMockReconnectLogic,
+    ), patch("homeassistant.components.esphome.APIClient", mock_client), patch(
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
     ):
         yield mock_client
@@ -234,7 +248,7 @@ async def _mock_generic_device_entry(
 
     try_connect_done = Event()
 
-    class MockReconnectLogic(ReconnectLogic):
+    class MockReconnectLogic(BaseMockReconnectLogic):
         """Mock ReconnectLogic."""
 
         def __init__(self, *args, **kwargs):
@@ -249,6 +263,13 @@ async def _mock_generic_device_entry(
             result = await super()._try_connect()
             try_connect_done.set()
             return result
+
+        def stop_callback(self) -> None:
+            """Stop the reconnect logic."""
+            # For the purposes of testing, we don't want to wait
+            # for the reconnect logic to finish trying to connect
+            self._cancel_connect("forced disconnect from test")
+            self._is_stopped = True
 
     with patch(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic

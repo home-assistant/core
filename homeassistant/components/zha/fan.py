@@ -299,3 +299,23 @@ class IkeaFan(ZhaFan):
         return int(
             (100 / self.speed_count) * self.preset_name_to_mode[PRESET_MODE_AUTO]
         )
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_FAN,
+    models={"HBUniversalCFRemote", "HDC52EastwindFan"},
+)
+class KofFan(ZhaFan):
+    """Representation of a fan made by King Of Fans."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+
+    @property
+    def speed_range(self) -> tuple[int, int]:
+        """Return the range of speeds the fan supports. Off is not included."""
+        return (1, 4)
+
+    @property
+    def preset_modes_to_name(self) -> dict[int, str]:
+        """Return a dict from preset mode to name."""
+        return {6: PRESET_MODE_SMART}

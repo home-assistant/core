@@ -263,7 +263,7 @@ class UniFiController:
             if entry.domain == Platform.DEVICE_TRACKER:
                 macs.append(entry.unique_id.split("-", 1)[0])
 
-        for mac in self.option_block_clients + macs:
+        for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
                 self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 

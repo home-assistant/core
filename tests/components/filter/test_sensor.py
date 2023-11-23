@@ -249,7 +249,9 @@ async def test_history_time(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         assert state.state == "18.0"
 
 
-async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_setup(
+    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -284,8 +286,7 @@ async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
         assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
         assert state.state == "1.0"
 
-        entity_reg = er.async_get(hass)
-        entity_id = entity_reg.async_get_entity_id(
+        entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, "uniqueid_sensor_test"
         )
         assert entity_id == "sensor.test"
