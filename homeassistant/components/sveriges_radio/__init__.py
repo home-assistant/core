@@ -10,7 +10,7 @@ from .const import DOMAIN
 from .sveriges_radio import SverigesRadio
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, _entry: ConfigEntry) -> bool:
     """Set up Sveriges Radio from a config entry.
 
     This integration doesn't set up any entities, as it provides a media source
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, _entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     del hass.data[DOMAIN]
     return True
