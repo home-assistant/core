@@ -98,7 +98,7 @@ class QuotableCardEditor extends HTMLElement {
         cursor: pointer;
       }
 
-     
+
 
       input[type="text"] {
         width: 100%;
@@ -131,39 +131,36 @@ class QuotableCardEditor extends HTMLElement {
         padding: 5px;
         margin-bottom: 10px;
       }
-
-
-
     </style>
-      <form id="form">
-    <div>
-    <label for="authorSelect">Select Authors:</label>
-    <input type="text" id="authorInput" placeholder="Search here">
-    <select id="authorSelect" multiple>
-      ${this._authors
-        .map((author) => `<option value="${author}">${author}</option>`)
-        .join("")}
-    </select>
-    <span id="selectedAuthorLabel"></span>
 
-  </div>
+    <form id="form">
+      <div>
+        <label for="authorSelect">Select Authors:</label>
+        <span id="selectedAuthorLabel"></span>
+        <input type="text" id="authorInput" placeholder="Search here">
+        <select id="authorSelect" multiple>
+          ${this._authors
+            .map((author) => `<option value="${author}">${author}</option>`)
+            .join("")}
+        </select>
+      </div>
 
-  <div>
-    <label for="tagSelect">Select Categories:</label>
-    <input type="text" id="selectedTags" readonly  placeholder="Select from list">
-    <select id="tagSelect" multiple>
-      ${this._tags
-        .map((tag) => `<option value="${tag}">${tag}</option>`)
-        .join("")}
-    </select>
-  </div>
+      <div>
+        <label for="tagSelect">Select Categories:</label>
+        <input type="text" id="selectedTags" readonly  placeholder="Select from list">
+        <select id="tagSelect" multiple>
+          ${this._tags
+            .map((tag) => `<option value="${tag}">${tag}</option>`)
+            .join("")}
+        </select>
+      </div>
 
-  <div>
-    <label for="slider">Select Update Interval(mins):</label>
-    <input type="range" id="slider" min="1" max="60" value="50">
-    <span id="updateIntervalLabel">50</span>
-  </div>
-  </form>
+      <div>
+        <label for="slider">Select Update Interval(mins):</label>
+        <input type="range" id="slider" min="1" max="60" value="50">
+        <span id="updateIntervalLabel">50</span>
+      </div>
+    </form>
   `;
 
     // Add references to the input and multiselect elements
@@ -202,7 +199,7 @@ class QuotableCardEditor extends HTMLElement {
         // Add or remove the selected item from the list
         const index = this._selectedAuthors.indexOf(selectedOption.value);
         if (index === -1) {
-          this._selectedAuthors.push(selectedOption.value);
+          this._selectedAuthors.push(selectedOption.text);
         } else {
           this._selectedAuthors.splice(index, 1);
         }
