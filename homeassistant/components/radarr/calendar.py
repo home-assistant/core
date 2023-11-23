@@ -5,7 +5,7 @@ from datetime import datetime
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,9 +37,6 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
         """Return the next upcoming event."""
         if not self.coordinator.event:
             return None
-        self._attr_extra_state_attributes = {
-            "release_type": self.coordinator.event.release_type
-        }
         return CalendarEvent(
             summary=self.coordinator.event.summary,
             start=self.coordinator.event.start,
@@ -53,3 +50,12 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
     ) -> list[RadarrEvent]:
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(start_date, end_date)
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if self.coordinator.event:
+            self._attr_extra_state_attributes = {
+                "release_type": self.coordinator.event.release_type
+            }
+        super().async_write_ha_state()
