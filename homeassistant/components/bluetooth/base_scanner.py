@@ -330,11 +330,11 @@ class BaseHaRemoteScanner(BaseHaScanner):
             prev_manufacturer_data = prev_advertisement.manufacturer_data
             prev_name = prev_device.name
 
-            if local_name and prev_name and len(prev_name) > len(local_name):
+            if prev_name and (not local_name or len(prev_name) > len(local_name)):
                 local_name = prev_name
 
             if service_uuids and service_uuids != prev_service_uuids:
-                service_uuids = list(set(service_uuids + prev_service_uuids))
+                service_uuids = list({*service_uuids, *prev_service_uuids})
             elif not service_uuids:
                 service_uuids = prev_service_uuids
 

@@ -1,5 +1,7 @@
 """Constants for the Aurora ABB PowerOne integration."""
 
+from datetime import timedelta
+
 DOMAIN = "aurora_abb_powerone"
 
 # Min max addresses and default according to here:
@@ -8,6 +10,7 @@ DOMAIN = "aurora_abb_powerone"
 MIN_ADDRESS = 2
 MAX_ADDRESS = 63
 DEFAULT_ADDRESS = 2
+SCAN_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_INTEGRATION_TITLE = "PhotoVoltaic Inverters"
 DEFAULT_DEVICE_NAME = "Solar Inverter"

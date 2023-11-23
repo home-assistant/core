@@ -9,7 +9,7 @@ from homeassistant.components.risco.config_flow import (
     CannotConnectError,
     UnauthorizedError,
 )
-from homeassistant.components.risco.const import DOMAIN
+from homeassistant.components.risco.const import CONF_COMMUNICATION_DELAY, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -246,7 +246,10 @@ async def test_local_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    expected_data = {**TEST_LOCAL_DATA, **{"type": "local"}}
+    expected_data = {
+        **TEST_LOCAL_DATA,
+        **{"type": "local", CONF_COMMUNICATION_DELAY: 0},
+    }
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
