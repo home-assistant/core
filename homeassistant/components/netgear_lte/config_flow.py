@@ -34,7 +34,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        if user_input is not None:
+        if user_input:
             host = user_input[CONF_HOST]
             password = user_input[CONF_PASSWORD]
 
@@ -49,16 +49,16 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
 
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                user_input or {CONF_HOST: DEFAULT_HOST},
             ),
             errors=errors,
         )
