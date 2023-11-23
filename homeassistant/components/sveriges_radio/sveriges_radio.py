@@ -50,7 +50,7 @@ class SverigesRadio:
 
     async def call(self, method, payload):
         """Asynchronously call the API."""
-        url = f"http://api.sr.se/api/v2/{method}"
+        url = f"https://api.sr.se/api/v2/{method}"
 
         try:
             async with self.session.get(url, params=payload, timeout=8) as response:
