@@ -171,7 +171,7 @@ class CrisisAlerterSensorCounty(SensorEntity):
     def update(self) -> None:
         """Get the latest alerts."""
         try:
-            response = self._crisis_alerter.news()
+            response = self._crisis_alerter.vmas(is_test=True)
             location = self._crisis_alerter.get_location_user()
             if len(response) > 0:
                 news = response[0]
