@@ -219,12 +219,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.data[
             "auth_implementation"
         ] == cloud.DOMAIN and not webhook_url.startswith("https://"):
-            _LOGGER.warning(
-                "Webhook not registered - "
-                "https and port 443 is required to register the webhook"
-            )
+            message = "Webhook not registered - HTTPS and port 443 are required to register the webhook"
+            _LOGGER.warning(message)
             async_create_issue_webhook_registration_error(hass)
-            return
+            raise HomeAssistantError(message)
 
         if not is_webhook_registered(hass, entry.data[CONF_WEBHOOK_ID]):
             webhook_register(
@@ -241,6 +239,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
             async_create_issue_webhook_registration_error(hass)
+            raise HomeAssistantError(f"Error during webhook registration - {err}") from err
         else:
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
