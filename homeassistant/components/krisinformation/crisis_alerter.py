@@ -118,3 +118,7 @@ class CrisisAlerter:
         if res.status_code == 200:
             return json.loads(res.content.decode("UTF-8"))
         raise Error("Error: " + str(res.status_code) + str(res.content))
+
+    def get_location_user(self):
+        """Return county selected by user."""
+        return self.county

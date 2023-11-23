@@ -2,6 +2,7 @@
 DOMAIN = "krisinformation"
 
 DEFAULT_NAME = "Krisinformation"
+COUNTY_NAME = "Krisinformation County"
 CONF_COUNTY = "county"
 LANGUAGES = ["sv", "en"]
 
