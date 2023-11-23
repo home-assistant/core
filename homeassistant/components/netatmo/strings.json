@@ -166,5 +166,15 @@
       "name": "Clear temperature setting",
       "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
     }
+  },
+  "issues": {
+    "webhook_not_registered": {
+      "title": "Netatmo webhook not registered",
+      "description": "The webhook for the Netatmo integration is not registered. Entity states may be slow to update and device triggers may not work as a result."
+    },
+    "webhook_registration_error": {
+      "title": "Netatmo webhook could not be configured",
+      "description": "There was a problem while configuring the webhook for the Netatmo integration. Entity states may be slow to update and device triggers may not work as a result. For further details about the issue, check the logs in Home Assistant."
+    }
   }
 }

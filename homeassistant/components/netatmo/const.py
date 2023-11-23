@@ -49,6 +49,10 @@ NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
+ISSUE_ID_WEBHOOK_NOT_REGISTERED = "webhook_not_registered"
+ISSUE_ID_WEBHOOK_REGISTRATION_ERROR = "webhook_registration_error"
+WEBHOOK_HELP_LINK = "https://www.home-assistant.io/integrations/netatmo/#webhook-events"
+
 CONF_AREA_NAME = "area_name"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_LAT_NE = "lat_ne"

@@ -6,6 +6,7 @@ from aiohttp.web import Request
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -18,7 +19,10 @@ from .const import (
     DEFAULT_PERSON,
     DOMAIN,
     EVENT_ID_MAP,
+    ISSUE_ID_WEBHOOK_NOT_REGISTERED,
+    ISSUE_ID_WEBHOOK_REGISTRATION_ERROR,
     NETATMO_EVENT,
+    WEBHOOK_HELP_LINK,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,4 +100,51 @@ def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
     hass.bus.async_fire(
         event_type=NETATMO_EVENT,
         event_data=event_data,
+    )
+
+def async_delete_webhook_issues(hass: HomeAssistant) -> None:
+    """Delete all webhook related issues."""
+    async_delete_issue_webhook_not_registered(hass)
+    async_delete_issue_webhook_registration_error(hass)
+
+def async_create_issue_webhook_not_registered(hass: HomeAssistant) -> None:
+    """Create an issue indicating that the webhook has been unregistered."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_ID_WEBHOOK_NOT_REGISTERED,
+        is_fixable=False,
+        is_persistent=True,
+        learn_more_url=WEBHOOK_HELP_LINK,
+        severity=IssueSeverity.WARNING,
+        translation_key=ISSUE_ID_WEBHOOK_NOT_REGISTERED,
+    )
+
+def async_delete_issue_webhook_not_registered(hass: HomeAssistant):
+    """Delete the issue indicating that the webhook has been unregistered."""
+    async_delete_issue(
+        hass,
+        DOMAIN,
+        ISSUE_ID_WEBHOOK_NOT_REGISTERED,
+    )
+
+def async_create_issue_webhook_registration_error(hass: HomeAssistant):
+    """Create an issue indicating that the webhook could not be registered."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_ID_WEBHOOK_REGISTRATION_ERROR,
+        is_fixable=False,
+        is_persistent=True,
+        learn_more_url=WEBHOOK_HELP_LINK,
+        severity=IssueSeverity.WARNING,
+        translation_key=ISSUE_ID_WEBHOOK_REGISTRATION_ERROR,
+    )
+
+def async_delete_issue_webhook_registration_error(hass: HomeAssistant):
+    """Delete the issue indicating that the webhook could not be registered."""
+    async_delete_issue(
+        hass,
+        DOMAIN,
+        ISSUE_ID_WEBHOOK_REGISTRATION_ERROR,
     )
