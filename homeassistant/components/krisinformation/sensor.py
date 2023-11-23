@@ -22,7 +22,7 @@ async def async_setup_entry(
     config: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the departure sensor."""
+    """Set up the sensor."""
     name = config.data.get(CONF_NAME, DEFAULT_NAME + " - Sweden")
     county = config.data[CONF_COUNTY]
     language = hass.config.language
@@ -93,6 +93,7 @@ class CrisisAlerterSensor(SensorEntity):
         """Get the latest alerts."""
         try:
             response = self._crisis_alerter.vmas(is_test=True)
+            _LOGGER.debug("wow 1")
             if len(response) > 0:
                 news = response[0]
                 self._state = news["PushMessage"]
@@ -103,6 +104,7 @@ class CrisisAlerterSensor(SensorEntity):
                 )
 
             else:
+                _LOGGER.debug("wow 2")
                 self._state = (
                     "Inga larm"
                     if self._crisis_alerter.language == "sv"
@@ -175,15 +177,13 @@ class CrisisAlerterSensorCounty(SensorEntity):
             location = self._crisis_alerter.get_location_user()
             if len(response) > 0:
                 news = response[0]
-                county = (
-                    news["Area"][1]["Description"] if len(news["Area"]) > 1 else "None"
-                )
+                county = news["Area"][0]["Description"]
                 if county == location:
                     self._state = news["PushMessage"][:255]  # Crashes if not capped
                     self._web = news["Web"]
                     self._published = news["Published"]
                     self._area = (
-                        news["Area"][1]["Description"]
+                        news["Area"][0]["Description"]
                         if len(news["Area"]) > 1
                         else None
                     )
