@@ -97,7 +97,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         icon="mdi:snowflake",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
     ),
     DaikinSensorEntityDescription(
@@ -106,7 +106,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         icon="mdi:fire",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
     ),
     DaikinSensorEntityDescription(
@@ -124,7 +124,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         value_func=lambda device: device.compressor_frequency,
     ),
     DaikinSensorEntityDescription(
@@ -133,7 +133,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
     ),
 )
