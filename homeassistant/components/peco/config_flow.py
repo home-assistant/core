@@ -79,6 +79,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         county = user_input[CONF_COUNTY]
 
         if CONF_PHONE_NUMBER not in user_input:
+            await self.async_set_unique_id(county)
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(
                 title=f"{user_input[CONF_COUNTY].capitalize()} Outage Count",
                 data=user_input,
@@ -92,9 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.meter_verification = True
 
         if self.meter_error is not None:
-            self.meter_error = (
-                {}
-            )  # Clear any previous errors, since the user may have corrected them
+            # Clear any previous errors, since the user may have corrected them
+            self.meter_error = {}
 
         self.hass.async_create_task(self._verify_meter(phone_number))
 

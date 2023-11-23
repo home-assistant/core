@@ -76,9 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"outage_count": coordinator}
 
-    if "phone_number" in entry.data:
-        # Smart Meter Setup
-        phone_number = entry.data[CONF_PHONE_NUMBER]
+    if phone_number := entry.data.get(CONF_PHONE_NUMBER):
+        # Smart Meter Setup]
 
         async def async_update_meter_data() -> bool:
             """Fetch data from API."""
