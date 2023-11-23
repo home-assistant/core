@@ -1,5 +1,5 @@
 """Tests for calendar platform of Holiday integration."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 
@@ -10,7 +10,6 @@ from homeassistant.components.calendar import (
 from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -19,7 +18,6 @@ from tests.common import MockConfigEntry
 
 async def test_holiday_calendar_entity(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test HolidayCalendarEntity functionality."""
@@ -35,7 +33,7 @@ async def test_holiday_calendar_entity(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await async_setup_component(hass, "calendar", {})
     await hass.async_block_till_done()
 
     response = await hass.services.async_call(
@@ -62,12 +60,38 @@ async def test_holiday_calendar_entity(
     }
 
     state = hass.states.get("calendar.united_states_ak")
-    assert state is not None and state.state == "on"
+    assert state is not None
+    assert state.state == "on"
+
+    # Test holidays for the next year
+    freezer.move_to(datetime(2023, 12, 31, 12, tzinfo=dt_util.UTC))
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.united_states_ak",
+            "end_date_time": dt_util.now() + timedelta(days=1),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.united_states_ak": {
+            "events": [
+                {
+                    "start": "2024-01-01",
+                    "end": "2024-01-02",
+                    "summary": "New Year's Day",
+                    "location": "United States, AK",
+                }
+            ]
+        }
+    }
 
 
 async def test_default_language(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test default language."""

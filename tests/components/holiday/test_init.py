@@ -12,15 +12,6 @@ MOCK_CONFIG_DATA = {
 }
 
 
-async def test_successful_config_entry(hass: HomeAssistant) -> None:
-    """Test settings up integration from config entry."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing integration."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
@@ -34,4 +25,5 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
+    # See https://github.com/python/mypy/issues/9005
     assert entry.state is ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
