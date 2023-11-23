@@ -28,9 +28,7 @@ async def async_setup_entry(
 
     crisis_alerter = CrisisAlerter(county)
 
-    sensor = CrisisAlerterSensor(
-        hass, config.entry_id, name, crisis_alerter, async_add_entities
-    )
+    sensor = CrisisAlerterSensor(hass, config.entry_id, name, crisis_alerter)
 
     async_add_entities([sensor], False)
 
@@ -47,7 +45,6 @@ class CrisisAlerterSensor(SensorEntity):
         unique_id: str,
         name: str,
         crisis_alerter: CrisisAlerter,
-        async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = unique_id
@@ -58,7 +55,6 @@ class CrisisAlerterSensor(SensorEntity):
         self.hass = hass
         self._published: str | None = None
         self._area: str | None = None
-        self._async_add_entities = async_add_entities
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str | None]:
