@@ -14,38 +14,21 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def ws_req_id() -> Callable[[], int]:
-    """Fixture for incremental websocket requests."""
-
-    id = 0
-
-    def next() -> int:
-        nonlocal id
-        id += 1
-        return id
-
-    return next
-
-
-@pytest.fixture
 async def ws_get_items(
-    hass_ws_client: WebSocketGenerator, ws_req_id: Callable[[], int]
+    hass_ws_client: WebSocketGenerator,
 ) -> Callable[[], Awaitable[dict[str, str]]]:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
-        id = ws_req_id()
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": id,
                 "type": "todo/item/list",
                 "entity_id": TEST_ENTITY,
             }
         )
         resp = await client.receive_json()
-        assert resp.get("id") == id
         assert resp.get("success")
         return resp.get("result", {}).get("items", [])
 
@@ -55,25 +38,21 @@ async def ws_get_items(
 @pytest.fixture
 async def ws_move_item(
     hass_ws_client: WebSocketGenerator,
-    ws_req_id: Callable[[], int],
 ) -> Callable[[str, str | None], Awaitable[None]]:
     """Fixture to move an item in the todo list."""
 
     async def move(uid: str, previous_uid: str | None) -> None:
         # Fetch items using To-do platform
         client = await hass_ws_client()
-        id = ws_req_id()
         data = {
-            "id": id,
             "type": "todo/item/move",
             "entity_id": TEST_ENTITY,
             "uid": uid,
         }
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
-        await client.send_json(data)
+        await client.send_json_auto_id(data)
         resp = await client.receive_json()
-        assert resp.get("id") == id
         assert resp.get("success")
 
     return move

@@ -1,4 +1,14 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Do you want to start the setup? The initial setup will take about 30-40 seconds."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
   "services": {
     "speedtest": {
       "name": "Speed test",
