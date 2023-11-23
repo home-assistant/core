@@ -176,5 +176,13 @@
       "title": "Netatmo webhook could not be configured",
       "description": "There was a problem while configuring the webhook for the Netatmo integration. Entity states may be slow to update and device triggers may not work as a result. For further details about the issue, check the logs in Home Assistant."
     }
+  },
+  "exceptions": {
+    "webhook_https_required": {
+      "message": "Webhook not registered - HTTPS and port 443 are required to register the webhook"
+    },
+    "webhook_registration_failed": {
+      "message": "Error during webhook registration - {error}"
+    }
   }
 }

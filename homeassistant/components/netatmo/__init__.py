@@ -54,6 +54,8 @@ from .const import (
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
+    EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED,
+    EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED,
     PLATFORMS,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
@@ -222,8 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             message = "Webhook not registered - HTTPS and port 443 are required to register the webhook"
             _LOGGER.warning(message)
             async_create_issue_webhook_registration_error(hass)
-            raise HomeAssistantError(message)
-
+            raise HomeAssistantError(message, translation_domain=DOMAIN, translation_key=EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED)
         if not is_webhook_registered(hass, entry.data[CONF_WEBHOOK_ID]):
             webhook_register(
                 hass,
@@ -239,7 +240,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
             async_create_issue_webhook_registration_error(hass)
-            raise HomeAssistantError(f"Error during webhook registration - {err}") from err
+            raise HomeAssistantError(
+                f"Error during webhook registration - {err}",
+                translation_domain=DOMAIN,
+                translation_key=EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED,
+                translation_placeholders={
+                    "error": err
+                }) from err
         else:
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
