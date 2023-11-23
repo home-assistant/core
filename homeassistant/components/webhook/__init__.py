@@ -36,6 +36,14 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 @callback
 @bind_hass
+def is_registered(hass: HomeAssistant, webhook_id: str) -> bool:
+    """Check if a webhook ID is registered."""
+    handlers = hass.data.setdefault(DOMAIN, {})
+    return webhook_id in handlers
+
+
+@callback
+@bind_hass
 def async_register(
     hass: HomeAssistant,
     domain: str,
@@ -49,7 +57,7 @@ def async_register(
     """Register a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
 
-    if webhook_id in handlers:
+    if is_registered(hass, webhook_id):
         raise ValueError("Handler is already defined!")
 
     if allowed_methods is None:
