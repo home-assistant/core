@@ -132,8 +132,8 @@ jobs:
           mariadb_groups=${MARIADB_VERSIONS}
           postgresql_groups=${POSTGRESQL_VERSIONS}
           test_full_suite="true"
-          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-          test_group_count=10
+          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+          test_group_count=14
           tests="[]"
           tests_glob=""
           skip_coverage=""
@@ -181,8 +181,8 @@ jobs:
           then
             mariadb_groups=${MARIADB_VERSIONS}
             postgresql_groups=${POSTGRESQL_VERSIONS}
-            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-            test_group_count=10
+            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+            test_group_count=14
             test_full_suite="true"
           fi
 
