@@ -2,11 +2,12 @@
 from datetime import timedelta
 
 from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_COUNTY
 from .crisis_alerter import CrisisAlerter
@@ -58,16 +59,18 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
         return self._unit_of_measurement
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config: ConfigEntry,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Demo geolocations."""
-    KrisInformationGeolocationManager(
-        hass, add_entities, CrisisAlerter(config.get(CONF_COUNTY))
+    manager = KrisInformationGeolocationManager(
+        hass, add_entities, CrisisAlerter(config.data.get(CONF_COUNTY))
     )
+
+    await hass.async_add_executor_job(manager.init_regular_updates)
 
 
 class KrisInformationGeolocationManager:
@@ -84,8 +87,6 @@ class KrisInformationGeolocationManager:
         self._add_entities = add_entities
         self._events: list[KrisInformationGeolocationEvent] = []
         self._crisis_alerter = crisis_alerter
-        self._update()
-        self._init_regular_updates()
         _LOGGER.info("INIT KRISINFO MANAGER")
 
     def _generate_random_event(
@@ -96,8 +97,9 @@ class KrisInformationGeolocationManager:
             headline, latitude, longitude, UnitOfLength.KILOMETERS
         )
 
-    def _init_regular_updates(self) -> None:
+    def init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
+        self._update()
         track_time_interval(
             self._hass,
             lambda now: self._update(),
@@ -105,7 +107,7 @@ class KrisInformationGeolocationManager:
             cancel_on_shutdown=True,
         )
 
-    def _update(self, count: int = 1) -> None:
+    def _update(self) -> None:
         """Remove events and add new random events."""
         new_events = []
         self._events.clear()

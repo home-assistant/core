@@ -81,6 +81,11 @@ class CrisisAlerterSensor(SensorEntity):
         """Return the name of the sensor."""
         return self._attr_name
 
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
     def first_update(self, _=None) -> None:
         """Run first update and write state."""
         self.update()
