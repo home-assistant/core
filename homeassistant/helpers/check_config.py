@@ -100,7 +100,7 @@ async def async_check_ha_config_file(  # noqa: C901
         message: str,
     ) -> None:
         """Handle errors from packages."""
-        message = f"Package {package} setup failed. {message}"
+        message = f"Setup of package '{package}' failed: {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
@@ -232,10 +232,10 @@ async def async_check_ha_config_file(  # noqa: C901
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:
             try:
-                config = config_schema(config)
+                validated_config = config_schema(config)
                 # Don't fail if the validator removed the domain from the config
-                if domain in config:
-                    result[domain] = config[domain]
+                if domain in validated_config:
+                    result[domain] = validated_config[domain]
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config, config[domain])
                 continue
