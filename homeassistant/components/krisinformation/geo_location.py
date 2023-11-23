@@ -1,3 +1,4 @@
+"""Support for geolocation data from Krisinformation."""
 from datetime import timedelta
 
 from homeassistant.components.geo_location import GeolocationEvent

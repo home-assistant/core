@@ -1,4 +1,5 @@
 """Support for Krisinformation sensor."""
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 
@@ -60,7 +61,7 @@ class CrisisAlerterSensor(SensorEntity):
         self._async_add_entities = async_add_entities
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, str | None]:
         """Return the state attributes."""
         return {
             "Länk": self._web,
@@ -76,14 +77,9 @@ class CrisisAlerterSensor(SensorEntity):
             self.first_update()
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         return self._attr_name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     def first_update(self, _=None) -> None:
         """Run first update and write state."""
