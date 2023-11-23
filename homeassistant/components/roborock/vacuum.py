@@ -2,6 +2,7 @@
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
+from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
@@ -94,6 +95,12 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
         self._attr_fan_speed_list = self._device_status.fan_power_options
+        self.api.add_listener(
+            RoborockDataProtocol.FAN_POWER, self._update_from_listener, self.api.cache
+        )
+        self.api.add_listener(
+            RoborockDataProtocol.STATE, self._update_from_listener, self.api.cache
+        )
 
     @property
     def state(self) -> str | None:

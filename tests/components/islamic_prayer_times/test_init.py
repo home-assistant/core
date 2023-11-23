@@ -154,15 +154,16 @@ async def test_update_failed(hass: HomeAssistant) -> None:
     ],
 )
 async def test_migrate_unique_id(
-    hass: HomeAssistant, object_id: str, old_unique_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    object_id: str,
+    old_unique_id: str,
 ) -> None:
     """Test unique id migration."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
 
-    ent_reg = er.async_get(hass)
-
-    entity: er.RegistryEntry = ent_reg.async_get_or_create(
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id=object_id,
         domain=SENSOR_DOMAIN,
         platform=islamic_prayer_times.DOMAIN,
@@ -178,6 +179,6 @@ async def test_migrate_unique_id(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_migrated = ent_reg.async_get(entity.entity_id)
+    entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == f"{entry.entry_id}-{old_unique_id}"

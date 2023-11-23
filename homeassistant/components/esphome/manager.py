@@ -1,6 +1,8 @@
 """Manager for esphome devices."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Coroutine
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -9,6 +11,7 @@ from aioesphomeapi import (
     APIConnectionError,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
+    EntityInfo,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
@@ -25,7 +28,14 @@ import voluptuous as vol
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -294,7 +304,7 @@ class ESPHomeManager:
                 event.data["entity_id"], attribute, new_state
             )
 
-        self.entry_data.disconnect_callbacks.append(
+        self.entry_data.disconnect_callbacks.add(
             async_track_state_change_event(
                 hass, [entity_id], send_home_assistant_state_event
             )
@@ -371,12 +381,19 @@ class ESPHomeManager:
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         try:
-            device_info = await cli.device_info()
+            results = await asyncio.gather(
+                cli.device_info(),
+                cli.list_entities_services(),
+            )
         except APIConnectionError as err:
             _LOGGER.warning("Error getting device info for %s: %s", self.host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
             return
+
+        device_info: EsphomeDeviceInfo = results[0]
+        entity_infos_services: tuple[list[EntityInfo], list[UserService]] = results[1]
+        entity_infos, services = entity_infos_services
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
@@ -438,42 +455,55 @@ class ESPHomeManager:
         if device_info.name:
             reconnect_logic.name = device_info.name
 
+        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
+        entry_data.async_update_device_state(hass)
+        await asyncio.gather(
+            entry_data.async_update_static_infos(
+                hass, entry, entity_infos, device_info.mac_address
+            ),
+            _setup_services(hass, entry_data, services),
+        )
+
+        setup_coros_with_disconnect_callbacks: list[
+            Coroutine[Any, Any, CALLBACK_TYPE]
+        ] = []
         if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
-            entry_data.disconnect_callbacks.append(
-                await async_connect_scanner(
+            setup_coros_with_disconnect_callbacks.append(
+                async_connect_scanner(
                     hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
                 )
             )
 
-        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
-        entry_data.async_update_device_state(hass)
+        if device_info.voice_assistant_version:
+            setup_coros_with_disconnect_callbacks.append(
+                cli.subscribe_voice_assistant(
+                    self._handle_pipeline_start,
+                    self._handle_pipeline_stop,
+                )
+            )
 
         try:
-            entity_infos, services = await cli.list_entities_services()
-            await entry_data.async_update_static_infos(
-                hass, entry, entity_infos, device_info.mac_address
+            setup_results = await asyncio.gather(
+                *setup_coros_with_disconnect_callbacks,
+                cli.subscribe_states(entry_data.async_update_state),
+                cli.subscribe_service_calls(self.async_on_service_call),
+                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
             )
-            await _setup_services(hass, entry_data, services)
-            await cli.subscribe_states(entry_data.async_update_state)
-            await cli.subscribe_service_calls(self.async_on_service_call)
-            await cli.subscribe_home_assistant_states(self.async_on_state_subscription)
-
-            if device_info.voice_assistant_version:
-                entry_data.disconnect_callbacks.append(
-                    await cli.subscribe_voice_assistant(
-                        self._handle_pipeline_start,
-                        self._handle_pipeline_stop,
-                    )
-                )
-
-            hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
-        else:
-            _async_check_firmware_version(hass, device_info, entry_data.api_version)
-            _async_check_using_api_password(hass, device_info, bool(self.password))
+            return
+
+        for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
+            cancel_callback = setup_results[result_idx]
+            if TYPE_CHECKING:
+                assert cancel_callback is not None
+            entry_data.disconnect_callbacks.add(cancel_callback)
+
+        hass.async_create_task(entry_data.async_save_to_store())
+        _async_check_firmware_version(hass, device_info, entry_data.api_version)
+        _async_check_using_api_password(hass, device_info, bool(self.password))
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -487,10 +517,7 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        for disconnect_cb in entry_data.disconnect_callbacks:
-            disconnect_cb()
-        entry_data.disconnect_callbacks = []
-        entry_data.available = False
+        entry_data.async_on_disconnect()
         entry_data.expected_disconnect = expected_disconnect
         # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
@@ -755,10 +782,7 @@ async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEn
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
-    data.available = False
-    for disconnect_cb in data.disconnect_callbacks:
-        disconnect_cb()
-    data.disconnect_callbacks = []
+    data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.async_cleanup()

@@ -52,7 +52,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "hive",
     },
-    "Healty Home Coach": {
+    "Healthy Home Coach": {
         "always_discover": True,
         "domain": "netatmo",
     },
@@ -503,6 +503,12 @@ ZEROCONF = {
         },
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*",
+        },
+    ],
+    "_kizboxdev._tcp.local.": [
         {
             "domain": "overkiz",
             "name": "gateway*",
