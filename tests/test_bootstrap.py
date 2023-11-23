@@ -719,7 +719,7 @@ async def test_setup_hass_invalid_core_config(
     event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
-    with patch("homeassistant.setup.async_notify_setup_error") as mock_notify:
+    with patch("homeassistant.config.async_notify_setup_error") as mock_notify:
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
