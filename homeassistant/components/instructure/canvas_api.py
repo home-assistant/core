@@ -10,6 +10,7 @@ from .const import (
     GRADES_ENTITY_CONSTANT,
 )
 
+
 class CanvasAPI:
     """A wrapper for the Canvas API.
 
@@ -88,12 +89,15 @@ class CanvasAPI:
 
         for course_id in course_ids:
             response = await self.async_make_get_request(
-                f"/courses/{course_id}/assignments", {"per_page": "50", "bucket": "future"}
+                f"/courses/{course_id}/assignments",
+                {"per_page": "50", "bucket": "future"},
             )
             course_assignments = json.loads(response.content.decode("utf-8"))
             for assignment in course_assignments:
-                if assignment['due_at'] is not None:
-                    due_date = datetime.strptime(assignment['due_at'], "%Y-%m-%dT%H:%M:%SZ")
+                if assignment["due_at"] is not None:
+                    due_date = datetime.strptime(
+                        assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
                     next_two_weeks = datetime.utcnow() + timedelta(days=14)
                     if due_date <= next_two_weeks:
                         assignments[f"assignment-{assignment['id']}"] = assignment
@@ -102,7 +106,6 @@ class CanvasAPI:
             return assignments
         else:
             return {f"assignment-{ASSIGNMENT__ENTITY_CONSTANT}": {}}
-
 
     async def async_get_announcements(self, course_ids: list[str]) -> dict[str, Any]:
         """Retrieves a dictionary of announcements for given course IDs from the Canvas API.
@@ -122,7 +125,12 @@ class CanvasAPI:
         for course_id in course_ids:
             response = await self.async_make_get_request(
                 "/announcements",
-                {"per_page": "50", "context_codes": f"course_{course_id}", "start_date": start_date_str, "end_date": end_date},
+                {
+                    "per_page": "50",
+                    "context_codes": f"course_{course_id}",
+                    "start_date": start_date_str,
+                    "end_date": end_date,
+                },
             )
             course_announcements = json.loads(response.content.decode("utf-8"))
             for announcement in course_announcements:
@@ -143,13 +151,24 @@ class CanvasAPI:
             "/conversations", {"per_page": "50"}
         )
         conversations = json.loads(response_unread.content.decode("utf-8"))
-        #get unreads and 5 latest reads
-        read_conversations = [conv for conv in conversations if conv['workflow_state'] == 'read']
-        unread_conversations = [conv for conv in conversations if conv['workflow_state'] == 'unread']
-        read_conversations = read_conversations = sorted(read_conversations, key=lambda x: datetime.strptime(x['last_message_at'], "%Y-%m-%dT%H:%M:%SZ"), reverse=True)[:5]
+        # get unreads and 5 latest reads
+        read_conversations = [
+            conv for conv in conversations if conv["workflow_state"] == "read"
+        ]
+        unread_conversations = [
+            conv for conv in conversations if conv["workflow_state"] == "unread"
+        ]
+        read_conversations = read_conversations = sorted(
+            read_conversations,
+            key=lambda x: datetime.strptime(x["last_message_at"], "%Y-%m-%dT%H:%M:%SZ"),
+            reverse=True,
+        )[:5]
         merged_conversations = read_conversations + unread_conversations
         if len(merged_conversations) != 0:
-            return {f"conversation-{conversation['id']}": conversation for conversation in merged_conversations}
+            return {
+                f"conversation-{conversation['id']}": conversation
+                for conversation in merged_conversations
+            }
         else:
             return {f"conversation-{CONVERSATION_ENTITY_CONSTANT}": {}}
 
@@ -170,8 +189,10 @@ class CanvasAPI:
             course_submissions = json.loads(response.content.decode("utf-8"))
             course_submissions = json.loads(response.content.decode("utf-8"))
             for submission in course_submissions:
-                if submission['graded_at'] is not None:
-                    graded_at = datetime.strptime(submission['graded_at'], "%Y-%m-%dT%H:%M:%SZ")
+                if submission["graded_at"] is not None:
+                    graded_at = datetime.strptime(
+                        submission["graded_at"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
                     past_one_month = datetime.utcnow() - timedelta(days=30)
                     if graded_at >= past_one_month:
                         submissions[f"submission-{submission['id']}"] = submission

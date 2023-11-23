@@ -59,7 +59,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                         self.update_entities(
                             data_type,
                             new_data.get(data_type, {}),
-                            self.old_data.get(data_type, {})
+                            self.old_data.get(data_type, {}),
                         )
                     self.old_data = new_data
 

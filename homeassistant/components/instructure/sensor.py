@@ -24,6 +24,7 @@ from .coordinator import CanvasUpdateCoordinator
 
 GLOBAL_UNIQUE_ID = 1
 
+
 @dataclass
 class BaseEntityDescriptionMixin:
     """Mixin for required Canvas base description keys."""
@@ -55,11 +56,15 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         icon="mdi:note-outline",
         avabl_fn=lambda data: data is not None,
         name_fn=lambda data: data["name"] if data else "Default Assignment Name",
-        value_fn=lambda data: datetime_process(data["due_at"]) if data else "Default Due Date",
+        value_fn=lambda data: datetime_process(data["due_at"])
+        if data
+        else "Default Due Date",
         attr_fn=lambda data, courses: {
             # "Course": courses[data["course_id"]],
             "Link": data["html_url"]
-        } if data else {"Link": "Default Assignment Link"},
+        }
+        if data
+        else {"Link": "Default Assignment Link"},
     ),
     ANNOUNCEMENTS_KEY: CanvasSensorEntityDescription(
         device_name="Announcements",
@@ -73,7 +78,9 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
             # "Course": courses[data["context_code"].split("_")[1]],
             "Link": data["html_url"],
             "Post Time": datetime_process(data["posted_at"]),
-        } if data else {"Link": "Default Link", "Post Time": "Default Post Time"},
+        }
+        if data
+        else {"Link": "Default Link", "Post Time": "Default Post Time"},
     ),
     CONVERSATIONS_KEY: CanvasSensorEntityDescription(
         device_name="Inbox",
@@ -82,13 +89,22 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         icon="mdi:email",
         avabl_fn=lambda data: data is not None,
         name_fn=lambda data: data["subject"] if data else "Default Inbox Subject",
-        value_fn=lambda data: data["workflow_state"] if data else "Default Workflow State",
+        value_fn=lambda data: data["workflow_state"]
+        if data
+        else "Default Workflow State",
         attr_fn=lambda data, courses: {
             "Course": data["context_name"],
             "Initial Sender": data["participants"][0]["name"],
             "Last Message": data["last_message"],
             "Last Message Time": datetime_process(data["last_message_at"]),
-        } if data else {"Course": "Default Course", "Initial Sender": "Default Sender", "Last Message": "Default Message", "Last Message Time": "Default Time"},
+        }
+        if data
+        else {
+            "Course": "Default Course",
+            "Initial Sender": "Default Sender",
+            "Last Message": "Default Message",
+            "Last Message Time": "Default Time",
+        },
     ),
     GRADES_KEY: CanvasSensorEntityDescription(
         device_name="Grades",
@@ -101,7 +117,9 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         attr_fn=lambda data, courses: {
             "Score": data["score"],
             "Submission Type": data["submission_type"],
-        } if data else {"Score": "Default Score", "Submission Type": "Default Submission Type"},
+        }
+        if data
+        else {"Score": "Default Score", "Submission Type": "Default Submission Type"},
     ),
 }
 
@@ -204,7 +222,6 @@ async def async_setup_entry(
             hass.data[DOMAIN][entry.entry_id]["entities"][data_type][
                 entity_id
             ] = new_entity
-
 
         if new_entities:
             async_add_entities(tuple(new_entities))

@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = CanvasAPI(
         f"https://{entry.data['host_prefix']}.instructure.com/api/v1",
-        entry.data["access_token"]
+        entry.data["access_token"],
     )
     coordinator = CanvasUpdateCoordinator(hass, entry, api)
     hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator

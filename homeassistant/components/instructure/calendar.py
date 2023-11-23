@@ -1,7 +1,11 @@
 import datetime
 from datetime import timezone
 from homeassistant.core import HomeAssistant
-from homeassistant.components.calendar import ENTITY_ID_FORMAT, CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    ENTITY_ID_FORMAT,
+    CalendarEntity,
+    CalendarEvent,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -13,6 +17,7 @@ from .const import DOMAIN, ASSIGNMENTS_KEY
 
 class CanvasCalendarEntity(CalendarEntity):
     """A calendar entity for Canvas assignments"""
+
     def __init__(self, hass, coordinator, entity_id):
         self.hass = hass
         self.coordinator = coordinator
@@ -22,7 +27,7 @@ class CanvasCalendarEntity(CalendarEntity):
             identifiers={(DOMAIN, "calendar_canvas_assignments")},
             entry_type=DeviceEntryType.SERVICE,
             name="Calendar Canvas Assignments",
-            manufacturer="Canvas"
+            manufacturer="Canvas",
         )
 
     @property
@@ -32,19 +37,27 @@ class CanvasCalendarEntity(CalendarEntity):
 
         current_time = datetime.datetime.now(timezone.utc)
 
-        next_assignment = min((item for item in assignments if self.parse_date(item["due_at"]) > current_time),
-               key=lambda item: self.parse_date(item["due_at"]), default=None)
+        next_assignment = min(
+            (
+                item
+                for item in assignments
+                if self.parse_date(item["due_at"]) > current_time
+            ),
+            key=lambda item: self.parse_date(item["due_at"]),
+            default=None,
+        )
 
         return CalendarEvent(
             start=self.parse_date(next_assignment["due_at"]),
-            end=self.parse_date(next_assignment["due_at"]) + datetime.timedelta(hours=1),
+            end=self.parse_date(next_assignment["due_at"])
+            + datetime.timedelta(hours=1),
             summary=next_assignment["name"],
-            description=next_assignment["html_url"]
+            description=next_assignment["html_url"],
         )
 
     def get_assignments_with_due_date(self):
         assignments = self.coordinator.data[ASSIGNMENTS_KEY].values()
-        return [i for i in assignments if i['due_at']]
+        return [i for i in assignments if i["due_at"]]
 
     def parse_date(self, date_str):
         return datetime.datetime.fromisoformat(date_str)
@@ -57,16 +70,23 @@ class CanvasCalendarEntity(CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         assignments = self.get_assignments_with_due_date()
-        filtered_assignments = [item for item in assignments if start_date <= self.parse_date(item["due_at"]) <= end_date]
+        filtered_assignments = [
+            item
+            for item in assignments
+            if start_date <= self.parse_date(item["due_at"]) <= end_date
+        ]
 
         event_list = []
         for assignment in filtered_assignments:
-            event_list.append(CalendarEvent(
-                start=self.parse_date(assignment["due_at"]),
-                end=self.parse_date(assignment["due_at"]) + datetime.timedelta(hours=1),
-                summary=assignment["name"],
-                description=assignment["html_url"]
-            ))
+            event_list.append(
+                CalendarEvent(
+                    start=self.parse_date(assignment["due_at"]),
+                    end=self.parse_date(assignment["due_at"])
+                    + datetime.timedelta(hours=1),
+                    summary=assignment["name"],
+                    description=assignment["html_url"],
+                )
+            )
 
         return event_list
 
@@ -82,11 +102,7 @@ async def async_setup_entry(
     canvas_calendar_entity = CanvasCalendarEntity(
         hass,
         coordinator,
-        generate_entity_id(
-            ENTITY_ID_FORMAT,
-            "canvas_calendar_assignments",
-            hass=hass
-        )
+        generate_entity_id(ENTITY_ID_FORMAT, "canvas_calendar_assignments", hass=hass),
     )
 
     async_add_entities([canvas_calendar_entity])
