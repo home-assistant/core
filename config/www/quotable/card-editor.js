@@ -7,6 +7,7 @@ class QuotableCardEditor extends HTMLElement {
     this._selectedTags = [];
     this._selectedAuthors = [];
     this.intervalValue = 300;
+    this._selectedAuthorSlug = [];
   }
 
   set hass(hass) {
@@ -15,6 +16,7 @@ class QuotableCardEditor extends HTMLElement {
 
   setConfig(config) {
     this._config = config;
+    this.configChanged(config);
   }
 
   async connectedCallback() {
@@ -106,7 +108,7 @@ class QuotableCardEditor extends HTMLElement {
         margin-bottom: 10px;
       }
 
-      input[type="range"] {
+            input[type="range"] {
         width: 80%;
         height: 10px;
         border: 1px solid #ccc;
@@ -116,7 +118,7 @@ class QuotableCardEditor extends HTMLElement {
       }
 
 
-      input[type="range"]::-webkit-slider-thumb {
+            input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         width: 20px;
         height: 20px;
@@ -133,34 +135,34 @@ class QuotableCardEditor extends HTMLElement {
       }
     </style>
 
-    <form id="form">
-      <div>
-        <label for="authorSelect">Select Authors:</label>
-        <span id="selectedAuthorLabel"></span>
-        <input type="text" id="authorInput" placeholder="Search here">
-        <select id="authorSelect" multiple>
-          ${this._authors
-            .map((author) => `<option value="${author}">${author}</option>`)
-            .join("")}
-        </select>
-      </div>
+      <form id="form">
+    <div>
+    <label for="authorSelect">Select Authors:</label>
+    <span id="selectedAuthorLabel"></span>
+    <input type="text" id="authorInput" placeholder="Search here">
+    <select id="authorSelect" multiple>
+      ${this._authors
+        .map((author) => `<option value="${author}">${author}</option>`)
+        .join("")}
+    </select>
+  </div>
 
-      <div>
-        <label for="tagSelect">Select Categories:</label>
-        <input type="text" id="selectedTags" readonly  placeholder="Select from list">
-        <select id="tagSelect" multiple>
-          ${this._tags
-            .map((tag) => `<option value="${tag}">${tag}</option>`)
-            .join("")}
-        </select>
-      </div>
+  <div>
+    <label for="tagSelect">Select Categories:</label>
+    <input type="text" id="selectedTags" readonly  placeholder="Select from list">
+    <select id="tagSelect" multiple>
+      ${this._tags
+        .map((tag) => `<option value="${tag}">${tag}</option>`)
+        .join("")}
+    </select>
+  </div>
 
-      <div>
-        <label for="slider">Select Update Interval(mins):</label>
-        <input type="range" id="slider" min="1" max="60" value="50">
-        <span id="updateIntervalLabel">50</span>
-      </div>
-    </form>
+  <div>
+    <label for="slider">Select Update Interval(mins):</label>
+    <input type="range" id="slider" min="1" max="60" value="50">
+    <span id="updateIntervalLabel">50</span>
+  </div>
+  </form>
   `;
 
     // Add references to the input and multiselect elements
@@ -175,6 +177,7 @@ class QuotableCardEditor extends HTMLElement {
     const selectedAuthorLabel = this.shadowRoot.getElementById(
       "selectedAuthorLabel"
     );
+    const form = this.shadowRoot.getElementById("form");
 
     // Add  event listener to search author
     authorInput.addEventListener("keyup", () => {
@@ -200,8 +203,10 @@ class QuotableCardEditor extends HTMLElement {
         const index = this._selectedAuthors.indexOf(selectedOption.value);
         if (index === -1) {
           this._selectedAuthors.push(selectedOption.text);
+          this._selectedAuthorSlug.push(selectedOption.value);
         } else {
           this._selectedAuthors.splice(index, 1);
+          this._selectedAuthorSlug.splice(index, 1);
         }
 
         // Update the selected author list
@@ -242,25 +247,30 @@ class QuotableCardEditor extends HTMLElement {
       updateIntervalLabel.textContent = updateIntervalSlider.value;
       this.intervalValue = updateIntervalSlider.value;
     });
-  }
-  // Add this function to your class
-  toggleOptionBackground(selectedOption) {
-    // Toggle the background color of the selected option
-    selectedOption.style.backgroundColor =
-      selectedOption.style.backgroundColor === "#007BFF" ? "#fff" : "#007BFF";
 
-    // Toggle the text color of the selected option
-    selectedOption.style.color =
-      selectedOption.style.color === "#fff" ? "#007BFF" : "#fff";
+    form.addEventListener("focusout", this.updateConfiguration.bind(this));
   }
+
+  configChanged(newConfig) {
+    // Update the local _config property with the new configuration
+    this._config = newConfig;
+
+    const event = new Event("config-changed", {
+      bubbles: true,
+      composed: true,
+    });
+    event.detail = { config: newConfig };
+    this.dispatchEvent(event);
+  }
+
   async searchAuthor(query) {
     try {
+      // Convert the selected authors into a list in YAML format
+
       const searchData = {
         entity_id: this._config.entity,
         query: query,
       };
-
-      console.log(searchData);
 
       const searchMessage = {
         domain: "quotable",
@@ -282,7 +292,7 @@ class QuotableCardEditor extends HTMLElement {
           slug: slug,
           name: authorResponse.response[slug],
         }));
-        // Add new options based on the new author array
+        // Add new options based on the author array
         this._authors.forEach((author) => {
           const option = document.createElement("option");
           option.value = author.slug;
@@ -292,6 +302,40 @@ class QuotableCardEditor extends HTMLElement {
       }
     } catch (error) {
       console.error("Error searching author:", error);
+    }
+  }
+
+  async updateConfiguration() {
+    try {
+      console.log("authorslug", this._selectedAuthorSlug);
+
+      console.log("tag slug", this._selectedTags);
+
+      const lowercaseTags = this._selectedTags.map((tag) => tag.toLowerCase());
+      console.log("lowercase", lowercaseTags);
+
+      const updateConfigData = {
+        entity_id: this._config.entity,
+        selected_tags: lowercaseTags,
+        selected_authors: this._selectedAuthorSlug,
+        update_frequency: parseInt(this.intervalValue) * 60,
+      };
+
+      const updateConfigMessage = {
+        domain: "quotable",
+        service: "update_configuration",
+        type: "call_service",
+        return_response: false,
+        service_data: updateConfigData,
+      };
+
+      const responseUpdateConfig = await this._hass.callWS(updateConfigMessage);
+
+      if (responseUpdateConfig) {
+        console.error(" updating configuration:");
+      }
+    } catch (error) {
+      console.error("Error updating configuration:", error);
     }
   }
 }
