@@ -1067,11 +1067,11 @@ async def merge_packages_config(
     return config
 
 
+@callback
 def _get_log_message_and_stack_print_pref(
     hass: HomeAssistant, domain: str, platform_exception: ConfigExceptionInfo
 ) -> tuple[str | None, bool, dict[str, str]]:
     """Get message to log and print stack trace preference."""
-    translation_key = platform_exception.translation_key
     exception = platform_exception.exception
     platform_name = platform_exception.platform_name
     platform_config = platform_exception.config
@@ -1115,7 +1115,9 @@ def _get_log_message_and_stack_print_pref(
             True,
         ),
     }
-    log_message_show_stack_trace = log_message_mapping.get(translation_key)
+    log_message_show_stack_trace = log_message_mapping.get(
+        platform_exception.translation_key
+    )
     if log_message_show_stack_trace is None:
         # If no pre defined log_message is set, we generate an enriched error
         # message, so we can notify about it during setup
