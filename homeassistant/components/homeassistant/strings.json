@@ -135,6 +135,16 @@
     "reload_all": {
       "name": "Reload all",
       "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+    },
+    "delete_scene": {
+      "name": "Delete scene",
+      "description": "Deletes a dynamically created scene.",
+      "fields": {
+        "entity_id": {
+          "name": "Scene entity ID",
+          "description": "The entity_id of the scene to be deleted."
+        }
+      }
     }
   },
   "exceptions": {
@@ -170,6 +180,9 @@
     },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
+    },
+    "entity_not_dynamically_created": {
+      "message": "The scene {entity_id} is not created with service `scene.create`."
     }
   }
 }

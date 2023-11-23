@@ -8,6 +8,7 @@ from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, async_mock_service
@@ -183,35 +184,22 @@ async def test_delete_service(
         blocking=True,
     )
 
-    await hass.services.async_call(
-        "scene",
-        "delete",
-        {
-            "entity_id": "scene.hallo_3",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert "The scene scene.hallo_3 does not exist" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "homeassistant",
+            "delete_scene",
+            {
+                "entity_id": "scene.hallo_2",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        assert hass.states.get("scene.hallo_2") is not None
 
     await hass.services.async_call(
-        "scene",
-        "delete",
-        {
-            "entity_id": "scene.hallo_2",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert (
-        "The scene scene.hallo_2 is not created with service `scene.create`"
-        in caplog.text
-    )
-    assert hass.states.get("scene.hallo_2") is not None
-
-    await hass.services.async_call(
-        "scene",
-        "delete",
+        "homeassistant",
+        "delete_scene",
         {
             "entity_id": "scene.hallo",
         },

@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -29,7 +30,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_per_platform,
     config_validation as cv,
@@ -40,6 +41,8 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
+
+from .const import DOMAIN
 
 
 def _convert_states(states: dict[str, Any]) -> dict[str, State]:
@@ -84,7 +87,6 @@ def _ensure_no_intersection(value: dict[str, Any]) -> dict[str, Any]:
 
 
 CONF_SCENE_ID = "scene_id"
-CONF_ENTITY_ID = "entity_id"
 CONF_SNAPSHOT = "snapshot_entities"
 DATA_PLATFORM = "homeassistant_scene"
 EVENT_SCENE_RELOADED = "scene_reloaded"
@@ -135,7 +137,7 @@ DELETE_SCENE_SCHEMA = vol.All(
 
 SERVICE_APPLY = "apply"
 SERVICE_CREATE = "create"
-SERVICE_DELETE = "delete"
+SERVICE_DELETE = "delete_scene"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -284,26 +286,8 @@ async def async_setup_platform(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
     )
 
-    async def delete_service(call: ServiceCall) -> None:
-        """Delete a dynamically created scene."""
-        entity_id = call.data[CONF_ENTITY_ID]
-        scene = platform.entities.get(entity_id)
-        if scene is None:
-            _LOGGER.error("The scene %s does not exist", entity_id)
-            return
-        if not isinstance(scene, HomeAssistantScene):
-            _LOGGER.error("Entity %s is not a scene", entity_id)
-            return
-        if not scene.from_service:
-            _LOGGER.error(
-                "The scene %s is not created with service `scene.create`", entity_id
-            )
-            return
-
-        await platform.async_remove_entity(entity_id)
-
-    hass.services.async_register(
-        SCENE_DOMAIN, SERVICE_DELETE, delete_service, DELETE_SCENE_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_DELETE, DELETE_SCENE_SCHEMA, "delete"
     )
 
 
@@ -372,3 +356,17 @@ class HomeAssistantScene(Scene):
             context=self._context,
             reproduce_options=kwargs,
         )
+
+    async def delete(self) -> None:
+        """Delete a dynamically created scene."""
+        if not self.from_service:
+            raise ServiceValidationError(
+                f"The scene {self.entity_id} is not created with service `scene.create`",
+                translation_domain=DOMAIN,
+                translation_key="entity_not_dynamically_created",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+
+        await self.async_remove()
