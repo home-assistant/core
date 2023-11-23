@@ -2,11 +2,16 @@ import httpx
 import urllib.parse
 import json
 from typing import Any
-
+from datetime import datetime, timedelta
+from .const import (
+    ANNOUNCEMENT_ENTITY_CONSTANT,
+    ASSIGNMENT__ENTITY_CONSTANT,
+    CONVERSATION_ENTITY_CONSTANT,
+    GRADES_ENTITY_CONSTANT,
+)
 
 class CanvasAPI:
-    """
-    A wrapper for the Canvas API.
+    """A wrapper for the Canvas API.
 
     This class provides methods to interact with the Canvas Learning Management System API.
     It supports various operations such as retrieving courses, assignments, announcements,
@@ -18,8 +23,7 @@ class CanvasAPI:
     """
 
     def __init__(self, host: str, access_token: str) -> None:
-        """
-        Initializes the CanvasAPI object with the host URL and access token.
+        """Initializes the CanvasAPI object with the host URL and access token.
 
         Args:
         host (str): The base URL of the Canvas instance.
@@ -31,8 +35,7 @@ class CanvasAPI:
     async def async_make_get_request(
         self, endpoint: str, parameters: dict = {}
     ) -> dict:
-        """
-        Makes an asynchronous GET request to a specified Canvas API endpoint.
+        """Makes an asynchronous GET request to a specified Canvas API endpoint.
 
         Args:
         endpoint (str): The API endpoint to make the request to.
@@ -53,8 +56,7 @@ class CanvasAPI:
         return response
 
     async def async_test_authentication(self) -> bool:
-        """
-        Tests if the provided access token is valid by making a dummy request to the Canvas API.
+        """Tests if the provided access token is valid by making a dummy request to the Canvas API.
 
         Returns:
         bool: True if the authentication is successful, False otherwise.
@@ -64,8 +66,7 @@ class CanvasAPI:
         return response.status_code == 200
 
     async def async_get_courses(self) -> list:
-        """
-        Retrieves a list of courses from the Canvas API.
+        """Retrieves a list of courses from the Canvas API.
 
         Returns:
         list: A list of courses.
@@ -75,8 +76,7 @@ class CanvasAPI:
         return courses
 
     async def async_get_assignments(self, course_ids: list[str]) -> dict[str, Any]:
-        """
-        Retrieves a dictionary of assignments for given course IDs from the Canvas API.
+        """Retrieves a dictionary of assignments for given course IDs from the Canvas API.
 
         Args:
         course_ids (list[str]): A list of course IDs to fetch assignments from.
@@ -88,17 +88,24 @@ class CanvasAPI:
 
         for course_id in course_ids:
             response = await self.async_make_get_request(
-                f"/courses/{course_id}/assignments", {"per_page": "50"}
+                f"/courses/{course_id}/assignments", {"per_page": "50", "bucket": "future"}
             )
             course_assignments = json.loads(response.content.decode("utf-8"))
             for assignment in course_assignments:
-                assignments[f"assignment-{assignment['id']}"] = assignment
+                if assignment['due_at'] is not None:
+                    due_date = datetime.strptime(assignment['due_at'], "%Y-%m-%dT%H:%M:%SZ")
+                    next_two_weeks = datetime.utcnow() + timedelta(days=14)
+                    if due_date <= next_two_weeks:
+                        assignments[f"assignment-{assignment['id']}"] = assignment
 
-        return assignments
+        if len(assignments) != 0:
+            return assignments
+        else:
+            return {f"assignment-{ASSIGNMENT__ENTITY_CONSTANT}": {}}
+
 
     async def async_get_announcements(self, course_ids: list[str]) -> dict[str, Any]:
-        """
-        Retrieves a dictionary of announcements for given course IDs from the Canvas API.
+        """Retrieves a dictionary of announcements for given course IDs from the Canvas API.
 
         Args:
         course_ids (list[str]): A list of course IDs to fetch assignments from.
@@ -106,28 +113,72 @@ class CanvasAPI:
         Returns:
         dict: The response from the Canvas API.
         """
+
+        start_date = datetime.now() - timedelta(days=7)
+        start_date_str = start_date.isoformat()
+        end_date = datetime.now().isoformat()
         announcements = {}
 
         for course_id in course_ids:
             response = await self.async_make_get_request(
                 "/announcements",
-                {"per_page": "50", "context_codes": f"course_{course_id}"},
+                {"per_page": "50", "context_codes": f"course_{course_id}", "start_date": start_date_str, "end_date": end_date},
             )
             course_announcements = json.loads(response.content.decode("utf-8"))
             for announcement in course_announcements:
                 announcements[f"announcement-{announcement['id']}"] = announcement
 
-        return announcements
+        if len(announcements) != 0:
+            return announcements
+        else:
+            return {f"announcement-{ANNOUNCEMENT_ENTITY_CONSTANT}": {}}
 
     async def async_get_conversations(self) -> dict[str, Any]:
-        """
-        Retrieves a dictionary of conversations from the Canvas API.
+        """Retrieves a dictionary of conversations from the Canvas API.
 
         Returns:
         dict: The response from the Canvas API.
         """
-        response = await self.async_make_get_request(
+        response_unread = await self.async_make_get_request(
             "/conversations", {"per_page": "50"}
         )
-        conversations = json.loads(response.content.decode("utf-8"))
-        return {f"conversation-{conversation['id']}": conversation for conversation in conversations}
+        conversations = json.loads(response_unread.content.decode("utf-8"))
+        #get unreads and 5 latest reads
+        read_conversations = [conv for conv in conversations if conv['workflow_state'] == 'read']
+        unread_conversations = [conv for conv in conversations if conv['workflow_state'] == 'unread']
+        read_conversations = read_conversations = sorted(read_conversations, key=lambda x: datetime.strptime(x['last_message_at'], "%Y-%m-%dT%H:%M:%SZ"), reverse=True)[:5]
+        merged_conversations = read_conversations + unread_conversations
+        if len(merged_conversations) != 0:
+            return {f"conversation-{conversation['id']}": conversation for conversation in merged_conversations}
+        else:
+            return {f"conversation-{CONVERSATION_ENTITY_CONSTANT}": {}}
+
+    async def async_get_grades(self, course_ids: list[str]) -> dict[str, Any]:
+        """Retrieves a dictionary of submissions from the Canvas API.
+
+        Returns:
+        dict: The response from the Canvas API.
+        """
+        submissions = {}
+        # Grades entity is right now meaningless because we dont get assignment description neither course name etc.
+        # Check GRADES_KEY: CanvasSensorEntityDescription(.... (name_fn and value_fn))
+        for course_id in course_ids:
+            response = await self.async_make_get_request(
+                f"/courses/{course_id}/students/submissions",
+                {"per_page": "50"},
+            )
+            course_submissions = json.loads(response.content.decode("utf-8"))
+            course_submissions = json.loads(response.content.decode("utf-8"))
+            for submission in course_submissions:
+                if submission['graded_at'] is not None:
+                    graded_at = datetime.strptime(submission['graded_at'], "%Y-%m-%dT%H:%M:%SZ")
+                    past_one_month = datetime.utcnow() - timedelta(days=30)
+                    if graded_at >= past_one_month:
+                        submissions[f"submission-{submission['id']}"] = submission
+
+        if len(submissions) != 0:
+            return submissions
+        else:
+            return {f"submission-{GRADES_ENTITY_CONSTANT}": {}}
+
+        return submissions
