@@ -10,7 +10,7 @@ from typing import Any
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -123,17 +123,14 @@ CIRCUIT_ENTITIES: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str,
-    vicare_api: PyViCareHeatingDeviceWithComponent,
+    api: PyViCareHeatingDeviceComponent,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
 ) -> ViCareNumber | None:
     """Create a ViCare number entity."""
-    if is_supported(name, entity_description, vicare_api):
-        _LOGGER.debug("Found device %s", name)
+    if is_supported(entity_description.key, entity_description, api):
         return ViCareNumber(
-            name,
-            vicare_api,
+            api,
             device_config,
             entity_description,
         )
@@ -152,13 +149,9 @@ async def async_setup_entry(
     entities: list[ViCareNumber] = []
     try:
         for circuit in api.circuits:
-            suffix = ""
-            if len(api.circuits) > 1:
-                suffix = f" {circuit.id}"
             for description in CIRCUIT_ENTITIES:
                 entity = await hass.async_add_executor_job(
                     _build_entity,
-                    f"{description.name}{suffix}",
                     circuit,
                     device_config,
                     description,
@@ -178,15 +171,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        name: str,
-        api: PyViCareHeatingDeviceWithComponent,
+        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
     ) -> None:
         """Initialize the number."""
         super().__init__(device_config, api, description.key)
         self.entity_description = description
-        self._attr_name = name
 
     @property
     def available(self) -> bool:
