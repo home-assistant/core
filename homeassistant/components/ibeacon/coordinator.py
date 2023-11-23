@@ -13,7 +13,7 @@ from ibeacon_ble import (
     iBeaconParser,
 )
 
-from homeassistant.components import bluetooth
+from homeassistant.components import bluetooth, persistent_notification
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -116,6 +116,7 @@ class IBeaconCoordinator:
         self._entry = entry
         self._dev_reg = registry
         self._ibeacon_parser = iBeaconParser()
+        self._persistent_notification_sent = False
 
         # iBeacon devices that do not follow the spec
         # and broadcast custom data in the major and minor fields
@@ -310,6 +311,26 @@ class IBeaconCoordinator:
                 == service_info.device.address
             )
         ):
+            # Past versions of the Companion Apps's BLE transmitter used major=100, minor=1 by default, so if we
+            # see an ignored beacon with these values it's likely the Companion App. We print a warning and create
+            # a persistent notification to inform the user how to solve the problem.
+            #
+            if ibeacon_advertisement.major == 100 and ibeacon_advertisement.minor == 1:
+                _LOGGER.warning(
+                    "You are likely using a Companion App BLE transmitter from an Android device that does not broadcast its name. The beacon %s will be ignored. You can fix this issue by setting Minor=40004 in the companion app settings",
+                    unique_id,
+                )
+
+                # At most one persistent notification to avoid spamming
+                if not self._persistent_notification_sent:
+                    self._persistent_notification_sent = True
+
+                    persistent_notification.async_create(
+                        self.hass,
+                        title="BLE transmitter iBeacon ignored",
+                        message="You are likely using a Companion App BLE transmitter from an Android device that does not broadcast its name. Such iBeacons will be ignored.\n\nYou can fix this issue by setting Minor=40004 in the settings of the BLE Transmitter.",
+                    )
+
             _LOGGER.debug("ignoring new beacon %s due to empty name", unique_id)
             return
 
