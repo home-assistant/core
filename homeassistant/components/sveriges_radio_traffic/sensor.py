@@ -78,7 +78,7 @@ class TrafficSensor(SensorEntity):
 
         # API call
         response = requests.get(
-            "http://api.sr.se/api/v2/traffic/messages?trafficareaname="
+            "https://api.sr.se/api/v2/traffic/messages?trafficareaname="
             + self.traffic_area,
             timeout=10,
         )
