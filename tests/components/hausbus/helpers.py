@@ -1,13 +1,21 @@
 """Helper functions for Haus-Bus tests."""
 
 from threading import Thread
+from typing import cast
 from unittest.mock import Mock, patch
 
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
+    EFirmwareId,
+)
 from pyhausbus.HomeServer import HomeServer
+from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.components.hausbus.channel import HausbusChannel
 from homeassistant.components.hausbus.const import DOMAIN as HAUSBUS_DOMAIN
 from homeassistant.components.hausbus.gateway import HausbusGateway
+from homeassistant.components.hausbus.light import HausbusLight
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -88,3 +96,24 @@ async def add_channel_from_thread(
 
     # adding entity is done asynchronously on hass loop, wait until this is finished
     await hass.async_block_till_done()
+
+
+async def create_light_channel(hass: HomeAssistant, instance):
+    """Add a light channel to the gateway via a different thread."""
+    gateway, _ = await create_gateway(hass)
+
+    # get mock config entry with id "1"
+    config_entry = hass.config_entries.async_get_entry("1")
+
+    # setup light domain
+    await hass.config_entries.async_forward_entry_setups(config_entry, [Platform.LIGHT])
+
+    # Add a new device to hold the dimmer channel
+    device_id = "1"
+    module = ModuleId("module", 0, 1, 0, EFirmwareId.ESP32)
+    gateway.add_device(device_id, module)
+    await add_channel_from_thread(hass, instance, gateway)
+
+    return gateway, cast(
+        HausbusLight, gateway.get_channel(ObjectId(instance.getObjectId()))
+    )

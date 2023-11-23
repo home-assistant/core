@@ -107,7 +107,7 @@ class HausbusLight(HausbusChannel, LightEntity):
             cast(RGBDimmer, self._channel.getStatus())
 
     def set_light_color(self, red: int, green: int, blue: int):
-        """Set the brightness of a light channel."""
+        """Set the color of a light channel."""
         hue, saturation, value = colorsys.rgb_to_hsv(
             red / 100.0,
             green / 100.0,
@@ -222,7 +222,7 @@ class HausbusLight(HausbusChannel, LightEntity):
         elif isinstance(light, Led):
             light = cast(Led, light)
             brightness = brightness * 100 // 255
-            light.setBrightness(brightness, 0)
+            light.on(brightness, 0, 0)
         elif isinstance(self._channel, RGBDimmer):
             light = cast(RGBDimmer, light)
             rgb = colorsys.hsv_to_rgb(h_s[0] / 360, h_s[1] / 100, brightness / 255)
