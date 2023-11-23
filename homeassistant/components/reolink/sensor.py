@@ -23,6 +23,8 @@ from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True)
 class ReolinkSensorEntityDescription(SensorEntityDescription):

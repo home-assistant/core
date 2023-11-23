@@ -24,6 +24,8 @@ from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True)
 class ReolinkLightEntityDescription(LightEntityDescription):

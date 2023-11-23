@@ -24,6 +24,8 @@ from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass
 class ReolinkSirenEntityDescription(SirenEntityDescription):

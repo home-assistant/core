@@ -24,6 +24,8 @@ from .entity import ReolinkChannelCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True)
 class ReolinkCameraEntityDescription(
