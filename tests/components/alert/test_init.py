@@ -352,31 +352,14 @@ async def test_alert_fires_on_startup(
     hass: HomeAssistant, mock_notifier: list[ServiceCall]
 ) -> None:
     """Test that the alert fires on startup of hass."""
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+
     config = deepcopy(TEST_CONFIG)
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(mock_notifier) == 0
-
-    hass.states.async_set("sensor.test", STATE_ON)
-    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
     assert len(mock_notifier) == 1
-
-
-async def test_alert_does_not_fire_on_startup(
-    hass: HomeAssistant, mock_notifier: list[ServiceCall]
-) -> None:
-    """Test that the alert does not fire on startup of hass."""
-    config = deepcopy(TEST_CONFIG)
-    assert await async_setup_component(hass, DOMAIN, config)
-    assert len(mock_notifier) == 0
-
-    hass.states.async_set("sensor.test", STATE_OFF)
-    await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    assert len(mock_notifier) == 0

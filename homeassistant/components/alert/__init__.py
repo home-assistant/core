@@ -208,8 +208,6 @@ class Alert(Entity):
             return
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
-        if to_state.state != self._alert_state and self._firing:
-            await self.end_alerting()
 
     async def watched_entity_change(
         self, event: EventType[EventStateChangedData]
