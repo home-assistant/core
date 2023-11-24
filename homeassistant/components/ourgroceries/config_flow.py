@@ -37,8 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             try:
-                og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
                 await og.login()
             except (AsyncIOTimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
