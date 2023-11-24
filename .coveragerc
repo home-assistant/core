@@ -120,6 +120,7 @@ omit =
     homeassistant/components/blink/binary_sensor.py
     homeassistant/components/blink/camera.py
     homeassistant/components/blink/sensor.py
+    homeassistant/components/blink/switch.py
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
