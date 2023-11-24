@@ -8,12 +8,12 @@ from eternalegypt import Error, Modem
 from eternalegypt.eternalegypt import Information
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DEFAULT_HOST, DOMAIN, MANUFACTURER
+from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
 
 
 class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -38,16 +38,16 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password = user_input[CONF_PASSWORD]
 
-            info, error = await self._async_validate_input(host, password)
-            if info:
-                await self.async_set_unique_id(info.serial_number)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"{MANUFACTURER} {info.items['general.devicename']}",
-                    data={CONF_HOST: host, CONF_PASSWORD: password},
-                )
-            if error:
-                errors["base"] = error
+            try:
+                if info := await self._async_validate_input(host, password):
+                    await self.async_set_unique_id(info.serial_number)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=f"{MANUFACTURER} {info.items['general.devicename']}",
+                        data={CONF_HOST: host, CONF_PASSWORD: password},
+                    )
+            except InputValidationError as ex:
+                errors["base"] = ex.base
 
         return self.async_show_form(
             step_id="user",
@@ -65,7 +65,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_input(
         self, host: str, password: str
-    ) -> tuple[Information, None] | tuple[None, str]:
+    ) -> Information | None:
         """Validate login credentials."""
         websession = async_create_clientsession(
             self.hass, cookie_jar=CookieJar(unsafe=True)
@@ -78,8 +78,18 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await modem.login()
-        except Error:
-            return None, "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            return None, "unknown"
-        return await modem.information(), None
+        except Error as ex:
+            raise InputValidationError("cannot_connect") from ex
+        except Exception as ex:
+            LOGGER.exception("Unexpected exception")
+            raise InputValidationError("unknown") from ex
+        return await modem.information()
+
+
+class InputValidationError(exceptions.HomeAssistantError):
+    """Error to indicate we cannot proceed due to invalid input."""
+
+    def __init__(self, base: str) -> None:
+        """Initialize with error base."""
+        super().__init__()
+        self.base = base

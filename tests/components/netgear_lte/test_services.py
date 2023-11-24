@@ -5,17 +5,11 @@ from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from .conftest import HOST, ComponentSetup
+from .conftest import HOST
 
 
-async def test_set_option(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    connection,
-) -> None:
+async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
     """Test service call set option."""
-    await setup_integration()
-
     with patch(
         "homeassistant.components.netgear_lte.Modem.set_failover_mode"
     ) as mock_client:

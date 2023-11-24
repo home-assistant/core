@@ -8,17 +8,12 @@ from homeassistant.components.notify import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup
-
 ICON_PATH = "/some/path"
 MESSAGE = "one, two, testing, testing"
 
 
-async def test_notify(
-    hass: HomeAssistant, setup_integration: ComponentSetup, connection
-) -> None:
+async def test_notify(hass: HomeAssistant, setup_integration: None) -> None:
     """Test sending a message."""
-    await setup_integration()
     assert hass.services.has_service(NOTIFY_DOMAIN, "netgear_lm1200")
 
     with patch("homeassistant.components.netgear_lte.Modem.sms") as mock:

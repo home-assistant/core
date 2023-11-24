@@ -1,8 +1,6 @@
 """Configure pytest for Netgear LTE tests."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
-
 from aiohttp.client_exceptions import ClientError
 import pytest
 
@@ -18,8 +16,6 @@ HOST = "192.168.5.1"
 PASSWORD = "password"
 
 CONF_DATA = {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
-
-ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture
@@ -69,12 +65,21 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-) -> Generator[ComponentSetup, None, None]:
+    connection: None,
+) -> None:
     """Set up the Netgear LTE integration in Home Assistant."""
     config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    async def func() -> None:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
 
-    return func
+@pytest.fixture(name="setup_cannot_connect")
+async def setup_cannot_connect(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    cannot_connect: None,
+) -> None:
+    """Set up the Netgear LTE integration in Home Assistant."""
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()

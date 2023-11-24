@@ -7,7 +7,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
-from .conftest import CONF_DATA, ComponentSetup
+from .conftest import CONF_DATA
 
 
 def _patch_setup():
@@ -16,7 +16,7 @@ def _patch_setup():
     )
 
 
-async def test_flow_user_form(hass: HomeAssistant, connection) -> None:
+async def test_flow_user_form(hass: HomeAssistant, connection: None) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -38,10 +38,9 @@ async def test_flow_user_form(hass: HomeAssistant, connection) -> None:
 
 
 async def test_flow_already_configured(
-    hass: HomeAssistant, setup_integration: ComponentSetup, connection
+    hass: HomeAssistant, setup_integration: None
 ) -> None:
     """Test config flow aborts when already configured."""
-    await setup_integration()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -52,7 +51,9 @@ async def test_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_cannot_connect(hass: HomeAssistant, cannot_connect) -> None:
+async def test_flow_user_cannot_connect(
+    hass: HomeAssistant, cannot_connect: None
+) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -65,7 +66,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, cannot_connect) -> 
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_flow_user_unknown_error(hass: HomeAssistant, unknown) -> None:
+async def test_flow_user_unknown_error(hass: HomeAssistant, unknown: None) -> None:
     """Test unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -80,7 +81,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown) -> None:
     assert result["errors"]["base"] == "unknown"
 
 
-async def test_flow_import(hass: HomeAssistant, connection) -> None:
+async def test_flow_import(hass: HomeAssistant, connection: None) -> None:
     """Test import step."""
     with _patch_setup():
         result = await hass.config_entries.flow.async_init(

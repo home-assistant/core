@@ -1,5 +1,5 @@
 """The tests for Netgear LTE sensor platform."""
-from unittest.mock import AsyncMock
+import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -11,18 +11,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup
 
-
-async def test_sensors(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    entity_registry_enabled_by_default: AsyncMock,
-    connection,
-):
+@pytest.mark.usefixtures("setup_integration", "entity_registry_enabled_by_default")
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test for successfully setting up the Netgear LTE sensor platform."""
-    await setup_integration()
-
     state = hass.states.get("sensor.netgear_lte_cell_id")
     assert state.state == "12345678"
     state = hass.states.get("sensor.netgear_lte_connection_text")
