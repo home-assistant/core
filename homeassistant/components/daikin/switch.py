@@ -146,7 +146,7 @@ class DaikinToggleSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return ATTR_STATE_OFF not in self._api.device.represent(DAIKIN_ATTR_MODE)
+        return "off" not in self._api.device.represent(DAIKIN_ATTR_MODE)
 
     @property
     def device_info(self) -> DeviceInfo:
