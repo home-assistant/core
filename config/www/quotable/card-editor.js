@@ -16,21 +16,15 @@ class QuotableCardEditor extends HTMLElement {
 
   setConfig(config) {
     this._config = config;
-    this.configChanged(config);
   }
 
   async connectedCallback() {
     this.loadOptions();
-    this.addEventListener("config-changed", this.handleConfigChanged);
   }
-  handleConfigChanged(event) {
-    console.log("Configuration changed:", event.detail.config);
-  }
+
   async loadOptions() {
     try {
-      console.log("in load options");
       if (!this._config.entity) {
-        console.error("Entity not defined in configuration.");
         return;
       }
 
@@ -71,7 +65,7 @@ class QuotableCardEditor extends HTMLElement {
         this._tags = Object.values(responseTags.response);
       }
     } catch (error) {
-      console.error("Error fetching options:", error);
+      return;
     }
     this.renderForm();
   }
@@ -149,7 +143,7 @@ class QuotableCardEditor extends HTMLElement {
 
   <div>
     <label for="tagSelect">Select Categories:</label>
-    <input type="text" id="selectedTags" readonly  placeholder="Select from list">
+    <input type="text" id="selectedTags"  placeholder="Select from list">
     <select id="tagSelect" multiple>
       ${this._tags
         .map((tag) => `<option value="${tag}">${tag}</option>`)
@@ -186,24 +180,22 @@ class QuotableCardEditor extends HTMLElement {
 
     // Add click event listener to update selected author list
     authorSelect.addEventListener("click", (event) => {
-      const selectedOption = event.target;
+      const authorOption = event.target;
 
-      if (selectedOption.tagName === "OPTION") {
+      if (authorOption.tagName === "OPTION") {
         // Toggle the background color of the selected option
-        selectedOption.style.backgroundColor =
-          selectedOption.style.backgroundColor === "#007BFF"
-            ? "#fff"
-            : "#007BFF";
+        authorOption.style.backgroundColor =
+          authorOption.style.backgroundColor === "#007BFF" ? "#fff" : "#007BFF";
 
         // Toggle the text color of the selected option
-        selectedOption.style.color =
-          selectedOption.style.color === "#fff" ? "#007BFF" : "#fff";
+        authorOption.style.color =
+          authorOption.style.color === "#fff" ? "#007BFF" : "#fff";
 
         // Add or remove the selected item from the list
-        const index = this._selectedAuthors.indexOf(selectedOption.value);
+        const index = this._selectedAuthors.indexOf(authorOption.value);
         if (index === -1) {
-          this._selectedAuthors.push(selectedOption.text);
-          this._selectedAuthorSlug.push(selectedOption.value);
+          this._selectedAuthors.push(authorOption.text);
+          this._selectedAuthorSlug.push(authorOption.value);
         } else {
           this._selectedAuthors.splice(index, 1);
           this._selectedAuthorSlug.splice(index, 1);
@@ -216,23 +208,21 @@ class QuotableCardEditor extends HTMLElement {
 
     // Add click event listener to update selected tags list
     tagSelect.addEventListener("click", (event) => {
-      const selectedOption = event.target;
+      const tagOption = event.target;
 
-      if (selectedOption.tagName === "OPTION") {
+      if (tagOption.tagName === "OPTION") {
         // Toggle the background color of the selected option
-        selectedOption.style.backgroundColor =
-          selectedOption.style.backgroundColor === "#007BFF"
-            ? "#fff"
-            : "#007BFF";
+        tagOption.style.backgroundColor =
+          tagOption.style.backgroundColor === "#007BFF" ? "#fff" : "#007BFF";
 
         // Toggle the text color of the selected option
-        selectedOption.style.color =
-          selectedOption.style.color === "#fff" ? "#007BFF" : "#fff";
+        tagOption.style.color =
+          tagOption.style.color === "#fff" ? "#007BFF" : "#fff";
 
         // Add or remove the selected item from the list
-        const index = this._selectedTags.indexOf(selectedOption.value);
+        const index = this._selectedTags.indexOf(tagOption.value);
         if (index === -1) {
-          this._selectedTags.push(selectedOption.value);
+          this._selectedTags.push(tagOption.value);
         } else {
           this._selectedTags.splice(index, 1);
         }
@@ -251,16 +241,24 @@ class QuotableCardEditor extends HTMLElement {
     form.addEventListener("focusout", this.updateConfiguration.bind(this));
   }
 
-  configChanged(newConfig) {
-    // Update the local _config property with the new configuration
-    this._config = newConfig;
+  configChanged() {
+    try {
+      // Get the current state of the integration
+      const currentState = this._hass.states[this._config.entity];
 
-    const event = new Event("config-changed", {
-      bubbles: true,
-      composed: true,
-    });
-    event.detail = { config: newConfig };
-    this.dispatchEvent(event);
+      // Create an event with the current state as part of the detail
+      const event = new event("config-changed", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          config: this._config,
+          currentState: currentState,
+        },
+      });
+
+      // Dispatch the event
+      this.dispatchEvent(event);
+    } catch (error) {}
   }
 
   async searchAuthor(query) {
@@ -283,7 +281,6 @@ class QuotableCardEditor extends HTMLElement {
       const authorResponse = await this._hass.callWS(searchMessage);
 
       if (authorResponse && authorResponse.response) {
-        console.log(authorResponse.response);
         const authorSelect = this.shadowRoot.getElementById("authorSelect");
 
         // Clear existing options
@@ -301,18 +298,13 @@ class QuotableCardEditor extends HTMLElement {
         });
       }
     } catch (error) {
-      console.error("Error searching author:", error);
+      return;
     }
   }
 
   async updateConfiguration() {
     try {
-      console.log("authorslug", this._selectedAuthorSlug);
-
-      console.log("tag slug", this._selectedTags);
-
       const lowercaseTags = this._selectedTags.map((tag) => tag.toLowerCase());
-      console.log("lowercase", lowercaseTags);
 
       const updateConfigData = {
         entity_id: this._config.entity,
@@ -332,11 +324,29 @@ class QuotableCardEditor extends HTMLElement {
       const responseUpdateConfig = await this._hass.callWS(updateConfigMessage);
 
       if (responseUpdateConfig) {
-        console.error(" updating configuration:");
+        this.fetchQuote();
       }
     } catch (error) {
-      console.error("Error updating configuration:", error);
+      return;
     }
+  }
+
+  async fetchQuote() {
+    const fetchData = {
+      entity_id: this._config.entity,
+    };
+
+    //Message object used when calling quotable service
+    const fetchNew = {
+      domain: "quotable",
+      service: "fetch_a_quote",
+      type: "call_service",
+      return_response: true,
+      service_data: fetchData,
+    };
+
+    // Call quotable service to fetch new quote
+    const responseAuthor = await this._hass.callWS(fetchNew);
   }
 }
 
