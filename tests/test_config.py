@@ -1606,12 +1606,12 @@ async def test_component_config_exceptions(
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform1 platform for test_domain"
-            " component with PLATFORM_SCHEMA"
+            "Unknown error validating config for test_platform1 platform "
+            "for test_domain component with PLATFORM_SCHEMA"
         ) in caplog.text
         assert (
-            "Unknown error validating config for test_platform2 platform for test_domain"
-            " component with PLATFORM_SCHEMA"
+            "Unknown error validating config for test_platform2 platform "
+            "for test_domain component with PLATFORM_SCHEMA"
         ) in caplog.text
         caplog.clear()
         with pytest.raises(HomeAssistantError) as ex:
@@ -1632,12 +1632,12 @@ async def test_component_config_exceptions(
         ) in str(ex.value)
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform1 platform for test_domain"
-            " component with PLATFORM_SCHEMA"
+            "Unknown error validating config for test_platform1 platform "
+            "for test_domain component with PLATFORM_SCHEMA"
         ) in caplog.text
         assert (
-            "Unknown error validating config for test_platform2 platform for test_domain"
-            " component with PLATFORM_SCHEMA"
+            "Unknown error validating config for test_platform2 platform "
+            "for test_domain component with PLATFORM_SCHEMA"
         ) in caplog.text
 
     # get_platform("domain") raising on ImportError
@@ -1664,8 +1664,8 @@ async def test_component_config_exceptions(
             raise_on_failure=False,
         ) == {"test_domain": []}
         assert (
-            "ImportError: ModuleNotFoundError: No module named 'not_installed_something'"
-            in caplog.text
+            "ImportError: ModuleNotFoundError: No module named "
+            "'not_installed_something'" in caplog.text
         )
         caplog.clear()
         with pytest.raises(HomeAssistantError) as ex:
@@ -1676,14 +1676,16 @@ async def test_component_config_exceptions(
                 raise_on_failure=True,
             )
         assert (
-            "ImportError: ModuleNotFoundError: No module named 'not_installed_something'"
-            in caplog.text
+            "ImportError: ModuleNotFoundError: No module named "
+            "'not_installed_something'" in caplog.text
         )
         assert (
-            "Platform error: test_domain - ModuleNotFoundError: No module named 'not_installed_something'"
+            "Platform error: test_domain - ModuleNotFoundError: "
+            "No module named 'not_installed_something'"
         ) in caplog.text
         assert (
-            "Platform error: test_domain - ModuleNotFoundError: No module named 'not_installed_something'"
+            "Platform error: test_domain - ModuleNotFoundError: "
+            "No module named 'not_installed_something'"
         ) in str(ex.value)
 
     # get_platform("config") raising
@@ -1708,8 +1710,8 @@ async def test_component_config_exceptions(
         is None
     )
     assert (
-        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
-        in caplog.text
+        "Error importing config platform test_domain: ModuleNotFoundError: "
+        "No module named 'not_installed_something'" in caplog.text
     )
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
@@ -1719,12 +1721,12 @@ async def test_component_config_exceptions(
             raise_on_failure=True,
         )
     assert (
-        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
-        in caplog.text
+        "Error importing config platform test_domain: ModuleNotFoundError: "
+        "No module named 'not_installed_something'" in caplog.text
     )
     assert (
-        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
-        in str(ex.value)
+        "Error importing config platform test_domain: ModuleNotFoundError: "
+        "No module named 'not_installed_something'" in str(ex.value)
     )
 
     # get_component raising
