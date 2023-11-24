@@ -1,0 +1,7 @@
+{
+  "entity": {
+    "switch": {
+      "outlet": { "name": "Steckdose {something}" }
+    }
+  }
+}

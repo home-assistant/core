@@ -1,0 +1,7 @@
+{
+  "entity": {
+    "switch": {
+      "outlet": { "name": "Outlet {placeholder}" }
+    }
+  }
+}

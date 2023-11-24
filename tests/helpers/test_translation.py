@@ -98,6 +98,47 @@ def test_load_translations_files(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("language", "expected_translation", "expect_error"),
+    (
+        (
+            "en",
+            {"component.test.entity.switch.outlet.name": "Outlet {placeholder}"},
+            False,
+        ),
+        (
+            "es",
+            {"component.test.entity.switch.outlet.name": "Enchufe {placeholder}"},
+            False,
+        ),
+        (
+            "de",
+            {"component.test.entity.switch.outlet.name": "Outlet {placeholder}"},
+            True,
+        ),
+    ),
+)
+async def test_load_translations_files_invalid_localized_placeholders(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+    language: str,
+    expected_translation: dict,
+    expect_error: bool,
+) -> None:
+    """Test the load translation files with invalid localized placeholders."""
+    caplog.clear()
+    translations = await translation.async_get_translations(
+        hass, language, "entity", ["test"]
+    )
+    assert translations == expected_translation
+
+    assert (
+        f"Validation of placeholders for localized ({language}) strings failed."
+        in caplog.text
+    ) == expect_error
+
+
 async def test_get_translations(
     hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
 ) -> None:
