@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
         manager = tuya.manager
 
-    report_version(hass, manager)
+    await report_version(hass, manager)
 
     # Get devices & clean up device entities
     await hass.async_add_executor_job(manager.update_device_cache)
@@ -97,8 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def report_version(hass: HomeAssistant, manager: Manager):
     integration = await async_get_integration(hass, DOMAIN)
     manifest = integration.manifest
-    tuya_version = manifest["version"]
-    sdk_version = manifest["requirements"]
+    tuya_version = manifest.get('version', 'unknown')
+    sdk_version = manifest.get('requirements', 'unknown')
     sharing_sdk = ""
     for item in sdk_version:
         if "device-sharing-sdk" in item:
