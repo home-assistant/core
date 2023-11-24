@@ -94,18 +94,3 @@ def mock_config_fixture():
         entry_id=str(uuid4()),
         version=3,
     )
-
-
-@pytest.fixture(name="mock_config_entry2")
-def mock_config_fixture2():
-    """Return a fake config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "test_user",
-            CONF_PASSWORD: "Password",
-            "device_id": "Another Device",
-        },
-        entry_id=str(uuid4()),
-        version=3,
-    )
