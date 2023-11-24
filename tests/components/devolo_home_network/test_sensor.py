@@ -36,13 +36,13 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
     assert hass.states.get(f"{DOMAIN}.{device_name}_neighboring_wifi_networks") is None
     assert (
         hass.states.get(
-            f"{DOMAIN}.{device_name}_plc_downlink_phyrate_{PLCNET.devices[1].user_device_name}"
+            f"{DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
         )
         is not None
     )
     assert (
         hass.states.get(
-            f"{DOMAIN}.{device_name}_plc_uplink_phyrate_{PLCNET.devices[1].user_device_name}"
+            f"{DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
         )
         is not None
     )
@@ -131,13 +131,14 @@ async def test_update_plc_phyrates(
     hass: HomeAssistant,
     mock_device: MockDevice,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key_downlink = f"{DOMAIN}.{device_name}_plc_downlink_phyrate_{PLCNET.devices[1].user_device_name}"
-    state_key_uplink = f"{DOMAIN}.{device_name}_plc_uplink_phyrate_{PLCNET.devices[1].user_device_name}"
+    state_key_downlink = f"{DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    state_key_uplink = f"{DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -150,7 +151,8 @@ async def test_update_plc_phyrates(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key_downlink)
@@ -163,7 +165,8 @@ async def test_update_plc_phyrates(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key_downlink)
