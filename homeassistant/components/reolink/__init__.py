@@ -205,7 +205,7 @@ def cleanup_disconnected_cams(
         remove = False
         if ch not in host.api.channels:
             remove = True
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Removing Reolink device %s, since no camera is connected to NVR channel %s anymore",
                 device.name,
                 ch,
