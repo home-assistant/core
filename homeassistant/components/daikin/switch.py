@@ -143,11 +143,6 @@ class DaikinToggleSwitch(SwitchEntity):
         """Return the state of the sensor."""
         return "off" not in self._api.device.represent(DAIKIN_ATTR_MODE)
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return self._api.device_info
-
     async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
