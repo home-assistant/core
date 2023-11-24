@@ -46,13 +46,13 @@
         "name": "Solar pump"
       },
       "domestic_hot_water_charging": {
-        "name": "Domestic hot water charging"
+        "name": "DHW charging"
       },
       "domestic_hot_water_circulation_pump": {
-        "name": "Domestic hot water circulation pump"
+        "name": "DHW circulation pump"
       },
       "domestic_hot_water_pump": {
-        "name": "Domestic hot water pump"
+        "name": "DHW pump"
       }
     },
     "button": {
@@ -67,10 +67,10 @@
     },
     "number": {
       "heating_curve_shift": {
-        "name": " Heating curve shift"
+        "name": "Heating curve shift"
       },
       "heating_curve_slope": {
-        "name": " Heating curve slope"
+        "name": "Heating curve slope"
       },
       "normal_temperature": {
         "name": "Normal temperature"
@@ -111,25 +111,25 @@
         "name": "Secondary circuit return temperature"
       },
       "hotwater_out_temperature": {
-        "name": "Hot Water Out Temperature"
+        "name": "DHW out temperature"
       },
       "hotwater_max_temperature": {
-        "name": "Hot water max temperature"
+        "name": "DHW max temperature"
       },
       "hotwater_min_temperature": {
-        "name": "Hot water min temperature"
+        "name": "DHW min temperature"
       },
       "hotwater_gas_consumption_today": {
-        "name": "Hot water gas consumption today"
+        "name": "DHW gas consumption today"
       },
       "hotwater_gas_consumption_heating_this_week": {
-        "name": "Hot water gas consumption this week"
+        "name": "DHW gas consumption this week"
       },
       "hotwater_gas_consumption_heating_this_month": {
-        "name": "Hot water gas consumption this month"
+        "name": "DHW gas consumption this month"
       },
       "hotwater_gas_consumption_heating_this_year": {
-        "name": "Hot water gas consumption this year"
+        "name": "DHW gas consumption this year"
       },
       "gas_consumption_heating_today": {
         "name": "Heating gas consumption today"
@@ -156,16 +156,16 @@
         "name": "Heating gas consumption last seven days"
       },
       "hotwater_gas_summary_consumption_heating_currentday": {
-        "name": "Hot water gas consumption current day"
+        "name": "DHW gas consumption current day"
       },
       "hotwater_gas_summary_consumption_heating_currentmonth": {
-        "name": "Hot water gas consumption current month"
+        "name": "DHW gas consumption current month"
       },
       "hotwater_gas_summary_consumption_heating_currentyear": {
-        "name": "Hot water gas consumption current year"
+        "name": "DHW gas consumption current year"
       },
       "hotwater_gas_summary_consumption_heating_lastsevendays": {
-        "name": "Hot water gas consumption last seven days"
+        "name": "DHW gas consumption last seven days"
       },
       "energy_summary_consumption_heating_currentday": {
         "name": "Energy consumption of gas heating current day"
