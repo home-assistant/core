@@ -60,6 +60,11 @@
         "name": "Activate one-time charge"
       }
     },
+    "climate": {
+      "heating": {
+        "name": "Heating"
+      },
+    },
     "number": {
       "heating_curve_shift": {
         "name": " Heating curve shift"
