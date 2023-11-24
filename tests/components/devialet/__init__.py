@@ -28,7 +28,7 @@ MOCK_USER_INPUT = {CONF_HOST: HOST}
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     ip_address=ip_address(HOST),
     ip_addresses=[ip_address(HOST)],
-    hostname="PhantomISilver-{SERIAL}.local.",
+    hostname="PhantomISilver-L00P00000AB11.local.",
     type="_devialet-http._tcp.",
     name="Livingroom",
     port=80,
@@ -53,7 +53,7 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 )
 
 
-def mock_off(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_unavailable(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Devialet connection for Home Assistant."""
     aioclient_mock.get(
         f"http://{HOST}{UrlSuffix.GET_GENERAL_INFO}", exc=ServerTimeoutError
@@ -64,7 +64,7 @@ def mock_idle(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Devialet connection for Home Assistant."""
     aioclient_mock.get(
         f"http://{HOST}{UrlSuffix.GET_GENERAL_INFO}",
-        text=load_fixture("general_info.json", "devialet"),
+        text=load_fixture("general_info.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -78,43 +78,43 @@ def mock_playing(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Devialet connection for Home Assistant."""
     aioclient_mock.get(
         f"http://{HOST}{UrlSuffix.GET_GENERAL_INFO}",
-        text=load_fixture("general_info.json", "devialet"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        f"http://{HOST}{UrlSuffix.GET_SOURCES}",
-        text=load_fixture("sources.json", "devialet"),
+        text=load_fixture("general_info.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://{HOST}{UrlSuffix.GET_CURRENT_SOURCE}",
-        text=load_fixture("source_state.json", "devialet"),
+        text=load_fixture("source_state.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
-        f"http://{HOST}{UrlSuffix.GET_CURRENT_POSITION}",
-        text=load_fixture("current_position.json", "devialet"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        f"http://{HOST}{UrlSuffix.GET_EQUALIZER}",
-        text=load_fixture("equalizer.json", "devialet"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        f"http://{HOST}{UrlSuffix.GET_NIGHT_MODE}",
-        text=load_fixture("night_mode.json", "devialet"),
+        f"http://{HOST}{UrlSuffix.GET_SOURCES}",
+        text=load_fixture("sources.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"http://{HOST}{UrlSuffix.GET_VOLUME}",
-        text=load_fixture("volume.json", "devialet"),
+        text=load_fixture("volume.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}{UrlSuffix.GET_NIGHT_MODE}",
+        text=load_fixture("night_mode.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}{UrlSuffix.GET_EQUALIZER}",
+        text=load_fixture("equalizer.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}{UrlSuffix.GET_CURRENT_POSITION}",
+        text=load_fixture("current_position.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -130,8 +130,8 @@ async def setup_integration(
 
     if state == "playing":
         mock_playing(aioclient_mock)
-    elif state == "off":
-        mock_off(aioclient_mock)
+    elif state == "unavailable":
+        mock_unavailable(aioclient_mock)
     elif state == "idle":
         mock_idle(aioclient_mock)
 

@@ -7,6 +7,7 @@ from yarl import URL
 
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.components.devialet.media_player import SUPPORT_DEVIALET
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -41,10 +42,12 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from . import HOST, SERIAL, setup_integration
+from . import HOST, NAME, setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -101,14 +104,22 @@ async def test_media_player_playing(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Devialet configuration entry loading and unloading."""
+    await async_setup_component(hass, "homeassistant", {})
     entry = await setup_integration(hass, aioclient_mock)
 
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}")
 
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: [f"{MP_DOMAIN}.{NAME.lower()}"]},
+        blocking=True,
+    )
+
+    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
     assert state.state == MediaPlayerState.PLAYING
-    assert state.name == f"{DOMAIN} {SERIAL.lower()}"
+    assert state.name == NAME
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] is not None
@@ -133,7 +144,7 @@ async def test_media_player_playing(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(f"media_player.{DOMAIN}_{SERIAL.lower()}").state
+            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state
             == MediaPlayerState.PAUSED
         )
 
@@ -146,8 +157,7 @@ async def test_media_player_playing(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}").state
-            == MediaPlayerState.ON
+            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state == MediaPlayerState.ON
         )
 
     with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
@@ -159,7 +169,7 @@ async def test_media_player_playing(
             await hass.config_entries.async_reload(entry.entry_id)
             await hass.async_block_till_done()
             assert (
-                hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}").attributes[
+                hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
                     ATTR_SOUND_MODE
                 ]
                 == "Night mode"
@@ -175,9 +185,20 @@ async def test_media_player_playing(
             await hass.async_block_till_done()
             assert (
                 ATTR_SOUND_MODE
-                not in hass.states.get(
-                    f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}"
-                ).attributes
+                not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
+            )
+
+    with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
+        mock.return_value = None
+
+        with patch.object(DevialetApi, "night_mode", new_callable=PropertyMock) as mock:
+            mock.return_value = None
+
+            await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
+            assert (
+                ATTR_SOUND_MODE
+                not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
             )
 
     with patch.object(
@@ -187,10 +208,19 @@ async def test_media_player_playing(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}").attributes[
+            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
                 ATTR_SUPPORTED_FEATURES
             ]
             == SUPPORT_DEVIALET
+        )
+
+    with patch.object(DevialetApi, "source", new_callable=PropertyMock) as mock:
+        mock.return_value = "someSource"
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert (
+            ATTR_INPUT_SOURCE
+            not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
         )
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -204,14 +234,14 @@ async def test_media_player_offline(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Devialet configuration entry loading and unloading."""
-    entry = await setup_integration(hass, aioclient_mock, state=MediaPlayerState.IDLE)
+    entry = await setup_integration(hass, aioclient_mock, state=STATE_UNAVAILABLE)
 
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get(f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}")
 
-    assert state.state == MediaPlayerState.IDLE
-    assert state.name == f"{DOMAIN} {SERIAL.lower()}"
+    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+    assert state.state == STATE_UNAVAILABLE
+    assert state.name == NAME
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -248,11 +278,7 @@ async def test_media_player_services(
     assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
 
-    target = {
-        ATTR_ENTITY_ID: hass.states.get(
-            f"{MP_DOMAIN}.{DOMAIN}_{SERIAL.lower()}"
-        ).entity_id
-    }
+    target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
 
     for i, (service, urls) in enumerate(SERVICE_TO_URL.items()):
         for url in urls:

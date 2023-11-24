@@ -57,10 +57,14 @@ class DevialetMediaPlayerEntity(CoordinatorEntity, MediaPlayerEntity):
         self.coordinator = coordinator
         super().__init__(coordinator)
 
-        self._attr_unique_id = self.coordinator.client.serial
+        self._attr_unique_id = (
+            entry.unique_id
+            if entry.unique_id is not None
+            else coordinator.client.serial
+        )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.client.serial)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=MANUFACTURER,
             model=self.coordinator.client.model,
             name=entry.data[CONF_NAME],
@@ -89,7 +93,7 @@ class DevialetMediaPlayerEntity(CoordinatorEntity, MediaPlayerEntity):
         )
         self._attr_media_title = (
             self.coordinator.client.media_title
-            if not self.coordinator.client.media_title
+            if self.coordinator.client.media_title
             else self.source
         )
         self.async_write_ha_state()
@@ -118,6 +122,9 @@ class DevialetMediaPlayerEntity(CoordinatorEntity, MediaPlayerEntity):
         features = SUPPORT_DEVIALET
 
         if self.coordinator.client.source_state is None:
+            return features
+
+        if not self.coordinator.client.available_options:
             return features
 
         for option in self.coordinator.client.available_options:

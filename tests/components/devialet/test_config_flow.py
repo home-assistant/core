@@ -123,7 +123,7 @@ async def test_zeroconf_devialet(
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Livingroom (Phantom I Silver)"
+    assert result2["title"] == "Livingroom"
     assert result2["data"] == {
         CONF_HOST: HOST,
         CONF_NAME: NAME,
