@@ -872,7 +872,7 @@ class Entity(
 
     @property
     def translation_placeholders(self) -> Mapping[str, str] | None:
-        """Return if the name of the entity is describing only the entity itself."""
+        """Return the translation placeholders for translated entity's name."""
         if hasattr(self, "_attr_translation_placeholders"):
             return self._attr_translation_placeholders
         if hasattr(self, "entity_description"):
