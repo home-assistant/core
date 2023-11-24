@@ -281,7 +281,12 @@
       "compressor_phase": {
         "name": "Compressor phase"
       }
-    }
+    },
+    "water_heater": {
+      "water": {
+        "name": "Water"
+      },
+    },
   },
   "services": {
     "set_vicare_mode": {
