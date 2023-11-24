@@ -28,3 +28,5 @@ SUPPORTED_LANGUAGE_CODES: Final = [
     "ko-KR",
     "pt-BR",
 ]
+
+CREDENTIALS_JSON_FILENAME = "google_assistant_sdk_credentials.json"

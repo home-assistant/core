@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import os
 from typing import Any
 
 import voluptuous as vol
@@ -13,7 +14,13 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import CONF_LANGUAGE_CODE, DEFAULT_NAME, DOMAIN, SUPPORTED_LANGUAGE_CODES
+from .const import (
+    CONF_LANGUAGE_CODE,
+    CREDENTIALS_JSON_FILENAME,
+    DEFAULT_NAME,
+    DOMAIN,
+    SUPPORTED_LANGUAGE_CODES,
+)
 from .helpers import default_language_code
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +49,20 @@ class OAuth2FlowHandler(
             "access_type": "offline",
             "prompt": "consent",
         }
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow start."""
+        if os.path.isfile(self.hass.config.path(CREDENTIALS_JSON_FILENAME)):
+            return self.async_create_entry(
+                title=DEFAULT_NAME,
+                data={},
+                options={
+                    CONF_LANGUAGE_CODE: default_language_code(self.hass),
+                },
+            )
+        return await self.async_step_pick_implementation(user_input)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""

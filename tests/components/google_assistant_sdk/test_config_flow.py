@@ -209,6 +209,21 @@ async def test_single_instance_allowed(
     assert result.get("reason") == "single_instance_allowed"
 
 
+async def test_credentials_json_flow(
+    hass: HomeAssistant,
+    credentials_json: dict,
+) -> None:
+    """Check flow with with config/google_assistant_sdk_credentials.json present."""
+    result = await hass.config_entries.flow.async_init(
+        "google_assistant_sdk", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == TITLE
+    assert "result" in result
+    assert result.get("result").unique_id is None
+    assert result.get("result").data == {}
+
+
 async def test_options_flow(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,

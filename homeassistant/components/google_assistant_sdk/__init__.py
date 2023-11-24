@@ -18,18 +18,15 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    OAuth2Session,
-    async_get_config_entry_implementation,
-)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_MEM_STORAGE, DATA_SESSION, DOMAIN, SUPPORTED_LANGUAGE_CODES
+from .const import DATA_MEM_STORAGE, DOMAIN, SUPPORTED_LANGUAGE_CODES
 from .helpers import (
     GoogleAssistantSDKAudioView,
     InMemoryStorage,
     async_create_credentials,
     async_send_text_commands,
+    is_created_credentials_valid,
 )
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
@@ -62,10 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Assistant SDK from a config entry."""
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
 
-    implementation = await async_get_config_entry_implementation(hass, entry)
-    session = OAuth2Session(hass, entry, implementation)
     try:
-        await session.async_ensure_token_valid()
+        await async_create_credentials(hass, entry)
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed(
@@ -74,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
-    hass.data[DOMAIN][entry.entry_id][DATA_SESSION] = session
 
     mem_storage = InMemoryStorage(hass)
     hass.data[DOMAIN][entry.entry_id][DATA_MEM_STORAGE] = mem_storage
@@ -143,7 +137,6 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         self.hass = hass
         self.entry = entry
         self.assistant: TextAssistant | None = None
-        self.session: OAuth2Session | None = None
         self.language: str | None = None
 
     @property
@@ -155,15 +148,11 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        if self.session:
-            session = self.session
-        else:
-            session = self.hass.data[DOMAIN][self.entry.entry_id][DATA_SESSION]
-            self.session = session
-        if not session.valid_token:
-            await session.async_ensure_token_valid()
-            self.assistant = None
-        if not self.assistant or user_input.language != self.language:
+        if (
+            not is_created_credentials_valid(self.hass, self.entry)
+            or not self.assistant
+            or user_input.language != self.language
+        ):
             credentials = await async_create_credentials(self.hass, self.entry)
             self.language = user_input.language
             self.assistant = TextAssistant(credentials, self.language)

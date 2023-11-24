@@ -26,11 +26,15 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_LANGUAGE_CODE,
+    CREDENTIALS_JSON_FILENAME,
     DATA_CREDENTIALS,
     DATA_MEM_STORAGE,
     DATA_SESSION,
@@ -69,9 +73,7 @@ async def async_create_credentials(
 
     # Check if there is a json file created with google-oauthlib-tool with application type of Desktop app.
     # This is needed for personal results to work.
-    credentials_json_filename = hass.config.path(
-        "google_assistant_sdk_credentials.json"
-    )
+    credentials_json_filename = hass.config.path(CREDENTIALS_JSON_FILENAME)
     if os.path.isfile(credentials_json_filename):
         with open(credentials_json_filename, encoding="utf-8") as credentials_json_file:
             credentials = Credentials(token=None, **json.load(credentials_json_file))
@@ -82,7 +84,12 @@ async def async_create_credentials(
     # Create credentials using only the access token, application type of Web application,
     # using the LocalOAuth2Implementation.
     # Personal results don't work with this.
-    session: OAuth2Session = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
+    if DATA_SESSION not in hass.data[DOMAIN][entry.entry_id]:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+        session = OAuth2Session(hass, entry, implementation)
+        hass.data[DOMAIN][entry.entry_id][DATA_SESSION] = session
+    else:
+        session = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as err:
@@ -90,6 +97,16 @@ async def async_create_credentials(
             entry.async_start_reauth(hass)
         raise err
     return Credentials(session.token[CONF_ACCESS_TOKEN])
+
+
+def is_created_credentials_valid(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Return true iff the Credentials returned by async_create_credentials is still valid."""
+    if DATA_CREDENTIALS in hass.data[DOMAIN][entry.entry_id]:
+        return True
+    if DATA_SESSION in hass.data[DOMAIN][entry.entry_id]:
+        session: OAuth2Session = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
+        return session.valid_token
+    return False
 
 
 async def async_send_text_commands(
