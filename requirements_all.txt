@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.6
+aioesphomeapi==18.5.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -862,7 +862,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==6.0.1
+gcal-sync==6.0.3
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1279,6 +1279,9 @@ mutagen==1.47.0
 # homeassistant.components.mutesync
 mutesync==0.0.1
 
+# homeassistant.components.permobil
+mypermobil==0.1.6
+
 # homeassistant.components.nad
 nad-receiver==0.3.0
 
@@ -1313,7 +1316,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.5.0
+nibe==2.5.1
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2201,7 +2204,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.36.1
+python-roborock==0.36.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2790,7 +2793,7 @@ yalexs-ble==2.3.2
 yalexs==1.10.0
 
 # homeassistant.components.yeelight
-yeelight==0.7.13
+yeelight==0.7.14
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
