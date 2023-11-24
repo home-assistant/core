@@ -68,7 +68,6 @@ from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
-from .setup import async_notify_setup_error
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, load_yaml
@@ -549,8 +548,6 @@ def async_log_schema_error(
     link: str | None = None,
 ) -> None:
     """Log a schema validation error."""
-    if hass is not None:
-        async_notify_setup_error(hass, domain, link)
     message = format_schema_error(hass, ex, domain, config, link)
     _LOGGER.error(message)
 
@@ -568,8 +565,6 @@ def async_log_config_validator_error(
         async_log_schema_error(ex, domain, config, hass, link)
         return
 
-    if hass is not None:
-        async_notify_setup_error(hass, domain, link)
     message = format_homeassistant_error(hass, ex, domain, config, link)
     _LOGGER.error(message, exc_info=ex)
 
