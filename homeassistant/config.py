@@ -1244,15 +1244,15 @@ async def async_process_component_config(  # noqa: C901
 
     try:
         component = integration.get_component()
-    except LOAD_EXCEPTIONS as ex:
-        ex_info = ConfigExceptionInfo(
-            ex,
+    except LOAD_EXCEPTIONS as exc:
+        exc_info = ConfigExceptionInfo(
+            exc,
             ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR,
             domain,
             config,
             integration_docs,
         )
-        config_exceptions.append(ex_info)
+        config_exceptions.append(exc_info)
         return IntegrationConfigInfo(None, config_exceptions)
 
     # Check if the integration has a custom config validator
@@ -1264,14 +1264,14 @@ async def async_process_component_config(  # noqa: C901
         # If the config platform contains bad imports, make sure
         # that still fails.
         if err.name != f"{integration.pkg_path}.config":
-            ex_info = ConfigExceptionInfo(
+            exc_info = ConfigExceptionInfo(
                 err,
                 ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR,
                 domain,
                 config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
 
     if config_validator is not None and hasattr(
@@ -1281,50 +1281,50 @@ async def async_process_component_config(  # noqa: C901
             return IntegrationConfigInfo(
                 await config_validator.async_validate_config(hass, config), []
             )
-        except (vol.Invalid, HomeAssistantError) as ex:
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except (vol.Invalid, HomeAssistantError) as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATION_ERR,
                 domain,
                 config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as ex:  # pylint: disable=broad-except
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except Exception as exc:  # pylint: disable=broad-except
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR,
                 domain,
                 config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
 
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
             return IntegrationConfigInfo(component.CONFIG_SCHEMA(config), [])
-        except vol.Invalid as ex:
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except vol.Invalid as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATION_ERR,
                 domain,
                 config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as ex:  # pylint: disable=broad-except
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except Exception as exc:  # pylint: disable=broad-except
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR,
                 domain,
                 config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
 
     component_platform_schema = getattr(
@@ -1340,25 +1340,25 @@ async def async_process_component_config(  # noqa: C901
         platform_name = f"{domain}.{p_name}"
         try:
             p_validated = component_platform_schema(p_config)
-        except vol.Invalid as ex:
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except vol.Invalid as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,
                 domain,
                 p_config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             continue
-        except Exception as ex:  # pylint: disable=broad-except
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except Exception as exc:  # pylint: disable=broad-except
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
                 str(p_name),
                 config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             continue
 
         # Not all platform components follow same pattern for platforms
@@ -1370,53 +1370,53 @@ async def async_process_component_config(  # noqa: C901
 
         try:
             p_integration = await async_get_integration_with_requirements(hass, p_name)
-        except (RequirementsNotFound, IntegrationNotFound) as ex:
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except (RequirementsNotFound, IntegrationNotFound) as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR,
                 platform_name,
                 p_config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             continue
 
         try:
             platform = p_integration.get_platform(domain)
-        except LOAD_EXCEPTIONS as ex:
-            ex_info = ConfigExceptionInfo(
-                ex,
+        except LOAD_EXCEPTIONS as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
                 ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC,
                 platform_name,
                 p_config,
                 integration_docs,
             )
-            config_exceptions.append(ex_info)
+            config_exceptions.append(exc_info)
             continue
 
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
                 p_validated = platform.PLATFORM_SCHEMA(p_config)
-            except vol.Invalid as ex:
-                ex_info = ConfigExceptionInfo(
-                    ex,
+            except vol.Invalid as exc:
+                exc_info = ConfigExceptionInfo(
+                    exc,
                     ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,
                     platform_name,
                     p_config,
                     p_integration.documentation,
                 )
-                config_exceptions.append(ex_info)
+                config_exceptions.append(exc_info)
                 continue
-            except Exception as ex:  # pylint: disable=broad-except
-                ex_info = ConfigExceptionInfo(
-                    ex,
+            except Exception as exc:  # pylint: disable=broad-except
+                exc_info = ConfigExceptionInfo(
+                    exc,
                     ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
                     p_name,
                     p_config,
                     p_integration.documentation,
                 )
-                config_exceptions.append(ex_info)
+                config_exceptions.append(exc_info)
                 continue
 
         platforms.append(p_validated)
