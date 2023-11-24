@@ -8,6 +8,8 @@ Installation:
 3. Run:
 hass
 
+3.1 Possibly, it will complain about `ffmpeg` not being installed. If so, just install it e.g. `brew install ffmpeg`.
+
 4. for zigbee home automation, usb needs to be accessible by user:
 `sudo chown $USER:$USER /dev/ttyACM0`
 
