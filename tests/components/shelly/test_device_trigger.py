@@ -1,4 +1,5 @@
 """The tests for Shelly device triggers."""
+from aioshelly.const import MODEL_BUTTON1
 import pytest
 from pytest_unordered import unordered
 
@@ -108,7 +109,7 @@ async def test_get_triggers_rpc_device(hass: HomeAssistant, mock_rpc_device) -> 
 
 async def test_get_triggers_button(hass: HomeAssistant, mock_block_device) -> None:
     """Test we get the expected triggers from a shelly button."""
-    entry = await init_integration(hass, 1, model="SHBTN-1")
+    entry = await init_integration(hass, 1, model=MODEL_BUTTON1)
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
 

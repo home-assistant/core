@@ -355,6 +355,7 @@ FLOWS = {
         "panasonic_viera",
         "peco",
         "pegel_online",
+        "permobil",
         "philips_js",
         "pi_hole",
         "picnic",
