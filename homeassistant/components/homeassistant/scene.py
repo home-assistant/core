@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
-    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
