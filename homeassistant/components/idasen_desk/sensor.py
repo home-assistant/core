@@ -67,7 +67,7 @@ async def async_setup_entry(
     )
 
 
-class IdasenDeskSensor(CoordinatorEntity, SensorEntity):
+class IdasenDeskSensor(CoordinatorEntity[IdasenDeskCoordinator], SensorEntity):
     """IdasenDesk sensor."""
 
     entity_description: IdasenDeskSensorDescription

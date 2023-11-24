@@ -36,6 +36,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.REMOTE,
     Platform.SWITCH,
+    Platform.BINARY_SENSOR,
 ]
 
 LOGGER = logging.getLogger(__name__)
