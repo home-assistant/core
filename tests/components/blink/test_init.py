@@ -25,13 +25,11 @@ PIN = "1234"
 
 async def test_setup_entry(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup entry."""
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -42,14 +40,13 @@ async def test_setup_entry(
 
 async def test_setup_not_ready_client_error(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup failed because we can't connect to the Blink system."""
-    blink_api.start = AsyncMock(side_effect=ClientError)
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
+
+    mock_blink_api.start = AsyncMock(side_effect=ClientError)
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -59,14 +56,13 @@ async def test_setup_not_ready_client_error(
 
 async def test_setup_not_ready_timeout_error(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup failed because we can't connect to the Blink system."""
-    blink_api.refresh = AsyncMock(side_effect=asyncio.TimeoutError)
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
+
+    mock_blink_api.refresh = AsyncMock(side_effect=asyncio.TimeoutError)
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -76,14 +72,13 @@ async def test_setup_not_ready_timeout_error(
 
 async def test_setup_not_ready_authkey_required(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup failed because 2FA is needed to connect to the Blink system."""
-    blink_api.return_value = blink_api
-    blink_auth_api.check_key_required = MagicMock(return_value=True)
-    blink_auth_api.return_value = blink_auth_api
+
+    mock_blink_auth_api.check_key_required = MagicMock(return_value=True)
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -93,14 +88,13 @@ async def test_setup_not_ready_authkey_required(
 
 async def test_setup_not_ready_not_available(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup failed because Blink system is not available."""
-    blink_api.available = False
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
+
+    mock_blink_api.available = False
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -110,14 +104,11 @@ async def test_setup_not_ready_not_available(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test being able to unload an entry."""
-
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -132,14 +123,11 @@ async def test_unload_entry(
 
 async def test_unload_entry_multiple(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test being able to unload one of 2 entries."""
-
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -155,14 +143,12 @@ async def test_unload_entry_multiple(
 
 async def test_migrate_V0(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test migration script version 0."""
 
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
     mock_config_entry.version = 0
 
     mock_config_entry.add_to_hass(hass)
@@ -173,15 +159,13 @@ async def test_migrate_V0(
 @pytest.mark.parametrize(("version"), [1, 2])
 async def test_migrate(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     version,
 ) -> None:
     """Test migration scripts."""
 
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
     mock_config_entry.version = version
     mock_config_entry.data = {**mock_config_entry.data, "login_response": "Blah"}
 
@@ -192,20 +176,18 @@ async def test_migrate(
 
 async def test_refresh_service_calls(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup entry."""
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert blink_api.refresh.call_count == 1
+    assert mock_blink_api.refresh.call_count == 1
 
     await hass.services.async_call(
         DOMAIN,
@@ -213,26 +195,24 @@ async def test_refresh_service_calls(
         blocking=True,
     )
 
-    assert blink_api.refresh.call_count == 2
+    assert mock_blink_api.refresh.call_count == 2
 
 
 async def test_video_service_calls(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup entry."""
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert blink_api.refresh.call_count == 1
+    assert mock_blink_api.refresh.call_count == 1
 
     caplog.clear()
     await hass.services.async_call(
@@ -245,16 +225,16 @@ async def test_video_service_calls(
 
     hass.config.is_allowed_path = Mock(return_value=True)
     caplog.clear()
-    blink_api.cameras = {CAMERA_NAME: AsyncMock()}
+    mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SAVE_VIDEO,
         {CONF_NAME: CAMERA_NAME, CONF_FILENAME: FILENAME},
         blocking=True,
     )
-    blink_api.cameras[CAMERA_NAME].video_to_file.assert_awaited_once()
+    mock_blink_api.cameras[CAMERA_NAME].video_to_file.assert_awaited_once()
 
-    blink_api.cameras[CAMERA_NAME].video_to_file = AsyncMock(side_effect=OSError)
+    mock_blink_api.cameras[CAMERA_NAME].video_to_file = AsyncMock(side_effect=OSError)
     caplog.clear()
 
     await hass.services.async_call(
@@ -270,21 +250,19 @@ async def test_video_service_calls(
 
 async def test_picture_service_calls(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup entry."""
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert blink_api.refresh.call_count == 1
+    assert mock_blink_api.refresh.call_count == 1
 
     caplog.clear()
     await hass.services.async_call(
@@ -296,7 +274,7 @@ async def test_picture_service_calls(
     assert "no access to path!" in caplog.text
 
     hass.config.is_allowed_path = Mock(return_value=True)
-    blink_api.cameras = {CAMERA_NAME: AsyncMock()}
+    mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
 
     await hass.services.async_call(
         DOMAIN,
@@ -304,9 +282,11 @@ async def test_picture_service_calls(
         {CONF_NAME: CAMERA_NAME, CONF_FILE_PATH: FILENAME},
         blocking=True,
     )
-    blink_api.cameras[CAMERA_NAME].save_recent_clips.assert_awaited_once()
+    mock_blink_api.cameras[CAMERA_NAME].save_recent_clips.assert_awaited_once()
 
-    blink_api.cameras[CAMERA_NAME].save_recent_clips = AsyncMock(side_effect=OSError)
+    mock_blink_api.cameras[CAMERA_NAME].save_recent_clips = AsyncMock(
+        side_effect=OSError
+    )
     caplog.clear()
 
     await hass.services.async_call(
@@ -320,20 +300,18 @@ async def test_picture_service_calls(
 
 async def test_pin_service_calls(
     hass: HomeAssistant,
-    blink_api: MagicMock,
-    blink_auth_api: MagicMock,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup entry."""
-    blink_api.return_value = blink_api
-    blink_auth_api.return_value = blink_auth_api
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert blink_api.refresh.call_count == 1
+    assert mock_blink_api.refresh.call_count == 1
 
     await hass.services.async_call(
         DOMAIN,
@@ -341,4 +319,4 @@ async def test_pin_service_calls(
         {CONF_PIN: PIN},
         blocking=True,
     )
-    assert blink_api.auth.send_auth_key.assert_awaited_once
+    assert mock_blink_api.auth.send_auth_key.assert_awaited_once
