@@ -14,6 +14,30 @@
     'POST',
   )
 # ---
+# name: test_parent_child_ordering[api_responses0]
+  list([
+    dict({
+      'status': 'needs_action',
+      'summary': 'Task 1',
+      'uid': 'task-1',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Task 2',
+      'uid': 'task-2',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Task 3 (Parent)',
+      'uid': 'task-3',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Task 4',
+      'uid': 'task-4',
+    }),
+  ])
+# ---
 # name: test_partial_update_status[api_responses0]
   tuple(
     'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
