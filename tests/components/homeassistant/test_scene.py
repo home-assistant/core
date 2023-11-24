@@ -209,6 +209,8 @@ async def test_delete_service(
         await hass.async_block_till_done()
     assert hass.states.get("scene.hallo_2") is not None
 
+    assert hass.states.get("scene.hallo") is not None
+
     await hass.services.async_call(
         "scene",
         "delete",

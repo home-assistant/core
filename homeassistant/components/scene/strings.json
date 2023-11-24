@@ -49,13 +49,7 @@
     },
     "delete": {
       "name": "Delete",
-      "description": "Deletes a dynamically created scene.",
-      "fields": {
-        "entity_id": {
-          "name": "Scene entity ID",
-          "description": "The entity_id of the scene to be deleted."
-        }
-      }
+      "description": "Deletes a dynamically created scene."
     }
   },
   "exceptions": {

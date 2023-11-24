@@ -310,11 +310,7 @@ async def async_setup_platform(
         SCENE_DOMAIN,
         SERVICE_DELETE,
         delete_service,
-        cv.make_entity_service_schema(
-            {
-                vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            }
-        ),
+        cv.make_entity_service_schema({}),
     )
 
 

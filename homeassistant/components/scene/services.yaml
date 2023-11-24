@@ -56,11 +56,7 @@ create:
           multiple: true
 
 delete:
-  fields:
-    entity_id:
-      required: true
-      example: scene.all_lights
-      selector:
-        entity:
-          domain: scene
-
+  target:
+    entity:
+      - integration: homeassistant
+        domain: scene
