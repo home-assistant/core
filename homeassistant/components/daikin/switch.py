@@ -132,9 +132,11 @@ class DaikinToggleSwitch(SwitchEntity):
     _attr_icon = TOGGLE_ICON
     _attr_has_entity_name = True
 
-    def __init__(self, daikin_api: DaikinApi) -> None:
+    def __init__(self, api: DaikinApi) -> None:
         """Initialize switch."""
-        self._api = daikin_api
+        self._api = api
+        self._attr_device_info = api.device_info
+        self._attr_unique_id = f"{self._api.device.mac}-toggle"
 
     @property
     def unique_id(self) -> str:
