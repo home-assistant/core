@@ -445,6 +445,33 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wireless_client_rx").state == "0"
     assert hass.states.get("sensor.wireless_client_tx").state == "0"
 
+    # Test other type of event does not reset sensor
+
+    wireless_client["rx_bytes-r"] = 3456000000
+    wireless_client["tx_bytes-r"] = 7891000000
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
+    assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
+
+    event = {
+        "user": wireless_client["mac"],
+        "ssid": "my_ssid",
+        "hostname": wireless_client["name"],
+        "ap": "my_ap_mac",
+        "key": "EVT_WU_Connected",
+        "subsystem": "wlan",
+        "site_id": "name",
+        "time": 1587752927000,
+        "datetime": "2020-04-24T18:28:47Z",
+        "msg": f'User{[wireless_client["mac"]]} has connected to AP[my_ap_mac] with SSID "my_ssid" on "channel 44(na)"',
+        "_id": "5ea32ff730c49e00f90dca1a",
+    }
+    mock_unifi_websocket(message=MessageKey.EVENT, data=event)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
+    assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
+
 
 @pytest.mark.parametrize(
     ("initial_uptime", "event_uptime", "new_uptime"),
