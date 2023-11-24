@@ -1,8 +1,11 @@
 """Remote control support for Apple TV."""
 import asyncio
 from collections.abc import Iterable
+import inspect
 import logging
 from typing import Any
+
+from pyatv.const import InputAction
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -71,6 +74,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 attr_value = None
+                action = None
                 if attributes := COMMAND_TO_ATTRIBUTE.get(single_command):
                     attr_value = self.atv
                     for attr_name in attributes:
@@ -78,8 +82,24 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                 if not attr_value:
                     attr_value = getattr(self.atv.remote_control, single_command, None)
                 if not attr_value:
+                    equal_pos = single_command.find("=")
+                    if equal_pos != -1:
+                        attr_value_candidate = getattr(
+                            self.atv.remote_control, single_command[:equal_pos], None
+                        )
+                        if (
+                            attr_value_candidate
+                            and "action"
+                            in inspect.signature(attr_value_candidate).parameters
+                        ):
+                            attr_value = attr_value_candidate
+                            action = InputAction(int(single_command[equal_pos + 1 :]))
+                if not attr_value:
                     raise ValueError("Command not found. Exiting sequence")
 
                 _LOGGER.info("Sending command %s", single_command)
-                await attr_value()  # type: ignore[operator]
+                if action:
+                    await attr_value(action)
+                else:
+                    await attr_value()
                 await asyncio.sleep(delay)
