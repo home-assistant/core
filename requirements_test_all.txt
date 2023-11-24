@@ -685,7 +685,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==6.0.1
+gcal-sync==6.0.3
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
