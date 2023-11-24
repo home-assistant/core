@@ -148,6 +148,7 @@ MOCK_CONFIG = {
     "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
+    "thermostat:0": {"id": 0, "enable": True, "type": "heating"},
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
@@ -174,6 +175,7 @@ MOCK_SHELLY_RPC = {
     "auth_en": False,
     "auth_domain": None,
     "profile": "cover",
+    "relay_operational": False,
 }
 
 MOCK_STATUS_COAP = {
@@ -207,6 +209,13 @@ MOCK_STATUS_RPC = {
     "em1:1": {"act_power": 123.3},
     "em1data:0": {"total_act_energy": 123456.4},
     "em1data:1": {"total_act_energy": 987654.3},
+    "thermostat:0": {
+        "id": 0,
+        "enable": True,
+        "target_C": 23,
+        "current_C": 12.3,
+        "output": True,
+    },
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -281,6 +290,7 @@ async def mock_block_device():
             firmware_version="some fw string",
             initialized=True,
             model="SHSW-1",
+            gen=1,
         )
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device

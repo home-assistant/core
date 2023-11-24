@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -65,7 +65,9 @@ class GoogleTaskTodoListEntity(
 
     _attr_has_entity_name = True
     _attr_supported_features = (
-        TodoListEntityFeature.CREATE_TODO_ITEM | TodoListEntityFeature.UPDATE_TODO_ITEM
+        TodoListEntityFeature.CREATE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEM
+        | TodoListEntityFeature.DELETE_TODO_ITEM
     )
 
     def __init__(
@@ -94,7 +96,7 @@ class GoogleTaskTodoListEntity(
                     item.get("status"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
                 ),
             )
-            for item in self.coordinator.data
+            for item in _order_tasks(self.coordinator.data)
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -114,3 +116,21 @@ class GoogleTaskTodoListEntity(
             task=_convert_todo_item(item),
         )
         await self.coordinator.async_refresh()
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Delete To-do items."""
+        await self.coordinator.api.delete(self._task_list_id, uids)
+        await self.coordinator.async_refresh()
+
+
+def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Order the task items response.
+
+    All tasks have an order amongst their sibblings based on position.
+
+        Home Assistant To-do items do not support the Google Task parent/sibbling
+    relationships and the desired behavior is for them to be filtered.
+    """
+    parents = [task for task in tasks if task.get("parent") is None]
+    parents.sort(key=lambda task: task["position"])
+    return parents
