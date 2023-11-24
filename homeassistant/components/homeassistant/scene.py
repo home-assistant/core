@@ -125,7 +125,6 @@ CREATE_SCENE_SCHEMA = vol.All(
 )
 
 DELETE_SCENE_SCHEMA = vol.All(
-    _ensure_no_intersection,
     vol.Schema(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
