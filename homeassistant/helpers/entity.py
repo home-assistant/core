@@ -246,6 +246,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     has_entity_name: bool = False
     name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
+    translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
 
 
@@ -635,11 +636,11 @@ class Entity(
         tuples = string.Formatter().parse(name)
         if len(tuple(tuples)) == 1:
             return name
-        if hasattr(self, "_attr_translation_placeholders"):
+        if (translation_placeholders := self.translation_placeholders) is not None:
             if TYPE_CHECKING:
-                assert isinstance(self._attr_translation_placeholders, Mapping)
+                assert isinstance(translation_placeholders, Mapping)
             try:
-                return name.format(**self._attr_translation_placeholders)
+                return name.format(**translation_placeholders)
             except KeyError as err:
                 raise HomeAssistantError("Missing placeholder %s" % err) from err
         raise HomeAssistantError("Missing property _attr_translation_placeholders")
@@ -867,6 +868,15 @@ class Entity(
             return self._attr_translation_key
         if hasattr(self, "entity_description"):
             return self.entity_description.translation_key
+        return None
+
+    @property
+    def translation_placeholders(self) -> Mapping[str, str] | None:
+        """Return if the name of the entity is describing only the entity itself."""
+        if hasattr(self, "_attr_translation_placeholders"):
+            return self._attr_translation_placeholders
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_placeholders
         return None
 
     # DO NOT OVERWRITE
