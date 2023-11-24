@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -302,11 +303,18 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         if self._current_program != VICARE_PROGRAM_NORMAL:
             # We can't deactivate "normal"
             _LOGGER.debug("deactivating %s", self._current_program)
+            current_program = ""
+            if self._current_program is not None:
+                current_program = self._current_program
             try:
                 self._circuit.deactivateProgram(self._current_program)
             except PyViCareCommandError as err:
-                raise ValueError(
-                    f"Unable to deactivate program {self._current_program}"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="program_not_deactivated",
+                    translation_placeholders={
+                        "program": current_program,
+                    },
                 ) from err
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
@@ -316,8 +324,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             try:
                 self._circuit.activateProgram(vicare_program)
             except PyViCareCommandError as err:
-                raise ValueError(
-                    f"Unable to activate program {vicare_program}"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="program_not_activated",
+                    translation_placeholders={
+                        "program": vicare_program,
+                    },
                 ) from err
 
     @property
