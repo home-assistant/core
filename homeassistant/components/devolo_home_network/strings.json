@@ -64,10 +64,10 @@
         "name": "Neighboring Wifi networks"
       },
       "plc_rx_rate": {
-        "name": "PLC downlink phyrate"
+        "name": "PLC downlink PHY rate"
       },
       "plc_tx_rate": {
-        "name": "PLC uplink phyrate"
+        "name": "PLC uplink PHY rate"
       }
     },
     "switch": {

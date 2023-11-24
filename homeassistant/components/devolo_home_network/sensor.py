@@ -85,7 +85,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
     PLC_RX_RATE: DevoloSensorEntityDescription[DataRate](
         key=PLC_RX_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="PLC downlink phyrate",
+        name="PLC downlink PHY rate",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_func=lambda data: getattr(data, DataRateDirection.RX, 0),
@@ -94,7 +94,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
     PLC_TX_RATE: DevoloSensorEntityDescription[DataRate](
         key=PLC_TX_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="PLC uplink phyrate",
+        name="PLC uplink PHY rate",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_func=lambda data: getattr(data, DataRateDirection.TX, 0),
