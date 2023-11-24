@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 import zigpy.backups
@@ -227,6 +228,7 @@ async def test_device_cluster_commands(zha_client) -> None:
         assert command[TYPE] is not None
 
 
+@freeze_time("2023-09-23 20:16:00+00:00")
 async def test_list_devices(zha_client) -> None:
     """Test getting ZHA devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})
@@ -940,6 +942,7 @@ async def test_websocket_bind_unbind_devices(
 @pytest.mark.parametrize("command_type", ["bind", "unbind"])
 async def test_websocket_bind_unbind_group(
     command_type: str,
+    hass: HomeAssistant,
     app_controller: ControllerApplication,
     zha_client,
 ) -> None:
@@ -947,8 +950,9 @@ async def test_websocket_bind_unbind_group(
 
     test_group_id = 0x0001
     gateway_mock = MagicMock()
+
     with patch(
-        "homeassistant.components.zha.websocket_api.get_gateway",
+        "homeassistant.components.zha.websocket_api.get_zha_gateway",
         return_value=gateway_mock,
     ):
         device_mock = MagicMock()

@@ -100,6 +100,7 @@ class BloomSkySensor(SensorEntity):
         self._sensor_name = sensor_name
         self._attr_name = f"{device['DeviceName']} {sensor_name}"
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
+        self._attr_device_class = SENSOR_DEVICE_CLASS.get(sensor_name)
         self._attr_native_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(
             sensor_name, None
         )
@@ -107,11 +108,6 @@ class BloomSkySensor(SensorEntity):
             self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(
                 sensor_name, None
             )
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SENSOR_DEVICE_CLASS.get(self._sensor_name)
 
     def update(self) -> None:
         """Request an update from the BloomSky API."""

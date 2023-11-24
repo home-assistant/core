@@ -223,6 +223,7 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
+        "_reauth_lock",
         "_tasks",
         "_background_tasks",
         "_integration_for_domain",
@@ -321,6 +322,8 @@ class ConfigEntry:
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
+        # Reauth lock to prevent concurrent reauth flows
+        self._reauth_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -437,27 +440,16 @@ class ConfigEntry:
             self._tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            if self._tries == 1:
-                _LOGGER.warning(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in"
-                        " background"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                )
-            else:
-                _LOGGER.debug(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in %d"
-                        " seconds"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                    wait_time,
-                )
+            _LOGGER.debug(
+                (
+                    "Config entry '%s' for %s integration not %s; Retrying in %d"
+                    " seconds"
+                ),
+                self.title,
+                self.domain,
+                ready_message,
+                wait_time,
+            )
 
             if hass.state == CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -738,12 +730,28 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
-
         hass.async_create_task(
-            hass.config_entries.flow.async_init(
+            self._async_init_reauth(hass, context, data),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow."""
+        async with self._reauth_lock:
+            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+                # Reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -753,9 +761,7 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            ),
-            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-        )
+            )
 
     @callback
     def async_get_active_flows(
@@ -765,7 +771,9 @@ class ConfigEntry:
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(
-                self.domain, match_context={"entry_id": self.entry_id}
+                self.domain,
+                match_context={"entry_id": self.entry_id},
+                include_uninitialized=True,
             )
             if flow["context"].get("source") in sources
         )
@@ -859,7 +867,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         flow_id = uuid_util.random_uuid_hex()
         if context["source"] == SOURCE_IMPORT:
-            init_done: asyncio.Future[None] = asyncio.Future()
+            init_done: asyncio.Future[None] = self.hass.loop.create_future()
             self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
         task = asyncio.create_task(
@@ -1047,7 +1055,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
-        self._domain_index: dict[str, list[str]] = {}
+        self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1077,9 +1085,7 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return [
-            self._entries[entry_id] for entry_id in self._domain_index.get(domain, [])
-        ]
+        return list(self._domain_index.get(domain, []))
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
@@ -1088,7 +1094,7 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
-        self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
+        self._domain_index.setdefault(entry.domain, []).append(entry)
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1106,7 +1112,7 @@ class ConfigEntries:
         await entry.async_remove(self.hass)
 
         del self._entries[entry.entry_id]
-        self._domain_index[entry.domain].remove(entry.entry_id)
+        self._domain_index[entry.domain].remove(entry)
         if not self._domain_index[entry.domain]:
             del self._domain_index[entry.domain]
         self._async_schedule_save()
@@ -1173,7 +1179,7 @@ class ConfigEntries:
             return
 
         entries = {}
-        domain_index: dict[str, list[str]] = {}
+        domain_index: dict[str, list[ConfigEntry]] = {}
 
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
@@ -1188,7 +1194,7 @@ class ConfigEntries:
             domain = entry["domain"]
             entry_id = entry["entry_id"]
 
-            entries[entry_id] = ConfigEntry(
+            config_entry = ConfigEntry(
                 version=entry["version"],
                 domain=domain,
                 entry_id=entry_id,
@@ -1207,7 +1213,8 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            domain_index.setdefault(domain, []).append(entry_id)
+            entries[entry_id] = config_entry
+            domain_index.setdefault(domain, []).append(config_entry)
 
         self._domain_index = domain_index
         self._entries = entries
@@ -1348,7 +1355,7 @@ class ConfigEntries:
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
         ):
-            if value == UNDEFINED or getattr(entry, attr) == value:
+            if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
             setattr(entry, attr, value)

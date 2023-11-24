@@ -6,13 +6,15 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
+from collections import UserDict, defaultdict
 from collections.abc import (
-    Awaitable,
     Callable,
     Collection,
     Coroutine,
     Iterable,
+    KeysView,
     Mapping,
+    ValuesView,
 )
 import concurrent.futures
 from contextlib import suppress
@@ -26,13 +28,24 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    ParamSpec,
+    Self,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 import voluptuous as vol
 import yarl
 
 from . import block_async_io, util
+from .backports.functools import cached_property
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -78,7 +91,7 @@ from .util.async_ import (
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.ulid import ulid, ulid_at_time
+from .util.ulid import ulid_at_time, ulid_now
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -92,6 +105,7 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers.entity import StateInfo
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -120,6 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
+EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
@@ -195,6 +210,18 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+def is_callback_check_partial(target: Callable[..., Any]) -> bool:
+    """Check if function is safe to be called in the event loop.
+
+    This version of is_callback will also check if the target is a partial
+    and walk the chain of partials to find the original function.
+    """
+    check_target = target
+    while isinstance(check_target, functools.partial):
+        check_target = check_target.func
+    return is_callback(check_target)
+
+
 class _Hass(threading.local):
     """Container which makes a HomeAssistant instance available to the event loop."""
 
@@ -216,6 +243,19 @@ def async_get_hass() -> HomeAssistant:
     if not _hass.hass:
         raise HomeAssistantError("async_get_hass called from the wrong thread")
     return _hass.hass
+
+
+@callback
+def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+    """Find release channel based on version number."""
+    version = __version__
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
 
 
 @enum.unique
@@ -243,11 +283,12 @@ class HassJob(Generic[_P, _R_co]):
         name: str | None = None,
         *,
         cancel_on_shutdown: bool | None = None,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = _get_hassjob_callable_job_type(target)
+        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
 
     @property
@@ -714,7 +755,9 @@ class HomeAssistant:
                 for task in tasks:
                     _LOGGER.debug("Waiting for task: %s", task)
 
-    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(
+        self, pending: Collection[asyncio.Future[Any]]
+    ) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
@@ -887,7 +930,7 @@ class Context:
         id: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
         """Init the context."""
-        self.id = id or ulid()
+        self.id = id or ulid_now()
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
@@ -958,7 +1001,7 @@ class Event:
                 {
                     "event_type": self.event_type,
                     "data": ReadOnlyDict(self.data),
-                    "origin": str(self.origin.value),
+                    "origin": self.origin.value,
                     "time_fired": self.time_fired.isoformat(),
                     "context": self.context.as_dict(),
                 }
@@ -1112,13 +1155,20 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if event_filter is not None and not is_callback(event_filter):
+        job_type: HassJobType | None = None
+        if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately and not is_callback(listener):
-            raise HomeAssistantError(f"Event listener {listener} is not a callback")
+        if run_immediately:
+            if not is_callback_check_partial(listener):
+                raise HomeAssistantError(f"Event listener {listener} is not a callback")
+            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
-            (HassJob(listener, f"listen {event_type}"), event_filter, run_immediately),
+            (
+                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                event_filter,
+                run_immediately,
+            ),
         )
 
     @callback
@@ -1126,12 +1176,9 @@ class EventBus:
         self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
-
-        def remove_listener() -> None:
-            """Remove the listener."""
-            self._async_remove_listener(event_type, filterable_job)
-
-        return remove_listener
+        return functools.partial(
+            self._async_remove_listener, event_type, filterable_job
+        )
 
     def listen_once(
         self,
@@ -1193,7 +1240,11 @@ class EventBus:
         )
 
         filterable_job = (
-            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
+            HassJob(
+                _onetime_listener,
+                f"onetime listen {event_type} {listener}",
+                job_type=HassJobType.Callback,
+            ),
             None,
             False,
         )
@@ -1235,20 +1286,6 @@ class State:
     object_id: Object id of this state.
     """
 
-    __slots__ = (
-        "entity_id",
-        "state",
-        "attributes",
-        "last_changed",
-        "last_updated",
-        "context",
-        "domain",
-        "object_id",
-        "_as_dict",
-        "_as_dict_json",
-        "_as_compressed_state_json",
-    )
-
     def __init__(
         self,
         entity_id: str,
@@ -1258,6 +1295,7 @@ class State:
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1276,10 +1314,9 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
+        self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-        self._as_dict_json: str | None = None
-        self._as_compressed_state_json: str | None = None
 
     @property
     def name(self) -> str:
@@ -1314,12 +1351,12 @@ class State:
             )
         return self._as_dict
 
+    @cached_property
     def as_dict_json(self) -> str:
         """Return a JSON string of the State."""
-        if not self._as_dict_json:
-            self._as_dict_json = json_dumps(self.as_dict())
-        return self._as_dict_json
+        return json_dumps(self.as_dict())
 
+    @cached_property
     def as_compressed_state(self) -> dict[str, Any]:
         """Build a compressed dict of a state for adds.
 
@@ -1344,6 +1381,7 @@ class State:
             )
         return compressed_state
 
+    @cached_property
     def as_compressed_state_json(self) -> str:
         """Build a compressed JSON key value pair of a state for adds.
 
@@ -1351,11 +1389,7 @@ class State:
 
         It is used for sending multiple states in a single message.
         """
-        if not self._as_compressed_state_json:
-            self._as_compressed_state_json = json_dumps(
-                {self.entity_id: self.as_compressed_state()}
-            )[1:-1]
-        return self._as_compressed_state_json
+        return json_dumps({self.entity_id: self.as_compressed_state})[1:-1]
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
@@ -1418,15 +1452,59 @@ class State:
         )
 
 
+class States(UserDict[str, State]):
+    """Container for states, maps entity_id -> State.
+
+    Maintains an additional index:
+    - domain -> dict[str, State]
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._domain_index: defaultdict[str, dict[str, State]] = defaultdict(dict)
+
+    def values(self) -> ValuesView[State]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
+
+    def __setitem__(self, key: str, entry: State) -> None:
+        """Add an item."""
+        self.data[key] = entry
+        self._domain_index[entry.domain][entry.entity_id] = entry
+
+    def __delitem__(self, key: str) -> None:
+        """Remove an item."""
+        entry = self[key]
+        del self._domain_index[entry.domain][entry.entity_id]
+        super().__delitem__(key)
+
+    def domain_entity_ids(self, key: str) -> KeysView[str] | tuple[()]:
+        """Get all entity_ids for a domain."""
+        # Avoid polluting _domain_index with non-existing domains
+        if key not in self._domain_index:
+            return ()
+        return self._domain_index[key].keys()
+
+    def domain_states(self, key: str) -> ValuesView[State] | tuple[()]:
+        """Get all states for a domain."""
+        # Avoid polluting _domain_index with non-existing domains
+        if key not in self._domain_index:
+            return ()
+        return self._domain_index[key].values()
+
+
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_domain_index", "_reservations", "_bus", "_loop")
+    __slots__ = ("_states", "_states_data", "_reservations", "_bus", "_loop")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
-        self._states: dict[str, State] = {}
-        self._domain_index: dict[str, dict[str, State]] = {}
+        self._states = States()
+        # _states_data is used to access the States backing dict directly to speed
+        # up read operations
+        self._states_data = self._states.data
         self._reservations: set[str] = set()
         self._bus = bus
         self._loop = loop
@@ -1447,16 +1525,15 @@ class StateMachine:
         This method must be run in the event loop.
         """
         if domain_filter is None:
-            return list(self._states)
+            return list(self._states_data)
 
         if isinstance(domain_filter, str):
-            return list(self._domain_index.get(domain_filter.lower(), ()))
+            return list(self._states.domain_entity_ids(domain_filter.lower()))
 
-        states: list[str] = []
+        entity_ids: list[str] = []
         for domain in domain_filter:
-            if domain_index := self._domain_index.get(domain):
-                states.extend(domain_index)
-        return states
+            entity_ids.extend(self._states.domain_entity_ids(domain))
+        return entity_ids
 
     @callback
     def async_entity_ids_count(
@@ -1467,12 +1544,14 @@ class StateMachine:
         This method must be run in the event loop.
         """
         if domain_filter is None:
-            return len(self._states)
+            return len(self._states_data)
 
         if isinstance(domain_filter, str):
-            return len(self._domain_index.get(domain_filter.lower(), ()))
+            return len(self._states.domain_entity_ids(domain_filter.lower()))
 
-        return sum(len(self._domain_index.get(domain, ())) for domain in domain_filter)
+        return sum(
+            len(self._states.domain_entity_ids(domain)) for domain in domain_filter
+        )
 
     def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
@@ -1489,15 +1568,14 @@ class StateMachine:
         This method must be run in the event loop.
         """
         if domain_filter is None:
-            return list(self._states.values())
+            return list(self._states_data.values())
 
         if isinstance(domain_filter, str):
-            return list(self._domain_index.get(domain_filter.lower(), {}).values())
+            return list(self._states.domain_states(domain_filter.lower()))
 
         states: list[State] = []
         for domain in domain_filter:
-            if domain_index := self._domain_index.get(domain):
-                states.extend(domain_index.values())
+            states.extend(self._states.domain_states(domain))
         return states
 
     def get(self, entity_id: str) -> State | None:
@@ -1505,7 +1583,7 @@ class StateMachine:
 
         Async friendly.
         """
-        return self._states.get(entity_id.lower())
+        return self._states_data.get(entity_id.lower())
 
     def is_state(self, entity_id: str, state: str) -> bool:
         """Test if entity exists and is in specified state.
@@ -1539,7 +1617,6 @@ class StateMachine:
         if old_state is None:
             return False
 
-        self._domain_index[old_state.domain].pop(entity_id)
         old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
@@ -1584,7 +1661,7 @@ class StateMachine:
         entity_id are added.
         """
         entity_id = entity_id.lower()
-        if entity_id in self._states or entity_id in self._reservations:
+        if entity_id in self._states_data or entity_id in self._reservations:
             raise HomeAssistantError(
                 "async_reserve must not be called once the state is in the state"
                 " machine."
@@ -1596,7 +1673,9 @@ class StateMachine:
     def async_available(self, entity_id: str) -> bool:
         """Check to see if an entity_id is available to be used."""
         entity_id = entity_id.lower()
-        return entity_id not in self._states and entity_id not in self._reservations
+        return (
+            entity_id not in self._states_data and entity_id not in self._reservations
+        )
 
     @callback
     def async_set(
@@ -1606,6 +1685,7 @@ class StateMachine:
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
+        state_info: StateInfo | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -1619,7 +1699,7 @@ class StateMachine:
         entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        if (old_state := self._states.get(entity_id)) is None:
+        if (old_state := self._states_data.get(entity_id)) is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1657,14 +1737,11 @@ class StateMachine:
             now,
             context,
             old_state is None,
+            state_info,
         )
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
-        if not (domain_index := self._domain_index.get(state.domain)):
-            domain_index = {}
-            self._domain_index[state.domain] = domain_index
-        domain_index[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
@@ -1694,7 +1771,13 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
+        func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
         schema: vol.Schema | None,
         domain: str,
         service: str,
@@ -1785,7 +1868,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
     ) -> None:
@@ -1803,7 +1886,11 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
@@ -2074,11 +2161,14 @@ class Config:
         # Dictionary of Media folders that integrations may use
         self.media_dirs: dict[str, str] = {}
 
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -2153,13 +2243,14 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
-            "safe_mode": self.safe_mode,
+            "recovery_mode": self.recovery_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

@@ -1,4 +1,6 @@
 """The tests for the Modbus sensor component."""
+import struct
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -6,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
@@ -19,6 +22,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_VIRTUAL_COUNT,
     CONF_ZERO_SUPPRESS,
     MODBUS_DOMAIN,
     DataType,
@@ -72,6 +76,23 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_PRECISION: 0,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                    CONF_LAZY_ERROR: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_CLASS: "battery",
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DEVICE_ADDRESS: 10,
                     CONF_DATA_TYPE: DataType.INT16,
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
@@ -148,6 +169,16 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 }
             ]
         },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT32,
+                    CONF_VIRTUAL_COUNT: 5,
+                }
+            ]
+        },
     ],
 )
 async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
@@ -216,7 +247,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}:` missing, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
         (
             {
@@ -380,6 +411,17 @@ async def test_config_wrong_struct_sensor(
         ),
         (
             {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB],
+            False,
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
                 CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -468,6 +510,20 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+            False,
+            "07-05-2020 14:35",
+        ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DataType.STRING,
+                CONF_SWAP: CONF_SWAP_BYTE,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x3730, 0x302D, 0x2D35, 0x3032, 0x3032, 0x3120, 0x3A34, 0x3533],
             False,
             "07-05-2020 14:35",
         ),
@@ -596,6 +652,38 @@ async def test_config_wrong_struct_sensor(
             False,
             "1.23",
         ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 10,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593750",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 0.01,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 2,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593.75",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 0.01,
+                CONF_OFFSET: 0,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593.75",
+        ),
     ],
 )
 async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
@@ -624,7 +712,46 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     [
         (
             {
+                CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [
+                0x5102,
+                0x0304,
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+            ],
+            False,
+            ["34899771392", "0"],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [
+                0x5102,
+                0x0304,
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+            ],
+            False,
+            ["34899771392", "0"],
+        ),
+        (
+            {
                 CONF_SLAVE_COUNT: 0,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [0x0102, 0x0304],
+            False,
+            ["16909060"],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 0,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
             },
             [0x0102, 0x0304],
@@ -642,7 +769,48 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
         ),
         (
             {
+                CONF_VIRTUAL_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201],
+            False,
+            ["16909060", "67305985"],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 2,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201, 0x0403],
+            False,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_UNKNOWN],
+        ),
+        (
+            {
                 CONF_SLAVE_COUNT: 3,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [
+                0x0102,
+                0x0304,
+                0x0506,
+                0x0708,
+                0x090A,
+                0x0B0C,
+                0x0D0E,
+                0x0F00,
+            ],
+            False,
+            [
+                "16909060",
+                "84281096",
+                "151653132",
+                "219025152",
+            ],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 3,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
             },
             [
@@ -674,7 +842,25 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
         ),
         (
             {
+                CONF_VIRTUAL_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201],
+            True,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+        ),
+        (
+            {
                 CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [],
+            False,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 1,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
             },
             [],
@@ -683,9 +869,10 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
         ),
     ],
 )
-async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+async def test_virtual_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
+) -> None:
     """Run test for sensor."""
-    entity_registry = er.async_get(hass)
     for i in range(0, len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"
@@ -717,7 +904,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
     [
         (
             {
-                CONF_SLAVE_COUNT: 0,
+                CONF_VIRTUAL_COUNT: 0,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_SWAP: CONF_SWAP_BYTE,
                 CONF_DATA_TYPE: DataType.UINT16,
@@ -728,7 +915,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 0,
+                CONF_VIRTUAL_COUNT: 0,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_SWAP: CONF_SWAP_WORD,
                 CONF_DATA_TYPE: DataType.UINT32,
@@ -739,7 +926,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 0,
+                CONF_VIRTUAL_COUNT: 0,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_SWAP: CONF_SWAP_WORD,
                 CONF_DATA_TYPE: DataType.UINT64,
@@ -750,7 +937,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 1,
+                CONF_VIRTUAL_COUNT: 1,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_DATA_TYPE: DataType.UINT16,
                 CONF_SWAP: CONF_SWAP_BYTE,
@@ -761,7 +948,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 1,
+                CONF_VIRTUAL_COUNT: 1,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SWAP: CONF_SWAP_WORD,
@@ -772,7 +959,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 1,
+                CONF_VIRTUAL_COUNT: 1,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_DATA_TYPE: DataType.UINT64,
                 CONF_SWAP: CONF_SWAP_WORD,
@@ -783,7 +970,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 3,
+                CONF_VIRTUAL_COUNT: 3,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_DATA_TYPE: DataType.UINT16,
                 CONF_SWAP: CONF_SWAP_BYTE,
@@ -794,7 +981,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 3,
+                CONF_VIRTUAL_COUNT: 3,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SWAP: CONF_SWAP_WORD,
@@ -819,7 +1006,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
         (
             {
-                CONF_SLAVE_COUNT: 3,
+                CONF_VIRTUAL_COUNT: 3,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
                 CONF_DATA_TYPE: DataType.UINT64,
                 CONF_SWAP: CONF_SWAP_WORD,
@@ -852,7 +1039,9 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
         ),
     ],
 )
-async def test_slave_swap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+async def test_virtual_swap_sensor(
+    hass: HomeAssistant, mock_do_cycle, expected
+) -> None:
     """Run test for sensor."""
     for i in range(0, len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
@@ -906,6 +1095,65 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "register_words", "expected"),
+    [
+        (
+            {
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+            ],
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [0x6E61, 0x6E00],
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 2,
+                CONF_STRUCTURE: "4s",
+            },
+            [0x6E61, 0x6E00],
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_COUNT: 2,
+                CONF_STRUCTURE: "4s",
+            },
+            [0x6161, 0x6100],
+            "aaa\x00",
+        ),
+    ],
+)
+async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 10,
                     CONF_LAZY_ERROR: 1,
                 },
@@ -914,27 +1162,23 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
+    ("register_words", "do_exception"),
     [
         (
             [0x8000],
             True,
-            "17",
-            STATE_UNAVAILABLE,
         ),
     ],
 )
 async def test_lazy_error_sensor(
-    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory
 ) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == start_expect
+    assert hass.states.get(ENTITY_ID).state == "17"
     await do_next_cycle(hass, mock_do_cycle, 5)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -961,10 +1205,35 @@ async def test_lazy_error_sensor(
                 CONF_DATA_TYPE: DataType.CUSTOM,
                 CONF_STRUCTURE: ">4f",
             },
-            # floats: 7.931250095367432, 10.600000381469727,
+            # floats: nan, 10.600000381469727,
             #         1.000879611487865e-28, 10.566553115844727
-            [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
-            "7.93,10.60,0.00,10.57",
+            [
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                0x4129,
+                0x999A,
+                0x10FD,
+                0xC0CD,
+                0x4129,
+                0x109A,
+            ],
+            "0,10.60,0.00,10.57",
+        ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_STRUCTURE: ">2i",
+                CONF_NAN_VALUE: 0x0000000F,
+            },
+            # int: nan, 10,
+            [
+                0x0000,
+                0x000F,
+                0x0000,
+                0x000A,
+            ],
+            "0,10",
         ),
         (
             {
@@ -983,6 +1252,18 @@ async def test_lazy_error_sensor(
             },
             [0x0101],
             "257",
+        ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DataType.CUSTOM,
+                CONF_STRUCTURE: ">4f",
+            },
+            # floats: 7.931250095367432, 10.600000381469727,
+            #         1.000879611487865e-28, 10.566553115844727
+            [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
+            "7.93,10.60,0.00,10.57",
         ),
     ],
 )
@@ -1089,7 +1370,7 @@ async def mock_restore(hass):
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 0,
-                    CONF_SLAVE_COUNT: 1,
+                    CONF_VIRTUAL_COUNT: 1,
                 }
             ]
         },

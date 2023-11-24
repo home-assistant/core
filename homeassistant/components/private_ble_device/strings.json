@@ -24,6 +24,9 @@
       },
       "estimated_distance": {
         "name": "Estimated distance"
+      },
+      "estimated_broadcast_interval": {
+        "name": "Estimated broadcast interval"
       }
     }
   }

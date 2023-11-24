@@ -39,7 +39,6 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             hass,
             _LOGGER,
             name=entry.title,
-            update_method=self._async_update_data,
             update_interval=SCAN_INTERVAL,
             always_update=False,
         )

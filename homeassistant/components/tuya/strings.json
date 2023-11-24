@@ -112,7 +112,7 @@
     },
     "number": {
       "temperature": {
-        "name": "[%key:component::number::entity_component::temperature::name%]"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "time": {
         "name": "Time"

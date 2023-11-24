@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
-    entity,
     entity_registry as er,
 )
 from homeassistant.setup import async_setup_component
@@ -22,11 +21,9 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 MOCK_ENTITY_SOURCES = {
     "light.platform_config_source": {
-        "source": entity.SOURCE_PLATFORM_CONFIG,
         "domain": "wled",
     },
     "light.config_entry_source": {
-        "source": entity.SOURCE_CONFIG_ENTRY,
         "config_entry": "config_entry_id",
         "domain": "wled",
     },
@@ -73,11 +70,9 @@ async def test_search(
 
     entity_sources = {
         "light.wled_platform_config_source": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
             "domain": "wled",
         },
         "light.wled_config_entry_source": {
-            "source": entity.SOURCE_CONFIG_ENTRY,
             "config_entry": wled_config_entry.entry_id,
             "domain": "wled",
         },

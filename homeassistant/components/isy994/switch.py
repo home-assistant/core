@@ -156,6 +156,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         self._attr_name = description.name  # Override super
         self._change_handler: EventListener = None
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.isy.nodes.status_events.subscribe(

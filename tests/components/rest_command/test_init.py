@@ -1,11 +1,16 @@
 """The tests for the rest command platform."""
 import asyncio
 from http import HTTPStatus
+from unittest.mock import patch
 
 import aiohttp
 
 import homeassistant.components.rest_command as rc
-from homeassistant.const import CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN
+from homeassistant.const import (
+    CONTENT_TYPE_JSON,
+    CONTENT_TYPE_TEXT_PLAIN,
+    SERVICE_RELOAD,
+)
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -42,6 +47,30 @@ class TestRestCommandSetup:
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         assert self.hass.services.has_service(rc.DOMAIN, "test_get")
+
+    def test_reload(self):
+        """Verify we can reload rest_command integration."""
+
+        with assert_setup_component(1):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        assert self.hass.services.has_service(rc.DOMAIN, "test_get")
+        assert not self.hass.services.has_service(rc.DOMAIN, "new_test")
+
+        new_config = {
+            rc.DOMAIN: {
+                "new_test": {"url": "https://example.org", "method": "get"},
+            }
+        }
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=new_config,
+        ):
+            self.hass.services.call(rc.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+        assert self.hass.services.has_service(rc.DOMAIN, "new_test")
+        assert not self.hass.services.has_service(rc.DOMAIN, "get_test")
 
 
 class TestRestCommandComponent:

@@ -1,9 +1,0 @@
-{
-  "domain": "test_weather",
-  "name": "Test Weather",
-  "documentation": "http://example.com",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [],
-  "version": "1.2.3"
-}
