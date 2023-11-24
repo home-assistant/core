@@ -74,6 +74,7 @@ def lock_fixture() -> loqed.Lock:
     mock_lock.name = "LOQED smart lock"
     mock_lock.getWebhooks = AsyncMock(return_value=webhooks_fixture)
     mock_lock.bolt_state = "locked"
+    mock_lock.last_event = "go_to_state_manual_lock_ble_latch"
     mock_lock.battery_percentage = 90
     mock_lock.battery_voltage = 3.1415
     mock_lock.battery_type = "UNKNOWN"

@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import BATTERY_TYPES, DOMAIN
+from .const import BATTERY_TYPES, DOMAIN, EVENT_TYPES
 from .coordinator import LoqedDataCoordinator
 from .entity import LoqedEntity
 
@@ -35,6 +35,16 @@ class LoqedSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: Final[tuple[LoqedSensorEntityDescription, ...]] = (
+    LoqedSensorEntityDescription(
+        key="last_event",
+        value_fn=lambda lock: lock.last_event if lock.last_event else None,
+        translation_key="last_event",
+        options=EVENT_TYPES,
+        icon="mdi:information-outline",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     LoqedSensorEntityDescription(
         key="ble_strength",
         value_fn=lambda lock: lock.ble_strength,

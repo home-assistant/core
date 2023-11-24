@@ -125,3 +125,28 @@ async def test_ble_strength(
 
     assert state
     assert state.state == "34"
+
+
+async def test_last_event(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the last event sensor entity."""
+    entity_id = "sensor.home_last_event"
+
+    # Ensure sensor is disabled by default
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # Enable sensor
+    entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "go_to_state_manual_lock_ble_latch"

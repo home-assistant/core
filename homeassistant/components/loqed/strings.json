@@ -20,6 +20,33 @@
   },
   "entity": {
     "sensor": {
+      "last_event": {
+        "name": "Last Event",
+        "state": {
+          "go_to_state_instantopen_open": "Opening by Instant Open",
+          "go_to_state_instantopen_latch": "Unlocking by Instant Open",
+          "go_to_state_manual_unlock_remote_open": "Opening by Remote",
+          "go_to_state_manual_unlock_ble_open": "Opening by Bluetooth",
+          "go_to_state_manual_unlock_via_outside_module_pin": "Opening by PIN code",
+          "go_to_state_manual_unlock_via_outside_module_button": "Opening by Touch Button",
+          "go_to_state_manual_lock_ble_latch": "Unlocking by Bluetooth",
+          "go_to_state_manual_lock_ble_night_lock": "Locking by Bluetooth",
+          "go_to_state_manual_lock_remote_latch": "Unlocking by Remote",
+          "go_to_state_manual_lock_remote_night_lock": "Locking by Remote",
+          "go_to_state_twist_assist_open": "Opening by Twist Assist",
+          "go_to_state_twist_assist_latch": "Unlocking by Twist Assist",
+          "go_to_state_twist_assist_lock": "Locking by Twist Assist",
+          "go_to_state_touch_to_lock": "Locking by Touch Button",
+          "state_changed_open": "Changed to Open",
+          "state_changed_latch": "Changed to Unlocked",
+          "state_changed_night_lock": "Changed to Locked",
+          "state_changed_unknown": "Changed to Unknown",
+          "motor_stall": "Motor stalled",
+          "state_changed_open_remote": "Opened Remotely",
+          "state_changed_latch_remote": "Unlocked Remotely",
+          "state_changed_night_lock_remote": "Locked Remotely"
+        }
+      },
       "ble_strength": {
         "name": "Bluetooth signal"
       },
