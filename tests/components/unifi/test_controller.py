@@ -465,6 +465,7 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
+        (aiounifi.Forbidden, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],
