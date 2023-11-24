@@ -5939,7 +5939,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_active_water_usage:device-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_active_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -5962,333 +5962,16 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-WTR',
+    'model': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '2.03',
+    'sw_version': '3.03',
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_active_water_usage:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_active_water_usage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water',
-    'original_name': 'Active water usage',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'active_liter_lpm',
-    'unique_id': 'aabbccddeeff_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_active_water_usage:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Active water usage',
-      'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_active_water_usage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_total_water_usage:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-WTR',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '2.03',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_total_water_usage:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_water_usage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
-    'original_icon': 'mdi:gauge',
-    'original_name': 'Total water usage',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_liter_m3',
-    'unique_id': 'aabbccddeeff_total_liter_m3',
-    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_total_water_usage:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Device Total water usage',
-      'icon': 'mdi:gauge',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_water_usage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17.014',
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_wi_fi_ssid:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-WTR',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '2.03',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_wi_fi_ssid:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.device_wi_fi_ssid',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi SSID',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_wi_fi_ssid:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
-      'icon': 'mdi:wifi',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_wi_fi_ssid',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'My Wi-Fi',
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_wi_fi_strength:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'HWE-WTR',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '2.03',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_wi_fi_strength:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.device_wi_fi_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:wifi',
-    'original_name': 'Wi-Fi strength',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[HWE-WTR-entity_ids2][sensor.device_wi_fi_strength:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
-      'icon': 'mdi:wifi',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_wi_fi_strength',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '84',
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_active_power:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '3.06',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_active_power:entity-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_active_power:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6324,7 +6007,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_active_power:state]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_active_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6336,10 +6019,10 @@
     'entity_id': 'sensor.device_active_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '-1058.296',
+    'state': '1457.277',
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_active_power_phase_1:device-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_active_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -6362,16 +6045,16 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
+    'model': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '3.06',
+    'sw_version': '3.03',
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_active_power_phase_1:entity-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_active_power_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6407,7 +6090,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_active_power_phase_1:state]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_active_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6419,10 +6102,10 @@
     'entity_id': 'sensor.device_active_power_phase_1',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '-1058.296',
+    'state': '1457.277',
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_export:device-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_total_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -6445,96 +6128,16 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
+    'model': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '3.06',
+    'sw_version': '3.03',
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_export:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_energy_export',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total energy export',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_export:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total energy export',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_energy_export',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255.551',
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_export_tariff_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '3.06',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_export_tariff_1:entity-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_total_energy_export_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6567,7 +6170,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_export_tariff_1:state]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_total_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6579,10 +6182,10 @@
     'entity_id': 'sensor.device_total_energy_export_tariff_1',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '255.551',
+    'state': '0',
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_import:device-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_total_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -6605,96 +6208,16 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
+    'model': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '3.06',
+    'sw_version': '3.03',
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_import:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_total_energy_import',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Total energy import',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_import:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Total energy import',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_total_energy_import',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.705',
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_import_tariff_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '3c:39:e7:aa:bb:cc',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '3c39e7aabbcc',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
-    'name': 'Device',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '3.06',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_import_tariff_1:entity-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_total_energy_import_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6727,7 +6250,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_total_energy_import_tariff_1:state]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_total_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6739,10 +6262,10 @@
     'entity_id': 'sensor.device_total_energy_import_tariff_1',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.705',
+    'state': '63.651',
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_wi_fi_ssid:device-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -6765,16 +6288,16 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
+    'model': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '3.06',
+    'sw_version': '3.03',
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_wi_fi_ssid:entity-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6805,7 +6328,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_wi_fi_ssid:state]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
@@ -6818,7 +6341,7 @@
     'state': 'My Wi-Fi',
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_wi_fi_strength:device-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -6841,16 +6364,16 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM230-wifi',
+    'model': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '3.06',
+    'sw_version': '3.03',
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_wi_fi_strength:entity-registry]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_wi_fi_strength:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6883,7 +6406,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[SDM230-entity_ids3][sensor.device_wi_fi_strength:state]
+# name: test_sensors[HWE-SKT-entity_ids2][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
@@ -6895,10 +6418,10 @@
     'entity_id': 'sensor.device_wi_fi_strength',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '92',
+    'state': '94',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power:device-registry]
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_active_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -6921,7 +6444,324 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM630-wifi',
+    'model': 'HWE-WTR',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '2.03',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_active_water_usage:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_active_water_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:water',
+    'original_name': 'Active water usage',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_liter_lpm',
+    'unique_id': 'aabbccddeeff_active_liter_lpm',
+    'unit_of_measurement': 'l/min',
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_active_water_usage:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Active water usage',
+      'icon': 'mdi:water',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'l/min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_active_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_total_water_usage:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-WTR',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '2.03',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_total_water_usage:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_total_water_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': 'mdi:gauge',
+    'original_name': 'Total water usage',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_liter_m3',
+    'unique_id': 'aabbccddeeff_total_liter_m3',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_total_water_usage:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Device Total water usage',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_total_water_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.014',
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_wi_fi_ssid:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-WTR',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '2.03',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_wi_fi_ssid:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_wi_fi_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Wi-Fi SSID',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_ssid',
+    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_wi_fi_ssid:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Wi-Fi SSID',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_wi_fi_ssid',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'My Wi-Fi',
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_wi_fi_strength:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'HWE-WTR',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '2.03',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_wi_fi_strength:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_wi_fi_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Wi-Fi strength',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_strength',
+    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[HWE-WTR-entity_ids3][sensor.device_wi_fi_strength:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Wi-Fi strength',
+      'icon': 'mdi:wifi',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_wi_fi_strength',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '84',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_active_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
@@ -6930,7 +6770,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power:entity-registry]
+# name: test_sensors[SDM230-entity_ids4][sensor.device_active_power:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6966,7 +6806,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power:state]
+# name: test_sensors[SDM230-entity_ids4][sensor.device_active_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6978,10 +6818,10 @@
     'entity_id': 'sensor.device_active_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '-900.194',
+    'state': '-1058.296',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_1:device-registry]
+# name: test_sensors[SDM230-entity_ids4][sensor.device_active_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7004,7 +6844,7 @@
     }),
     'is_new': False,
     'manufacturer': 'HomeWizard',
-    'model': 'SDM630-wifi',
+    'model': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': None,
@@ -7013,7 +6853,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_1:entity-registry]
+# name: test_sensors[SDM230-entity_ids4][sensor.device_active_power_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7049,7 +6889,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_1:state]
+# name: test_sensors[SDM230-entity_ids4][sensor.device_active_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7064,7 +6904,483 @@
     'state': '-1058.296',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_2:device-registry]
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_export:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_export:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_total_energy_export',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy export',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_export_kwh',
+    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_export:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Device Total energy export',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_total_energy_export',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255.551',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_export_tariff_1:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_export_tariff_1:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_total_energy_export_tariff_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy export tariff 1',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_export_t1_kwh',
+    'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_export_tariff_1:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Device Total energy export tariff 1',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_total_energy_export_tariff_1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255.551',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_import:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_import:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_total_energy_import',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy import',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_import_kwh',
+    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_import:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Device Total energy import',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_total_energy_import',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.705',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_import_tariff_1:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_import_tariff_1:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_total_energy_import_tariff_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy import tariff 1',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_import_t1_kwh',
+    'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_total_energy_import_tariff_1:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Device Total energy import tariff 1',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_total_energy_import_tariff_1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.705',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_wi_fi_ssid:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_wi_fi_ssid:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_wi_fi_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Wi-Fi SSID',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_ssid',
+    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_wi_fi_ssid:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Wi-Fi SSID',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_wi_fi_ssid',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'My Wi-Fi',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_wi_fi_strength:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_wi_fi_strength:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_wi_fi_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Wi-Fi strength',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_strength',
+    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids4][sensor.device_wi_fi_strength:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Device Wi-Fi strength',
+      'icon': 'mdi:wifi',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_wi_fi_strength',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '92',
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7096,7 +7412,173 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_2:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_active_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Active power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_power_w',
+    'unique_id': 'aabbccddeeff_active_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Active power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_active_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-900.194',
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_1:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM630-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_1:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_active_power_phase_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Active power phase 1',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_power_l1_w',
+    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_1:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Active power phase 1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_active_power_phase_1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-1058.296',
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_2:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:39:e7:aa:bb:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '3c39e7aabbcc',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'HomeWizard',
+    'model': 'SDM630-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7132,7 +7614,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_2:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7147,7 +7629,7 @@
     'state': '158.102',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_3:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7179,7 +7661,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_3:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7215,7 +7697,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_active_power_phase_3:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_active_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7230,7 +7712,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_export:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7262,7 +7744,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_export:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_export:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7295,7 +7777,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_export:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7310,7 +7792,7 @@
     'state': '0.523',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_export_tariff_1:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7342,7 +7824,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_export_tariff_1:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_export_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7375,7 +7857,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_export_tariff_1:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7390,7 +7872,7 @@
     'state': '0.523',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_import:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7422,7 +7904,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_import:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_import:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7455,7 +7937,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_import:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7470,7 +7952,7 @@
     'state': '0.101',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_import_tariff_1:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7502,7 +7984,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_import_tariff_1:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_import_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7535,7 +8017,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_total_energy_import_tariff_1:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_total_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7550,7 +8032,7 @@
     'state': '0.101',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_wi_fi_ssid:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7582,7 +8064,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_wi_fi_ssid:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7613,7 +8095,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_wi_fi_ssid:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi SSID',
@@ -7626,7 +8108,7 @@
     'state': 'My Wi-Fi',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_wi_fi_strength:device-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -7658,7 +8140,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_wi_fi_strength:entity-registry]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_wi_fi_strength:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7691,7 +8173,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[SDM630-entity_ids4][sensor.device_wi_fi_strength:state]
+# name: test_sensors[SDM630-entity_ids5][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Wi-Fi strength',
