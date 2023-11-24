@@ -137,12 +137,10 @@ async def test_config_flow(
     state_mag = hass.states.get("sensor.esios_mag_tax")
     state_omie = hass.states.get("sensor.esios_omie_price")
     assert state_inyection
-    assert state_mag
-    assert state_omie
+    assert not state_mag
+    assert not state_omie
     assert "period" not in state_inyection.attributes
     assert "available_power" not in state_inyection.attributes
-    assert "period" not in state_mag.attributes
-    assert "period" not in state_omie.attributes
 
     # check update failed
     freezer.tick(timedelta(days=1))
@@ -151,7 +149,7 @@ async def test_config_flow(
     state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[0], value="unavailable")
     assert "period" not in state.attributes
-    assert pvpc_aioclient_mock.call_count == 10
+    assert pvpc_aioclient_mock.call_count == 8
 
     # disable api token in options
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -163,9 +161,9 @@ async def test_config_flow(
         user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6, CONF_USE_API_TOKEN: False},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert pvpc_aioclient_mock.call_count == 10
+    assert pvpc_aioclient_mock.call_count == 8
     await hass.async_block_till_done()
-    assert pvpc_aioclient_mock.call_count == 11
+    assert pvpc_aioclient_mock.call_count == 9
 
     state = hass.states.get("sensor.esios_pvpc")
     state_inyection = hass.states.get("sensor.esios_injection_price")
@@ -173,8 +171,8 @@ async def test_config_flow(
     state_omie = hass.states.get("sensor.esios_omie_price")
     check_valid_state(state, tariff=TARIFFS[1])
     assert state_inyection.state == "unavailable"
-    assert state_mag.state == "unavailable"
-    assert state_omie.state == "unavailable"
+    assert not state_mag
+    assert not state_omie
 
 
 async def test_reauth(
@@ -225,7 +223,7 @@ async def test_reauth(
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
     async_fire_time_changed(hass, _MOCK_TIME_BAD_AUTH_RESPONSES)
     await hass.async_block_till_done()
-    assert pvpc_aioclient_mock.call_count == 10
+    assert pvpc_aioclient_mock.call_count == 8
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["context"]["entry_id"] == config_entry.entry_id
@@ -237,7 +235,7 @@ async def test_reauth(
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert pvpc_aioclient_mock.call_count == 11
+    assert pvpc_aioclient_mock.call_count == 9
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["context"]["entry_id"] == config_entry.entry_id
@@ -251,7 +249,7 @@ async def test_reauth(
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert pvpc_aioclient_mock.call_count == 12
+    assert pvpc_aioclient_mock.call_count == 10
 
     await hass.async_block_till_done()
-    assert pvpc_aioclient_mock.call_count == 16
+    assert pvpc_aioclient_mock.call_count == 12

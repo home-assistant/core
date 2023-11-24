@@ -52,6 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         name="MAG tax",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=KEY_OMIE,
@@ -60,6 +61,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         name="OMIE Price",
+        entity_registry_enabled_default=False,
     ),
 )
 _PRICE_SENSOR_ATTRIBUTES_MAP = {
