@@ -77,7 +77,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._power = user_input[ATTR_POWER]
             self._power_p3 = user_input[ATTR_POWER_P3]
             self._use_api_token = user_input[CONF_USE_API_TOKEN]
-            return await self.async_step_api_token(user_input)
+            return await self.async_step_api_token()
 
         data_schema = vol.Schema(
             {
