@@ -391,7 +391,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.total_gas_m3 is not None,
-        value_fn=lambda data: data.total_gas_m3 or None,
+        value_fn=lambda data: data.total_gas_m3,
     ),
     HomeWizardSensorEntityDescription(
         key="gas_unique_id",
@@ -418,7 +418,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.total_liter_m3 is not None,
-        value_fn=lambda data: data.total_liter_m3 or None,
+        value_fn=lambda data: data.total_liter_m3,
     ),
 )
 
