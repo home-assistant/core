@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -23,7 +22,6 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     ClimateEntity,
-    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -95,11 +93,6 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-@dataclass
-class ViCareClimateEntityDescription(ClimateEntityDescription):
-    """Describes ViCare climate entity."""
-
-
 def _get_circuits(vicare_api):
     """Return the list of circuits."""
     try:
@@ -125,7 +118,7 @@ async def async_setup_entry(
             api,
             circuit,
             device_config,
-            ViCareClimateEntityDescription(key="heating", translation_key="heating"),
+            "heating",
         )
         entities.append(entity)
 
@@ -143,7 +136,6 @@ async def async_setup_entry(
 class ViCareClimate(ViCareEntity, ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
-    entity_description: ViCareClimateEntityDescription
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -161,14 +153,14 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         api: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
         device_config: PyViCareDeviceConfig,
-        description: ViCareClimateEntityDescription,
+        translation_key: str,
     ) -> None:
         """Initialize the climate device."""
         super().__init__(device_config, api, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_program = None
-        self.entity_description = description
+        self._attr_translation_key = translation_key
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""

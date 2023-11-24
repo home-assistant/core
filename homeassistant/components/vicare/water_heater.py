@@ -1,6 +1,5 @@
 """Viessmann ViCare water_heater device."""
 from contextlib import suppress
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -16,7 +15,6 @@ import requests
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
-    WaterHeaterEntityEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -59,11 +57,6 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
-@dataclass
-class ViCareWaterHeaterEntityDescription(WaterHeaterEntityEntityDescription):
-    """Describes ViCare water heater entity."""
-
-
 def _get_circuits(vicare_api):
     """Return the list of circuits."""
     try:
@@ -89,7 +82,7 @@ async def async_setup_entry(
             api,
             circuit,
             device_config,
-            ViCareWaterHeaterEntityDescription(key="water", translation_key="water"),
+            "water",
         )
         entities.append(entity)
 
@@ -99,7 +92,6 @@ async def async_setup_entry(
 class ViCareWater(ViCareEntity, WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
-    entity_description: ViCareWaterHeaterEntityDescription
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -112,14 +104,14 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         api: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
         device_config: PyViCareDeviceConfig,
-        description: ViCareWaterHeaterEntityDescription,
+        translation_key: str,
     ) -> None:
         """Initialize the DHW water_heater device."""
         super().__init__(device_config, api, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_mode = None
-        self.entity_description = description
+        self._attr_translation_key = translation_key
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
