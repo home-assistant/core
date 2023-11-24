@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 import logging
+import string
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -242,6 +243,52 @@ class _TranslationCache:
 
         self.loaded[language].update(components)
 
+    def _compare_placeholders(
+        self,
+        language: str,
+        updated_resources: dict[str, Any],
+        cached_resources: dict[str, Any] | None = None,
+    ) -> bool:
+        """Validate if updated resources has same placeholders as cached resources."""
+        if cached_resources is None:
+            return True
+
+        cached_resources_placholders: dict[str, set[str]] = {}
+        updated_resources_placholders: dict[str, set[str]] = {}
+        has_placeholders = False
+
+        for key, value in cached_resources.items():
+            tuples = list(string.Formatter().parse(value))
+            if tuples[0][1] is None:
+                continue
+            cached_resources_placholders[key] = {
+                tup[1] for tup in tuples if tup[1] is not None
+            }
+            has_placeholders = True
+
+        if not has_placeholders:
+            return True
+
+        for key, value in updated_resources.items():
+            tuples = list(string.Formatter().parse(value))
+            if tuples[0][1] is None:
+                continue
+            updated_resources_placholders[key] = {
+                tup[1] for tup in tuples if tup[1] is not None
+            }
+
+        if cached_resources_placholders != updated_resources_placholders:
+            _LOGGER.error(
+                "Validation of placeholders for localized (%s) strings failed."
+                " Expected placeholders: %s"
+                " Gathered placeholders: %s",
+                language,
+                cached_resources_placholders,
+                updated_resources_placholders,
+            )
+            return False
+        return True
+
     @callback
     def _build_category_cache(
         self,
@@ -274,12 +321,14 @@ class _TranslationCache:
                 ).setdefault(category, {})
 
                 if isinstance(resource, dict):
-                    category_cache.update(
-                        recursive_flatten(
-                            f"component.{component}.{category}.",
-                            resource,
-                        )
+                    resources_flatten = recursive_flatten(
+                        f"component.{component}.{category}.",
+                        resource,
                     )
+                    if self._compare_placeholders(
+                        language, resources_flatten, category_cache
+                    ):
+                        category_cache.update(resources_flatten)
                 else:
                     category_cache[f"component.{component}.{category}"] = resource
 
