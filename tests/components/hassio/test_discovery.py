@@ -19,6 +19,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 @pytest.fixture(name="mock_mqtt")
 async def mock_mqtt_fixture(hass):
     """Mock the MQTT integration's config flow."""
+    mock_integration(hass, MockModule(MQTT_DOMAIN))
+    mock_platform(hass, f"{MQTT_DOMAIN}.config_flow", None)
 
     class MqttFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -28,8 +30,6 @@ async def mock_mqtt_fixture(hass):
         async_step_hassio = AsyncMock(return_value={"type": "abort"})
 
     with mock_config_flow(MQTT_DOMAIN, MqttFlow):
-        mock_integration(hass, MockModule(MQTT_DOMAIN))
-        mock_platform(hass, f"{MQTT_DOMAIN}.config_flow", None)
         yield MqttFlow
 
 
