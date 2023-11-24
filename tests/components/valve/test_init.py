@@ -201,7 +201,7 @@ async def test_services(hass: HomeAssistant) -> None:
     assert is_open(hass, ent1)
     assert is_opening(hass, ent2)
 
-    #     # call basic toggle services
+    # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
     await call_service(hass, SERVICE_TOGGLE, ent2)
 
