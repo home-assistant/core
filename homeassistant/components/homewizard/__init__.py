@@ -1,6 +1,5 @@
 """The Homewizard integration."""
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -10,7 +9,7 @@ from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Homewizard from a config entry."""
-    coordinator = Coordinator(hass, entry, entry.data[CONF_IP_ADDRESS])
+    coordinator = Coordinator(hass)
     try:
         await coordinator.async_config_entry_first_refresh()
 

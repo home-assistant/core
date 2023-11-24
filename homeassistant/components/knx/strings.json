@@ -189,10 +189,10 @@
         }
       },
       "secure_key_source_menu_routing": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_routing::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_routing::description%]",
+        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]",
+        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
         "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_routing::menu_options::secure_knxkeys%]",
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
           "secure_routing_manual": "[%key:component::knx::config::step::secure_key_source_menu_routing::menu_options::secure_routing_manual%]"
         }
       },
@@ -230,7 +230,7 @@
       },
       "secure_routing_manual": {
         "title": "[%key:component::knx::config::step::secure_routing_manual::title%]",
-        "description": "[%key:component::knx::config::step::secure_routing_manual::description%]",
+        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
         "data": {
           "backbone_key": "[%key:component::knx::config::step::secure_routing_manual::data::backbone_key%]",
           "sync_latency_tolerance": "[%key:component::knx::config::step::secure_routing_manual::data::sync_latency_tolerance%]"
@@ -248,11 +248,11 @@
           "routing_secure": "[%key:component::knx::config::step::routing::data::routing_secure%]",
           "multicast_group": "[%key:component::knx::config::step::routing::data::multicast_group%]",
           "multicast_port": "[%key:component::knx::config::step::routing::data::multicast_port%]",
-          "local_ip": "[%key:component::knx::config::step::routing::data::local_ip%]"
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
         },
         "data_description": {
           "individual_address": "[%key:component::knx::config::step::routing::data_description::individual_address%]",
-          "local_ip": "[%key:component::knx::config::step::routing::data_description::local_ip%]"
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       }
     },

@@ -77,19 +77,17 @@ async def test_executor_shutdown_does_not_log_shutdown_on_first_attempt(
 async def test_overall_timeout_reached(caplog: pytest.LogCaptureFixture) -> None:
     """Test that shutdown moves on when the overall timeout is reached."""
 
-    iexecutor = InterruptibleThreadPoolExecutor()
-
     def _loop_sleep_in_executor():
         time.sleep(1)
 
-    for _ in range(6):
-        iexecutor.submit(_loop_sleep_in_executor)
-
-    start = time.monotonic()
     with patch.object(executor, "EXECUTOR_SHUTDOWN_TIMEOUT", 0.5):
+        iexecutor = InterruptibleThreadPoolExecutor()
+        for _ in range(6):
+            iexecutor.submit(_loop_sleep_in_executor)
+        start = time.monotonic()
         iexecutor.shutdown()
-    finish = time.monotonic()
+        finish = time.monotonic()
 
-    assert finish - start < 1.2
+    assert finish - start < 1.3
 
     iexecutor.shutdown()

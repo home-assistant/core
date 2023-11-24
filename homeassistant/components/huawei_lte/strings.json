@@ -279,6 +279,12 @@
       }
     }
   },
+  "issues": {
+    "service_changed_to_button": {
+      "title": "Service changed to a button",
+      "description": "The {service} service is deprecated, use the corresponding {button} button instead."
+    }
+  },
   "services": {
     "clear_traffic_statistics": {
       "name": "Clear traffic statistics",

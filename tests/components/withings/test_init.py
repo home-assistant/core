@@ -120,11 +120,9 @@ async def test_data_manager_webhook_subscription(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
-    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test data manager webhook subscriptions."""
     await setup_integration(hass, webhook_config_entry)
-    await hass_client_no_auth()
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
@@ -158,12 +156,10 @@ async def test_webhook_subscription_polling_config(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    hass_client_no_auth: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test webhook subscriptions not run when polling."""
     await setup_integration(hass, polling_config_entry, False)
-    await hass_client_no_auth()
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)

@@ -41,7 +41,11 @@ def hass_mock_forward_entry_setup(hass):
 
 
 async def test_device_setup(
-    hass: HomeAssistant, forward_entry_setup, config, setup_config_entry
+    hass: HomeAssistant,
+    forward_entry_setup,
+    config,
+    setup_config_entry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
@@ -62,7 +66,6 @@ async def test_device_setup(
     assert device.name == config[CONF_NAME]
     assert device.unique_id == FORMATTED_MAC
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(AXIS_DOMAIN, device.unique_id)}
     )

@@ -11,7 +11,7 @@ import importlib
 import sys
 import time
 from typing import Any, Literal, cast
-from unittest.mock import patch, sentinel
+from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
 from sqlalchemy import create_engine
@@ -430,3 +430,16 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
         ),
     ):
         yield
+
+
+async def async_attach_db_engine(hass: HomeAssistant) -> None:
+    """Attach a database engine to the recorder."""
+    instance = recorder.get_instance(hass)
+
+    def _mock_setup_recorder_connection():
+        with instance.engine.connect() as connection:
+            instance._setup_recorder_connection(
+                connection._dbapi_connection, MagicMock()
+            )
+
+    await instance.async_add_executor_job(_mock_setup_recorder_connection)

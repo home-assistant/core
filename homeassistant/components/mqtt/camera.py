@@ -20,7 +20,11 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_mqtt_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+)
 from .models import ReceiveMessage
 from .util import valid_subscribe_topic
 
@@ -60,7 +64,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT camera through YAML and through MQTT discovery."""
-    await async_mqtt_entry_helper(
+    await async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttCamera,
