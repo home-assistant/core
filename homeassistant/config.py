@@ -442,15 +442,15 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
             hass.config.path(YAML_CONFIG_FILE),
             secrets,
         )
-    except HomeAssistantError as ex:
-        if not (base_ex := ex.__cause__) or not isinstance(base_ex, MarkedYAMLError):
+    except HomeAssistantError as exc:
+        if not (base_exc := exc.__cause__) or not isinstance(base_exc, MarkedYAMLError):
             raise
 
         # Rewrite path to offending YAML file to be relative the hass config dir
-        if base_ex.context_mark and base_ex.context_mark.name:
-            base_ex.context_mark.name = _relpath(hass, base_ex.context_mark.name)
-        if base_ex.problem_mark and base_ex.problem_mark.name:
-            base_ex.problem_mark.name = _relpath(hass, base_ex.problem_mark.name)
+        if base_exc.context_mark and base_exc.context_mark.name:
+            base_exc.context_mark.name = _relpath(hass, base_exc.context_mark.name)
+        if base_exc.problem_mark and base_exc.problem_mark.name:
+            base_exc.problem_mark.name = _relpath(hass, base_exc.problem_mark.name)
         raise
 
     core_config = config.get(CONF_CORE, {})
@@ -541,32 +541,32 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
 @callback
 def async_log_schema_error(
-    ex: vol.Invalid,
+    exc: vol.Invalid,
     domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
     """Log a schema validation error."""
-    message = format_schema_error(hass, ex, domain, config, link)
+    message = format_schema_error(hass, exc, domain, config, link)
     _LOGGER.error(message)
 
 
 @callback
 def async_log_config_validator_error(
-    ex: vol.Invalid | HomeAssistantError,
+    exc: vol.Invalid | HomeAssistantError,
     domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
     """Log an error from a custom config validator."""
-    if isinstance(ex, vol.Invalid):
-        async_log_schema_error(ex, domain, config, hass, link)
+    if isinstance(exc, vol.Invalid):
+        async_log_schema_error(exc, domain, config, hass, link)
         return
 
-    message = format_homeassistant_error(hass, ex, domain, config, link)
-    _LOGGER.error(message, exc_info=ex)
+    message = format_homeassistant_error(hass, exc, domain, config, link)
+    _LOGGER.error(message, exc_info=exc)
 
 
 def _get_annotation(item: Any) -> tuple[str, int | str] | None:
@@ -647,7 +647,7 @@ def _relpath(hass: HomeAssistant, path: str) -> str:
 
 def stringify_invalid(
     hass: HomeAssistant,
-    ex: vol.Invalid,
+    exc: vol.Invalid,
     domain: str,
     config: dict,
     link: str | None,
@@ -668,26 +668,26 @@ def stringify_invalid(
         message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
-    if annotation := find_annotation(config, ex.path):
+    if annotation := find_annotation(config, exc.path):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
-    path = "->".join(str(m) for m in ex.path)
-    if ex.error_message == "extra keys not allowed":
+    path = "->".join(str(m) for m in exc.path)
+    if exc.error_message == "extra keys not allowed":
         return (
-            f"{message_prefix}: '{ex.path[-1]}' is an invalid option for '{domain}', "
+            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
             f"check: {path}{message_suffix}"
         )
-    if ex.error_message == "required key not provided":
+    if exc.error_message == "required key not provided":
         return (
-            f"{message_prefix}: required key '{ex.path[-1]}' not provided"
+            f"{message_prefix}: required key '{exc.path[-1]}' not provided"
             f"{message_suffix}"
         )
     # This function is an alternative to the stringification done by
     # vol.Invalid.__str__, so we need to call Exception.__str__ here
-    # instead of str(ex)
-    output = Exception.__str__(ex)
-    if error_type := ex.error_type:
+    # instead of str(exc)
+    output = Exception.__str__(exc)
+    if error_type := exc.error_type:
         output += " for " + error_type
-    offending_item_summary = repr(_get_by_path(config, ex.path))
+    offending_item_summary = repr(_get_by_path(config, exc.path))
     if len(offending_item_summary) > max_sub_error_length:
         offending_item_summary = (
             f"{offending_item_summary[: max_sub_error_length - 3]}..."
@@ -728,7 +728,7 @@ def humanize_error(
 @callback
 def format_homeassistant_error(
     hass: HomeAssistant,
-    ex: HomeAssistantError,
+    exc: HomeAssistantError,
     domain: str,
     config: dict,
     link: str | None = None,
@@ -739,7 +739,7 @@ def format_homeassistant_error(
     # offending configuration key, use the domain key as path instead.
     if annotation := find_annotation(config, [domain]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
-    message = f"{message_prefix}: {str(ex) or repr(ex)}"
+    message = f"{message_prefix}: {str(exc) or repr(exc)}"
     if domain != CONF_CORE and link:
         message += f", please check the docs at {link}"
 
@@ -749,13 +749,13 @@ def format_homeassistant_error(
 @callback
 def format_schema_error(
     hass: HomeAssistant,
-    ex: vol.Invalid,
+    exc: vol.Invalid,
     domain: str,
     config: dict,
     link: str | None = None,
 ) -> str:
     """Format configuration validation error."""
-    return humanize_error(hass, ex, domain, config, link)
+    return humanize_error(hass, exc, domain, config, link)
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
@@ -981,17 +981,17 @@ async def merge_packages_config(
                     hass, domain
                 )
                 component = integration.get_component()
-            except LOAD_EXCEPTIONS as ex:
+            except LOAD_EXCEPTIONS as exc:
                 _log_pkg_error(
                     hass,
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} caused error: {str(ex)}",
+                    f"Integration {comp_name} caused error: {str(exc)}",
                 )
                 continue
-            except INTEGRATION_LOAD_EXCEPTIONS as ex:
-                _log_pkg_error(hass, pack_name, comp_name, config, str(ex))
+            except INTEGRATION_LOAD_EXCEPTIONS as exc:
+                _log_pkg_error(hass, pack_name, comp_name, config, str(exc))
                 continue
 
             try:
