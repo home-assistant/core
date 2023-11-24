@@ -2,6 +2,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, PropertyMock
 
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
@@ -54,7 +55,7 @@ async def test_climate_hvac_mode(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     monkeypatch.delattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "targetTemp")
-    await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
+    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
     mock_block_device.mock_update()
@@ -155,7 +156,7 @@ async def test_climate_set_preset_mode(
     monkeypatch.delattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", None)
-    await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
+    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
     mock_block_device.mock_update()
@@ -507,7 +508,7 @@ async def test_device_not_calibrated(
     """Test to create an issue when the device is not calibrated."""
     issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
-    await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
+    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
     mock_block_device.mock_update()
