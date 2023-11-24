@@ -141,19 +141,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            data_schema = vol.Schema(
+            data_schema = USER_SCHEMA.extend(
                 {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Optional(
-                        CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
-                    ): vol.Coerce(int),
-                    vol.Required(
-                        CONF_TOKEN, default=user_input.get(CONF_TOKEN, "")
-                    ): str,
-                    vol.Optional(
-                        CONF_ENCRYPT_TOKEN,
-                        default=user_input.get(CONF_ENCRYPT_TOKEN, True),
-                    ): bool,
+                    vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
                 }
             )
             try:
@@ -173,5 +163,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=bridge_id, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
+            errors=errors,
         )
