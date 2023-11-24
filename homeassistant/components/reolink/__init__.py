@@ -212,7 +212,7 @@ def cleanup_disconnected_cams(
             )
         if ch_model not in [device.model, "Unknown"]:
             remove = True
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Removing Reolink device %s, since the camera model connected to channel %s changed from %s to %s",
                 device.name,
                 ch,
