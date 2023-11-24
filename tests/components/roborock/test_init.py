@@ -98,6 +98,50 @@ async def test_get_networking_fails_none(
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_cloud_client_fails_props_cached(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    hass_storage,
+) -> None:
+    """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, set up."""
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "data": {
+            "abc123": asdict(
+                CachedCoordinatorInformation(
+                    network_info=NETWORK_INFO,
+                    supported_entities={
+                        "status_abc123",
+                    },
+                    map_info=CACHED_COORD_MAPS,
+                )
+            )
+        },
+    }
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.ping",
+        side_effect=RoborockException(),
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
+        side_effect=RoborockException(),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+
+async def test_local_client_fails_props(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
+) -> None:
+    """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, fail."""
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        side_effect=RoborockException(),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_get_networking_fails_one_cache(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
@@ -261,38 +305,6 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
     assert hass.states.get("sensor.roborock_s7_maxv_status").state == "charging"
 
 
-async def test_cloud_client_fails_props_cached(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture,
-    hass_storage,
-) -> None:
-    """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, set up."""
-    hass_storage[DOMAIN] = {
-        "version": 1,
-        "data": {
-            "abc123": asdict(
-                CachedCoordinatorInformation(
-                    network_info=NETWORK_INFO,
-                    supported_entities={
-                        "status_abc123",
-                    },
-                    map_info=CACHED_COORD_MAPS,
-                )
-            )
-        },
-    }
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.ping",
-        side_effect=RoborockException(),
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
-        side_effect=RoborockException(),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.LOADED
-
-
 async def test_migrate_entry(hass: HomeAssistant, bypass_api_fixture):
     """Test migrating entry from v1 to v2."""
     entry = MockConfigEntry(
@@ -311,18 +323,6 @@ async def test_migrate_entry(hass: HomeAssistant, bypass_api_fixture):
 
     assert entry.state == ConfigEntryState.LOADED
     assert entry.version == 1
-
-
-async def test_local_client_fails_props(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
-) -> None:
-    """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, fail."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        side_effect=RoborockException(),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_reauth_started(

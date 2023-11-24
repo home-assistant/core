@@ -18,6 +18,5 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics for config entry."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, setup_entry)
-    # Since supported entities gets added to asyncly, the list can have different orders.
     assert isinstance(result, dict)
     assert result == snapshot
