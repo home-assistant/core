@@ -149,6 +149,11 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "step": 0.5,
     "default": 20.0,
 }
+RPC_THERMOSTAT_SETTINGS: Final = {
+    "min": 5,
+    "max": 35,
+    "step": 0.5,
+}
 
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE: Final = 6500
@@ -186,3 +191,14 @@ OTA_BEGIN = "ota_begin"
 OTA_ERROR = "ota_error"
 OTA_PROGRESS = "ota_progress"
 OTA_SUCCESS = "ota_success"
+
+MODEL_WALL_DISPLAY = "SAWD-0A1XX10EU1"
+
+GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
+GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
+DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
+    MODEL_WALL_DISPLAY,
+    "SHMOS-01",
+    "SHMOS-02",
+    "SHTRV-01",
+)
