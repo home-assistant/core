@@ -37,7 +37,10 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    async_extract_entity_ids,
+    async_register_admin_service,
+)
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -120,14 +123,6 @@ CREATE_SCENE_SCHEMA = vol.All(
             vol.Required(CONF_SCENE_ID): cv.slug,
             vol.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
             vol.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
-        }
-    ),
-)
-
-DELETE_SCENE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
         }
     ),
 )
@@ -285,40 +280,41 @@ async def async_setup_platform(
 
     async def delete_service(call: ServiceCall) -> None:
         """Delete a dynamically created scene."""
-        entity_id = call.data[CONF_ENTITY_ID]
-        scene = platform.entities.get(entity_id)
-        if scene is None:
-            raise ServiceValidationError(
-                f"Entity {entity_id} does not exist",
-                translation_domain=SCENE_DOMAIN,
-                translation_key="entity_not_exists",
-                translation_placeholders={
-                    "entity_id": entity_id,
-                },
-            )
-        if not isinstance(scene, HomeAssistantScene):
-            raise ServiceValidationError(
-                f"Entity {entity_id} is not a scene",
-                translation_domain=SCENE_DOMAIN,
-                translation_key="entity_not_scene",
-                translation_placeholders={
-                    "entity_id": entity_id,
-                },
-            )
-        if not scene.from_service:
-            raise ServiceValidationError(
-                f"The scene {entity_id} is not created with service `scene.create`",
-                translation_domain=SCENE_DOMAIN,
-                translation_key="entity_not_dynamically_created",
-                translation_placeholders={
-                    "entity_id": entity_id,
-                },
-            )
+        entity_ids = await async_extract_entity_ids(hass, call)
 
-        await platform.async_remove_entity(entity_id)
+        for entity_id in entity_ids:
+            scene = platform.entities.get(entity_id)
+            if scene is None:
+                raise ServiceValidationError(
+                    f"{entity_id} is not a valid scene entity_id",
+                    translation_domain=SCENE_DOMAIN,
+                    translation_key="entity_not_scene",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                    },
+                )
+            assert isinstance(scene, HomeAssistantScene)
+            if not scene.from_service:
+                raise ServiceValidationError(
+                    f"The scene {entity_id} is not created with service `scene.create`",
+                    translation_domain=SCENE_DOMAIN,
+                    translation_key="entity_not_dynamically_created",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                    },
+                )
+
+            await platform.async_remove_entity(entity_id)
 
     hass.services.async_register(
-        SCENE_DOMAIN, SERVICE_DELETE, delete_service, DELETE_SCENE_SCHEMA
+        SCENE_DOMAIN,
+        SERVICE_DELETE,
+        delete_service,
+        cv.make_entity_service_schema(
+            {
+                vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            }
+        ),
     )
 
 

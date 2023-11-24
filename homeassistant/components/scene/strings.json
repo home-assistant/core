@@ -59,11 +59,8 @@
     }
   },
   "exceptions": {
-    "entity_not_exists": {
-      "message": "Entity {entity_id} does not exist."
-    },
     "entity_not_scene": {
-      "message": "Entity {entity_id} is not a scene."
+      "message": "{entity_id} is not a valid scene entity_id."
     },
     "entity_not_dynamically_created": {
       "message": "The scene {entity_id} is not created with service `scene.create`."
