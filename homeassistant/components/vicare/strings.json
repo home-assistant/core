@@ -28,6 +28,14 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "exceptions": {
+    "program_not_activated": {
+      "message": "Unable to activate program {program}"
+    },
+    "program_not_deactivated": {
+      "message": "Unable to deactivate program {program}"
+    }
+  },
   "services": {
     "set_vicare_mode": {
       "name": "Set ViCare mode",
