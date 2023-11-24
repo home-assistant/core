@@ -363,3 +363,17 @@ async def test_alert_fires_on_startup(
     await hass.async_block_till_done()
 
     assert len(mock_notifier) == 1
+
+
+async def test_alert_fires_on_startup_non_existent_entity(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test that the alert fires on startup of hass."""
+    config = deepcopy(TEST_CONFIG)
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_notifier) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert len(mock_notifier) == 0
