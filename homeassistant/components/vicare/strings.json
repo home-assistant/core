@@ -87,37 +87,37 @@
     },
     "sensor": {
       "outside_temperature": {
-        "name": "Outside Temperature"
+        "name": "Outside temperature"
       },
       "return_temperature": {
-        "name": "Return Temperature"
+        "name": "Return temperature"
       },
       "boiler_temperature": {
-        "name": "Boiler Temperature"
+        "name": "Boiler temperature"
       },
       "boiler_supply_temperature": {
-        "name": "Boiler Supply Temperature"
+        "name": "Boiler supply temperature"
       },
       "primary_circuit_supply_temperature": {
-        "name": "Primary Circuit Supply Temperature"
+        "name": "Primary circuit supply temperature"
       },
       "primary_circuit_return_temperature": {
-        "name": "Primary Circuit  Return Temperature"
+        "name": "Primary circuit return temperature"
       },
       "secondary_circuit_supply_temperature": {
-        "name": "Secondary Circuit Supply Temperature"
+        "name": "Secondary circuit supply temperature"
       },
       "secondary_circuit_return_temperature": {
-        "name": "Secondary Circuit Return Temperature"
+        "name": "Secondary circuit return temperature"
       },
       "hotwater_out_temperature": {
         "name": "Hot Water Out Temperature"
       },
       "hotwater_max_temperature": {
-        "name": "Hot Water Max Temperature"
+        "name": "Hot water max temperature"
       },
       "hotwater_min_temperature": {
-        "name": "Hot Water Min Temperature"
+        "name": "Hot water min temperature"
       },
       "hotwater_gas_consumption_today": {
         "name": "Hot water gas consumption today"
@@ -207,10 +207,10 @@
         "name": "Energy production this year"
       },
       "solar_storage_temperature": {
-        "name": "Solar Storage Temperature"
+        "name": "Solar storage temperature"
       },
       "collector_temperature": {
-        "name": "Solar Collector Temperature"
+        "name": "Solar collector temperature"
       },
       "solar_power_production_today": {
         "name": "Solar energy production today"
@@ -246,37 +246,37 @@
         "name": "Volumetric flow"
       },
       "supply_temperature": {
-        "name": "Supply Temperature"
+        "name": "Supply temperature"
       },
       "burner_starts": {
-        "name": "Burner Starts"
+        "name": "Burner starts"
       },
       "burner_hours": {
-        "name": "Burner Hours"
+        "name": "Burner hours"
       },
       "burner_modulation": {
-        "name": "Burner Modulation"
+        "name": "Burner modulation"
       },
       "compressor_starts": {
-        "name": "Compressor Starts"
+        "name": "Compressor starts"
       },
       "compressor_hours": {
-        "name": "Compressor Hours"
+        "name": "Compressor hours"
       },
       "compressor_hours_loadclass1": {
-        "name": "Compressor Hours Load Class 1"
+        "name": "Compressor hours load class 1"
       },
       "compressor_hours_loadclass2": {
-        "name": "Compressor Hours Load Class 2"
+        "name": "Compressor hours load class 2"
       },
       "compressor_hours_loadclass3": {
-        "name": "Compressor Hours Load Class 3"
+        "name": "Compressor hours load class 3"
       },
       "compressor_hours_loadclass4": {
-        "name": "Compressor Hours Load Class 4"
+        "name": "Compressor hours load class 4"
       },
       "compressor_hours_loadclass5": {
-        "name": "Compressor Hours Load Class 5"
+        "name": "Compressor hours load class 5"
       },
       "compressor_phase": {
         "name": "Compressor phase"
