@@ -139,11 +139,6 @@ class DaikinToggleSwitch(SwitchEntity):
         self._attr_unique_id = f"{self._api.device.mac}-toggle"
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._api.device.mac}-toggle"
-
-    @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return "off" not in self._api.device.represent(DAIKIN_ATTR_MODE)
