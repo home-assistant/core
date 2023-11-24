@@ -1,5 +1,4 @@
 """Test the CO2 Signal config flow."""
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aioelectricitymaps.exceptions import (
@@ -15,19 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-@pytest.fixture(name="em_config_flow")
-def mock_em_config_flow(
-    electricity_maps: AsyncMock,
-) -> Generator[AsyncMock, None, None]:
-    """Patch the electricity maps client in the config flow."""
-    with patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps",
-        return_value=electricity_maps,
-    ):
-        yield electricity_maps
-
-
-@pytest.mark.usefixtures("em_config_flow")
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_home(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -58,7 +45,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("em_config_flow")
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_coordinates(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -100,7 +87,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("em_config_flow")
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_country(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -157,19 +144,18 @@ async def test_form_country(hass: HomeAssistant) -> None:
     ],
 )
 async def test_form_error_handling(
-    hass: HomeAssistant, em_config_flow: AsyncMock, side_effect, err_code
+    hass: HomeAssistant,
+    electricity_maps: AsyncMock,
+    side_effect: Exception,
+    err_code: str,
 ) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # keep a copy of the old return value before setting the side effect
-    old_return_value = em_config_flow.__aenter__.return_value
-    em_config_flow.__aenter__.return_value = AsyncMock(
-        latest_carbon_intensity_by_coordinates=AsyncMock(side_effect=side_effect),
-        latest_carbon_intensity_by_country_code=AsyncMock(side_effec=side_effect),
-    )
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = side_effect
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -183,7 +169,8 @@ async def test_form_error_handling(
     assert result["errors"] == {"base": err_code}
 
     # reset mock and test if now succeeds
-    em_config_flow.__aenter__.return_value = old_return_value
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = None
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

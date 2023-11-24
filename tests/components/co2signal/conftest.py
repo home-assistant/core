@@ -1,8 +1,7 @@
 """Fixtures for Electricity maps integration tests."""
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioelectricitymaps import ElectricityMaps
 import pytest
 
 from homeassistant.components.co2signal import DOMAIN
@@ -15,28 +14,21 @@ from tests.components.co2signal import VALID_RESPONSE
 
 
 @pytest.fixture(name="electricity_maps")
-def mock_electricity_maps() -> Generator[AsyncMock, None, None]:
+def mock_electricity_maps() -> Generator[None, MagicMock, None]:
     """Mock the ElectricityMaps client."""
-    mock = AsyncMock(
-        __aenter__=AsyncMock(
-            return_value=AsyncMock(
-                spec=ElectricityMaps,
-                latest_carbon_intensity_by_coordinates=AsyncMock(
-                    return_value=VALID_RESPONSE
-                ),
-                latest_carbon_intensity_by_country_code=AsyncMock(
-                    return_value=VALID_RESPONSE
-                ),
-            )
-        ),
-        __aexit__=AsyncMock(return_value=None),
-    )
 
     with patch(
         "homeassistant.components.co2signal.ElectricityMaps",
-        return_value=mock,
+        autospec=True,
+    ) as electricity_maps, patch(
+        "homeassistant.components.co2signal.config_flow.ElectricityMaps",
+        new=electricity_maps,
     ):
-        yield mock
+        client = electricity_maps.return_value
+        client.latest_carbon_intensity_by_coordinates.return_value = VALID_RESPONSE
+        client.latest_carbon_intensity_by_country_code.return_value = VALID_RESPONSE
+
+        yield client
 
 
 @pytest.fixture(name="config_entry")
