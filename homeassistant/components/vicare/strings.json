@@ -286,7 +286,7 @@
       "water": {
         "name": "Water"
       }
-    },
+    }
   },
   "services": {
     "set_vicare_mode": {
