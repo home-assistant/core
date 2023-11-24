@@ -633,8 +633,8 @@ class Entity(
 
     def _name_placeholders(self, name: str) -> str:
         """Process possible placeholders in entity name."""
-        tuples = string.Formatter().parse(name)
-        if len(tuple(tuples)) == 1:
+        tuples = list(string.Formatter().parse(name))
+        if tuples[0][1] is None:
             return name
         if (translation_placeholders := self.translation_placeholders) is not None:
             if TYPE_CHECKING:

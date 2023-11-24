@@ -1170,6 +1170,17 @@ async def test_friendly_name_description_device_class_name(
             {"placeholder": "special"},
             "Device Bla special English ent",
         ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla English ent special",
+        ),
     ),
 )
 async def test_entity_name_translation_placeholders(
