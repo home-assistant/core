@@ -39,15 +39,16 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                if info := await self._async_validate_input(host, password):
-                    await self.async_set_unique_id(info.serial_number)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=f"{MANUFACTURER} {info.items['general.devicename']}",
-                        data={CONF_HOST: host, CONF_PASSWORD: password},
-                    )
+                info = await self._async_validate_input(host, password)
             except InputValidationError as ex:
                 errors["base"] = ex.base
+            else:
+                await self.async_set_unique_id(info.serial_number)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"{MANUFACTURER} {info.items['general.devicename']}",
+                    data={CONF_HOST: host, CONF_PASSWORD: password},
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -63,9 +64,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_validate_input(
-        self, host: str, password: str
-    ) -> Information | None:
+    async def _async_validate_input(self, host: str, password: str) -> Information:
         """Validate login credentials."""
         websession = async_create_clientsession(
             self.hass, cookie_jar=CookieJar(unsafe=True)
