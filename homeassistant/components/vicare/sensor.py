@@ -594,16 +594,13 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str,
     vicare_api,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareSensorEntityDescription,
 ):
     """Create a ViCare sensor entity."""
-    _LOGGER.debug("Found device %s", name)
-    if is_supported(name, entity_description, vicare_api):
+    if is_supported(entity_description.key, entity_description, vicare_api):
         return ViCareSensor(
-            name,
             vicare_api,
             device_config,
             entity_description,
@@ -621,12 +618,8 @@ async def _entities_from_descriptions(
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
         for current in iterables:
-            suffix = ""
-            if len(iterables) > 1:
-                suffix = f" {current.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{description.name}{suffix}",
                 current,
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
@@ -647,7 +640,6 @@ async def async_setup_entry(
     for description in GLOBAL_SENSORS:
         entity = await hass.async_add_executor_job(
             _build_entity,
-            description.name,
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
@@ -685,12 +677,14 @@ class ViCareSensor(ViCareEntity, SensorEntity):
     entity_description: ViCareSensorEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareSensorEntityDescription
+        self,
+        api,
+        device_config: PyViCareDeviceConfig,
+        description: ViCareSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device_config, api, description.key)
         self.entity_description = description
-        self._attr_name = name
 
     @property
     def available(self) -> bool:
