@@ -34,7 +34,7 @@ async def mock_mqtt_fixture(hass):
 
 
 async def test_hassio_discovery_startup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_mqtt, hassio_client
 ) -> None:
     """Test startup and discovery after event."""
     aioclient_mock.get(
