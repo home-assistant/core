@@ -382,11 +382,12 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         """Event subscription callback."""
         if event.mac != self._obj_id:
             return
-        if (
-            self.entity_description.event_is_on is None
-            or event.key not in self.entity_description.event_is_on
-        ):
+        if self.entity_description.event_is_on is None:
             return
-        if self._attr_native_value != 0:
-            self._attr_native_value = 0
-            self.async_write_ha_state()
+        if event.key not in self.entity_description.event_is_on:
+            return
+        # Reset sensor value if client entity has disconnected
+        if event.key in (WIRED_DISCONNECTION + WIRELESS_DISCONNECTION):
+            if self._attr_native_value != 0:
+                self._attr_native_value = 0
+                self.async_write_ha_state()
