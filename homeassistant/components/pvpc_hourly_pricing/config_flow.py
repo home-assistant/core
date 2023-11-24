@@ -94,7 +94,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle optional step to define API token for extra sensors."""
-        if user_input is not None and user_input.get(CONF_API_TOKEN):
+        if user_input is not None:
             self._api_token = user_input[CONF_API_TOKEN]
             return await self._async_verify(
                 "api_token",
