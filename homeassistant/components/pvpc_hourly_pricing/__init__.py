@@ -2,12 +2,7 @@
 from datetime import timedelta
 import logging
 
-from aiopvpc import (
-    BadApiTokenAuthError,
-    EsiosApiData,
-    PVPCData,
-    get_enabled_sensor_keys,
-)
+from aiopvpc import BadApiTokenAuthError, EsiosApiData, PVPCData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
@@ -19,7 +14,13 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
+from .const import (
+    ATTR_POWER,
+    ATTR_POWER_P3,
+    ATTR_TARIFF,
+    DOMAIN,
+    get_enabled_sensor_keys,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]

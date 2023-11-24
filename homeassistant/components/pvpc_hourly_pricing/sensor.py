@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from aiopvpc.const import KEY_INJECTION, KEY_MAG, KEY_OMIE, KEY_PVPC
-from aiopvpc.ha_helpers import make_sensor_unique_id
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -24,7 +23,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ElecPricesDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, make_sensor_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
