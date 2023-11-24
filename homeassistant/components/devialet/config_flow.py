@@ -29,34 +29,43 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._model: str | None = None
         self._serial: str | None = None
+        self._errors: dict[str, str] = {}
+
+    async def async_validate_input(self) -> FlowResult | None:
+        """Validate the input using the Devialet API."""
+
+        self._errors.clear()
+        session = async_get_clientsession(self.hass)
+        client = DevialetApi(self._host, session)
+
+        if not await client.async_update() or client.serial is None:
+            self._errors["base"] = "cannot_connect"
+            LOGGER.error("Cannot connect")
+            return None
+
+        await self.async_set_unique_id(client.serial)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=client.device_name,
+            data={CONF_HOST: self._host, CONF_NAME: client.device_name},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        errors = {}
+        """Handle a flow initialized by the user or zeroconf."""
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
             self._host = user_input[CONF_HOST]
-            client = DevialetApi(self._host, session)
-
-            if not await client.async_update() or client.serial is None:
-                errors["base"] = "cannot_connect"
-                LOGGER.error("Cannot connect")
-            else:
-                await self.async_set_unique_id(client.serial)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=client.device_name,
-                    data={CONF_HOST: self._host, CONF_NAME: client.device_name},
-                )
+            result = await self.async_validate_input()
+            if result is not None:
+                return result
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
-            errors=errors,
+            errors=self._errors,
         )
 
     async def async_step_zeroconf(
@@ -80,25 +89,16 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user-confirmation of discovered node."""
-        errors = {}
         title = f"{self._name} ({self._model})"
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            api = DevialetApi(self._host, session)
-
-            if not await api.async_update():
-                errors["base"] = "cannot_connect"
-                LOGGER.error("Cannot connect")
-            else:
-                return self.async_create_entry(
-                    title=title,
-                    data={CONF_HOST: self._host, CONF_NAME: self._name},
-                )
+            result = await self.async_validate_input()
+            if result is not None:
+                return result
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={"device": self._model, "title": title},
-            errors=errors,
+            errors=self._errors,
             last_step=True,
         )

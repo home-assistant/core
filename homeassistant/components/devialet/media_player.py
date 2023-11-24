@@ -1,10 +1,6 @@
-"""Support for Devialet Phantom speakers."""
+"""Support for Devialet speakers."""
 from __future__ import annotations
 
-import datetime
-from datetime import timedelta
-
-from devialet import DevialetApi
 from devialet.const import NORMAL_INPUTS
 
 from homeassistant.components.media_player import (
@@ -14,13 +10,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MANUFACTURER, SOUND_MODES
-
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+from .const import DOMAIN, MANUFACTURER, SOUND_MODES
+from .coordinator import DevialetCoordinator
 
 SUPPORT_DEVIALET = (
     MediaPlayerEntityFeature.VOLUME_SET
@@ -30,14 +26,13 @@ SUPPORT_DEVIALET = (
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
-SUPPORT_MEDIA_MODES = (
-    MediaPlayerEntityFeature.PAUSE
-    | MediaPlayerEntityFeature.STOP
-    | MediaPlayerEntityFeature.PREVIOUS_TRACK
-    | MediaPlayerEntityFeature.NEXT_TRACK
-    | MediaPlayerEntityFeature.PLAY
-    | MediaPlayerEntityFeature.SEEK
-)
+DEVIALET_TO_HA_FEATURE_MAP = {
+    "play": MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.STOP,
+    "pause": MediaPlayerEntityFeature.PAUSE,
+    "previous": MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    "next": MediaPlayerEntityFeature.NEXT_TRACK,
+    "seek": MediaPlayerEntityFeature.SEEK,
+}
 
 
 async def async_setup_entry(
@@ -45,42 +40,64 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Devialet entry."""
     client = hass.data[DOMAIN][entry.entry_id]
+    coordinator = DevialetCoordinator(hass, client)
+    await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities(
-        [DevialetDevice(client, entry)],
-        update_before_add=True,
-    )
+    async_add_entities([DevialetMediaPlayerEntity(coordinator, entry)])
 
 
-class DevialetDevice(MediaPlayerEntity):
-    """Representation of a Devialet device."""
+class DevialetMediaPlayerEntity(CoordinatorEntity, MediaPlayerEntity):
+    """Devialet media player."""
 
-    def __init__(self, client: DevialetApi, entry: ConfigEntry) -> None:
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, coordinator, entry: ConfigEntry) -> None:
         """Initialize the Devialet device."""
-        self._client = client
+        self.coordinator = coordinator
+        super().__init__(coordinator)
 
-        if entry.unique_id:
-            self._serial = self._attr_unique_id = entry.unique_id
+        self._attr_unique_id = self.coordinator.client.serial
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial)},
+            identifiers={(DOMAIN, self.coordinator.client.serial)},
             manufacturer=MANUFACTURER,
-            model=self._client.model,
+            model=self.coordinator.client.model,
             name=entry.data[CONF_NAME],
-            sw_version=self._client.version,
+            sw_version=self.coordinator.client.version,
         )
 
-    async def async_update(self) -> None:
-        """Get the latest details from the device."""
-        await self._client.async_update()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.client.is_available:
+            self.async_write_ha_state()
+            return
+
+        self._attr_volume_level = self.coordinator.client.volume_level
+        self._attr_is_volume_muted = self.coordinator.client.is_volume_muted
+        self._attr_source_list = self.coordinator.client.source_list
+        self._attr_sound_mode_list = sorted(SOUND_MODES)
+        self._attr_media_artist = self.coordinator.client.media_artist
+        self._attr_media_album_name = self.coordinator.client.media_album_name
+        self._attr_media_artist = self.coordinator.client.media_artist
+        self._attr_media_image_url = self.coordinator.client.media_image_url
+        self._attr_media_duration = self.coordinator.client.media_duration
+        self._attr_media_position = self.coordinator.client.current_position
+        self._attr_media_position_updated_at = (
+            self.coordinator.client.position_updated_at
+        )
+        self._attr_media_title = (
+            self.coordinator.client.media_title
+            if not self.coordinator.client.media_title
+            else self.source
+        )
+        self.async_write_ha_state()
 
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        if not self._client.is_available:
-            return MediaPlayerState.OFF
-
-        playing_state = self._client.playing_state
+        playing_state = self.coordinator.client.playing_state
 
         if not playing_state:
             return MediaPlayerState.IDLE
@@ -91,95 +108,26 @@ class DevialetDevice(MediaPlayerEntity):
         return MediaPlayerState.ON
 
     @property
-    def volume_level(self) -> float | None:
-        """Volume level of the media player (0..1)."""
-        return self._client.volume_level
-
-    @property
-    def is_volume_muted(self) -> bool | None:
-        """Return boolean if volume is currently muted."""
-        return self._client.is_volume_muted
-
-    @property
-    def source_list(self) -> list[str] | None:
-        """Return the list of available input sources."""
-        return self._client.source_list
-
-    @property
-    def sound_mode_list(self) -> list[str] | None:
-        """Return the list of available sound modes."""
-        return sorted(SOUND_MODES)
-
-    @property
-    def media_artist(self) -> str | None:
-        """Artist of current playing media, music track only."""
-        return self._client.media_artist
-
-    @property
-    def media_album_name(self) -> str | None:
-        """Album name of current playing media, music track only."""
-        return self._client.media_album_name
-
-    @property
-    def media_title(self) -> str | None:
-        """Return the current media info."""
-        if not self._client.media_title:
-            return self.source
-
-        return self._client.media_title
-
-    @property
-    def media_image_url(self) -> str | None:
-        """Image url of current playing media."""
-        return self._client.media_image_url
-
-    @property
-    def media_duration(self) -> int | None:
-        """Duration of current playing media in seconds."""
-        return self._client.media_duration
-
-    @property
-    def media_position(self) -> int | None:
-        """Position of current playing media in seconds."""
-        return self._client.current_position
-
-    @property
-    def media_position_updated_at(self) -> datetime.datetime | None:
-        """When was the position of the current playing media valid."""
-        return self._client.position_updated_at
+    def available(self) -> bool:
+        """Return if the media player is available."""
+        return self.coordinator.client.is_available
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         features = SUPPORT_DEVIALET
 
-        if self._client.source_state is None:
+        if self.coordinator.client.source_state is None:
             return features
 
-        available_options = self._client.available_options
-        if available_options is None:
-            return features
-
-        if "play" in available_options:
-            features = features | MediaPlayerEntityFeature.PLAY
-        if "pause" in available_options:
-            features = (
-                features
-                | MediaPlayerEntityFeature.PAUSE
-                | MediaPlayerEntityFeature.STOP
-            )
-        if "previous" in available_options:
-            features = features | MediaPlayerEntityFeature.PREVIOUS_TRACK
-        if "next" in available_options:
-            features = features | MediaPlayerEntityFeature.NEXT_TRACK
-        if "seek" in available_options:
-            features = features | MediaPlayerEntityFeature.SEEK
+        for option in self.coordinator.client.available_options:
+            features |= DEVIALET_TO_HA_FEATURE_MAP.get(option, 0)
         return features
 
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        source = self._client.source
+        source = self.coordinator.client.source
 
         for pretty_name, name in NORMAL_INPUTS.items():
             if source == name:
@@ -189,9 +137,9 @@ class DevialetDevice(MediaPlayerEntity):
     @property
     def sound_mode(self) -> str | None:
         """Return the current sound mode."""
-        if self._client.equalizer is not None:
-            sound_mode = self._client.equalizer
-        elif self._client.night_mode:
+        if self.coordinator.client.equalizer is not None:
+            sound_mode = self.coordinator.client.equalizer
+        elif self.coordinator.client.night_mode:
             sound_mode = "night mode"
         else:
             return None
@@ -203,58 +151,58 @@ class DevialetDevice(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
-        await self._client.async_volume_up()
+        await self.coordinator.client.async_volume_up()
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._client.async_volume_down()
+        await self.coordinator.client.async_volume_down()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        await self._client.async_set_volume_level(volume)
+        await self.coordinator.client.async_set_volume_level(volume)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
-        await self._client.async_mute_volume(mute)
+        await self.coordinator.client.async_mute_volume(mute)
 
     async def async_media_play(self) -> None:
         """Play media player."""
-        await self._client.async_media_play()
+        await self.coordinator.client.async_media_play()
 
     async def async_media_pause(self) -> None:
         """Pause media player."""
-        await self._client.async_media_pause()
+        await self.coordinator.client.async_media_pause()
 
     async def async_media_stop(self) -> None:
         """Pause media player."""
-        await self._client.async_media_stop()
+        await self.coordinator.client.async_media_stop()
 
     async def async_media_next_track(self) -> None:
         """Send the next track command."""
-        await self._client.async_media_next_track()
+        await self.coordinator.client.async_media_next_track()
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
-        await self._client.async_media_previous_track()
+        await self.coordinator.client.async_media_previous_track()
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        await self._client.async_media_seek(position)
+        await self.coordinator.client.async_media_seek(position)
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Send sound mode command."""
         for pretty_name, mode in SOUND_MODES.items():
             if sound_mode == pretty_name:
                 if mode == "night mode":
-                    await self._client.async_set_night_mode(True)
+                    await self.coordinator.client.async_set_night_mode(True)
                 else:
-                    await self._client.async_set_night_mode(False)
-                    await self._client.async_set_equalizer(mode)
+                    await self.coordinator.client.async_set_night_mode(False)
+                    await self.coordinator.client.async_set_equalizer(mode)
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._client.async_turn_off()
+        await self.coordinator.client.async_turn_off()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._client.async_select_source(source)
+        await self.coordinator.client.async_select_source(source)

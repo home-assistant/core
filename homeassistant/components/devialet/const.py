@@ -2,7 +2,6 @@
 from typing import Final
 
 DOMAIN: Final = "devialet"
-DEFAULT_SCAN_INTERVAL: Final = 5
 MANUFACTURER: Final = "Devialet"
 
 SOUND_MODES = {
