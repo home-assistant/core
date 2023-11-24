@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from dataclasses import dataclass
 import logging
 from typing import Any
 
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareInvalidDataError,
@@ -19,6 +23,7 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -90,6 +95,11 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
+@dataclass
+class ViCareClimateEntityDescription(ClimateEntityDescription):
+    """Describes ViCare climate entity."""
+
+
 def _get_circuits(vicare_api):
     """Return the list of circuits."""
     try:
@@ -107,18 +117,15 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
     circuits = await hass.async_add_executor_job(_get_circuits, api)
 
     for circuit in circuits:
-        suffix = ""
-        if len(circuits) > 1:
-            suffix = f" {circuit.id}"
-
         entity = ViCareClimate(
-            f"Heating{suffix}",
             api,
             circuit,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            device_config,
+            ViCareClimateEntityDescription(key="heating", translation_key="heating"),
         )
         entities.append(entity)
 
@@ -136,6 +143,7 @@ async def async_setup_entry(
 class ViCareClimate(ViCareEntity, ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
+    entity_description: ViCareClimateEntityDescription
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -148,13 +156,19 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _current_action: bool | None = None
     _current_mode: str | None = None
 
-    def __init__(self, name, api, circuit, device_config) -> None:
+    def __init__(
+        self,
+        api: PyViCareDevice,
+        circuit: PyViCareHeatingCircuit,
+        device_config: PyViCareDeviceConfig,
+        description: ViCareClimateEntityDescription,
+    ) -> None:
         """Initialize the climate device."""
         super().__init__(device_config, api, circuit.id)
-        self._attr_name = name
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_program = None
+        self.entity_description = description
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
