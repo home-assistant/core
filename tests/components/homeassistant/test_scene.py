@@ -174,6 +174,8 @@ async def test_delete_service(
         "scene",
         {"scene": {"name": "hallo_2", "entities": {"light.kitchen": "on"}}},
     )
+    assert await async_setup_component(hass, "light", {"light": {"name": "dummy"}})
+
     await hass.services.async_call(
         "scene",
         "create",
@@ -183,23 +185,51 @@ async def test_delete_service(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            "homeassistant",
-            "delete_scene",
+            "scene",
+            "delete",
+            {
+                "entity_id": "scene.hallo_3",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert "Entity scene.hallo_3 does not exist" in caplog.text
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "scene",
+            "delete",
+            {
+                "entity_id": "light.dummy",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert "Entity light.dummy is not a scene" in caplog.text
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "scene",
+            "delete",
             {
                 "entity_id": "scene.hallo_2",
             },
             blocking=True,
         )
         await hass.async_block_till_done()
-
+        assert (
+            "The scene scene.hallo_2 is not created with service `scene.create`"
+            in caplog.text
+        )
         assert hass.states.get("scene.hallo_2") is not None
 
     await hass.services.async_call(
-        "homeassistant",
-        "delete_scene",
+        "scene",
+        "delete",
         {
             "entity_id": "scene.hallo",
         },

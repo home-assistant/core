@@ -62,12 +62,3 @@ reload_config_entry:
 save_persistent_states:
 
 reload_all:
-
-delete_scene:
-  fields:
-    entity_id:
-      required: true
-      example: scene.all_lights
-      selector:
-        entity:
-          domain: scene
