@@ -452,3 +452,5 @@ MAP_DATA = MapData(0, 0)
 MAP_DATA.image = ImageData(
     100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (1, 1)), lambda p: p
 )
+
+CACHED_COORD_MAPS = {"Upstairs": 0, "Downstairs": 1}

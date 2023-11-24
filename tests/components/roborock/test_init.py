@@ -17,7 +17,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .mock_data import BASE_URL, NETWORK_INFO, PROP, USER_DATA, USER_EMAIL, CACHED_COORD_MAPS
+from .mock_data import (
+    BASE_URL,
+    CACHED_COORD_MAPS,
+    NETWORK_INFO,
+    PROP,
+    USER_DATA,
+    USER_EMAIL,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -103,7 +110,9 @@ async def test_get_networking_fails_one_cache(
         "data": {
             "abc123": asdict(
                 CachedCoordinatorInformation(
-                    network_info=NETWORK_INFO, supported_entities=set(), map_info=CACHED_COORD_MAPS
+                    network_info=NETWORK_INFO,
+                    supported_entities=set(),
+                    map_info=CACHED_COORD_MAPS,
                 )
             )
         },
@@ -128,12 +137,16 @@ async def test_get_networking_fails_both_cached(
         "data": {
             "abc123": asdict(
                 CachedCoordinatorInformation(
-                    network_info=NETWORK_INFO, supported_entities=set(),map_info=CACHED_COORD_MAPS
+                    network_info=NETWORK_INFO,
+                    supported_entities=set(),
+                    map_info=CACHED_COORD_MAPS,
                 )
             ),
             "device_2": asdict(
                 CachedCoordinatorInformation(
-                    network_info=NETWORK_INFO, supported_entities=set(), map_info=CACHED_COORD_MAPS
+                    network_info=NETWORK_INFO,
+                    supported_entities=set(),
+                    map_info=CACHED_COORD_MAPS,
                 )
             ),
         },
@@ -165,12 +178,14 @@ async def test_get_networking_fails_both_cached_connection_fails_for_one(
                         "dnd_switch_abc123",
                         "volume_abc123",
                     },
-                    map_info=CACHED_COORD_MAPS
+                    map_info=CACHED_COORD_MAPS,
                 )
             ),
             "device_2": asdict(
                 CachedCoordinatorInformation(
-                    network_info=NETWORK_INFO, supported_entities=set(), map_info=CACHED_COORD_MAPS
+                    network_info=NETWORK_INFO,
+                    supported_entities=set(),
+                    map_info=CACHED_COORD_MAPS,
                 )
             ),
         },
@@ -212,12 +227,14 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
                     supported_entities={
                         "status_abc123",
                     },
-                    map_info=CACHED_COORD_MAPS
+                    map_info=CACHED_COORD_MAPS,
                 )
             ),
             "device_2": asdict(
                 CachedCoordinatorInformation(
-                    network_info=NETWORK_INFO, supported_entities=set(), map_info=CACHED_COORD_MAPS
+                    network_info=NETWORK_INFO,
+                    supported_entities=set(),
+                    map_info=CACHED_COORD_MAPS,
                 )
             ),
         },
@@ -229,7 +246,7 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         side_effect=RoborockException(),
-    ),patch(
+    ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
         side_effect=RoborockException(),
     ):
@@ -245,7 +262,10 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
 
 
 async def test_cloud_client_fails_props_cached(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture, hass_storage
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+    hass_storage,
 ) -> None:
     """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, set up."""
     hass_storage[DOMAIN] = {
@@ -257,7 +277,7 @@ async def test_cloud_client_fails_props_cached(
                     supported_entities={
                         "status_abc123",
                     },
-                    map_info=CACHED_COORD_MAPS
+                    map_info=CACHED_COORD_MAPS,
                 )
             )
         },

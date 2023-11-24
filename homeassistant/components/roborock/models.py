@@ -31,3 +31,4 @@ class CachedCoordinatorInformation:
 
     network_info: NetworkInfo
     supported_entities: set[str]
+    map_info: dict[str, int]

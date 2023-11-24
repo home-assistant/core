@@ -63,6 +63,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
         if mac := self.roborock_device_info.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+        self.maps: dict[str, int] = {}
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -130,3 +131,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self.current_map = (
                 self.roborock_device_info.props.status.map_status - 3
             ) // 4
+
+    async def get_maps(self) -> None:
+        """Add a map to the coordinators mapping."""
+        maps = await self.api.get_multi_maps_list()
+        if maps is not None and maps.map_info is not None:
+            for roborock_map in maps.map_info:
+                self.maps[roborock_map.name] = roborock_map.mapFlag

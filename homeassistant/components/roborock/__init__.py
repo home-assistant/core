@@ -60,7 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinators = await asyncio.gather(
         *build_setup_functions(
             hass, device_map, user_data, product_info, current_cached_data
-        ), return_exceptions=True
+        ),
+        return_exceptions=True,
     )
     # Valid coordinators are those where we had networking cached or we could get networking
     valid_coordinators: list[RoborockDataUpdateCoordinator] = [
@@ -83,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     CachedCoordinatorInformation(
                         network_info=coord.roborock_device_info.network_info,
                         supported_entities=coord.supported_entities,
-                        map_info=coord.maps
+                        map_info=coord.maps,
                     )
                 )
             }
@@ -111,7 +112,7 @@ def build_setup_functions(
                 supported_entities=set(
                     stored_cached_data[device.duid]["supported_entities"]
                 ),
-                map_info=stored_cached_data[device.duid]["map_info"]
+                map_info=stored_cached_data[device.duid]["map_info"],
             )
         setup_functions.append(
             setup_device(
