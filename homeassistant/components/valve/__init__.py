@@ -183,9 +183,9 @@ class ValveEntity(Entity):
         if reports_position is True:
             if (current_valve_position := self.current_valve_position) is None:
                 return None
-            closed = current_valve_position == 0
+            closed: bool | None = current_valve_position == 0
             return STATE_CLOSED if closed else STATE_OPEN
-        if self.is_closed is None:
+        if (closed := self.is_closed) is None:
             return None
         return STATE_CLOSED if self.is_closed else STATE_OPEN
 
@@ -222,10 +222,9 @@ class ValveEntity(Entity):
 
     def open_valve(self) -> None:
         """Open the valve."""
-        if ValveEntityFeature.SET_POSITION | self.supported_features:
-            self.set_valve_position(100)
-        else:
+        if not ValveEntityFeature.SET_POSITION | self.supported_features:
             raise NotImplementedError()
+        self.set_valve_position(100)
 
     async def async_open_valve(self) -> None:
         """Open the valve."""

@@ -280,9 +280,6 @@ async def test_is_closed(hass: HomeAssistant) -> None:
 
 async def test_none_state(hass: HomeAssistant) -> None:
     """Test different criteria for closeness."""
-    valve = MockValveEntity(current_position=0)
-    valve.hass = hass
-
     valve_with_none_is_closed_attr = MockBinaryValveEntity(is_closed=None)
     valve_with_none_is_closed_attr.hass = hass
 
