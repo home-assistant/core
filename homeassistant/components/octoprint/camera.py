@@ -69,8 +69,3 @@ class OctoprintCamera(CoordinatorEntity[OctoprintDataUpdateCoordinator], MjpegCa
             unique_id=device_id,
             verify_ssl=verify_ssl,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
