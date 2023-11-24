@@ -161,4 +161,4 @@ class DaikinToggleSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
-        await self._api.device.set({DAIKIN_ATTR_MODE: ATTR_STATE_OFF})
+        await self._api.device.set({DAIKIN_ATTR_MODE: "off"})
