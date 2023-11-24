@@ -19,7 +19,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCK_CODE = "012345"
 MOCK_EMAIL = "valid@email.com"
 INVALID_EMAIL = "this is not a valid email"
-EXPECTED_DATA = {
+VALID_DATA = {
     CONF_EMAIL: MOCK_EMAIL,
     CONF_REGION: MOCK_URL,
     CONF_CODE: MOCK_CODE,
@@ -61,46 +61,7 @@ async def test_sucessful_config_flow(hass: HomeAssistant, my_permobil: Mock) -> 
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == EXPECTED_DATA
-
-
-async def test_sucessful_config_flow_fail_reauth(
-    hass: HomeAssistant, my_permobil: Mock
-) -> None:
-    """Test the config flow from start to finish with no errors."""
-    # init flow
-    with patch(
-        "homeassistant.components.permobil.config_flow.MyPermobil",
-        return_value=my_permobil,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_EMAIL: MOCK_EMAIL},
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "region"
-    assert result["errors"] == {}
-
-    # select region step
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_REGION: MOCK_REGION_NAME},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "email_code"
-    assert result["errors"] == {}
-
-    # request region code
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_CODE: MOCK_CODE},
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == EXPECTED_DATA
+    assert result["data"] == VALID_DATA
 
 
 async def test_config_flow_incorrect_code(
@@ -228,15 +189,10 @@ async def test_config_flow_reauth_success(
     reauth_token = ("b" * 256, "reauth_date")
     reauth_code = "567890"
     my_permobil.request_application_token.return_value = reauth_token
+
     mock_entry = MockConfigEntry(
         domain="permobil",
-        data={
-            CONF_EMAIL: MOCK_EMAIL,
-            CONF_REGION: MOCK_URL,
-            CONF_CODE: MOCK_CODE,
-            CONF_TOKEN: MOCK_TOKEN[0],
-            CONF_TTL: MOCK_TOKEN[1],
-        },
+        data=VALID_DATA,
     )
     mock_entry.add_to_hass(hass)
 
@@ -263,9 +219,9 @@ async def test_config_flow_reauth_success(
     assert result["data"] == {
         CONF_EMAIL: MOCK_EMAIL,
         CONF_REGION: MOCK_URL,
-        CONF_CODE: reauth_code,  # new value
-        CONF_TOKEN: reauth_token[0],  # new value
-        CONF_TTL: reauth_token[1],  # new value
+        CONF_CODE: reauth_code,
+        CONF_TOKEN: reauth_token[0],
+        CONF_TTL: reauth_token[1],
     }
 
 
@@ -278,13 +234,7 @@ async def test_config_flow_reauth_fail_invalid_code(
     my_permobil.request_application_token.side_effect = MyPermobilAPIException
     mock_entry = MockConfigEntry(
         domain="permobil",
-        data={
-            CONF_EMAIL: MOCK_EMAIL,
-            CONF_REGION: MOCK_URL,
-            CONF_CODE: MOCK_CODE,
-            CONF_TOKEN: MOCK_TOKEN[0],
-            CONF_TTL: MOCK_TOKEN[1],
-        },
+        data=VALID_DATA,
     )
     mock_entry.add_to_hass(hass)
 
@@ -319,13 +269,7 @@ async def test_config_flow_reauth_fail_code_request(
     my_permobil.request_application_code.side_effect = MyPermobilAPIException
     mock_entry = MockConfigEntry(
         domain="permobil",
-        data={
-            CONF_EMAIL: MOCK_EMAIL,
-            CONF_REGION: MOCK_URL,
-            CONF_CODE: MOCK_CODE,
-            CONF_TOKEN: MOCK_TOKEN[0],
-            CONF_TTL: MOCK_TOKEN[1],
-        },
+        data=VALID_DATA,
     )
     mock_entry.add_to_hass(hass)
     # test the reauth and have request_application_code fail leading to an abort
