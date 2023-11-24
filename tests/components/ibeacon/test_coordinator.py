@@ -25,7 +25,11 @@ from . import (
     bluetooth_service_info_replace as replace,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 from tests.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
@@ -150,6 +154,41 @@ async def test_ignore_default_name(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == before_entity_count
+
+
+async def test_ignore_default_name_companion_app(hass: HomeAssistant) -> None:
+    """Test we ignore beacons with default name from the companion app.
+
+    For beacons matching the old default values of the companion app (major=100,
+    minor=1), we create a persistent notification with fixing instructions.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+            manufacturer_data={
+                76: b"\x02\x15BlueCharmBeacons"
+                + struct.pack(">H", 100)
+                + struct.pack(">H", 1)
+                + b"\xc5"
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
 
 
 async def test_default_name_whitelisted_minor(hass: HomeAssistant) -> None:
