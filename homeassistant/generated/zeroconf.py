@@ -508,6 +508,12 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_kizboxdev._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
