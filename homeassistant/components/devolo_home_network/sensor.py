@@ -187,7 +187,7 @@ class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
         return self.entity_description.value_func(self.coordinator.data)
 
 
-class DevoloPlcDataRateSensorEntity(DevoloSensorEntity[LogicalNetwork]):
+class DevoloPlcDataRateSensorEntity(DevoloSensorEntity[DataRate]):
     """Representation of a devolo PLC data rate sensor."""
 
     entity_description: DevoloSensorEntityDescription[DataRate]
