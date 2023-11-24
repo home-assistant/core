@@ -95,7 +95,11 @@ INPUTS_EVENTS_DICT: Final = {
 }
 
 # List of battery devices that maintain a permanent WiFi connection
-BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [MODEL_MOTION]
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_VALVE,
+]
 
 # Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
