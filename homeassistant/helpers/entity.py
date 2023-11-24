@@ -11,6 +11,7 @@ from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
+import string
 import sys
 from timeit import default_timer as timer
 from typing import (
@@ -537,6 +538,7 @@ class Entity(
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_translation_key: str | None
+    _attr_translation_placeholders: Mapping[str, str] | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -628,6 +630,20 @@ class Entity(
             f".{self.translation_key}.name"
         )
 
+    def _name_placeholders(self, name: str) -> str:
+        """Process possible placeholders in entity name."""
+        tuples = string.Formatter().parse(name)
+        if len(tuple(tuples)) == 1:
+            return name
+        if hasattr(self, "_attr_translation_placeholders"):
+            if TYPE_CHECKING:
+                assert isinstance(self._attr_translation_placeholders, Mapping)
+            try:
+                return name.format(**self._attr_translation_placeholders)
+            except KeyError as err:
+                raise HomeAssistantError("Missing placeholder %s" % err) from err
+        raise HomeAssistantError("Missing property _attr_translation_placeholders")
+
     def _name_internal(
         self,
         device_class_name: str | None,
@@ -643,7 +659,7 @@ class Entity(
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
-            return name
+            return self._name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():

@@ -1138,6 +1138,88 @@ async def test_friendly_name_description_device_class_name(
 
 
 @pytest.mark.parametrize(
+    (
+        "has_entity_name",
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_friendly_name",
+    ),
+    (
+        (False, None, None, None, "Entity Blu"),
+        (True, None, None, None, "Device Bla Entity Blu"),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent"
+                },
+            },
+            None,
+            "Device Bla English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla special English ent",
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholders(
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_friendly_name: str | None,
+) -> None:
+    """Test friendly name when the entity name translation has placeholders."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=has_entity_name,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            ent,
+            expected_friendly_name,
+        )
+
+
+@pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
         (False, "Entity Blu", "Entity Blu"),
