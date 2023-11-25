@@ -60,3 +60,5 @@ remove_item:
       required: true
       selector:
         text:
+
+remove_completed_items:

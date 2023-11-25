@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
-    HomeAssistantError,
+    ConfigValidationError,
     ServiceValidationError,
     TemplateError,
     Unauthorized,
@@ -249,7 +249,7 @@ async def async_check_config_schema(
                     integration = await async_get_integration(hass, DOMAIN)
                     # pylint: disable-next=protected-access
                     message = conf_util.format_schema_error(
-                        ex, domain, config, integration.documentation
+                        hass, ex, domain, config, integration.documentation
                     )
                     raise ServiceValidationError(
                         message,
@@ -417,14 +417,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
             # Fetch updated manually configured items and validate
-            if (
-                config_yaml := await async_integration_yaml_config(hass, DOMAIN)
-            ) is None:
-                # Raise in case we have an invalid configuration
-                raise HomeAssistantError(
-                    "Error reloading manually configured MQTT items, "
-                    "check your configuration.yaml"
+            try:
+                config_yaml = await async_integration_yaml_config(
+                    hass, DOMAIN, raise_on_failure=True
                 )
+            except ConfigValidationError as ex:
+                raise ServiceValidationError(
+                    str(ex),
+                    translation_domain=ex.translation_domain,
+                    translation_key=ex.translation_key,
+                    translation_placeholders=ex.translation_placeholders,
+                ) from ex
+
             # Check the schema before continuing reload
             await async_check_config_schema(hass, config_yaml)
 

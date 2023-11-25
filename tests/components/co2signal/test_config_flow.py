@@ -1,5 +1,5 @@
 """Test the CO2 Signal config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aioelectricitymaps.exceptions import (
     ElectricityMapsDecodeError,
@@ -13,9 +13,8 @@ from homeassistant.components.co2signal import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import VALID_PAYLOAD
 
-
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_home(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -26,9 +25,6 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
-        return_value=VALID_PAYLOAD,
-    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,6 +45,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_coordinates(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -68,9 +65,6 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
-        return_value=VALID_PAYLOAD,
-    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -93,6 +87,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_country(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -112,9 +107,6 @@ async def test_form_country(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
-        return_value=VALID_PAYLOAD,
-    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -151,39 +143,43 @@ async def test_form_country(hass: HomeAssistant) -> None:
         "json decode error",
     ],
 )
-async def test_form_error_handling(hass: HomeAssistant, side_effect, err_code) -> None:
+async def test_form_error_handling(
+    hass: HomeAssistant,
+    electricity_maps: AsyncMock,
+    side_effect: Exception,
+    err_code: str,
+) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = side_effect
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "location": config_flow.TYPE_USE_HOME,
+            "api_key": "api_key",
+        },
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": err_code}
 
-    with patch(
-        "homeassistant.components.co2signal.config_flow.ElectricityMaps._get",
-        return_value=VALID_PAYLOAD,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
-        await hass.async_block_till_done()
+    # reset mock and test if now succeeds
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = None
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "location": config_flow.TYPE_USE_HOME,
+            "api_key": "api_key",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "CO2 Signal"
