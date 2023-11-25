@@ -1265,14 +1265,8 @@ async def test_passive_bluetooth_entity_with_entity_platform(
     await hass.async_block_till_done()
     inject_bluetooth_service_info(hass, NO_DEVICES_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
-    assert (
-        hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_temperature")
-        is not None
-    )
-    assert (
-        hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_pressure")
-        is not None
-    )
+    assert hass.states.get("test_domain.temperature") is not None
+    assert hass.states.get("test_domain.pressure") is not None
     cancel_coordinator()
 
 
