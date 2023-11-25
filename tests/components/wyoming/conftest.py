@@ -109,4 +109,6 @@ def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
         bit_rate=stt.AudioBitRates.BITRATE_16,
         sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
         channel=stt.AudioChannels.CHANNEL_MONO,
+        pipeline_name="",
+        pipeline_language="",
     )

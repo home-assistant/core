@@ -21,6 +21,8 @@ class SpeechMetadata:
     bit_rate: AudioBitRates
     sample_rate: AudioSampleRates
     channel: AudioChannels
+    pipeline_name: str = ""
+    pipeline_language: str = ""
 
     def __post_init__(self) -> None:
         """Finish initializing the metadata."""

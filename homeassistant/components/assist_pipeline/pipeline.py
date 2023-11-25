@@ -827,8 +827,20 @@ class PipelineRun:
             if self.audio_settings.is_vad_enabled:
                 stt_vad = VoiceCommandSegmenter()
 
+            # Recreate SpeechMetadata to include pipeline details
+            _metadata = stt.SpeechMetadata(
+                language=metadata.language,
+                format=metadata.format,
+                codec=metadata.codec,
+                bit_rate=metadata.bit_rate,
+                sample_rate=metadata.sample_rate,
+                channel=metadata.channel,
+                pipeline_name=self.pipeline.name,
+                pipeline_language=self.pipeline.language,
+            )
+
             result = await self.stt_provider.async_process_audio_stream(
-                metadata,
+                _metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
         except Exception as src_error:
