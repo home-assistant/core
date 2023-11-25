@@ -8,7 +8,7 @@
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "06aecb3d00354375924f50c47af36bd2",
-      "mode": "heat",
+      "mode": "off",
       "model": "Lisa",
       "name": "Slaapkamer",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],

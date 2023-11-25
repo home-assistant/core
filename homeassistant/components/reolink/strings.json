@@ -61,6 +61,18 @@
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     }
   },
+  "services": {
+    "ptz_move": {
+      "name": "PTZ move",
+      "description": "Move the camera with a specific speed.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "PTZ move speed."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "face": {
@@ -74,6 +86,9 @@
       },
       "pet": {
         "name": "Pet"
+      },
+      "animal": {
+        "name": "Animal"
       },
       "visitor": {
         "name": "Visitor"
@@ -93,6 +108,9 @@
       "pet_lens_0": {
         "name": "Pet lens 0"
       },
+      "animal_lens_0": {
+        "name": "Animal lens 0"
+      },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
@@ -110,6 +128,9 @@
       },
       "pet_lens_1": {
         "name": "Pet lens 1"
+      },
+      "animal_lens_1": {
+        "name": "Animal lens 1"
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
@@ -245,6 +266,9 @@
       "ai_pet_sensititvity": {
         "name": "AI pet sensitivity"
       },
+      "ai_animal_sensititvity": {
+        "name": "AI animal sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -256,6 +280,9 @@
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
+      },
+      "ai_animal_delay": {
+        "name": "AI animal delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
