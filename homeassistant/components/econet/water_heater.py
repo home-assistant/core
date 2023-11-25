@@ -18,7 +18,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
@@ -55,6 +55,7 @@ async def async_setup_entry(
             EcoNetWaterHeater(water_heater)
             for water_heater in equipment[EquipmentType.WATER_HEATER]
         ],
+        update_before_add=True,
     )
 
 
@@ -68,11 +69,6 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Initialize."""
         super().__init__(water_heater)
         self.water_heater = water_heater
-
-    @callback
-    def on_update_received(self):
-        """Update was pushed from the econet API."""
-        self.async_write_ha_state()
 
     @property
     def is_away_mode_on(self):
@@ -151,12 +147,6 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Get the latest energy usage."""
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Initialize energy usage."""
-        await super().async_added_to_hass()
-        await self.async_update_ha_state(force_refresh=True)
 
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
