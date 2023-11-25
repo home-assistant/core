@@ -31,12 +31,7 @@ def _simulated_returns(index, global_measure=None):
     returns = {
         3: 45.678,  # power
         21: 9.876,  # temperature
-        22: 8.765,  # temperature
         5: 12345,  # energy
-        1: 234.4,  # grid voltage
-        4: 50.1234,  # frequency
-        6: 0.00001,  # dcdc leak
-        7: 0.00002,  # inverter leak
     }
     return returns[index]
 

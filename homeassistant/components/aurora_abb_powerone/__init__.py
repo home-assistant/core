@@ -75,12 +75,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             # read ADC channel 3 (grid power output)
             power_watts = self.client.measure(3, True)
             inverter_temperature_c = self.client.measure(21)
-            booster_temperature_c = self.client.measure(22)
             energy_wh = self.client.cumulated_energy(5)
-            grid_v = self.client.measure(1)
-            freq = self.client.measure(4)
-            dcdc_leak_i = self.client.measure(6)
-            inverter_leak_i = self.client.measure(7)
             [alarm, *_] = self.client.alarms()
         except AuroraTimeoutError:
             self.available = False
@@ -91,12 +86,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         else:
             data["instantaneouspower"] = round(power_watts, 1)
             data["invertertemp"] = round(inverter_temperature_c, 1)
-            data["boostertemp"] = round(booster_temperature_c, 1)
             data["totalenergy"] = round(energy_wh / 1000, 2)
-            data["gridvoltage"] = round(grid_v, 1)
-            data["frequency"] = round(freq, 2)
-            data["dcdcleak"] = round(dcdc_leak_i, 6)
-            data["inverterleak"] = round(inverter_leak_i, 6)
             data["alarm"] = alarm
             self.available = True
 
