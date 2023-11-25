@@ -6,7 +6,7 @@ from decora_wifi import DecoraWiFiSession
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -17,35 +17,34 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("email"): str,
+        vol.Required("username"): str,
         vol.Required("password"): str,
     }
 )
 
 
 class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Will write later."""
+    """Config flow for Decora Wifi Integration."""
 
     VERSION = 1
 
     async def async_step_user(self, user_input=None) -> FlowResult:
-        """Will write later."""
+        """Handle a flow initiated by the user."""
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            email = user_input["email"]
+            username = user_input["username"]
             password = user_input["password"]
 
             try:
-                unique_id, session = await async_validate_input(
-                    self.hass, email, password
-                )
+                await async_validate_input(self.hass, username, password)
+                unique_id = username.lower()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception: %s", exc)
                 errors["base"] = "unknown"
             else:
                 # No Errors
@@ -62,11 +61,10 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
                 return self.async_create_entry(
-                    title=email,
+                    title=username,
                     data={
-                        CONF_EMAIL: email,
+                        CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                        # CONF_DEVICES: [],
                     },
                 )
 
@@ -76,14 +74,13 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 async def async_validate_input(
-    hass: HomeAssistant, email: str, password: str
-) -> tuple[str, DecoraWiFiSession]:
-    """Will add later."""
+    hass: HomeAssistant, username: str, password: str
+) -> None:
+    """Validate user input. Will throw if cannot authenticated with provided credentials."""
     session = DecoraWiFiSession()
-    user = await hass.async_add_executor_job(lambda: session.login(email, password))
+    user = await hass.async_add_executor_job(lambda: session.login(username, password))
     if not user:
         raise InvalidAuth("invalid authentication")
-    return email, session
 
 
 class CannotConnect(HomeAssistantError):

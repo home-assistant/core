@@ -41,7 +41,7 @@ NOTIFICATION_TITLE = "myLeviton Decora Setup"
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Will write later."""
+    """Set up Decora Wifi Switches."""
 
     component: DecoraComponentData = hass.data[DOMAIN][entry.entry_id]
 
