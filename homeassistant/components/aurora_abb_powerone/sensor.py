@@ -14,7 +14,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -39,6 +42,47 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = [
     SensorEntityDescription(
+        key="alarm",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="alarm",
+    ),
+    SensorEntityDescription(
+        key="boostertemp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="booster_temp",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="dcdcleak",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        translation_key="dcdc_leak",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="gridvoltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        translation_key="grid_voltage",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="instantaneouspower",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -46,11 +90,21 @@ SENSOR_TYPES = [
         translation_key="power_output",
     ),
     SensorEntityDescription(
-        key="temp",
+        key="inverterleak",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        translation_key="inverter_leak",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="invertertemp",
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="inverter_temp",
     ),
     SensorEntityDescription(
         key="totalenergy",
