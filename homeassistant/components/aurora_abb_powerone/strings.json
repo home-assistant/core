@@ -21,6 +21,24 @@
   },
   "entity": {
     "sensor": {
+      "grid_voltage": {
+        "name": "Grid Voltage"
+      },
+      "alarm": {
+        "name": "Alarm Status"
+      },
+      "dcdc_leak": {
+        "name": "DC/DC Leak"
+      },
+      "inverter_leak": {
+        "name": "Inverter Leak"
+      },
+      "inverter_temp": {
+        "name": "Inverter Temperature"
+      },
+      "booster_temp": {
+        "name": "Booster Temperature"
+      },
       "power_output": {
         "name": "Power Output"
       },
