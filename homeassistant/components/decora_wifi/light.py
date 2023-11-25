@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from decora_wifi import DecoraWiFiSession
-from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
@@ -26,6 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DecoraComponentData
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,60 +42,42 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Will write later."""
-    # data = hass.data[DOMAIN]
-    email = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    session = DecoraWiFiSession()
-    user = await hass.async_add_executor_job(lambda: session.login(email, password))
-    if not user:
-        raise RuntimeError("config error")
-    # Assert logged in
+
+    component: DecoraComponentData = hass.data[DOMAIN][entry.entry_id]
 
     try:
-        all_switches = []
-        # Gather all the available devices...
+        session = component.session
+        assert session.user
 
-        # PENDING better handling for this async stuff
         perms = await hass.async_add_executor_job(
             session.user.get_residential_permissions
         )
+        residences: list[Residence] = []
         for permission in perms:
             if permission.residentialAccountId is not None:
-                acct = ResidentialAccount(session, permission.residentialAccountId)
-                residences = await hass.async_add_executor_job(acct.get_residences)
-                for residence in residences:
-                    switches = await hass.async_add_executor_job(
-                        residence.get_iot_switches
-                    )
-                    for switch in switches:
-                        all_switches.append(switch)
+                account = ResidentialAccount(session, permission.residentialAccountId)
+                residences.extend(
+                    await hass.async_add_executor_job(account.get_residences)
+                )
             elif permission.residenceId is not None:
-                residence = Residence(session, permission.residenceId)
-                switches = await hass.async_add_executor_job(residence.get_iot_switches)
-                for switch in switches:
-                    all_switches.append(switch)
+                residences.append(Residence(session, permission.residenceId))
 
-        async_add_entities([DecoraWifiLight(sw) for sw in all_switches])
+        switches = [
+            sw
+            for res in residences
+            for sw in (await hass.async_add_executor_job(res.get_iot_switches))
+        ]
+
+        async_add_entities([DecoraWifiLight(sw) for sw in switches])
 
     except ValueError:
         _LOGGER.error("Failed to communicate with myLeviton Service")
-
-    # Listen for the stop event and log out.
-    def logout(event):
-        """Log out..."""
-        try:
-            if session is not None:
-                Person.logout(session)
-        except ValueError:
-            _LOGGER.error("Failed to log out of myLeviton Service")
-
-    # hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
 
 
 class DecoraWifiLight(LightEntity):
     """Representation of a Decora WiFi switch."""
 
-    def __init__(self, switch):
+    def __init__(self, switch) -> None:
         """Initialize the switch."""
         self._switch = switch
         self._attr_unique_id = switch.serial
@@ -121,22 +102,22 @@ class DecoraWifiLight(LightEntity):
         return LightEntityFeature(0)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the display name of this switch."""
         return self._switch.name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the ID of this light."""
         return self._switch.serial
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the dimmer switch."""
         return int(self._switch.brightness * 255 / 100)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._switch.power == "ON"
 
@@ -184,18 +165,8 @@ class DecoraWifiLight(LightEntity):
                 (DOMAIN, self.unique_id)
             },
             name=self.name,
-            # manufacturer=self.light.manufacturername,
-            # model=self.light.productname,
-            # sw_version=self.light.swversion,
-            # via_device=(hue.DOMAIN, self.api.bridgeid),
+            manufacturer=self._switch.manufacturer,
+            model=self._switch.model,
+            sw_version=self._switch.version,
+            serial_number=self._switch.serial,
         )
-
-    # async def async_added_to_hass(self) -> None:
-    #     """Subscribe to Abode connection status updates."""
-    #     await self.hass.async_add_executor_job(
-    #         self._data.abode.events.add_connection_status_callback,
-    #         self.unique_id,
-    #         self._update_connection_status,
-    #     )
-
-    #     self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
