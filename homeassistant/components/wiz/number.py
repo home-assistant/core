@@ -22,20 +22,13 @@ from .entity import WizEntity
 from .models import WizData
 
 
-@dataclass
-class WizNumberEntityDescriptionMixin:
-    """Mixin to describe a WiZ number entity."""
-
-    value_fn: Callable[[wizlight], int | None]
-    set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
-    required_feature: str
-
-
-@dataclass
-class WizNumberEntityDescription(
-    NumberEntityDescription, WizNumberEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class WizNumberEntityDescription(NumberEntityDescription):
     """Class to describe a WiZ number entity."""
+
+    required_feature: str
+    set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
+    value_fn: Callable[[wizlight], int | None]
 
 
 async def _async_set_speed(device: wizlight, speed: int) -> None:

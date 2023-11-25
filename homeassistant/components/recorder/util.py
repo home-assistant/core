@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -855,6 +855,20 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     From more-itertools
     """
     return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
+def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
+    """Break *collection* into iterables of length *n*.
+
+    Returns the collection if its length is less than *n*.
+
+    Unlike chunked, this function requires a collection so it can
+    determine the length of the collection and return the collection
+    if it is less than *n*.
+    """
+    if len(iterable) <= chunked_num:
+        return (iterable,)
+    return chunked(iterable, chunked_num)
 
 
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
