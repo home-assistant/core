@@ -29,11 +29,14 @@
     }
   },
   "exceptions": {
+    "program_unknown": {
+      "message": "Cannot translate preset {preset} into a valid ViCare program"
+    },
     "program_not_activated": {
-      "message": "Unable to activate program {program}"
+      "message": "Unable to activate ViCare program {program}"
     },
     "program_not_deactivated": {
-      "message": "Unable to deactivate program {program}"
+      "message": "Unable to deactivate ViCare program {program}"
     }
   },
   "services": {
