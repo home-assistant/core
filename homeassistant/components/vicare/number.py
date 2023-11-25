@@ -43,7 +43,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
-        name="Heating curve shift",
+        translation_key="heating curve shift",
         icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveShift(),
@@ -57,7 +57,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ),
     ViCareNumberEntityDescription(
         key="heating curve slope",
-        name="Heating curve slope",
+        translation_key="heating_curve_slope",
         icon="mdi:slope-uphill",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveSlope(),
@@ -72,16 +72,13 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str,
     vicare_api: PyViCareHeatingDeviceWithComponent,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
 ) -> ViCareNumber | None:
     """Create a ViCare number entity."""
-    _LOGGER.debug("Found device %s", name)
-    if is_supported(name, entity_description, vicare_api):
+    if is_supported(entity_description.key, entity_description, vicare_api):
         return ViCareNumber(
-            name,
             vicare_api,
             device_config,
             entity_description,
@@ -100,13 +97,9 @@ async def async_setup_entry(
     entities: list[ViCareNumber] = []
     try:
         for circuit in api.circuits:
-            suffix = ""
-            if len(api.circuits) > 1:
-                suffix = f" {circuit.id}"
             for description in CIRCUIT_ENTITY_DESCRIPTIONS:
                 entity = await hass.async_add_executor_job(
                     _build_entity,
-                    f"{description.name}{suffix}",
                     circuit,
                     hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                     description,
@@ -126,7 +119,6 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        name: str,
         api: PyViCareHeatingDeviceWithComponent,
         device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
@@ -134,7 +126,6 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         """Initialize the number."""
         super().__init__(device_config, api, description.key)
         self.entity_description = description
-        self._attr_name = name
 
     @property
     def available(self) -> bool:
