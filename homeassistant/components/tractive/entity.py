@@ -62,7 +62,11 @@ class TractiveEntity(Entity):
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
-        self._attr_available = event[self.entity_description.key] is not None
+        # Switch data is sometimes not present in the event and we do not want to mark
+        # these entities as unavailable.
+        if self.__module__.rsplit(".", maxsplit=1)[-1] != "switch":
+            self._attr_available = event[self.entity_description.key] is not None
+
         self.async_write_ha_state()
 
     @callback
