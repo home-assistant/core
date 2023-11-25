@@ -37,15 +37,15 @@ class ViCareEntity(Entity):
 
         if isinstance(device, HeatingCircuit):
             self._attr_device_info = self._get_info_for_component(
-                device_config, device, "Circuit"
+                device_config, device, "Circuit", device.getName()
             )
         elif isinstance(device, FuelCellBurner | GazBurner | OilBurner):
             self._attr_device_info = self._get_info_for_component(
-                device_config, device, "Burner"
+                device_config, device, "Burner", "Burner"
             )
         elif isinstance(device, Compressor):
             self._attr_device_info = self._get_info_for_component(
-                device_config, device, "Compressor"
+                device_config, device, "Compressor", "Compressor"
             )
         else:
             self._attr_device_info = self._get_info_for_device(device_config)
@@ -55,6 +55,7 @@ class ViCareEntity(Entity):
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         component_type: str,
+        name: str,
     ) -> DeviceInfo:
         return DeviceInfo(
             via_device=(DOMAIN, device_config.getConfig().serial),
@@ -64,7 +65,7 @@ class ViCareEntity(Entity):
                     f"{device_config.getConfig().serial}-{component_type.lower()}-{device.id}",
                 )
             },
-            name=component_type,
+            name=name,
             manufacturer="Viessmann",
             model=component_type,
             configuration_url="https://developer.viessmann.com/",
