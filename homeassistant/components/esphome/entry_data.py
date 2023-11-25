@@ -321,7 +321,6 @@ class RuntimeEntryData:
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
         subscription_key = (state_type, key)
-        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
         if (
             current_state == state
             and subscription_key not in stale_state
@@ -333,21 +332,7 @@ class RuntimeEntryData:
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
-            if debug_enabled:
-                _LOGGER.debug(
-                    "%s: ignoring duplicate update with key %s: %s",
-                    self.name,
-                    key,
-                    state,
-                )
             return
-        if debug_enabled:
-            _LOGGER.debug(
-                "%s: dispatching update with key %s: %s",
-                self.name,
-                key,
-                state,
-            )
         stale_state.discard(subscription_key)
         current_state_by_type[key] = state
         if subscription := self.state_subscriptions.get(subscription_key):

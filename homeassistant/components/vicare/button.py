@@ -5,6 +5,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -26,8 +27,6 @@ from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
-BUTTON_DHW_ACTIVATE_ONETIME_CHARGE = "activate_onetimecharge"
-
 
 @dataclass
 class ViCareButtonEntityDescription(
@@ -38,8 +37,8 @@ class ViCareButtonEntityDescription(
 
 BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
     ViCareButtonEntityDescription(
-        key=BUTTON_DHW_ACTIVATE_ONETIME_CHARGE,
-        name="Activate one-time charge",
+        key="activate_onetimecharge",
+        translation_key="activate_onetimecharge",
         icon="mdi:shower-head",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getOneTimeCharge(),
@@ -49,16 +48,13 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 
 
 def _build_entity(
-    name: str,
-    vicare_api,
+    vicare_api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareButtonEntityDescription,
 ):
     """Create a ViCare button entity."""
-    _LOGGER.debug("Found device %s", name)
-    if is_supported(name, entity_description, vicare_api):
+    if is_supported(entity_description.key, entity_description, vicare_api):
         return ViCareButton(
-            name,
             vicare_api,
             device_config,
             entity_description,
@@ -79,7 +75,6 @@ async def async_setup_entry(
     for description in BUTTON_DESCRIPTIONS:
         entity = await hass.async_add_executor_job(
             _build_entity,
-            description.name,
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
@@ -96,7 +91,10 @@ class ViCareButton(ViCareEntity, ButtonEntity):
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareButtonEntityDescription
+        self,
+        api: PyViCareDevice,
+        device_config: PyViCareDeviceConfig,
+        description: ViCareButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
         super().__init__(device_config, api, description.key)

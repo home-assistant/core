@@ -282,10 +282,10 @@ aiokef==0.2.16
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.4.5
+aiolifx-themes==0.4.10
 
 # homeassistant.components.lifx
-aiolifx==0.8.10
+aiolifx==1.0.0
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -567,7 +567,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.14.0
+bluetooth-data-tools==1.15.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -2430,7 +2430,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
-sentry-sdk==1.36.0
+sentry-sdk==1.37.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.6
