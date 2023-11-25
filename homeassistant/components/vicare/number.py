@@ -93,6 +93,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare number devices."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
     circuits = get_circuits(api)
 
     entities: list[ViCareNumber] = []
@@ -101,7 +102,7 @@ async def async_setup_entry(
             entity = await hass.async_add_executor_job(
                 _build_entity,
                 circuit,
-                hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+                device_config,
                 description,
             )
             if entity is not None:
