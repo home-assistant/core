@@ -23,46 +23,22 @@ FILENAME = "blah"
 PIN = "1234"
 
 
-async def test_setup_entry(
+@pytest.mark.parametrize(
+    ("the_error", "available"),
+    [(ClientError, False), (asyncio.TimeoutError, False), (None, False)],
+)
+async def test_setup_not_ready(
     hass: HomeAssistant,
     mock_blink_api: MagicMock,
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup entry."""
-
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_setup_not_ready_client_error(
-    hass: HomeAssistant,
-    mock_blink_api: MagicMock,
-    mock_blink_auth_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    the_error,
+    available,
 ) -> None:
     """Test setup failed because we can't connect to the Blink system."""
 
-    mock_blink_api.start = AsyncMock(side_effect=ClientError)
-
-    mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_not_ready_timeout_error(
-    hass: HomeAssistant,
-    mock_blink_api: MagicMock,
-    mock_blink_auth_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup failed because we can't connect to the Blink system."""
-
-    mock_blink_api.refresh = AsyncMock(side_effect=asyncio.TimeoutError)
+    mock_blink_api.start = AsyncMock(side_effect=the_error)
+    mock_blink_api.available = available
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -78,27 +54,11 @@ async def test_setup_not_ready_authkey_required(
 ) -> None:
     """Test setup failed because 2FA is needed to connect to the Blink system."""
 
-    mock_blink_auth_api.check_key_required = MagicMock(side_effect=True)
+    mock_blink_auth_api.check_key_required = MagicMock(return_value=True)
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_not_ready_not_available(
-    hass: HomeAssistant,
-    mock_blink_api: MagicMock,
-    mock_blink_auth_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup failed because Blink system is not available."""
-
-    mock_blink_api.available = False
-
-    mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(
@@ -153,6 +113,8 @@ async def test_migrate_V0(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(("version"), [1, 2])
@@ -171,6 +133,8 @@ async def test_migrate(
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_refresh_service_calls(
@@ -204,7 +168,7 @@ async def test_video_service_calls(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup entry."""
+    """Test video service calls."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -254,7 +218,7 @@ async def test_picture_service_calls(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup entry."""
+    """Test picture servcie calls."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -303,7 +267,7 @@ async def test_pin_service_calls(
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup entry."""
+    """Test pin service calls."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
