@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from typing import Any
 
 import pytest
 
@@ -10,7 +11,7 @@ from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     CONFIG_ENTRY_DATA,
@@ -221,34 +222,51 @@ async def test_fix_unique_id_duplicate(
         "config_entry_unique_id",
         "serial_number",
         "entity_unique_id",
+        "device_identifier",
         "expected_unique_id",
+        "expected_device_identifier",
     ),
     [
-        (SERIAL_NUMBER, SERIAL_NUMBER, SERIAL_NUMBER, MAC_ADDRESS_UNIQUE_ID),
+        (
+            SERIAL_NUMBER,
+            SERIAL_NUMBER,
+            SERIAL_NUMBER,
+            str(SERIAL_NUMBER),
+            MAC_ADDRESS_UNIQUE_ID,
+            MAC_ADDRESS_UNIQUE_ID,
+        ),
         (
             SERIAL_NUMBER,
             SERIAL_NUMBER,
             f"{SERIAL_NUMBER}-rain-delay",
+            f"{SERIAL_NUMBER}-1",
             f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-1",
         ),
-        ("0", 0, "0", MAC_ADDRESS_UNIQUE_ID),
+        ("0", 0, "0", "0", MAC_ADDRESS_UNIQUE_ID, MAC_ADDRESS_UNIQUE_ID),
         (
             "0",
             0,
             "0-rain-delay",
+            "0-1",
             f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-1",
         ),
         (
             MAC_ADDRESS_UNIQUE_ID,
             SERIAL_NUMBER,
             MAC_ADDRESS_UNIQUE_ID,
             MAC_ADDRESS_UNIQUE_ID,
+            MAC_ADDRESS_UNIQUE_ID,
+            MAC_ADDRESS_UNIQUE_ID,
         ),
         (
             MAC_ADDRESS_UNIQUE_ID,
             SERIAL_NUMBER,
             f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-1",
             f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
+            f"{MAC_ADDRESS_UNIQUE_ID}-1",
         ),
     ],
     ids=(
@@ -264,13 +282,21 @@ async def test_fix_entity_unique_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_unique_id: str,
+    device_identifier: str,
     expected_unique_id: str,
+    expected_device_identifier: str,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test fixing entity unique ids from old unique id formats."""
 
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "number", unique_id=entity_unique_id, config_entry=config_entry
+    )
+    device_entry = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, device_identifier)},
+        config_entry_id=config_entry.entry_id,
+        serial_number=config_entry.data["serial_number"],
     )
 
     await config_entry.async_setup(hass)
@@ -279,3 +305,130 @@ async def test_fix_entity_unique_ids(
     entity_entry = entity_registry.async_get(entity_entry.id)
     assert entity_entry
     assert entity_entry.unique_id == expected_unique_id
+
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, expected_device_identifier)}
+    )
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, expected_device_identifier)}
+
+
+@pytest.mark.parametrize(
+    (
+        "entry1_updates",
+        "entry2_updates",
+        "expected_device_name",
+        "expected_disabled_by",
+    ),
+    [
+        ({}, {}, None, None),
+        (
+            {
+                "name_by_user": "Front Sprinkler",
+            },
+            {},
+            "Front Sprinkler",
+            None,
+        ),
+        (
+            {},
+            {
+                "name_by_user": "Front Sprinkler",
+            },
+            "Front Sprinkler",
+            None,
+        ),
+        (
+            {
+                "name_by_user": "Sprinkler 1",
+            },
+            {
+                "name_by_user": "Sprinkler 2",
+            },
+            "Sprinkler 2",
+            None,
+        ),
+        (
+            {
+                "disabled_by": dr.DeviceEntryDisabler.USER,
+            },
+            {},
+            None,
+            None,
+        ),
+        (
+            {},
+            {
+                "disabled_by": dr.DeviceEntryDisabler.USER,
+            },
+            None,
+            None,
+        ),
+        (
+            {
+                "disabled_by": dr.DeviceEntryDisabler.USER,
+            },
+            {
+                "disabled_by": dr.DeviceEntryDisabler.USER,
+            },
+            None,
+            dr.DeviceEntryDisabler.USER,
+        ),
+    ],
+    ids=[
+        "duplicates",
+        "prefer-old-name",
+        "prefer-new-name",
+        "both-names-prefers-new",
+        "old-disabled-prefer-new",
+        "new-disabled-prefer-old",
+        "both-disabled",
+    ],
+)
+async def test_fix_duplicate_device_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entry1_updates: dict[str, Any],
+    entry2_updates: dict[str, Any],
+    expected_device_name: str | None,
+    expected_disabled_by: dr.DeviceEntryDisabler | None,
+) -> None:
+    """Test fixing duplicate device ids."""
+
+    entry1 = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, str(SERIAL_NUMBER))},
+        config_entry_id=config_entry.entry_id,
+        serial_number=config_entry.data["serial_number"],
+    )
+    device_registry.async_update_device(entry1.id, **entry1_updates)
+
+    entry2 = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, MAC_ADDRESS_UNIQUE_ID)},
+        config_entry_id=config_entry.entry_id,
+        serial_number=config_entry.data["serial_number"],
+    )
+    device_registry.async_update_device(entry2.id, **entry2_updates)
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(device_entries) == 2
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    # Only the device with the new format exists
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+
+    device_entry = device_registry.async_get_device({(DOMAIN, MAC_ADDRESS_UNIQUE_ID)})
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
+    assert device_entry.name_by_user == expected_device_name
+    assert device_entry.disabled_by == expected_disabled_by
+
+
+## TODO Fix device ids that already exist
