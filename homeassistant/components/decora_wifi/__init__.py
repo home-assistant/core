@@ -1,17 +1,25 @@
 """The decora_wifi component."""
 
 import logging
-
+from dataclasses import dataclass, field
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, CALLBACK_TYPE
 
 from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class DecoraComponentData:
+    """Decora Component Data Class."""
+
+    clientSession: DecoraWiFiSession
+    entity_ids: set[str | None] = field(default_factory=set)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -21,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
     session = DecoraWiFiSession()
 
-    # hass.data[DOMAIN] = AbodeSystem(abode, polling)
+    hass.data[DOMAIN] = DecoraComponentData(session)
     hass.data[DOMAIN] = session
 
     # PR Need handle some config errors
@@ -58,5 +66,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     )
 
-    # hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass.data.pop(DOMAIN)
+    return unload_ok
