@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ViCareRequiredKeysMixin
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
-from .utils import is_supported
+from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,26 +159,17 @@ async def async_setup_entry(
         if entity is not None:
             entities.append(entity)
 
-    try:
-        await _entities_from_descriptions(
-            hass, entities, CIRCUIT_SENSORS, api.circuits, config_entry
-        )
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No circuits found")
+    await _entities_from_descriptions(
+        hass, entities, CIRCUIT_SENSORS, get_circuits(api), config_entry
+    )
 
-    try:
-        await _entities_from_descriptions(
-            hass, entities, BURNER_SENSORS, api.burners, config_entry
-        )
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No burners found")
+    await _entities_from_descriptions(
+        hass, entities, BURNER_SENSORS, get_burners(api), config_entry
+    )
 
-    try:
-        await _entities_from_descriptions(
-            hass, entities, COMPRESSOR_SENSORS, api.compressors, config_entry
-        )
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No compressors found")
+    await _entities_from_descriptions(
+        hass, entities, COMPRESSOR_SENSORS, get_compressors(api), config_entry
+    )
 
     async_add_entities(entities)
 

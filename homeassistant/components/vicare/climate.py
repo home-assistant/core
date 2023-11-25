@@ -40,6 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
+from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,15 +94,6 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-def _get_circuits(vicare_api):
-    """Return the list of circuits."""
-    try:
-        return vicare_api.circuits
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No circuits found")
-        return []
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -111,7 +103,7 @@ async def async_setup_entry(
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    circuits = await hass.async_add_executor_job(_get_circuits, api)
+    circuits = get_circuits(api)
 
     for circuit in circuits:
         entity = ViCareClimate(
@@ -213,11 +205,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._current_action = False
             # Update the specific device attributes
             with suppress(PyViCareNotSupportedFeatureError):
-                for burner in self._api.burners:
+                for burner in get_burners(self._api):
                     self._current_action = self._current_action or burner.getActive()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                for compressor in self._api.compressors:
+                for compressor in get_compressors(self._api):
                     self._current_action = (
                         self._current_action or compressor.getActive()
                     )
