@@ -215,7 +215,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.7
+aioesphomeapi==18.5.9
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -326,7 +326,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==6.0.0
+aioshelly==6.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -685,7 +685,7 @@ gardena-bluetooth==1.4.0
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==6.0.1
+gcal-sync==6.0.3
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -1003,6 +1003,9 @@ mutagen==1.47.0
 # homeassistant.components.mutesync
 mutesync==0.0.1
 
+# homeassistant.components.permobil
+mypermobil==0.1.6
+
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
 
@@ -1028,7 +1031,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.5.0
+nibe==2.5.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1132,7 +1135,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.33.2
+plugwise==0.34.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1269,7 +1272,7 @@ pycsspeechtts==1.0.8
 pydaikin==2.11.1
 
 # homeassistant.components.deconz
-pydeconz==113
+pydeconz==114
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1640,7 +1643,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.36.1
+python-roborock==0.36.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1754,7 +1757,7 @@ reolink-aio==0.8.1
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell==0.8.0
+ring-doorbell[listen]==0.8.2
 
 # homeassistant.components.roku
 rokuecp==0.18.1
@@ -2085,7 +2088,7 @@ yalexs-ble==2.3.2
 yalexs==1.10.0
 
 # homeassistant.components.yeelight
-yeelight==0.7.13
+yeelight==0.7.14
 
 # homeassistant.components.yolink
 yolink-api==0.3.1

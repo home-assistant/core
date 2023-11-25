@@ -15,7 +15,7 @@ from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from homeassistant.components import webhook
+from homeassistant.components import matter, webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -678,10 +678,18 @@ class GoogleEntity:
         elif area_entry and area_entry.name:
             device["roomHint"] = area_entry.name
 
-        # Add deviceInfo
         if not device_entry:
             return device
 
+        # Add Matter info
+        if "matter" in self.hass.config.components and (
+            matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+        ):
+            device["matterUniqueId"] = matter_info["unique_id"]
+            device["matterOriginalVendorId"] = matter_info["vendor_id"]
+            device["matterOriginalProductId"] = matter_info["product_id"]
+
+        # Add deviceInfo
         device_info = {}
 
         if device_entry.manufacturer:
