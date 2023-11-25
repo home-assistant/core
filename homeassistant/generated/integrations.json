@@ -4242,6 +4242,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "permobil": {
+      "name": "MyPermobil",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "pge": {
       "name": "Pacific Gas & Electric (PG&E)",
       "integration_type": "virtual",

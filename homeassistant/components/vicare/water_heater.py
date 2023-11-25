@@ -3,6 +3,9 @@ from contextlib import suppress
 import logging
 from typing import Any
 
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -63,18 +66,15 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
     circuits = get_circuits(api)
 
     for circuit in circuits:
-        suffix = ""
-        if len(circuits) > 1:
-            suffix = f" {circuit.id}"
-
         entity = ViCareWater(
-            f"Water{suffix}",
             api,
             circuit,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            device_config,
+            "water",
         )
         entities.append(entity)
 
@@ -91,13 +91,19 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
 
-    def __init__(self, name, api, circuit, device_config) -> None:
+    def __init__(
+        self,
+        api: PyViCareDevice,
+        circuit: PyViCareHeatingCircuit,
+        device_config: PyViCareDeviceConfig,
+        translation_key: str,
+    ) -> None:
         """Initialize the DHW water_heater device."""
         super().__init__(device_config, api, circuit.id)
-        self._attr_name = name
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_mode = None
+        self._attr_translation_key = translation_key
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
