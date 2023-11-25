@@ -1,11 +1,19 @@
 """Tests for Shelly utils."""
-import pytest
-
-from homeassistant.components.shelly.const import (
-    GEN1_RELEASE_URL,
-    GEN2_RELEASE_URL,
+from aioshelly.const import (
+    MODEL_1,
+    MODEL_1L,
+    MODEL_BUTTON1,
+    MODEL_BUTTON1_V2,
+    MODEL_DIMMER_2,
+    MODEL_EM3,
+    MODEL_I3,
+    MODEL_MOTION,
+    MODEL_PLUS_2PM_V2,
     MODEL_WALL_DISPLAY,
 )
+import pytest
+
+from homeassistant.components.shelly.const import GEN1_RELEASE_URL, GEN2_RELEASE_URL
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
     get_block_device_sleep_period,
@@ -45,7 +53,7 @@ async def test_block_get_number_of_channels(mock_block_device, monkeypatch) -> N
         == 4
     )
 
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHDM-2")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_DIMMER_2)
     assert (
         get_number_of_channels(
             mock_block_device,
@@ -67,7 +75,7 @@ async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> N
         == "Test name channel 1"
     )
 
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHEM-3")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
 
     assert (
         get_block_channel_name(
@@ -113,7 +121,7 @@ async def test_is_block_momentary_input(mock_block_device, monkeypatch) -> None:
     )
 
     monkeypatch.setitem(mock_block_device.settings, "mode", "relay")
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHSW-L")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_1L)
     assert (
         is_block_momentary_input(
             mock_block_device.settings, mock_block_device.blocks[DEVICE_BLOCK_ID], True
@@ -131,7 +139,7 @@ async def test_is_block_momentary_input(mock_block_device, monkeypatch) -> None:
         is False
     )
 
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHBTN-2")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_BUTTON1_V2)
 
     assert (
         is_block_momentary_input(
@@ -183,7 +191,7 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
         )
     ) == {("long", "button"), ("single", "button")}
 
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHBTN-1")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_BUTTON1)
     assert set(
         get_block_input_triggers(
             mock_block_device, mock_block_device.blocks[DEVICE_BLOCK_ID]
@@ -195,7 +203,7 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
         ("triple", "button"),
     }
 
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHIX3-1")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_I3)
     assert set(
         get_block_input_triggers(
             mock_block_device, mock_block_device.blocks[DEVICE_BLOCK_ID]
@@ -235,12 +243,12 @@ async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:
 @pytest.mark.parametrize(
     ("gen", "model", "beta", "expected"),
     [
-        (1, "SHMOS-01", False, None),
-        (1, "SHSW-1", False, GEN1_RELEASE_URL),
-        (1, "SHSW-1", True, None),
+        (1, MODEL_MOTION, False, None),
+        (1, MODEL_1, False, GEN1_RELEASE_URL),
+        (1, MODEL_1, True, None),
         (2, MODEL_WALL_DISPLAY, False, None),
-        (2, "SNSW-102P16EU", False, GEN2_RELEASE_URL),
-        (2, "SNSW-102P16EU", True, None),
+        (2, MODEL_PLUS_2PM_V2, False, GEN2_RELEASE_URL),
+        (2, MODEL_PLUS_2PM_V2, True, None),
     ],
 )
 def test_get_release_url(

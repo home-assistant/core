@@ -120,18 +120,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         session = async_get_clientsession(self.hass)
-        async with ElectricityMaps(token=data[CONF_API_KEY], session=session) as em:
-            try:
-                await fetch_latest_carbon_intensity(self.hass, em, data)
-            except InvalidToken:
-                errors["base"] = "invalid_auth"
-            except ElectricityMapsError:
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=get_extra_name(data) or "CO2 Signal",
-                    data=data,
-                )
+        em = ElectricityMaps(token=data[CONF_API_KEY], session=session)
+        try:
+            await fetch_latest_carbon_intensity(self.hass, em, data)
+        except InvalidToken:
+            errors["base"] = "invalid_auth"
+        except ElectricityMapsError:
+            errors["base"] = "unknown"
+        else:
+            return self.async_create_entry(
+                title=get_extra_name(data) or "CO2 Signal",
+                data=data,
+            )
 
         return self.async_show_form(
             step_id=step_id,
