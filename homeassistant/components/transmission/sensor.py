@@ -6,9 +6,13 @@ from typing import Any
 
 from transmission_rpc.torrent import Torrent
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
+from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,6 +28,25 @@ from .const import (
 )
 from .coordinator import TransmissionDataUpdateCoordinator
 
+SPEED_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(key="download", translation_key="download_speed"),
+    SensorEntityDescription(key="upload", translation_key="upload_speed"),
+)
+
+STATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(key="status", translation_key="transmission_status"),
+)
+
+TORRENT_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(key="active_torrents", translation_key="active_torrents"),
+    SensorEntityDescription(key="paused_torrents", translation_key="paused_torrents"),
+    SensorEntityDescription(key="total_torrents", translation_key="total_torrents"),
+    SensorEntityDescription(
+        key="completed_torrents", translation_key="completed_torrents"
+    ),
+    SensorEntityDescription(key="started_torrents", translation_key="started_torrents"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -35,60 +58,23 @@ async def async_setup_entry(
     coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    name: str = config_entry.data[CONF_NAME]
 
-    dev = [
-        TransmissionSpeedSensor(
-            coordinator,
-            name,
-            "download_speed",
-            "download",
-        ),
-        TransmissionSpeedSensor(
-            coordinator,
-            name,
-            "upload_speed",
-            "upload",
-        ),
-        TransmissionStatusSensor(
-            coordinator,
-            name,
-            "transmission_status",
-            "status",
-        ),
-        TransmissionTorrentsSensor(
-            coordinator,
-            name,
-            "active_torrents",
-            "active_torrents",
-        ),
-        TransmissionTorrentsSensor(
-            coordinator,
-            name,
-            "paused_torrents",
-            "paused_torrents",
-        ),
-        TransmissionTorrentsSensor(
-            coordinator,
-            name,
-            "total_torrents",
-            "total_torrents",
-        ),
-        TransmissionTorrentsSensor(
-            coordinator,
-            name,
-            "completed_torrents",
-            "completed_torrents",
-        ),
-        TransmissionTorrentsSensor(
-            coordinator,
-            name,
-            "started_torrents",
-            "started_torrents",
-        ),
+    entities: list[TransmissionSensor] = []
+
+    entities = [
+        TransmissionSpeedSensor(coordinator, description)
+        for description in SPEED_SENSORS
+    ]
+    entities += [
+        TransmissionStatusSensor(coordinator, description)
+        for description in STATUS_SENSORS
+    ]
+    entities += [
+        TransmissionTorrentsSensor(coordinator, description)
+        for description in TORRENT_SENSORS
     ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
 class TransmissionSensor(
@@ -97,25 +83,22 @@ class TransmissionSensor(
     """A base class for all Transmission sensors."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
         coordinator: TransmissionDataUpdateCoordinator,
-        client_name: str,
-        sensor_translation_key: str,
-        key: str,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_translation_key = sensor_translation_key
-        self._key = key
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{key}"
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Transmission",
-            name=client_name,
         )
 
 
@@ -133,7 +116,7 @@ class TransmissionSpeedSensor(TransmissionSensor):
         data = self.coordinator.data
         return (
             float(data.download_speed)
-            if self._key == "download"
+            if self.entity_description.key == "download"
             else float(data.upload_speed)
         )
 
@@ -184,7 +167,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
             torrents=self.coordinator.torrents,
             order=self.coordinator.order,
             limit=self.coordinator.limit,
-            statuses=self.MODES[self._key],
+            statuses=self.MODES[self.entity_description.key],
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,
@@ -194,7 +177,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     def native_value(self) -> int:
         """Return the count of the sensor."""
         torrents = _filter_torrents(
-            self.coordinator.torrents, statuses=self.MODES[self._key]
+            self.coordinator.torrents, statuses=self.MODES[self.entity_description.key]
         )
         return len(torrents)
 
@@ -217,7 +200,7 @@ def _torrents_info(
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
     for torrent in torrents[:limit]:
         info = infos[torrent.name] = {
-            "added_date": torrent.date_added,
+            "added_date": torrent.added_date,
             "percent_done": f"{torrent.percent_done * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,

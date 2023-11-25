@@ -20,10 +20,6 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "819LMB": {
-        "always_discover": True,
-        "domain": "myq",
-    },
     "AC02": {
         "always_discover": True,
         "domain": "tado",
@@ -56,7 +52,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "hive",
     },
-    "Healty Home Coach": {
+    "Healthy Home Coach": {
         "always_discover": True,
         "domain": "netatmo",
     },
@@ -120,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Nightvision": {
         "always_discover": True,
         "domain": "lifx",
@@ -129,6 +129,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX String": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -143,10 +147,6 @@ HOMEKIT = {
     "LIFX Z": {
         "always_discover": True,
         "domain": "lifx",
-    },
-    "MYQ": {
-        "always_discover": True,
-        "domain": "myq",
     },
     "NL29": {
         "always_discover": False,
@@ -511,6 +511,12 @@ ZEROCONF = {
         },
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*",
+        },
+    ],
+    "_kizboxdev._tcp.local.": [
         {
             "domain": "overkiz",
             "name": "gateway*",

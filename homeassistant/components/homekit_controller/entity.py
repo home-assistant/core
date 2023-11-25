@@ -219,7 +219,11 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.available and self.service.available
+        return self._accessory.available and all(
+            c.available
+            for c in self.service.characteristics
+            if (self._aid, c.iid) in self.all_characteristics
+        )
 
     @property
     def device_info(self) -> DeviceInfo:

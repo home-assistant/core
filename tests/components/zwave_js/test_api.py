@@ -4653,11 +4653,20 @@ async def test_subscribe_node_statistics(
 
 
 async def test_hard_reset_controller(
-    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    client,
+    integration,
+    listen_block,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the hard_reset_controller WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
 
     client.async_send_command.return_value = {}
     await ws_client.send_json(
@@ -4667,8 +4676,13 @@ async def test_hard_reset_controller(
             ENTRY_ID: entry.entry_id,
         }
     )
+
+    listen_block.set()
+    listen_block.clear()
+    await hass.async_block_till_done()
+
     msg = await ws_client.receive_json()
-    assert msg["result"] is None
+    assert msg["result"] == device.id
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1

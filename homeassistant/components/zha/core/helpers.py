@@ -397,6 +397,15 @@ QR_CODES = (
         ([0-9a-fA-F]{36})  # install code
         $
     """,
+    # Bosch
+    r"""
+        ^RB01SG
+        [0-9a-fA-F]{34}
+        ([0-9a-fA-F]{16}) # IEEE address
+        DLK
+        ([0-9a-fA-F]{36}) # install code
+        $
+    """,
 )
 
 

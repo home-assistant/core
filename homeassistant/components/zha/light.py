@@ -850,8 +850,8 @@ class Light(BaseLight, ZhaEntity):
             self._off_with_transition = last_state.attributes["off_with_transition"]
         if "off_brightness" in last_state.attributes:
             self._off_brightness = last_state.attributes["off_brightness"]
-        if "color_mode" in last_state.attributes:
-            self._attr_color_mode = ColorMode(last_state.attributes["color_mode"])
+        if (color_mode := last_state.attributes.get("color_mode")) is not None:
+            self._attr_color_mode = ColorMode(color_mode)
         if "color_temp" in last_state.attributes:
             self._attr_color_temp = last_state.attributes["color_temp"]
         if "xy_color" in last_state.attributes:
@@ -1072,7 +1072,7 @@ class HueLight(Light):
 @STRICT_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     aux_cluster_handlers={CLUSTER_HANDLER_COLOR, CLUSTER_HANDLER_LEVEL},
-    manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
+    manufacturers={"Jasco", "Jasco Products", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect on/off for move_to_level_with_on_off commands."""

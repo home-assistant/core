@@ -833,10 +833,8 @@ class HKDevice:
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)
 
-        self.entity_map.process_changes(new_values_dict)
-
         to_callback: set[CALLBACK_TYPE] = set()
-        for aid_iid in new_values_dict:
+        for aid_iid in self.entity_map.process_changes(new_values_dict):
             if callbacks := self._subscriptions.get(aid_iid):
                 to_callback.update(callbacks)
 
@@ -886,7 +884,9 @@ class HKDevice:
         self._config_changed_callbacks.add(callback_)
         return partial(self._remove_config_changed_callback, callback_)
 
-    async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    async def get_characteristics(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[tuple[int, int], dict[str, Any]]:
         """Read latest state from homekit accessory."""
         return await self.pairing.get_characteristics(*args, **kwargs)
 

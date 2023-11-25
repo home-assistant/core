@@ -35,7 +35,8 @@ async def async_setup_entry(
 
 
 class ReolinkUpdateEntity(
-    ReolinkBaseCoordinatorEntity[str | Literal[False]], UpdateEntity
+    ReolinkBaseCoordinatorEntity[str | Literal[False] | NewSoftwareVersion],
+    UpdateEntity,
 ):
     """Update entity for a Netgear device."""
 
@@ -97,3 +98,5 @@ class ReolinkUpdateEntity(
             raise HomeAssistantError(
                 f"Error trying to update Reolink firmware: {err}"
             ) from err
+        finally:
+            self.async_write_ha_state()

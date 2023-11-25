@@ -229,6 +229,7 @@
         'mac': '**REDACTED**',
         'wifi_channel': 6,
         'wifi_rssi': -42,
+        'ws_type': 'ws_az',
       }),
     }),
     'config_entry': dict({
@@ -323,7 +324,9 @@
       }),
       'version': '1.62',
       'webserver': dict({
+        'full-name': 'Airzone WebServer',
         'mac': '**REDACTED**',
+        'model': 'Airzone WebServer',
         'wifi-channel': 6,
         'wifi-rssi': -42,
       }),

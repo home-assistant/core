@@ -216,11 +216,19 @@
         },
         "bitmask": {
           "name": "Bitmask",
-          "description": "Target a specific bitmask (see the documentation for more information)."
+          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with value_size or value_format."
         },
         "value": {
           "name": "Value",
           "description": "The new value to set for this configuration parameter."
+        },
+        "value_size": {
+          "name": "Value size",
+          "description": "Size of the value, either 1, 2, or 4. Used in combination with value_format when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask."
+        },
+        "value_format": {
+          "name": "Value format",
+          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with value_size when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask."
         }
       }
     },
@@ -361,6 +369,58 @@
         "parameters": {
           "name": "Parameters",
           "description": "A list of parameters to pass to the API method. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters."
+        }
+      }
+    },
+    "refresh_notifications": {
+      "name": "Refresh notifications on a node (advanced)",
+      "description": "Refreshes notifications on a node based on notification type and optionally notification event.",
+      "fields": {
+        "notification_type": {
+          "name": "Notification Type",
+          "description": "The Notification Type number as defined in the Z-Wave specs."
+        },
+        "notification_event": {
+          "name": "Notification Event",
+          "description": "The Notification Event number as defined in the Z-Wave specs."
+        }
+      }
+    },
+    "set_lock_configuration": {
+      "name": "Set lock configuration",
+      "description": "Sets the configuration for a lock.",
+      "fields": {
+        "operation_type": {
+          "name": "Operation Type",
+          "description": "The operation type of the lock."
+        },
+        "lock_timeout": {
+          "name": "Lock timeout",
+          "description": "Seconds until lock mode times out. Should only be used if operation type is `timed`."
+        },
+        "outside_handles_can_open_door_configuration": {
+          "name": "Outside handles can open door configuration",
+          "description": "A list of four booleans which indicate which outside handles can open the door."
+        },
+        "inside_handles_can_open_door_configuration": {
+          "name": "Inside handles can open door configuration",
+          "description": "A list of four booleans which indicate which inside handles can open the door."
+        },
+        "auto_relock_time": {
+          "name": "Auto relock time",
+          "description": "Duration in seconds until lock returns to secure state. Only enforced when operation type is `constant`."
+        },
+        "hold_and_release_time": {
+          "name": "Hold and release time",
+          "description": "Duration in seconds the latch stays retracted."
+        },
+        "twist_assist": {
+          "name": "Twist assist",
+          "description": "Enable Twist Assist."
+        },
+        "block_to_block": {
+          "name": "Block to block",
+          "description": "Enable block-to-block functionality."
         }
       }
     }
