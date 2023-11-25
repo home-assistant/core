@@ -185,4 +185,4 @@ async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.mydevicename_power_output")
-        assert power is None
+        assert power.state == "unknown"
