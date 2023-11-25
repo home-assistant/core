@@ -11,6 +11,7 @@ from .atlantic_heat_recovery_ventilation import AtlanticHeatRecoveryVentilation
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 from .atlantic_pass_apc_zone_control import AtlanticPassAPCZoneControl
 from .hitachi_air_to_air_heat_pump_hlrrwifi import HitachiAirToAirHeatPumpHLRRWIFI
+from .hitachi_air_to_air_heat_pump_ovp import HitachiAirToAirHeatPumpOVP
 from .somfy_heating_temperature_interface import SomfyHeatingTemperatureInterface
 from .somfy_thermostat import SomfyThermostat
 from .valve_heating_temperature_interface import ValveHeatingTemperatureInterface
@@ -33,5 +34,6 @@ WIDGET_TO_CLIMATE_ENTITY = {
 WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
     UIWidget.HITACHI_AIR_TO_AIR_HEAT_PUMP: {
         Protocol.HLRR_WIFI: HitachiAirToAirHeatPumpHLRRWIFI,
+        Protocol.OVP: HitachiAirToAirHeatPumpOVP,
     },
 }
