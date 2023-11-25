@@ -4,11 +4,5 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads trend sensors from the YAML-configuration."
     }
-  },
-  "issues": {
-    "min_samples_larger_max_samples": {
-      "title": "Configured min_samples larger than max_samples for {device_id}",
-      "description": "The configured minimum number of samples ({min_samples}) is greater than the configured maximum number of samples ({max_samples}) for the binary sensor '{device_id}'. To resolve this please check your YAML-configuration."
-    }
   }
 }
