@@ -114,7 +114,7 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_load(self, force):
         """Load config."""
-        if self.hass.config.safe_mode:
+        if self.hass.config.recovery_mode:
             raise ConfigNotFound
 
         if self._data is None:
@@ -127,8 +127,8 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_save(self, config):
         """Save config."""
-        if self.hass.config.safe_mode:
-            raise HomeAssistantError("Saving not supported in safe mode")
+        if self.hass.config.recovery_mode:
+            raise HomeAssistantError("Saving not supported in recovery mode")
 
         if self._data is None:
             await self._load()
@@ -138,8 +138,8 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_delete(self):
         """Delete config."""
-        if self.hass.config.safe_mode:
-            raise HomeAssistantError("Deleting not supported in safe mode")
+        if self.hass.config.recovery_mode:
+            raise HomeAssistantError("Deleting not supported in recovery mode")
 
         await self._store.async_remove()
         self._data = None

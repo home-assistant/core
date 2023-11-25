@@ -20,5 +20,12 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_devices_found": "No remaining devices found"
     }
+  },
+  "entity": {
+    "button": {
+      "phone_modem_reject": {
+        "name": "Phone modem reject"
+      }
+    }
   }
 }

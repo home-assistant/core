@@ -28,9 +28,6 @@
       "chlorine": {
         "name": "Chlorine"
       },
-      "ph": {
-        "name": "pH"
-      },
       "last_seen": {
         "name": "Last seen"
       },

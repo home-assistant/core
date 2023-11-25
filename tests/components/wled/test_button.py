@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
-    pytest.mark.freeze_time("2021-11-04 17:37:00+01:00"),
+    pytest.mark.freeze_time("2021-11-04 17:36:59+01:00"),
 ]
 
 

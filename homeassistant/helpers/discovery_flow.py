@@ -8,7 +8,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.loader import bind_hass
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 FLOW_INIT_LIMIT = 2
 DISCOVERY_FLOW_DISPATCHER = "discovery_flow_dispatcher"
@@ -44,8 +44,9 @@ def _async_init_flow(
     # as ones in progress as it may cause additional device probing
     # which can overload devices since zeroconf/ssdp updates can happen
     # multiple times in the same minute
-    if hass.is_stopping or hass.config_entries.flow.async_has_matching_flow(
-        domain, context, data
+    if (
+        hass.config_entries.flow.async_has_matching_flow(domain, context, data)
+        or hass.is_stopping
     ):
         return None
 
@@ -92,7 +93,7 @@ class FlowDispatcher:
             for flow_key, flows in pending_flows.items()
             for flow_values in flows
         ]
-        await gather_with_concurrency(
+        await gather_with_limited_concurrency(
             FLOW_INIT_LIMIT,
             *[init_coro for init_coro in init_coros if init_coro is not None],
         )

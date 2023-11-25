@@ -811,9 +811,10 @@ async def test_v2_set_percentage_non_standard_rotation_range(
     )
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a fan unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     fan_entry = entity_registry.async_get_or_create(
         "fan",

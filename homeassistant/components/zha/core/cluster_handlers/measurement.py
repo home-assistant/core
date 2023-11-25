@@ -67,9 +67,7 @@ class OccupancySensing(ClusterHandler):
         """Initialize Occupancy cluster handler."""
         super().__init__(cluster, endpoint)
         if is_hue_motion_sensor(self):
-            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
-                self.ZCL_INIT_ATTRS.copy()
-            )
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
             self.ZCL_INIT_ATTRS["sensitivity"] = True
 
 

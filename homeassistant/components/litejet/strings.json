@@ -25,5 +25,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_serial_exception": {
+      "title": "The LiteJet YAML configuration import failed",
+      "description": "Configuring LiteJet using YAML is being removed but there was an error opening the serial port when importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or manually continue to [set up the integration]({url})."
+    }
   }
 }

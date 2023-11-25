@@ -1,7 +1,7 @@
 """The tests for the Scrape sensor platform."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -28,7 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template_entity import CONF_AVAILABILITY, CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -244,7 +247,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
         assert state.state == "Current Version: 2021.12.10"
 
         mocker.payload = "test_scrape_sensor_no_data"
-        async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")

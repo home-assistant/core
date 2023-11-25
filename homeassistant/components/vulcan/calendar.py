@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 import logging
+from typing import cast
 from zoneinfo import ZoneInfo
 
 from aiohttp import ClientConnectorError
@@ -56,26 +57,27 @@ async def async_setup_entry(
 class VulcanCalendarEntity(CalendarEntity):
     """A calendar entity."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "calendar"
+
     def __init__(self, client, data, entity_id) -> None:
         """Create the Calendar entity."""
-        self.student_info = data["student_info"]
         self._event: CalendarEvent | None = None
         self.client = client
         self.entity_id = entity_id
-        self._unique_id = f"vulcan_calendar_{self.student_info['id']}"
-        self._attr_name = f"Vulcan calendar - {self.student_info['full_name']}"
-        self._attr_unique_id = f"vulcan_calendar_{self.student_info['id']}"
+        student_info = data["student_info"]
+        self._attr_unique_id = f"vulcan_calendar_{student_info['id']}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"calendar_{self.student_info['id']}")},
+            identifiers={(DOMAIN, f"calendar_{student_info['id']}")},
             entry_type=DeviceEntryType.SERVICE,
-            name=f"{self.student_info['full_name']}: Calendar",
+            name=cast(str, student_info["full_name"]),
             model=(
-                f"{self.student_info['full_name']} -"
-                f" {self.student_info['class']} {self.student_info['school']}"
+                f"{student_info['full_name']} -"
+                f" {student_info['class']} {student_info['school']}"
             ),
             manufacturer="Uonet +",
             configuration_url=(
-                f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}"
+                f"https://uonetplus.vulcan.net.pl/{student_info['symbol']}"
             ),
         )
 

@@ -27,6 +27,13 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "button": {
+      "update_location": {
+        "name": "Update Location"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

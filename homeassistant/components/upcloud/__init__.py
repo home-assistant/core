@@ -211,7 +211,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
     def is_on(self) -> bool:
         """Return true if the server is on."""
         try:
-            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON
+            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON  # type: ignore[no-any-return]
         except AttributeError:
             return False
 
@@ -243,7 +243,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         assert self.coordinator.config_entry is not None
         return DeviceInfo(
             configuration_url="https://hub.upcloud.com",
-            default_model="Control Panel",
+            model="Control Panel",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")

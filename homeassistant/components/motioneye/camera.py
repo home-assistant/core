@@ -143,6 +143,10 @@ async def async_setup_entry(
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     """motionEye mjpeg camera."""
 
+    _attr_brand = MOTIONEYE_MANUFACTURER
+    # motionEye cameras are always streaming or unavailable.
+    _attr_is_streaming = True
+
     def __init__(
         self,
         config_entry_id: str,
@@ -157,9 +161,6 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._surveillance_username = username
         self._surveillance_password = password
         self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
-
-        # motionEye cameras are always streaming or unavailable.
-        self._attr_is_streaming = True
 
         MotionEyeEntity.__init__(
             self,
@@ -248,11 +249,6 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
                 KEY_MOTION_DETECTION, False
             )
         super()._handle_coordinator_update()
-
-    @property
-    def brand(self) -> str:
-        """Return the camera brand."""
-        return MOTIONEYE_MANUFACTURER
 
     @property
     def motion_detection_enabled(self) -> bool:

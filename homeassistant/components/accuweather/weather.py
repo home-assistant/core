@@ -17,7 +17,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -27,9 +28,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import AccuWeatherDataUpdateCoordinator
@@ -58,7 +58,7 @@ async def async_setup_entry(
 
 
 class AccuWeatherEntity(
-    CoordinatorEntity[AccuWeatherDataUpdateCoordinator], WeatherEntity
+    SingleCoordinatorWeatherEntity[AccuWeatherDataUpdateCoordinator]
 ):
     """Define an AccuWeather entity."""
 
@@ -76,6 +76,8 @@ class AccuWeatherEntity(
         self._attr_unique_id = coordinator.location_key
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = coordinator.device_info
+        if self.coordinator.forecast:
+            self._attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     @property
     def condition(self) -> str | None:
@@ -174,3 +176,8 @@ class AccuWeatherEntity(
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
+
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self.forecast

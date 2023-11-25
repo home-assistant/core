@@ -11,7 +11,7 @@ import orjson
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .file import WriteError  # pylint: disable=unused-import # noqa: F401
+from .file import WriteError  # noqa: F401
 
 _SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)

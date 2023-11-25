@@ -18,11 +18,12 @@ TRACKER_BUFFERING_WOBBLE_SECONDS = 5
 class AdvertisementTracker:
     """Tracker to determine the interval that a device is advertising."""
 
-    __slots__ = ("intervals", "sources", "_timings")
+    __slots__ = ("intervals", "fallback_intervals", "sources", "_timings")
 
     def __init__(self) -> None:
         """Initialize the tracker."""
         self.intervals: dict[str, float] = {}
+        self.fallback_intervals: dict[str, float] = {}
         self.sources: dict[str, str] = {}
         self._timings: dict[str, list[float]] = {}
 
@@ -31,6 +32,7 @@ class AdvertisementTracker:
         """Return diagnostics."""
         return {
             "intervals": self.intervals,
+            "fallback_intervals": self.fallback_intervals,
             "sources": self.sources,
             "timings": self._timings,
         }
@@ -66,6 +68,11 @@ class AdvertisementTracker:
         self.intervals.pop(address, None)
         self.sources.pop(address, None)
         self._timings.pop(address, None)
+
+    @callback
+    def async_remove_fallback_interval(self, address: str) -> None:
+        """Remove fallback interval."""
+        self.fallback_intervals.pop(address, None)
 
     @callback
     def async_remove_source(self, source: str) -> None:

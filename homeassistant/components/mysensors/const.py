@@ -8,6 +8,7 @@ from homeassistant.const import Platform
 
 ATTR_DEVICES: Final = "devices"
 ATTR_GATEWAY_ID: Final = "gateway_id"
+ATTR_NODE_ID: Final = "node_id"
 
 CONF_BAUD_RATE: Final = "baud_rate"
 CONF_DEVICE: Final = "device"
@@ -26,11 +27,13 @@ CONF_GATEWAY_TYPE_MQTT: ConfGatewayType = "MQTT"
 DOMAIN: Final = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: Final = "mysensors_gateways"
+MYSENSORS_DISCOVERED_NODES: Final = "mysensors_discovered_nodes_{}"
 PLATFORM: Final = "platform"
 SCHEMA: Final = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
 MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
+MYSENSORS_NODE_DISCOVERY: str = "mysensors_node_discovery"
 MYSENSORS_ON_UNLOAD: str = "mysensors_on_unload_{}"
 TYPE: Final = "type"
 UPDATE_DELAY: float = 0.1
@@ -41,6 +44,13 @@ class DiscoveryInfo(TypedDict):
 
     devices: list[DevId]
     gateway_id: GatewayId
+
+
+class NodeDiscoveryInfo(TypedDict):
+    """Represent discovered mysensors node."""
+
+    gateway_id: GatewayId
+    node_id: int
 
 
 SERVICE_SEND_IR_CODE: Final = "send_ir_code"

@@ -74,17 +74,19 @@ async def test_garage_door_open_close(hass: HomeAssistant, hk_driver, events) ->
     assert acc.char_obstruction_detected.value is True
 
     hass.states.async_set(
-        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: False}
+        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: True}
     )
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
-    assert acc.char_obstruction_detected.value is False
+    assert acc.char_obstruction_detected.value is True
+    assert acc.available is False
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
+    assert acc.available is True
 
     # Set from HomeKit
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
@@ -605,20 +607,18 @@ async def test_windowcovering_open_close_with_position_and_stop(
 
 
 async def test_windowcovering_basic_restore(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "cover",
         "generic",
         "1234",
         suggested_object_id="simple",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "cover",
         "generic",
         "9012",
@@ -644,19 +644,19 @@ async def test_windowcovering_basic_restore(
     assert acc.char_position_state is not None
 
 
-async def test_windowcovering_restore(hass: HomeAssistant, hk_driver, events) -> None:
-    """Test setting up an entity from state in the event registry."""
+async def test_windowcovering_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
+    """Test setting up an entity from state in the event entity_registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "cover",
         "generic",
         "1234",
         suggested_object_id="simple",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "cover",
         "generic",
         "9012",
