@@ -298,12 +298,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             )
 
         _LOGGER.debug("Current preset %s", self._current_program)
-        if self._current_program != VICARE_PROGRAM_NORMAL:
+        if self._current_program != VICARE_PROGRAM_NORMAL and self._current_program:
             # We can't deactivate "normal"
             _LOGGER.debug("deactivating %s", self._current_program)
-            current_program = ""
-            if self._current_program is not None:
-                current_program = self._current_program
             try:
                 self._circuit.deactivateProgram(self._current_program)
             except PyViCareCommandError as err:
@@ -311,7 +308,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                     translation_domain=DOMAIN,
                     translation_key="program_not_deactivated",
                     translation_placeholders={
-                        "program": current_program,
+                        "program": self._current_program,
                     },
                 ) from err
 
