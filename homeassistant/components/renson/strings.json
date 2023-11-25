@@ -182,7 +182,7 @@
           "name": "Level",
           "description": "Level setting"
         },
-        "time": {
+        "minutes": {
           "name": "Time",
           "description": "Time of the timer (0 will disable the timer)"
         },

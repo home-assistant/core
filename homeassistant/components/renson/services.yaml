@@ -13,7 +13,7 @@ set_timer_level:
             - "level4"
             - "holiday"
             - "breeze"
-    time:
+    minutes:
       required: true
       default: 0
       selector:
