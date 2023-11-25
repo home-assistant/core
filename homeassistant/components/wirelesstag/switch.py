@@ -10,7 +10,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,10 +52,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switches for a Wireless Sensor Tags."""
@@ -63,15 +63,17 @@ def setup_platform(
 
     tags = platform.load_tags()
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    entities = [
-        WirelessTagSwitch(platform, tag, description)
-        for tag in tags.values()
-        for description in SWITCH_TYPES
-        if description.key in monitored_conditions
-        and description.key in tag.allowed_monitoring_types
-    ]
+    entities = []
+    for tag in tags.values():
+        for description in SWITCH_TYPES:
+            if (
+                description.key in monitored_conditions
+                and description.key in tag.allowed_monitoring_types
+            ):
+                platform.async_migrate_unique_id(tag, Platform.SWITCH, description.key)
+                entities.append(WirelessTagSwitch(platform, tag, description))
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
