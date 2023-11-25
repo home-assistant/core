@@ -120,6 +120,7 @@ omit =
     homeassistant/components/blink/binary_sensor.py
     homeassistant/components/blink/camera.py
     homeassistant/components/blink/sensor.py
+    homeassistant/components/blink/switch.py
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
@@ -185,7 +186,6 @@ omit =
     homeassistant/components/control4/director_utils.py
     homeassistant/components/control4/light.py
     homeassistant/components/coolmaster/coordinator.py
-    homeassistant/components/co2signal/coordinator.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/crownstone/__init__.py
     homeassistant/components/crownstone/devices.py
@@ -830,6 +830,7 @@ omit =
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/nobo_hub/__init__.py
     homeassistant/components/nobo_hub/climate.py
+    homeassistant/components/nobo_hub/select.py
     homeassistant/components/nobo_hub/sensor.py
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/notify_events/notify.py
@@ -930,6 +931,9 @@ omit =
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pencom/switch.py
+    homeassistant/components/permobil/__init__.py
+    homeassistant/components/permobil/coordinator.py
+    homeassistant/components/permobil/sensor.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/light.py
     homeassistant/components/philips_js/media_player.py
@@ -1124,10 +1128,7 @@ omit =
     homeassistant/components/sky_hub/*
     homeassistant/components/skybeacon/sensor.py
     homeassistant/components/skybell/__init__.py
-    homeassistant/components/skybell/binary_sensor.py
     homeassistant/components/skybell/camera.py
-    homeassistant/components/skybell/coordinator.py
-    homeassistant/components/skybell/entity.py
     homeassistant/components/skybell/light.py
     homeassistant/components/skybell/sensor.py
     homeassistant/components/skybell/switch.py
@@ -1468,6 +1469,7 @@ omit =
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
     homeassistant/components/vicare/entity.py
+    homeassistant/components/vicare/number.py
     homeassistant/components/vicare/sensor.py
     homeassistant/components/vicare/utils.py
     homeassistant/components/vicare/water_heater.py
