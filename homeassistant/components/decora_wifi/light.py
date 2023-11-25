@@ -189,3 +189,13 @@ class DecoraWifiLight(LightEntity):
             # sw_version=self.light.swversion,
             # via_device=(hue.DOMAIN, self.api.bridgeid),
         )
+
+    # async def async_added_to_hass(self) -> None:
+    #     """Subscribe to Abode connection status updates."""
+    #     await self.hass.async_add_executor_job(
+    #         self._data.abode.events.add_connection_status_callback,
+    #         self.unique_id,
+    #         self._update_connection_status,
+    #     )
+
+    #     self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
