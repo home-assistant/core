@@ -1,20 +1,17 @@
 """The decora_wifi component."""
 
 from dataclasses import dataclass
-import logging
 
 from decora_wifi import DecoraWiFiSession
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN
 
 PLATFORMS = [Platform.LIGHT]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -29,10 +26,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    email = entry.data[CONF_EMAIL]
+    username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     session = DecoraWiFiSession()
-    user = await hass.async_add_executor_job(lambda: session.login(email, password))
+    user = await hass.async_add_executor_job(lambda: session.login(username, password))
     if not user:
         raise ConfigEntryAuthFailed("invalid authentication")
 

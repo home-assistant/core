@@ -1,3 +1,3 @@
-"""Constants for the Decore Wifi integration."""
+"""Constants for the Decora Wifi integration."""
 
 DOMAIN = "decora_wifi"
