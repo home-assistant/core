@@ -64,8 +64,9 @@ class ViCareEntity(Entity):
                     f"{device_config.getConfig().serial}-{component_type.lower()}-{device.id}",
                 )
             },
-            name=f"{component_type}",
+            name=component_type,
             manufacturer="Viessmann",
+            model=component_type,
             configuration_url="https://developer.viessmann.com/",
         )
 
