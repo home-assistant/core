@@ -441,16 +441,10 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
             self.controller, self._obj_id
         )
         self._check_is_connected = heartbeat_timedelta != 0
-        # description.is_connected_fn is not None
-        if self._check_is_connected:
-            self._is_connected = description.is_connected_fn(
-                self.controller, self._obj_id
-            )
-            # Send heartbeat if client is connected
-            if self.is_connected:
-                self.controller.async_heartbeat(
-                    self.unique_id, dt_util.utcnow() + heartbeat_timedelta
-                )
+        self._is_connected = False
+
+        # Update initial state
+        self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
