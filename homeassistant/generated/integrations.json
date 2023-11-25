@@ -3053,6 +3053,12 @@
       "config_flow": false,
       "iot_class": "assumed_state"
     },
+    "linear_garage_door": {
+      "name": "Linear Garage Door",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
       "integration_type": "hub",
@@ -4150,7 +4156,7 @@
       "name": "Overkiz",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "local_polling"
     },
     "ovo_energy": {
       "name": "OVO Energy",
@@ -4235,6 +4241,12 @@
       "name": "Potomac Electric Power Company (Pepco)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "permobil": {
+      "name": "MyPermobil",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "pge": {
       "name": "Pacific Gas & Electric (PG&E)",
