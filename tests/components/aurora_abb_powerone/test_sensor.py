@@ -31,7 +31,12 @@ def _simulated_returns(index, global_measure=None):
     returns = {
         3: 45.678,  # power
         21: 9.876,  # temperature
+        22: 8.765,  # temperature
         5: 12345,  # energy
+        1: 234.4,  # grid voltage
+        4: 50.1234,  # frequency
+        6: 0.00001,  # dcdc leak
+        7: 0.00002,  # inverter leak
     }
     return returns[index]
 
@@ -63,6 +68,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
     ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
+    ), patch(
         "aurorapy.client.AuroraSerialClient.serial_number",
         return_value="9876543",
     ), patch(
@@ -86,7 +93,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert power
         assert power.state == "45.7"
 
-        temperature = hass.states.get("sensor.mydevicename_temperature")
+        temperature = hass.states.get("sensor.mydevicename_inverter_temperature")
         assert temperature
         assert temperature.state == "9.9"
 
@@ -102,6 +109,8 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     # sun is up
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
     ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
@@ -133,6 +142,8 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=AuroraTimeoutError("No response after 3 tries"),
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
     ):
         freezer.tick(SCAN_INTERVAL * 2)
         async_fire_time_changed(hass)
@@ -145,6 +156,8 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
     ):
         freezer.tick(SCAN_INTERVAL * 4)
         async_fire_time_changed(hass)
@@ -159,6 +172,8 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=AuroraError("No response after 10 seconds"),
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
     ):
         freezer.tick(SCAN_INTERVAL * 6)
         async_fire_time_changed(hass)
@@ -174,7 +189,11 @@ async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=AuroraError("another error"),
-    ), patch("serial.Serial.isOpen", return_value=True):
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
+    ), patch(
+        "serial.Serial.isOpen", return_value=True
+    ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
