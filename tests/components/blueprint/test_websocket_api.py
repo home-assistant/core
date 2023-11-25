@@ -284,7 +284,7 @@ async def test_save_existing_file_override(
 
     assert msg["id"] == 7
     assert msg["success"]
-    assert msg["result"] == {"updated_existing": True}
+    assert msg["result"] == {"overrides_existing": True}
     assert yaml.safe_load(write_mock.mock_calls[0][1][0]) == {
         "blueprint": {
             "name": "name",

@@ -322,7 +322,7 @@ class DomainBlueprints:
     ) -> bool:
         """Create blueprint file.
 
-        Returns true if the action updated an existing blueprint.
+        Returns true if the action overrides an existing blueprint.
         """
 
         path = pathlib.Path(
@@ -341,16 +341,16 @@ class DomainBlueprints:
         self, blueprint: Blueprint, blueprint_path: str, allow_override=False
     ) -> bool:
         """Add a blueprint."""
-        is_update = await self.hass.async_add_executor_job(
+        overrides_existing = await self.hass.async_add_executor_job(
             self._create_file, blueprint, blueprint_path, allow_override
         )
 
         self._blueprints[blueprint_path] = blueprint
 
-        if is_update:
+        if overrides_existing:
             await self._reload_blueprint_consumers(self.hass, blueprint_path)
 
-        return is_update
+        return overrides_existing
 
     async def async_populate(self) -> None:
         """Create folder if it doesn't exist and populate with examples."""

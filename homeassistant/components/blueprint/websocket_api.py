@@ -153,7 +153,7 @@ async def ws_save_blueprint(
         path = f"{path}.yaml"
 
     try:
-        updated_existing = await domain_blueprints[domain].async_add_blueprint(
+        overrides_existing = await domain_blueprints[domain].async_add_blueprint(
             blueprint, path, allow_override=msg.get("allow_override", False)
         )
     except FileAlreadyExists:
@@ -166,7 +166,7 @@ async def ws_save_blueprint(
     connection.send_result(
         msg["id"],
         {
-            "updated_existing": updated_existing,
+            "overrides_existing": overrides_existing,
         },
     )
 
