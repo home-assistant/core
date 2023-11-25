@@ -143,7 +143,7 @@ async def test_refresh_service_calls(
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup entry."""
+    """Test refrest service calls."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
