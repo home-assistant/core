@@ -74,7 +74,7 @@ class PlexSensor(SensorEntity):
     _attr_name = None
     _attr_icon = "mdi:plex"
     _attr_should_poll = False
-    _attr_native_unit_of_measurement = "Watching"
+    _attr_native_unit_of_measurement = "watching"
 
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
