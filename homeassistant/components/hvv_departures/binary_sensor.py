@@ -191,16 +191,3 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
             for k, v in self.coordinator.data[self.idx]["attributes"].items()
             if v is not None
         }
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

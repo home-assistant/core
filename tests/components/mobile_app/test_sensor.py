@@ -25,6 +25,8 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 )
 async def test_sensor(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     create_registrations,
     webhook_client,
     unit_system,
@@ -77,9 +79,7 @@ async def test_sensor(
     assert entity.state == state1
 
     assert (
-        er.async_get(hass)
-        .async_get("sensor.test_1_battery_temperature")
-        .entity_category
+        entity_registry.async_get("sensor.test_1_battery_temperature").entity_category
         == "diagnostic"
     )
 
@@ -109,8 +109,7 @@ async def test_sensor(
     assert updated_entity.state == state2
     assert "foo" not in updated_entity.attributes
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == len(create_registrations)
+    assert len(device_registry.devices) == len(create_registrations)
 
     # Reload to verify state is restored
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -503,7 +502,10 @@ async def test_sensor_datetime(
 
 
 async def test_default_disabling_entity(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that sensors can be disabled by default upon registration."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -532,13 +534,16 @@ async def test_default_disabling_entity(
     assert entity is None
 
     assert (
-        er.async_get(hass).async_get("sensor.test_1_battery_state").disabled_by
+        entity_registry.async_get("sensor.test_1_battery_state").disabled_by
         == er.RegistryEntryDisabler.INTEGRATION
     )
 
 
 async def test_updating_disabled_sensor(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that sensors return error if disabled in instance."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -580,7 +585,7 @@ async def test_updating_disabled_sensor(
     assert json["battery_state"]["success"] is True
     assert "is_disabled" not in json["battery_state"]
 
-    er.async_get(hass).async_update_entity(
+    entity_registry.async_update_entity(
         "sensor.test_1_battery_state", disabled_by=er.RegistryEntryDisabler.USER
     )
 

@@ -4,13 +4,13 @@ from __future__ import annotations
 from open_meteo import Forecast as OpenMeteoForecast
 
 from homeassistant.components.weather import (
-    CoordinatorWeatherEntity,
     Forecast,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -29,7 +29,7 @@ async def async_setup_entry(
 
 
 class OpenMeteoWeatherEntity(
-    CoordinatorWeatherEntity[DataUpdateCoordinator[OpenMeteoForecast]]
+    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[OpenMeteoForecast]]
 ):
     """Defines an Open-Meteo weather entity."""
 
@@ -124,6 +124,7 @@ class OpenMeteoWeatherEntity(
 
         return forecasts
 
-    async def async_forecast_daily(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.forecast

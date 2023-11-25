@@ -6,9 +6,6 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-import zigpy.exceptions
-from zigpy.zcl.foundation import Status
-
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
@@ -17,7 +14,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
-from .core.const import CLUSTER_HANDLER_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .core.const import CLUSTER_HANDLER_IDENTIFY, SIGNAL_ADD_ENTITIES
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -41,7 +39,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation button from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.BUTTON]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.BUTTON]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -106,7 +105,6 @@ class ZHAIdentifyButton(ZHAButton):
 
     _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Identify"
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:
@@ -134,17 +132,10 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Write attribute with defined value."""
-        try:
-            result = await self._cluster_handler.cluster.write_attributes(
-                {self._attribute_name: self._attribute_value}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(result, Exception) and all(
-            record.status == Status.SUCCESS for record in result[0]
-        ):
-            self.async_write_ha_state()
+        await self._cluster_handler.write_attributes_safe(
+            {self._attribute_name: self._attribute_value}
+        )
+        self.async_write_ha_state()
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -153,47 +144,49 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
         "_TZE200_htnnfasr",
     },
 )
-class FrostLockResetButton(ZHAAttributeButton, id_suffix="reset_frost_lock"):
+class FrostLockResetButton(ZHAAttributeButton):
     """Defines a ZHA frost lock reset button."""
 
+    _unique_id_suffix = "reset_frost_lock"
     _attribute_name = "frost_lock_reset"
-    _attr_name = "Frost lock reset"
     _attribute_value = 0
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reset_frost_lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.motion.ac01"}
 )
-class NoPresenceStatusResetButton(
-    ZHAAttributeButton, id_suffix="reset_no_presence_status"
-):
+class NoPresenceStatusResetButton(ZHAAttributeButton):
     """Defines a ZHA no presence status reset button."""
 
+    _unique_id_suffix = "reset_no_presence_status"
     _attribute_name = "reset_no_presence_status"
-    _attr_name = "Presence status reset"
     _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reset_no_presence_status"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
+class AqaraPetFeederFeedButton(ZHAAttributeButton):
     """Defines a feed button for the aqara c1 pet feeder."""
 
+    _unique_id_suffix = "feeding"
     _attribute_name = "feeding"
-    _attr_name = "Feed"
     _attribute_value = 1
+    _attr_translation_key = "feed"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
 )
-class AqaraSelfTestButton(ZHAAttributeButton, id_suffix="self_test"):
+class AqaraSelfTestButton(ZHAAttributeButton):
     """Defines a ZHA self-test button for Aqara smoke sensors."""
 
+    _unique_id_suffix = "self_test"
     _attribute_name = "self_test"
-    _attr_name = "Self-test"
     _attribute_value = 1
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "self_test"

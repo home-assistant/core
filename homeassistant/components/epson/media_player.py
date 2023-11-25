@@ -6,7 +6,7 @@ import logging
 from epson_projector import Projector, ProjectorUnavailableError
 from epson_projector.const import (
     BACK,
-    BUSY,
+    BUSY_CODES,
     CMODE,
     CMODE_LIST,
     CMODE_LIST_SET,
@@ -147,7 +147,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                     self._attr_volume_level = float(volume)
                 except ValueError:
                     self._attr_volume_level = None
-        elif power_state == BUSY:
+        elif power_state in BUSY_CODES:
             self._attr_state = MediaPlayerState.ON
         else:
             self._attr_state = MediaPlayerState.OFF

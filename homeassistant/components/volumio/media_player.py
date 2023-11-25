@@ -69,38 +69,27 @@ class Volumio(MediaPlayerEntity):
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_source_list = []
 
     def __init__(self, volumio, uid, name, info):
         """Initialize the media player."""
         self._volumio = volumio
-        self._uid = uid
-        self._name = name
-        self._info = info
+        unique_id = uid
         self._state = {}
-        self._playlists = []
-        self._currentplaylist = None
         self.thumbnail_cache = {}
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Volumio",
+            model=info["hardware"],
+            name=name,
+            sw_version=info["systemversion"],
+        )
 
     async def async_update(self) -> None:
         """Update state."""
         self._state = await self._volumio.get_state()
         await self._async_update_playlists()
-
-    @property
-    def unique_id(self):
-        """Return the unique id for the entity."""
-        return self._uid
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Volumio",
-            model=self._info["hardware"],
-            name=self._name,
-            sw_version=self._info["systemversion"],
-        )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -169,16 +158,6 @@ class Volumio(MediaPlayerEntity):
             return RepeatMode.ALL
         return RepeatMode.OFF
 
-    @property
-    def source_list(self):
-        """Return the list of available input sources."""
-        return self._playlists
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._currentplaylist
-
     async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
         await self._volumio.next()
@@ -235,17 +214,17 @@ class Volumio(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Choose an available playlist and play it."""
         await self._volumio.play_playlist(source)
-        self._currentplaylist = source
+        self._attr_source = source
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._volumio.clear_playlist()
-        self._currentplaylist = None
+        self._attr_source = None
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     async def _async_update_playlists(self, **kwargs):
         """Update available Volumio playlists."""
-        self._playlists = await self._volumio.get_playlists()
+        self._attr_source_list = await self._volumio.get_playlists()
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any

@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 import functools
 import gc
 import itertools
 import logging
 import os
+import reprlib
 import sqlite3
 import ssl
 import threading
@@ -302,6 +303,27 @@ def skip_stop_scripts(
         yield
 
 
+@contextmanager
+def long_repr_strings() -> Generator[None, None, None]:
+    """Increase reprlib maxstring and maxother to 300."""
+    arepr = reprlib.aRepr
+    original_maxstring = arepr.maxstring
+    original_maxother = arepr.maxother
+    arepr.maxstring = 300
+    arepr.maxother = 300
+    try:
+        yield
+    finally:
+        arepr.maxstring = original_maxstring
+        arepr.maxother = original_maxother
+
+
+@pytest.fixture(autouse=True)
+def enable_event_loop_debug(event_loop: asyncio.AbstractEventLoop) -> None:
+    """Enable event loop debug mode."""
+    event_loop.set_debug(True)
+
+
 @pytest.fixture(autouse=True)
 def verify_cleanup(
     event_loop: asyncio.AbstractEventLoop,
@@ -335,13 +357,16 @@ def verify_cleanup(
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            if expected_lingering_timers:
-                _LOGGER.warning("Lingering timer after test %r", handle)
-            elif handle._args and isinstance(job := handle._args[0], HassJob):
-                pytest.fail(f"Lingering timer after job {repr(job)}")
-            else:
-                pytest.fail(f"Lingering timer after test {repr(handle)}")
-            handle.cancel()
+            with long_repr_strings():
+                if expected_lingering_timers:
+                    _LOGGER.warning("Lingering timer after test %r", handle)
+                elif handle._args and isinstance(job := handle._args[-1], HassJob):
+                    if job.cancel_on_shutdown:
+                        continue
+                    pytest.fail(f"Lingering timer after job {repr(job)}")
+                else:
+                    pytest.fail(f"Lingering timer after test {repr(handle)}")
+                handle.cancel()
 
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
@@ -349,6 +374,13 @@ def verify_cleanup(
         assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
             "waitpid-"
         )
+
+
+@pytest.fixture(autouse=True)
+def reset_hass_threading_local_object() -> Generator[None, None, None]:
+    """Reset the _Hass threading.local object for every test case."""
+    yield
+    ha._hass.__dict__.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -1113,13 +1145,19 @@ def mock_zeroconf() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
-    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
+    from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel
+        AsyncZeroconf,
+    )
 
-    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
+    with patch(
+        "homeassistant.components.zeroconf.HaAsyncZeroconf", spec=AsyncZeroconf
+    ) as mock_aiozc:
         zc = mock_aiozc.return_value
         zc.async_unregister_service = AsyncMock()
         zc.async_register_service = AsyncMock()
         zc.async_update_service = AsyncMock()
+        zc.zeroconf = Mock(spec=Zeroconf)
         zc.zeroconf.async_wait_for_start = AsyncMock()
         # DNSCache has strong Cython type checks, and MagicMock does not work
         # so we must mock the class directly
@@ -1276,6 +1314,11 @@ def hass_recorder(
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    compile_missing = (
+        recorder.Recorder._schedule_compile_missing_statistics
+        if enable_statistics
+        else None
+    )
     schema_validate = (
         migration._find_schema_errors
         if enable_schema_validation
@@ -1326,6 +1369,10 @@ def hass_recorder(
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
         side_effect=migrate_entity_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+        side_effect=compile_missing,
         autospec=True,
     ):
 
@@ -1399,6 +1446,11 @@ async def async_setup_recorder_instance(
         if enable_schema_validation
         else itertools.repeat(set())
     )
+    compile_missing = (
+        recorder.Recorder._schedule_compile_missing_statistics
+        if enable_statistics
+        else None
+    )
     migrate_states_context_ids = (
         recorder.Recorder._migrate_states_context_ids
         if enable_migrate_context_ids
@@ -1445,6 +1497,10 @@ async def async_setup_recorder_instance(
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
         side_effect=migrate_entity_ids,
         autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+        side_effect=compile_missing,
+        autospec=True,
     ):
 
         async def async_setup_recorder(
@@ -1470,33 +1526,6 @@ async def recorder_mock(
 ) -> recorder.Recorder:
     """Fixture with in-memory recorder."""
     return await async_setup_recorder_instance(hass, recorder_config)
-
-
-@pytest.fixture
-def mock_integration_frame() -> Generator[Mock, None, None]:
-    """Mock as if we're calling code from inside an integration."""
-    correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
-        lineno="23",
-        line="self.light.is_on",
-    )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
-    ):
-        yield correct_frame
 
 
 @pytest.fixture(name="enable_bluetooth")

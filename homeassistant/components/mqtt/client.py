@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
+from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain, groupby
 import logging
@@ -12,7 +13,6 @@ import time
 from typing import TYPE_CHECKING, Any
 import uuid
 
-import attr
 import certifi
 
 from homeassistant.config_entries import ConfigEntry
@@ -110,7 +110,7 @@ def publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    hass.add_job(async_publish, hass, topic, payload, qos, retain, encoding)
+    hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
 async def async_publish(
@@ -176,7 +176,13 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
-    mqtt_data = get_mqtt_data(hass)
+    try:
+        mqtt_data = get_mqtt_data(hass)
+    except KeyError as ex:
+        raise HomeAssistantError(
+            f"Cannot subscribe to topic '{topic}', "
+            "make sure MQTT is set up correctly"
+        ) from ex
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
@@ -212,15 +218,15 @@ def subscribe(
     return remove
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass(frozen=True)
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic: str = attr.ib()
-    matcher: Any = attr.ib()
-    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
-    qos: int = attr.ib(default=0)
-    encoding: str | None = attr.ib(default="utf-8")
+    topic: str
+    matcher: Any
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
+    qos: int = 0
+    encoding: str | None = "utf-8"
 
 
 class MqttClientSetup:
@@ -376,6 +382,7 @@ class MQTT:
     ) -> None:
         """Initialize Home Assistant MQTT client."""
         self.hass = hass
+        self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
 
@@ -806,7 +813,7 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
-        self.hass.add_job(self._mqtt_handle_message, msg)
+        self.loop.call_soon_threadsafe(self._mqtt_handle_message, msg)
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:

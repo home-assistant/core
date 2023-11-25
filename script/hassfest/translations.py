@@ -37,6 +37,7 @@ ALLOW_NAME_TRANSLATION = {
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
@@ -327,6 +328,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 ),
                 slug_validator=cv.slug,
             ),
+            vol.Optional("exceptions"): cv.schema_with_slug_keys(
+                {vol.Optional("message"): translation_value_validator},
+                slug_validator=cv.slug,
+            ),
             vol.Optional("services"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
@@ -531,6 +536,11 @@ def validate_translation_file(  # noqa: C901
             integration.add_error(
                 "translations",
                 f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+            )
+        elif match := re.match(RE_REFERENCE, search[key]):
+            integration.add_error(
+                "translations",
+                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
             )
 
 

@@ -38,20 +38,15 @@ class PlexScanClientsButton(ButtonEntity):
     def __init__(self, server_id: str, server_name: str) -> None:
         """Initialize a scan_clients Plex button entity."""
         self.server_id = server_id
-        self._server_name = server_name
+        self._attr_name = f"Scan Clients ({server_name})"
         self._attr_unique_id = f"plex-scan_clients-{self.server_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, server_id)},
+            manufacturer="Plex",
+        )
 
     async def async_press(self) -> None:
         """Press the button."""
         async_dispatcher_send(
             self.hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(self.server_id)
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.server_id)},
-            manufacturer="Plex",
-            name=self._server_name,
         )

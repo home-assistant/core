@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util import dt as dt_util
 
 _LOGGER = getLogger(__name__)
 
@@ -207,7 +207,7 @@ class FeedManager:
             self._firstrun = False
         else:
             # Set last entry timestamp as epoch time if not available
-            self._last_entry_timestamp = datetime.utcfromtimestamp(0).timetuple()
+            self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
         for entry in self._feed.entries:
             if (
                 self._firstrun
@@ -286,6 +286,6 @@ class StoredData:
     def _async_save_data(self) -> dict[str, str]:
         """Save feed data to storage."""
         return {
-            feed_id: utc_from_timestamp(timegm(struct_utc)).isoformat()
+            feed_id: dt_util.utc_from_timestamp(timegm(struct_utc)).isoformat()
             for feed_id, struct_utc in self._data.items()
         }

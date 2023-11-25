@@ -107,6 +107,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
     SensiboMotionSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
         value_fn=lambda data: data.temperature,
@@ -145,6 +146,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="feels_like",
         translation_key="feels_like",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.feelslike,
         extra_fn=None,
@@ -154,6 +156,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="climate_react_low",
         translation_key="climate_react_low",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.smart_low_temp_threshold,
         extra_fn=lambda data: data.smart_low_state,
@@ -163,6 +166,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="climate_react_high",
         translation_key="climate_react_high",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.smart_high_temp_threshold,
         extra_fn=lambda data: data.smart_high_state,
@@ -228,7 +232,7 @@ ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="ethanol",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Ethanol",
+        translation_key="ethanol",
         value_fn=lambda data: data.etoh,
         extra_fn=None,
     ),
@@ -300,13 +304,6 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Add native unit of measurement."""
-        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return UnitOfTemperature.CELSIUS
-        return self.entity_description.native_unit_of_measurement
-
-    @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if TYPE_CHECKING:
@@ -332,13 +329,6 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Add native unit of measurement."""
-        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return UnitOfTemperature.CELSIUS
-        return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType | datetime:

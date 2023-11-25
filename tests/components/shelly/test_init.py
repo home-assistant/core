@@ -195,7 +195,7 @@ async def test_sleeping_rpc_device_online_new_firmware(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_name_test_switch_0"),
+        (2, "switch.test_switch_0"),
     ],
 )
 async def test_entry_unload(
@@ -218,7 +218,7 @@ async def test_entry_unload(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_name_test_switch_0"),
+        (2, "switch.test_switch_0"),
     ],
 )
 async def test_entry_unload_device_not_ready(
@@ -246,7 +246,7 @@ async def test_entry_unload_not_connected(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_name_test_switch_0"
+        entity_id = "switch.test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
         assert hass.states.get(entity_id).state is STATE_ON
@@ -272,7 +272,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_name_test_switch_0"
+        entity_id = "switch.test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
         assert hass.states.get(entity_id).state is STATE_ON

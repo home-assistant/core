@@ -16,7 +16,7 @@ from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from .const import CONF_STATION, DOMAIN, UPDATE_TIME_PERIOD
@@ -45,7 +45,7 @@ class NWSData:
     coordinator_forecast_hourly: NwsDataUpdateCoordinator
 
 
-class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class NwsDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
     """NWS data update coordinator.
 
     Implements faster data update intervals for failed updates and exposes a last successful update time.
@@ -72,7 +72,6 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             request_refresh_debouncer=request_refresh_debouncer,
         )
         self.failed_update_interval = failed_update_interval
-        self.last_update_success_time: datetime.datetime | None = None
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -97,23 +96,6 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._handle_refresh_interval,
             utcnow().replace(microsecond=0) + update_interval,
         )
-
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
-        """Refresh data."""
-        await super()._async_refresh(
-            log_failures,
-            raise_on_auth_failed,
-            scheduled,
-            raise_on_entry_error,
-        )
-        if self.last_update_success:
-            self.last_update_success_time = utcnow()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

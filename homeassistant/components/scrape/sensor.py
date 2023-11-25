@@ -23,7 +23,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     TEMPLATE_SENSOR_BASE_SCHEMA,
@@ -192,9 +192,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
 
     async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
-        await ManualTriggerEntity.async_added_to_hass(self)
-        # https://github.com/python/mypy/issues/15097
-        await CoordinatorEntity.async_added_to_hass(self)  # type: ignore[arg-type]
+        await super().async_added_to_hass()
         self._async_update_from_rest_data()
 
     def _async_update_from_rest_data(self) -> None:

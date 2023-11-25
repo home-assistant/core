@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .mock import MockDevice
@@ -62,6 +62,7 @@ async def test_sensor(
     hass: HomeAssistant,
     mock_device: MockDevice,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     name: str,
     get_method: str,
@@ -80,7 +81,8 @@ async def test_sensor(
     # Emulate device failure
     setattr(mock_device.device, get_method, AsyncMock(side_effect=DeviceUnavailable))
     setattr(mock_device.plcnet, get_method, AsyncMock(side_effect=DeviceUnavailable))
-    async_fire_time_changed(hass, dt_util.utcnow() + interval)
+    freezer.tick(interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -89,7 +91,8 @@ async def test_sensor(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt_util.utcnow() + interval)
+    freezer.tick(interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

@@ -33,7 +33,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     TEMPLATE_ENTITY_BASE_SCHEMA,

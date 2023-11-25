@@ -319,7 +319,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond configured duration",
+        match="Not possible to change timer timer.test1 beyond duration",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -370,7 +370,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
     with pytest.raises(
@@ -387,7 +387,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
 
@@ -844,43 +844,6 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     assert count_start == len(hass.states.async_entity_ids())
 
 
-async def test_restore_idle(hass: HomeAssistant) -> None:
-    """Test entity restore logic when timer is idle."""
-    utc_now = utcnow()
-    stored_state = StoredState(
-        State(
-            "timer.test",
-            STATUS_IDLE,
-            {ATTR_DURATION: "0:00:30"},
-        ),
-        None,
-        utc_now,
-    )
-
-    data = async_get(hass)
-    await data.store.async_save([stored_state.as_dict()])
-    await data.async_load()
-
-    entity = Timer.from_storage(
-        {
-            CONF_ID: "test",
-            CONF_NAME: "test",
-            CONF_DURATION: "0:01:00",
-            CONF_RESTORE: True,
-        }
-    )
-    entity.hass = hass
-    entity.entity_id = "timer.test"
-
-    await entity.async_added_to_hass()
-    await hass.async_block_till_done()
-    assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
-    assert ATTR_REMAINING not in entity.extra_state_attributes
-    assert ATTR_FINISHES_AT not in entity.extra_state_attributes
-    assert entity.extra_state_attributes[ATTR_RESTORE]
-
-
 @pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_restore_paused(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is paused."""
@@ -1007,7 +970,7 @@ async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
+    assert entity.extra_state_attributes[ATTR_DURATION] == "0:01:00"
     assert ATTR_REMAINING not in entity.extra_state_attributes
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]

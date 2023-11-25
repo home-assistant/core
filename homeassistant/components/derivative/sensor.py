@@ -116,8 +116,8 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
+    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
     derivative_sensor = DerivativeSensor(
