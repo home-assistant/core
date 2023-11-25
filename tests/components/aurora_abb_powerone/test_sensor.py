@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
@@ -171,7 +172,9 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
         assert power.state == "unknown"  # should this be 'available'?
 
 
-async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
+async def test_sensor_unknown_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test other comms error is handled correctly."""
     mock_entry = _mock_config_entry()
 
@@ -184,5 +187,9 @@ async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
+        assert (
+            "Exception: AuroraError('another error') occurred, 2 retries remaining"
+            in caplog.text
+        )
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power.state == "unknown"
