@@ -291,14 +291,18 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
-        vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
-        if vicare_program is None:
-            raise ValueError(
-                f"Cannot set invalid vicare program: {preset_mode}/{vicare_program}"
+        target_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
+        if target_program is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="program_unknown",
+                translation_placeholders={
+                    "preset": preset_mode,
+                },
             )
 
         _LOGGER.debug("Current preset %s", self._current_program)
-        if self._current_program != VICARE_PROGRAM_NORMAL and self._current_program:
+        if self._current_program and self._current_program != VICARE_PROGRAM_NORMAL:
             # We can't deactivate "normal"
             _LOGGER.debug("deactivating %s", self._current_program)
             try:
@@ -312,18 +316,18 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                     },
                 ) from err
 
-        _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        if vicare_program != VICARE_PROGRAM_NORMAL:
+        _LOGGER.debug("Setting preset to %s / %s", preset_mode, target_program)
+        if target_program != VICARE_PROGRAM_NORMAL:
             # And we can't explicitly activate "normal", either
-            _LOGGER.debug("activating %s", vicare_program)
+            _LOGGER.debug("activating %s", target_program)
             try:
-                self._circuit.activateProgram(vicare_program)
+                self._circuit.activateProgram(target_program)
             except PyViCareCommandError as err:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="program_not_activated",
                     translation_placeholders={
-                        "program": vicare_program,
+                        "program": target_program,
                     },
                 ) from err
 
