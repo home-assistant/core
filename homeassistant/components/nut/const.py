@@ -28,7 +28,7 @@ STATE_TYPES = {
     "OB": "On Battery",
     "LB": "Low Battery",
     "HB": "High Battery",
-    "RB": "Battery Needs Replaced",
+    "RB": "Battery Needs Replacement",
     "CHRG": "Battery Charging",
     "DISCHRG": "Battery Discharging",
     "BYPASS": "Bypass Active",

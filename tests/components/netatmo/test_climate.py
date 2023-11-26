@@ -1,7 +1,9 @@
 """The tests for the Netatmo climate platform."""
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -18,11 +20,20 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
 from homeassistant.components.netatmo.const import (
+    ATTR_END_DATETIME,
     ATTR_SCHEDULE_NAME,
+    ATTR_TARGET_TEMPERATURE,
+    ATTR_TIME_PERIOD,
+    DOMAIN as NETATMO_DOMAIN,
+    SERVICE_CLEAR_TEMPERATURE_SETTING,
+    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
+    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .common import selected_platforms, simulate_webhook
 
@@ -354,6 +365,203 @@ async def test_service_preset_modes_thermostat(
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
 
 
+async def test_service_set_temperature_with_end_datetime(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
+    """Test service setting temperature with an end datetime."""
+    with selected_platforms(["climate"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+
+    # Test service setting the temperature without an end datetime
+    await hass.services.async_call(
+        NETATMO_DOMAIN,
+        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_TARGET_TEMPERATURE: 25,
+            ATTR_END_DATETIME: "2023-11-17 12:23:00",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Test webhook room mode change to "manual"
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 25,
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "heat"
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 25
+
+
+async def test_service_set_temperature_with_time_period(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
+    """Test service setting temperature with an end datetime."""
+    with selected_platforms(["climate"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+
+    # Test service setting the temperature without an end datetime
+    await hass.services.async_call(
+        NETATMO_DOMAIN,
+        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_TARGET_TEMPERATURE: 25,
+            ATTR_TIME_PERIOD: "02:24:00",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Test webhook room mode change to "manual"
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 25,
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "heat"
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 25
+
+
+async def test_service_clear_temperature_setting(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
+    """Test service clearing temperature setting."""
+    with selected_platforms(["climate"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+
+    # Simulate a room thermostat change to manual boost
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 25,
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "heat"
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 25
+
+    # Test service setting the temperature without an end datetime
+    await hass.services.async_call(
+        NETATMO_DOMAIN,
+        SERVICE_CLEAR_TEMPERATURE_SETTING,
+        {ATTR_ENTITY_ID: climate_entity_livingroom},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Test webhook room mode change to "home"
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "home",
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+
+
 async def test_webhook_event_handling_no_data(
     hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
@@ -456,6 +664,78 @@ async def test_service_schedule_thermostats(
         mock_switch_home_schedule.assert_not_called()
 
     assert "summer is not a valid schedule" in caplog.text
+
+
+async def test_service_preset_mode_with_end_time_thermostats(
+    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, netatmo_auth
+) -> None:
+    """Test service for set preset mode with end datetime for Netatmo thermostats."""
+    with selected_platforms(["climate"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) and a valid end datetime
+    await hass.services.async_call(
+        "netatmo",
+        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_PRESET_MODE: PRESET_AWAY,
+            ATTR_END_DATETIME: (dt_util.now() + timedelta(days=10)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Fake webhook thermostat mode change to "Away"
+    response = {
+        "event_type": "therm_mode",
+        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+        "mode": "away",
+        "previous_mode": "schedule",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
+    )
+
+    # Test setting an invalid preset mode (not in THERM_MODES) and a valid end datetime
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+            {
+                ATTR_ENTITY_ID: climate_entity_livingroom,
+                ATTR_PRESET_MODE: PRESET_BOOST,
+                ATTR_END_DATETIME: (dt_util.now() + timedelta(days=10)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+            {
+                ATTR_ENTITY_ID: climate_entity_livingroom,
+                ATTR_PRESET_MODE: PRESET_AWAY,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_service_preset_mode_already_boost_valves(

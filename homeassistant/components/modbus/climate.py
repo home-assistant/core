@@ -247,10 +247,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
 
-        # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
         self._attr_target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
@@ -282,7 +278,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
 
-        self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(

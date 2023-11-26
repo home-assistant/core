@@ -13,11 +13,13 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
+from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -27,20 +29,12 @@ from .entity import ReolinkChannelCoordinatorEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class ReolinkSelectEntityDescriptionMixin:
-    """Mixin values for Reolink select entities."""
-
-    method: Callable[[Host, int, str], Any]
-    get_options: list[str] | Callable[[Host, int], list[str]]
-
-
-@dataclass
-class ReolinkSelectEntityDescription(
-    SelectEntityDescription, ReolinkSelectEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkSelectEntityDescription(SelectEntityDescription):
     """A class that describes select entities."""
 
+    get_options: list[str] | Callable[[Host, int], list[str]]
+    method: Callable[[Host, int, str], Any]
     supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], str] | None = None
 
@@ -78,6 +72,7 @@ SELECT_ENTITIES = (
         key="auto_quick_reply_message",
         translation_key="auto_quick_reply_message",
         icon="mdi:message-reply-text-outline",
+        entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
@@ -168,5 +163,10 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.entity_description.method(self._host.api, self._channel, option)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, option)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()

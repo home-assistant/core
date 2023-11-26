@@ -4,9 +4,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime
+import json
 import logging
 import os
 from pathlib import Path
+import re
 from typing import Any
 
 from freebox_api import Freepybox
@@ -34,6 +36,20 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def is_json(json_str):
+    """Validate if a String is a JSON value or not."""
+    try:
+        json.loads(json_str)
+        return True
+    except (ValueError, TypeError) as err:
+        _LOGGER.error(
+            "Failed to parse JSON '%s', error '%s'",
+            json_str,
+            err,
+        )
+        return False
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -69,6 +85,7 @@ class FreeboxRouter:
         self._sw_v: str = freebox_config["firmware_version"]
         self._attrs: dict[str, Any] = {}
 
+        self.supports_hosts = True
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
         self.supports_raid = True
@@ -89,7 +106,32 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
+
+        fbx_devices: list[dict[str, Any]] = []
+
+        # Access to Host list not available in bridge mode, API return error_code 'nodev'
+        if self.supports_hosts:
+            try:
+                fbx_devices = await self._api.lan.get_hosts_list()
+            except HttpRequestError as err:
+                if (
+                    (
+                        matcher := re.search(
+                            r"Request failed \(APIResponse: (.+)\)", str(err)
+                        )
+                    )
+                    and is_json(json_str := matcher.group(1))
+                    and (json_resp := json.loads(json_str)).get("error_code") == "nodev"
+                ):
+                    # No need to retry, Host list not available
+                    self.supports_hosts = False
+                    _LOGGER.debug(
+                        "Host list is not available using bridge mode (%s)",
+                        json_resp.get("msg"),
+                    )
+
+                else:
+                    raise err
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -118,6 +160,7 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
+
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -145,7 +188,6 @@ class FreeboxRouter:
         self.call_list = await self._api.call.get_calls_log()
 
         await self._update_disks_sensors()
-
         await self._update_raids_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
@@ -156,10 +198,16 @@ class FreeboxRouter:
         fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
-            self.disks[fbx_disk["id"]] = fbx_disk
+            disk: dict[str, Any] = {**fbx_disk}
+            disk_part: dict[int, dict[str, Any]] = {}
+            for fbx_disk_part in fbx_disk["partitions"]:
+                disk_part[fbx_disk_part["id"]] = fbx_disk_part
+            disk["partitions"] = disk_part
+            self.disks[fbx_disk["id"]] = disk
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
+        # None at first request
         if not self.supports_raid:
             return
 

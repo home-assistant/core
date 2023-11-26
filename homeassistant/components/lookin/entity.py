@@ -182,6 +182,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
                 self._lookin_device.id,

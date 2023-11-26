@@ -7,29 +7,30 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import device_trigger
 from .config import MQTT_BASE_SCHEMA
-from .mixins import async_setup_entry_helper
+from .mixins import async_setup_non_entity_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
 AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]
 AUTOMATION_TYPES_SCHEMA = vol.In(AUTOMATION_TYPES)
 CONF_AUTOMATION_TYPE = "automation_type"
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
+DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {vol.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA},
     extra=vol.ALLOW_EXTRA,
-).extend(MQTT_BASE_SCHEMA.schema)
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up MQTT device automation dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_automation, hass, config_entry=config_entry)
-    await async_setup_entry_helper(hass, "device_automation", setup, PLATFORM_SCHEMA)
+    await async_setup_non_entity_entry_helper(
+        hass, "device_automation", setup, DISCOVERY_SCHEMA
+    )
 
 
 async def _async_setup_automation(

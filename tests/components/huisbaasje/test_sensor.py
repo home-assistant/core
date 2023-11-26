@@ -222,10 +222,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             energy_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
         )
         assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert (
-            energy_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
-        )
+        assert energy_today.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == UnitOfEnergy.KILO_WATT_HOUR
@@ -239,8 +236,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
-            energy_this_week.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
+            energy_this_week.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
         assert (
             energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -255,8 +251,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
-            energy_this_month.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
+            energy_this_month.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
         assert (
             energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -271,8 +266,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
-            energy_this_year.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.MEASUREMENT
+            energy_this_year.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
         assert (
             energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -295,10 +289,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert gas_today.state == "1.1"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_today.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert (
-            gas_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
-        )
+        assert gas_today.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             gas_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == UnitOfVolume.CUBIC_METERS
@@ -308,10 +299,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert gas_this_week.state == "5.6"
         assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert (
-            gas_this_week.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
-        )
+        assert gas_this_week.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             gas_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == UnitOfVolume.CUBIC_METERS
@@ -321,10 +309,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert gas_this_month.state == "39.1"
         assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert (
-            gas_this_month.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
-        )
+        assert gas_this_month.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             gas_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == UnitOfVolume.CUBIC_METERS
@@ -334,10 +319,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert gas_this_year.state == "116.7"
         assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert (
-            gas_this_year.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
-        )
+        assert gas_this_year.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             gas_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == UnitOfVolume.CUBIC_METERS

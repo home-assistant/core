@@ -272,6 +272,46 @@ async def test_dimmable_light(hass: HomeAssistant) -> None:
     assert call.data["brightness_pct"] == 50
 
 
+async def test_dimmable_light_with_none_brightness(hass: HomeAssistant) -> None:
+    """Test dimmable light discovery."""
+    device = (
+        "light.test_2",
+        "on",
+        {
+            "brightness": None,
+            "friendly_name": "Test light 2",
+            "supported_color_modes": ["brightness"],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "light#test_2"
+    assert appliance["displayCategories"][0] == "LIGHT"
+    assert appliance["friendlyName"] == "Test light 2"
+
+    assert_endpoint_capabilities(
+        appliance,
+        "Alexa.BrightnessController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "light#test_2")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+    properties.assert_equal("Alexa.BrightnessController", "brightness", 0)
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.BrightnessController",
+        "SetBrightness",
+        "light#test_2",
+        "light.turn_on",
+        hass,
+        payload={"brightness": "50"},
+    )
+    assert call.data["brightness_pct"] == 50
+
+
 @pytest.mark.parametrize(
     "supported_color_modes",
     [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
@@ -308,6 +348,55 @@ async def test_color_light(
 
     # IncreaseColorTemperature and DecreaseColorTemperature have their own
     # tests
+
+
+async def test_color_light_turned_off(hass: HomeAssistant) -> None:
+    """Test color light discovery with turned off light."""
+    device = (
+        "light.test_off",
+        "off",
+        {
+            "friendly_name": "Test light off",
+            "supported_color_modes": ["color_temp", "hs"],
+            "hs_color": None,
+            "color_temp": None,
+            "brightness": None,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "light#test_off"
+    assert appliance["displayCategories"][0] == "LIGHT"
+    assert appliance["friendlyName"] == "Test light off"
+
+    assert_endpoint_capabilities(
+        appliance,
+        "Alexa.BrightnessController",
+        "Alexa.PowerController",
+        "Alexa.ColorController",
+        "Alexa.ColorTemperatureController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "light#test_off")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+    properties.assert_equal("Alexa.BrightnessController", "brightness", 0)
+    properties.assert_equal(
+        "Alexa.ColorController",
+        "color",
+        {"hue": 0.0, "saturation": 0.0, "brightness": 0.0},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.BrightnessController",
+        "SetBrightness",
+        "light#test_off",
+        "light.turn_on",
+        hass,
+        payload={"brightness": "50"},
+    )
+    assert call.data["brightness_pct"] == 50
 
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
@@ -1350,6 +1439,8 @@ async def test_media_player_inputs(hass: HomeAssistant) -> None:
                 "aux",
                 "input 1",
                 "tv",
+                0,
+                None,
             ],
         },
     )
@@ -2469,6 +2560,75 @@ async def test_thermostat(hass: HomeAssistant) -> None:
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
+
+
+async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> None:
+    """Test thermostat adjusting temp with no initial target temperature."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    device = (
+        "climate.test_thermostat",
+        "cool",
+        {
+            "temperature": None,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "current_temperature": 75.0,
+            "friendly_name": "Test Thermostat",
+            "supported_features": 1 | 2 | 4 | 128,
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
+            "preset_mode": None,
+            "preset_modes": ["eco"],
+            "min_temp": 50,
+            "max_temp": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "climate#test_thermostat"
+    assert appliance["displayCategories"][0] == "THERMOSTAT"
+    assert appliance["friendlyName"] == "Test Thermostat"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ThermostatController",
+        "Alexa.TemperatureSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "climate#test_thermostat")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "COOL")
+    properties.assert_not_has_property(
+        "Alexa.ThermostatController",
+        "targetSetpoint",
+    )
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 75.0, "scale": "FAHRENHEIT"}
+    )
+
+    thermostat_capability = get_capability(capabilities, "Alexa.ThermostatController")
+    assert thermostat_capability is not None
+    configuration = thermostat_capability["configuration"]
+    assert configuration["supportsScheduling"] is False
+
+    supported_modes = ["OFF", "HEAT", "COOL", "AUTO", "ECO", "CUSTOM"]
+    for mode in supported_modes:
+        assert mode in configuration["supportedModes"]
+
+    # Adjust temperature where target temp is not set
+    msg = await assert_request_fails(
+        "Alexa.ThermostatController",
+        "AdjustTargetTemperature",
+        "climate#test_thermostat",
+        "climate.set_temperature",
+        hass,
+        payload={"targetSetpointDelta": {"value": -5.0, "scale": "KELVIN"}},
+    )
+    assert msg["event"]["payload"]["type"] == "INVALID_TARGET_STATE"
+    assert msg["event"]["payload"]["message"] == (
+        "The current target temperature is not set, cannot adjust target temperature"
+    )
 
 
 async def test_thermostat_dual(hass: HomeAssistant) -> None:

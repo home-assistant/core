@@ -2,6 +2,7 @@
 import asyncio
 from collections.abc import Generator
 from copy import copy
+from ipaddress import ip_address
 from unittest.mock import DEFAULT, MagicMock, call, patch
 
 import aiohttp
@@ -2672,8 +2673,8 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            host="localhost",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=3000,
@@ -2697,7 +2698,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
     assert result["data"] == {
-        "url": "ws://localhost:3000",
+        "url": "ws://127.0.0.1:3000",
         "usb_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,

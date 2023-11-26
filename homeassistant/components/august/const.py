@@ -26,12 +26,16 @@ DOMAIN = "august"
 OPERATION_METHOD_AUTORELOCK = "autorelock"
 OPERATION_METHOD_REMOTE = "remote"
 OPERATION_METHOD_KEYPAD = "keypad"
+OPERATION_METHOD_MANUAL = "manual"
+OPERATION_METHOD_TAG = "tag"
 OPERATION_METHOD_MOBILE_DEVICE = "mobile"
 
 ATTR_OPERATION_AUTORELOCK = "autorelock"
 ATTR_OPERATION_METHOD = "method"
 ATTR_OPERATION_REMOTE = "remote"
 ATTR_OPERATION_KEYPAD = "keypad"
+ATTR_OPERATION_MANUAL = "manual"
+ATTR_OPERATION_TAG = "tag"
 
 # Limit battery, online, and hardware updates to hourly
 # in order to reduce the number of api requests and

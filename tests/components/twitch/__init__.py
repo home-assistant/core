@@ -1,10 +1,10 @@
 """Tests for the Twitch component."""
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
 
-from twitchAPI.object import TwitchUser
+from twitchAPI.object.api import FollowedChannelsResult, TwitchUser
 from twitchAPI.twitch import (
     InvalidTokenException,
     MissingScopeException,
@@ -12,24 +12,34 @@ from twitchAPI.twitch import (
     TwitchAuthorizationException,
     TwitchResourceNotFound,
 )
-from twitchAPI.types import AuthScope, AuthType
+from twitchAPI.type import AuthScope, AuthType
 
-USER_OBJECT: TwitchUser = TwitchUser(
-    id=123,
-    display_name="channel123",
-    offline_image_url="logo.png",
-    profile_image_url="logo.png",
-    view_count=42,
-)
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
-class TwitchUserFollowResultMock:
-    """Mock for twitch user follow result."""
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
 
-    def __init__(self, follows: list[dict[str, Any]]) -> None:
-        """Initialize mock."""
-        self.total = len(follows)
-        self.data = follows
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+def _get_twitch_user(user_id: str = "123") -> TwitchUser:
+    return TwitchUser(
+        id=user_id,
+        display_name="channel123",
+        offline_image_url="logo.png",
+        profile_image_url="logo.png",
+        view_count=42,
+    )
+
+
+async def async_iterator(iterable) -> AsyncIterator:
+    """Return async iterator."""
+    for i in iterable:
+        yield i
 
 
 @dataclass
@@ -41,10 +51,18 @@ class UserSubscriptionMock:
 
 
 @dataclass
-class UserFollowMock:
-    """User follow mock."""
+class FollowedChannelMock:
+    """Followed channel mock."""
 
+    broadcaster_login: str
     followed_at: str
+
+
+@dataclass
+class ChannelFollowerMock:
+    """Channel follower mock."""
+
+    user_id: str
 
 
 @dataclass
@@ -56,6 +74,32 @@ class StreamMock:
     thumbnail_url: str
 
 
+class TwitchUserFollowResultMock:
+    """Mock for twitch user follow result."""
+
+    def __init__(self, follows: list[FollowedChannelMock]) -> None:
+        """Initialize mock."""
+        self.total = len(follows)
+        self.data = follows
+
+    def __aiter__(self):
+        """Return async iterator."""
+        return async_iterator(self.data)
+
+
+class ChannelFollowersResultMock:
+    """Mock for twitch channel follow result."""
+
+    def __init__(self, follows: list[ChannelFollowerMock]) -> None:
+        """Initialize mock."""
+        self.total = len(follows)
+        self.data = follows
+
+    def __aiter__(self):
+        """Return async iterator."""
+        return async_iterator(self.data)
+
+
 STREAMS = StreamMock(
     game_name="Good game", title="Title", thumbnail_url="stream-medium.png"
 )
@@ -64,24 +108,17 @@ STREAMS = StreamMock(
 class TwitchMock:
     """Mock for the twitch object."""
 
+    is_streaming = True
+    is_gifted = False
+    is_subscribed = False
+    is_following = True
+    different_user_id = False
+
     def __await__(self):
         """Add async capabilities to the mock."""
         t = asyncio.create_task(self._noop())
         yield from t
         return self
-
-    def __init__(
-        self,
-        is_streaming: bool = True,
-        is_gifted: bool = False,
-        is_subscribed: bool = False,
-        is_following: bool = True,
-    ) -> None:
-        """Initialize mock."""
-        self._is_streaming = is_streaming
-        self._is_gifted = is_gifted
-        self._is_subscribed = is_subscribed
-        self._is_following = is_following
 
     async def _noop(self):
         """Fake function to create task."""
@@ -91,7 +128,8 @@ class TwitchMock:
         self, user_ids: list[str] | None = None, logins: list[str] | None = None
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
-        for user in [USER_OBJECT]:
+        users = [_get_twitch_user("234" if self.different_user_id else "123")]
+        for user in users:
             yield user
 
     def has_required_auth(
@@ -100,38 +138,56 @@ class TwitchMock:
         """Return if auth required."""
         return True
 
-    async def get_users_follows(
-        self, to_id: str | None = None, from_id: str | None = None
-    ) -> TwitchUserFollowResultMock:
-        """Return the followers of the user."""
-        if self._is_following:
-            return TwitchUserFollowResultMock(
-                follows=[UserFollowMock("2020-01-20T21:22:42") for _ in range(0, 24)]
-            )
-        return TwitchUserFollowResultMock(follows=[])
-
     async def check_user_subscription(
         self, broadcaster_id: str, user_id: str
     ) -> UserSubscriptionMock:
         """Check if the user is subscribed."""
-        if self._is_subscribed:
+        if self.is_subscribed:
             return UserSubscriptionMock(
-                broadcaster_id=broadcaster_id, is_gift=self._is_gifted
+                broadcaster_id=broadcaster_id, is_gift=self.is_gifted
             )
         raise TwitchResourceNotFound
 
     async def set_user_authentication(
-        self, token: str, scope: list[AuthScope], validate: bool = True
+        self,
+        token: str,
+        scope: list[AuthScope],
+        validate: bool = True,
     ) -> None:
         """Set user authentication."""
         pass
+
+    async def get_followed_channels(
+        self, user_id: str, broadcaster_id: str | None = None
+    ) -> FollowedChannelsResult:
+        """Get followed channels."""
+        if self.is_following:
+            return TwitchUserFollowResultMock(
+                [
+                    FollowedChannelMock(
+                        followed_at=datetime(year=2023, month=8, day=1),
+                        broadcaster_login="internetofthings",
+                    ),
+                    FollowedChannelMock(
+                        followed_at=datetime(year=2023, month=8, day=1),
+                        broadcaster_login="homeassistant",
+                    ),
+                ]
+            )
+        return TwitchUserFollowResultMock([])
+
+    async def get_channel_followers(
+        self, broadcaster_id: str
+    ) -> ChannelFollowersResultMock:
+        """Get channel followers."""
+        return ChannelFollowersResultMock([ChannelFollowerMock(user_id="abc")])
 
     async def get_streams(
         self, user_id: list[str], first: int
     ) -> AsyncGenerator[StreamMock, None]:
         """Get streams for the user."""
         streams = []
-        if self._is_streaming:
+        if self.is_streaming:
             streams = [STREAMS]
         for stream in streams:
             yield stream

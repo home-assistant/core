@@ -112,7 +112,7 @@ def websocket_get_entity(
         return
 
     connection.send_message(
-        websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
+        websocket_api.result_message(msg["id"], entry.extended_dict)
     )
 
 
@@ -138,7 +138,7 @@ def websocket_get_entities(
     entries: dict[str, dict[str, Any] | None] = {}
     for entity_id in entity_ids:
         entry = registry.entities.get(entity_id)
-        entries[entity_id] = _entry_ext_dict(entry) if entry else None
+        entries[entity_id] = entry.extended_dict if entry else None
 
     connection.send_message(websocket_api.result_message(msg["id"], entries))
 
@@ -248,7 +248,7 @@ def websocket_update_entity(
         )
         return
 
-    result: dict[str, Any] = {"entity_entry": _entry_ext_dict(entity_entry)}
+    result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
         if (
@@ -289,15 +289,3 @@ def websocket_remove_entity(
 
     registry.async_remove(msg["entity_id"])
     connection.send_message(websocket_api.result_message(msg["id"]))
-
-
-@callback
-def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
-    """Convert entry to API format."""
-    data = entry.as_partial_dict
-    data["aliases"] = entry.aliases
-    data["capabilities"] = entry.capabilities
-    data["device_class"] = entry.device_class
-    data["original_device_class"] = entry.original_device_class
-    data["original_icon"] = entry.original_icon
-    return data

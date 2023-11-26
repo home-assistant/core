@@ -42,6 +42,32 @@ async def test_invalid_irk(hass: HomeAssistant, enable_bluetooth: None) -> None:
     assert_form_error(result, "irk", "irk_not_valid")
 
 
+async def test_invalid_irk_base64(hass: HomeAssistant, enable_bluetooth: None) -> None:
+    """Test invalid irk."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": "Ucredacted4T8n!!ZZZ=="}
+    )
+    assert_form_error(result, "irk", "irk_not_valid")
+
+
+async def test_invalid_irk_hex(hass: HomeAssistant, enable_bluetooth: None) -> None:
+    """Test invalid irk."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": "irk:abcdefghi"}
+    )
+    assert_form_error(result, "irk", "irk_not_valid")
+
+
 async def test_irk_not_found(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test irk not found."""
     result = await hass.config_entries.flow.async_init(

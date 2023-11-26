@@ -173,8 +173,10 @@ async def test_heater_switch(
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
-async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
-    """Test heater switching input_boolean."""
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+) -> None:
+    """Test setting a unique ID."""
     unique_id = "some_unique_id"
     _setup_sensor(hass, 18)
     _setup_switch(hass, True)
@@ -192,8 +194,6 @@ async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
         },
     )
     await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(ENTITY)
     assert entry
