@@ -196,8 +196,6 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
         Returns true if the mode has been changed, false otherwise.
         """
-        self._valid_preset_mode_or_raise(preset_mode)
-
         if preset_mode == self.preset_mode:
             return False
 

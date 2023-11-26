@@ -175,7 +175,6 @@ class ValueMappingZwaveFan(ZwaveFan):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        self._valid_preset_mode_or_raise(preset_mode)
         for zwave_value, mapped_preset_mode in self.fan_value_mapping.presets.items():
             if preset_mode == mapped_preset_mode:
                 await self._async_set_value(self._target_value, zwave_value)

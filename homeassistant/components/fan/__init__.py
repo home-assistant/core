@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -104,7 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
-        "async_turn_on",
+        _async_turn_on,
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
@@ -153,7 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "async_set_preset_mode",
+        _async_set_preset_mode,
         [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )
 
@@ -393,3 +393,20 @@ class FanEntity(ToggleEntity):
         if hasattr(self, "_attr_preset_modes"):
             return self._attr_preset_modes
         return None
+
+
+async def _async_set_preset_mode(entity: FanEntity, service_call: ServiceCall) -> None:
+    """Validate and set new preset mode."""
+    preset_mode: str = service_call.data["preset_mode"]
+    # pylint: disable-next=protected-access
+    entity._valid_preset_mode_or_raise(preset_mode)
+    await entity.async_set_preset_mode(preset_mode)
+
+
+async def _async_turn_on(entity: FanEntity, service_call: ServiceCall) -> None:
+    """Validate and turn on the fan."""
+    preset_mode: str | None
+    if (preset_mode := service_call.data.get("preset_mode")) is not None:
+        # pylint: disable-next=protected-access
+        entity._valid_preset_mode_or_raise(preset_mode)
+    await entity.async_turn_on(**service_call.data)

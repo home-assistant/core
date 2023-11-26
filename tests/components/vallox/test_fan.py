@@ -189,7 +189,7 @@ async def test_set_invalid_preset_mode(
             },
             blocking=True,
         )
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
 
 async def test_set_preset_mode_exception(

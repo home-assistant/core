@@ -707,7 +707,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "low")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -919,11 +919,11 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "low")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "auto")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -981,7 +981,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_turn_on(hass, "fan.test", preset_mode="freaking-high")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
 
 @pytest.mark.parametrize(
@@ -1084,11 +1084,11 @@ async def test_sending_mqtt_command_templates_(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "low")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "medium")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1148,7 +1148,7 @@ async def test_sending_mqtt_command_templates_(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_turn_on(hass, "fan.test", preset_mode="low")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
 
 @pytest.mark.parametrize(
@@ -1185,7 +1185,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "medium")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1286,10 +1286,8 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_turn_on(hass, "fan.test", preset_mode="auto")
-        assert exc.value.translation_key == "not_valid_preset_mode"
-    assert mqtt_mock.async_publish.call_count == 1
-    # We can turn on, but the invalid preset mode will raise
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    assert exc.value.translation_key == "not_valid_preset_mode"
+    assert mqtt_mock.async_publish.call_count == 0
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_on(hass, "fan.test", preset_mode="whoosh")
@@ -1439,11 +1437,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "low")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "medium")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1465,7 +1463,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     with pytest.raises(ServiceValidationError) as exc:
         await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")

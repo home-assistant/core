@@ -161,7 +161,6 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        self._valid_preset_mode_or_raise(preset_mode)
         self._preset_mode = preset_mode
         self._percentage = None
         self.schedule_update_ha_state()
@@ -228,7 +227,6 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        self._valid_preset_mode_or_raise(preset_mode)
         self._preset_mode = preset_mode
         self._percentage = None
         self.async_write_ha_state()

@@ -130,7 +130,6 @@ class BaseFan(FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
-        self._valid_preset_mode_or_raise(preset_mode)
         await self._async_set_fan_mode(self.preset_name_to_mode[preset_mode])
 
     @abstractmethod
