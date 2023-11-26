@@ -1,6 +1,7 @@
 """Tests for the Huawei LTE config flow."""
 from typing import Any
 from unittest.mock import patch
+from urllib.parse import urlparse, urlunparse
 
 from huawei_lte_api.enums.client import ResponseCodeEnum
 from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTypeEnum
@@ -133,22 +134,24 @@ async def test_connection_errors(
 @pytest.fixture
 def login_requests_mock(requests_mock):
     """Set up a requests_mock with base mocks for login tests."""
-    requests_mock.request(
-        ANY, FIXTURE_USER_INPUT[CONF_URL], text='<meta name="csrf_token" content="x"/>'
+    https_url = urlunparse(
+        urlparse(FIXTURE_USER_INPUT[CONF_URL])._replace(scheme="https")
     )
-    requests_mock.request(
-        ANY,
-        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/state-login",
-        text=(
-            f"<response><State>{LoginStateEnum.LOGGED_OUT}</State>"
-            f"<password_type>{PasswordTypeEnum.SHA256}</password_type></response>"
-        ),
-    )
-    requests_mock.request(
-        ANY,
-        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/logout",
-        text="<response>OK</response>",
-    )
+    for url in FIXTURE_USER_INPUT[CONF_URL], https_url:
+        requests_mock.request(ANY, url, text='<meta name="csrf_token" content="x"/>')
+        requests_mock.request(
+            ANY,
+            f"{url}api/user/state-login",
+            text=(
+                f"<response><State>{LoginStateEnum.LOGGED_OUT}</State>"
+                f"<password_type>{PasswordTypeEnum.SHA256}</password_type></response>"
+            ),
+        )
+        requests_mock.request(
+            ANY,
+            f"{url}api/user/logout",
+            text="<response>OK</response>",
+        )
     return requests_mock
 
 
@@ -220,11 +223,19 @@ async def test_login_error(
     assert result["errors"] == errors
 
 
-async def test_success(hass: HomeAssistant, login_requests_mock) -> None:
+@pytest.mark.parametrize("scheme", ("http", "https"))
+async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) -> None:
     """Test successful flow provides entry creation data."""
+    user_input = {
+        **FIXTURE_USER_INPUT,
+        CONF_URL: urlunparse(
+            urlparse(FIXTURE_USER_INPUT[CONF_URL])._replace(scheme=scheme)
+        ),
+    }
+
     login_requests_mock.request(
         ANY,
-        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
+        f"{user_input[CONF_URL]}api/user/login",
         text="<response>OK</response>",
     )
     with patch("homeassistant.components.huawei_lte.async_setup"), patch(
@@ -233,14 +244,14 @@ async def test_success(hass: HomeAssistant, login_requests_mock) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=user_input,
         )
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
-    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_URL] == user_input[CONF_URL]
+    assert result["data"][CONF_USERNAME] == user_input[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == user_input[CONF_PASSWORD]
 
 
 @pytest.mark.parametrize(
