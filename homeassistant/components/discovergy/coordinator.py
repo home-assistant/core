@@ -31,7 +31,7 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"Discovergy meter {self.meter.meter_id}",
+            name=f"Discovergy meter {meter.meter_id}",
             update_interval=timedelta(seconds=30),
         )
 
