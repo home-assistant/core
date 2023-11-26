@@ -1313,7 +1313,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==2.0.1
+nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.5.2
