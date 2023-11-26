@@ -215,7 +215,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.0.1
+aioesphomeapi==19.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1016,7 +1016,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.1
+nettigo-air-monitor==2.2.2
 
 # homeassistant.components.nexia
 nexia==2.0.7
@@ -1094,6 +1094,9 @@ opower==0.0.39
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
+
+# homeassistant.components.ourgroceries
+ourgroceries==1.5.4
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
