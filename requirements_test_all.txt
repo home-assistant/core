@@ -1095,6 +1095,9 @@ opower==0.0.39
 # homeassistant.components.oralb
 oralb-ble==0.17.6
 
+# homeassistant.components.ourgroceries
+ourgroceries==1.5.4
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 

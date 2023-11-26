@@ -1425,6 +1425,9 @@ oru==0.1.11
 # homeassistant.components.orvibo
 orvibo==1.1.1
 
+# homeassistant.components.ourgroceries
+ourgroceries==1.5.4
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 
