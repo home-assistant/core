@@ -115,7 +115,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
         self._attr_is_on = event[self.entity_description.key]
 
-        super().handle_status_update(event)
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""
