@@ -49,11 +49,11 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Data], StateType]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class HomeWizardExternalSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
-    suggested_device_class: SensorDeviceClass | None = None
+    suggested_device_class: SensorDeviceClass
 
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
@@ -608,9 +608,6 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Validate unit of measurement and set device class."""
-        if self._suggested_device_class is None:
-            return None
-
         if (
             self.native_unit_of_measurement
             not in DEVICE_CLASS_UNITS[self._suggested_device_class]
