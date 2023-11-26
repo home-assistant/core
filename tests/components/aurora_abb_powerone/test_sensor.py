@@ -88,7 +88,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert power
         assert power.state == "45.7"
 
-        temperature = hass.states.get("sensor.mydevicename_inverter_temperature")
+        temperature = hass.states.get("sensor.mydevicename_temperature")
         assert temperature
         assert temperature.state == "9.9"
 
