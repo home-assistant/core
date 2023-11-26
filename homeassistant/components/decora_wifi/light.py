@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
@@ -23,7 +24,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DecoraComponentData
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,10 +42,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Decora Wifi Switches."""
 
-    component: DecoraComponentData = hass.data[DOMAIN][entry.entry_id]
+    session: DecoraWiFiSession = hass.data[DOMAIN][entry.entry_id]
 
     try:
-        session = component.session
         assert session.user
 
         perms = await hass.async_add_executor_job(
