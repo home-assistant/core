@@ -4,7 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from homeassistant.components.todo import TodoItem, TodoItemStatus, TodoListEntity
+from homeassistant.components.todo import (
+    TodoItem,
+    TodoItemStatus,
+    TodoListEntity,
+    TodoListEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -15,6 +20,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import CONF_COORDINATOR, DOMAIN
+from .services import product_search
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,19 +33,20 @@ async def async_setup_entry(
     """Set up the Picnic shopping cart todo platform config entry."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
-    # Add an entity shopping card
-    async_add_entities([PicnicCart(picnic_coordinator, config_entry)])
+    async_add_entities([PicnicCart(hass, picnic_coordinator, config_entry)])
 
 
 class PicnicCart(TodoListEntity, CoordinatorEntity):
     """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "shopping_cart"
     _attr_icon = "mdi:cart"
+    _attr_supported_features = TodoListEntityFeature.CREATE_TODO_ITEM
+    _attr_translation_key = "shopping_cart"
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: DataUpdateCoordinator[Any],
         config_entry: ConfigEntry,
     ) -> None:
@@ -51,6 +58,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
             manufacturer="Picnic",
             model=config_entry.unique_id,
         )
+        self.hass = hass
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
 
     @property
@@ -73,3 +81,18 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
                 )
 
         return items
+
+    async def async_create_todo_item(self, item: TodoItem) -> None:
+        """Add item to shopping cart."""
+        product_id = await self.hass.async_add_executor_job(
+            product_search, self.coordinator.picnic_api_client, item.summary
+        )
+
+        if not product_id:
+            raise ValueError("No product found or no product ID given")
+
+        await self.hass.async_add_executor_job(
+            self.coordinator.picnic_api_client.add_product, product_id, 1
+        )
+
+        await self.coordinator.async_refresh()
