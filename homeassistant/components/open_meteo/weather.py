@@ -14,6 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
+import datetime as dt
 
 from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
 
@@ -25,7 +27,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Open-Meteo weather entity based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator)])
+    if hass.config.time_zone is not None:
+        tz_info = dt_util.get_time_zone(hass.config.time_zone)
+    else:
+        tz_info = dt_util.DEFAULT_TIME_ZONE
+    async_add_entities(
+        [
+            OpenMeteoWeatherEntity(
+                entry=entry, coordinator=coordinator, time_zone=tz_info
+            )
+        ]
+    )
 
 
 class OpenMeteoWeatherEntity(
@@ -45,10 +57,12 @@ class OpenMeteoWeatherEntity(
         *,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator[OpenMeteoForecast],
+        time_zone: dt.tzinfo = dt.UTC,
     ) -> None:
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = entry.entry_id
+        self._time_zone = time_zone
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -97,7 +111,11 @@ class OpenMeteoWeatherEntity(
         daily = self.coordinator.data.daily
         for index, time in enumerate(self.coordinator.data.daily.time):
             forecast = Forecast(
-                datetime=time.isoformat(),
+                datetime=dt.datetime.fromisoformat(
+                    time.isoformat(),
+                )
+                .replace(tzinfo=self._time_zone)
+                .isoformat(),
             )
 
             if daily.weathercode is not None:

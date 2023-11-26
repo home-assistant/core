@@ -31,6 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if (zone := hass.states.get(entry.data[CONF_ZONE])) is None:
             raise UpdateFailed(f"Zone '{entry.data[CONF_ZONE]}' not found")
 
+        if hass.config.time_zone is not None:
+            time_zone = hass.config.time_zone
+        else:
+            time_zone = "UTC"
+
         try:
             return await open_meteo.forecast(
                 latitude=zone.attributes[ATTR_LATITUDE],
@@ -46,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ],
                 precipitation_unit=PrecipitationUnit.MILLIMETERS,
                 temperature_unit=TemperatureUnit.CELSIUS,
-                timezone="UTC",
+                timezone=time_zone,
                 wind_speed_unit=WindSpeedUnit.KILOMETERS_PER_HOUR,
             )
         except OpenMeteoError as err:
