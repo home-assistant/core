@@ -6,10 +6,7 @@ from typing import Any
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from . import DOMAIN
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
@@ -164,17 +161,10 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self.preset_modes and preset_mode in self.preset_modes:
-            self._preset_mode = preset_mode
-            self._percentage = None
-            self.schedule_update_ha_state()
-        else:
-            raise ServiceValidationError(
-                f"Invalid preset mode: {preset_mode}",
-                translation_key="invalid_fan_preset_mode",
-                translation_domain=DOMAIN,
-                translation_placeholders={"preset_mode": preset_mode},
-            )
+        self._valid_preset_mode_or_raise(preset_mode)
+        self._preset_mode = preset_mode
+        self._percentage = None
+        self.schedule_update_ha_state()
 
     def turn_on(
         self,
@@ -238,15 +228,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if (
-            preset_modes := self.preset_modes
-        ) is None or preset_mode not in preset_modes:
-            raise ServiceValidationError(
-                f"Invalid preset mode: {preset_mode}",
-                translation_key="invalid_fan_preset_mode",
-                translation_domain=DOMAIN,
-                translation_placeholders={"preset_mode": preset_mode},
-            )
+        self._valid_preset_mode_or_raise(preset_mode)
         self._preset_mode = preset_mode
         self._percentage = None
         self.async_write_ha_state()

@@ -16,7 +16,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
-    NotValidPresetModeError,
 )
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.discovery import GROUP_PROBE
@@ -37,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -222,10 +221,11 @@ async def test_fan(
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(ServiceValidationError) as exc:
         await async_set_preset_mode(
             hass, entity_id, preset_mode="invalid does not exist"
         )
+        assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA
@@ -624,10 +624,11 @@ async def test_fan_ikea(
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(ServiceValidationError) as exc:
         await async_set_preset_mode(
             hass, entity_id, preset_mode="invalid does not exist"
         )
+        assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA
@@ -813,8 +814,9 @@ async def test_fan_kof(
 
     # set invalid preset_mode from HA
     cluster.write_attributes.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(ServiceValidationError) as exc:
         await async_set_preset_mode(hass, entity_id, preset_mode=PRESET_MODE_AUTO)
+        assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA

@@ -13,7 +13,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import patch_metrics, patch_metrics_set, patch_profile, patch_profile_set
 
@@ -179,7 +179,7 @@ async def test_set_invalid_preset_mode(
     """Test set preset mode."""
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -189,6 +189,7 @@ async def test_set_invalid_preset_mode(
             },
             blocking=True,
         )
+        assert exc.value.translation_key == "not_valid_preset_mode"
 
 
 async def test_set_preset_mode_exception(

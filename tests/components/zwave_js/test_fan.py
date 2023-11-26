@@ -16,7 +16,6 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
 from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
 from homeassistant.const import (
@@ -30,7 +29,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 
@@ -536,13 +535,14 @@ async def test_inovelli_lzw36(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             "fan",
             "turn_on",
             {"entity_id": entity_id, "preset_mode": "wheeze"},
             blocking=True,
         )
+        assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(client.async_send_command.call_args_list) == 0
 
 

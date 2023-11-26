@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -75,10 +76,6 @@ ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 
 # mypy: disallow-any-generics
-
-
-class NotValidPresetModeError(ValueError):
-    """Exception class when the preset_mode in not in the preset_modes list."""
 
 
 @bind_hass
@@ -242,12 +239,19 @@ class FanEntity(ToggleEntity):
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
     def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
-        """Raise NotValidPresetModeError on invalid preset_mode."""
+        """Raise ServiceValidationError on invalid preset_mode."""
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
-            raise NotValidPresetModeError(
+            preset_modes_str: str = ",".join(preset_modes or [])
+            raise ServiceValidationError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode:"
-                f" {preset_modes}"
+                f" {preset_modes}",
+                translation_domain=DOMAIN,
+                translation_key="not_valid_preset_mode",
+                translation_placeholders={
+                    "preset_mode": preset_mode,
+                    "preset_modes": preset_modes_str,
+                },
             )
 
     def set_direction(self, direction: str) -> None:

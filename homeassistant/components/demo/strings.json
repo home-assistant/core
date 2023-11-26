@@ -92,10 +92,5 @@
       "name": "Randomize device tracker data",
       "description": "Demonstrates using a device tracker to see where devices are located."
     }
-  },
-  "exceptions": {
-    "invalid_fan_preset_mode": {
-      "message": "Invalid preset mode: {preset_mode}"
-    }
   }
 }
