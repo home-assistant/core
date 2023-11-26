@@ -1,16 +1,13 @@
 """Plugin to enforce type hints on specific functions."""
 from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
 import re
 from typing import TYPE_CHECKING
-
 from astroid import nodes
 from astroid.exceptions import NameInferenceError
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
-
 from homeassistant.const import Platform
 
 if TYPE_CHECKING:
@@ -21,14 +18,13 @@ if TYPE_CHECKING:
 _COMMON_ARGUMENTS: dict[str, list[str]] = {
     "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
-_PLATFORMS: set[str] = {platform.value for platform in Platform}
 
+_PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 class _Special(Enum):
     """Sentinel values."""
 
     UNDEFINED = 1
-
 
 @dataclass
 class TypeHintMatch:
@@ -54,7 +50,6 @@ class TypeHintMatch:
             and node.name.startswith(self.function_name[:-1])
         )
 
-
 @dataclass
 class ClassTypeHintMatch:
     """Class for pattern matching."""
@@ -62,14 +57,16 @@ class ClassTypeHintMatch:
     base_class: str
     matches: list[TypeHintMatch]
 
-
 _INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
+
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     # or "dict | list | None"
     "a_or_b": re.compile(rf"^(.+) \| {_INNER_MATCH}$"),
 }
+
 _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
+
 _TYPE_HINT_MATCHERS.update(
     {
         f"x_of_y_{i}": re.compile(
@@ -78,7 +75,6 @@ _TYPE_HINT_MATCHERS.update(
         for i in _INNER_MATCH_POSSIBILITIES
     }
 )
-
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
@@ -144,11 +140,11 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
 }
+
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
     return_type=None,
 )
-
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     "__init__": [
@@ -673,6 +669,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         has_async_counterpart=True,
     ),
 ]
+
 _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="async_get_last_state",
@@ -687,6 +684,7 @@ _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
         return_type=["ExtraStoredData", None],
     ),
 ]
+
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
@@ -711,6 +709,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
         has_async_counterpart=True,
     ),
 ]
+
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     # "air_quality": [],  # ignored as deprecated
     "alarm_control_panel": [
@@ -2869,7 +2868,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     ],
 }
 
-
 def _is_valid_type(
     expected_type: list[str] | str | None | object,
     node: nodes.NodeNG,
@@ -2967,7 +2965,6 @@ def _is_valid_type(
         node.attrname == expected_type or node.as_string() == expected_type
     )
 
-
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
     if _is_valid_type(match.return_type, node, True):
         return True
@@ -2999,7 +2996,6 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
 
     return False
 
-
 def _check_ancestry(infer_node: InferenceResult, valid_types: set[str]) -> bool:
     if isinstance(infer_node, nodes.ClassDef):
         if infer_node.name in valid_types:
@@ -3008,7 +3004,6 @@ def _check_ancestry(infer_node: InferenceResult, valid_types: set[str]) -> bool:
             if ancestor.name in valid_types:
                 return True
     return False
-
 
 def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     args = node.args
@@ -3020,7 +3015,6 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     if args.kwarg is not None:
         annotations.append(args.kwargannotation)
     return annotations
-
 
 def _get_named_annotation(
     node: nodes.FunctionDef, key: str
@@ -3036,7 +3030,6 @@ def _get_named_annotation(
 
     return None, None
 
-
 def _has_valid_annotations(
     annotations: list[nodes.NodeNG | None],
 ) -> bool:
@@ -3044,7 +3037,6 @@ def _has_valid_annotations(
         if annotation is not None:
             return True
     return False
-
 
 def _get_module_platform(module_name: str) -> str | None:
     """Return the platform for the module name."""
@@ -3056,11 +3048,9 @@ def _get_module_platform(module_name: str) -> str | None:
     platform = module_match.groups()[0]
     return platform.lstrip(".") if platform else "__init__"
 
-
 def _is_test_function(module_name: str, node: nodes.FunctionDef) -> bool:
     """Return True if function is a pytest function."""
     return module_name.startswith("tests.") and node.name.startswith("test_")
-
 
 class HassTypeHintChecker(BaseChecker):
     """Checker for setup type hints."""
@@ -3271,7 +3261,6 @@ class HassTypeHintChecker(BaseChecker):
                     node=arg_node,
                     args=(arg_name, expected_type, node.name),
                 )
-
 
 def register(linter: PyLinter) -> None:
     """Register the checker."""
