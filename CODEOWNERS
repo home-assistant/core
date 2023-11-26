@@ -930,6 +930,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
+/homeassistant/components/ourgroceries/ @OnFreund
+/tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /homeassistant/components/ovo_energy/ @timmo001

@@ -1028,7 +1028,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==2.0.1
+nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.5.2
@@ -1095,6 +1095,9 @@ opower==0.0.39
 # homeassistant.components.oralb
 oralb-ble==0.17.6
 
+# homeassistant.components.ourgroceries
+ourgroceries==1.5.4
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 
@@ -1135,7 +1138,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.34.0
+plugwise==0.34.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
