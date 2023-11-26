@@ -63,6 +63,11 @@ from .const import (  # noqa: F401
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_REGISTER,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -72,7 +77,6 @@ from .const import (  # noqa: F401
     CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
@@ -80,6 +84,7 @@ from .const import (  # noqa: F401
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
     CONF_MIN_VALUE,
+    CONF_MODE_VALUES,
     CONF_MSG_WAIT,
     CONF_NAN_VALUE,
     CONF_PARITY,
@@ -239,7 +244,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
-                    CONF_HVAC_MODE_VALUES: {
+                    CONF_MODE_VALUES: {
                         vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
@@ -259,6 +264,26 @@ CLIMATE_SCHEMA = vol.All(
                             cv.positive_int, [cv.positive_int]
                         ),
                         vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
+            ),
+            vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_MODE_VALUES: {
+                        vol.Optional(CONF_FAN_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_LOW): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_MEDIUM): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_HIGH): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },

@@ -6,6 +6,10 @@ import struct
 from typing import Any, cast
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -31,6 +35,11 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_REGISTER,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -39,10 +48,10 @@ from .const import (
     CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_MODE_VALUES,
     CONF_STEP,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
@@ -75,7 +84,9 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
 
     def __init__(
         self,
@@ -112,7 +123,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
             self._hvac_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
-            mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
+            mode_value_config = mode_config[CONF_MODE_VALUES]
 
             for hvac_mode_kw, hvac_mode in (
                 (CONF_HVAC_MODE_OFF, HVACMode.OFF),
@@ -136,6 +147,35 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._hvac_mode_register = None
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_hvac_modes = [HVACMode.AUTO]
+
+        if CONF_FAN_MODE_REGISTER in config:
+            mode_config = config[CONF_FAN_MODE_REGISTER]
+            self._fan_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_fan_modes = cast(list[str], [])
+            self._attr_fan_mode = None
+            self._fan_mode_mapping: list[tuple[int, str]] = []
+            self._fan_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
+            mode_value_config = mode_config[CONF_MODE_VALUES]
+
+            for fan_mode_kw, fan_mode in (
+                (CONF_FAN_MODE_AUTO, FAN_AUTO),
+                (CONF_FAN_MODE_LOW, FAN_LOW),
+                (CONF_FAN_MODE_MEDIUM, FAN_MEDIUM),
+                (CONF_FAN_MODE_HIGH, FAN_HIGH),
+            ):
+                if fan_mode_kw in mode_value_config:
+                    values = mode_value_config[fan_mode_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._fan_mode_mapping.append((value, fan_mode))
+                    self._attr_fan_modes.append(fan_mode)
+
+        else:
+            # No HVAC modes defined
+            self._fan_mode_register = None
+            self._attr_fan_mode = FAN_AUTO
+            self._attr_fan_modes = [FAN_AUTO]
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
@@ -186,6 +226,31 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         await self._hub.async_pb_call(
                             self._slave,
                             self._hvac_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
+
+        await self.async_update()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+
+        if self._fan_mode_register is not None:
+            # Write a value to the mode register for the desired mode.
+            for value, mode in self._fan_mode_mapping:
+                if mode == fan_mode:
+                    if self._fan_mode_write_registers:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._fan_mode_register,
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._fan_mode_register,
                             value,
                             CALL_TYPE_WRITE_REGISTER,
                         )
@@ -254,7 +319,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._input_type, self._address
         )
 
-        # Read the mode register if defined
+        # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, raw=True
@@ -268,7 +333,21 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         self._attr_hvac_mode = mode
                         break
 
-        # Read th on/off register if defined. If the value in this
+        # Read the Fan mode register if defined
+        if self._fan_mode_register is not None:
+            fan_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._fan_mode_register, raw=True
+            )
+
+            # Translate the value received
+            if fan_mode is not None:
+                self._attr_fan_mode = None
+                for value, f_mode in self._fan_mode_mapping:
+                    if fan_mode == value:
+                        self._attr_fan_mode = f_mode
+                        break
+
+        # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
         # in the mode register.
         if self._hvac_onoff_register is not None:
