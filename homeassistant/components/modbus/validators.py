@@ -114,7 +114,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         data_type = config[CONF_DATA_TYPE] = DataType.INT16
     count = config.get(CONF_COUNT, None)
     structure = config.get(CONF_STRUCTURE, None)
-    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, None))
+    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     for entry in (
