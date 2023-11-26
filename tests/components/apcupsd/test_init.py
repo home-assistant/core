@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.apcupsd.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
