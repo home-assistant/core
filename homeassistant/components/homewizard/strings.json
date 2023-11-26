@@ -167,5 +167,10 @@
         "name": "Cloud connection"
       }
     }
+  },
+  "exceptions": {
+    "switch_locked": {
+      "message": "Could not change state; Lock is active"
+    }
   }
 }

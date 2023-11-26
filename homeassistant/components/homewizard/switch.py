@@ -5,8 +5,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homewizard_energy import HomeWizardEnergy
-
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
@@ -15,12 +13,29 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
+
+
+async def _async_power_on_state_set_with_possible_lock(
+    coordinator: HWEnergyDeviceUpdateCoordinator, state: bool
+) -> None:
+    """Set the power state of the device, taking into account the switch lock.
+
+    Trying to set a locked switch will raise an exception.
+    """
+    if coordinator.data.state and coordinator.data.state.switch_lock:
+        raise ServiceValidationError(
+            "Could not change state; Lock is active",
+            translation_domain=DOMAIN,
+            translation_key="switch_locked",
+        )
+    await coordinator.api.state_set(power_on=state)
 
 
 @dataclass(kw_only=True)
@@ -31,7 +46,7 @@ class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
     icon_off: str | None = None
     is_on_fn: Callable[[DeviceResponseEntry], bool | None]
-    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
+    set_fn: Callable[[HWEnergyDeviceUpdateCoordinator, bool], Awaitable[Any]]
 
 
 SWITCHES = [
@@ -40,9 +55,9 @@ SWITCHES = [
         name=None,
         device_class=SwitchDeviceClass.OUTLET,
         create_fn=lambda coordinator: coordinator.supports_state(),
-        available_fn=lambda data: data.state is not None and not data.state.switch_lock,
+        available_fn=lambda data: data.state is not None,
         is_on_fn=lambda data: data.state.power_on if data.state else None,
-        set_fn=lambda api, active: api.state_set(power_on=active),
+        set_fn=_async_power_on_state_set_with_possible_lock,
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
@@ -53,7 +68,9 @@ SWITCHES = [
         create_fn=lambda coordinator: coordinator.supports_state(),
         available_fn=lambda data: data.state is not None,
         is_on_fn=lambda data: data.state.switch_lock if data.state else None,
-        set_fn=lambda api, active: api.state_set(switch_lock=active),
+        set_fn=lambda coordinator, active: coordinator.api.state_set(
+            switch_lock=active
+        ),
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",
@@ -64,7 +81,9 @@ SWITCHES = [
         create_fn=lambda coordinator: coordinator.supports_system(),
         available_fn=lambda data: data.system is not None,
         is_on_fn=lambda data: data.system.cloud_enabled if data.system else None,
-        set_fn=lambda api, active: api.system_set(cloud_enabled=active),
+        set_fn=lambda coordinator, active: coordinator.api.system_set(
+            cloud_enabled=active
+        ),
     ),
 ]
 
@@ -121,11 +140,11 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
     @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.entity_description.set_fn(self.coordinator.api, True)
+        await self.entity_description.set_fn(self.coordinator, True)
         await self.coordinator.async_refresh()
 
     @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.entity_description.set_fn(self.coordinator.api, False)
+        await self.entity_description.set_fn(self.coordinator, False)
         await self.coordinator.async_refresh()

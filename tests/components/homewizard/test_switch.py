@@ -12,10 +12,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -181,3 +183,40 @@ async def test_switch_unreachable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+async def test_switch_power_behavior_with_locking(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Tests the behavior of the power control with the device lock."""
+    assert (state := hass.states.get("switch.device_switch_lock"))
+    assert state.state == STATE_OFF
+
+    # Test the device state can be changed
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.device"},
+        blocking=True,
+    )
+
+    # Ensure switch lock is turned on
+    mock_homewizardenergy.state.return_value.switch_lock = True
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.device_switch_lock"))
+    assert state.state == STATE_ON
+
+    # Test the power state can not be changed
+    with pytest.raises(
+        ServiceValidationError, match="Could not change state; Lock is active"
+    ):
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.device"},
+            blocking=True,
+        )
