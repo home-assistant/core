@@ -113,6 +113,9 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         if self.entity_description.key not in event:
             return
 
+        # We received an event, so the service is online and the switch entities should
+        #  be available.
+        self._attr_available = True
         self._attr_is_on = event[self.entity_description.key]
 
         self.async_write_ha_state()
