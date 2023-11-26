@@ -387,7 +387,7 @@ async def test_anna_climate_entity_climate_changes(
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.anna", "hvac_mode": "heat"},
+        {"entity_id": "climate.anna", "hvac_mode": "heat_cool"},
         blocking=True,
     )
     assert mock_smile_anna.set_schedule_state.call_count == 1
