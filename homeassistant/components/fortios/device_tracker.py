@@ -24,12 +24,12 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
 
-
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional("vdom", default="root"): cv.string,
     }
 )
 
@@ -39,11 +39,12 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     host = config[DOMAIN][CONF_HOST]
     verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
     token = config[DOMAIN][CONF_TOKEN]
+    vdom = config[DOMAIN]["vdom"]
 
     fgt = FortiOSAPI()
 
     try:
-        fgt.tokenlogin(host, token, verify_ssl, None, 12, "root")
+        fgt.tokenlogin(host, token, verify_ssl, vdom, 12, "root")
     except ConnectionError as ex:
         _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
         return None
