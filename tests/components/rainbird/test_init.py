@@ -429,6 +429,3 @@ async def test_fix_duplicate_device_ids(
     assert device_entry.identifiers == {(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
     assert device_entry.name_by_user == expected_device_name
     assert device_entry.disabled_by == expected_disabled_by
-
-
-## TODO Fix device ids that already exist
