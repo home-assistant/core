@@ -1016,7 +1016,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.1
+nettigo-air-monitor==2.2.2
 
 # homeassistant.components.nexia
 nexia==2.0.7
