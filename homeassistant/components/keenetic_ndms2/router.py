@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 from ndms2_client import Client, ConnectionException, Device, TelnetConnection
-from ndms2_client.client import RouterInfo
+from ndms2_client.client import RouterInfo, InterfaceInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,6 +34,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+IGNORED_INTERFACE_TYPES = {'Port', 'WifiMaster'}
+
 
 class KeeneticRouter:
     """Keenetic client Object."""
@@ -43,6 +45,7 @@ class KeeneticRouter:
         self.hass = hass
         self.config_entry = config_entry
         self._last_devices: dict[str, Device] = {}
+        self._last_interfaces: dict[str, InterfaceInfo] = {}
         self._router_info: RouterInfo | None = None
         self._connection: TelnetConnection | None = None
         self._client: Client | None = None
@@ -60,6 +63,11 @@ class KeeneticRouter:
     def last_devices(self):
         """Read-only accessor for last_devices."""
         return self._last_devices
+
+    @property
+    def last_interfaces(self):
+        """Read-only accessor for last_interfaces."""
+        return self._last_interfaces
 
     @property
     def host(self):
@@ -116,6 +124,9 @@ class KeeneticRouter:
     def signal_update(self):
         """Event specific per router entry to signal updates."""
         return f"keenetic-update-{self.config_entry.entry_id}"
+
+    def set_interface_state(self, interface_id: str, is_on: bool):
+        self._client.set_interface_state(interface_id, is_on)
 
     async def request_update(self):
         """Request an update."""
@@ -177,17 +188,28 @@ class KeeneticRouter:
         _LOGGER.debug("Fetching devices from router")
 
         try:
-            _response = self._client.get_devices(
+            devices_response = self._client.get_devices(
                 try_hotspot=self.config_entry.options[CONF_TRY_HOTSPOT],
                 include_arp=self.config_entry.options[CONF_INCLUDE_ARP],
                 include_associated=self.config_entry.options[CONF_INCLUDE_ASSOCIATED],
             )
             self._last_devices = {
                 dev.mac: dev
-                for dev in _response
+                for dev in devices_response
                 if dev.interface in self._tracked_interfaces
             }
-            _LOGGER.debug("Successfully fetched data from router: %s", str(_response))
+
+            interfaces_response = self._client.get_interfaces()
+            self._last_interfaces = {
+                interface.name: interface
+                for interface in interfaces_response
+                if (interface.type not in IGNORED_INTERFACE_TYPES)
+                   and not (interface.type == "UsbModem" and interface.plugged is not None)
+            }
+
+            _LOGGER.debug("Successfully fetched data from router. Devices: [%s] Interfaces [%s]", str(devices_response),
+                          str(interfaces_response))
+
             self._router_info = self._client.get_router_info()
             self._available = True
 

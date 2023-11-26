@@ -23,7 +23,7 @@ from .const import (
 )
 from .router import KeeneticRouter
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
