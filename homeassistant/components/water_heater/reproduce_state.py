@@ -29,6 +29,7 @@ from . import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    STATE_VACATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ VALID_STATES = {
     STATE_OFF,
     STATE_ON,
     STATE_PERFORMANCE,
+    STATE_VACATION,
 }
 
 

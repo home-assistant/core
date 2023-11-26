@@ -53,6 +53,7 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
+STATE_VACATION = "vacation"
 
 
 class WaterHeaterEntityFeature(IntFlag):
