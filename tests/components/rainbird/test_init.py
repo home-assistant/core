@@ -36,7 +36,7 @@ async def test_init_success(
 ) -> None:
     """Test successful setup and unload."""
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
@@ -87,7 +87,7 @@ async def test_communication_failure(
     config_entry_state: list[ConfigEntryState],
 ) -> None:
     """Test unable to talk to device on startup, which fails setup."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == config_entry_state
 
 
@@ -116,7 +116,7 @@ async def test_fix_unique_id(
     assert entries[0].unique_id is None
     assert entries[0].data.get(CONF_MAC) is None
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     # Verify config entry now has a unique id
@@ -168,7 +168,7 @@ async def test_fix_unique_id_failure(
 
     responses.insert(0, initial_response)
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     # Config entry is loaded, but not updated
     assert config_entry.state == ConfigEntryState.LOADED
     assert config_entry.unique_id is None
@@ -203,13 +203,9 @@ async def test_fix_unique_id_duplicate(
     responses.append(mock_json_response(WIFI_PARAMS_RESPONSE))
     responses.extend(responses_copy)
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
     assert config_entry.unique_id == MAC_ADDRESS_UNIQUE_ID
-
-    await other_entry.async_setup(hass)
-    # Config entry unique id could not be updated since it already exists
-    assert other_entry.state == ConfigEntryState.SETUP_ERROR
 
     assert "Unable to fix missing unique id (already exists)" in caplog.text
 
@@ -299,7 +295,7 @@ async def test_fix_entity_unique_ids(
         serial_number=config_entry.data["serial_number"],
     )
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     entity_entry = entity_registry.async_get(entity_entry.id)
@@ -415,7 +411,7 @@ async def test_fix_duplicate_device_ids(
     )
     assert len(device_entries) == 2
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     # Only the device with the new format exists
