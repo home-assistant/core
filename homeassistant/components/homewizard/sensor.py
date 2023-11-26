@@ -115,7 +115,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: (
-            # HWE-SKT SKT/SDM230/630 provides both total and tarif 1: duplicate.
+            # SKT/SDM230/630 provides both total and tariff 1: duplicate.
             data.total_energy_import_t1_kwh is not None
             and data.total_energy_export_t2_kwh is not None
         ),
@@ -165,7 +165,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: (
-            # HWE-SKT SKT/SDM230/630 provides both total and tarif 1: duplicate.
+            # SKT/SDM230/630 provides both total and tariff 1: duplicate.
             data.total_energy_export_t1_kwh is not None
             and data.total_energy_export_t2_kwh is not None
         ),
