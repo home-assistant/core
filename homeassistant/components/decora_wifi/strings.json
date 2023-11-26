@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "title": "Setup Decora Wifi",
-        "description": "Your my.leviton.com Credentials",
+        "description": "Your my.leviton.com credentials",
         "data": {
-          "email": "Email",
+          "username": "Username",
           "password": "Password"
         }
       }
@@ -16,7 +16,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }

@@ -28,6 +28,48 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def async_step_import(self, import_data: dict[str, str]) -> FlowResult:
+        """Import decora wifi config from configuration.yaml."""
+
+        if CONF_USERNAME not in import_data or CONF_PASSWORD not in import_data:
+            _LOGGER.error(
+                "Could not import config data from yaml. Required Fields not found: %s, %s",
+                CONF_USERNAME,
+                CONF_PASSWORD,
+            )
+            return await self.async_step_user(None)
+
+        return self.async_create_entry(
+            title=CONF_USERNAME,
+            data={CONF_USERNAME: CONF_USERNAME, CONF_PASSWORD: CONF_PASSWORD},
+        )
+
+    # From components/vera
+    # async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    #     """Handle a flow initialized by import."""
+
+    #     # If there are entities with the legacy unique_id, then this imported config
+    #     # should also use the legacy unique_id for entity creation.
+    #     entity_registry = er.async_get(self.hass)
+    #     use_legacy_unique_id = (
+    #         len(
+    #             [
+    #                 entry
+    #                 for entry in entity_registry.entities.values()
+    #                 if entry.platform == DOMAIN and entry.unique_id.isdigit()
+    #             ]
+    #         )
+    #         > 0
+    #     )
+
+    #     return await self.async_step_finish(
+    #         {
+    #             **config,
+    #             **{CONF_SOURCE: config_entries.SOURCE_IMPORT},
+    #             **{CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id},
+    #         }
+    #     )
+
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""
 
