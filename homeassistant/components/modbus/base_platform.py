@@ -76,6 +76,12 @@ class BasePlatform(Entity):
 
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
+
+        if CONF_LAZY_ERROR in entry:
+            _LOGGER.warning(
+                "`lazy_error_count`: is deprecated and will be removed in version 2024.5"
+            )
+
         self._hub = hub
         self._slave = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
         self._address = int(entry[CONF_ADDRESS])
@@ -92,8 +98,6 @@ class BasePlatform(Entity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None
-        self._lazy_error_count = entry[CONF_LAZY_ERROR]
-        self._lazy_errors = self._lazy_error_count
 
         def get_optional_numeric_config(config_name: str) -> int | float | None:
             if (val := entry.get(config_name)) is None:
@@ -343,15 +347,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
             self._attr_is_on = bool(result.bits[0] & 1)

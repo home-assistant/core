@@ -109,14 +109,9 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self._result = []
         else:
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = True
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
                 self._result = result.bits

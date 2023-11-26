@@ -288,14 +288,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._slave, register, self._count, register_type
         )
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return -1
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             return -1
-
-        self._lazy_errors = self._lazy_error_count
 
         if raw:
             # Return the raw value read from the register, do not change

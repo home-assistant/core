@@ -1,7 +1,7 @@
 """Support for Modbus Register sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -114,13 +113,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             self._slave, self._address, self._count, self._input_type
         )
         if raw_result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                self._cancel_call = async_call_later(
-                    self.hass, timedelta(seconds=1), self.async_update
-                )
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self._attr_native_value = None
             if self._coordinator:
@@ -142,7 +134,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         else:
             self._attr_native_value = result
         self._attr_available = self._attr_native_value is not None
-        self._lazy_errors = self._lazy_error_count
         self.async_write_ha_state()
 
 
