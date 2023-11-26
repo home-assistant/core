@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to connect to MELCloud, with exception: %s", ex)
         if ex.code == 401:
             raise ConfigEntryAuthFailed(ex) from ex
-        return False
+        raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
