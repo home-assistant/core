@@ -103,7 +103,7 @@ async def async_setup_entry(
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    circuits = get_circuits(api)
+    circuits = await hass.async_add_executor_job(get_circuits, api)
 
     for circuit in circuits:
         entity = ViCareClimate(

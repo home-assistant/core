@@ -159,8 +159,9 @@ async def async_setup_entry(
         if entity is not None:
             entities.append(entity)
 
+    circuits = await hass.async_add_executor_job(get_circuits, api)
     await _entities_from_descriptions(
-        hass, entities, CIRCUIT_SENSORS, get_circuits(api), config_entry
+        hass, entities, CIRCUIT_SENSORS, circuits, config_entry
     )
 
     await _entities_from_descriptions(
