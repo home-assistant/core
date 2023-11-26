@@ -149,9 +149,9 @@ def _async_device_entry_to_keep(
     """Determine which device entry to keep when there are duplicates.
 
     As we transitioned to new unique ids, we did not update existing device entries
-    and as a result there are devies with both the old and new unique id format. We
+    and as a result there are devices with both the old and new unique id format. We
     have to pick which one to keep, and preferably this can repair things if the
-    user previously picked renamed devices.
+    user previously renamed devices.
     """
     # Prefer the new device if the user already gave it a name or area. Otherwise,
     # do the same for the old entry. If no entries have been modified then keep the new one.
