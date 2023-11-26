@@ -112,7 +112,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.1
 
 # homeassistant.components.vicare
-PyViCare==2.28.1
+PyViCare==2.29.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.5.9
+aioesphomeapi==19.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -392,7 +392,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==1.0.2
+aiowithings==1.0.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1313,10 +1313,10 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==2.0.1
+nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.5.1
+nibe==2.5.2
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1477,7 +1477,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.34.0
+plugwise==0.34.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11

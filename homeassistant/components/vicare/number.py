@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ViCareRequiredKeysMixin
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
-from .utils import is_supported
+from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
-        translation_key="heating curve shift",
+        translation_key="heating_curve_shift",
         icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveShift(),
@@ -93,10 +93,11 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare number devices."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(get_circuits, api)
 
     entities: list[ViCareNumber] = []
     try:
-        for circuit in api.circuits:
+        for circuit in circuits:
             for description in CIRCUIT_ENTITY_DESCRIPTIONS:
                 entity = await hass.async_add_executor_job(
                     _build_entity,

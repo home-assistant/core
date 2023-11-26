@@ -42,7 +42,12 @@ from .const import (
 )
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyRpcEntity
-from .utils import async_remove_shelly_entity, get_device_entry_gen, get_rpc_key_ids
+from .utils import (
+    async_remove_shelly_entity,
+    get_device_entry_gen,
+    get_rpc_key_ids,
+    is_relay_used_as_actuator,
+)
 
 
 async def async_setup_entry(
@@ -125,8 +130,10 @@ def async_setup_rpc_entry(
     climate_ids = []
     for id_ in climate_key_ids:
         climate_ids.append(id_)
-        unique_id = f"{coordinator.mac}-switch:{id_}"
-        async_remove_shelly_entity(hass, "switch", unique_id)
+
+        if is_relay_used_as_actuator(id_, coordinator.mac, coordinator.device.config):
+            unique_id = f"{coordinator.mac}-switch:{id_}"
+            async_remove_shelly_entity(hass, "switch", unique_id)
 
     if not climate_ids:
         return
