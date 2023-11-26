@@ -15,7 +15,7 @@ class BalboaEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, client: SpaClient, key: str | None = None) -> None:
+    def __init__(self, client: SpaClient, key: str) -> None:
         """Initialize the control."""
         mac = client.mac_address
         model = client.model
