@@ -73,9 +73,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
 
             assert self.entry is not None
-            errors, _, _ = await self.validate_input(
-                api_key, self.entry.data[CONF_LOCATION]
-            )
+            errors, _, _ = await self.validate_input(api_key, self.entry.data[CONF_ID])
 
             if not errors:
                 self.hass.config_entries.async_update_entry(

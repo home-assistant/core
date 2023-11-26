@@ -42,13 +42,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
+    api_key = entry.data[CONF_API_KEY]
+    web_session = async_get_clientsession(hass)
+    camera_api = TrafikverketCamera(web_session, api_key)
     # Change entry unique id from location to camera id
     if entry.version == 1:
         location = entry.data[CONF_LOCATION]
-        api_key = entry.data[CONF_API_KEY]
-
-        web_session = async_get_clientsession(hass)
-        camera_api = TrafikverketCamera(web_session, api_key)
 
         try:
             camera_info = await camera_api.async_get_camera(location)
@@ -60,23 +59,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if camera_id := camera_info.camera_id:
             entry.version = 2
-            _LOGGER.debug(
-                "Migrate Trafikverket Camera config entry unique id to %s",
-                camera_id,
-            )
             hass.config_entries.async_update_entry(
                 entry,
                 unique_id=f"{DOMAIN}-{camera_id}",
             )
-            return True
-        _LOGGER.error("Could not migrate the config entry. Camera has no id")
-        return False
+            _LOGGER.debug(
+                "Migrated Trafikverket Camera config entry unique id to %s",
+                camera_id,
+            )
+        else:
+            _LOGGER.error("Could not migrate the config entry. Camera has no id")
+            return False
+
+    # Change entry data from location to id
     if entry.version == 2:
         location = entry.data[CONF_LOCATION]
-        api_key = entry.data[CONF_API_KEY]
-
-        web_session = async_get_clientsession(hass)
-        camera_api = TrafikverketCamera(web_session, api_key)
 
         try:
             camera_info = await camera_api.async_get_camera(location)
