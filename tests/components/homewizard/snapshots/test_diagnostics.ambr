@@ -18,7 +18,7 @@
         'active_voltage_l2_v': 230.222,
         'active_voltage_l3_v': 230.333,
         'any_power_fail_count': 4,
-        'external_devices': None,
+        'external_devices': '**REDACTED**',
         'gas_timestamp': '2021-03-14T11:22:33',
         'gas_unique_id': '**REDACTED**',
         'long_power_fail_count': 5,

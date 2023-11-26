@@ -536,18 +536,17 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
         description: HomeWizardSensorEntityDescription,
     ) -> None:
         """Initialize Sensor Domain."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
         if not description.enabled_fn(self.coordinator.data.data):
             self._attr_entity_registry_enabled_default = False
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.data)
 
