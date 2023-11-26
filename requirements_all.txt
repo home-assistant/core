@@ -392,7 +392,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==1.0.2
+aiowithings==1.0.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1316,7 +1316,7 @@ nextcord==2.0.0a8
 nextdns==2.0.1
 
 # homeassistant.components.nibe_heatpump
-nibe==2.5.1
+nibe==2.5.2
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
