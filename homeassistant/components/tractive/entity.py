@@ -63,7 +63,6 @@ class TractiveEntity(Entity):
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         self._attr_available = event[self.entity_description.key] is not None
-
         self.async_write_ha_state()
 
     @callback
