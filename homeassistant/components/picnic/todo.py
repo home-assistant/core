@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -14,12 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_COORDINATOR, DOMAIN
+from .coordinator import PicnicUpdateCoordinator
 from .services import product_search
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +34,7 @@ async def async_setup_entry(
     async_add_entities([PicnicCart(hass, picnic_coordinator, config_entry)])
 
 
-class PicnicCart(TodoListEntity, CoordinatorEntity):
+class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
@@ -47,7 +45,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: PicnicUpdateCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize PicnicCart."""
