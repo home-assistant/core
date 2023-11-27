@@ -350,9 +350,7 @@ class Thermostat(ClimateEntity):
         if len(self._attr_hvac_modes) == 2:
             self._attr_hvac_modes.insert(0, HVACMode.HEAT_COOL)
         self._attr_hvac_modes.append(HVACMode.OFF)
-        self._sensors = [
-            d.get("name", None) for d in thermostat.get("remoteSensors", [])
-        ]
+        self._sensors = self.remote_sensors
         self._preset_modes = {
             comfort["climateRef"]: comfort["name"]
             for comfort in self.thermostat["program"]["climates"]
@@ -554,6 +552,21 @@ class Thermostat(ClimateEntity):
     def is_aux_heat(self) -> bool:
         """Return true if aux heater."""
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
+
+    @property
+    def remote_sensors(self) -> list:
+        """Return the remote sensor names of the thermostat."""
+        try:
+            sensors_info = self.thermostat["remoteSensors"]
+        except KeyError:
+            sensors_info = []
+        sensors = []
+        if len(sensors_info) > 0:
+            for sensor in sensors_info:
+                sensor_name = sensor.get("name", None)
+                if sensor_name is not None:
+                    sensors.append(sensor_name)
+        return sensors
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
