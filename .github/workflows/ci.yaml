@@ -292,17 +292,10 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Run ruff-format (fully)
+      - name: Run ruff-format
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual ruff-format --all-files --show-diff-on-failure
-      - name: Run ruff-format (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual ruff-format --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
 
   lint-ruff:
     name: Check ruff
@@ -340,19 +333,10 @@ jobs:
       - name: Register ruff problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/ruff.json"
-      - name: Run ruff (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
+      - name: Run ruff
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
-      - name: Run ruff (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
-
   lint-other:
     name: Check other linters
     runs-on: ubuntu-22.04
