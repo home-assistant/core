@@ -166,7 +166,7 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle flux options."""
 
     def convert_mired_to_kelvin(self, user_input):
-        """Convert between mireds and kelvins because I can't find the kelvin option for ColorTempSelector."""
+        """ColorTempSelector only supports mireds, convert between mireds and kelvin."""
         user_input[CONF_START_CT] = color_temperature_mired_to_kelvin(
             user_input[CONF_START_CT]
         )
