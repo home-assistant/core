@@ -109,10 +109,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    with (
-        patch("apcaccess.status.parse", side_effect=OSError()),
-        patch("apcaccess.status.get"),
-    ):
+    with patch("aioapcaccess.request_status", side_effect=OSError()):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -156,12 +153,9 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert pytest.approx(float(state.state)) == 14.0
 
-    with (
-        patch("apcaccess.status.parse") as mock_parse,
-        patch("apcaccess.status.get", return_value=b""),
-    ):
+    with patch("aioapcaccess.request_status") as mock_request_status:
         # Mock a network error and then trigger an auto-polling event.
-        mock_parse.side_effect = OSError()
+        mock_request_status.side_effect = OSError()
         future = utcnow() + UPDATE_INTERVAL
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -172,8 +166,8 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
         # Reset the API to return a new status and update.
-        mock_parse.side_effect = None
-        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+        mock_request_status.side_effect = None
+        mock_request_status.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
         future = future + UPDATE_INTERVAL
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
