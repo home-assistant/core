@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare number entity."""
 
+    value_getter: Callable[[PyViCareDevice], float]
     value_setter: Callable[[PyViCareDevice, float], Any] | None = None
     min_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     max_value_getter: Callable[[PyViCareDevice], float | None] | None = None
@@ -193,8 +194,8 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         """Update state of number."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_native_value = float(
-                    self.entity_description.value_getter(self._api)
+                self._attr_native_value = self.entity_description.value_getter(
+                    self._api
                 )
 
                 if self.entity_description.min_value_getter:
