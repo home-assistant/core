@@ -139,7 +139,9 @@ async def setup_deconz_integration(
 
 
 async def test_gateway_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -178,7 +180,6 @@ async def test_gateway_setup(
         assert forward_entry_setup.mock_calls[12][1] == (config_entry, SIREN_DOMAIN)
         assert forward_entry_setup.mock_calls[13][1] == (config_entry, SWITCH_DOMAIN)
 
-    device_registry = dr.async_get(hass)
     gateway_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
     )
@@ -188,7 +189,9 @@ async def test_gateway_setup(
 
 
 async def test_gateway_device_configuration_url_when_addon(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -200,7 +203,6 @@ async def test_gateway_device_configuration_url_when_addon(
         )
         gateway = get_gateway_from_config_entry(hass, config_entry)
 
-    device_registry = dr.async_get(hass)
     gateway_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
     )

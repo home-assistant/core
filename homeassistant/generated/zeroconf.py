@@ -52,7 +52,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "hive",
     },
-    "Healty Home Coach": {
+    "Healthy Home Coach": {
         "always_discover": True,
         "domain": "netatmo",
     },
@@ -116,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Nightvision": {
         "always_discover": True,
         "domain": "lifx",
@@ -125,6 +129,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX String": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -503,6 +511,12 @@ ZEROCONF = {
         },
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*",
+        },
+    ],
+    "_kizboxdev._tcp.local.": [
         {
             "domain": "overkiz",
             "name": "gateway*",

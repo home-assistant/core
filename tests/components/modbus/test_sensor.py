@@ -247,7 +247,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: Size of structure is 0 bytes but `{CONF_COUNT}: 4` is 8 bytes",
         ),
         (
             {
@@ -276,7 +276,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` cannot be combined with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` illegal with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
     ],
 )
@@ -869,9 +869,10 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
         ),
     ],
 )
-async def test_virtual_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+async def test_virtual_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
+) -> None:
     """Run test for sensor."""
-    entity_registry = er.async_get(hass)
     for i in range(0, len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"

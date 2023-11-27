@@ -721,6 +721,9 @@
       },
       "away_preset_temperature": {
         "name": "Away preset temperature"
+      },
+      "quick_start_time": {
+        "name": "Quick start time"
       }
     },
     "select": {
@@ -765,6 +768,9 @@
       },
       "led_scaling_mode": {
         "name": "Led scaling mode"
+      },
+      "smart_fan_led_display_levels": {
+        "name": "Smart fan led display levels"
       },
       "increased_non_neutral_output": {
         "name": "Non neutral output"
@@ -877,6 +883,9 @@
       },
       "smart_bulb_mode": {
         "name": "Smart bulb mode"
+      },
+      "smart_fan_mode": {
+        "name": "Smart fan mode"
       },
       "double_tap_up_enabled": {
         "name": "Double tap up enabled"

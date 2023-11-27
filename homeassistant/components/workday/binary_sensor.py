@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -72,17 +72,29 @@ async def async_setup_entry(
     province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
+    language: str | None = entry.options.get(CONF_LANGUAGE)
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
     if country:
-        cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
         obj_holidays: HolidayBase = country_holidays(
             country,
             subdiv=province,
             years=year,
-            language=cls.default_language,
+            language=language,
         )
+        if (
+            supported_languages := obj_holidays.supported_languages
+        ) and language == "en":
+            for lang in supported_languages:
+                if lang.startswith("en"):
+                    obj_holidays = country_holidays(
+                        country,
+                        subdiv=province,
+                        years=year,
+                        language=lang,
+                    )
+                LOGGER.debug("Changing language from %s to %s", language, lang)
     else:
         obj_holidays = HolidayBase()
 

@@ -37,7 +37,7 @@ from homeassistant.components.assist_pipeline.vad import (
 )
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.util.ulid import ulid
+from homeassistant.util.ulid import ulid_now
 
 from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 
@@ -111,11 +111,13 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
             valid_protocol_factory=lambda call_info, rtcp_state: make_protocol(
                 hass, devices, call_info, rtcp_state
             ),
-            invalid_protocol_factory=lambda call_info, rtcp_state: PreRecordMessageProtocol(
-                hass,
-                "not_configured.pcm",
-                opus_payload_type=call_info.opus_payload_type,
-                rtcp_state=rtcp_state,
+            invalid_protocol_factory=(
+                lambda call_info, rtcp_state: PreRecordMessageProtocol(
+                    hass,
+                    "not_configured.pcm",
+                    opus_payload_type=call_info.opus_payload_type,
+                    rtcp_state=rtcp_state,
+                )
             ),
         )
         self.hass = hass
@@ -219,7 +221,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     ) -> None:
         """Forward audio to pipeline STT and handle TTS."""
         if self._session_id is None:
-            self._session_id = ulid()
+            self._session_id = ulid_now()
 
         # Play listening tone at the start of each cycle
         if self.listening_tone_enabled:

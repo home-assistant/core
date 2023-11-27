@@ -176,13 +176,17 @@ class NativeLargeBinary(LargeBinary):
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
 UINT_32_TYPE = BigInteger().with_variant(
-    mysql.INTEGER(unsigned=True), "mysql", "mariadb"  # type: ignore[no-untyped-call]
+    mysql.INTEGER(unsigned=True),  # type: ignore[no-untyped-call]
+    "mysql",
+    "mariadb",
 )
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True),  # type: ignore[no-untyped-call]
+    "postgresql",
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+    "postgresql",
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
