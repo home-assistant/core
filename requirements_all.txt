@@ -143,7 +143,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.1.0
+accuweather==2.1.1
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -392,7 +392,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==1.0.3
+aiowithings==2.0.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
