@@ -64,6 +64,11 @@ async def async_setup_entry(
         )
 
 
+def _recording_list_available(api: PhilipsTV) -> bool:
+    """Return False if recording_list is None Type."""
+    return not isinstance(api.recordings_list, type(None))
+
+
 def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
     for rec in api.recordings_list["recordings"]:
@@ -86,20 +91,22 @@ class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEnti
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
-        self._attr_is_on = _check_for_recording_entry(
-            coordinator.api,
-            "RecordingType",
-            description.recording_value,
-        )
+        if _recording_list_available(coordinator.api):
+            self._attr_is_on = _check_for_recording_entry(
+                coordinator.api,
+                "RecordingType",
+                description.recording_value,
+            )
 
         super().__init__(coordinator)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator and set is_on true if one specified value is available within given entry of list."""
-        self._attr_is_on = _check_for_recording_entry(
-            self.coordinator.api,
-            "RecordingType",
-            self.entity_description.recording_value,
-        )
+        if _recording_list_available(self.coordinator.api):
+            self._attr_is_on = _check_for_recording_entry(
+                self.coordinator.api,
+                "RecordingType",
+                self.entity_description.recording_value,
+            )
         super()._handle_coordinator_update()
