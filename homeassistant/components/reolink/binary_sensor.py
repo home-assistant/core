@@ -71,8 +71,10 @@ BINARY_SENSORS = (
         icon="mdi:dog-side",
         icon_off="mdi:dog-side-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
-        supported=lambda api, ch: api.ai_supported(ch, PET_DETECTION_TYPE)
-        and not api.supported(ch, "ai_animal"),
+        supported=lambda api, ch: (
+            api.ai_supported(ch, PET_DETECTION_TYPE)
+            and not api.supported(ch, "ai_animal")
+        ),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,

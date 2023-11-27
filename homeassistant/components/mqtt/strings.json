@@ -214,7 +214,13 @@
   },
   "exceptions": {
     "invalid_platform_config": {
-      "message": "Reloading YAML config for manually configured MQTT `{domain}` failed. See logs for more details."
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+    },
+    "mqtt_not_setup_cannot_subscribe": {
+      "message": "Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly."
+    },
+    "mqtt_not_setup_cannot_publish": {
+      "message": "Cannot publish to topic '{topic}', make sure MQTT is set up correctly."
     }
   }
 }

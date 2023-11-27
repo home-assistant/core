@@ -1315,9 +1315,9 @@ class PipelineInput:
                 if stt_audio_buffer:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
-                    async def buffer_then_audio_stream() -> AsyncGenerator[
-                        ProcessedAudioChunk, None
-                    ]:
+                    async def buffer_then_audio_stream() -> (
+                        AsyncGenerator[ProcessedAudioChunk, None]
+                    ):
                         # Buffered audio
                         for chunk in stt_audio_buffer:
                             yield chunk

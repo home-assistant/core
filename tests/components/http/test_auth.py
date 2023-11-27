@@ -35,9 +35,10 @@ from homeassistant.components.http.request_context import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
-from . import HTTP_HEADER_HA_AUTH, mock_real_ip
+from . import HTTP_HEADER_HA_AUTH
 
 from tests.common import MockUser
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 API_PASSWORD = "test-password"
