@@ -1,7 +1,5 @@
 """The SMA Manager integration."""
 
-# Home Assistant Imports
-# 3rd Party Imports
 from sma_manager_api import SMA
 
 from homeassistant.config_entries import ConfigEntry
