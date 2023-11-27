@@ -373,6 +373,20 @@ async def test_form_errors_reauthentication(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == reason
 
+    mock_login.side_effect = None
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 @pytest.mark.parametrize(
     ("error", "reason"),
@@ -416,3 +430,17 @@ async def test_client_errors_reauthentication(
 
     assert result["errors"]["base"] == reason
     assert result["type"] == FlowResultType.FORM
+
+    mock_login.side_effect = None
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
