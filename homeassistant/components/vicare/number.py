@@ -10,7 +10,7 @@ from typing import Any
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -72,7 +72,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entity(
-    vicare_api: PyViCareHeatingDeviceWithComponent,
+    vicare_api: PyViCareHeatingDeviceComponent,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
 ) -> ViCareNumber | None:
@@ -121,7 +121,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceWithComponent,
+        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
     ) -> None:
