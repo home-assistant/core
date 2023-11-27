@@ -57,7 +57,8 @@ def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObject
 
 
 def load_json(
-    filename: str | PathLike, default: JsonValueType = _SENTINEL  # type: ignore[assignment]
+    filename: str | PathLike,
+    default: JsonValueType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonValueType:
     """Load JSON data from a file.
 
@@ -79,7 +80,8 @@ def load_json(
 
 
 def load_json_array(
-    filename: str | PathLike, default: JsonArrayType = _SENTINEL  # type: ignore[assignment]
+    filename: str | PathLike,
+    default: JsonArrayType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonArrayType:
     """Load JSON data from a file and return as list.
 
@@ -98,7 +100,8 @@ def load_json_array(
 
 
 def load_json_object(
-    filename: str | PathLike, default: JsonObjectType = _SENTINEL  # type: ignore[assignment]
+    filename: str | PathLike,
+    default: JsonObjectType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonObjectType:
     """Load JSON data from a file and return as dict.
 
