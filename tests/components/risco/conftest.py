@@ -140,7 +140,7 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
         "homeassistant.components.risco.RiscoCloud.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.RiscoCloud.close"
+        "homeassistant.components.risco.RiscoCloud.close",
     ), patch(
         "homeassistant.components.risco.RiscoCloud.get_events",
         return_value=events,
@@ -191,7 +191,7 @@ async def setup_risco_local(hass, local_config_entry):
         "homeassistant.components.risco.RiscoLocal.id",
         new_callable=PropertyMock(return_value=TEST_SITE_UUID),
     ), patch(
-        "homeassistant.components.risco.RiscoLocal.disconnect"
+        "homeassistant.components.risco.RiscoLocal.disconnect",
     ):
         await hass.config_entries.async_setup(local_config_entry.entry_id)
         await hass.async_block_till_done()
