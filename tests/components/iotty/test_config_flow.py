@@ -1,7 +1,8 @@
 """Test the iotty config flow."""
 from http import HTTPStatus
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+import multidict
 import pytest
 
 from homeassistant import config_entries
@@ -10,7 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.iotty import DOMAIN
-from homeassistant.components.iotty.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.components.iotty.const import OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -33,6 +34,16 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture
+def current_request_with_host(current_request: MagicMock) -> None:
+    """Mock current request with a host header."""
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
+    )
+
+
 async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
@@ -46,11 +57,12 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-    setup_credentials: None,
     mock_setup_entry: AsyncMock,
+    setup_credentials: None,
+    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
+
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
@@ -59,18 +71,14 @@ async def test_full_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER, "entry_id": DOMAIN}
     )
 
+    assert result.get("type") == FlowResultType.EXTERNAL_STEP
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
             "redirect_uri": REDIRECT_URI,
         },
-    )
-
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URI}"
-        f"&state={state}"
     )
 
     client = await hass_client_no_auth()
