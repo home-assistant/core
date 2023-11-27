@@ -441,9 +441,7 @@ async def async_setup_entry(
                     description,
                     entry,
                     telegram,
-                    *device_class_and_uom(
-                        telegram, description
-                    ),  # type: ignore[arg-type]
+                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
                 )
                 for description in all_sensors
                 if (

@@ -77,9 +77,9 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
         return_value=return_value,
         side_effect=side_effect,
     ), patch(
-        "pathlib.Path.mkdir"
+        "pathlib.Path.mkdir",
     ) as mkdir_mock, patch(
-        "shutil.move"
+        "shutil.move",
     ) as shutil_move_mock:
         file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value

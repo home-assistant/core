@@ -111,11 +111,13 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
             valid_protocol_factory=lambda call_info, rtcp_state: make_protocol(
                 hass, devices, call_info, rtcp_state
             ),
-            invalid_protocol_factory=lambda call_info, rtcp_state: PreRecordMessageProtocol(
-                hass,
-                "not_configured.pcm",
-                opus_payload_type=call_info.opus_payload_type,
-                rtcp_state=rtcp_state,
+            invalid_protocol_factory=(
+                lambda call_info, rtcp_state: PreRecordMessageProtocol(
+                    hass,
+                    "not_configured.pcm",
+                    opus_payload_type=call_info.opus_payload_type,
+                    rtcp_state=rtcp_state,
+                )
             ),
         )
         self.hass = hass

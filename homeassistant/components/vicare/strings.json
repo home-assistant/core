@@ -288,6 +288,17 @@
       }
     }
   },
+  "exceptions": {
+    "program_unknown": {
+      "message": "Cannot translate preset {preset} into a valid ViCare program"
+    },
+    "program_not_activated": {
+      "message": "Unable to activate ViCare program {program}"
+    },
+    "program_not_deactivated": {
+      "message": "Unable to deactivate ViCare program {program}"
+    }
+  },
   "services": {
     "set_vicare_mode": {
       "name": "Set ViCare mode",
