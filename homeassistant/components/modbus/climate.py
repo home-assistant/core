@@ -52,6 +52,7 @@ from .const import (
     CONF_FAN_MODE_ON,
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_TOP,
+    CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -60,10 +61,10 @@ from .const import (
     CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_MODE_VALUES,
     CONF_STEP,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
@@ -133,7 +134,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
             self._hvac_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
-            mode_value_config = mode_config[CONF_MODE_VALUES]
+            mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
 
             for hvac_mode_kw, hvac_mode in (
                 (CONF_HVAC_MODE_OFF, HVACMode.OFF),
@@ -168,7 +169,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_fan_mode = None
             self._fan_mode_mapping: list[tuple[int, str]] = []
             self._fan_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
-            mode_value_config = mode_config[CONF_MODE_VALUES]
+            mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
 
             for fan_mode_kw, fan_mode in (
                 (CONF_FAN_MODE_ON, FAN_ON),

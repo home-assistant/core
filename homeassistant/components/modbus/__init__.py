@@ -74,6 +74,7 @@ from .const import (  # noqa: F401
     CONF_FAN_MODE_ON,
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_TOP,
+    CONF_FAN_MODE_VALUES,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -83,6 +84,7 @@ from .const import (  # noqa: F401
     CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
@@ -90,7 +92,6 @@ from .const import (  # noqa: F401
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
     CONF_MIN_VALUE,
-    CONF_MODE_VALUES,
     CONF_MSG_WAIT,
     CONF_NAN_VALUE,
     CONF_PARITY,
@@ -250,7 +251,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
-                    CONF_MODE_VALUES: {
+                    CONF_HVAC_MODE_VALUES: {
                         vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
@@ -279,7 +280,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
-                    CONF_MODE_VALUES: {
+                    CONF_FAN_MODE_VALUES: {
                         vol.Optional(CONF_FAN_MODE_ON): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
