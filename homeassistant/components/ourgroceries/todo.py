@@ -1,6 +1,7 @@
 """A todo platform for OurGroceries."""
 
 import asyncio
+from typing import Any
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -28,7 +29,7 @@ async def async_setup_entry(
     )
 
 
-def _completion_status(item):
+def _completion_status(item: dict[str, Any]) -> TodoItemStatus:
     if item.get("crossedOffAt", False):
         return TodoItemStatus.COMPLETED
     return TodoItemStatus.NEEDS_ACTION
