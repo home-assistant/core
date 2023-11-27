@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import pydiscovergy
+from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 import voluptuous as vol
@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                await pydiscovergy.Discovergy(
+                await Discovergy(
                     email=user_input[CONF_EMAIL],
                     password=user_input[CONF_PASSWORD],
                     httpx_client=get_async_client(self.hass),

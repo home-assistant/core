@@ -42,7 +42,6 @@ async def test_sensor(
 @pytest.mark.parametrize(
     "error",
     [
-        InvalidToken,
         ElectricityMapsDecodeError,
         ElectricityMapsError,
         Exception,
@@ -82,3 +81,25 @@ async def test_sensor_update_fail(
     assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
     assert state.state == "45.9862319009581"
     assert len(electricity_maps.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_sensor_reauth_triggered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    electricity_maps: AsyncMock,
+):
+    """Test if reauth flow is triggered."""
+    assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
+    assert state.state == "45.9862319009581"
+
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = InvalidToken
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = InvalidToken
+
+    freezer.tick(timedelta(minutes=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (flows := hass.config_entries.flow.async_progress())
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth"
