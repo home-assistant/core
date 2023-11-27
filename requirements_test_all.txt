@@ -642,6 +642,9 @@ debugpy==1.8.11
 # homeassistant.components.ecovacs
 deebot-client==12.1.0
 
+# homeassistant.components.decora_wifi
+# decora-wifi==1.4
+
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect

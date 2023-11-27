@@ -7,9 +7,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 
@@ -29,46 +30,34 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_import(self, import_data: dict[str, str]) -> FlowResult:
-        """Import decora wifi config from configuration.yaml."""
+        """Handle importting decora wifi config from configuration.yaml."""
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Decora Wifi",
+            },
+        )
 
         if CONF_USERNAME not in import_data or CONF_PASSWORD not in import_data:
             _LOGGER.error(
-                "Could not import config data from yaml. Required Fields not found: %s, %s",
+                "Could not import config data from yaml. Required Fields not found "
+                "in decora_wifi config: %s, %s",
                 CONF_USERNAME,
                 CONF_PASSWORD,
             )
+            # We don't have enough to auto-import, so skip to new setup
             return await self.async_step_user(None)
 
-        return self.async_create_entry(
-            title=CONF_USERNAME,
-            data={CONF_USERNAME: CONF_USERNAME, CONF_PASSWORD: CONF_PASSWORD},
-        )
-
-    # From components/vera
-    # async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-    #     """Handle a flow initialized by import."""
-
-    #     # If there are entities with the legacy unique_id, then this imported config
-    #     # should also use the legacy unique_id for entity creation.
-    #     entity_registry = er.async_get(self.hass)
-    #     use_legacy_unique_id = (
-    #         len(
-    #             [
-    #                 entry
-    #                 for entry in entity_registry.entities.values()
-    #                 if entry.platform == DOMAIN and entry.unique_id.isdigit()
-    #             ]
-    #         )
-    #         > 0
-    #     )
-
-    #     return await self.async_step_finish(
-    #         {
-    #             **config,
-    #             **{CONF_SOURCE: config_entries.SOURCE_IMPORT},
-    #             **{CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id},
-    #         }
-    #     )
+        return await self.async_step_user(import_data)
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""

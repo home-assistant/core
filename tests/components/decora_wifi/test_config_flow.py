@@ -4,8 +4,8 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.decora_wifi.config_flow import CannotConnect
 from homeassistant.components.decora_wifi.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -107,25 +107,38 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-# async def test_async_step_import_success(hass: HomeAssistant) -> None:
-#     """Test import step success."""
-#     with patch("pyvera.VeraController") as vera_controller_class_mock:
-#         controller = MagicMock()
-#         controller.refresh_data = MagicMock()
-#         controller.serial_number = "serial_number_1"
-#         vera_controller_class_mock.return_value = controller
+async def test_async_step_import_success(hass: HomeAssistant) -> None:
+    """Test import step success."""
 
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": config_entries.SOURCE_IMPORT},
-#             data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
-#         )
+    with patch(
+        "homeassistant.components.decora_wifi.config_flow.DecoraWiFiSession.login",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_USERNAME: "test-email", CONF_PASSWORD: "test-password"},
+        )
 
-#         assert result["type"] == FlowResultType.CREATE_ENTRY
-#         assert result["title"] == "http://127.0.0.1:123"
-#         assert result["data"] == {
-#             CONF_CONTROLLER: "http://127.0.0.1:123",
-#             CONF_SOURCE: config_entries.SOURCE_IMPORT,
-#             CONF_LEGACY_UNIQUE_ID: False,
-#         }
-#         assert result["result"].unique_id == controller.serial_number
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-email"
+    assert result["data"] == {
+        CONF_USERNAME: "test-email",
+        CONF_PASSWORD: "test-password",
+    }
+
+
+async def test_async_step_import_incomplete(hass: HomeAssistant) -> None:
+    """Test import step failure."""
+
+    with patch(
+        "homeassistant.components.decora_wifi.config_flow.DecoraWiFiSession.login",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_USERNAME: "test-email"},
+        )
+
+    assert result["type"] == FlowResultType.FORM

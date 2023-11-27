@@ -34,9 +34,6 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
-NOTIFICATION_ID = "leviton_notification"
-NOTIFICATION_TITLE = "myLeviton Decora Setup"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
