@@ -1154,6 +1154,7 @@ async def test_formation_strategy_form_initial_network(
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_onboarding_auto_formation_new_hardware(
     mock_app, hass: HomeAssistant
 ) -> None:

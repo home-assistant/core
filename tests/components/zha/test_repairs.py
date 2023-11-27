@@ -314,6 +314,8 @@ async def test_inconsistent_settings_keep_new(
     data = await resp.json()
     assert data["type"] == "create_entry"
 
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
     assert (
         issue_registry.async_get_issue(
             domain=DOMAIN,
@@ -389,6 +391,8 @@ async def test_inconsistent_settings_restore_old(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data["type"] == "create_entry"
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert (
         issue_registry.async_get_issue(
