@@ -192,9 +192,9 @@ async def test_turn_on_with_preset_mode_only(
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert exc.value.translation_domain == DOMAIN
-        assert exc.value.translation_key == "invalid_fan_preset_mode"
-        assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "invalid_fan_preset_mode"
+    assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
 
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
@@ -263,9 +263,9 @@ async def test_turn_on_with_preset_mode_and_speed(
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert exc.value.translation_domain == DOMAIN
-        assert exc.value.translation_key == "invalid_fan_preset_mode"
-        assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "invalid_fan_preset_mode"
+    assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
 
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
@@ -359,9 +359,9 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert exc.value.translation_domain == DOMAIN
-        assert exc.value.translation_key == "invalid_fan_preset_mode"
-        assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "invalid_fan_preset_mode"
+    assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
 
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
@@ -371,9 +371,9 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert exc.value.translation_domain == DOMAIN
-        assert exc.value.translation_key == "invalid_fan_preset_mode"
-        assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "invalid_fan_preset_mode"
+    assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
 
 
 @pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
