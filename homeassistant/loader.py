@@ -403,9 +403,7 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[
-        str, list[dict[str, str | dict[str, str]]]
-    ] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -1013,9 +1011,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][  # type: ignore[no-any-return]
-            comp_or_platform
-        ]
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     cache = hass.data[DATA_COMPONENTS]
 

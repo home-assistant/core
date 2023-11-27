@@ -301,10 +301,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             if self.transport is None:
                 return
 
-            self.handle_event(
-                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
-            )
-
             extension, data = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
@@ -331,11 +327,17 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
                 audio_bytes = wav_file.readframes(wav_file.getnframes())
 
-            _LOGGER.debug("Sending %d bytes of audio", len(audio_bytes))
+            audio_bytes_size = len(audio_bytes)
+
+            _LOGGER.debug("Sending %d bytes of audio", audio_bytes_size)
+
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
+            )
 
             bytes_per_sample = stt.AudioBitRates.BITRATE_16 // 8
             sample_offset = 0
-            samples_left = len(audio_bytes) // bytes_per_sample
+            samples_left = audio_bytes_size // bytes_per_sample
 
             while samples_left > 0:
                 bytes_offset = sample_offset * bytes_per_sample
