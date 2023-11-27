@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DEFAULT_SCAN_INTERVAL, DEVICE_CONFIG_LIST, DOMAIN, PLATFORMS
+from .const import DEFAULT_CACHE_DURATION, DEVICE_CONFIG_LIST, DOMAIN, PLATFORMS
 from .utils import get_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,10 +43,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
+def vicare_login(
+    hass: HomeAssistant,
+    entry_data: Mapping[str, Any],
+    cache_duration=DEFAULT_CACHE_DURATION,
+) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
-    vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
+    vicare_api.setCacheDuration(cache_duration)
     vicare_api.initWithCredentials(
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
@@ -59,8 +63,20 @@ def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
-    device_config_list = vicare_api.devices
 
+    number_of_devices = len(vicare_api.devices)
+    if number_of_devices > 1:
+        cache_duration = max(
+            DEFAULT_CACHE_DURATION, DEFAULT_CACHE_DURATION * number_of_devices
+        )
+        _LOGGER.info(
+            "Found %s devices, adjusting cache duration to %s",
+            number_of_devices,
+            cache_duration,
+        )
+        vicare_api = vicare_login(hass, entry.data, cache_duration)
+
+    device_config_list = vicare_api.devices
     for device in device_config_list:
         _LOGGER.info(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())

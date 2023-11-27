@@ -20,7 +20,7 @@ VICARE_NAME = "ViCare"
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
 
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_CACHE_DURATION = 60
 
 VICARE_CUBIC_METER = "cubicMeter"
 VICARE_KWH = "kilowattHour"
