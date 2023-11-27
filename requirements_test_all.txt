@@ -445,7 +445,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.37.0
+bellows==0.37.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.3
@@ -1979,7 +1979,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.1.7
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.14
+universal-silabs-flasher==0.0.15
 
 # homeassistant.components.upb
 upb-lib==0.5.4
