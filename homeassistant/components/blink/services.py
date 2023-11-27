@@ -30,11 +30,21 @@ from .coordinator import BlinkUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FILENAME): cv.string,
+    }
 )
-SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
+SERVICE_SEND_PIN_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DEVICE_ID): cv.ensure_list, vol.Optional(CONF_PIN): cv.string}
+)
 SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILE_PATH): cv.string}
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_FILE_PATH): cv.string,
+    }
 )
 
 
@@ -104,11 +114,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def send_pin(call: ServiceCall):
         """Call blink to send new pin."""
-        pin = call.data[CONF_PIN]
         for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
             await coordinator.api.auth.send_auth_key(
                 coordinator.api,
-                pin,
+                call.data[CONF_PIN],
             )
 
     async def blink_refresh(call: ServiceCall):
