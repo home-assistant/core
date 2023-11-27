@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["smarttub"],
   "quality_scale": "platinum",
-  "requirements": ["python-smarttub==0.0.35"]
+  "requirements": ["python-smarttub==0.0.36"]
 }

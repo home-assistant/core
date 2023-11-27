@@ -10,10 +10,8 @@ from homeassistant.util import dt as dt_util
 from . import init_integration
 
 
-async def test_button(hass: HomeAssistant) -> None:
+async def test_button(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test states of the button."""
-    registry = er.async_get(hass)
-
     await init_integration(hass)
 
     state = hass.states.get("button.nettigo_air_monitor_restart")
@@ -21,7 +19,7 @@ async def test_button(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_DEVICE_CLASS) == ButtonDeviceClass.RESTART
 
-    entry = registry.async_get("button.nettigo_air_monitor_restart")
+    entry = entity_registry.async_get("button.nettigo_air_monitor_restart")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-restart"
 

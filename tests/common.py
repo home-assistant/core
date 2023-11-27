@@ -267,7 +267,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start"
+            "homeassistant.helpers.restore_state.start.async_at_start",
         ):
             await asyncio.gather(
                 ar.async_load(hass),
@@ -984,7 +984,10 @@ def assert_setup_component(count, domain=None):
     async def mock_psc(hass, config_input, integration):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
-        res = await async_process_component_config(hass, config_input, integration)
+        integration_config_info = await async_process_component_config(
+            hass, config_input, integration
+        )
+        res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug(
             "Configuration for %s, Validated: %s, Original %s",
@@ -992,7 +995,7 @@ def assert_setup_component(count, domain=None):
             config[domain_input],
             config_input.get(domain_input),
         )
-        return res
+        return integration_config_info
 
     assert isinstance(config, dict)
     with patch("homeassistant.config.async_process_component_config", mock_psc):
@@ -1301,11 +1304,12 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    assert domain not in config_entries.HANDLERS
+    handler = config_entries.HANDLERS.get(domain)
     config_entries.HANDLERS[domain] = config_flow
     _LOGGER.info("Adding mock config flow: %s", domain)
     yield
-    config_entries.HANDLERS.pop(domain)
+    if handler:
+        config_entries.HANDLERS[domain] = handler
 
 
 def mock_integration(
@@ -1337,18 +1341,6 @@ def mock_integration(
     module_cache[module.DOMAIN] = module
 
     return integration
-
-
-def mock_entity_platform(
-    hass: HomeAssistant, platform_path: str, module: MockPlatform | None
-) -> None:
-    """Mock a entity platform.
-
-    platform_path is in form light.hue. Will create platform
-    hue.light.
-    """
-    domain, platform_name = platform_path.split(".")
-    mock_platform(hass, f"{platform_name}.{domain}", module)
 
 
 def mock_platform(
