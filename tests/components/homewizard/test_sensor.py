@@ -6,13 +6,14 @@ from homewizard_energy.errors import DisabledError, RequestError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homewizard import DOMAIN
 from homeassistant.components.homewizard.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -426,3 +427,39 @@ async def test_entities_not_created_for_device(
     """Ensures entities for a specific device are not created."""
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "unique_ids"),
+    [
+        (
+            "HWE-P1",
+            ["aabbccddeeff_total_gas_m3", "aabbccddeeff_gas_unique_id"],
+        ),
+    ],
+)
+async def test_gas_meter_migrated(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    unique_ids: list[str],
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test old gas meter sensors are migrated."""
+    for unique_id in unique_ids:
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            DOMAIN,
+            unique_id,
+        )
+
+        await hass.config_entries.async_reload(init_integration.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = f"sensor.homewizard_{unique_id}"
+
+        assert (entity_entry := entity_registry.async_get(entity_id))
+        assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
+
+        # Make really sure this happens
+        assert entity_entry.previous_unique_id == unique_id
