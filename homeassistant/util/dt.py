@@ -268,18 +268,8 @@ def parse_time(time_str: str) -> dt.time | None:
         return None
 
 
-def get_age(date: dt.datetime, is_future: bool = False, depth: int = 1) -> str:
-    """Take a datetime and return its "age" as a string.
-
-    The age can be in second, minute, hour, day, month and year.
-
-    depth number of units will be returned, with the last unit rounded
-
-    The date must be in the past or a ValueException will be raised
-    if is_future is False.
-
-    If is_future is set, and the date is in the past, 0 seconds is returned
-    """
+def _get_timestring(timediff: float, depth: int = 1) -> str:
+    """Return a string representation of a time diff."""
 
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
@@ -287,19 +277,7 @@ def get_age(date: dt.datetime, is_future: bool = False, depth: int = 1) -> str:
             return f"1 {unit} "
         return f"{number:d} {unit}s "
 
-    if not is_future:
-        delta = (now() - date).total_seconds()
-    else:
-        delta = (date - now()).total_seconds()
-
-    rounded_delta = round(delta)
-
-    if rounded_delta < 0:
-        if is_future:
-            return "0 seconds"
-        raise ValueError("Time value is in the future")
-
-    if rounded_delta == 0:
+    if timediff == 0.0:
         return "0 seconds"
 
     units = ("year", "month", "day", "hour", "minute", "second")
@@ -311,18 +289,57 @@ def get_age(date: dt.datetime, is_future: bool = False, depth: int = 1) -> str:
 
     for i, current_factor in enumerate(factors):
         selected_unit = units[i]
-        if rounded_delta < current_factor:
+        if timediff < current_factor:
             continue
         current_depth = current_depth + 1
         if current_depth == depth:
             return (
-                result_string
-                + formatn(round(rounded_delta / current_factor), selected_unit)
+                result_string + formatn(round(timediff / current_factor), selected_unit)
             ).rstrip()
-        result_string += formatn(rounded_delta // current_factor, selected_unit)
-        rounded_delta -= (rounded_delta // current_factor) * current_factor
+        curr_diff = int(timediff // current_factor)
+        result_string += formatn(curr_diff, selected_unit)
+        timediff -= (curr_diff) * current_factor
 
     return result_string.rstrip()
+
+
+def get_age(date: dt.datetime, depth: int = 1) -> str:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the past or a ValueException will be raised.
+    """
+
+    delta = (now() - date).total_seconds()
+
+    rounded_delta = round(delta)
+
+    if rounded_delta < 0:
+        raise ValueError("Time value is in the future")
+    return _get_timestring(rounded_delta, depth)
+
+
+def get_time_remaining(date: dt.datetime, depth: int = 1) -> str:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the future or a ValueException will be raised.
+    """
+
+    delta = (date - now()).total_seconds()
+
+    rounded_delta = round(delta)
+
+    if rounded_delta < 0:
+        raise ValueError("Time value is in the past")
+
+    return _get_timestring(rounded_delta, depth)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
