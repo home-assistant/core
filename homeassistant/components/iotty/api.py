@@ -38,6 +38,8 @@ class IottyProxy(CloudApi):
         """Initialize iotty auth."""
 
         super().__init__(websession, IOTTYAPI_BASE, OAUTH2_CLIENT_ID)
+        if oauth_session is None:
+            raise ValueError("oauth_session")
         self._oauth_session = oauth_session
         self._devices = []
         self._entities = {}
@@ -45,6 +47,7 @@ class IottyProxy(CloudApi):
 
     async def init(self, entry):
         """Initialize iotty middleware."""
+        ## Improve efficiency by removing
         with suppress(Exception):
             self._devices = await self.get_devices()
 
