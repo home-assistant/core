@@ -7,6 +7,9 @@ import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import (
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
+)
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -123,7 +126,7 @@ async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareBinarySensor],
     sensor_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
-    iterables,
+    iterables: PyViCareHeatingDeviceComponent,
     device_config: PyViCareDeviceConfig,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""

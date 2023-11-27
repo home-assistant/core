@@ -596,14 +596,14 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 
 def _build_entity(
-    api,
+    vicare_api,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareSensorEntityDescription,
 ):
     """Create a ViCare sensor entity."""
-    if is_supported(entity_description.key, entity_description, api):
+    if is_supported(entity_description.key, entity_description, vicare_api):
         return ViCareSensor(
-            api,
+            vicare_api,
             device_config,
             entity_description,
         )
