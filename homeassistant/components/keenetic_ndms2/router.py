@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 IGNORED_INTERFACE_TYPES = {'Port', 'WifiMaster'}
-
+UPDATE_DELAY_SECONDS = 2
 
 class KeeneticRouter:
     """Keenetic client Object."""
@@ -125,8 +125,17 @@ class KeeneticRouter:
         """Event specific per router entry to signal updates."""
         return f"keenetic-update-{self.config_entry.entry_id}"
 
-    def set_interface_state(self, interface_id: str, is_on: bool):
+    async def set_interface_state(self, interface_id: str, is_on: bool):
         self._client.set_interface_state(interface_id, is_on)
+
+        async def deferred_update(_now):
+            await self.request_update()
+
+        async_call_later(
+            self.hass,
+            UPDATE_DELAY_SECONDS,
+            deferred_update
+        )
 
     async def request_update(self):
         """Request an update."""

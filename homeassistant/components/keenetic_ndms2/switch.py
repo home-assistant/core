@@ -79,11 +79,11 @@ class KeeneticInterface(SwitchEntity):
     def is_on(self) -> bool | None:
         return self._interface_info.state == "up"
 
-    def turn_on(self, **kwargs: Any) -> None:
-        return self._router.set_interface_state(self._interface_info.name, True)
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._router.set_interface_state(self._interface_info.name, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
-        return self._router.set_interface_state(self._interface_info.name, False)
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._router.set_interface_state(self._interface_info.name, False)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
