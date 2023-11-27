@@ -7,9 +7,15 @@ from typing import Any, cast
 
 from homeassistant.components.climate import (
     FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_MIDDLE,
+    FAN_OFF,
+    FAN_ON,
+    FAN_TOP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -36,10 +42,16 @@ from .const import (
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
     CONF_FAN_MODE_HIGH,
     CONF_FAN_MODE_LOW,
     CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
     CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -84,9 +96,7 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(
         self,
@@ -149,6 +159,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.AUTO]
 
         if CONF_FAN_MODE_REGISTER in config:
+            self._attr_supported_features = (
+                self._attr_supported_features | ClimateEntityFeature.FAN_MODE
+            )
             mode_config = config[CONF_FAN_MODE_REGISTER]
             self._fan_mode_register = mode_config[CONF_ADDRESS]
             self._attr_fan_modes = cast(list[str], [])
@@ -158,10 +171,16 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             mode_value_config = mode_config[CONF_MODE_VALUES]
 
             for fan_mode_kw, fan_mode in (
+                (CONF_FAN_MODE_ON, FAN_ON),
+                (CONF_FAN_MODE_OFF, FAN_OFF),
                 (CONF_FAN_MODE_AUTO, FAN_AUTO),
                 (CONF_FAN_MODE_LOW, FAN_LOW),
                 (CONF_FAN_MODE_MEDIUM, FAN_MEDIUM),
                 (CONF_FAN_MODE_HIGH, FAN_HIGH),
+                (CONF_FAN_MODE_TOP, FAN_TOP),
+                (CONF_FAN_MODE_MIDDLE, FAN_MIDDLE),
+                (CONF_FAN_MODE_FOCUS, FAN_FOCUS),
+                (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
             ):
                 if fan_mode_kw in mode_value_config:
                     values = mode_value_config[fan_mode_kw]

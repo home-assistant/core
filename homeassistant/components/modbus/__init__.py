@@ -64,10 +64,16 @@ from .const import (  # noqa: F401
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
     CONF_FAN_MODE_HIGH,
     CONF_FAN_MODE_LOW,
     CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
     CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -274,6 +280,12 @@ CLIMATE_SCHEMA = vol.All(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_MODE_VALUES: {
+                        vol.Optional(CONF_FAN_MODE_ON): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
                         vol.Optional(CONF_FAN_MODE_AUTO): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
@@ -284,6 +296,18 @@ CLIMATE_SCHEMA = vol.All(
                             cv.positive_int, [cv.positive_int]
                         ),
                         vol.Optional(CONF_FAN_MODE_HIGH): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_TOP): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_MIDDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_FOCUS): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_DIFFUSE): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
