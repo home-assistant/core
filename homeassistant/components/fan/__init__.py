@@ -78,7 +78,7 @@ ATTR_PRESET_MODES = "preset_modes"
 # mypy: disallow-any-generics
 
 
-class NotValidPresetModeError(ValueError):
+class NotValidPresetModeError(ServiceValidationError):
     """Exception class when the preset_mode in not in the preset_modes list.
 
     The use of this class is deprecated, and will be removed with
