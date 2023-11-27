@@ -24,9 +24,6 @@
       "alarm": {
         "name": "Alarm status"
       },
-      "inverter_temp": {
-        "name": "Inverter temperature"
-      },
       "power_output": {
         "name": "Power output"
       },

@@ -61,7 +61,6 @@ SENSOR_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="inverter_temp",
     ),
     SensorEntityDescription(
         key="totalenergy",
