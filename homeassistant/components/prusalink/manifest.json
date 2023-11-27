@@ -10,7 +10,5 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/prusalink",
   "iot_class": "local_polling",
-  "requirements": [
-    "git+https://github.com/Skaronator/pyprusalink.git@v1-api#pyprusalink==2.0.0"
-  ]
+  "requirements": ["pyprusalink==2.0.0"]
 }
