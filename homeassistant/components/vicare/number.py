@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ViCareRequiredKeysMixin
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
-from .utils import is_supported
+from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 CIRCUIT_ENTITIES: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
-        translation_key="heating curve shift",
+        translation_key="heating_curve_shift",
         icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -145,21 +145,19 @@ async def async_setup_entry(
     """Create the ViCare number devices."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-
     entities: list[ViCareNumber] = []
-    try:
-        for circuit in api.circuits:
-            for description in CIRCUIT_ENTITIES:
-                entity = await hass.async_add_executor_job(
-                    _build_entity,
-                    circuit,
-                    device_config,
-                    description,
-                )
-                if entity is not None:
-                    entities.append(entity)
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.debug("No circuits found")
+
+    circuits = await hass.async_add_executor_job(get_circuits, api)
+    for circuit in circuits:
+        for description in CIRCUIT_ENTITIES:
+            entity = await hass.async_add_executor_job(
+                _build_entity,
+                circuit,
+                device_config,
+                description,
+            )
+            if entity is not None:
+                entities.append(entity)
 
     async_add_entities(entities)
 

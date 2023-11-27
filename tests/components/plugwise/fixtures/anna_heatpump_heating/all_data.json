@@ -21,6 +21,7 @@
       "binary_sensors": {
         "compressor_state": true,
         "cooling_enabled": false,
+        "cooling_state": false,
         "dhw_state": false,
         "flame_state": false,
         "heating_state": true,
@@ -40,7 +41,7 @@
         "setpoint": 60.0,
         "upper_bound": 100.0
       },
-      "model": "Generic heater",
+      "model": "Generic heater/cooler",
       "name": "OpenTherm",
       "sensors": {
         "dhw_temperature": 46.3,
@@ -72,7 +73,8 @@
         "cooling_activation_outdoor_temperature": 21.0,
         "cooling_deactivation_threshold": 4.0,
         "illuminance": 86.0,
-        "setpoint": 20.5,
+        "setpoint_high": 30.0,
+        "setpoint_low": 20.5,
         "temperature": 19.3
       },
       "temperature_offset": {
@@ -84,16 +86,18 @@
       "thermostat": {
         "lower_bound": 4.0,
         "resolution": 0.1,
-        "setpoint": 20.5,
+        "setpoint_high": 30.0,
+        "setpoint_low": 20.5,
         "upper_bound": 30.0
       },
       "vendor": "Plugwise"
     }
   },
   "gateway": {
-    "cooling_present": false,
+    "cooling_present": true,
     "gateway_id": "015ae9ea3f964e668e490fa39da3870b",
     "heater_id": "1cbf783bb11e4a7c8a6843dee3a86927",
+    "item_count": 66,
     "notifications": {},
     "smile_name": "Smile Anna"
   }

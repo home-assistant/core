@@ -149,7 +149,12 @@ MOCK_CONFIG = {
     "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
-    "thermostat:0": {"id": 0, "enable": True, "type": "heating"},
+    "thermostat:0": {
+        "id": 0,
+        "enable": True,
+        "type": "heating",
+        "actuator": f"shelly://shellywalldisplay-{MOCK_MAC.lower()}/c/switch:0",
+    },
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
