@@ -198,18 +198,15 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                 )
 
                 if self.entity_description.min_value_getter:
-                    min_value = self.entity_description.min_value_getter(self._api)
-                    if min_value is not None:
+                    if min_value := self.entity_description.min_value_getter(self._api):
                         self._attr_native_min_value = min_value
 
                 if self.entity_description.max_value_getter:
-                    max_value = self.entity_description.max_value_getter(self._api)
-                    if max_value is not None:
+                    if max_value := self.entity_description.max_value_getter(self._api):
                         self._attr_native_max_value = max_value
 
                 if self.entity_description.stepping_getter:
-                    stepping = self.entity_description.stepping_getter(self._api)
-                    if stepping is not None:
+                    if stepping := self.entity_description.stepping_getter(self._api):
                         self._attr_native_step = stepping
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
