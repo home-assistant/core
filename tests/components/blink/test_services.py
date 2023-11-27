@@ -270,12 +270,34 @@ async def test_pin_service_calls(
     assert "Device 'bad-device_id' not found in device registry" in str(execinfo)
 
 
+@pytest.mark.parametrize(
+    ("service", "params"),
+    [
+        (SERVICE_SEND_PIN, {CONF_PIN: PIN}),
+        (
+            SERVICE_SAVE_RECENT_CLIPS,
+            {
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILE_PATH: FILENAME,
+            },
+        ),
+        (
+            SERVICE_SAVE_VIDEO,
+            {
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILENAME: FILENAME,
+            },
+        ),
+    ],
+)
 async def test_service_called_with_non_blink_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_blink_api: MagicMock,
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
+    service,
+    params,
 ) -> None:
     """Test service calls with non blink device."""
 
@@ -297,23 +319,51 @@ async def test_service_called_with_non_blink_device(
         },
     )
 
+    hass.config.is_allowed_path = Mock(return_value=True)
+    mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
+
+    parameters = {ATTR_DEVICE_ID: [device_entry.id]}
+    parameters.update(params)
+
     with pytest.raises(HomeAssistantError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PIN,
-            {ATTR_DEVICE_ID: [device_entry.id], CONF_PIN: PIN},
+            service,
+            parameters,
             blocking=True,
         )
 
     assert f"Device '{device_entry.id}' is not a blink device" in str(execinfo)
 
 
+@pytest.mark.parametrize(
+    ("service", "params"),
+    [
+        (SERVICE_SEND_PIN, {CONF_PIN: PIN}),
+        (
+            SERVICE_SAVE_RECENT_CLIPS,
+            {
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILE_PATH: FILENAME,
+            },
+        ),
+        (
+            SERVICE_SAVE_VIDEO,
+            {
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILENAME: FILENAME,
+            },
+        ),
+    ],
+)
 async def test_service_called_with_unloaded_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_blink_api: MagicMock,
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
+    service,
+    params,
 ) -> None:
     """Test service calls with unloaded config entry."""
 
@@ -326,11 +376,17 @@ async def test_service_called_with_unloaded_entry(
 
     assert device_entry
 
+    hass.config.is_allowed_path = Mock(return_value=True)
+    mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
+
+    parameters = {ATTR_DEVICE_ID: [device_entry.id]}
+    parameters.update(params)
+
     with pytest.raises(HomeAssistantError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PIN,
-            {ATTR_DEVICE_ID: [device_entry.id], CONF_PIN: PIN},
+            service,
+            parameters,
             blocking=True,
         )
 
