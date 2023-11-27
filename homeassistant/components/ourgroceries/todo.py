@@ -28,6 +28,12 @@ async def async_setup_entry(
     )
 
 
+def _completion_status(item):
+    if item.get("crossedOffAt", False):
+        return TodoItemStatus.COMPLETED
+    return TodoItemStatus.NEEDS_ACTION
+
+
 class OurGroceriesTodoListEntity(
     CoordinatorEntity[OurGroceriesDataUpdateCoordinator], TodoListEntity
 ):
@@ -58,12 +64,6 @@ class OurGroceriesTodoListEntity(
         if self.coordinator.data is None:
             self._attr_todo_items = None
         else:
-
-            def _completion_status(item):
-                if item.get("crossedOffAt", False):
-                    return TodoItemStatus.COMPLETED
-                return TodoItemStatus.NEEDS_ACTION
-
             self._attr_todo_items = [
                 TodoItem(
                     summary=item["name"],
