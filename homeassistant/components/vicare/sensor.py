@@ -8,6 +8,9 @@ import logging
 
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import (
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
+)
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -593,14 +596,14 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 
 def _build_entity(
-    vicare_api,
+    api,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareSensorEntityDescription,
 ):
     """Create a ViCare sensor entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
+    if is_supported(entity_description.key, entity_description, api):
         return ViCareSensor(
-            vicare_api,
+            api,
             device_config,
             entity_description,
         )
@@ -611,8 +614,8 @@ async def _entities_from_descriptions(
     hass: HomeAssistant,
     entities: list[ViCareSensor],
     sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
-    iterables,
-    device,
+    iterables: PyViCareHeatingDeviceComponent,
+    device_config: PyViCareDeviceConfig,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -620,7 +623,7 @@ async def _entities_from_descriptions(
             entity = await hass.async_add_executor_job(
                 _build_entity,
                 current,
-                device,
+                device_config,
                 description,
             )
             if entity is not None:
@@ -633,7 +636,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    entities = []
+    entities: list[ViCareSensor] = []
 
     for device_config, device in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
