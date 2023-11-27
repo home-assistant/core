@@ -122,7 +122,7 @@ Tami4EdgeAPI==2.1
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.1.0
+accuweather==2.1.1
 
 # homeassistant.components.adax
 adax==0.3.0
