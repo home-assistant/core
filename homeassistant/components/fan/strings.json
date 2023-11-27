@@ -1,5 +1,11 @@
 {
   "title": "Fan",
+  "issues": {
+    "deprecated_preset_mode_validator": {
+      "title": "An integration uses deprecated code",
+      "description": "Custom integration {integration} implements a fan platform with a deprecated preset_mode validator. Contact the maintainer of the integration to solve this issue an restart Home Home Assisant after this is fixed."
+    }
+  },
   "device_automation": {
     "condition_type": {
       "is_on": "[%key:common::device_automation::condition_type::is_on%]",

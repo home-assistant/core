@@ -27,6 +27,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
@@ -182,6 +183,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+async def _async_set_preset_mode(entity: FanEntity, service_call: ServiceCall) -> None:
+    """Validate and set new preset mode."""
+    preset_mode: str = service_call.data["preset_mode"]
+    # pylint: disable-next=protected-access
+    entity.valid_preset_mode_or_raise(preset_mode)
+    await entity.async_set_preset_mode(preset_mode)
+
+
+async def _async_turn_on(entity: FanEntity, service_call: ServiceCall) -> None:
+    """Validate and turn on the fan."""
+    preset_mode: str | None
+    if (preset_mode := service_call.data.get("preset_mode")) is not None:
+        # pylint: disable-next=protected-access
+        entity.valid_preset_mode_or_raise(preset_mode)
+    await entity.async_turn_on(**service_call.data)
+
+
 @dataclass
 class FanEntityDescription(ToggleEntityDescription):
     """A class that describes fan entities."""
@@ -251,14 +269,29 @@ class FanEntity(ToggleEntity):
     @callback
     def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
         """Raise ServiceValidationError on invalid preset_mode."""
+        integration_platform: str = "unknown"
+        if (entry := self.registry_entry) is not None:
+            integration_platform = entry.platform
+
         _LOGGER.warning(
-            "Call to fan_entity._valid_preset_mode_or_raise detected. "
-            "The use of _valid_preset_mode_or_raise is deprecated, "
-            "and will be removed with HA Core 2024.12. "
+            "The integration %s implements "
+            "entity._valid_preset_mode_or_raise, which is is deprecated. Support "
+            "will be removed with HA Core 2024.12. "
             "The fan entity component already validates the preset_mode "
             "when fan.async_turn_on or fan_entity._async_set_preset_mode is called. "
             "If still needed, the function fan_entity.valid_preset_mode_or_raise "
-            "can be used instead"
+            "can be used instead",
+            integration_platform,
+        )
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_preset_mode_validator_{integration_platform}",
+            breaks_in_ha_version="2024.12.0",
+            is_fixable=False,
+            translation_key="deprecated_preset_mode_validator",
+            translation_placeholders={"integration": integration_platform},
+            severity=IssueSeverity.WARNING,
         )
         self.valid_preset_mode_or_raise(preset_mode)
 
@@ -267,7 +300,7 @@ class FanEntity(ToggleEntity):
         """Raise ServiceValidationError on invalid preset_mode."""
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
-            preset_modes_str: str = ",".join(preset_modes or [])
+            preset_modes_str: str = ", ".join(preset_modes or [])
             raise ServiceValidationError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode:"
                 f" {preset_modes}",
@@ -418,20 +451,3 @@ class FanEntity(ToggleEntity):
         if hasattr(self, "_attr_preset_modes"):
             return self._attr_preset_modes
         return None
-
-
-async def _async_set_preset_mode(entity: FanEntity, service_call: ServiceCall) -> None:
-    """Validate and set new preset mode."""
-    preset_mode: str = service_call.data["preset_mode"]
-    # pylint: disable-next=protected-access
-    entity.valid_preset_mode_or_raise(preset_mode)
-    await entity.async_set_preset_mode(preset_mode)
-
-
-async def _async_turn_on(entity: FanEntity, service_call: ServiceCall) -> None:
-    """Validate and turn on the fan."""
-    preset_mode: str | None
-    if (preset_mode := service_call.data.get("preset_mode")) is not None:
-        # pylint: disable-next=protected-access
-        entity.valid_preset_mode_or_raise(preset_mode)
-    await entity.async_turn_on(**service_call.data)

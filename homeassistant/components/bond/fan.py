@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -200,7 +200,7 @@ class BondFan(BondEntity, FanEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if not self._device.has_action(Action.BREEZE_ON):
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
+            raise ServiceValidationError(f"Invalid preset mode: {preset_mode}")
         await self._hub.bond.action(self._device.device_id, Action(Action.BREEZE_ON))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
