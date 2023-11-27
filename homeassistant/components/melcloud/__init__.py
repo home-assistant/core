@@ -69,9 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
         _LOGGER.debug("Token used: %s", conf[CONF_TOKEN])
-    except ClientResponseError as ex:
+    except (ClientResponseError, ConfigEntryNotReady) as ex:
         _LOGGER.error("Failed to connect to MELCloud, with exception: %s", ex)
-        if ex.code == 401:
+        if isinstance(ex, ClientResponseError) and ex.code == 401:
             raise ConfigEntryAuthFailed(ex) from ex
         raise ConfigEntryNotReady from ex
 
