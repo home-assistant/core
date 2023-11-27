@@ -244,9 +244,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     ) as sleep_mock, patch(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=[mysql_exception, None],
-    ), patch.object(
-        instance.engine.dialect, "name", "mysql"
-    ):
+    ), patch.object(instance.engine.dialect, "name", "mysql"):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)

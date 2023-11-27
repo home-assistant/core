@@ -38,7 +38,7 @@ async def test_set_unique_id(
     ), patch(
         "homeassistant.components.epson.Projector.get_serial_number", return_value="123"
     ), patch(
-        "homeassistant.components.epson.Projector.get_property"
+        "homeassistant.components.epson.Projector.get_property",
     ):
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
