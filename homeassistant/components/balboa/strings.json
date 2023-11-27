@@ -26,6 +26,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "filter_1": {
+        "name": "Filter cycle 1"
+      },
+      "filter_2": {
+        "name": "Filter cycle 2"
+      },
+      "circ_pump": {
+        "name": "Circulation pump"
+      }
+    },
     "climate": {
       "balboa": {
         "state_attributes": {

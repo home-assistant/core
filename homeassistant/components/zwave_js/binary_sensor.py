@@ -276,9 +276,7 @@ async def async_setup_entry(
                 if state_key == "0":
                     continue
 
-                notification_description: NotificationZWaveJSEntityDescription | None = (
-                    None
-                )
+                notification_description: NotificationZWaveJSEntityDescription | None = None
 
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
                     if (

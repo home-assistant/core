@@ -79,9 +79,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["homeassistant*"]
 
-[tool.black]
-extend-exclude = "/generated/"
-
 [tool.pylint.MAIN]
 py-version = "3.11"
 ignore = [
