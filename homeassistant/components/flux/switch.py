@@ -415,9 +415,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         if self._start_time:
             sunrise = datetime.combine(now.date(), self._start_time, now.tzinfo)
         else:
-            sunrise = get_astral_event_date(
-                self.hass, SUN_EVENT_SUNRISE, now.date()
-            )  # type: ignore[assignment]
+            sunrise = get_astral_event_date(self.hass, SUN_EVENT_SUNRISE, now.date())  # type: ignore[assignment]
         return sunrise
 
     def find_stop_time(self, now: datetime):
@@ -425,7 +423,5 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         if self._stop_time:
             dusk = datetime.combine(now.date(), self._stop_time, now.tzinfo)
         else:
-            dusk = get_astral_event_date(
-                self.hass, "dusk", now.date()
-            )  # type: ignore[assignment]
+            dusk = get_astral_event_date(self.hass, "dusk", now.date())  # type: ignore[assignment]
         return dusk

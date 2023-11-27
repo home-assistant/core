@@ -1,7 +1,6 @@
 """Config flow for Flux integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -48,13 +47,8 @@ from .const import (
     CONF_STOP_CT,
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
-    DEFAULT_INTERVAL_DURATION,
-    DEFAULT_MODE,
     DEFAULT_NAME,
-    DEFAULT_START_COLOR_TEMP_KELVIN,
-    DEFAULT_STOP_COLOR_TEMP_KELVIN,
-    DEFAULT_SUNSET_COLOR_TEMP_KELVIN,
-    DEFAULT_TRANSITION_DURATION,
+    DEFAULT_SETTINGS,
     DOMAIN,
     MODE_MIRED,
     MODE_RGB,
@@ -62,9 +56,7 @@ from .const import (
 )
 from .switch import CONF_DISABLE_BRIGHTNESS_ADJUST
 
-_LOGGER = logging.getLogger(__name__)
-
-MINIMAL_FLUX_SCHEMA = vol.Schema(
+USER_FLOW_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_LIGHTS): EntitySelector(
@@ -72,19 +64,6 @@ MINIMAL_FLUX_SCHEMA = vol.Schema(
         ),
     }
 )
-
-
-def default_settings():
-    """Return object with the default settings for the Flux integration."""
-    settings_dict = {}
-    settings_dict[CONF_START_CT] = DEFAULT_START_COLOR_TEMP_KELVIN
-    settings_dict[CONF_SUNSET_CT] = DEFAULT_SUNSET_COLOR_TEMP_KELVIN
-    settings_dict[CONF_STOP_CT] = DEFAULT_STOP_COLOR_TEMP_KELVIN
-    settings_dict[CONF_ADJUST_BRIGHTNESS] = True
-    settings_dict[CONF_MODE] = DEFAULT_MODE
-    settings_dict[CONF_INTERVAL] = DEFAULT_INTERVAL_DURATION
-    settings_dict[ATTR_TRANSITION] = DEFAULT_TRANSITION_DURATION
-    return settings_dict
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -104,20 +83,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         if user_input is not None:
-            user_input.update(default_settings())
+            user_input.update(DEFAULT_SETTINGS.copy())
             return self.async_create_entry(
                 title=user_input[CONF_NAME], data={}, options=user_input
             )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=MINIMAL_FLUX_SCHEMA,
+            data_schema=USER_FLOW_SCHEMA,
         )
 
     async def async_step_import(self, yaml_config: ConfigType) -> FlowResult:
         """Handle import from configuration.yaml."""
         # start with the same default settings as in the UI
-        entry_options = default_settings()
+        entry_options = DEFAULT_SETTINGS.copy()
 
         # remove the old two very similar options
         brightness = yaml_config.get(CONF_BRIGHTNESS, False)
@@ -156,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(entry_options)
 
         return self.async_create_entry(
-            title=entry_options.get(CONF_NAME, DEFAULT_NAME),
+            title=str(entry_options.get(CONF_NAME, DEFAULT_NAME)),
             data={},
             options=entry_options,
         )

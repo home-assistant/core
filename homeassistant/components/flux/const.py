@@ -1,5 +1,9 @@
 """Constants for the Flux integration."""
 
+from homeassistant.components.light import ATTR_TRANSITION
+from homeassistant.const import CONF_MODE
+from homeassistant.util.read_only_dict import ReadOnlyDict
+
 DOMAIN = "flux"
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -20,3 +24,15 @@ DEFAULT_STOP_COLOR_TEMP_KELVIN = 1900
 DEFAULT_MODE = MODE_XY
 DEFAULT_INTERVAL_DURATION = {"seconds": 30}
 DEFAULT_TRANSITION_DURATION = {"seconds": 30}
+
+DEFAULT_SETTINGS = ReadOnlyDict(
+    {
+        CONF_START_CT: DEFAULT_START_COLOR_TEMP_KELVIN,
+        CONF_SUNSET_CT: DEFAULT_SUNSET_COLOR_TEMP_KELVIN,
+        CONF_STOP_CT: DEFAULT_STOP_COLOR_TEMP_KELVIN,
+        CONF_ADJUST_BRIGHTNESS: True,
+        CONF_MODE: DEFAULT_MODE,
+        CONF_INTERVAL: DEFAULT_INTERVAL_DURATION,
+        ATTR_TRANSITION: DEFAULT_TRANSITION_DURATION,
+    }
+)

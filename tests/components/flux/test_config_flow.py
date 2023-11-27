@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.flux.config_flow import default_settings
 from homeassistant.components.flux.const import (
     CONF_START_CT,
     CONF_STOP_CT,
     CONF_SUNSET_CT,
+    DEFAULT_SETTINGS,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -58,7 +58,7 @@ async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
 
     # set up stuff
-    config_settings = default_settings()
+    config_settings = DEFAULT_SETTINGS.copy()
     config_settings.update(
         {
             "name": "flux",
