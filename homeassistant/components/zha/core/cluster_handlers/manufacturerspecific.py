@@ -80,6 +80,15 @@ class TuyaClusterHandler(ClusterHandler):
                 "backlight_mode": True,
                 "power_on_state": True,
             }
+        if self.cluster.endpoint.manufacturer in ("_TZE200_hue3yfsn"):
+            self.ZCL_INIT_ATTRS = {
+                "window_detection": True,
+                "online_set": True,
+                "temperature_calibration": True,
+                "opened_window_temperature": True,
+                "child_lock": True,
+                "boost_duration_seconds": True,
+            }
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFCC0)
