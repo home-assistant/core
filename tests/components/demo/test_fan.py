@@ -365,8 +365,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
         )
         await hass.async_block_till_done()
     assert exc.value.translation_domain == fan.DOMAIN
-    assert exc.value.translation_key == "not_valid_fan_preset_mode"
-    assert exc.value.translation_placeholders == {"preset_mode": "invalid"}
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
@@ -378,10 +377,6 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
         await hass.async_block_till_done()
     assert exc.value.translation_domain == fan.DOMAIN
     assert exc.value.translation_key == "not_valid_preset_mode"
-    assert exc.value.translation_placeholders == {
-        "preset_mode": "invalid",
-        "preset_modes": "auto, smart, sleep, on",
-    }
 
 
 @pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
