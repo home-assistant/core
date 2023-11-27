@@ -69,11 +69,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
         _LOGGER.debug("Token used: %s", conf[CONF_TOKEN])
-    except (ClientResponseError, ConfigEntryNotReady) as ex:
-        _LOGGER.error("Failed to connect to MELCloud, with exception: %s", ex)
+    except (ClientResponseError) as ex:
         if isinstance(ex, ClientResponseError) and ex.code == 401:
-            raise ConfigEntryAuthFailed(ex) from ex
+            raise ConfigEntryAuthFailed from ex
         raise ConfigEntryNotReady from ex
+        except (asyncio.TimeoutError, ClientConnectionError) as ex:
+            raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
