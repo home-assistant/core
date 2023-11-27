@@ -1,10 +1,10 @@
 {
   "domain": "prometheus",
   "name": "Prometheus",
-  "documentation": "https://www.home-assistant.io/integrations/prometheus",
-  "requirements": ["prometheus_client==0.7.1"],
-  "dependencies": ["http"],
   "codeowners": ["@knyar"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/prometheus",
   "iot_class": "assumed_state",
-  "loggers": ["prometheus_client"]
+  "loggers": ["prometheus_client"],
+  "requirements": ["prometheus-client==0.17.1"]
 }

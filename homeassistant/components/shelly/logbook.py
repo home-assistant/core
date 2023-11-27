@@ -5,8 +5,7 @@ from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import EventType
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
     ATTR_CHANNEL,
@@ -21,18 +20,18 @@ from .coordinator import (
     get_block_coordinator_by_device_id,
     get_rpc_coordinator_by_device_id,
 )
-from .utils import get_block_device_name, get_rpc_entity_name
+from .utils import get_rpc_entity_name
 
 
 @callback
 def async_describe_events(
     hass: HomeAssistant,
-    async_describe_event: Callable[[str, str, Callable[[EventType], dict]], None],
+    async_describe_event: Callable[[str, str, Callable[[Event], dict]], None],
 ) -> None:
     """Describe logbook events."""
 
     @callback
-    def async_describe_shelly_click_event(event: EventType) -> dict[str, str]:
+    def async_describe_shelly_click_event(event: Event) -> dict[str, str]:
         """Describe shelly.click logbook event (block device)."""
         device_id = event.data[ATTR_DEVICE_ID]
         click_type = event.data[ATTR_CLICK_TYPE]
@@ -48,8 +47,7 @@ def async_describe_events(
         elif click_type in BLOCK_INPUTS_EVENTS_TYPES:
             block_coordinator = get_block_coordinator_by_device_id(hass, device_id)
             if block_coordinator and block_coordinator.device.initialized:
-                device_name = get_block_device_name(block_coordinator.device)
-                input_name = f"{device_name} channel {channel}"
+                input_name = f"{block_coordinator.device.name} channel {channel}"
 
         return {
             LOGBOOK_ENTRY_NAME: "Shelly",

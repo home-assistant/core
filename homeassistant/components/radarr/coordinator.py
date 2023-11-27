@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar, Union, cast
+from typing import Generic, TypeVar, cast
 
 from aiopyarr import Health, RadarrMovie, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -14,9 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", bound=Union[SystemStatus, list[RootFolder], list[Health], int])
+T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
@@ -71,7 +71,10 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
 
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
-        return cast(list[RootFolder], await self.api_client.async_get_root_folders())
+        root_folders = await self.api_client.async_get_root_folders()
+        if isinstance(root_folders, RootFolder):
+            root_folders = [root_folders]
+        return root_folders
 
 
 class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
@@ -88,3 +91,13 @@ class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
     async def _fetch_data(self) -> int:
         """Fetch the movies data."""
         return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
+
+
+class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Queue update coordinator."""
+
+    async def _fetch_data(self) -> int:
+        """Fetch the movies in queue."""
+        return (
+            await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
+        ).totalRecords

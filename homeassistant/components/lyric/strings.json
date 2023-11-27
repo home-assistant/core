@@ -12,16 +12,48 @@
     "abort": {
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Honeywell Lyric YAML configuration has been removed",
-      "description": "Configuring Honeywell Lyric using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      },
+      "next_period_time": {
+        "name": "Next period time"
+      },
+      "setpoint_status": {
+        "name": "Setpoint status"
+      }
+    }
+  },
+  "services": {
+    "set_hold_time": {
+      "name": "Set Hold Time",
+      "description": "Sets the time to hold until.",
+      "fields": {
+        "time_period": {
+          "name": "Time Period",
+          "description": "Time to hold until."
+        }
+      }
     }
   }
 }

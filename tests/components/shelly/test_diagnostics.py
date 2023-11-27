@@ -1,8 +1,8 @@
 """Tests for Shelly diagnostics platform."""
 from unittest.mock import ANY
 
-from aiohttp import ClientSession
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
+from aioshelly.const import MODEL_25
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.shelly.const import (
@@ -17,13 +17,14 @@ from . import init_integration, inject_rpc_device_event
 from .conftest import MOCK_STATUS_COAP
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 RELAY_BLOCK_ID = 0
 
 
 async def test_block_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession, mock_block_device
-):
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_block_device
+) -> None:
     """Test config entry diagnostics for block device."""
     await init_integration(hass, 1)
 
@@ -40,7 +41,7 @@ async def test_block_config_entry_diagnostics(
         "bluetooth": "not initialized",
         "device_info": {
             "name": "Test name",
-            "model": "SHSW-25",
+            "model": MODEL_25,
             "sw_version": "some fw string",
         },
         "device_settings": {"coiot": {"update_period": 15}},
@@ -50,10 +51,10 @@ async def test_block_config_entry_diagnostics(
 
 async def test_rpc_config_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_rpc_device,
     monkeypatch,
-):
+) -> None:
     """Test config entry diagnostics for rpc device."""
     await init_integration(
         hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
@@ -103,13 +104,13 @@ async def test_rpc_config_entry_diagnostics(
                             None,
                             {
                                 "89": {
-                                    "__type": "<class " "'bytes'>",
+                                    "__type": "<class 'bytes'>",
                                     "repr": "b'\\xd1\\xfb;t\\xc8\\x90'",
                                 }
                             },
                             {
                                 "00000d00-0000-1000-8000-00805f9b34fb": {
-                                    "__type": "<class " "'bytes'>",
+                                    "__type": "<class 'bytes'>",
                                     "repr": "b'H\\x10a'",
                                 }
                             },
@@ -136,7 +137,7 @@ async def test_rpc_config_entry_diagnostics(
         },
         "device_info": {
             "name": "Test name",
-            "model": "SHSW-25",
+            "model": MODEL_25,
             "sw_version": "some fw string",
         },
         "device_settings": {},

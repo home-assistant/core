@@ -1,6 +1,8 @@
 *.md
 .strict-typing
 azure-*.yml
-docs/source/_templates/*
 homeassistant/components/*/translations/*.json
 homeassistant/generated/*
+tests/components/lidarr/fixtures/initialize.js
+tests/components/lidarr/fixtures/initialize-wrong.js
+tests/fixtures/core/config/yaml_errors/

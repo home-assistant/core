@@ -10,10 +10,8 @@ from afsapi import (
     NotImplementedException as FSNotImplementedException,
     PlayState,
 )
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
@@ -21,70 +19,44 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .browse_media import browse_node, browse_top_level
-from .const import DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_CONTENT_ID_PRESET
+from .const import DOMAIN, MEDIA_CONTENT_ID_PRESET
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PIN): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Frontier Silicon platform."""
-    if discovery_info is not None:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            discovery_info["ssdp_description"]
-        )
-        afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
+    """Set up the Frontier Silicon entity."""
 
-        name = await afsapi.get_friendly_name()
-        async_add_entities(
-            [AFSAPIDevice(name, afsapi)],
-            True,
-        )
-        return
+    afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    password = config.get(CONF_PASSWORD)
-    name = config.get(CONF_NAME)
-
-    try:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            f"http://{host}:{port}/device"
-        )
-    except FSConnectionError:
-        _LOGGER.error(
-            "Could not add the FSAPI device at %s:%s -> %s", host, port, password
-        )
-        return
-    afsapi = AFSAPI(webfsapi_url, password)
-    async_add_entities([AFSAPIDevice(name, afsapi)], True)
+    async_add_entities(
+        [
+            AFSAPIDevice(
+                config_entry.entry_id,
+                config_entry.title,
+                afsapi,
+            )
+        ],
+        True,
+    )
 
 
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     _attr_media_content_type: str = MediaType.CHANNEL
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -104,16 +76,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(self, unique_id: str, name: str | None, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
+            identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-        self._attr_name = name
-
+        self._attr_unique_id = unique_id
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
@@ -152,12 +123,11 @@ class AFSAPIDevice(MediaPlayerEntity):
             )
 
             self._attr_available = True
-        if not self._attr_name:
-            self._attr_name = await afsapi.get_friendly_name()
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -305,7 +275,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_eq_preset(mode)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse media library and preset stations."""
         if not media_content_id:

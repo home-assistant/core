@@ -174,7 +174,9 @@ def setup_service_functions(hass: HomeAssistant, broker):
 class GeniusBroker:
     """Container for geniushub client and data."""
 
-    def __init__(self, hass, client, hub_uid) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: GeniusHub, hub_uid: str | None
+    ) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
         self.client = client
@@ -182,7 +184,7 @@ class GeniusBroker:
         self._connect_error = False
 
     @property
-    def hub_uid(self) -> int:
+    def hub_uid(self) -> str:
         """Return the Hub UID (MAC address)."""
         return self._hub_uid if self._hub_uid is not None else self.client.uid
 
@@ -210,11 +212,10 @@ class GeniusBroker:
 
     def make_debug_log_entries(self) -> None:
         """Make any useful debug log entries."""
-        # pylint: disable=protected-access
         _LOGGER.debug(
             "Raw JSON: \n\nclient._zones = %s \n\nclient._devices = %s",
-            self.client._zones,
-            self.client._devices,
+            self.client._zones,  # pylint: disable=protected-access
+            self.client._devices,  # pylint: disable=protected-access
         )
 
 
@@ -307,10 +308,10 @@ class GeniusZone(GeniusEntity):
 
         mode = payload["data"][ATTR_ZONE_MODE]
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         if mode == "footprint" and not self._zone._has_pir:
             raise TypeError(
-                f"'{self.entity_id}' can not support footprint mode (it has no PIR)"
+                f"'{self.entity_id}' cannot support footprint mode (it has no PIR)"
             )
 
         await self._zone.set_mode(mode)

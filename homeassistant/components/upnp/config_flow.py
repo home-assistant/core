@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any, cast
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -25,7 +26,7 @@ from .const import (
     ST_IGD_V1,
     ST_IGD_V2,
 )
-from .device import async_get_mac_address_from_host
+from .device import async_get_mac_address_from_host, get_preferred_location
 
 
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
@@ -43,7 +44,7 @@ def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     return bool(
         ssdp.ATTR_UPNP_UDN in discovery_info.upnp
         and discovery_info.ssdp_st
-        and discovery_info.ssdp_location
+        and discovery_info.ssdp_all_locations
         and discovery_info.ssdp_usn
     )
 
@@ -61,7 +62,9 @@ async def _async_mac_address_from_discovery(
     hass: HomeAssistant, discovery: SsdpServiceInfo
 ) -> str | None:
     """Get the mac address from a discovery."""
-    host = discovery.ssdp_headers["_host"]
+    location = get_preferred_location(discovery.ssdp_all_locations)
+    host = urlparse(location).hostname
+    assert host is not None
     return await async_get_mac_address_from_host(hass, host)
 
 
@@ -77,7 +80,8 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # Paths:
-    # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
+    # - ssdp(discovery_info) --> ssdp_confirm(None)
+    # --> ssdp_confirm({}) --> create_entry()
     # - user(None): scan --> user({...}) --> create_entry()
 
     @property
@@ -173,10 +177,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
             # Store mac address and other data for older entries.
-            # The location is stored in the config entry such that when the location changes, the entry is reloaded.
+            # The location is stored in the config entry such that
+            # when the location changes, the entry is reloaded.
             updates={
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
-                CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
+                CONFIG_ENTRY_LOCATION: get_preferred_location(
+                    discovery_info.ssdp_all_locations
+                ),
                 CONFIG_ENTRY_HOST: host,
                 CONFIG_ENTRY_ST: discovery_info.ssdp_st,
             },
@@ -205,8 +212,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={**entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
             )
             if entry.state == config_entries.ConfigEntryState.LOADED:
-                # Only reload when entry has state LOADED; when entry has state SETUP_RETRY,
-                # another load is started, causing the entry to be loaded twice.
+                # Only reload when entry has state LOADED; when entry has state
+                # SETUP_RETRY, another load is started,
+                # causing the entry to be loaded twice.
                 LOGGER.debug("Reloading entry: %s", entry.entry_id)
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
@@ -246,7 +254,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
-            CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
+            CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
         }
 
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
@@ -268,7 +276,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_ST: discovery.ssdp_st,
             CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
-            CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
+            CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
         }

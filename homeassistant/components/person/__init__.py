@@ -1,9 +1,12 @@
 """Support for tracking people."""
 from __future__ import annotations
 
+from http import HTTPStatus
+from ipaddress import ip_address
 import logging
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
@@ -13,6 +16,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
@@ -42,20 +46,23 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
-    entity_registry,
+    entity_registry as er,
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
+ATTR_DEVICE_TRACKERS = "device_trackers"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
@@ -188,7 +195,7 @@ class PersonStore(Store):
         return {"items": old_data["persons"]}
 
 
-class PersonStorageCollection(collection.StorageCollection):
+class PersonStorageCollection(collection.DictStorageCollection):
     """Person collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -197,15 +204,14 @@ class PersonStorageCollection(collection.StorageCollection):
     def __init__(
         self,
         store: Store,
-        logger: logging.Logger,
         id_manager: collection.IDManager,
         yaml_collection: collection.YamlCollection,
     ) -> None:
         """Initialize a person storage collection."""
-        super().__init__(store, logger, id_manager)
+        super().__init__(store, id_manager)
         self.yaml_collection = yaml_collection
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data.
 
         A past bug caused onboarding to create invalid person objects.
@@ -226,19 +232,22 @@ class PersonStorageCollection(collection.StorageCollection):
         """Load the Storage collection."""
         await super().async_load()
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._entity_registry_updated
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._entity_registry_updated,
+            event_filter=self._entity_registry_filter,
         )
 
-    async def _entity_registry_updated(self, event) -> None:
+    @callback
+    def _entity_registry_filter(self, event: Event) -> bool:
+        """Filter entity registry events."""
+        return (
+            event.data["action"] == "remove"
+            and split_entity_id(event.data[ATTR_ENTITY_ID])[0] == "device_tracker"
+        )
+
+    async def _entity_registry_updated(self, event: Event) -> None:
         """Handle entity registry updated."""
-        if event.data["action"] != "remove":
-            return
-
         entity_id = event.data[ATTR_ENTITY_ID]
-
-        if split_entity_id(entity_id)[0] != "device_tracker":
-            return
-
         for person in list(self.data.values()):
             if entity_id not in person[CONF_DEVICE_TRACKERS]:
                 continue
@@ -268,16 +277,16 @@ class PersonStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
 
         user_id = update_data.get(CONF_USER_ID)
 
-        if user_id is not None and user_id != data.get(CONF_USER_ID):
+        if user_id is not None and user_id != item.get(CONF_USER_ID):
             await self._validate_user_id(user_id)
 
-        return {**data, **update_data}
+        return {**item, **update_data}
 
     async def _validate_user_id(self, user_id):
         """Validate the used user_id."""
@@ -334,7 +343,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     storage_collection = PersonStorageCollection(
         PersonStore(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
         yaml_collection,
     )
@@ -353,7 +361,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass, create_list=False)
 
@@ -383,11 +391,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
     )
 
+    hass.http.register_view(ListPersonsView)
+
     return True
 
 
 class Person(collection.CollectionEntity, RestoreEntity):
     """Represent a tracked person."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
 
     _attr_should_poll = False
     editable: bool
@@ -445,6 +457,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
             data[ATTR_SOURCE] = self._source
         if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
+        data[ATTR_DEVICE_TRACKERS] = self.device_trackers
         return data
 
     @property
@@ -564,3 +577,44 @@ def _get_latest(prev: State | None, curr: State):
     if prev is None or curr.last_updated > prev.last_updated:
         return curr
     return prev
+
+
+class ListPersonsView(HomeAssistantView):
+    """List all persons if request is made from a local network."""
+
+    requires_auth = False
+    url = "/api/person/list"
+    name = "api:person:list"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return a list of persons if request comes from a local IP."""
+        try:
+            remote_address = ip_address(request.remote)  # type: ignore[arg-type]
+        except ValueError:
+            return self.json_message(
+                message="Invalid remote IP",
+                status_code=HTTPStatus.BAD_REQUEST,
+                message_code="invalid_remote_ip",
+            )
+
+        hass: HomeAssistant = request.app["hass"]
+        if is_cloud_connection(hass) or not is_local(remote_address):
+            return self.json_message(
+                message="Not local",
+                status_code=HTTPStatus.BAD_REQUEST,
+                message_code="not_local",
+            )
+
+        yaml, storage, _ = hass.data[DOMAIN]
+        persons = [*yaml.async_items(), *storage.async_items()]
+
+        return self.json(
+            {
+                person[ATTR_USER_ID]: {
+                    ATTR_NAME: person[ATTR_NAME],
+                    CONF_PICTURE: person.get(CONF_PICTURE),
+                }
+                for person in persons
+                if person.get(ATTR_USER_ID)
+            }
+        )

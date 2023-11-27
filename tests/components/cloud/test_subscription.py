@@ -16,7 +16,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mocked_cloud")
-def mocked_cloud_object(hass: HomeAssistant) -> Cloud:
+async def mocked_cloud_object(hass: HomeAssistant) -> Cloud:
     """Mock cloud object."""
     return Mock(
         accounts_server="accounts.nabucasa.com",
@@ -29,7 +29,7 @@ async def test_fetching_subscription_with_timeout_error(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
     mocked_cloud: Cloud,
-):
+) -> None:
     """Test that we handle timeout error."""
     aioclient_mock.get(
         "https://accounts.nabucasa.com/payments/subscription_info",
@@ -47,7 +47,7 @@ async def test_migrate_paypal_agreement_with_timeout_error(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
     mocked_cloud: Cloud,
-):
+) -> None:
     """Test that we handle timeout error."""
     aioclient_mock.post(
         "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",

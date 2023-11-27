@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryAuthFailed from err
 
     device = AxisNetworkDevice(hass, config_entry, api)
-    hass.data[AXIS_DOMAIN][config_entry.unique_id] = device
+    hass.data[AXIS_DOMAIN][config_entry.entry_id] = device
     await device.async_update_device_registry()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     device.async_setup_events()
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN].pop(config_entry.unique_id)
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
     return await device.async_reset()
 
 
@@ -51,7 +51,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version != 3:
         # Home Assistant 2023.2
         config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

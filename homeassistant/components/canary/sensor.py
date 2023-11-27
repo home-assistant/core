@@ -1,7 +1,7 @@
 """Support for Canary sensors."""
 from __future__ import annotations
 
-from typing import Final, Optional
+from typing import Final
 
 from canary.model import Device, Location, SensorType
 
@@ -13,16 +13,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
 from .coordinator import CanaryDataUpdateCoordinator
 
-SensorTypeItem = tuple[
-    str, Optional[str], Optional[str], Optional[SensorDeviceClass], list[str]
-]
+SensorTypeItem = tuple[str, str | None, str | None, SensorDeviceClass | None, list[str]]
 
 SENSOR_VALUE_PRECISION: Final = 2
 ATTR_AIR_QUALITY: Final = "air_quality"

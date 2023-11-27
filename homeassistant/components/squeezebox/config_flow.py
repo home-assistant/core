@@ -60,7 +60,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
         self.discovery_info = None
@@ -95,8 +95,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = _base_schema(self.discovery_info)
 
     async def _validate_input(self, data):
-        """
-        Validate the user input allows us to connect.
+        """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
         """
@@ -131,7 +130,8 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # no host specified, see if we can discover an unconfigured LMS server
         try:
-            await asyncio.wait_for(self._discover(), timeout=TIMEOUT)
+            async with asyncio.timeout(TIMEOUT):
+                await self._discover()
             return await self.async_step_edit()
         except asyncio.TimeoutError:
             errors["base"] = "no_server_found"

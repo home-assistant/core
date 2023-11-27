@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "dsmr_version,old_unique_id,new_unique_id",
+    ("dsmr_version", "old_unique_id", "new_unique_id"),
     [
         ("5", "1234_Power_Consumption", "1234_current_electricity_usage"),
         ("5", "1234_Power_Production", "1234_current_electricity_delivery"),
@@ -85,6 +85,7 @@ from tests.common import MockConfigEntry
 )
 async def test_migrate_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
     dsmr_version: str,
     old_unique_id: str,
@@ -109,7 +110,6 @@ async def test_migrate_unique_id(
 
     mock_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id="my_sensor",
         disabled_by=None,

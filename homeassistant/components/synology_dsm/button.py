@@ -1,7 +1,7 @@
 """Support for Synology DSM buttons."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any, Final
@@ -12,8 +12,9 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -27,7 +28,7 @@ LOGGER = logging.getLogger(__name__)
 class SynologyDSMbuttonDescriptionMixin:
     """Mixin to describe a Synology DSM button entity."""
 
-    press_action: Callable[[SynoApi], Any]
+    press_action: Callable[[SynoApi], Callable[[], Coroutine[Any, Any, None]]]
 
 
 @dataclass
@@ -43,14 +44,14 @@ BUTTONS: Final = [
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda syno_api: syno_api.async_reboot(),
+        press_action=lambda syno_api: syno_api.async_reboot,
     ),
     SynologyDSMbuttonDescription(
         key="shutdown",
         name="Shutdown",
         icon="mdi:power",
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda syno_api: syno_api.async_shutdown(),
+        press_action=lambda syno_api: syno_api.async_shutdown,
     ),
 ]
 
@@ -92,4 +93,4 @@ class SynologyDSMButton(ButtonEntity):
             self.entity_description.key,
             self.syno_api.network.hostname,
         )
-        await self.entity_description.press_action(self.syno_api)
+        await self.entity_description.press_action(self.syno_api)()

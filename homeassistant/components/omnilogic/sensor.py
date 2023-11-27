@@ -66,7 +66,7 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         coordinator: OmniLogicUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: str,
+        device_class: SensorDeviceClass | None,
         icon: str,
         unit: str,
         item_id: tuple,
@@ -85,19 +85,9 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         unit_type = coordinator.data[backyard_id].get("Unit-of-Measurement")
 
         self._unit_type = unit_type
-        self._device_class = device_class
-        self._unit = unit
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = unit
         self._state_key = state_key
-
-    @property
-    def device_class(self):
-        """Return the device class of the entity."""
-        return self._device_class
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the right unit of measure."""
-        return self._unit
 
 
 class OmniLogicTemperatureSensor(OmnilogicSensor):
@@ -123,7 +113,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         self._attrs["hayward_temperature"] = hayward_state
         self._attrs["hayward_unit_of_measure"] = hayward_unit_of_measure
 
-        self._unit = UnitOfTemperature.FAHRENHEIT
+        self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
 
         return state
 
@@ -143,10 +133,10 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
         pump_speed = self.coordinator.data[self._item_id][self._state_key]
 
         if pump_type == "VARIABLE":
-            self._unit = PERCENTAGE
+            self._attr_native_unit_of_measurement = PERCENTAGE
             state = pump_speed
         elif pump_type == "DUAL":
-            self._unit = None
+            self._attr_native_unit_of_measurement = None
             if pump_speed == 0:
                 state = "off"
             elif pump_speed == self.coordinator.data[self._item_id].get(
@@ -171,13 +161,12 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         """Return the state for the salt level sensor."""
 
         salt_return = self.coordinator.data[self._item_id][self._state_key]
-        unit_of_measurement = self._unit
 
         if self._unit_type == "Metric":
             salt_return = round(int(salt_return) / 1000, 2)
-            unit_of_measurement = f"{UnitOfMass.GRAMS}/{UnitOfVolume.LITERS}"
-
-        self._unit = unit_of_measurement
+            self._attr_native_unit_of_measurement = (
+                f"{UnitOfMass.GRAMS}/{UnitOfVolume.LITERS}"
+            )
 
         return salt_return
 
@@ -188,9 +177,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
     @property
     def native_value(self):
         """Return the state for the chlorinator sensor."""
-        state = self.coordinator.data[self._item_id][self._state_key]
-
-        return state
+        return self.coordinator.data[self._item_id][self._state_key]
 
 
 class OmniLogicPHSensor(OmnilogicSensor):
@@ -224,7 +211,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         name: str,
         kind: str,
         item_id: tuple,
-        device_class: str,
+        device_class: SensorDeviceClass | None,
         icon: str,
         unit: str,
     ) -> None:

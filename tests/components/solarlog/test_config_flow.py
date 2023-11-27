@@ -7,6 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +15,7 @@ NAME = "Solarlog test 1 2 3"
 HOST = "http://1.1.1.1"
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -58,7 +59,7 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass, test_connect):
+async def test_user(hass: HomeAssistant, test_connect) -> None:
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -73,7 +74,7 @@ async def test_user(hass, test_connect):
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_import(hass, test_connect):
+async def test_import(hass: HomeAssistant, test_connect) -> None:
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -96,7 +97,7 @@ async def test_import(hass, test_connect):
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_abort_if_already_setup(hass, test_connect):
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(

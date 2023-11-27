@@ -6,7 +6,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -21,8 +21,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
-from homeassistant.helpers import device_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -36,7 +35,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Optional[Mapping[str, Any]]
+FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):
@@ -127,7 +126,8 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_set_info_from_discovery(discovery_info)
 
@@ -501,4 +501,4 @@ async def _async_get_mac_address(hass: HomeAssistant, host: str) -> str | None:
     if not mac_address:
         return None
 
-    return device_registry.format_mac(mac_address)
+    return dr.format_mac(mac_address)

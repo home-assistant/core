@@ -1,4 +1,5 @@
 """Tests for the lifx integration config flow."""
+from ipaddress import ip_address
 import socket
 from unittest.mock import patch
 
@@ -32,7 +33,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_discovery(hass: HomeAssistant):
+async def test_discovery(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
@@ -96,7 +97,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_but_cannot_connect(hass: HomeAssistant):
+async def test_discovery_but_cannot_connect(hass: HomeAssistant) -> None:
     """Test we can discover the device but we cannot connect."""
     with _patch_discovery(), _patch_config_flow_try_connect(no_device=True):
         result = await hass.config_entries.flow.async_init(
@@ -123,7 +124,7 @@ async def test_discovery_but_cannot_connect(hass: HomeAssistant):
     assert result3["reason"] == "cannot_connect"
 
 
-async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id="dd:dd:dd:dd:dd:dd"
@@ -197,7 +198,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_no_device(hass: HomeAssistant):
+async def test_discovery_no_device(hass: HomeAssistant) -> None:
     """Test discovery without device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -213,7 +214,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual(hass: HomeAssistant) -> None:
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -265,7 +266,7 @@ async def test_manual(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_manual_dns_error(hass: HomeAssistant):
+async def test_manual_dns_error(hass: HomeAssistant) -> None:
     """Test manually setup with unresolving host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -303,7 +304,7 @@ async def test_manual_dns_error(hass: HomeAssistant):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_manual_no_capabilities(hass: HomeAssistant):
+async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     """Test manually setup without successful get_capabilities."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -326,7 +327,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_discovery_and_dhcp(hass):
+async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
     with _patch_discovery(), _patch_config_flow_try_connect():
@@ -379,7 +380,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -388,8 +389,8 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
@@ -403,7 +404,9 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_discovery(hass, source, data):
+async def test_discovered_by_dhcp_or_discovery(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we can setup when discovered from dhcp or discovery."""
 
     with _patch_discovery(), _patch_config_flow_try_connect():
@@ -432,7 +435,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -441,8 +444,8 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
@@ -456,7 +459,9 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source, data):
+async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
 
     with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
@@ -471,7 +476,7 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -480,8 +485,8 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
@@ -491,7 +496,9 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_homekit_updates_ip(hass, source, data):
+async def test_discovered_by_dhcp_or_homekit_updates_ip(
+    hass: HomeAssistant, source, data
+) -> None:
     """Update host from dhcp."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id=SERIAL
@@ -509,7 +516,7 @@ async def test_discovered_by_dhcp_or_homekit_updates_ip(hass, source, data):
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
-async def test_refuse_relays(hass: HomeAssistant):
+async def test_refuse_relays(hass: HomeAssistant) -> None:
     """Test we refuse to setup relays."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -529,7 +536,11 @@ async def test_refuse_relays(hass: HomeAssistant):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_suggested_area(hass: HomeAssistant) -> None:
+async def test_suggested_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test suggested area is populated from lifx group label."""
 
     class MockLifxCommandGetGroup:
@@ -540,9 +551,11 @@ async def test_suggested_area(hass: HomeAssistant) -> None:
             self.bulb = bulb
             self.lifx_group = kwargs.get("lifx_group")
 
-        def __call__(self, *args, **kwargs):
+        def __call__(self, callb=None, *args, **kwargs):
             """Call command."""
             self.bulb.group = self.lifx_group
+            if callb:
+                callb(self.bulb, self.lifx_group)
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=SERIAL
@@ -558,10 +571,8 @@ async def test_suggested_area(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entity_id = "light.my_bulb"
     entity = entity_registry.async_get(entity_id)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entity.device_id)
     assert device.suggested_area == "My LIFX Group"

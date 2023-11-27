@@ -1,7 +1,7 @@
 """Fixtures for Risco tests."""
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from pytest import fixture
+import pytest
 
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
 from homeassistant.const import (
@@ -30,7 +30,7 @@ TEST_LOCAL_CONFIG = {
 }
 
 
-@fixture
+@pytest.fixture
 def two_zone_cloud():
     """Fixture to mock alarm with two zones."""
     zone_mocks = {0: zone_mock(), 1: zone_mock()}
@@ -58,7 +58,7 @@ def two_zone_cloud():
         yield zone_mocks
 
 
-@fixture
+@pytest.fixture
 def two_zone_local():
     """Fixture to mock alarm with two zones."""
     zone_mocks = {0: zone_mock(), 1: zone_mock()}
@@ -92,19 +92,19 @@ def two_zone_local():
         yield zone_mocks
 
 
-@fixture
+@pytest.fixture
 def options():
     """Fixture for default (empty) options."""
     return {}
 
 
-@fixture
+@pytest.fixture
 def events():
     """Fixture for default (empty) events."""
     return []
 
 
-@fixture
+@pytest.fixture
 def cloud_config_entry(hass, options):
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
@@ -117,7 +117,7 @@ def cloud_config_entry(hass, options):
     return config_entry
 
 
-@fixture
+@pytest.fixture
 def login_with_error(exception):
     """Fixture to simulate error on login."""
     with patch(
@@ -127,7 +127,7 @@ def login_with_error(exception):
         yield
 
 
-@fixture
+@pytest.fixture
 async def setup_risco_cloud(hass, cloud_config_entry, events):
     """Set up a Risco integration for testing."""
     with patch(
@@ -140,7 +140,7 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
         "homeassistant.components.risco.RiscoCloud.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.RiscoCloud.close"
+        "homeassistant.components.risco.RiscoCloud.close",
     ), patch(
         "homeassistant.components.risco.RiscoCloud.get_events",
         return_value=events,
@@ -151,7 +151,7 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
         yield cloud_config_entry
 
 
-@fixture
+@pytest.fixture
 def local_config_entry(hass, options):
     """Fixture for a local config entry."""
     config_entry = MockConfigEntry(
@@ -161,7 +161,7 @@ def local_config_entry(hass, options):
     return config_entry
 
 
-@fixture
+@pytest.fixture
 def connect_with_error(exception):
     """Fixture to simulate error on connect."""
     with patch(
@@ -171,7 +171,17 @@ def connect_with_error(exception):
         yield
 
 
-@fixture
+@pytest.fixture
+def connect_with_single_error(exception):
+    """Fixture to simulate error on connect."""
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.connect",
+        side_effect=[exception, None],
+    ):
+        yield
+
+
+@pytest.fixture
 async def setup_risco_local(hass, local_config_entry):
     """Set up a local Risco integration for testing."""
     with patch(
@@ -181,7 +191,7 @@ async def setup_risco_local(hass, local_config_entry):
         "homeassistant.components.risco.RiscoLocal.id",
         new_callable=PropertyMock(return_value=TEST_SITE_UUID),
     ), patch(
-        "homeassistant.components.risco.RiscoLocal.disconnect"
+        "homeassistant.components.risco.RiscoLocal.disconnect",
     ):
         await hass.config_entries.async_setup(local_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import MODEL_BULB
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -81,7 +82,6 @@ def async_setup_block_entry(
                 continue
 
             blocks.append(block)
-            assert coordinator.device.shelly
             unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
@@ -255,7 +255,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        if self.coordinator.model == "SHBLB-1":
+        if self.coordinator.model == MODEL_BULB:
             return list(SHBLB_1_RGB_EFFECTS.values())
 
         return list(STANDARD_RGB_EFFECTS.values())
@@ -268,7 +268,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         else:
             effect_index = self.block.effect
 
-        if self.coordinator.model == "SHBLB-1":
+        if self.coordinator.model == MODEL_BULB:
             return SHBLB_1_RGB_EFFECTS[effect_index]
 
         return STANDARD_RGB_EFFECTS[effect_index]
@@ -299,7 +299,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             ATTR_COLOR_TEMP_KELVIN in kwargs
             and ColorMode.COLOR_TEMP in supported_color_modes
         ):
-            # Color temperature change - used only in white mode, switch device mode to white
+            # Color temperature change - used only in white mode,
+            # switch device mode to white
             color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
             set_mode = "white"
             params["temp"] = int(
@@ -310,12 +311,14 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             )
 
         if ATTR_RGB_COLOR in kwargs and ColorMode.RGB in supported_color_modes:
-            # Color channels change - used only in color mode, switch device mode to color
+            # Color channels change - used only in color mode,
+            # switch device mode to color
             set_mode = "color"
             (params["red"], params["green"], params["blue"]) = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs and ColorMode.RGBW in supported_color_modes:
-            # Color channels change - used only in color mode, switch device mode to color
+            # Color channels change - used only in color mode,
+            # switch device mode to color
             set_mode = "color"
             (params["red"], params["green"], params["blue"], params["white"]) = kwargs[
                 ATTR_RGBW_COLOR
@@ -324,7 +327,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP_KELVIN not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
-            if self.coordinator.model == "SHBLB-1":
+            if self.coordinator.model == MODEL_BULB:
                 effect_dict = SHBLB_1_RGB_EFFECTS
             else:
                 effect_dict = STANDARD_RGB_EFFECTS

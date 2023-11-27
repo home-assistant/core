@@ -290,7 +290,7 @@ async def async_start(  # noqa: C901
 
         for platform in PLATFORMS:
             tasmota_entities = tasmota_get_entities_for_platform(payload, platform)
-            for (tasmota_entity_config, discovery_hash) in tasmota_entities:
+            for tasmota_entity_config, discovery_hash in tasmota_entities:
                 _discover_entity(tasmota_entity_config, discovery_hash, platform)
 
     async def async_sensors_discovered(
@@ -302,7 +302,7 @@ async def async_start(  # noqa: C901
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
         device = device_registry.async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}
         )
 
         if device is None:
@@ -316,7 +316,7 @@ async def async_start(  # noqa: C901
             )
             if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
         }
-        for (tasmota_sensor_config, discovery_hash) in sensors:
+        for tasmota_sensor_config, discovery_hash in sensors:
             if tasmota_sensor_config:
                 orphaned_entities.discard(tasmota_sensor_config.unique_id)
             _discover_entity(tasmota_sensor_config, discovery_hash, platform)

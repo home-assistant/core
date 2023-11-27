@@ -28,10 +28,10 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
+    EVENT_QUERY_RECEIVED,  # noqa: F401
     SERVICE_REQUEST_SYNC,
     SOURCE_CLOUD,
 )
-from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 from .http import GoogleAssistantView, GoogleConfig
 
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
@@ -166,6 +166,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
         )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -44,11 +45,13 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
-    entity_registry,
+    entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,6 +59,8 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
+    BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
+    BUTTON_KEY_RESTART,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -85,7 +90,7 @@ from .const import (
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,6 +131,7 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -143,9 +149,11 @@ class Router:
     url: str
 
     data: dict[str, Any] = field(default_factory=dict, init=False)
-    subscriptions: dict[str, set[str]] = field(
+    # Values are lists rather than sets, because the same item may be used by more than
+    # one thing, such as MonthDuration for CurrentMonth{Download,Upload}.
+    subscriptions: dict[str, list[str]] = field(
         default_factory=lambda: defaultdict(
-            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+            list, ((x, ["initial_scan"]) for x in ALL_KEYS)
         ),
         init=False,
     )
@@ -327,22 +335,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
 
-    def get_connection() -> Connection:
+    def _connect() -> Connection:
         """Set up a connection."""
+        kwargs: dict[str, Any] = {
+            "timeout": CONNECTION_TIMEOUT,
+        }
+        if url.startswith("https://") and not entry.data.get(CONF_VERIFY_SSL):
+            kwargs["requests_session"] = non_verifying_requests_session(url)
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
-            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
+            connection = Connection(url, **kwargs)
         else:
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = Connection(
-                url, username=username, password=password, timeout=CONNECTION_TIMEOUT
-            )
+            connection = Connection(url, username=username, password=password, **kwargs)
         return connection
 
     try:
-        connection = await hass.async_add_executor_job(get_connection)
+        connection = await hass.async_add_executor_job(_connect)
     except LoginErrorInvalidCredentialsException as ex:
         raise ConfigEntryAuthFailed from ex
     except Timeout as ex:
@@ -360,8 +371,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Transitional from < 2021.8: update None config entry and entity unique ids
         if router_info and (serial_number := router_info.get("SerialNumber")):
             hass.config_entries.async_update_entry(entry, unique_id=serial_number)
-            ent_reg = entity_registry.async_get(hass)
-            for entity_entry in entity_registry.async_entries_for_config_entry(
+            ent_reg = er.async_get(hass)
+            for entity_entry in er.async_entries_for_config_entry(
                 ent_reg, entry.entry_id
             ):
                 if not entity_entry.unique_id.startswith("None-"):
@@ -414,9 +425,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
-            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
-            manufacturer=entry.data.get(CONF_MANUFACTURER),
+            manufacturer=entry.data.get(CONF_MANUFACTURER, DEFAULT_MANUFACTURER),
             name=router.device_name,
         )
         hw_version = None
@@ -457,8 +467,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     def _update_router(*_: Any) -> None:
-        """
-        Update router data.
+        """Update router data.
 
         Separate passthrough function because lambdas don't work with track_time_interval.
         """
@@ -497,8 +506,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
     def service_handler(service: ServiceCall) -> None:
-        """
-        Apply a service.
+        """Apply a service.
 
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.
@@ -525,12 +533,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            create_issue(
+                hass,
+                DOMAIN,
+                "service_clear_traffic_statistics_moved_to_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_changed_to_button",
+                translation_placeholders={
+                    "service": service.service,
+                    "button": BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
+                },
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            create_issue(
+                hass,
+                DOMAIN,
+                "service_reboot_moved_to_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_changed_to_button",
+                translation_placeholders={
+                    "service": service.service,
+                    "button": BUTTON_KEY_RESTART,
+                },
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return

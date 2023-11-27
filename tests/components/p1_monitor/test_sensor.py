@@ -16,11 +16,11 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CURRENCY_EURO,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    VOLUME_LITERS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -43,23 +43,26 @@ async def test_smartmeter(
     assert state
     assert entry.unique_id == f"{entry_id}_smartmeter_power_consumption"
     assert state.state == "877"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumption"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "SmartMeter Power consumption"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.smartmeter_energy_consumption_high")
-    entry = entity_registry.async_get("sensor.smartmeter_energy_consumption_high")
+    state = hass.states.get("sensor.smartmeter_energy_consumption_high_tariff")
+    entry = entity_registry.async_get(
+        "sensor.smartmeter_energy_consumption_high_tariff"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_smartmeter_energy_consumption_high"
     assert state.state == "2770.133"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - High Tariff"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "SmartMeter Energy consumption - High tariff"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -69,7 +72,7 @@ async def test_smartmeter(
     assert state
     assert entry.unique_id == f"{entry_id}_smartmeter_energy_tariff_period"
     assert state.state == "high"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Tariff Period"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "SmartMeter Energy tariff period"
     assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -100,9 +103,11 @@ async def test_phases(
     assert state
     assert entry.unique_id == f"{entry_id}_phases_voltage_phase_l1"
     assert state.state == "233.6"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Voltage Phase L1"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Phases Voltage phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_POTENTIAL_VOLT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricPotential.VOLT
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
     assert ATTR_ICON not in state.attributes
 
@@ -112,9 +117,11 @@ async def test_phases(
     assert state
     assert entry.unique_id == f"{entry_id}_phases_current_phase_l1"
     assert state.state == "1.6"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Current Phase L1"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Phases Current phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_AMPERE
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricCurrent.AMPERE
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
     assert ATTR_ICON not in state.attributes
 
@@ -124,9 +131,9 @@ async def test_phases(
     assert state
     assert entry.unique_id == f"{entry_id}_phases_power_consumed_phase_l1"
     assert state.state == "315"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumed Phase L1"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Phases Power consumed phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
 
@@ -156,11 +163,14 @@ async def test_settings(
     assert state
     assert entry.unique_id == f"{entry_id}_settings_energy_consumption_price_low"
     assert state.state == "0.20522"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Settings Energy consumption price - Low"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
     )
 
     state = hass.states.get("sensor.settings_energy_production_price_low")
@@ -169,11 +179,14 @@ async def test_settings(
     assert state
     assert entry.unique_id == f"{entry_id}_settings_energy_production_price_low"
     assert state.state == "0.20522"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Settings Energy production price - Low"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
     )
 
     assert entry.device_id
@@ -201,9 +214,9 @@ async def test_watermeter(
     assert state
     assert entry.unique_id == f"{entry_id}_watermeter_consumption_day"
     assert state.state == "112.0"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Consumption Day"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "WaterMeter Consumption day"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_LITERS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.LITERS
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

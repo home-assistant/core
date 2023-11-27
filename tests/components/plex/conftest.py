@@ -1,5 +1,6 @@
 """Fixtures for Plex tests."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,6 +17,15 @@ from tests.common import MockConfigEntry, load_fixture
 def plex_server_url(entry):
     """Return a protocol-less URL from a config entry."""
     return entry.data[PLEX_SERVER_CONFIG][CONF_URL].split(":", 1)[-1]
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="album", scope="session")
@@ -222,6 +232,12 @@ def player_plexweb_resources_fixture():
     return load_fixture("plex/player_plexweb_resources.xml")
 
 
+@pytest.fixture(name="player_plexhtpc_resources", scope="session")
+def player_plexhtpc_resources_fixture():
+    """Load resources payload for a Plex HTPC player and return it."""
+    return load_fixture("plex/player_plexhtpc_resources.xml")
+
+
 @pytest.fixture(name="playlists", scope="session")
 def playlists_fixture():
     """Load payload for all playlists and return it."""
@@ -380,6 +396,24 @@ def hubs_music_library_fixture():
     return load_fixture("plex/hubs_library_section.xml")
 
 
+@pytest.fixture(name="update_check_nochange", scope="session")
+def update_check_fixture_nochange() -> str:
+    """Load a no-change update resource payload and return it."""
+    return load_fixture("plex/release_nochange.xml")
+
+
+@pytest.fixture(name="update_check_new", scope="session")
+def update_check_fixture_new() -> str:
+    """Load a changed update resource payload and return it."""
+    return load_fixture("plex/release_new.xml")
+
+
+@pytest.fixture(name="update_check_new_not_updatable", scope="session")
+def update_check_fixture_new_not_updatable() -> str:
+    """Load a changed update resource payload (not updatable) and return it."""
+    return load_fixture("plex/release_new_not_updatable.xml")
+
+
 @pytest.fixture(name="entry")
 async def mock_config_entry():
     """Return the default mocked config entry."""
@@ -436,12 +470,13 @@ def mock_plex_calls(
     plex_server_clients,
     plex_server_default,
     security_token,
+    update_check_nochange,
 ):
     """Mock Plex API calls."""
     requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
     requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
-    requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
+    requests_mock.get("https://plex.tv/api/v2/user", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
 
     url = plex_server_url(entry)
 
@@ -503,6 +538,8 @@ def mock_plex_calls(
     requests_mock.get(f"{url}/playlists", text=playlists)
     requests_mock.get(f"{url}/playlists/500/items", text=playlist_500)
     requests_mock.get(f"{url}/security/token", text=security_token)
+    requests_mock.put(f"{url}/updater/check")
+    requests_mock.get(f"{url}/updater/status", text=update_check_nochange)
 
 
 @pytest.fixture

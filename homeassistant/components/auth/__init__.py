@@ -124,10 +124,12 @@ as part of a config flow.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any, Optional, cast
+from logging import getLogger
+from typing import Any, cast
 import uuid
 
 from aiohttp import web
@@ -138,6 +140,7 @@ from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
+    RefreshToken,
     User,
 )
 from homeassistant.components import websocket_api
@@ -149,6 +152,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -159,7 +163,9 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 
 StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Optional[Credentials]]
+RetrieveResultType = Callable[[str, str], Credentials | None]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -185,6 +191,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
     websocket_api.async_register_command(hass, websocket_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
+    websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
 
     await login_flow.async_setup(hass, store_result)
@@ -438,7 +445,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(client_id: str, result: Credentials) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
-            raise ValueError("result has to be a Credentials instance")
+            raise TypeError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = (
@@ -593,6 +600,50 @@ async def websocket_delete_refresh_token(
     await hass.auth.async_remove_refresh_token(refresh_token)
 
     connection.send_result(msg["id"], {})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/delete_all_refresh_tokens",
+    }
+)
+@websocket_api.ws_require_user()
+@websocket_api.async_response
+async def websocket_delete_all_refresh_tokens(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle delete all refresh tokens request."""
+    tasks = []
+    current_refresh_token: RefreshToken
+    for token in connection.user.refresh_tokens.values():
+        if token.id == connection.refresh_token_id:
+            # Skip the current refresh token as it has revoke_callback,
+            # which cancels/closes the connection.
+            # It will be removed after sending the result.
+            current_refresh_token = token
+            continue
+        tasks.append(
+            hass.async_create_task(hass.auth.async_remove_refresh_token(token))
+        )
+
+    remove_failed = False
+    if tasks:
+        for result in await asyncio.gather(*tasks, return_exceptions=True):
+            if isinstance(result, Exception):
+                getLogger(__name__).exception(
+                    "During refresh token removal, the following error occurred: %s",
+                    result,
+                )
+                remove_failed = True
+
+    if remove_failed:
+        connection.send_error(
+            msg["id"], "token_removing_error", "During removal, an error was raised."
+        )
+    else:
+        connection.send_result(msg["id"], {})
+
+    hass.async_create_task(hass.auth.async_remove_refresh_token(current_refresh_token))
 
 
 @websocket_api.websocket_command(

@@ -1,5 +1,4 @@
-"""
-Support for Homekit number ranges.
+"""Support for Homekit number ranges.
 
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
@@ -16,9 +15,8 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,6 +47,18 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION,
+        name="Duration",
+        icon="mdi:timer",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY,
+        name="Sensitivity",
+        icon="mdi:knob",
         entity_category=EntityCategory.CONFIG,
     ),
 }

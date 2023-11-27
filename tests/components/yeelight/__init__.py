@@ -1,5 +1,6 @@
 """Tests for the Yeelight integration."""
 from datetime import timedelta
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
@@ -32,16 +33,18 @@ CAPABILITIES = {
     "model": MODEL,
     "fw_ver": FW_VER,
     "location": f"yeelight://{IP_ADDRESS}",
-    "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
-    " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
+    "support": (
+        "get_prop set_default set_power toggle set_bright start_cf stop_cf"
+        " set_scene cron_add cron_get cron_del set_ct_abx set_rgb"
+    ),
     "name": "",
 }
 
 ID_DECIMAL = f"{int(ID, 16):08d}"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host=IP_ADDRESS,
-    addresses=[IP_ADDRESS],
+    ip_address=ip_address(IP_ADDRESS),
+    ip_addresses=[ip_address(IP_ADDRESS)],
     port=54321,
     hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
     type="_miio._udp.local.",

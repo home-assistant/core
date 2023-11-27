@@ -5,8 +5,8 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ScreenlogicDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
@@ -19,6 +19,6 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "config_entry": config_entry.as_dict(),
-        "data": coordinator.data,
+        "data": coordinator.gateway.get_data(),
         "debug": coordinator.gateway.get_debug(),
     }

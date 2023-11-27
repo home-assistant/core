@@ -5,10 +5,18 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from denonavr.const import (
+    ALL_TELNET_EVENTS,
+    ALL_ZONES,
+    POWER_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -16,10 +24,10 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -29,7 +37,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
@@ -72,6 +80,23 @@ PARALLEL_UPDATES = 1
 SERVICE_GET_COMMAND = "get_command"
 SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
 SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+# HA Telnet events
+TELNET_EVENTS = {
+    "HD",
+    "MS",
+    "MU",
+    "MV",
+    "NS",
+    "NSE",
+    "PS",
+    "SI",
+    "SS",
+    "TF",
+    "ZM",
+    "Z2",
+    "Z3",
+}
 
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
@@ -140,8 +165,7 @@ async def async_setup_entry(
 def async_log_errors(
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
-    """
-    Log errors occurred when calling a Denon AVR receiver.
+    """Log errors occurred when calling a Denon AVR receiver.
 
     Decorates methods of DenonDevice class.
     Declaration of staticmethod for this method is at the end of this class.
@@ -198,11 +222,10 @@ def async_log_errors(
             )
         except DenonAvrError as err:
             available = False
-            _LOGGER.error(
+            _LOGGER.exception(
                 "Error %s occurred in method %s for Denon AVR receiver",
                 err,
                 func.__name__,
-                exc_info=True,
             )
         finally:
             if available and not self.available:
@@ -219,6 +242,10 @@ def async_log_errors(
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+
     def __init__(
         self,
         receiver: DenonAVR,
@@ -227,7 +254,6 @@ class DenonDevice(MediaPlayerEntity):
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
-        self._attr_name = receiver.name
         self._attr_unique_id = unique_id
         assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
@@ -236,10 +262,9 @@ class DenonDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
             model=config_entry.data[CONF_MODEL],
-            name=config_entry.title,
+            name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-
         self._receiver = receiver
         self._update_audyssey = update_audyssey
 
@@ -249,12 +274,58 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
+        self._telnet_was_healthy: bool | None = None
+
+    async def _telnet_callback(self, zone, event, parameter) -> None:
+        """Process a telnet command callback."""
+        # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
+        if zone not in (self._receiver.zone, ALL_ZONES):
+            return
+        if event not in TELNET_EVENTS:
+            return
+        # Some updates trigger multiple events like one for artist and one for title for one change
+        # We skip every event except the last one
+        if event == "NSE" and not parameter.startswith("4"):
+            return
+        if event == "TA" and not parameter.startwith("ANNAME"):
+            return
+        if event == "HD" and not parameter.startswith("ALBUM"):
+            return
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register for telnet events."""
+        self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up the entity."""
+        self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
+
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
-        await self._receiver.async_update()
+        receiver = self._receiver
+
+        # We can only skip the update if telnet was healthy after
+        # the last update and is still healthy now to ensure that
+        # we don't miss any state changes while telnet is down
+        # or reconnecting.
+        if (
+            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
+        ) and self._telnet_was_healthy:
+            return
+
+        # if async_update raises an exception, we don't want to skip the next update
+        # so we set _telnet_was_healthy to None here and only set it to the value
+        # before the update if the update was successful
+        self._telnet_was_healthy = None
+
+        await receiver.async_update()
+
+        self._telnet_was_healthy = telnet_is_healthy
+
         if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
+            await receiver.async_update_audyssey()
 
     @property
     def state(self) -> MediaPlayerState | None:

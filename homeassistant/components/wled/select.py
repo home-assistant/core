@@ -7,8 +7,8 @@ from wled import Live, Playlist, Preset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -50,7 +50,6 @@ class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:theater"
-    _attr_name = "Live override"
     _attr_translation_key = "live_override"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -75,7 +74,7 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
     """Defined a WLED Preset select."""
 
     _attr_icon = "mdi:playlist-play"
-    _attr_name = "Preset"
+    _attr_translation_key = "preset"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED ."""
@@ -106,7 +105,7 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
     """Define a WLED Playlist select."""
 
     _attr_icon = "mdi:play-speed"
-    _attr_name = "Playlist"
+    _attr_translation_key = "playlist"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED playlist."""

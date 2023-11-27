@@ -81,6 +81,7 @@ async def fake_post_request_no_data(*args, **kwargs):
 async def simulate_webhook(hass, webhook_id, response):
     """Simulate a webhook event."""
     request = MockRequest(
+        method="POST",
         content=bytes(json.dumps({**COMMON_RESPONSE, **response}), "utf-8"),
         mock_source="test",
     )
@@ -91,7 +92,11 @@ async def simulate_webhook(hass, webhook_id, response):
 @contextmanager
 def selected_platforms(platforms):
     """Restrict loaded platforms to list given."""
-    with patch("homeassistant.components.netatmo.PLATFORMS", platforms), patch(
+    with patch(
+        "homeassistant.components.netatmo.data_handler.PLATFORMS", platforms
+    ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
+    ), patch(
+        "homeassistant.components.netatmo.webhook_generate_url",
+    ):
         yield

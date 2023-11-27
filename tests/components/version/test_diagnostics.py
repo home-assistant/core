@@ -1,18 +1,17 @@
 """Test version diagnostics."""
 
 
-from aioaseko import ClientSession
-
 from homeassistant.core import HomeAssistant
 
 from .common import MOCK_VERSION, setup_version_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test diagnostic information."""
     config_entry = await setup_version_integration(hass)

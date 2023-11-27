@@ -13,10 +13,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex import DOMAIN as PLEX_DOMAIN, PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-async def test_plex_play_media(hass, async_autosetup_sonos):
+async def test_plex_play_media(hass: HomeAssistant, async_autosetup_sonos) -> None:
     """Test playing media via the Plex integration."""
     mock_plex_server = Mock()
     mock_lookup = mock_plex_server.lookup_media
@@ -33,7 +34,7 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
         "homeassistant.components.sonos.media_player.SonosMediaPlayerEntity.set_shuffle"
     ) as mock_shuffle:
         # Test successful Plex service call
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
@@ -53,9 +54,12 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
         # Test handling shuffle in payload
         mock_lookup.reset_mock()
         mock_add_to_queue.reset_mock()
-        shuffle_media_content_id = '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album", "shuffle": 1}'
+        shuffle_media_content_id = (
+            '{"library_name": "Music", "artist_name": "Artist", '
+            '"album_name": "Album", "shuffle": 1}'
+        )
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
@@ -103,13 +107,15 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
             "homeassistant.components.plex.services.get_plex_server",
             return_value=mock_plex_server,
         ):
-            assert await hass.services.async_call(
+            await hass.services.async_call(
                 MP_DOMAIN,
                 SERVICE_PLAY_MEDIA,
                 {
                     ATTR_ENTITY_ID: media_player,
                     ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                    ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{server_id}/{plex_item_key}?shuffle=1",
+                    ATTR_MEDIA_CONTENT_ID: (
+                        f"{PLEX_URI_SCHEME}{server_id}/{plex_item_key}?shuffle=1"
+                    ),
                 },
                 blocking=True,
             )

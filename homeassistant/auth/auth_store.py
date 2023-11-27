@@ -555,7 +555,9 @@ class AuthStore:
                 "client_icon": refresh_token.client_icon,
                 "token_type": refresh_token.token_type,
                 "created_at": refresh_token.created_at.isoformat(),
-                "access_token_expiration": refresh_token.access_token_expiration.total_seconds(),
+                "access_token_expiration": (
+                    refresh_token.access_token_expiration.total_seconds()
+                ),
                 "token": refresh_token.token,
                 "jwt_key": refresh_token.jwt_key,
                 "last_used_at": refresh_token.last_used_at.isoformat()

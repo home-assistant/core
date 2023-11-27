@@ -1,28 +1,28 @@
 """Define fixtures available for all tests."""
 from unittest.mock import patch
 
-from pytest import fixture
+import pytest
 
-from . import _get_mock_cfupdate
+from . import _get_mock_client
 
 
-@fixture
+@pytest.fixture
 def cfupdate(hass):
     """Mock the CloudflareUpdater for easier testing."""
-    mock_cfupdate = _get_mock_cfupdate()
+    mock_cfupdate = _get_mock_client()
     with patch(
-        "homeassistant.components.cloudflare.CloudflareUpdater",
+        "homeassistant.components.cloudflare.pycfdns.Client",
         return_value=mock_cfupdate,
     ) as mock_api:
         yield mock_api
 
 
-@fixture
+@pytest.fixture
 def cfupdate_flow(hass):
     """Mock the CloudflareUpdater for easier config flow testing."""
-    mock_cfupdate = _get_mock_cfupdate()
+    mock_cfupdate = _get_mock_client()
     with patch(
-        "homeassistant.components.cloudflare.config_flow.CloudflareUpdater",
+        "homeassistant.components.cloudflare.pycfdns.Client",
         return_value=mock_cfupdate,
     ) as mock_api:
         yield mock_api

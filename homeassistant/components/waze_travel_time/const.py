@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 DOMAIN = "waze_travel_time"
+SEMAPHORE = "semaphore"
 
 CONF_DESTINATION = "destination"
 CONF_ORIGIN = "origin"
@@ -25,7 +26,7 @@ IMPERIAL_UNITS = "imperial"
 METRIC_UNITS = "metric"
 UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 
-REGIONS = ["US", "NA", "EU", "IL", "AU"]
+REGIONS = ["us", "na", "eu", "il", "au"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
 
 DEFAULT_OPTIONS: dict[str, str | bool] = {

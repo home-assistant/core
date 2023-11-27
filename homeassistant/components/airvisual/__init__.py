@@ -266,8 +266,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": source},
-                    data={CONF_API_KEY: entry.data[CONF_API_KEY], **geography},
+                    context={"source": SOURCE_IMPORT},
+                    data={
+                        "import_source": source,
+                        CONF_API_KEY: entry.data[CONF_API_KEY],
+                        **geography,
+                    },
                 )
             )
 
@@ -376,7 +380,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
         else:
             entry.version = version
-            hass.config_entries.async_update_entry(entry)
 
     LOGGER.info("Migration to version %s successful", version)
 
@@ -420,6 +423,7 @@ class AirVisualEntity(CoordinatorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
 
         @callback
         def update() -> None:

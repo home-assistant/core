@@ -26,6 +26,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -36,7 +37,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,8 +55,7 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 
 
 def thread_node_capability_to_str(char: Characteristic) -> str:
-    """
-    Return the thread device type as a string.
+    """Return the thread device type as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. Some devices will have multiple capabilities.
@@ -93,8 +92,7 @@ def thread_node_capability_to_str(char: Characteristic) -> str:
 
 
 def thread_status_to_str(char: Characteristic) -> str:
-    """
-    Return the thread status as a string.
+    """Return the thread status as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. So we check the flags in order. E.g. BORDER_ROUTER implies
@@ -333,6 +331,20 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
+    CharacteristicsTypes.FILTER_LIFE_LEVEL: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.FILTER_LIFE_LEVEL,
+        name="Filter lifetime",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION,
+        name="Valve position",
+        icon="mdi:pipe-valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 }
 
 
@@ -462,21 +474,23 @@ class HomeKitBatterySensor(HomeKitSensor):
     @property
     def icon(self) -> str:
         """Return the sensor icon."""
-        if not self.available or self.state is None:
+        native_value = self.native_value
+        if not self.available or native_value is None:
             return "mdi:battery-unknown"
 
         # This is similar to the logic in helpers.icon, but we have delegated the
         # decision about what mdi:battery-alert is to the device.
         icon = "mdi:battery"
-        if self.is_charging and self.state > 10:
-            percentage = int(round(self.state / 20 - 0.01)) * 20
+        is_charging = self.is_charging
+        if is_charging and native_value > 10:
+            percentage = int(round(native_value / 20 - 0.01)) * 20
             icon += f"-charging-{percentage}"
-        elif self.is_charging:
+        elif is_charging:
             icon += "-outline"
         elif self.is_low_battery:
             icon += "-alert"
-        elif self.state < 95:
-            percentage = max(int(round(self.state / 10 - 0.01)) * 10, 10)
+        elif native_value < 95:
+            percentage = max(int(round(native_value / 10 - 0.01)) * 10, 10)
             icon += f"-{percentage}"
 
         return icon
@@ -501,8 +515,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
 
 class SimpleSensor(CharacteristicEntity, SensorEntity):
-    """
-    A simple sensor for a single characteristic.
+    """A simple sensor for a single characteristic.
 
     This may be an additional secondary entity that is part of another service. An
     example is a switch that has an energy sensor.
@@ -568,6 +581,11 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_should_poll = False
 
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
+        """Initialise a HomeKit Controller RSSI sensor."""
+        super().__init__(accessory, devinfo)
+        self._attr_unique_id = f"{accessory.unique_id}_rssi"
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return []
@@ -588,11 +606,6 @@ class RSSISensor(HomeKitEntity, SensorEntity):
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-rssi"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
-        return f"{self._accessory.unique_id}_rssi"
 
     @property
     def native_value(self) -> int | None:
@@ -654,6 +667,7 @@ async def async_setup_entry(
         accessory_info = accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
+        assert accessory_info
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
         entity = RSSISensor(conn, info)
         conn.async_migrate_unique_id(

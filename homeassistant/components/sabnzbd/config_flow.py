@@ -52,7 +52,6 @@ class SABnzbdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-
             errors = await self._async_validate_input(user_input)
 
             if not errors:

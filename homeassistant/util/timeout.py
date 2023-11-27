@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import enum
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 from .async_ import run_callback_threadsafe
 
@@ -32,7 +32,7 @@ class _GlobalFreezeContext:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._manager: TimeoutManager = manager
 
-    async def __aenter__(self) -> _GlobalFreezeContext:
+    async def __aenter__(self) -> Self:
         self._enter()
         return self
 
@@ -45,11 +45,11 @@ class _GlobalFreezeContext:
         self._exit()
         return None
 
-    def __enter__(self) -> _GlobalFreezeContext:
+    def __enter__(self) -> Self:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(  # pylint: disable=useless-return
+    def __exit__(
         self,
         exc_type: type[BaseException],
         exc_val: BaseException,
@@ -100,7 +100,7 @@ class _ZoneFreezeContext:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._zone: _ZoneTimeoutManager = zone
 
-    async def __aenter__(self) -> _ZoneFreezeContext:
+    async def __aenter__(self) -> Self:
         self._enter()
         return self
 
@@ -113,11 +113,11 @@ class _ZoneFreezeContext:
         self._exit()
         return None
 
-    def __enter__(self) -> _ZoneFreezeContext:
+    def __enter__(self) -> Self:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(  # pylint: disable=useless-return
+    def __exit__(
         self,
         exc_type: type[BaseException],
         exc_val: BaseException,
@@ -157,11 +157,12 @@ class _GlobalTaskContext:
         self._time_left: float = timeout
         self._expiration_time: float | None = None
         self._timeout_handler: asyncio.Handle | None = None
+        self._on_wait_task: asyncio.Task | None = None
         self._wait_zone: asyncio.Event = asyncio.Event()
         self._state: _State = _State.INIT
         self._cool_down: float = cool_down
 
-    async def __aenter__(self) -> _GlobalTaskContext:
+    async def __aenter__(self) -> Self:
         self._manager.global_tasks.append(self)
         self._start_timer()
         self._state = _State.ACTIVE
@@ -221,7 +222,7 @@ class _GlobalTaskContext:
 
         # Reset timer if zones are running
         if not self._manager.zones_done:
-            asyncio.create_task(self._on_wait())
+            self._on_wait_task = asyncio.create_task(self._on_wait())
         else:
             self._cancel_task()
 
@@ -229,7 +230,7 @@ class _GlobalTaskContext:
         """Cancel own task."""
         if self._task.done():
             return
-        self._task.cancel()
+        self._task.cancel("Global task timeout")
 
     def pause(self) -> None:
         """Pause timers while it freeze."""
@@ -243,6 +244,7 @@ class _GlobalTaskContext:
         """Wait until zones are done."""
         await self._wait_zone.wait()
         await asyncio.sleep(self._cool_down)  # Allow context switch
+        self._on_wait_task = None
         if self.state != _State.TIMEOUT:
             return
         self._cancel_task()
@@ -271,7 +273,7 @@ class _ZoneTaskContext:
         """Return state of the Zone task."""
         return self._state
 
-    async def __aenter__(self) -> _ZoneTaskContext:
+    async def __aenter__(self) -> Self:
         self._zone.enter_task(self)
         self._state = _State.ACTIVE
 
@@ -326,7 +328,7 @@ class _ZoneTaskContext:
         # Timeout
         if self._task.done():
             return
-        self._task.cancel()
+        self._task.cancel("Zone timeout")
 
     def pause(self) -> None:
         """Pause timers while it freeze."""

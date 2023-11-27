@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 
-import W800rf32 as w800
 import voluptuous as vol
+import W800rf32 as w800
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -17,7 +17,6 @@ from homeassistant.helpers import config_validation as cv, event as evt
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
 
 from . import W800RF32_DEVICE
 
@@ -54,7 +53,6 @@ async def async_setup_platform(
     # device_id --> "c1 or a3" X10 device. entity (type dictionary)
     # --> name, device_class etc
     for device_id, entity in config[CONF_DEVICES].items():
-
         _LOGGER.debug(
             "Add %s w800rf32.binary_sensor (class %s)",
             entity[CONF_NAME],
@@ -128,9 +126,8 @@ class W800rf32BinarySensor(BinarySensorEntity):
             self.update_state(is_on)
 
         if self.is_on and self._off_delay is not None and self._delay_listener is None:
-
-            self._delay_listener = evt.async_track_point_in_time(
-                self.hass, self._off_delay_listener, dt_util.utcnow() + self._off_delay
+            self._delay_listener = evt.async_call_later(
+                self.hass, self._off_delay, self._off_delay_listener
             )
 
     def update_state(self, state):

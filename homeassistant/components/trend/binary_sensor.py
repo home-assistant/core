@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Mapping
 import logging
 import math
+from typing import Any
 
 import numpy as np
 import voluptuous as vol
@@ -12,6 +14,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -22,6 +25,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SENSORS,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -29,9 +33,13 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.dt import utcnow
 
 from . import PLATFORMS
@@ -110,59 +118,49 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class SensorTrend(BinarySensorEntity):
+class SensorTrend(BinarySensorEntity, RestoreEntity):
     """Representation of a trend Sensor."""
 
     _attr_should_poll = False
+    _gradient = 0.0
+    _state: bool | None = None
 
     def __init__(
         self,
-        hass,
-        device_id,
-        friendly_name,
-        entity_id,
-        attribute,
-        device_class,
-        invert,
-        max_samples,
-        min_gradient,
-        sample_duration,
-    ):
+        hass: HomeAssistant,
+        device_id: str,
+        friendly_name: str,
+        entity_id: str,
+        attribute: str,
+        device_class: BinarySensorDeviceClass,
+        invert: bool,
+        max_samples: int,
+        min_gradient: float,
+        sample_duration: int,
+    ) -> None:
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
-        self._name = friendly_name
+        self._attr_name = friendly_name
+        self._attr_device_class = device_class
         self._entity_id = entity_id
         self._attribute = attribute
-        self._device_class = device_class
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
-        self._gradient = None
-        self._state = None
-        self.samples = deque(maxlen=max_samples)
+        self.samples: deque = deque(maxlen=max_samples)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
 
     @property
-    def device_class(self):
-        """Return the sensor class of the sensor."""
-        return self._device_class
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_FRIENDLY_NAME: self._name,
+            ATTR_FRIENDLY_NAME: self._attr_name,
             ATTR_GRADIENT: self._gradient,
             ATTR_INVERT: self._invert,
             ATTR_MIN_GRADIENT: self._min_gradient,
@@ -174,9 +172,11 @@ class SensorTrend(BinarySensorEntity):
         """Complete device setup after being added to hass."""
 
         @callback
-        def trend_sensor_state_listener(event):
+        def trend_sensor_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle state changes on the observed device."""
-            if (new_state := event.data.get("new_state")) is None:
+            if (new_state := event.data["new_state"]) is None:
                 return
             try:
                 if self._attribute:
@@ -184,7 +184,7 @@ class SensorTrend(BinarySensorEntity):
                 else:
                     state = new_state.state
                 if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                    sample = (new_state.last_updated.timestamp(), float(state))
+                    sample = (new_state.last_updated.timestamp(), float(state))  # type: ignore[arg-type]
                     self.samples.append(sample)
                     self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
@@ -195,6 +195,12 @@ class SensorTrend(BinarySensorEntity):
                 self.hass, [self._entity_id], trend_sensor_state_listener
             )
         )
+
+        if not (state := await self.async_get_last_state()):
+            return
+        if state.state == STATE_UNKNOWN:
+            return
+        self._state = state.state == STATE_ON
 
     async def async_update(self) -> None:
         """Get the latest data and update the states."""
@@ -219,7 +225,7 @@ class SensorTrend(BinarySensorEntity):
         if self._invert:
             self._state = not self._state
 
-    def _calculate_gradient(self):
+    def _calculate_gradient(self) -> None:
         """Compute the linear trend gradient of the current samples.
 
         This need run inside executor.

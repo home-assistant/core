@@ -1,15 +1,16 @@
 """Alexa related errors."""
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import API_TEMP_UNITS
 
 
 class UnsupportedProperty(HomeAssistantError):
-    """This entity does not support the requested Smart Home API property."""
+    """Does not support the requested Smart Home API property."""
 
 
 class NoTokenAvailable(HomeAssistantError):
@@ -29,7 +30,9 @@ class AlexaError(Exception):
     namespace: str | None = None
     error_type: str | None = None
 
-    def __init__(self, error_message, payload=None):
+    def __init__(
+        self, error_message: str, payload: dict[str, Any] | None = None
+    ) -> None:
         """Initialize an alexa error."""
         Exception.__init__(self)
         self.error_message = error_message
@@ -42,7 +45,7 @@ class AlexaInvalidEndpointError(AlexaError):
     namespace = "Alexa"
     error_type = "NO_SUCH_ENDPOINT"
 
-    def __init__(self, endpoint_id):
+    def __init__(self, endpoint_id: str) -> None:
         """Initialize invalid endpoint error."""
         msg = f"The endpoint {endpoint_id} does not exist"
         AlexaError.__init__(self, msg)
@@ -87,13 +90,22 @@ class AlexaUnsupportedThermostatModeError(AlexaError):
     error_type = "UNSUPPORTED_THERMOSTAT_MODE"
 
 
+class AlexaUnsupportedThermostatTargetStateError(AlexaError):
+    """Class to represent unsupported climate target state error."""
+
+    namespace = "Alexa.ThermostatController"
+    error_type = "INVALID_TARGET_STATE"
+
+
 class AlexaTempRangeError(AlexaError):
     """Class to represent TempRange errors."""
 
     namespace = "Alexa"
     error_type = "TEMPERATURE_VALUE_OUT_OF_RANGE"
 
-    def __init__(self, hass, temp, min_temp, max_temp):
+    def __init__(
+        self, hass: HomeAssistant, temp: float, min_temp: float, max_temp: float
+    ) -> None:
         """Initialize TempRange error."""
         unit = hass.config.units.temperature_unit
         temp_range = {

@@ -1,9 +1,9 @@
 """Config flow for HomeKit integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
+from operator import itemgetter
 import random
 import re
 import string
@@ -29,15 +29,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry, entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
 )
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import async_get_integrations
 
 from .const import (
     CONF_ENTITY_CONFIG,
@@ -163,17 +166,14 @@ def _async_cameras_from_entities(entities: list[str]) -> dict[str, str]:
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of devices/entities HomeKit can support."""
-    integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS),
-        return_exceptions=True,
-    )
-    name_to_type_map = {
-        domain: domain
-        if isinstance(integrations[idx], Exception)
-        else integrations[idx].name
-        for idx, domain in enumerate(SUPPORTED_DOMAINS)
+    integrations = await async_get_integrations(hass, SUPPORTED_DOMAINS)
+    return {
+        domain: integration_or_exception.name
+        if (integration_or_exception := integrations[domain])
+        and not isinstance(integration_or_exception, Exception)
+        else domain
+        for domain in SUPPORTED_DOMAINS
     }
-    return name_to_type_map
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -257,7 +257,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
 
-    async def async_step_accessory(self, accessory_input: dict) -> FlowResult:
+    async def async_step_accessory(self, accessory_input: dict[str, Any]) -> FlowResult:
         """Handle creation a single accessory in accessory mode."""
         entity_id = accessory_input[CONF_ENTITY_ID]
         port = accessory_input[CONF_PORT]
@@ -283,7 +283,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
-    async def async_step_import(self, user_input: dict) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import from yaml."""
         if not self._async_is_unique_name_port(user_input):
             return self.async_abort(reason="port_name_in_use")
@@ -318,7 +318,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return suggested_name
 
     @callback
-    def _async_is_unique_name_port(self, user_input: dict[str, str]) -> bool:
+    def _async_is_unique_name_port(self, user_input: dict[str, Any]) -> bool:
         """Determine is a name or port is already used."""
         name = user_input[CONF_NAME]
         port = user_input[CONF_PORT]
@@ -634,16 +634,16 @@ async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
     results = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.TRIGGER
     )
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     unsorted: dict[str, str] = {}
     for device_id in results:
         entry = dev_reg.async_get(device_id)
         unsorted[device_id] = entry.name or device_id if entry else device_id
-    return dict(sorted(unsorted.items(), key=lambda item: item[1]))
+    return dict(sorted(unsorted.items(), key=itemgetter(1)))
 
 
 def _exclude_by_entity_registry(
-    ent_reg: entity_registry.EntityRegistry,
+    ent_reg: er.EntityRegistry,
     entity_id: str,
     include_entity_category: bool,
     include_hidden: bool,
@@ -665,7 +665,7 @@ def _async_get_matching_entities(
     include_hidden: bool = False,
 ) -> dict[str, str]:
     """Fetch all entities or entities in the given domains."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     return {
         state.entity_id: (
             f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"

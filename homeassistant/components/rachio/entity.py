@@ -1,7 +1,8 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_NAME, DOMAIN
 from .device import RachioIro
@@ -25,7 +26,7 @@ class RachioDevice(Entity):
             },
             connections={
                 (
-                    device_registry.CONNECTION_NETWORK_MAC,
+                    dr.CONNECTION_NETWORK_MAC,
                     self._controller.mac_address,
                 )
             },

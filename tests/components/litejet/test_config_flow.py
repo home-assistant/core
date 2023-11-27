@@ -6,11 +6,13 @@ from serial import SerialException
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION, DOMAIN
 from homeassistant.const import CONF_PORT
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+import homeassistant.helpers.issue_registry as ir
 
 from tests.common import MockConfigEntry
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -20,7 +22,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass, mock_litejet):
+async def test_create_entry(hass: HomeAssistant, mock_litejet) -> None:
     """Test create entry from user input."""
     test_data = {CONF_PORT: "/dev/test"}
 
@@ -33,7 +35,7 @@ async def test_create_entry(hass, mock_litejet):
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass):
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input when a config entry already exists."""
     first_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -51,7 +53,7 @@ async def test_flow_entry_already_exists(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_flow_open_failed(hass):
+async def test_flow_open_failed(hass: HomeAssistant) -> None:
     """Test user input when serial port open fails."""
     test_data = {CONF_PORT: "/dev/test"}
 
@@ -66,7 +68,7 @@ async def test_flow_open_failed(hass):
     assert result["errors"][CONF_PORT] == "open_failed"
 
 
-async def test_import_step(hass):
+async def test_import_step(hass: HomeAssistant, mock_litejet) -> None:
     """Test initializing via import step."""
     test_data = {CONF_PORT: "/dev/imported"}
     result = await hass.config_entries.flow.async_init(
@@ -77,8 +79,53 @@ async def test_import_step(hass):
     assert result["title"] == test_data[CONF_PORT]
     assert result["data"] == test_data
 
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_litejet"
+    )
+    assert issue.translation_key == "deprecated_yaml"
 
-async def test_options(hass):
+
+async def test_import_step_fails(hass: HomeAssistant) -> None:
+    """Test initializing via import step fails due to can't open port."""
+    test_data = {CONF_PORT: "/dev/test"}
+    with patch("pylitejet.LiteJet") as mock_pylitejet:
+        mock_pylitejet.side_effect = SerialException
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=test_data
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {"port": "open_failed"}
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_serial_exception")
+
+
+async def test_import_step_already_exist(hass: HomeAssistant) -> None:
+    """Test initializing via import step when entry already exist."""
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PORT: "/dev/imported"},
+    )
+    first_entry.add_to_hass(hass)
+
+    test_data = {CONF_PORT: "/dev/imported"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=test_data
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_litejet"
+    )
+    assert issue.translation_key == "deprecated_yaml"
+
+
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_PORT: "/dev/test"})
     entry.add_to_hass(hass)

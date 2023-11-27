@@ -4,17 +4,20 @@
       "user": {
         "description": "Default host: {host}\nDefault username: {username}",
         "data": {
-          "host": "[%key:common::config_flow::data::host%] (Optional)",
-          "username": "[%key:common::config_flow::data::username%] (Optional)",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
-      "config": "Connection or login error: please check your configuration"
+      "config": "Connection or login error: please check your configuration",
+      "info": "Failed to get info from router"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_ipv4_address": "No IPv4 address in ssdp discovery information",
+      "no_serial": "No serial number in ssdp discovery information"
     }
   },
   "options": {
@@ -24,6 +27,117 @@
         "data": {
           "consider_home": "Consider home time (seconds)"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "link_type": {
+        "name": "Link type"
+      },
+      "link_rate": {
+        "name": "Link rate"
+      },
+      "signal_strength": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "access_point_mac": {
+        "name": "Access point mac"
+      },
+      "upload_today": {
+        "name": "Upload today"
+      },
+      "download_today": {
+        "name": "Download today"
+      },
+      "upload_yesterday": {
+        "name": "Upload yesterday"
+      },
+      "download_yesterday": {
+        "name": "Download yesterday"
+      },
+      "upload_week": {
+        "name": "Upload this week"
+      },
+      "upload_week_average": {
+        "name": "Upload this week average"
+      },
+      "download_week": {
+        "name": "Download this week"
+      },
+      "download_week_average": {
+        "name": "Download this week average"
+      },
+      "upload_month": {
+        "name": "Upload this month"
+      },
+      "upload_month_average": {
+        "name": "Upload this month average"
+      },
+      "download_month": {
+        "name": "Download this month"
+      },
+      "download_month_average": {
+        "name": "Download this month average"
+      },
+      "upload_last_month": {
+        "name": "Upload last month"
+      },
+      "upload_last_month_average": {
+        "name": "Upload last month average"
+      },
+      "download_last_month": {
+        "name": "Download last month"
+      },
+      "download_last_month_average": {
+        "name": "Download last month average"
+      },
+      "uplink_bandwidth": {
+        "name": "Uplink bandwidth"
+      },
+      "downlink_bandwidth": {
+        "name": "Downlink bandwidth"
+      },
+      "average_ping": {
+        "name": "Average ping"
+      },
+      "cpu_utilization": {
+        "name": "CPU utilization"
+      },
+      "memory_utilization": {
+        "name": "Memory utilization"
+      },
+      "ethernet_link_status": {
+        "name": "Ethernet link status"
+      }
+    },
+    "switch": {
+      "allowed_on_network": {
+        "name": "Allowed on network"
+      },
+      "access_control": {
+        "name": "Access control"
+      },
+      "traffic_meter": {
+        "name": "Traffic meter"
+      },
+      "parental_control": {
+        "name": "Parental control"
+      },
+      "quality_of_service": {
+        "name": "Quality of service"
+      },
+      "2g_guest_wifi": {
+        "name": "2.4GHz guest Wi-Fi"
+      },
+      "5g_guest_wifi": {
+        "name": "5GHz guest Wi-Fi"
+      },
+      "smart_connect": {
+        "name": "Smart connect"
       }
     }
   }

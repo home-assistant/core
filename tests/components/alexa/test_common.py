@@ -2,7 +2,9 @@
 from unittest.mock import Mock
 from uuid import uuid4
 
-from homeassistant.components.alexa import config, smart_home, smart_home_http
+import pytest
+
+from homeassistant.components.alexa import config, smart_home
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
@@ -14,7 +16,7 @@ TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 TEST_LOCALE = "en-US"
 
 
-class MockConfig(smart_home_http.AlexaConfig):
+class MockConfig(smart_home.AlexaConfig):
     """Mock Alexa config."""
 
     entity_config = {
@@ -216,7 +218,7 @@ class ReportedProperties:
         """Assert a property does not exist."""
         for prop in self.properties:
             if prop["namespace"] == namespace and prop["name"] == name:
-                assert False, "Property %s:%s exists"
+                pytest.fail(f"Property {namespace}:{name} exists")
 
     def assert_equal(self, namespace, name, value):
         """Assert a property is equal to a given value."""
@@ -225,4 +227,4 @@ class ReportedProperties:
                 assert prop["value"] == value
                 return prop
 
-        assert False, f"property {namespace}:{name} not in {self.properties!r}"
+        pytest.fail(f"property {namespace}:{name} not in {self.properties!r}")

@@ -9,11 +9,10 @@ from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
-from typing import Any, Final, TypeVar
+from typing import Any, Concatenate, Final, ParamSpec, TypeVar
 
 from aiohttp.web import Application, Request, Response, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -141,7 +140,7 @@ async def process_wrong_login(request: Request) -> None:
 
     # Supervisor IP should never be banned
     if "hassio" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from homeassistant.components import hassio
 
         if hassio.get_supervisor_ip() == str(remote_addr):
@@ -163,27 +162,28 @@ async def process_wrong_login(request: Request) -> None:
         )
 
 
-async def process_success_login(request: Request) -> None:
+@callback
+def process_success_login(request: Request) -> None:
     """Process a success login attempt.
 
     Reset failed login attempts counter for remote IP address.
     No release IP address from banned list function, it can only be done by
     manual modify ip bans config file.
     """
-    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
-
+    app = request.app
     # Check if ban middleware is loaded
-    if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
+    if KEY_BAN_MANAGER not in app or app[KEY_LOGIN_THRESHOLD] < 1:
         return
 
-    if (
-        remote_addr in request.app[KEY_FAILED_LOGIN_ATTEMPTS]
-        and request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0
-    ):
+    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
+    login_attempt_history: defaultdict[IPv4Address | IPv6Address, int] = app[
+        KEY_FAILED_LOGIN_ATTEMPTS
+    ]
+    if remote_addr in login_attempt_history and login_attempt_history[remote_addr] > 0:
         _LOGGER.debug(
             "Login success, reset failed login attempts counter from %s", remote_addr
         )
-        request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
+        login_attempt_history.pop(remote_addr)
 
 
 class IpBan:
@@ -243,5 +243,6 @@ class IpBanManager:
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
-        new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-        await self.hass.async_add_executor_job(self._add_ban, new_ban)
+        if remote_addr not in self.ip_bans_lookup:
+            new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
+            await self.hass.async_add_executor_job(self._add_ban, new_ban)

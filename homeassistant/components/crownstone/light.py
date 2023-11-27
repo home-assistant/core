@@ -65,13 +65,13 @@ def hass_to_crownstone_state(value: int) -> int:
 
 
 class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
-    """
-    Representation of a crownstone.
+    """Representation of a crownstone.
 
     Light platform is used to support dimming.
     """
 
     _attr_icon = "mdi:power-socket-de"
+    _attr_name = None
 
     def __init__(
         self, crownstone_data: Crownstone, usb: CrownstoneUart | None = None
@@ -80,7 +80,6 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         super().__init__(crownstone_data)
         self.usb = usb
         # Entity class attributes
-        self._attr_name = str(self.device.name)
         self._attr_unique_id = f"{self.cloud_id}-{CROWNSTONE_SUFFIX}"
 
     @property

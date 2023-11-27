@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
 from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
@@ -11,9 +11,9 @@ from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
@@ -21,12 +21,7 @@ from .util import serial_from_unique_id
 
 _DeviceT = TypeVar(
     "_DeviceT",
-    bound=Union[
-        PydeconzGroup,
-        PydeconzLightBase,
-        PydeconzSensorBase,
-        PydeconzScene,
-    ],
+    bound=PydeconzGroup | PydeconzLightBase | PydeconzSensorBase | PydeconzScene,
 )
 
 
@@ -134,9 +129,8 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
         if self.gateway.ignore_state_updates:
             return
 
-        if (
-            self._update_keys is not None
-            and not self._device.changed_keys.intersection(self._update_keys)
+        if self._update_keys is not None and not self._device.changed_keys.intersection(
+            self._update_keys
         ):
             return
 

@@ -1,4 +1,6 @@
 """Test reproduce state for Cover."""
+import pytest
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -15,13 +17,15 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Cover states."""
     hass.states.async_set("cover.entity_close", STATE_CLOSED, {})
     hass.states.async_set(

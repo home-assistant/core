@@ -3,6 +3,7 @@
   "device_automation": {
     "condition_type": {
       "is_apparent_power": "Current {entity_name} apparent power",
+      "is_aqi": "Current {entity_name} air quality index",
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
       "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
@@ -11,6 +12,7 @@
       "is_data_rate": "Current {entity_name} data rate",
       "is_data_size": "Current {entity_name} data size",
       "is_distance": "Current {entity_name} distance",
+      "is_duration": "Current {entity_name} duration",
       "is_energy": "Current {entity_name} energy",
       "is_frequency": "Current {entity_name} frequency",
       "is_gas": "Current {entity_name} gas",
@@ -18,15 +20,19 @@
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",
+      "is_monetary": "Current {entity_name} money",
       "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
       "is_ozone": "Current {entity_name} ozone concentration level",
+      "is_ph": "Current {entity_name} pH level",
       "is_pm1": "Current {entity_name} PM1 concentration level",
       "is_pm10": "Current {entity_name} PM10 concentration level",
       "is_pm25": "Current {entity_name} PM2.5 concentration level",
       "is_power": "Current {entity_name} power",
       "is_power_factor": "Current {entity_name} power factor",
+      "is_precipitation": "Current {entity_name} precipitation",
+      "is_precipitation_intensity": "Current {entity_name} precipitation intensity",
       "is_pressure": "Current {entity_name} pressure",
       "is_reactive_power": "Current {entity_name} reactive power",
       "is_signal_strength": "Current {entity_name} signal strength",
@@ -36,20 +42,25 @@
       "is_temperature": "Current {entity_name} temperature",
       "is_value": "Current {entity_name} value",
       "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
+      "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
       "is_voltage": "Current {entity_name} voltage",
       "is_volume": "Current {entity_name} volume",
       "is_water": "Current {entity_name} water",
-      "is_weight": "Current {entity_name} weight"
+      "is_weight": "Current {entity_name} weight",
+      "is_wind_speed": "Current {entity_name} wind speed"
     },
     "trigger_type": {
       "apparent_power": "{entity_name} apparent power changes",
+      "aqi": "{entity_name} air quality index changes",
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
       "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
       "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
       "current": "{entity_name} current changes",
       "data_rate": "{entity_name} data rate changes",
+      "data_size": "{entity_name} data size changes",
       "distance": "{entity_name} distance changes",
+      "duration": "{entity_name} duration changes",
       "energy": "{entity_name} energy changes",
       "frequency": "{entity_name} frequency changes",
       "gas": "{entity_name} gas changes",
@@ -57,15 +68,19 @@
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
+      "monetary": "{entity_name} money changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
       "ozone": "{entity_name} ozone concentration changes",
+      "ph": "{entity_name} pH level changes",
       "pm1": "{entity_name} PM1 concentration changes",
       "pm10": "{entity_name} PM10 concentration changes",
       "pm25": "{entity_name} PM2.5 concentration changes",
       "power": "{entity_name} power changes",
       "power_factor": "{entity_name} power factor changes",
+      "precipitation": "{entity_name} precipitation changes",
+      "precipitation_intensity": "{entity_name} precipitation intensity changes",
       "pressure": "{entity_name} pressure changes",
       "reactive_power": "{entity_name} reactive power changes",
       "signal_strength": "{entity_name} signal strength changes",
@@ -75,16 +90,187 @@
       "temperature": "{entity_name} temperature changes",
       "value": "{entity_name} value changes",
       "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
+      "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
       "voltage": "{entity_name} voltage changes",
       "volume": "{entity_name} volume changes",
       "water": "{entity_name} water changes",
-      "weight": "{entity_name} weight changes"
+      "weight": "{entity_name} weight changes",
+      "wind_speed": "{entity_name} wind speed changes"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::sensor::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "last_reset": {
+          "name": "Last reset"
+        },
+        "options": {
+          "name": "Possible states"
+        },
+        "state_class": {
+          "name": "State class",
+          "state": {
+            "measurement": "Measurement",
+            "total": "Total",
+            "total_increasing": "Total increasing"
+          }
+        }
+      }
+    },
+    "date": {
+      "name": "Date"
+    },
+    "duration": {
+      "name": "Duration"
+    },
+    "apparent_power": {
+      "name": "Apparent power"
+    },
+    "aqi": {
+      "name": "Air quality index"
+    },
+    "atmospheric_pressure": {
+      "name": "Atmospheric pressure"
+    },
+    "battery": {
+      "name": "Battery"
+    },
+    "carbon_monoxide": {
+      "name": "Carbon monoxide"
+    },
+    "carbon_dioxide": {
+      "name": "Carbon dioxide"
+    },
+    "current": {
+      "name": "Current"
+    },
+    "data_rate": {
+      "name": "Data rate"
+    },
+    "data_size": {
+      "name": "Data size"
+    },
+    "distance": {
+      "name": "Distance"
+    },
+    "energy": {
+      "name": "Energy"
+    },
+    "energy_storage": {
+      "name": "Stored energy"
+    },
+    "enum": {
+      "name": "[%key:component::sensor::title%]"
+    },
+    "frequency": {
+      "name": "Frequency"
+    },
+    "gas": {
+      "name": "Gas"
+    },
+    "humidity": {
+      "name": "Humidity"
+    },
+    "illuminance": {
+      "name": "Illuminance"
+    },
+    "irradiance": {
+      "name": "Irradiance"
+    },
+    "moisture": {
+      "name": "Moisture"
+    },
+    "monetary": {
+      "name": "Balance"
+    },
+    "nitrogen_dioxide": {
+      "name": "Nitrogen dioxide"
+    },
+    "nitrogen_monoxide": {
+      "name": "Nitrogen monoxide"
+    },
+    "nitrous_oxide": {
+      "name": "Nitrous oxide"
+    },
+    "ozone": {
+      "name": "Ozone"
+    },
+    "ph": {
+      "name": "pH"
+    },
+    "pm1": {
+      "name": "PM1"
+    },
+    "pm10": {
+      "name": "PM10"
+    },
+    "pm25": {
+      "name": "PM2.5"
+    },
+    "power_factor": {
+      "name": "Power factor"
+    },
+    "power": {
+      "name": "Power"
+    },
+    "precipitation": {
+      "name": "Precipitation"
+    },
+    "precipitation_intensity": {
+      "name": "Precipitation intensity"
+    },
+    "pressure": {
+      "name": "Pressure"
+    },
+    "reactive_power": {
+      "name": "Reactive power"
+    },
+    "signal_strength": {
+      "name": "Signal strength"
+    },
+    "sound_pressure": {
+      "name": "Sound pressure"
+    },
+    "speed": {
+      "name": "Speed"
+    },
+    "sulphur_dioxide": {
+      "name": "Sulphur dioxide"
+    },
+    "temperature": {
+      "name": "Temperature"
+    },
+    "timestamp": {
+      "name": "Timestamp"
+    },
+    "volatile_organic_compounds": {
+      "name": "VOCs"
+    },
+    "volatile_organic_compounds_parts": {
+      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+    },
+    "voltage": {
+      "name": "Voltage"
+    },
+    "volume": {
+      "name": "Volume"
+    },
+    "volume_storage": {
+      "name": "Stored volume"
+    },
+    "water": {
+      "name": "Water"
+    },
+    "weight": {
+      "name": "Weight"
+    },
+    "wind_speed": {
+      "name": "Wind speed"
     }
   }
 }

@@ -7,9 +7,9 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
@@ -59,7 +59,7 @@ TYPE_FREEZE_PROTECTION_TEMPERATURE = "freeze_protection_temperature"
 SELECT_DESCRIPTIONS = (
     FreezeProtectionSelectDescription(
         key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
-        name="Freeze protection temperature",
+        translation_key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,

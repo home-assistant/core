@@ -23,5 +23,49 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "air_demand": {
+        "name": "Air demand"
+      },
+      "floor_demand": {
+        "name": "Floor demand"
+      }
+    },
+    "select": {
+      "grille_angles": {
+        "name": "Cold angle",
+        "state": {
+          "90deg": "90°",
+          "50deg": "50°",
+          "45deg": "45°",
+          "40deg": "40°"
+        }
+      },
+      "heat_angles": {
+        "name": "Heat angle",
+        "state": {
+          "90deg": "[%key:component::airzone::entity::select::grille_angles::state::90deg%]",
+          "50deg": "[%key:component::airzone::entity::select::grille_angles::state::50deg%]",
+          "45deg": "[%key:component::airzone::entity::select::grille_angles::state::45deg%]",
+          "40deg": "[%key:component::airzone::entity::select::grille_angles::state::40deg%]"
+        }
+      },
+      "sleep_times": {
+        "name": "Sleep",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "30m": "30 minutes",
+          "60m": "60 minutes",
+          "90m": "90 minutes"
+        }
+      }
+    },
+    "sensor": {
+      "rssi": {
+        "name": "RSSI"
+      }
+    }
   }
 }

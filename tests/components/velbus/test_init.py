@@ -7,12 +7,13 @@ from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("controller")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -29,13 +30,12 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 @pytest.mark.usefixtures("controller")
 async def test_device_identifier_migration(
-    hass: HomeAssistant, config_entry: ConfigEntry
-):
+    hass: HomeAssistant, config_entry: ConfigEntry, device_registry: dr.DeviceRegistry
+) -> None:
     """Test being able to unload an entry."""
     original_identifiers = {(DOMAIN, "module_address", "module_serial")}
     target_identifiers = {(DOMAIN, "module_address")}
 
-    device_registry = mock_device_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers=original_identifiers,  # type: ignore[arg-type]
@@ -45,17 +45,17 @@ async def test_device_identifier_migration(
         sw_version="module_sw_version",
     )
     assert device_registry.async_get_device(
-        original_identifiers  # type: ignore[arg-type]
+        identifiers=original_identifiers  # type: ignore[arg-type]
     )
-    assert not device_registry.async_get_device(target_identifiers)
+    assert not device_registry.async_get_device(identifiers=target_identifiers)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get_device(
-        original_identifiers  # type: ignore[arg-type]
+        identifiers=original_identifiers  # type: ignore[arg-type]
     )
-    device_entry = device_registry.async_get_device(target_identifiers)
+    device_entry = device_registry.async_get_device(identifiers=target_identifiers)
     assert device_entry
     assert device_entry.name == "channel_name"
     assert device_entry.manufacturer == "Velleman"

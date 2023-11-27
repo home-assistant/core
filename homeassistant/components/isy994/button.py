@@ -2,18 +2,26 @@
 from __future__ import annotations
 
 from pyisy import ISY
-from pyisy.constants import PROTO_INSTEON
+from pyisy.constants import (
+    ATTR_ACTION,
+    NC_NODE_ENABLED,
+    PROTO_INSTEON,
+    TAG_ADDRESS,
+    TAG_ENABLED,
+)
+from pyisy.helpers import EventListener, NodeProperty
 from pyisy.networking import NetworkCommand
 from pyisy.nodes import Node
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.const import EntityCategory, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_NETWORK, DOMAIN
+from .models import IsyData
 
 
 async def async_setup_entry(
@@ -22,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX button from config entry."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
     isy: ISY = isy_data.root
     device_info = isy_data.devices
     entities: list[
@@ -67,7 +75,7 @@ async def async_setup_entry(
         ISYNodeQueryButtonEntity(
             node=isy,
             name="Query",
-            unique_id=isy.uuid,
+            unique_id=f"{isy.uuid}_query",
             device_info=DeviceInfo(identifiers={(DOMAIN, isy.uuid)}),
             entity_category=EntityCategory.DIAGNOSTIC,
         )
@@ -98,6 +106,34 @@ class ISYNodeButtonEntity(ButtonEntity):
         self._attr_entity_category = entity_category
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
+        self._node_enabled = getattr(node, TAG_ENABLED, True)
+        self._availability_handler: EventListener | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._node_enabled
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node change events."""
+        # No status for NetworkResources or ISY Query buttons
+        if not hasattr(self._node, "status_events") or not hasattr(self._node, "isy"):
+            return
+        self._availability_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_update,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: NC_NODE_ENABLED,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_update(self, event: NodeProperty, key: str) -> None:
+        """Handle the update event from the ISY Node."""
+        # Watch for node availability/enabled changes only
+        self._node_enabled = getattr(self._node, TAG_ENABLED, True)
+        self.async_write_ha_state()
 
 
 class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):

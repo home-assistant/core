@@ -3,14 +3,19 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.select import ATTR_OPTIONS, DOMAIN, SelectEntity
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
+from homeassistant.components.select import (
+    ATTR_CYCLE,
     ATTR_OPTION,
-    CONF_PLATFORM,
+    ATTR_OPTIONS,
+    DOMAIN,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
+    SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
-    STATE_UNKNOWN,
+    SERVICE_SELECT_PREVIOUS,
+    SelectEntity,
 )
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -42,13 +47,39 @@ async def test_select(hass: HomeAssistant) -> None:
     select.hass = hass
 
     with pytest.raises(NotImplementedError):
+        await select.async_first()
+
+    with pytest.raises(NotImplementedError):
+        await select.async_last()
+
+    with pytest.raises(NotImplementedError):
+        await select.async_next(cycle=False)
+
+    with pytest.raises(NotImplementedError):
+        await select.async_previous(cycle=False)
+
+    with pytest.raises(NotImplementedError):
         await select.async_select_option("option_one")
 
     select.select_option = MagicMock()
-    await select.async_select_option("option_one")
+    select._attr_current_option = None
 
-    assert select.select_option.called
+    await select.async_first()
     assert select.select_option.call_args[0][0] == "option_one"
+
+    await select.async_last()
+    assert select.select_option.call_args[0][0] == "option_three"
+
+    await select.async_next(cycle=False)
+    assert select.select_option.call_args[0][0] == "option_one"
+
+    await select.async_previous(cycle=False)
+    assert select.select_option.call_args[0][0] == "option_three"
+
+    await select.async_select_option("option_two")
+    assert select.select_option.call_args[0][0] == "option_two"
+
+    assert select.select_option.call_count == 5
 
     assert select.capability_attributes[ATTR_OPTIONS] == [
         "option_one",
@@ -57,7 +88,9 @@ async def test_select(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_custom_integration_and_validation(hass, enable_custom_integrations):
+async def test_custom_integration_and_validation(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we can only select valid options."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -109,4 +142,56 @@ async def test_custom_integration_and_validation(hass, enable_custom_integration
     )
     await hass.async_block_till_done()
 
+    assert hass.states.get("select.select_2").state == "option 3"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_FIRST,
+        {ATTR_ENTITY_ID: "select.select_2"},
+        blocking=True,
+    )
+    assert hass.states.get("select.select_2").state == "option 1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_LAST,
+        {ATTR_ENTITY_ID: "select.select_2"},
+        blocking=True,
+    )
+    assert hass.states.get("select.select_2").state == "option 3"
+
+    # Do no cycle
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: "select.select_2", ATTR_CYCLE: False},
+        blocking=True,
+    )
+    assert hass.states.get("select.select_2").state == "option 3"
+
+    # Do cycle (default behavior)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: "select.select_2"},
+        blocking=True,
+    )
+    assert hass.states.get("select.select_2").state == "option 1"
+
+    # Do not cycle
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: "select.select_2", ATTR_CYCLE: False},
+        blocking=True,
+    )
+    assert hass.states.get("select.select_2").state == "option 1"
+
+    # Do cycle (default behavior)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: "select.select_2"},
+        blocking=True,
+    )
     assert hass.states.get("select.select_2").state == "option 3"

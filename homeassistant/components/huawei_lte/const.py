@@ -82,6 +82,9 @@ ALL_KEYS = (
     | {KEY_DEVICE_BASIC_INFORMATION}
 )
 
+BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS = "clear_traffic_statistics"
+BUTTON_KEY_RESTART = "restart"
+
 NETWORKMODE_TO_STRING = {
     NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
     NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",

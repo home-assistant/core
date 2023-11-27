@@ -1,5 +1,6 @@
 """Tests for the Spotify config flow."""
 from http import HTTPStatus
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -18,10 +19,12 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.2.3.4",
-    addresses=["1.2.3.4"],
+    ip_address=ip_address("1.2.3.4"),
+    ip_addresses=[ip_address("1.2.3.4")],
     hostname="mock_hostname",
     name="mock_name",
     port=None,
@@ -43,7 +46,7 @@ async def component_setup(hass: HomeAssistant) -> None:
     assert result
 
 
-async def test_abort_if_no_configuration(hass):
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow aborts when no configuration is present."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -60,7 +63,7 @@ async def test_abort_if_no_configuration(hass):
     assert result["reason"] == "missing_credentials"
 
 
-async def test_zeroconf_abort_if_existing_entry(hass):
+async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check zeroconf flow aborts when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -73,18 +76,17 @@ async def test_zeroconf_abort_if_existing_entry(hass):
 
 
 async def test_full_flow(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check a full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -140,18 +142,17 @@ async def test_full_flow(
 
 
 async def test_abort_if_spotify_error(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check Spotify errors causes flow to abort."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -183,12 +184,12 @@ async def test_abort_if_spotify_error(
 
 
 async def test_reauthentication(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test Spotify reauthentication."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -213,7 +214,6 @@ async def test_reauthentication(
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -251,12 +251,12 @@ async def test_reauthentication(
 
 
 async def test_reauth_account_mismatch(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test Spotify reauthentication with different account."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -279,7 +279,6 @@ async def test_reauth_account_mismatch(
     flows = hass.config_entries.flow.async_progress()
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -308,7 +307,7 @@ async def test_reauth_account_mismatch(
     assert result["reason"] == "reauth_account_mismatch"
 
 
-async def test_abort_if_no_reauth_entry(hass):
+async def test_abort_if_no_reauth_entry(hass: HomeAssistant) -> None:
     """Check flow aborts when no entry is known when entring reauth confirmation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "reauth_confirm"}

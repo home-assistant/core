@@ -13,17 +13,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
-from .const import (
-    COLOR_MODE,
-    COLOR_TEMP_MODE,
-    CONF_COORDINATOR,
-    DOMAIN as FRITZBOX_DOMAIN,
-    LOGGER,
-)
+from .common import get_coordinator
+from .const import COLOR_MODE, COLOR_TEMP_MODE, LOGGER
 
 SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
@@ -32,31 +27,27 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome light from ConfigEntry."""
-    entities: list[FritzboxLight] = []
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    for ain, device in coordinator.data.devices.items():
-        if not device.has_lightbulb:
-            continue
-
-        supported_color_temps = await hass.async_add_executor_job(
-            device.get_color_temps
-        )
-
-        supported_colors = await hass.async_add_executor_job(device.get_colors)
-
-        entities.append(
+    @callback
+    def _add_entities() -> None:
+        """Add devices."""
+        if not coordinator.new_devices:
+            return
+        async_add_entities(
             FritzboxLight(
                 coordinator,
                 ain,
-                supported_colors,
-                supported_color_temps,
+                device.get_colors(),
+                device.get_color_temps(),
             )
+            for ain in coordinator.new_devices
+            if (device := coordinator.data.devices[ain]).has_lightbulb
         )
 
-    async_add_entities(entities)
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
@@ -72,8 +63,10 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         """Initialize the FritzboxLight entity."""
         super().__init__(coordinator, ain, None)
 
-        self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
-        self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
+        if supported_color_temps:
+            # only available for color bulbs
+            self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+            self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
         # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
         # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
@@ -125,7 +118,11 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        return SUPPORTED_COLOR_MODES
+        if self.data.has_color:
+            return SUPPORTED_COLOR_MODES
+        if self.data.has_level:
+            return {ColorMode.BRIGHTNESS}
+        return {ColorMode.ONOFF}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

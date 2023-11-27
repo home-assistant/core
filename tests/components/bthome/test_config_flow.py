@@ -1,5 +1,4 @@
 """Test the BTHome config flow."""
-
 from unittest.mock import patch
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
@@ -7,6 +6,7 @@ from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bthome.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -19,7 +19,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_async_step_bluetooth_valid_device(hass):
+async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -38,7 +38,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result2["result"].unique_id == "A4:C1:38:8D:18:B2"
 
 
-async def test_async_step_bluetooth_during_onboarding(hass):
+async def test_async_step_bluetooth_during_onboarding(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth during onboarding."""
     with patch(
         "homeassistant.components.bthome.async_setup_entry", return_value=True
@@ -60,7 +60,9 @@ async def test_async_step_bluetooth_during_onboarding(hass):
     assert len(mock_onboarding.mock_calls) == 1
 
 
-async def test_async_step_bluetooth_valid_device_with_encryption(hass):
+async def test_async_step_bluetooth_valid_device_with_encryption(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery via bluetooth with a valid device, with encryption."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -81,7 +83,9 @@ async def test_async_step_bluetooth_valid_device_with_encryption(hass):
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_bluetooth_valid_device_encryption_wrong_key(hass):
+async def test_async_step_bluetooth_valid_device_encryption_wrong_key(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery via bluetooth with a valid device, with encryption and invalid key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -111,7 +115,9 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key(hass):
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(hass):
+async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery via bluetooth with a valid device, with encryption and wrong key length."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -142,7 +148,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(has
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_bluetooth_not_supported(hass):
+async def test_async_step_bluetooth_not_supported(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth not supported."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -153,7 +159,7 @@ async def test_async_step_bluetooth_not_supported(hass):
     assert result["reason"] == "not_supported"
 
 
-async def test_async_step_user_no_devices_found(hass):
+async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
     """Test setup from service info cache with no devices found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -163,14 +169,13 @@ async def test_async_step_user_no_devices_found(hass):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_no_devices_found_2(hass):
-    """
-    Test setup from service info cache with no devices found.
+async def test_async_step_user_no_devices_found_2(hass: HomeAssistant) -> None:
+    """Test setup from service info cache with no devices found.
 
     This variant tests with a non-BTHome device known to us.
     """
     with patch(
-        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.bthome.config_flow.async_discovered_service_info",
         return_value=[NOT_BTHOME_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -181,7 +186,7 @@ async def test_async_step_user_no_devices_found_2(hass):
         assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_with_found_devices(hass):
+async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.bthome.config_flow.async_discovered_service_info",
@@ -204,7 +209,9 @@ async def test_async_step_user_with_found_devices(hass):
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_user_with_found_devices_encryption(hass):
+async def test_async_step_user_with_found_devices_encryption(
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found, with encryption."""
     with patch(
         "homeassistant.components.bthome.config_flow.async_discovered_service_info",
@@ -236,7 +243,9 @@ async def test_async_step_user_with_found_devices_encryption(hass):
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_user_with_found_devices_encryption_wrong_key(hass):
+async def test_async_step_user_with_found_devices_encryption_wrong_key(
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found, with encryption and wrong key."""
     # Get a list of devices
     with patch(
@@ -280,7 +289,9 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key(hass):
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_user_with_found_devices_encryption_wrong_key_length(hass):
+async def test_async_step_user_with_found_devices_encryption_wrong_key_length(
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found, with encryption and wrong key length."""
     # Get a list of devices
     with patch(
@@ -325,7 +336,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key_length(ha
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
-async def test_async_step_user_device_added_between_steps(hass):
+async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
     """Test the device gets added via another flow between steps."""
     with patch(
         "homeassistant.components.bthome.config_flow.async_discovered_service_info",
@@ -353,7 +364,9 @@ async def test_async_step_user_device_added_between_steps(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_async_step_user_with_found_devices_already_setup(hass):
+async def test_async_step_user_with_found_devices_already_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -373,7 +386,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_bluetooth_devices_already_setup(hass):
+async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -> None:
     """Test we can't start a flow if there is already a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -390,7 +403,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_async_step_bluetooth_already_in_progress(hass):
+async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -409,7 +422,9 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_async_step_user_takes_precedence_over_discovery(hass):
+async def test_async_step_user_takes_precedence_over_discovery(
+    hass: HomeAssistant,
+) -> None:
     """Test manual setup takes precedence over discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -443,7 +458,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
 
-async def test_async_step_reauth(hass):
+async def test_async_step_reauth(hass: HomeAssistant) -> None:
     """Test reauth with a key."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -483,7 +498,7 @@ async def test_async_step_reauth(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_async_step_reauth_wrong_key(hass):
+async def test_async_step_reauth_wrong_key(hass: HomeAssistant) -> None:
     """Test reauth with a bad key, and that we can recover."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -531,9 +546,8 @@ async def test_async_step_reauth_wrong_key(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_async_step_reauth_abort_early(hass):
-    """
-    Test we can abort the reauth if there is no encryption.
+async def test_async_step_reauth_abort_early(hass: HomeAssistant) -> None:
+    """Test we can abort the reauth if there is no encryption.
 
     (This can't currently happen in practice).
     """

@@ -5,8 +5,10 @@ from telegram.ext.dispatcher import Dispatcher
 
 from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -18,24 +20,32 @@ def clear_dispatcher():
     Dispatcher._Dispatcher__singleton_semaphore.release()
 
 
-async def test_webhook_platform_init(hass, webhook_platform):
+async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
     """Test initialization of the webhooks platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
-async def test_polling_platform_init(hass, polling_platform):
+async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
     """Test initialization of the polling platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
 async def test_webhook_endpoint_generates_telegram_text_event(
-    hass, webhook_platform, hass_client, update_message_text
-):
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_message_text,
+    mock_generate_secret_token,
+) -> None:
     """POST to the configured webhook endpoint and assert fired `telegram_text` event."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_text")
 
-    response = await client.post(TELEGRAM_WEBHOOK_URL, json=update_message_text)
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_message_text,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+    )
     assert response.status == 200
     assert (await response.read()).decode("utf-8") == ""
 
@@ -47,13 +57,21 @@ async def test_webhook_endpoint_generates_telegram_text_event(
 
 
 async def test_webhook_endpoint_generates_telegram_command_event(
-    hass, webhook_platform, hass_client, update_message_command
-):
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_message_command,
+    mock_generate_secret_token,
+) -> None:
     """POST to the configured webhook endpoint and assert fired `telegram_command` event."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_command")
 
-    response = await client.post(TELEGRAM_WEBHOOK_URL, json=update_message_command)
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_message_command,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+    )
     assert response.status == 200
     assert (await response.read()).decode("utf-8") == ""
 
@@ -65,13 +83,21 @@ async def test_webhook_endpoint_generates_telegram_command_event(
 
 
 async def test_webhook_endpoint_generates_telegram_callback_event(
-    hass, webhook_platform, hass_client, update_callback_query
-):
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_callback_query,
+    mock_generate_secret_token,
+) -> None:
     """POST to the configured webhook endpoint and assert fired `telegram_callback` event."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_callback")
 
-    response = await client.post(TELEGRAM_WEBHOOK_URL, json=update_callback_query)
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_callback_query,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+    )
     assert response.status == 200
     assert (await response.read()).decode("utf-8") == ""
 
@@ -83,8 +109,8 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
 
 async def test_polling_platform_message_text_update(
-    hass, polling_platform, update_message_text
-):
+    hass: HomeAssistant, polling_platform, update_message_text
+) -> None:
     """Provide the `PollBot`s `Dispatcher` with an `Update` and assert fired `telegram_text` event."""
     events = async_capture_events(hass, "telegram_text")
 
@@ -104,14 +130,20 @@ async def test_polling_platform_message_text_update(
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(
-    hass, webhook_platform, hass_client, unauthorized_update_message_text
-):
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    unauthorized_update_message_text,
+    mock_generate_secret_token,
+) -> None:
     """Update with unauthorized user/chat should not trigger event."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL, json=unauthorized_update_message_text
+        TELEGRAM_WEBHOOK_URL,
+        json=unauthorized_update_message_text,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
     assert response.status == 200
     assert (await response.read()).decode("utf-8") == ""
@@ -120,3 +152,39 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
     await hass.async_block_till_done()
 
     assert len(events) == 0
+
+
+async def test_webhook_endpoint_without_secret_token_is_denied(
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_message_text,
+) -> None:
+    """Request without a secret token header should be denied."""
+    client = await hass_client()
+    async_capture_events(hass, "telegram_text")
+
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_message_text,
+    )
+    assert response.status == 401
+
+
+async def test_webhook_endpoint_invalid_secret_token_is_denied(
+    hass: HomeAssistant,
+    webhook_platform,
+    hass_client: ClientSessionGenerator,
+    update_message_text,
+    incorrect_secret_token,
+) -> None:
+    """Request with an invalid secret token header should be denied."""
+    client = await hass_client()
+    async_capture_events(hass, "telegram_text")
+
+    response = await client.post(
+        TELEGRAM_WEBHOOK_URL,
+        json=update_message_text,
+        headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
+    )
+    assert response.status == 401

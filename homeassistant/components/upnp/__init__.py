@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONFIG_ENTRY_HOST,
@@ -26,14 +26,14 @@ from .const import (
     LOGGER,
 )
 from .coordinator import UpnpDataUpdateCoordinator
-from .device import async_create_device
+from .device import async_create_device, get_preferred_location
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-CONFIG_SCHEMA = config_validation.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     udn = entry.data[CONFIG_ENTRY_UDN]
-    st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
+    st = entry.data[CONFIG_ENTRY_ST]
     usn = f"{udn}::{st}"
 
     # Register device discovered-callback.
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         nonlocal discovery_info
-        LOGGER.debug("Device discovered: %s, at: %s", usn, headers.ssdp_location)
+        LOGGER.debug("Device discovered: %s, at: %s", usn, headers.ssdp_all_locations)
         discovery_info = headers
         device_discovered_event.set()
 
@@ -70,7 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await asyncio.wait_for(device_discovered_event.wait(), timeout=10)
+        async with asyncio.timeout(10):
+            await device_discovered_event.wait()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
@@ -78,8 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create device.
     assert discovery_info is not None
-    assert discovery_info.ssdp_location is not None
-    location = discovery_info.ssdp_location
+    assert discovery_info.ssdp_all_locations
+    location = get_preferred_location(discovery_info.ssdp_all_locations)
     try:
         device = await async_create_device(hass, location)
     except UpnpConnectionError as err:
@@ -116,11 +117,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(device_registry.CONNECTION_UPNP, device.udn)}
+    connections = {(dr.CONNECTION_UPNP, device.udn)}
     if device_mac_address:
-        connections.add((device_registry.CONNECTION_NETWORK_MAC, device_mac_address))
+        connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
-    dev_registry = device_registry.async_get(hass)
+    dev_registry = dr.async_get(hass)
     device_entry = dev_registry.async_get_device(
         identifiers=identifiers, connections=connections
     )

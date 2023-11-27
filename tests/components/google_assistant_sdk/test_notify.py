@@ -13,7 +13,7 @@ from .conftest import ComponentSetup, ExpectedCredentials
 
 
 @pytest.mark.parametrize(
-    "language_code,message,expected_command",
+    ("language_code", "message", "expected_command"),
     [
         ("en-US", "Dinner is served", "broadcast Dinner is served"),
         ("es-ES", "La cena está en la mesa", "Anuncia La cena está en la mesa"),
@@ -44,12 +44,14 @@ async def test_broadcast_no_targets(
             {notify.ATTR_MESSAGE: message},
         )
         await hass.async_block_till_done()
-    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), language_code)
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), language_code, audio_out=False
+    )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
 
 
 @pytest.mark.parametrize(
-    "language_code,message,target,expected_command",
+    ("language_code", "message", "target", "expected_command"),
     [
         (
             "en-US",
@@ -64,7 +66,12 @@ async def test_broadcast_no_targets(
             "Anuncia en el salón Es hora de hacer los deberes",
         ),
         ("ko-KR", "숙제할 시간이야", "거실", "숙제할 시간이야 라고 거실에 방송해 줘"),
-        ("ja-JP", "宿題の時間だよ", "リビング", "宿題の時間だよとリビングにブロードキャストして"),
+        (
+            "ja-JP",
+            "宿題の時間だよ",
+            "リビング",
+            "宿題の時間だよとリビングにブロードキャストして",
+        ),
     ],
     ids=["english", "spanish", "korean", "japanese"],
 )
@@ -84,7 +91,7 @@ async def test_broadcast_one_target(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -108,7 +115,7 @@ async def test_broadcast_two_targets(
     expected_command2 = "broadcast to master bedroom time for dinner"
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -129,7 +136,7 @@ async def test_broadcast_empty_message(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,

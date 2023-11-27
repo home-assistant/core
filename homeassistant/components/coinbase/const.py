@@ -12,14 +12,16 @@ DOMAIN = "coinbase"
 API_ACCOUNT_AMOUNT = "amount"
 API_ACCOUNT_BALANCE = "balance"
 API_ACCOUNT_CURRENCY = "currency"
+API_ACCOUNT_CURRENCY_CODE = "code"
 API_ACCOUNT_ID = "id"
-API_ACCOUNT_NATIVE_BALANCE = "native_balance"
+API_ACCOUNT_NATIVE_BALANCE = "balance"
 API_ACCOUNT_NAME = "name"
 API_ACCOUNTS_DATA = "data"
 API_RATES = "rates"
 API_RESOURCE_PATH = "resource_path"
 API_RESOURCE_TYPE = "type"
 API_TYPE_VAULT = "vault"
+API_USD = "USD"
 
 WALLETS = {
     "1INCH": "1INCH",
@@ -157,6 +159,7 @@ WALLETS = {
     "LYD": "LYD",
     "MAD": "MAD",
     "MANA": "MANA",
+    "MASK": "MASK",
     "MATIC": "MATIC",
     "MDL": "MDL",
     "MGA": "MGA",

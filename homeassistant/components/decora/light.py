@@ -6,11 +6,10 @@ import copy
 from functools import wraps
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error
-import decora  # pylint: disable=import-error
-from typing_extensions import Concatenate, ParamSpec
+from bluepy.btle import BTLEException
+import decora
 import voluptuous as vol
 
 from homeassistant import util
@@ -82,7 +81,7 @@ def retry(
                     "Decora connect error for device %s. Reconnecting",
                     device.name,
                 )
-                # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
                 device._switch.connect()
 
     return wrapper_retry

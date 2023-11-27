@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "no_devices_found": "\u6ca1\u6709\u5728\u7f51\u7edc\u4e0a\u627e\u5230 LIFX \u8bbe\u5907\u3002"
-        }
-    }
-}

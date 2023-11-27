@@ -1,21 +1,21 @@
 {
   "domain": "awair",
   "name": "Awair",
-  "documentation": "https://www.home-assistant.io/integrations/awair",
-  "requirements": ["python_awair==0.2.4"],
   "codeowners": ["@ahayworth", "@danielsjf"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "70886B1*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/awair",
   "iot_class": "local_polling",
   "loggers": ["python_awair"],
+  "requirements": ["python-awair==0.2.4"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
       "name": "awair*"
-    }
-  ],
-  "dhcp": [
-    {
-      "macaddress": "70886B1*"
     }
   ]
 }

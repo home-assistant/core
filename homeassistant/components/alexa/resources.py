@@ -1,17 +1,23 @@
 """Alexa Resources and Assets."""
 
 
+from typing import Any
+
+
 class AlexaGlobalCatalog:
     """The Global Alexa catalog.
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#global-alexa-catalog
 
-    You can use the global Alexa catalog for pre-defined names of devices, settings, values, and units.
-    This catalog is localized into all the languages that Alexa supports.
+    You can use the global Alexa catalog for pre-defined names of devices, settings,
+    values, and units.
 
+    This catalog is localized into all the languages that Alexa supports.
     You can reference the following catalog of pre-defined friendly names.
-    Each item in the following list is an asset identifier followed by its supported friendly names.
-    The first friendly name for each identifier is the one displayed in the Alexa mobile app.
+
+    Each item in the following list is an asset identifier followed by its
+    supported friendly names. The first friendly name for each identifier is
+    the one displayed in the Alexa mobile app.
     """
 
     # Air Purifier, Air Cleaner,Clean Air Machine
@@ -23,7 +29,8 @@ class AlexaGlobalCatalog:
     # Router, Internet Router, Network Router, Wifi Router, Net Router
     DEVICE_NAME_ROUTER = "Alexa.DeviceName.Router"
 
-    # Shade, Blind, Curtain, Roller, Shutter, Drape, Awning, Window shade, Interior blind
+    # Shade, Blind, Curtain, Roller, Shutter, Drape, Awning,
+    # Window shade, Interior blind
     DEVICE_NAME_SHADE = "Alexa.DeviceName.Shade"
 
     # Shower
@@ -190,40 +197,53 @@ class AlexaGlobalCatalog:
 
 
 class AlexaCapabilityResource:
-    """Base class for Alexa capabilityResources, modeResources, and presetResources objects.
+    """Base class for Alexa capabilityResources, modeResources, and presetResources.
 
-    Resources objects labels must be unique across all modeResources and presetResources within the same device.
-    To provide support for all supported locales, include one label from the AlexaGlobalCatalog in the labels array.
+    Resources objects labels must be unique across all modeResources and
+    presetResources within the same device. To provide support for all
+    supported locales, include one label from the AlexaGlobalCatalog in the
+    labels array.
+
     You cannot use any words from the following list as friendly names:
     https://developer.amazon.com/docs/alexa/device-apis/resources-and-assets.html#names-you-cannot-use
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
-    def __init__(self, labels):
+    def __init__(self, labels: list[str]) -> None:
         """Initialize an Alexa resource."""
         self._resource_labels = []
         for label in labels:
             self._resource_labels.append(label)
 
-    def serialize_capability_resources(self):
+    def serialize_capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object serialized for an API response."""
         return self.serialize_labels(self._resource_labels)
 
-    def serialize_configuration(self):
-        """Return ModeResources, PresetResources friendlyNames serialized for an API response."""
-        return []
+    def serialize_configuration(self) -> dict[str, Any]:
+        """Return serialized configuration for an API response.
 
-    def serialize_labels(self, resources):
-        """Return resource label objects for friendlyNames serialized for an API response."""
-        labels = []
+        Return ModeResources, PresetResources friendlyNames serialized.
+        """
+        raise NotImplementedError()
+
+    def serialize_labels(self, resources: list[str]) -> dict[str, list[dict[str, Any]]]:
+        """Return serialized labels for an API response.
+
+        Returns resource label objects for friendlyNames serialized.
+        """
+        labels: list[dict[str, Any]] = []
+        label_dict: dict[str, Any]
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label = {"@type": "asset", "value": {"assetId": label}}
+                label_dict = {"@type": "asset", "value": {"assetId": label}}
             else:
-                label = {"@type": "text", "value": {"text": label, "locale": "en-US"}}
+                label_dict = {
+                    "@type": "text",
+                    "value": {"text": label, "locale": "en-US"},
+                }
 
-            labels.append(label)
+            labels.append(label_dict)
 
         return {"friendlyNames": labels}
 
@@ -234,19 +254,22 @@ class AlexaModeResource(AlexaCapabilityResource):
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
-    def __init__(self, labels, ordered=False):
+    def __init__(self, labels: list[str], ordered: bool = False) -> None:
         """Initialize an Alexa modeResource."""
         super().__init__(labels)
-        self._supported_modes = []
-        self._mode_ordered = ordered
+        self._supported_modes: list[dict[str, Any]] = []
+        self._mode_ordered: bool = ordered
 
-    def add_mode(self, value, labels):
+    def add_mode(self, value: str, labels: list[str]) -> None:
         """Add mode to the supportedModes object."""
         self._supported_modes.append({"value": value, "labels": labels})
 
-    def serialize_configuration(self):
-        """Return configuration for ModeResources friendlyNames serialized for an API response."""
-        mode_resources = []
+    def serialize_configuration(self) -> dict[str, Any]:
+        """Return serialized configuration for an API response.
+
+        Returns configuration for ModeResources friendlyNames serialized.
+        """
+        mode_resources: list[dict[str, Any]] = []
         for mode in self._supported_modes:
             result = {
                 "value": mode["value"],
@@ -260,15 +283,23 @@ class AlexaModeResource(AlexaCapabilityResource):
 class AlexaPresetResource(AlexaCapabilityResource):
     """Implements Alexa PresetResources.
 
-    Use presetResources with RangeController to provide a set of friendlyNames for each RangeController preset.
+    Use presetResources with RangeController to provide a set of
+    friendlyNamesfor each RangeController preset.
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#presetresources
     """
 
-    def __init__(self, labels, min_value, max_value, precision, unit=None):
+    def __init__(
+        self,
+        labels: list[str],
+        min_value: int | float,
+        max_value: int | float,
+        precision: int | float,
+        unit: str | None = None,
+    ) -> None:
         """Initialize an Alexa presetResource."""
         super().__init__(labels)
-        self._presets = []
+        self._presets: list[dict[str, Any]] = []
         self._minimum_value = min_value
         self._maximum_value = max_value
         self._precision = precision
@@ -276,13 +307,16 @@ class AlexaPresetResource(AlexaCapabilityResource):
         if unit in AlexaGlobalCatalog.__dict__.values():
             self._unit_of_measure = unit
 
-    def add_preset(self, value, labels):
+    def add_preset(self, value: int | float, labels: list[str]) -> None:
         """Add preset to configuration presets array."""
         self._presets.append({"value": value, "labels": labels})
 
-    def serialize_configuration(self):
-        """Return configuration for PresetResources friendlyNames serialized for an API response."""
-        configuration = {
+    def serialize_configuration(self) -> dict[str, Any]:
+        """Return serialized configuration for an API response.
+
+        Returns configuration for PresetResources friendlyNames serialized.
+        """
+        configuration: dict[str, Any] = {
             "supportedRange": {
                 "minimumValue": self._minimum_value,
                 "maximumValue": self._maximum_value,
@@ -309,18 +343,23 @@ class AlexaPresetResource(AlexaCapabilityResource):
 class AlexaSemantics:
     """Class for Alexa Semantics Object.
 
-    You can optionally enable additional utterances by using semantics. When you use semantics,
-    you manually map the phrases "open", "close", "raise", and "lower" to directives.
+    You can optionally enable additional utterances by using semantics. When
+    you use semantics, you manually map the phrases "open", "close", "raise",
+    and "lower" to directives.
 
-    Semantics is supported for the following interfaces only: ModeController, RangeController, and ToggleController.
+    Semantics is supported for the following interfaces only: ModeController,
+    RangeController, and ToggleController.
 
-    Semantics stateMappings are only supported for one interface of the same type on the same device. If a device has
-    multiple RangeControllers only one interface may use stateMappings otherwise discovery will fail.
+    Semantics stateMappings are only supported for one interface of the same
+    type on the same device. If a device has multiple RangeControllers only
+    one interface may use stateMappings otherwise discovery will fail.
 
-    You can support semantics actionMappings on different controllers for the same device, however each controller must
-    support different phrases. For example, you can support "raise" on a RangeController, and "open" on a ModeController,
-    but you can't support "open" on both RangeController and ModeController. Semantics stateMappings are only supported
-    for one interface on the same device.
+    You can support semantics actionMappings on different controllers for the
+    same device, however each controller must support different phrases.
+    For example, you can support "raise" on a RangeController, and "open"
+    on a ModeController, but you can't support "open" on both RangeController
+    and ModeController. Semantics stateMappings are only supported for one
+    interface on the same device.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#semantics-object
     """
@@ -347,26 +386,28 @@ class AlexaSemantics:
     DIRECTIVE_MODE_SET_MODE = "SetMode"
     DIRECTIVE_MODE_ADJUST_MODE = "AdjustMode"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an Alexa modeResource."""
-        self._action_mappings = []
-        self._state_mappings = []
+        self._action_mappings: list[dict[str, Any]] = []
+        self._state_mappings: list[dict[str, Any]] = []
 
-    def _add_action_mapping(self, semantics):
+    def _add_action_mapping(self, semantics: dict[str, Any]) -> None:
         """Add action mapping between actions and interface directives."""
         self._action_mappings.append(semantics)
 
-    def _add_state_mapping(self, semantics):
+    def _add_state_mapping(self, semantics: dict[str, Any]) -> None:
         """Add state mapping between states and interface directives."""
         self._state_mappings.append(semantics)
 
-    def add_states_to_value(self, states, value):
+    def add_states_to_value(self, states: list[str], value: Any) -> None:
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
             {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
         )
 
-    def add_states_to_range(self, states, min_value, max_value):
+    def add_states_to_range(
+        self, states: list[str], min_value: int | float, max_value: int | float
+    ) -> None:
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(
             {
@@ -376,7 +417,9 @@ class AlexaSemantics:
             }
         )
 
-    def add_action_to_directive(self, actions, directive, payload):
+    def add_action_to_directive(
+        self, actions: list[str], directive: str, payload: dict[str, Any]
+    ) -> None:
         """Add ActionsToDirective actionMappings."""
         self._add_action_mapping(
             {
@@ -386,9 +429,9 @@ class AlexaSemantics:
             }
         )
 
-    def serialize_semantics(self):
+    def serialize_semantics(self) -> dict[str, Any]:
         """Return semantics object serialized for an API response."""
-        semantics = {}
+        semantics: dict[str, Any] = {}
         if self._action_mappings:
             semantics[self.MAPPINGS_ACTION] = self._action_mappings
         if self._state_mappings:

@@ -9,8 +9,8 @@ from wled import Segment
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_INTENSITY, ATTR_SPEED, DOMAIN
@@ -39,16 +39,11 @@ async def async_setup_entry(
     update_segments()
 
 
-@dataclass
-class WLEDNumberDescriptionMixin:
-    """Mixin for WLED number."""
+@dataclass(kw_only=True)
+class WLEDNumberEntityDescription(NumberEntityDescription):
+    """Class describing WLED number entities."""
 
     value_fn: Callable[[Segment], float | None]
-
-
-@dataclass
-class WLEDNumberEntityDescription(NumberEntityDescription, WLEDNumberDescriptionMixin):
-    """Class describing WLED number entities."""
 
 
 NUMBERS = [
