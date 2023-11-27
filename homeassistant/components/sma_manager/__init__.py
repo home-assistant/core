@@ -1,4 +1,4 @@
-"""THE SMA Manager integration."""
+"""The SMA Manager integration."""
 
 # Home Assistant Imports
 # 3rd Party Imports
