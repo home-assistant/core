@@ -36,7 +36,7 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.11.0",
+            breaks_in_ha_version="2024.6.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -69,7 +69,6 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await async_validate_input(self.hass, username, password)
-                unique_id = username.lower()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -79,6 +78,7 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # No Errors
+                unique_id = username.lower()
                 existing_entry = await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 

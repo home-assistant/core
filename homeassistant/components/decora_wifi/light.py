@@ -6,10 +6,6 @@ import logging
 from typing import Any
 
 from decora_wifi import DecoraWiFiSession
-from decora_wifi.models.iot_switch import IotSwitch
-from decora_wifi.models.permission import Permission
-from decora_wifi.models.residence import Residence
-from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -27,6 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DecoraWifiAsyncClient
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,40 +148,3 @@ class DecoraWifiLight(LightEntity):
             sw_version=self._switch.version,
             serial_number=self._switch.serial,
         )
-
-
-class DecoraWifiAsyncClient:
-    """A thin wrapper to make async calls more readable."""
-
-    def __init__(self, session: DecoraWiFiSession, hass: HomeAssistant) -> None:
-        """DecoraWifiAsyncClient."""
-        self.session = session
-        self.hass = hass
-
-    async def get_permissions(self):
-        """Get all permissions for the provided session."""
-        assert self.session.user
-        return await self.hass.async_add_executor_job(
-            self.session.user.get_residential_permissions
-        )
-
-    async def get_residences(self, permissions: list[Permission]):
-        """Get all residences for the provided permissions."""
-        residences: list[Residence] = []
-        for perm in permissions:
-            if perm.residentialAccountId is not None:
-                account = ResidentialAccount(self.session, perm.residentialAccountId)
-                residences.extend(
-                    await self.hass.async_add_executor_job(account.get_residences)
-                )
-            elif perm.residenceId is not None:
-                residences.append(Residence(self.session, perm.residenceId))
-        return residences
-
-    async def get_iot_switches(self, residences: list[Residence]) -> list[IotSwitch]:
-        """Get all the iot switches for the provided residences."""
-        return [
-            sw
-            for res in residences
-            for sw in (await self.hass.async_add_executor_job(res.get_iot_switches))
-        ]
