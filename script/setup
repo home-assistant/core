@@ -16,7 +16,6 @@ fi
 
 mkdir -p config
 
-
 # Read min required python
 MIN_PYTHON="$(python3 -c 'import tomllib; print(".".join(tomllib.load(open("pyproject.toml", "rb"))["project"]["requires-python"].lstrip("=>").split(".")[:2]))')"
 
