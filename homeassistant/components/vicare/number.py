@@ -114,7 +114,7 @@ async def async_setup_entry(
                 device_config,
                 description,
             )
-            if entity is not None:
+            if entity:
                 entities.append(entity)
 
     async_add_entities(entities)
