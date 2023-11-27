@@ -43,7 +43,7 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
-CIRCUIT_ENTITIES: tuple[ViCareNumberEntityDescription, ...] = (
+CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
         translation_key="heating_curve_shift",
@@ -123,14 +123,14 @@ CIRCUIT_ENTITIES: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entity(
-    api: PyViCareHeatingDeviceComponent,
+    vicare_api: PyViCareHeatingDeviceComponent,
     device_config: PyViCareDeviceConfig,
     entity_description: ViCareNumberEntityDescription,
 ) -> ViCareNumber | None:
     """Create a ViCare number entity."""
-    if is_supported(entity_description.key, entity_description, api):
+    if is_supported(entity_description.key, entity_description, vicare_api):
         return ViCareNumber(
-            api,
+            vicare_api,
             device_config,
             entity_description,
         )
@@ -143,13 +143,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare number devices."""
+    entities: list[ViCareNumber] = []
+
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    entities: list[ViCareNumber] = []
 
     circuits = await hass.async_add_executor_job(get_circuits, api)
     for circuit in circuits:
-        for description in CIRCUIT_ENTITIES:
+        for description in CIRCUIT_ENTITY_DESCRIPTIONS:
             entity = await hass.async_add_executor_job(
                 _build_entity,
                 circuit,
