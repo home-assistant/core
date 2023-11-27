@@ -4,6 +4,7 @@ import logging
 
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -16,10 +17,15 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import BASE_SCHEMA
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.LIGHT]
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: BASE_SCHEMA},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -51,12 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = session
 
-    # Forward the setup to the sensor platform.
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     )
 
-    # Listen for the stop event and log out.
     def logout(event: Event) -> None:
         try:
             if session is not None:
