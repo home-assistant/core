@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Decora Wifi Switches."""
+    """Set up the Decora WiFi platform."""
 
     session: DecoraWiFiSession = hass.data[DOMAIN][entry.entry_id]
 
@@ -59,12 +59,12 @@ async def async_setup_entry(
                 residences.append(Residence(session, permission.residenceId))
 
         switches = [
-            sw
+            DecoraWifiLight(sw)
             for res in residences
             for sw in (await hass.async_add_executor_job(res.get_iot_switches))
         ]
 
-        async_add_entities([DecoraWifiLight(sw) for sw in switches])
+        async_add_entities(switches)
 
     except ValueError:
         _LOGGER.error("Failed to communicate with myLeviton Service")
