@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -76,6 +76,16 @@ ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 
 # mypy: disallow-any-generics
+
+
+class NotValidPresetModeError(ValueError):
+    """Exception class when the preset_mode in not in the preset_modes list.
+
+    The use of this class is deprecated, and will be removed with
+    HA Core 2024.12
+    The fan entity component now has built-in validation and
+    raises a ServiceValidationError in case an invalid preset_mode is used.
+    """
 
 
 @bind_hass
@@ -238,6 +248,21 @@ class FanEntity(ToggleEntity):
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
+    @callback
+    def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
+        """Raise ServiceValidationError on invalid preset_mode."""
+        _LOGGER.warning(
+            "Call to fan_entity._valid_preset_mode_or_raise detected. "
+            "The use of _valid_preset_mode_or_raise is deprecated, "
+            "and will be removed with HA Core 2024.12. "
+            "The fan entity component already validates the preset_mode "
+            "when fan.async_turn_on or fan_entity._async_set_preset_mode is called. "
+            "If still needed, the function fan_entity.valid_preset_mode_or_raise "
+            "can be used instead"
+        )
+        self.valid_preset_mode_or_raise(preset_mode)
+
+    @callback
     def valid_preset_mode_or_raise(self, preset_mode: str) -> None:
         """Raise ServiceValidationError on invalid preset_mode."""
         preset_modes = self.preset_modes
