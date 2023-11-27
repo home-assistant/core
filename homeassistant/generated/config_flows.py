@@ -473,6 +473,7 @@ FLOWS = {
         "switchbot",
         "switchbot_cloud",
         "switcher_kis",
+        "switchgrid",
         "syncthing",
         "syncthru",
         "synology_dsm",
