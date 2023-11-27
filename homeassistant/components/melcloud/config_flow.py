@@ -187,9 +187,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "invalid_auth"
             elif isinstance(err, AttributeError) and err.name == "get":
-                _LOGGER.warning(
-                    "Login.ContextKey not found, the user needs to try again"
-                )
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
