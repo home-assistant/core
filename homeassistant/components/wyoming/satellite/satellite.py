@@ -17,7 +17,7 @@ from wyoming.wake import Detection
 from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.core import Context, HomeAssistant
 
-from .data import WyomingService
+from ..data import WyomingService
 
 _LOGGER = logging.getLogger()
 
