@@ -6,6 +6,8 @@ import logging
 from typing import Any
 
 from decora_wifi import DecoraWiFiSession
+from decora_wifi.models.iot_switch import IotSwitch
+from decora_wifi.models.permission import Permission
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
@@ -41,31 +43,14 @@ async def async_setup_entry(
     """Set up the Decora WiFi platform."""
 
     session: DecoraWiFiSession = hass.data[DOMAIN][entry.entry_id]
-
+    asyncSession = DecoraWifiAsyncClient(session, hass)
     try:
-        assert session.user
+        permissions = await asyncSession.get_permissions()
+        residences = await asyncSession.get_residences(permissions)
+        iot_switches = await asyncSession.get_iot_switches(residences)
+        async_add_entities([DecoraWifiLight(e) for e in iot_switches])
 
-        perms = await hass.async_add_executor_job(
-            session.user.get_residential_permissions
-        )
-        residences: list[Residence] = []
-        for permission in perms:
-            if permission.residentialAccountId is not None:
-                account = ResidentialAccount(session, permission.residentialAccountId)
-                residences.extend(
-                    await hass.async_add_executor_job(account.get_residences)
-                )
-            elif permission.residenceId is not None:
-                residences.append(Residence(session, permission.residenceId))
-
-        switches = [
-            DecoraWifiLight(sw)
-            for res in residences
-            for sw in (await hass.async_add_executor_job(res.get_iot_switches))
-        ]
-
-        async_add_entities(switches)
-
+    # As of the current release of the decora wifi lib (1.4), all api errors raise a generic ValueError
     except ValueError:
         _LOGGER.error("Failed to communicate with myLeviton Service")
 
@@ -166,3 +151,40 @@ class DecoraWifiLight(LightEntity):
             sw_version=self._switch.version,
             serial_number=self._switch.serial,
         )
+
+
+class DecoraWifiAsyncClient:
+    """A thin wrapper to make async calls more readable."""
+
+    def __init__(self, session: DecoraWiFiSession, hass: HomeAssistant) -> None:
+        """DecoraWifiAsyncClient."""
+        self.session = session
+        self.hass = hass
+
+    async def get_permissions(self):
+        """Get all permissions for the provided session."""
+        assert self.session.user
+        return await self.hass.async_add_executor_job(
+            self.session.user.get_residential_permissions
+        )
+
+    async def get_residences(self, permissions: list[Permission]):
+        """Get all residences for the provided permissions."""
+        residences: list[Residence] = []
+        for perm in permissions:
+            if perm.residentialAccountId is not None:
+                account = ResidentialAccount(self.session, perm.residentialAccountId)
+                residences.extend(
+                    await self.hass.async_add_executor_job(account.get_residences)
+                )
+            elif perm.residenceId is not None:
+                residences.append(Residence(self.session, perm.residenceId))
+        return residences
+
+    async def get_iot_switches(self, residences: list[Residence]) -> list[IotSwitch]:
+        """Get all the iot switches for the provided residences."""
+        return [
+            sw
+            for res in residences
+            for sw in (await self.hass.async_add_executor_job(res.get_iot_switches))
+        ]
