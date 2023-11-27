@@ -146,6 +146,38 @@
     'state': '70',
   })
 # ---
+# name: test_all_entities[sensor.henk_distance]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Distance',
+      'icon': 'mdi:stairs-up',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_distance',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.henk_distance_2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Distance',
+      'icon': 'mdi:stairs-up',
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_distance_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
 # name: test_all_entities[sensor.henk_distance_travelled_last_workout]
   StateSnapshot({
     'attributes': ReadOnlyDict({
