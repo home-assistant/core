@@ -2,6 +2,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from iottycloud.device import Device
+from iottycloud.verbs import LS_DEVICE_TYPE_UID
 import pytest
 
 from homeassistant import setup
@@ -18,7 +20,7 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 
 
 @pytest.fixture
-async def local_impl(hass: HomeAssistant):
+async def oauth_impl(hass: HomeAssistant):
     """Local implementation."""
     assert await setup.async_setup_component(hass, "auth", {})
     return config_entry_oauth2_flow.LocalOAuth2Implementation(
@@ -58,3 +60,16 @@ def mock_iotty() -> Generator[None, MagicMock, None]:
         "homeassistant.components.iotty.api.IottyProxy", autospec=True
     ) as iotty_mock:
         yield iotty_mock
+
+
+@pytest.fixture
+def mock_devices() -> Generator[None, MagicMock, None]:
+    """Fixture for two LS Devices."""
+    return [
+        Device(
+            "TestDevice0", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Device Name 0"
+        ),
+        Device(
+            "TestDevice1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Device Name 1"
+        ),
+    ]
