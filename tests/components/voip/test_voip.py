@@ -1,7 +1,9 @@
 """Test VoIP protocol."""
 import asyncio
+import io
 import time
 from unittest.mock import AsyncMock, Mock, patch
+import wave
 
 import pytest
 
@@ -12,6 +14,18 @@ from homeassistant.setup import async_setup_component
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 _MEDIA_ID = "12345"
+
+
+def _empty_wav() -> bytes:
+    """Return bytes of an empty WAV file."""
+    with io.BytesIO() as wav_io:
+        wav_file: wave.Wave_write = wave.open(wav_io, "wb")
+        with wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+
+        return wav_io.getvalue()
 
 
 async def test_pipeline(
@@ -72,8 +86,7 @@ async def test_pipeline(
         media_source_id: str,
     ) -> tuple[str, bytes]:
         assert media_source_id == _MEDIA_ID
-
-        return ("mp3", b"")
+        return ("wav", _empty_wav())
 
     with patch(
         "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
@@ -266,7 +279,7 @@ async def test_tts_timeout(
         media_source_id: str,
     ) -> tuple[str, bytes]:
         # Should time out immediately
-        return ("raw", bytes(0))
+        return ("wav", _empty_wav())
 
     with patch(
         "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
