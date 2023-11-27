@@ -2,8 +2,8 @@
   "title": "Fan",
   "issues": {
     "deprecated_preset_mode_validator": {
-      "title": "An integration uses deprecated code",
-      "description": "Custom integration {integration} implements a fan platform with a deprecated preset_mode validator. Contact the maintainer of the integration to solve this issue an restart Home Home Assisant after this is fixed."
+      "title": "The {integration} custom integration is using a deprecated fan validator",
+      "description": "The custom integration {integration} implements the preset_mode validator in the `fan` platform. \n\nPlease report it to the author of the {integration} integration\n\nOnce an updated version of `{integration}` is available, install it and restart Home Assistant to fix this issue."
     }
   },
   "device_automation": {
