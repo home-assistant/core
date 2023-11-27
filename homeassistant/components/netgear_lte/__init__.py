@@ -8,7 +8,7 @@ import eternalegypt
 from eternalegypt import Error, Modem
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -161,7 +161,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.5.0",
+            breaks_in_ha_version="2024.6.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -180,14 +180,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    if DOMAIN not in hass.data:
+        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
 
-    hass.data[DOMAIN] = LTEData(websession)
+        hass.data[DOMAIN] = LTEData(websession)
 
     modem = Modem(
         hostname=host,
         password=password,
-        websession=websession,
+        websession=hass.data[DOMAIN].websession,
     )
     try:
         await modem.login()
@@ -211,7 +212,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await hass.data[DOMAIN].get_modem_data(entry.data).modem.logout()
+    data: LTEData = hass.data[DOMAIN]
+    await data.get_modem_data(entry.data).modem.logout()
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        hass.data.pop(DOMAIN)
 
     return unload_ok
 
@@ -270,7 +279,8 @@ async def _login(hass, modem_data, password):
         """Clean up resources."""
         update_unsub()
         await modem_data.modem.logout()
-        del hass.data[DOMAIN].modem_data[modem_data.host]
+        if DOMAIN in hass.data:
+            del hass.data[DOMAIN].modem_data[modem_data.host]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
@@ -313,7 +323,7 @@ def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass,
         DOMAIN,
         "deprecated_notify",
-        breaks_in_ha_version="2024.5.0",
+        breaks_in_ha_version="2024.6.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_notify",
