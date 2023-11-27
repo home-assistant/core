@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import BASE_SCHEMA
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = DecoraWiFiSession()
     user = await hass.async_add_executor_job(lambda: session.login(username, password))
     if not user:
-        raise ConfigEntryAuthFailed("invalid authentication")
+        raise ConfigEntryError("could not authenticate")
 
     hass.data[DOMAIN][entry.entry_id] = session
 
