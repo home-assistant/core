@@ -68,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     try:
         mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
-        _LOGGER.debug("Token used: %s", conf[CONF_TOKEN])
     except (ClientResponseError) as ex:
         if isinstance(ex, ClientResponseError) and ex.code == 401:
             raise ConfigEntryAuthFailed from ex
