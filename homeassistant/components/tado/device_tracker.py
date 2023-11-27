@@ -22,16 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     """Configure the Tado device scanner."""
-    import_result = await hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_HOME_ID: config[CONF_HOME_ID],
-            },
-        )
+    import_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+            CONF_HOME_ID: config[CONF_HOME_ID],
+        },
     )
 
     translation_key = "deprecated_yaml_import_device_tracker"
