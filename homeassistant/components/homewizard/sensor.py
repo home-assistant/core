@@ -591,7 +591,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        return super().available and self.native_value is not None
+        return super().available and self.device is not None
 
     @property
     def native_unit_of_measurement(self) -> str | None:

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.models import Data
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -256,6 +257,22 @@ async def test_sensors_unreachable(
     assert state.state == "10830.511"
 
     mock_homewizardenergy.data.side_effect = exception
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(state.entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_external_sensors_unreachable(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test external device sensor handles API unreachable."""
+    assert (state := hass.states.get("sensor.gas_meter_total_gas"))
+    assert state.state == "111.111"
+
+    mock_homewizardenergy.data.return_value = Data.from_dict({})
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
