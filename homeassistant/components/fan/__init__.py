@@ -194,7 +194,6 @@ async def _async_turn_on(entity: FanEntity, service_call: ServiceCall) -> None:
     """Validate and turn on the fan."""
     preset_mode: str | None
     if (preset_mode := service_call.data.get("preset_mode")) is not None:
-        # pylint: disable-next=protected-access
         entity.valid_preset_mode_or_raise(preset_mode)
     await entity.async_turn_on(**service_call.data)
 
