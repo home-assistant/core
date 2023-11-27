@@ -747,7 +747,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
@@ -784,7 +784,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n auto \
@@ -905,7 +905,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
             -n 1 \
@@ -1029,7 +1029,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n 1 \
