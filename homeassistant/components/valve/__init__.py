@@ -183,7 +183,7 @@ class ValveEntity(Entity):
         if reports_position is True:
             if (current_valve_position := self.current_valve_position) is None:
                 return None
-            position_zero: bool = current_valve_position == 0
+            position_zero = current_valve_position == 0
             return STATE_CLOSED if position_zero else STATE_OPEN
         if (closed := self.is_closed) is None:
             return None
