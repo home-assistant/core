@@ -17,14 +17,15 @@ from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from .controller import UniFiController
+from .controller import UNIFI_DOMAIN, UniFiController
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -175,7 +176,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.clients[obj_id],
         should_poll=False,
         supported_fn=lambda controller, obj_id: True,
-        unique_id_fn=lambda controller, obj_id: f"{obj_id}-{controller.site}",
+        unique_id_fn=lambda controller, obj_id: f"{controller.site}-{obj_id}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
         hostname_fn=lambda api, obj_id: api.clients[obj_id].hostname,
     ),
@@ -201,12 +202,37 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
 )
 
 
+@callback
+def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Normalize client unique ID to have a prefix rather than suffix.
+
+    Introduced with release 2023.12.
+    """
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    ent_reg = er.async_get(hass)
+
+    @callback
+    def update_unique_id(obj_id: str) -> None:
+        """Rework unique ID."""
+        new_unique_id = f"{controller.site}-{obj_id}"
+        if ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, new_unique_id):
+            return
+
+        unique_id = f"{obj_id}-{controller.site}"
+        if entity_id := ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, unique_id):
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+    for obj_id in list(controller.api.clients) + list(controller.api.clients_all):
+        update_unique_id(obj_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
+    async_update_unique_id(hass, config_entry)
     UniFiController.register_platform(
         hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )

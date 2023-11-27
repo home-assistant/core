@@ -44,7 +44,11 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
+from homeassistant.setup import (
+    async_notify_setup_error,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import dump
 
@@ -1007,6 +1011,7 @@ async def async_load_config(
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
             async_log_schema_error(exp, dev_id, devices, hass)
+            async_notify_setup_error(hass, DOMAIN)
         else:
             result.append(Device(hass, **device))
     return result

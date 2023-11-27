@@ -6,10 +6,11 @@ from homeassistant.const import Platform, UnitOfEnergy, UnitOfVolume
 DOMAIN = "vicare"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
-    Platform.BINARY_SENSOR,
     Platform.WATER_HEATER,
 ]
 

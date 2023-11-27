@@ -45,14 +45,34 @@ BOUNDARY = "batch_00972cc8-75bd-11ee-9692-0242ac110002"  # Arbitrary uuid
 
 LIST_TASKS_RESPONSE_WATER = {
     "items": [
-        {"id": "some-task-id", "title": "Water", "status": "needsAction"},
+        {
+            "id": "some-task-id",
+            "title": "Water",
+            "status": "needsAction",
+            "position": "00000000000000000001",
+        },
     ],
 }
 LIST_TASKS_RESPONSE_MULTIPLE = {
     "items": [
-        {"id": "some-task-id-1", "title": "Water", "status": "needsAction"},
-        {"id": "some-task-id-2", "title": "Milk", "status": "needsAction"},
-        {"id": "some-task-id-3", "title": "Cheese", "status": "needsAction"},
+        {
+            "id": "some-task-id-2",
+            "title": "Milk",
+            "status": "needsAction",
+            "position": "00000000000000000002",
+        },
+        {
+            "id": "some-task-id-1",
+            "title": "Water",
+            "status": "needsAction",
+            "position": "00000000000000000001",
+        },
+        {
+            "id": "some-task-id-3",
+            "title": "Cheese",
+            "status": "needsAction",
+            "position": "00000000000000000003",
+        },
     ],
 }
 
@@ -182,8 +202,18 @@ def mock_http_response(response_handler: list | Callable) -> Mock:
             LIST_TASK_LIST_RESPONSE,
             {
                 "items": [
-                    {"id": "task-1", "title": "Task 1", "status": "needsAction"},
-                    {"id": "task-2", "title": "Task 2", "status": "completed"},
+                    {
+                        "id": "task-1",
+                        "title": "Task 1",
+                        "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-2",
+                        "title": "Task 2",
+                        "status": "completed",
+                        "position": "0000000000000002",
+                    },
                 ],
             },
         ]
@@ -541,7 +571,7 @@ async def test_partial_update_status(
                     LIST_TASK_LIST_RESPONSE,
                     LIST_TASKS_RESPONSE_MULTIPLE,
                     [EMPTY_RESPONSE, EMPTY_RESPONSE, EMPTY_RESPONSE],  # Delete batch
-                    LIST_TASKS_RESPONSE,  # refresh after create
+                    LIST_TASKS_RESPONSE,  # refresh after delete
                 ]
             )
         )
@@ -697,3 +727,72 @@ async def test_delete_server_error(
             target={"entity_id": "todo.my_tasks"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            {
+                "items": [
+                    {
+                        "id": "task-3-2",
+                        "title": "Child 2",
+                        "status": "needsAction",
+                        "parent": "task-3",
+                        "position": "0000000000000002",
+                    },
+                    {
+                        "id": "task-3",
+                        "title": "Task 3 (Parent)",
+                        "status": "needsAction",
+                        "position": "0000000000000003",
+                    },
+                    {
+                        "id": "task-2",
+                        "title": "Task 2",
+                        "status": "needsAction",
+                        "position": "0000000000000002",
+                    },
+                    {
+                        "id": "task-1",
+                        "title": "Task 1",
+                        "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-3-1",
+                        "title": "Child 1",
+                        "status": "needsAction",
+                        "parent": "task-3",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-4",
+                        "title": "Task 4",
+                        "status": "needsAction",
+                        "position": "0000000000000004",
+                    },
+                ],
+            },
+        ]
+    ],
+)
+async def test_parent_child_ordering(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting todo list items."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "4"
+
+    items = await ws_get_items()
+    assert items == snapshot
