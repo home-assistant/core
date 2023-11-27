@@ -21,15 +21,21 @@
         "data": {
           "name": "A name for your flux configuration",
           "lights": "Select the lights you want controlled by Flux",
-          "start_time": "Start time. If left empty this will be automatically calculated based on the location.",
-          "stop_time": "Stop time. If left empty this will be automatically calculated based on the location.",
+          "start_time": "Start time",
+          "stop_time": "Stop time",
           "start_colortemp": "Start color temperature",
           "sunset_colortemp": "Sunset color temperature",
           "stop_colortemp": "Stop color temperature",
           "adjust_brightness": "Adjust brightness",
           "mode": "Select how color temperature is passed to lights",
-          "transition": "Transition time for the light changes",
-          "interval": "Time between between consecutive light updates"
+          "transition": "Transition time",
+          "interval": "Interval duration"
+        },
+        "data_description": {
+          "start_time": "If left empty this will be the sunrise time at your location.",
+          "stop_time": "If left empty this will be the dusk time at your location.",
+          "transition": "Transition time for the light changes.",
+          "interval": "Time between between consecutive light updates."
         }
       }
     }
