@@ -147,7 +147,7 @@
   },
   "exceptions": {
     "not_valid_preset_mode": {
-      "message": "Preset mode {preset_mode} is not valid, valid preset modes are: [{preset_modes}]."
+      "message": "Preset mode {preset_mode} is not valid, valid preset modes are: {preset_modes}."
     }
   }
 }
