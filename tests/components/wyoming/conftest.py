@@ -7,10 +7,17 @@ import pytest
 from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import STT_INFO, TTS_INFO, WAKE_WORD_INFO
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+async def init_components(hass: HomeAssistant):
+    """Set up required components."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
