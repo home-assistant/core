@@ -124,7 +124,7 @@ async def _entities_from_descriptions(
     entities: list[ViCareBinarySensor],
     sensor_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
     iterables,
-    device,
+    device_config: PyViCareDeviceConfig,
 ) -> None:
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -132,7 +132,7 @@ async def _entities_from_descriptions(
             entity = await hass.async_add_executor_job(
                 _build_entity,
                 current,
-                device,
+                device_config,
                 description,
             )
             if entity is not None:
@@ -145,7 +145,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare binary sensor devices."""
-    entities = []
+    entities: list[ViCareBinarySensor] = []
 
     for device_config, device in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
