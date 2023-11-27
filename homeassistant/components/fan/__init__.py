@@ -186,7 +186,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_set_preset_mode(entity: FanEntity, service_call: ServiceCall) -> None:
     """Validate and set new preset mode."""
     preset_mode: str = service_call.data["preset_mode"]
-    # pylint: disable-next=protected-access
     entity.valid_preset_mode_or_raise(preset_mode)
     await entity.async_set_preset_mode(preset_mode)
 
