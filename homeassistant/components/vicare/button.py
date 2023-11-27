@@ -68,15 +68,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    entities = []
+    entities: list[ViCareButton] = []
 
-    for device_config, device in hass.data[DOMAIN][config_entry.entry_id][
+    for device_config, api in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
     ]:
         for description in BUTTON_DESCRIPTIONS:
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                device,
+                api,
                 device_config,
                 description,
             )

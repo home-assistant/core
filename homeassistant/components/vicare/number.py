@@ -94,10 +94,10 @@ async def async_setup_entry(
     """Create the ViCare number devices."""
     entities: list[ViCareNumber] = []
 
-    for device_config, device in hass.data[DOMAIN][config_entry.entry_id][
+    for device_config, api in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
     ]:
-        circuits = await hass.async_add_executor_job(get_circuits, device)
+        circuits = await hass.async_add_executor_job(get_circuits, api)
         for circuit in circuits:
             for description in CIRCUIT_ENTITY_DESCRIPTIONS:
                 entity = await hass.async_add_executor_job(

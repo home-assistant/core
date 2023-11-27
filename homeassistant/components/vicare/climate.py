@@ -100,15 +100,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    entities = []
+    entities: list[ViCareClimate] = []
 
-    for device_config, device in hass.data[DOMAIN][config_entry.entry_id][
+    for device_config, api in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
     ]:
-        circuits = await hass.async_add_executor_job(get_circuits, device)
+        circuits = await hass.async_add_executor_job(get_circuits, api)
         for circuit in circuits:
             entity = ViCareClimate(
-                device,
+                api,
                 circuit,
                 device_config,
                 "heating",
