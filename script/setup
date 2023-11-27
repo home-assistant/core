@@ -20,13 +20,8 @@ mkdir -p config
 # Read min required python
 MIN_PYTHON="$(python3 -c 'import toml; print(".".join(toml.load(open("pyproject.toml"))["project"]["requires-python"].lstrip("=>").split(".")[:2]))')"
 
-if [ -z "$DEVCONTAINER" ] && [ -z "$VIRTUAL_ENV" ];then
-  # Try to use specific required python binary
-  PY3="python$MIN_PYTHON"
-  if ! hash "$PY3" > /dev/null ;then
-    PY3=python3
-  fi
-  $PY3 -m venv venv
+if [ ! -n "$DEVCONTAINER" ] && [ ! -n "$VIRTUAL_ENV" ];then
+  python3 -m venv venv
   source venv/bin/activate
 fi
 
