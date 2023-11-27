@@ -15,7 +15,7 @@ bleak-retry-connector==3.3.0
 bleak==0.21.1
 bluetooth-adapters==0.16.1
 bluetooth-auto-recovery==1.2.3
-bluetooth-data-tools==1.14.0
+bluetooth-data-tools==1.15.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.5
@@ -153,7 +153,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.25.0
+protobuf==4.25.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

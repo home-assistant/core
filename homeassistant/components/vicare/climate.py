@@ -5,6 +5,9 @@ from contextlib import suppress
 import logging
 from typing import Any
 
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareInvalidDataError,
@@ -37,6 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
+from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,15 +94,6 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-def _get_circuits(vicare_api):
-    """Return the list of circuits."""
-    try:
-        return vicare_api.circuits
-    except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("No circuits found")
-        return []
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -107,18 +102,15 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    circuits = await hass.async_add_executor_job(_get_circuits, api)
+    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
+    circuits = await hass.async_add_executor_job(get_circuits, api)
 
     for circuit in circuits:
-        suffix = ""
-        if len(circuits) > 1:
-            suffix = f" {circuit.id}"
-
         entity = ViCareClimate(
-            f"Heating{suffix}",
             api,
             circuit,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
+            device_config,
+            "heating",
         )
         entities.append(entity)
 
@@ -148,17 +140,21 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _current_action: bool | None = None
     _current_mode: str | None = None
 
-    def __init__(self, name, api, circuit, device_config) -> None:
+    def __init__(
+        self,
+        api: PyViCareDevice,
+        circuit: PyViCareHeatingCircuit,
+        device_config: PyViCareDeviceConfig,
+        translation_key: str,
+    ) -> None:
         """Initialize the climate device."""
-        super().__init__(device_config)
-        self._attr_name = name
-        self._api = api
+        super().__init__(device_config, api, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_program = None
-        self._attr_unique_id = f"{device_config.getConfig().serial}-{circuit.id}"
+        self._attr_translation_key = translation_key
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             _room_temperature = None
@@ -209,11 +205,15 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._current_action = False
             # Update the specific device attributes
             with suppress(PyViCareNotSupportedFeatureError):
-                for burner in self._api.burners:
+                burners = await self.hass.async_add_executor_job(get_burners, self._api)
+                for burner in burners:
                     self._current_action = self._current_action or burner.getActive()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                for compressor in self._api.compressors:
+                compressors = await self.hass.async_add_executor_job(
+                    get_compressors, self._api
+                )
+                for compressor in compressors:
                     self._current_action = (
                         self._current_action or compressor.getActive()
                     )
