@@ -13,10 +13,10 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     CONF_FALLBACK,
+    CONF_HOME_ID,
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
@@ -31,8 +31,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-CONF_HOME_ID = "home_id"
 
 
 async def validate_input(
@@ -137,15 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
         except RuntimeError:
-            _LOGGER.exception("Unexpected exception while importing Tado")
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "failed_to_import",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="failed_to_import",
-            )
+            return self.async_abort(reason="import_failed")
 
         if home_id is not None:
             await self.async_set_unique_id(home_id)

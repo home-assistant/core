@@ -127,7 +127,11 @@
   "issues": {
     "deprecated_yaml_import_device_tracker": {
       "title": "YAML device tracker configuration import failed",
-      "description": "Configuring using YAML is being removed, as a device tracker.\n\nRemove the YAML device tracker configuration and restart Home Assistant."
+      "description": "Configuring using YAML is being removed.\nRemove the YAML device tracker configuration and restart Home Assistant."
+    },
+    "import_aborted": {
+      "title": "Import aborted",
+      "description": "Configuring Tado using YAML is being removed.\n The import was aborted. Please check the logs for more information."
     },
     "failed_to_import": {
       "title": "Failed to import",

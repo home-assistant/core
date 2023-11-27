@@ -6,21 +6,40 @@ from typing import Any
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
+from .const import CONF_HOME_ID, DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     """Configure the Tado device scanner."""
+    import_result = await hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: config[CONF_USERNAME],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+                CONF_HOME_ID: config[CONF_HOME_ID],
+            },
+        )
+    )
+
+    translation_key = "deprecated_yaml_import_device_tracker"
+    if import_result.get("type") == FlowResultType.ABORT:
+        translation_key = "import_aborted"
+        if import_result.get("reason") == "import_failed":
+            translation_key = "import_failed"
+
     async_create_issue(
         hass,
         DOMAIN,
@@ -28,7 +47,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         breaks_in_ha_version="2024.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml_import_device_tracker",
+        translation_key=translation_key,
     )
 
 

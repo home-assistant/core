@@ -36,6 +36,7 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 
 # Configuration
 CONF_FALLBACK = "fallback"
+CONF_HOME_ID = "home_id"
 DATA = "data"
 UPDATE_TRACK = "update_track"
 UPDATE_MOBILE_DEVICE_TRACK = "update_mobile_device_track"
