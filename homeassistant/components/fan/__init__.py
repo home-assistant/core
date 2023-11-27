@@ -238,7 +238,7 @@ class FanEntity(ToggleEntity):
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
-    def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
+    def valid_preset_mode_or_raise(self, preset_mode: str) -> None:
         """Raise ServiceValidationError on invalid preset_mode."""
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
@@ -399,7 +399,7 @@ async def _async_set_preset_mode(entity: FanEntity, service_call: ServiceCall) -
     """Validate and set new preset mode."""
     preset_mode: str = service_call.data["preset_mode"]
     # pylint: disable-next=protected-access
-    entity._valid_preset_mode_or_raise(preset_mode)
+    entity.valid_preset_mode_or_raise(preset_mode)
     await entity.async_set_preset_mode(preset_mode)
 
 
@@ -408,5 +408,5 @@ async def _async_turn_on(entity: FanEntity, service_call: ServiceCall) -> None:
     preset_mode: str | None
     if (preset_mode := service_call.data.get("preset_mode")) is not None:
         # pylint: disable-next=protected-access
-        entity._valid_preset_mode_or_raise(preset_mode)
+        entity.valid_preset_mode_or_raise(preset_mode)
     await entity.async_turn_on(**service_call.data)

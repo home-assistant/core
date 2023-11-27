@@ -34,7 +34,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import utcnow
 
@@ -251,10 +251,14 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: HomeAssistant) -> Non
         props={"max_speed": 6},
     )
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(ValueError):
+    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
+        ServiceValidationError
+    ):
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(ValueError):
+    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
+        ServiceValidationError
+    ):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
