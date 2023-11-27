@@ -97,6 +97,8 @@ async def async_setup_entry(
     for device_config, api in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
     ]:
+        if device_config.getModel() == "Heatbox1":
+            continue
         circuits = await hass.async_add_executor_job(get_circuits, api)
         for circuit in circuits:
             for description in CIRCUIT_ENTITY_DESCRIPTIONS:

@@ -73,6 +73,8 @@ async def async_setup_entry(
     for device_config, api in hass.data[DOMAIN][config_entry.entry_id][
         DEVICE_CONFIG_LIST
     ]:
+        if device_config.getModel() == "Heatbox1":
+            continue
         for description in BUTTON_DESCRIPTIONS:
             entity = await hass.async_add_executor_job(
                 _build_entity,
