@@ -70,9 +70,9 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         value_setter=lambda api, slope: (
             api.setHeatingCurve(api.getHeatingCurveShift(), slope)
         ),
-        min_value_getter=lambda api: api.getHeatingCurveShiftMin(),
-        max_value_getter=lambda api: api.getHeatingCurveShiftMax(),
-        stepping_getter=lambda api: api.getHeatingCurveShiftStepping(),
+        min_value_getter=lambda api: api.getHeatingCurveSlopeMin(),
+        max_value_getter=lambda api: api.getHeatingCurveSlopeMax(),
+        stepping_getter=lambda api: api.getHeatingCurveSlopeStepping(),
         native_min_value=0.2,
         native_max_value=3.5,
         native_step=0.1,
