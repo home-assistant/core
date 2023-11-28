@@ -18,12 +18,21 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ORG_CRED = "Org API Key"
-ROBOT_CRED = "Robot Location Secret"
 STEP_AUTH_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("credential_type"): selector(
-            {"select": {"options": [ORG_CRED, ROBOT_CRED]}}
+            {
+                "select": {
+                    "options": [
+                        {"value": "api-key", "label": "Org API Key"},
+                        {
+                            "value": "robot-location-secret",
+                            "label": "Robot Location Secret",
+                        },
+                    ],
+                    "translation_key": "credential_type",
+                }
+            }
         )
     }
 )
@@ -69,18 +78,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     credential_type = data["credential_type"]
+    auth_entity = data["api_id"]
+    secret = data["api_key"]
+    if credential_type == "robot-location-secret":
+        auth_entity = data["address"]
+        secret = data["secret"]
+
     hub = ViamHub(
-        data["address"]
-        if credential_type == "robot-location-secret"
-        else data["api_id"],
+        auth_entity,
         data["credential_type"],
     )
 
-    if not await hub.authenticate(
-        data["secret"]
-        if credential_type == "robot-location-secret"
-        else data["api_key"]
-    ):
+    if not await hub.authenticate(secret):
         raise InvalidAuth
 
     # If you cannot connect:
@@ -91,7 +100,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         locations = await hub.client.app_client.list_locations()
         location = await hub.client.app_client.get_location(next(iter(locations)).id)
 
-        # breakpoint()
         # Return info that you want to store in the config entry.
         return {"title": location.name, "hub": hub}
 
@@ -115,11 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.credential_type = (
-                "api-key"
-                if user_input["credential_type"] == ORG_CRED
-                else "robot-location-secret"
-            )
+            self.credential_type = user_input["credential_type"]
             return await self.async_step_auth()
 
         return self.async_show_form(
@@ -147,11 +151,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data = user_input
                 return await self.async_step_robot()
 
+        schema = STEP_AUTH_ROBOT_DATA_SCHEMA
+        if self.credential_type == "api-key":
+            schema = STEP_AUTH_ORG_DATA_SCHEMA
+
         return self.async_show_form(
             step_id="auth",
-            data_schema=STEP_AUTH_ORG_DATA_SCHEMA
-            if self.credential_type == "api-key"
-            else STEP_AUTH_ROBOT_DATA_SCHEMA,
+            data_schema=schema,
             errors=errors,
         )
 
@@ -160,7 +166,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Select robot from location."""
 
-        # breakpoint()
         locations = await self.info["hub"].client.app_client.list_locations()
         robots = await self.info["hub"].client.app_client.list_robots(
             next(iter(locations)).id

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import base64
 from datetime import datetime
-import logging
 from typing import Any
 
 from PIL import Image
@@ -13,6 +12,7 @@ from viam.robot.client import RobotClient
 from viam.rpc.dial import Credentials, DialOptions
 from viam.services.vision import VisionClient
 from viam.services.vision.client import RawImage
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
@@ -21,11 +21,55 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+DATA_CAPTURE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("values"): vol.All(dict),
+        vol.Required("component_name"): vol.All(str),
+        vol.Required("component_type", default="sensor"): vol.All(str),
+    }
+)
+
+IMAGE_SERVICE_FIELDS = {
+    vol.Optional("filepath"): vol.All(str, vol.IsFile),
+    vol.Optional("camera"): vol.All(str),
+}
+VISION_SERVICE_FIELDS = {
+    vol.Optional("confidence", default="0.6"): vol.All(
+        str, vol.Coerce(float), vol.Range(min=0, max=1)
+    ),
+    vol.Optional("robot_address"): vol.All(str),
+    vol.Optional("robot_secret"): vol.All(str),
+}
+
+CAPTURE_IMAGE_SERVICE_SCHEMA = vol.Schema(
+    {
+        **IMAGE_SERVICE_FIELDS,
+        vol.Optional("file_name", default="camera"): vol.All(str),
+        vol.Optional("component_name"): vol.All(str),
+    }
+)
+
+CLASSIFICATION_SERVICE_SCHEMA = vol.Schema(
+    {
+        **IMAGE_SERVICE_FIELDS,
+        **VISION_SERVICE_FIELDS,
+        vol.Required("classifier_name"): vol.All(str),
+        vol.Optional("count", default="2"): vol.All(str, vol.Coerce(int)),
+    }
+)
+
+DETECTIONS_SERVICE_SCHEMA = vol.Schema(
+    {
+        **IMAGE_SERVICE_FIELDS,
+        **VISION_SERVICE_FIELDS,
+        vol.Required("detector_name"): vol.All(str),
+    }
+)
 
 
 class ViamManager:
@@ -46,18 +90,24 @@ class ViamManager:
 
     def register_services(self) -> None:
         """Register all available services provided by the integration."""
-        self.hass.services.async_register(DOMAIN, "capture_data", self.capture_data)
-        self.hass.services.async_register(DOMAIN, "capture_image", self.capture_image)
+        self.hass.services.async_register(
+            DOMAIN, "capture_data", self.capture_data, DATA_CAPTURE_SERVICE_SCHEMA
+        )
+        self.hass.services.async_register(
+            DOMAIN, "capture_image", self.capture_image, CAPTURE_IMAGE_SERVICE_SCHEMA
+        )
         self.hass.services.async_register(
             DOMAIN,
             "get_classifications",
             self.get_classifications,
+            CLASSIFICATION_SERVICE_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
         self.hass.services.async_register(
             DOMAIN,
             "get_detections",
             self.get_detections,
+            DETECTIONS_SERVICE_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
 
@@ -74,13 +124,12 @@ class ViamManager:
         parts: list[RobotPart] = await self.client.app_client.get_robot_parts(
             robot_id=self.data["robot_id"]
         )
-        data = [call.data.get("values")]
+        values = [call.data.get("values")]
         component_type = call.data.get("component_type", "sensor")
         component_name = call.data.get("component_name")
-        assert data is not None and component_name is not None
 
         await self.client.data_client.tabular_data_capture_upload(
-            tabular_data=data,
+            tabular_data=values,
             part_id=parts.pop().id,
             component_type=component_type,
             component_name=component_name,
@@ -121,7 +170,6 @@ class ViamManager:
         classifier_name = call.data.get("classifier_name")
         count = int(call.data.get("count", 2))
         confidence_threshold = float(call.data.get("confidence_threshold", 0.6))
-        assert classifier_name is not None
 
         async with await self._get_robot_client(
             call.data.get("robot_secret"), call.data.get("robot_address")
@@ -133,9 +181,14 @@ class ViamManager:
             )
             image = RawImage(cam_bytes, "jpeg") if len(cam_bytes) > 0 else None
 
-            assert image is not None
-            img_src = filepath or self._encode_image(image)
-            classifications = await classifier.get_classifications(image, count)
+        if image is None:
+            return {
+                "classifications": [],
+                "img_src": filepath or None,
+            }
+
+        img_src = filepath or self._encode_image(image)
+        classifications = await classifier.get_classifications(image, count)
 
         return {
             "classifications": [
@@ -152,7 +205,6 @@ class ViamManager:
         camera = call.data.get("camera")
         detector_name = call.data.get("detector_name")
         confidence_threshold = float(call.data.get("confidence_threshold", 0.6))
-        assert detector_name is not None
 
         async with await self._get_robot_client(
             call.data.get("robot_secret"), call.data.get("robot_address")
@@ -164,9 +216,14 @@ class ViamManager:
             )
             image = RawImage(cam_bytes, "jpeg") if len(cam_bytes) > 0 else None
 
-            assert image is not None
-            img_src = filepath or self._encode_image(image)
-            detections = await detector.get_detections(image)
+        if image is None:
+            return {
+                "detections": [],
+                "img_src": filepath or None,
+            }
+
+        img_src = filepath or self._encode_image(image)
+        detections = await detector.get_detections(image)
 
         return {
             "detections": [
@@ -195,9 +252,24 @@ class ViamManager:
 
     async def _get_image_from_camera(self, camera_name: str) -> bytes:
         cam_entity = er.async_get(self.hass).async_get(camera_name)
-        assert cam_entity is not None
+        if cam_entity is None:
+            raise ServiceValidationError(
+                f"A camera entity called {camera_name} was not found",
+                translation_key="camera_entity_not_found",
+                translation_placeholders={
+                    "camera_name": camera_name,
+                },
+            )
+
         cam = self.hass.data[cam_entity.domain].get_entity(camera_name)
-        assert cam is not None
+
+        if cam is None:
+            raise ServiceValidationError(
+                f"A camera for the entity {camera_name} was not found",
+                translation_key="camera_not_found",
+                translation_placeholders={"camera_name": camera_name},
+            )
+
         return await cam.async_camera_image()
 
     async def _get_robot_client(
@@ -207,11 +279,20 @@ class ViamManager:
         address = self.data.get("address")
         payload = self.data.get("secret")
         if self.data["credential_type"] == "api-key":
-            assert robot_secret is not None and robot_address is not None
+            if robot_secret is None or robot_address is None:
+                raise ServiceValidationError(
+                    "The robot location and secret are required for this connection type.",
+                    translation_key="robot_credentials_required",
+                )
             address = robot_address
             payload = robot_secret
 
-        assert address is not None and payload is not None
+        if address is None or payload is None:
+            raise ServiceValidationError(
+                "The necessary credentials for the RobotClient could not be found.",
+                translation_key="robot_credentials_not_found",
+            )
+
         credentials = Credentials(type="robot-location-secret", payload=payload)
         robot_options = RobotClient.Options(
             refresh_interval=0, dial_options=DialOptions(credentials=credentials)
@@ -222,12 +303,12 @@ class ViamManager:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up viam from a config entry."""
     credential_type = entry.data["credential_type"]
-    payload = (
-        entry.data["api_key"] if credential_type == "api-key" else entry.data["secret"]
-    )
-    auth_entity = (
-        entry.data["api_id"] if credential_type == "api-key" else entry.data["address"]
-    )
+    payload = entry.data["secret"]
+    auth_entity = entry.data["address"]
+    if credential_type == "api-key":
+        payload = entry.data["api_key"]
+        auth_entity = entry.data["api_id"]
+
     credentials = Credentials(type=credential_type, payload=payload)
     dial_options = DialOptions(auth_entity=auth_entity, credentials=credentials)
     viam_client = await ViamClient.create_from_dial_options(dial_options=dial_options)
