@@ -4,18 +4,23 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import ATTR_SPEAKER, DOMAIN
+from .const import DOMAIN
 from .data import WyomingService
-from .satellite import WyomingSatellite
+from .models import DomainDataItem
+from .satellite import SatelliteDevices, WyomingSatellite
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT]
+
 __all__ = [
-    "ATTR_SPEAKER",
     "DOMAIN",
+    "async_setup_entry",
+    "async_unload_entry",
 ]
 
 
@@ -26,29 +31,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if service is None:
         raise ConfigEntryNotReady("Unable to connect")
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = service
+    satellite_devices = SatelliteDevices(hass, entry)
+    satellite_devices.async_setup()
+
+    item = DomainDataItem(service=service, satellite_devices=satellite_devices)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = item
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
-        service.platforms,
+        service.platforms + PLATFORMS,
     )
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     if service.info.satellite is not None:
+        satellite_device = satellite_devices.async_get_or_create(item.service)
+        wyoming_satellite = WyomingSatellite(hass, service, satellite_device)
         hass.async_create_background_task(
-            WyomingSatellite(hass, service).run(),
-            f"Satellite {service.info.satellite.name}",
+            wyoming_satellite.run(), f"Satellite {item.service.info.satellite.name}"
         )
+
+        def stop_satellite():
+            wyoming_satellite.is_running = False
+
+        entry.async_on_unload(stop_satellite)
 
     return True
 
 
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Wyoming."""
-    service: WyomingService = hass.data[DOMAIN][entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][entry.entry_id]
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
-        service.platforms,
+        item.service.platforms,
     )
     if unload_ok:
         del hass.data[DOMAIN][entry.entry_id]
