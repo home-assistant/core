@@ -86,21 +86,16 @@ def _build_entities(
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
-    entities: list[ViCareNumber] = []
-
-    for circuit in get_circuits(api):
-        entities.extend(
-            [
-                ViCareNumber(
-                    circuit,
-                    device_config,
-                    description,
-                )
-                for description in CIRCUIT_ENTITY_DESCRIPTIONS
-                if is_supported(description.key, description, circuit)
-            ]
+    return [
+        ViCareNumber(
+            circuit,
+            device_config,
+            description,
         )
-    return entities
+        for circuit in get_circuits(api)
+        for description in CIRCUIT_ENTITY_DESCRIPTIONS
+        if is_supported(description.key, description, circuit)
+    ]
 
 
 async def async_setup_entry(
