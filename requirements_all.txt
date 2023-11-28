@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.1.4
+aioesphomeapi==19.1.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -462,9 +462,6 @@ asmog==0.0.6
 
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
-
-# homeassistant.components.esphome
-async-interrupt==1.1.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
