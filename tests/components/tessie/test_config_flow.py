@@ -1,15 +1,22 @@
 """Test the Aussie Broadband config flow."""
-from http import HTTPStatus
+
 from unittest.mock import patch
 
-from aiohttp import ClientConnectionError, ClientResponseError
+from aiohttp import ClientConnectionError
 
 from homeassistant import config_entries
 from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .common import TEST_DATA, TEST_VEHICLES, URL_VEHICLES
+from .common import (
+    ERROR_AUTH,
+    ERROR_UNKNOWN,
+    TEST_DATA,
+    TEST_VEHICLES,
+    URL_VEHICLES,
+    setup_platform,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -95,9 +102,7 @@ async def test_form_invalid_api_key(
 
     aioclient_mock.get(
         URL_VEHICLES,
-        exc=ClientResponseError(
-            request_info=None, history=None, status=HTTPStatus.FORBIDDEN
-        ),
+        exc=ERROR_AUTH,
     )
 
     result1 = await hass.config_entries.flow.async_init(
@@ -120,9 +125,7 @@ async def test_form_invalid_response(
 
     aioclient_mock.get(
         URL_VEHICLES,
-        exc=ClientResponseError(
-            request_info=None, history=None, status=HTTPStatus.BAD_REQUEST
-        ),
+        exc=ERROR_UNKNOWN,
     )
 
     result1 = await hass.config_entries.flow.async_init(
@@ -194,6 +197,35 @@ async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
         TEST_DATA,
     )
     await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_entry.data == TEST_DATA
+
+
+async def test_reauth_invalid_api(hass: HomeAssistant) -> None:
+    mock_entry = await setup_platform(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=TEST_DATA,
+    )
+
+    with patch(
+        "tessie_api.current_state.get_state_of_all_vehicles",
+        return_value=TEST_VEHICLES,
+        side_effect=ERROR_AUTH,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

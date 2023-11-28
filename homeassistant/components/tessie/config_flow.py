@@ -42,7 +42,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     api_key=user_input[CONF_API_KEY],
                 )
             except ClientResponseError as e:
-                if e.status == HTTPStatus.FORBIDDEN:
+                if e.status == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_api_key"
                 else:
                     errors["base"] = "unknown"
@@ -83,7 +83,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     api_key=user_input[CONF_API_KEY],
                 )
             except ClientResponseError as e:
-                if e.status == HTTPStatus.FORBIDDEN:
+                if e.status == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_api_key"
                 else:
                     errors["base"] = "unknown"
