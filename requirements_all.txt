@@ -636,7 +636,6 @@ concord232==0.15
 # homeassistant.components.upc_connect
 connect-box==0.2.8
 
-# homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
@@ -2129,9 +2128,6 @@ python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.17
-
-# homeassistant.components.eq3btsmart
-# python-eq3bt==0.2
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
