@@ -1,14 +1,17 @@
 """Tessie integration."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
+from aiohttp import ClientResponseError
 from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .models import TessieData
@@ -25,9 +28,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
 
     async def async_get():
-        vehicles = await get_state_of_all_vehicles(
-            session=session, api_key=api_key, only_active=False
-        )
+        try:
+            vehicles = await get_state_of_all_vehicles(
+                session=session, api_key=api_key, only_active=False
+            )
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                raise ConfigEntryAuthFailed() from e
+            raise UpdateFailed from e
         return {
             vehicle["vin"]: vehicle["last_state"] for vehicle in vehicles["results"]
         }
