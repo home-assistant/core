@@ -14,9 +14,11 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from . import HuaweiLteBaseEntityWithDevice
 from .const import DOMAIN, KEY_NET_NET_MODE, NETWORKMODE_TO_STRING
@@ -62,23 +64,28 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     key: str
     item: str
     choices: dict[str, str]
-    setter_fn: Callable
+    setter_fn: Callable[[str], None]
 
     _raw_state: str | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         """Initialize remaining attributes."""
-        self._attr_name = self.entity_description.name or self.item
+        name = None
+        if self.entity_description.name != UNDEFINED:
+            name = self.entity_description.name
+        self._attr_name = name or self.item
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         choices_reverse = {v: k for k, v in self.choices.items()}
-        self.setter_fn(choices_reverse.get(option))
+        self.setter_fn(choices_reverse[option])
 
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        state_str = self.choices.get(self._raw_state)
+        state_str = None
+        if self._raw_state is not None:
+            state_str = self.choices.get(self._raw_state)
         if state_str is None:
             _LOGGER.warning("Unknown state: %s", self._raw_state)
 
