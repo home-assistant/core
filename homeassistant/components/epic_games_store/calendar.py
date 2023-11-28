@@ -45,8 +45,8 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
         """Initialize EGSCalendar."""
         super().__init__(coordinator)
         self._cal_type = cal_type
-        self._attr_translation_key = f"{self._cal_type}_games"
-        self._attr_unique_id = f"{config_entry_id}-{self._cal_type}"
+        self._attr_translation_key = f"{cal_type}_games"
+        self._attr_unique_id = f"{config_entry_id}-{cal_type}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry_id)},
