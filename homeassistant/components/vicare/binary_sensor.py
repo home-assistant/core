@@ -135,7 +135,7 @@ async def _entities_from_descriptions(
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
             )
-            if entity is not None:
+            if entity:
                 entities.append(entity)
 
 
@@ -156,7 +156,7 @@ async def async_setup_entry(
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
         )
-        if entity is not None:
+        if entity:
             entities.append(entity)
 
     circuits = await hass.async_add_executor_job(get_circuits, api)
