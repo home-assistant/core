@@ -57,12 +57,7 @@ class DevialetMediaPlayerEntity(CoordinatorEntity, MediaPlayerEntity):
         self.coordinator = coordinator
         super().__init__(coordinator)
 
-        self._attr_unique_id = (
-            entry.unique_id
-            if entry.unique_id is not None
-            else coordinator.client.serial
-        )
-
+        self._attr_unique_id = str(entry.unique_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=MANUFACTURER,
