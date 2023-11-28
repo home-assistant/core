@@ -173,7 +173,7 @@ class RensonFan(RensonEntity, FanEntity):
 
         await self.coordinator.async_request_refresh()
 
-    async def set_timer_level(self, timer_level: str, time: int) -> None:
+    async def set_timer_level(self, timer_level: str, minutes: int) -> None:
         """Set timer level."""
         level = Level[str(timer_level).upper()]
 
