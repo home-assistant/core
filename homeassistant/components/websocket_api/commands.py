@@ -778,7 +778,32 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    script_result = await script_obj.async_run(msg.get("variables"), context=context)
+    try:
+        script_result = await script_obj.async_run(
+            msg.get("variables"), context=context
+        )
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    except HomeAssistantError as exc:
+        connection.logger.exception(exc)
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(exc),
+            translation_key=exc.translation_key,
+            translation_domain=exc.translation_domain,
+            translation_placeholders=exc.translation_placeholders,
+        )
+
     connection.send_result(
         msg["id"],
         {
