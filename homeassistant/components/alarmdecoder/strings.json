@@ -17,7 +17,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the machine connected to the AlarmDecoder device.",
-          "port": "The port on which AlarmDecoder is accessible (i.e. 10000)"
+          "port": "The port on which AlarmDecoder is accessible (for example, 10000)"
         }
       }
     },
