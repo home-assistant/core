@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.tag import DOMAIN, async_scan_tag
+from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -15,7 +15,6 @@ from tests.typing import WebSocketGenerator
 TEST_TAG_ID = "test tag id"
 TEST_TAG_NAME = "test tag name"
 TEST_DEVICE_ID = "device id"
-TAG_SCANNED_EVENT_NAME = "tag_scanned"
 
 
 @pytest.fixture
@@ -48,7 +47,7 @@ async def test_named_tag_scanned_event(
 
     await hass_ws_client(hass)
 
-    events = async_capture_events(hass, TAG_SCANNED_EVENT_NAME)
+    events = async_capture_events(hass, EVENT_TAG_SCANNED)
 
     now = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -91,7 +90,7 @@ async def test_unnamed_tag_scanned_event(
 
     await hass_ws_client(hass)
 
-    events = async_capture_events(hass, TAG_SCANNED_EVENT_NAME)
+    events = async_capture_events(hass, EVENT_TAG_SCANNED)
 
     now = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=now):
