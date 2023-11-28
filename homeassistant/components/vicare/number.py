@@ -80,19 +80,25 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    vicare_api: PyViCareHeatingDeviceComponent,
+def _build_entities(
     device_config: PyViCareDeviceConfig,
-    entity_description: ViCareNumberEntityDescription,
-) -> ViCareNumber | None:
-    """Create a ViCare number entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
-        return ViCareNumber(
-            vicare_api,
-            device_config,
-            entity_description,
-        )
-    return None
+    api: PyViCareDevice,
+) -> list[ViCareNumber]:
+    """Create ViCare number entities."""
+    entities: list[ViCareNumber] = []
+
+    for circuit in get_circuits(api):
+        for description in CIRCUIT_ENTITY_DESCRIPTIONS:
+            entity = None
+            if is_supported(description.key, description, circuit):
+                entity = ViCareNumber(
+                    circuit,
+                    device_config,
+                    description,
+                )
+            if entity:
+                entities.append(entity)
+    return entities
 
 
 async def async_setup_entry(
@@ -101,21 +107,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare number devices."""
-    entities: list[ViCareNumber] = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
 
-    circuits = await hass.async_add_executor_job(get_circuits, api)
-    for circuit in circuits:
-        for description in CIRCUIT_ENTITY_DESCRIPTIONS:
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                circuit,
-                device_config,
-                description,
-            )
-            if entity:
-                entities.append(entity)
+    entities: list[ViCareNumber] = await hass.async_add_executor_job(
+        _build_entities,
+        device_config,
+        api,
+    )
 
     async_add_entities(entities)
 
