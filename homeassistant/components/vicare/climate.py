@@ -166,7 +166,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
             _supply_temperature = None
             with suppress(PyViCareNotSupportedFeatureError):
-                _supply_temperature = self._circuit.getSupplyTemperature()
+                _supply_temperature = await self.hass.async_add_executor_job(
+                    self._circuit.getSupplyTemperature
+                )
 
             if _room_temperature is not None:
                 self._attr_current_temperature = _room_temperature
@@ -179,12 +181,14 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 self._current_program = self._circuit.getActiveProgram()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_target_temperature = (
-                    self._circuit.getCurrentDesiredTemperature()
+                self._attr_target_temperature = await self.hass.async_add_executor_job(
+                    self._circuit.getCurrentDesiredTemperature
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._current_mode = self._circuit.getActiveMode()
+                self._current_mode = await self.hass.async_add_executor_job(
+                    self._circuit.getActiveMode
+                )
 
             # Update the generic device attributes
             self._attributes = {
@@ -196,21 +200,30 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes[
                     "heating_curve_slope"
-                ] = self._circuit.getHeatingCurveSlope()
+                ] = await self.hass.async_add_executor_job(
+                    self._circuit.getHeatingCurveSlope
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes[
                     "heating_curve_shift"
-                ] = self._circuit.getHeatingCurveShift()
+                ] = await self.hass.async_add_executor_job(
+                    self._circuit.getHeatingCurveShift
+                )
 
-            self._attributes["vicare_modes"] = self._circuit.getModes()
+            self._attributes["vicare_modes"] = await self.hass.async_add_executor_job(
+                self._circuit.getModes
+            )
 
             self._current_action = False
             # Update the specific device attributes
             with suppress(PyViCareNotSupportedFeatureError):
                 burners = await self.hass.async_add_executor_job(get_burners, self._api)
                 for burner in burners:
-                    self._current_action = self._current_action or burner.getActive()
+                    self._current_action = (
+                        self._current_action
+                        or await self.hass.async_add_executor_job(burner.getActive)
+                    )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 compressors = await self.hass.async_add_executor_job(
@@ -218,7 +231,8 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 )
                 for compressor in compressors:
                     self._current_action = (
-                        self._current_action or compressor.getActive()
+                        self._current_action
+                        or await self.hass.async_add_executor_job(compressor.getActive)
                     )
 
         except requests.exceptions.ConnectionError:
