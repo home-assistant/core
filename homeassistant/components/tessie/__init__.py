@@ -3,7 +3,7 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectionError, ClientResponseError
 from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
@@ -35,6 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed() from e
+            raise UpdateFailed from e
+        except ClientConnectionError as e:
             raise UpdateFailed from e
         return {
             vehicle["vin"]: vehicle["last_state"] for vehicle in vehicles["results"]
