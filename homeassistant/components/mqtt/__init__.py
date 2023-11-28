@@ -24,7 +24,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    ServiceValidationError,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, event as ev, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -240,13 +245,20 @@ async def async_check_config_schema(
             for config in config_items:
                 try:
                     schema(config)
-                except vol.Invalid as ex:
+                except vol.Invalid as exc:
                     integration = await async_get_integration(hass, DOMAIN)
                     # pylint: disable-next=protected-access
-                    message, _ = conf_util._format_config_error(
-                        ex, domain, config, integration.documentation
+                    message = conf_util.format_schema_error(
+                        hass, exc, domain, config, integration.documentation
                     )
-                    raise HomeAssistantError(message) from ex
+                    raise ServiceValidationError(
+                        message,
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_platform_config",
+                        translation_placeholders={
+                            "domain": domain,
+                        },
+                    ) from exc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -405,14 +417,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
             # Fetch updated manually configured items and validate
-            if (
-                config_yaml := await async_integration_yaml_config(hass, DOMAIN)
-            ) is None:
-                # Raise in case we have an invalid configuration
-                raise HomeAssistantError(
-                    "Error reloading manually configured MQTT items, "
-                    "check your configuration.yaml"
+            try:
+                config_yaml = await async_integration_yaml_config(
+                    hass, DOMAIN, raise_on_failure=True
                 )
+            except ConfigValidationError as ex:
+                raise ServiceValidationError(
+                    str(ex),
+                    translation_domain=ex.translation_domain,
+                    translation_key=ex.translation_key,
+                    translation_placeholders=ex.translation_placeholders,
+                ) from ex
+
             # Check the schema before continuing reload
             await async_check_config_schema(hass, config_yaml)
 

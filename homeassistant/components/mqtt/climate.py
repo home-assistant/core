@@ -256,7 +256,7 @@ def valid_humidity_state_configuration(config: ConfigType) -> ConfigType:
         CONF_HUMIDITY_STATE_TOPIC in config
         and CONF_HUMIDITY_COMMAND_TOPIC not in config
     ):
-        raise ValueError(
+        raise vol.Invalid(
             f"{CONF_HUMIDITY_STATE_TOPIC} cannot be used without"
             f" {CONF_HUMIDITY_COMMAND_TOPIC}"
         )
@@ -470,9 +470,10 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(
-        self, topics: dict[str, dict[str, Any]]
-    ) -> None:  # noqa: C901
+    def prepare_subscribe_topics(  # noqa: C901
+        self,
+        topics: dict[str, dict[str, Any]],
+    ) -> None:
         """(Re)Subscribe to topics."""
 
         @callback

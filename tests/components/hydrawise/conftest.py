@@ -1,14 +1,23 @@
 """Common fixtures for the Hydrawise tests."""
 
-from collections.abc import Generator
-from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Awaitable, Callable, Generator
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
+from pydrawise.schema import (
+    Controller,
+    ControllerHardware,
+    ScheduledZoneRun,
+    ScheduledZoneRuns,
+    User,
+    Zone,
+)
 import pytest
 
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -24,59 +33,71 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 def mock_pydrawise(
-    mock_controller: dict[str, Any],
-    mock_zones: list[dict[str, Any]],
-) -> Generator[Mock, None, None]:
-    """Mock LegacyHydrawise."""
-    with patch("pydrawise.legacy.LegacyHydrawise", autospec=True) as mock_pydrawise:
-        mock_pydrawise.return_value.controller_info = {"controllers": [mock_controller]}
-        mock_pydrawise.return_value.current_controller = mock_controller
-        mock_pydrawise.return_value.controller_status = {"relays": mock_zones}
-        mock_pydrawise.return_value.relays = mock_zones
-        mock_pydrawise.return_value.relays_by_zone_number = {
-            r["relay"]: r for r in mock_zones
-        }
+    user: User,
+    controller: Controller,
+    zones: list[Zone],
+) -> Generator[AsyncMock, None, None]:
+    """Mock LegacyHydrawiseAsync."""
+    with patch(
+        "pydrawise.legacy.LegacyHydrawiseAsync", autospec=True
+    ) as mock_pydrawise:
+        user.controllers = [controller]
+        controller.zones = zones
+        mock_pydrawise.return_value.get_user.return_value = user
         yield mock_pydrawise.return_value
 
 
 @pytest.fixture
-def mock_controller() -> dict[str, Any]:
-    """Mock Hydrawise controller."""
-    return {
-        "name": "Home Controller",
-        "last_contact": 1693292420,
-        "serial_number": "0310b36090",
-        "controller_id": 52496,
-        "status": "Unknown",
-    }
+def user() -> User:
+    """Hydrawise User fixture."""
+    return User(customer_id=12345)
 
 
 @pytest.fixture
-def mock_zones() -> list[dict[str, Any]]:
-    """Mock Hydrawise zones."""
+def controller() -> Controller:
+    """Hydrawise Controller fixture."""
+    return Controller(
+        id=52496,
+        name="Home Controller",
+        hardware=ControllerHardware(
+            serial_number="0310b36090",
+        ),
+        last_contact_time=datetime.fromtimestamp(1693292420),
+        online=True,
+    )
+
+
+@pytest.fixture
+def zones() -> list[Zone]:
+    """Hydrawise zone fixtures."""
     return [
-        {
-            "name": "Zone One",
-            "period": 259200,
-            "relay": 1,
-            "relay_id": 5965394,
-            "run": 1800,
-            "stop": 1,
-            "time": 330597,
-            "timestr": "Sat",
-            "type": 1,
-        },
-        {
-            "name": "Zone Two",
-            "period": 259200,
-            "relay": 2,
-            "relay_id": 5965395,
-            "run": 1788,
-            "stop": 1,
-            "time": 1,
-            "timestr": "Now",
-            "type": 106,
-        },
+        Zone(
+            name="Zone One",
+            number=1,
+            id=5965394,
+            scheduled_runs=ScheduledZoneRuns(
+                summary="",
+                current_run=None,
+                next_run=ScheduledZoneRun(
+                    start_time=dt_util.now() + timedelta(seconds=330597),
+                    end_time=dt_util.now()
+                    + timedelta(seconds=330597)
+                    + timedelta(seconds=1800),
+                    normal_duration=timedelta(seconds=1800),
+                    duration=timedelta(seconds=1800),
+                ),
+            ),
+        ),
+        Zone(
+            name="Zone Two",
+            number=2,
+            id=5965395,
+            scheduled_runs=ScheduledZoneRuns(
+                current_run=ScheduledZoneRun(
+                    remaining_time=timedelta(seconds=1788),
+                ),
+            ),
+        ),
     ]
 
 
@@ -95,13 +116,25 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def mock_added_config_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pydrawise: Mock,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]]
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert DOMAIN in hass.config_entries.async_domains()
-    return mock_config_entry
+    return await mock_add_config_entry()
+
+
+@pytest.fixture
+async def mock_add_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+) -> Callable[[], Awaitable[MockConfigEntry]]:
+    """Callable that creates a mock ConfigEntry that's been added to HA."""
+
+    async def callback() -> MockConfigEntry:
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert DOMAIN in hass.config_entries.async_domains()
+        return mock_config_entry
+
+    return callback
