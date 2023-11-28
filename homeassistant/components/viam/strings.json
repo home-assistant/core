@@ -37,6 +37,14 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "selector": {
+    "credential_type": {
+      "options": {
+        "api-key": "Org API Key",
+        "robot-location-secret": "Robot Location Secret"
+      }
+    }
+  },
   "services": {
     "capture_data": {
       "name": "Capture data",
