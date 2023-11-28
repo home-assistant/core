@@ -160,9 +160,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         try:
             _room_temperature = None
             with suppress(PyViCareNotSupportedFeatureError):
-                _room_temperature = await self.hass.async_add_executor_job(
-                    self._circuit.getRoomTemperature
-                )
+                _room_temperature = self._circuit.getRoomTemperature()
 
             _supply_temperature = None
             with suppress(PyViCareNotSupportedFeatureError):
