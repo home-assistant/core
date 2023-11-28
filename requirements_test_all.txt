@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.6
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.22
+AIOSomecomfort==0.0.23
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -557,6 +557,9 @@ demetriek==0.4.0
 
 # homeassistant.components.denonavr
 denonavr==0.11.4
+
+# homeassistant.components.devialet
+devialet==1.4.3
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
@@ -1886,7 +1889,7 @@ steamodd==4.21
 stookalert==0.1.4
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.3.0
+stookwijzer==1.4.2
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge

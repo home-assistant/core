@@ -79,7 +79,7 @@ async def async_setup_entry(
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
         )
-        if entity is not None:
+        if entity:
             entities.append(entity)
 
     async_add_entities(entities)
