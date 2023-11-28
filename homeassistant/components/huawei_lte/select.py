@@ -26,6 +26,13 @@ from .const import DOMAIN, KEY_NET_NET_MODE
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class HuaweiSelectEntityDescription(SelectEntityDescription):
+    """Class describing Huawei LTE select entities."""
+
+    setter_fn: Callable[[str], None] = lambda x: None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -35,7 +42,7 @@ async def async_setup_entry(
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
     selects: list[Entity] = []
 
-    desc = SelectEntityDescription(
+    desc = HuaweiSelectEntityDescription(
         key=KEY_NET_NET_MODE,
         entity_category=EntityCategory.CONFIG,
         name="Preferred network mode",
@@ -49,18 +56,18 @@ async def async_setup_entry(
             NetworkModeEnum.MODE_3G_ONLY.value,
             NetworkModeEnum.MODE_2G_ONLY.value,
         ],
+        setter_fn=partial(
+            router.client.net.set_net_mode,
+            LTEBandEnum.ALL,
+            NetworkBandEnum.ALL,
+        ),
     )
     selects.append(
         HuaweiLteBaseSelect(
             router,
             entity_description=desc,
-            key=KEY_NET_NET_MODE,
+            key=desc.key,
             item="NetworkMode",
-            setter_fn=partial(
-                router.client.net.set_net_mode,
-                LTEBandEnum.ALL,
-                NetworkBandEnum.ALL,
-            ),
         )
     )
 
@@ -71,10 +78,9 @@ async def async_setup_entry(
 class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     """Huawei LTE select base class."""
 
-    entity_description: SelectEntityDescription
+    entity_description: HuaweiSelectEntityDescription
     key: str
     item: str
-    setter_fn: Callable[[str], None]
 
     _raw_state: str | None = field(default=None, init=False)
 
@@ -87,7 +93,7 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        self.setter_fn(option)
+        self.entity_description.setter_fn(option)
 
     @property
     def current_option(self) -> str | None:
