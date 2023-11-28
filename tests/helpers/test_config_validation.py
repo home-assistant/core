@@ -1,12 +1,11 @@
 """Test config validators."""
 from collections import OrderedDict
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 import enum
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from unittest.mock import Mock, patch
 import uuid
-import zoneinfo
 
 import pytest
 import voluptuous as vol
@@ -20,9 +19,6 @@ from homeassistant.helpers import (
     selector,
     template,
 )
-from homeassistant.util import dt as dt_util
-
-TEST_TZ = zoneinfo.ZoneInfo("America/Los_Angeles")
 
 
 def test_boolean() -> None:
@@ -790,67 +786,6 @@ def test_datetime() -> None:
 
     schema(datetime.now())
     schema("2016-11-23T18:59:08")
-
-
-def test_datetime_has_timezone() -> None:
-    """Test date time has a timezone validation."""
-    schema = vol.Schema(cv.datetime_has_timezone)
-    for value in [datetime.now(), datetime(2023, 11, 17, 17, 00, 00), "Wrong DateTime"]:
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    schema(dt_util.now())
-    schema(datetime(2023, 11, 17, 17, 00, 00, tzinfo=UTC))
-    schema(datetime(2023, 11, 17, 17, 00, 00, tzinfo=TEST_TZ))
-
-
-@pytest.mark.parametrize(
-    ("tzinfo", "expected_date_time"),
-    [
-        (
-            None,
-            datetime(2023, 11, 17, 17, 00, 00, tzinfo=TEST_TZ),
-        ),
-        (
-            UTC,
-            datetime(2023, 11, 17, 9, 00, 00, tzinfo=TEST_TZ),
-        ),
-        (
-            zoneinfo.ZoneInfo("America/Regina"),
-            datetime(
-                2023,
-                11,
-                17,
-                15,
-                00,
-                00,
-                tzinfo=TEST_TZ,
-            ),
-        ),
-        (
-            zoneinfo.ZoneInfo("America/Los_Angeles"),
-            datetime(
-                2023,
-                11,
-                17,
-                17,
-                00,
-                00,
-                tzinfo=TEST_TZ,
-            ),
-        ),
-    ],
-)
-def test_datetime_as_local_timezone(tzinfo: str, expected_date_time: datetime) -> None:
-    """Test date time is coerced to the local timezone."""
-    schema = vol.Schema(cv.datetime_as_local_timezone)
-
-    tz = zoneinfo.ZoneInfo("America/Los_Angeles")
-    dt_util.set_default_time_zone(tz)
-
-    assert (
-        schema(datetime(2023, 11, 17, 17, 00, 00, tzinfo=tzinfo)) == expected_date_time
-    )
 
 
 def test_multi_select() -> None:
