@@ -25,9 +25,6 @@ GROUP4_NAME: Final = "grp4_name"
 GROUP5_NAME: Final = "grp5_name"
 GROUP6_NAME: Final = "grp6_name"
 
-SERVICE_NEXT_DOWN_POS: Final = "next_down_position"
-SERVICE_NEXT_UP_POS: Final = "next_up_position"
-
 CANNOTCONNECT: Final = "cannot_connect"
 
 HUB_EXCEPTIONS = (

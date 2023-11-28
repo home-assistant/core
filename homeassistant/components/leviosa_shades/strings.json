@@ -45,27 +45,5 @@
       "device_already_configured": "This Leviosa Zone is already configured",
       "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
     }
-  },
-  "services": {
-    "next_down_position": {
-      "name": "Next Down Position",
-      "description": "Moves a blind group down to the next defined intermediate position",
-      "fields": {
-        "entity_id": {
-          "name": "Enrty ID",
-          "description": "Name(s) of entities to move down to the next position."
-        }
-      }
-    },
-    "next_up_position": {
-      "name": "Next Up Position",
-      "description": "Moves a blind group up to the next defined intermediate position",
-      "fields": {
-        "entity_id": {
-          "name": "Enrty ID",
-          "description": "Name(s) of entities to move up to the next position."
-        }
-      }
-    }
   }
 }

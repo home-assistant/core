@@ -7,18 +7,11 @@ import voluptuous as vol
 from homeassistant.components import cover
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    BLIND_GROUPS,
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    SERVICE_NEXT_DOWN_POS,
-    SERVICE_NEXT_UP_POS,
-)
+from .const import BLIND_GROUPS, DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,20 +50,6 @@ async def async_setup_entry(
             )
         )
     async_add_entities(entities)
-
-    _LOGGER.debug("Setting up Leviosa shade group services")
-    platform = entity_platform.current_platform.get()
-    if platform:
-        platform.async_register_entity_service(
-            SERVICE_NEXT_DOWN_POS,
-            COVER_NEXT_POS_SCHEMA,
-            "next_down_position",
-        )
-        platform.async_register_entity_service(
-            SERVICE_NEXT_UP_POS,
-            COVER_NEXT_POS_SCHEMA,
-            "next_up_position",
-        )
 
 
 class LeviosaBlindGroup(cover.CoverEntity):
@@ -131,11 +110,3 @@ class LeviosaBlindGroup(cover.CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self._blind_group_obj.stop()
-
-    async def next_down_position(self):
-        """Move to the next position down."""
-        await self._blind_group_obj.down()
-
-    async def next_up_position(self):
-        """Move to the next position down."""
-        await self._blind_group_obj.up()
