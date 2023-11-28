@@ -2,25 +2,26 @@
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import DROP_DeviceDataUpdateCoordinator
 
 
-class DROP_Entity(Entity):
-    """A base class for DROP entities."""
+class DROP_Entity(CoordinatorEntity[DROP_DeviceDataUpdateCoordinator]):
+    """Representation of a DROP device entity."""
 
     _attr_force_update = False
     _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
-        self, entity_type: str, device: DROP_DeviceDataUpdateCoordinator, **kwargs
+        self, entity_type: str, coordinator: DROP_DeviceDataUpdateCoordinator
     ) -> None:
         """Init DROP entity."""
-        self._attr_unique_id = f"{device.id}_{entity_type}"
-        self._device: DROP_DeviceDataUpdateCoordinator = device
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.id}_{entity_type}"
+        self._device: DROP_DeviceDataUpdateCoordinator = coordinator
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -31,7 +32,3 @@ class DROP_Entity(Entity):
             model=self._device.model,
             name=self._device.device_name,
         )
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(self._device.async_add_listener(self.async_write_ha_state))
