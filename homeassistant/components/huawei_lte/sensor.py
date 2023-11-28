@@ -588,6 +588,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "NetworkMode": HuaweiSensorEntityDescription(
                 key="NetworkMode",
                 translation_key="preferred_mode",
+                icon="mdi:transmission-tower",
                 format_fn=lambda x: (
                     NETWORKMODE_TO_STRING.get(x),
                     None,
