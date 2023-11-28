@@ -167,8 +167,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._fan_mode_register = mode_config[CONF_ADDRESS]
             self._attr_fan_modes = cast(list[str], [])
             self._attr_fan_mode = None
-            self._fan_mode_mapping: list[tuple[int, str]] = []
-            self._fan_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
+            self._fan_mode_mapping_to_modbus: dict[str, int] = {}
+            self._fan_mode_mapping_from_modbus: dict[int, str] = {}
             mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
 
             for fan_mode_kw, fan_mode in (
@@ -184,11 +184,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
             ):
                 if fan_mode_kw in mode_value_config:
-                    values = mode_value_config[fan_mode_kw]
-                    if not isinstance(values, list):
-                        values = [values]
-                    for value in values:
-                        self._fan_mode_mapping.append((value, fan_mode))
+                    value = mode_value_config[fan_mode_kw]
+                    if value in self._fan_mode_mapping_from_modbus:
+                        raise ValueError(f"{value} is a duplicate for {fan_mode_kw}")
+                    self._fan_mode_mapping_from_modbus[value] = fan_mode
+                    self._fan_mode_mapping_to_modbus[fan_mode] = value
                     self._attr_fan_modes.append(fan_mode)
 
         else:
@@ -258,23 +258,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if self._fan_mode_register is not None:
             # Write a value to the mode register for the desired mode.
-            for value, mode in self._fan_mode_mapping:
-                if mode == fan_mode:
-                    if self._fan_mode_write_registers:
-                        await self._hub.async_pb_call(
-                            self._slave,
-                            self._fan_mode_register,
-                            [value],
-                            CALL_TYPE_WRITE_REGISTERS,
-                        )
-                    else:
-                        await self._hub.async_pb_call(
-                            self._slave,
-                            self._fan_mode_register,
-                            value,
-                            CALL_TYPE_WRITE_REGISTER,
-                        )
-                    break
+            value = self._fan_mode_mapping_to_modbus[self._fan_mode_register]
+            await self._hub.async_pb_call(
+                self._slave,
+                self._fan_mode_register,
+                value,
+                CALL_TYPE_WRITE_REGISTER,
+            )
 
         await self.async_update()
 
@@ -361,11 +351,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
             # Translate the value received
             if fan_mode is not None:
-                self._attr_fan_mode = None
-                for value, f_mode in self._fan_mode_mapping:
-                    if fan_mode == value:
-                        self._attr_fan_mode = f_mode
-                        break
+                self._attr_fan_mode = self._fan_mode_mapping_from_modbus[int(fan_mode)]
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
