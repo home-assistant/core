@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import executor, thread
 
 # https://github.com/home-assistant/supervisor/blob/main/supervisor/docker/homeassistant.py
-SUPERVISOR_HARD_TIMEOUT = 220
+SUPERVISOR_HARD_TIMEOUT = 240
 
 TIMEOUT_SAFETY_MARGIN = 10
 
