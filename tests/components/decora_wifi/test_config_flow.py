@@ -1,6 +1,8 @@
 """Test the decora_wifi config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.decora_wifi.config_flow import CannotConnect
 from homeassistant.components.decora_wifi.const import DOMAIN
@@ -39,15 +41,25 @@ async def test_form(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("mock_login_kwargs", "expected_error"),
+    (
+        ({"return_value": False}, "invalid_auth"),
+        ({"side_effect": CannotConnect}, "cannot_connect"),
+    ),
+)
+async def test_form_errors(
+    mock_login_kwargs, expected_error, hass: HomeAssistant
+) -> None:
+    """Test form errors based on api response."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Mock With Error
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWiFiSession.login",
-        return_value=False,
+        **mock_login_kwargs,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,29 +70,24 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": expected_error}
 
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
+    # Mock Success and ensure recovery
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWiFiSession.login",
-        side_effect=CannotConnect,
+        return_value=True,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "bad-password",
             },
         )
+    await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert "errors" not in result3
 
 
 async def test_duplicate_error(hass: HomeAssistant) -> None:
@@ -141,4 +148,12 @@ async def test_async_step_import_incomplete(hass: HomeAssistant) -> None:
             data={CONF_USERNAME: "test-email"},
         )
 
-    assert result["type"] == FlowResultType.FORM
+        assert result["type"] == FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_USERNAME: "test-email", CONF_PASSWORD: "test-password"},
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
