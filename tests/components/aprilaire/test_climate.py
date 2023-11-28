@@ -545,23 +545,6 @@ def test_climate_max_humidity(climate: AprilaireClimate) -> None:
     assert climate.max_humidity == 50
 
 
-def test_climate_extra_state_attributes(
-    climate: AprilaireClimate, coordinator: AprilaireCoordinator
-) -> None:
-    """Test the extra state attributes."""
-    coordinator.data = {
-        "fan_status": 0,
-    }
-
-    assert climate.extra_state_attributes.get("fan_status") == "off"
-
-    coordinator.data = {
-        "fan_status": 1,
-    }
-
-    assert climate.extra_state_attributes.get("fan_status") == "on"
-
-
 async def test_set_hvac_mode(
     client: AprilaireClient,
     climate: AprilaireClimate,

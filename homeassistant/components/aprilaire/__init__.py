@@ -7,6 +7,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -19,10 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Aprilaire."""
 
-    host = entry.data.get(CONF_HOST)
-    port = entry.data.get(CONF_PORT)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
 
-    coordinator = AprilaireCoordinator(hass, host, port)  # type: ignore[arg-type]
+    coordinator = AprilaireCoordinator(hass, host, port)
     await coordinator.start_listen()
 
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = coordinator
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
             async def _async_close(_: Event) -> None:
-                coordinator.stop_listen()  # pragma: no cover
+                coordinator.stop_listen()
 
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
@@ -41,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Failed to wait for ready")
 
             coordinator.stop_listen()
+
+            raise ConfigEntryNotReady()
 
     await coordinator.wait_for_ready(ready_callback)
 

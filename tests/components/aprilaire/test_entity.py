@@ -133,25 +133,11 @@ def test_unique_id(coordinator: AprilaireCoordinator) -> None:
     """Test the generation of the entity's unique ID."""
 
     entity = BaseAprilaireEntity(coordinator)
+    entity._attr_translation_key = "test_entity"
 
     coordinator.data["mac_address"] = "1:2:3:4:5:6"
 
-    with patch(
-        "homeassistant.components.aprilaire.entity.BaseAprilaireEntity.name",
-        new="Test Entity",
-    ):
-        assert entity.unique_id == "1_2_3_4_5_6_test_entity"
-
-
-def test_extra_state_attributes(coordinator: AprilaireCoordinator) -> None:
-    """Test the entity's extra state attributes."""
-
-    entity = BaseAprilaireEntity(coordinator)
-    coordinator.data["location"] = "Test Location"
-
-    assert entity.extra_state_attributes == {
-        "device_location": "Test Location",
-    }
+    assert entity.unique_id == "1_2_3_4_5_6_test_entity"
 
 
 def test_device_info(coordinator: AprilaireCoordinator) -> None:

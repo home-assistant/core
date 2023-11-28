@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
@@ -18,6 +18,7 @@ from .const import DOMAIN
 
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
+WAIT_TIMEOUT = 30
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,8 @@ class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 new_device_info.pop("connections", None)
 
                 device_registry.async_update_device(
-                    device_id=device.id, **new_device_info  # type: ignore[misc]
+                    device_id=device.id,
+                    **new_device_info,  # type: ignore[misc]
                 )
 
     async def start_listen(self):
@@ -86,26 +88,32 @@ class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
             data = await self.client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 2, 30
+                FunctionalDomain.IDENTIFICATION, 2, WAIT_TIMEOUT
             )
 
             if not data or Attribute.MAC_ADDRESS not in data:
-                _LOGGER.error("Missing MAC address, cannot create unique ID")
+                _LOGGER.error("Missing MAC address")
                 await ready_callback(False)
 
                 return False
 
         if not self.data or Attribute.NAME not in self.data:
-            await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 4, 30)
+            await self.client.wait_for_response(
+                FunctionalDomain.IDENTIFICATION, 4, WAIT_TIMEOUT
+            )
 
         if not self.data or Attribute.THERMOSTAT_MODES not in self.data:
-            await self.client.wait_for_response(FunctionalDomain.CONTROL, 7, 30)
+            await self.client.wait_for_response(
+                FunctionalDomain.CONTROL, 7, WAIT_TIMEOUT
+            )
 
         if (
             not self.data
             or Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS not in self.data
         ):
-            await self.client.wait_for_response(FunctionalDomain.SENSORS, 2, 30)
+            await self.client.wait_for_response(
+                FunctionalDomain.SENSORS, 2, WAIT_TIMEOUT
+            )
 
         await ready_callback(True)
 
@@ -117,15 +125,12 @@ class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return self.create_device_name(self.data)
 
-    def create_device_name(self, data: dict[str, Any]) -> str:
+    def create_device_name(self, data: Optional[dict[str, Any]]) -> str:
         """Create the name of the thermostat."""
 
-        name = None if data is None else data.get(Attribute.NAME)
+        name = data.get(Attribute.NAME) if data else None
 
-        if name is None or len(name) == 0:
-            return "Aprilaire"
-
-        return name
+        return name if name else "Aprilaire"
 
     def get_hw_version(self, data: dict[str, Any]) -> str:
         """Get the hardware version."""

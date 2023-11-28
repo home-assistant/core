@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from pyaprilaire.const import Attribute
@@ -230,33 +229,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
                 return fan_mode
 
         return None
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return device specific state attributes."""
-        return {
-            "fan_status": "on"
-            if self.coordinator.data.get(Attribute.FAN_STATUS, 0) == 1
-            else "off",
-            "humidification_setpoint": self.coordinator.data.get(
-                Attribute.HUMIDIFICATION_SETPOINT
-            ),
-            "dehumidification_setpoint": self.coordinator.data.get(
-                Attribute.DEHUMIDIFICATION_SETPOINT
-            ),
-            "air_cleaning_mode": {1: "constant", 2: "automatic"}.get(
-                self.coordinator.data.get(Attribute.AIR_CLEANING_MODE, 0), "off"
-            ),
-            "air_cleaning_event": {3: "3hour", 4: "24hour"}.get(
-                self.coordinator.data.get(Attribute.AIR_CLEANING_EVENT, 0), "off"
-            ),
-            "fresh_air_mode": {1: "automatic"}.get(
-                self.coordinator.data.get(Attribute.FRESH_AIR_MODE, 0), "off"
-            ),
-            "fresh_air_event": {2: "3hour", 3: "24hour"}.get(
-                self.coordinator.data.get(Attribute.FRESH_AIR_EVENT, 0), "off"
-            ),
-        }
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

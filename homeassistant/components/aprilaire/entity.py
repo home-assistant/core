@@ -8,7 +8,6 @@ from pyaprilaire.const import Attribute
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .coordinator import AprilaireCoordinator
 
@@ -54,15 +53,8 @@ class BaseAprilaireEntity(CoordinatorEntity[AprilaireCoordinator], Entity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return slugify(
+        return (
             self.coordinator.data[Attribute.MAC_ADDRESS].replace(":", "_")
             + "_"
-            + self.name
+            + self.translation_key
         )
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        return {
-            "device_location": self.coordinator.data.get(Attribute.LOCATION),
-        }
