@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -76,7 +76,7 @@ class FlexitClimateEntity(ClimateEntity):
             identifiers={
                 (DOMAIN, device.serial_number),
             },
-            name="Ventilation",
+            name=self._device.device_name,
             manufacturer="Flexit",
             model="Nordic",
         )
