@@ -171,23 +171,6 @@ class ESPHomeClient(BaseBleakClient):
         """Return the string representation of the client."""
         return f"ESPHomeClient ({self._description})"
 
-    def _unsubscribe_connection_state(self) -> None:
-        """Unsubscribe from connection state updates."""
-        if not self._cancel_connection_state:
-            return
-        try:
-            self._cancel_connection_state()
-        except (AssertionError, ValueError) as ex:
-            _LOGGER.debug(
-                (
-                    "%s: Failed to unsubscribe from connection state (likely"
-                    " connection dropped): %s"
-                ),
-                self._description,
-                ex,
-            )
-        self._cancel_connection_state = None
-
     def _async_disconnected_cleanup(self) -> None:
         """Clean up on disconnect."""
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
@@ -196,7 +179,9 @@ class ESPHomeClient(BaseBleakClient):
             notify_abort()
         self._notify_cancels.clear()
         self._disconnect_callbacks.discard(self._async_esp_disconnected)
-        self._unsubscribe_connection_state()
+        if self._cancel_connection_state:
+            self._cancel_connection_state()
+            self._cancel_connection_state = None
 
     def _async_ble_device_disconnected(self) -> None:
         """Handle the BLE device disconnecting from the ESP."""
