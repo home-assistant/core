@@ -64,12 +64,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform.async_register_entity_service(
         SERVICE_NEXT_DOWN_POS,
         COVER_NEXT_POS_SCHEMA,
-        "next_down_pos",
+        "next_down_position",
     )
     platform.async_register_entity_service(
         SERVICE_NEXT_UP_POS,
         COVER_NEXT_POS_SCHEMA,
-        "next_up_pos",
+        "next_up_position",
     )
 
 
@@ -127,10 +127,10 @@ class LeviosaBlindGroup(cover.CoverEntity):
         """Stop the cover."""
         await self._blind_group_obj.stop()
 
-    async def next_down_pos(self):
+    async def next_down_position(self):
         """Move to the next position down."""
         await self._blind_group_obj.down()
 
-    async def next_up_pos(self):
+    async def next_up_position(self):
         """Move to the next position down."""
         await self._blind_group_obj.up()

@@ -47,7 +47,7 @@
     }
   },
   "services": {
-    "next_down_pos": {
+    "next_down_position": {
       "name": "Next Down Position",
       "description": "Moves a blind group down to the next defined intermediate position",
       "fields": {
@@ -57,7 +57,7 @@
         }
       }
     },
-    "next_up_pos": {
+    "next_up_position": {
       "name": "Next Up Position",
       "description": "Moves a blind group up to the next defined intermediate position",
       "fields": {
