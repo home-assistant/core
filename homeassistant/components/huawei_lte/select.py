@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from functools import partial
 import logging
 
-from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum
+from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum, NetworkModeEnum
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
 
 from . import HuaweiLteBaseEntityWithDevice
-from .const import DOMAIN, KEY_NET_NET_MODE, NETWORKMODE_TO_STRING
+from .const import DOMAIN, KEY_NET_NET_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,19 @@ async def async_setup_entry(
     selects: list[Entity] = []
 
     desc = SelectEntityDescription(
-        key="network_mode", name="Preferred mode", entity_category=EntityCategory.CONFIG
+        key=KEY_NET_NET_MODE,
+        entity_category=EntityCategory.CONFIG,
+        name="Preferred network mode",
+        translation_key="preferred_network_mode",
+        options=[
+            NetworkModeEnum.MODE_AUTO.value,
+            NetworkModeEnum.MODE_4G_3G_AUTO.value,
+            NetworkModeEnum.MODE_4G_2G_AUTO.value,
+            NetworkModeEnum.MODE_4G_ONLY.value,
+            NetworkModeEnum.MODE_3G_2G_AUTO.value,
+            NetworkModeEnum.MODE_3G_ONLY.value,
+            NetworkModeEnum.MODE_2G_ONLY.value,
+        ],
     )
     selects.append(
         HuaweiLteBaseSelect(
@@ -44,7 +56,6 @@ async def async_setup_entry(
             entity_description=desc,
             key=KEY_NET_NET_MODE,
             item="NetworkMode",
-            choices=NETWORKMODE_TO_STRING,
             setter_fn=partial(
                 router.client.net.set_net_mode,
                 LTEBandEnum.ALL,
@@ -63,7 +74,6 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     entity_description: SelectEntityDescription
     key: str
     item: str
-    choices: dict[str, str]
     setter_fn: Callable[[str], None]
 
     _raw_state: str | None = field(default=None, init=False)
@@ -77,24 +87,12 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        choices_reverse = {v: k for k, v in self.choices.items()}
-        self.setter_fn(choices_reverse[option])
+        self.setter_fn(option)
 
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        state_str = None
-        if self._raw_state is not None:
-            state_str = self.choices.get(self._raw_state)
-        if state_str is None:
-            _LOGGER.warning("Unknown state: %s", self._raw_state)
-
-        return state_str
-
-    @property
-    def options(self) -> list[str]:
-        """Return available options."""
-        return list(self.choices.values())
+        return self._raw_state
 
     @property
     def _device_unique_id(self) -> str:
