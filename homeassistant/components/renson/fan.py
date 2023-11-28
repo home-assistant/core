@@ -48,7 +48,7 @@ SET_TIMER_LEVEL_SCHEMA = {
     vol.Required("timer_level"): vol.In(
         ["level1", "level2", "level3", "level4", "holiday", "breeze"]
     ),
-    vol.Required("time"): cv.positive_int,
+    vol.Required("minutes"): cv.positive_int,
 }
 
 SET_DAY_NIGHT_TIME_SCHEMA = {
