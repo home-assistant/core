@@ -48,12 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def logout(event: Event) -> None:
-        try:
-            if session is not None:
+        if session is not None:
+            try:
                 Person.logout(session)
-        except ValueError:
-            _LOGGER.error("Failed to log out of myLeviton Service")
+            except ValueError as err:
+                _LOGGER.error("Failed to log out of myLeviton Service: %s", err)
 
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
 
     return True
