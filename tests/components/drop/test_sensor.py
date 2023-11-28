@@ -48,27 +48,27 @@ async def test_sensors_hub(
     usedTodaySensorName = "sensor.hub_drop_1_c0ffee_total_water_used_today"
     usedTodaySensor = hass.states.get(usedTodaySensorName)
     assert usedTodaySensor
-    assert usedTodaySensor.state == "232.8"
+    assert usedTodaySensor.state == "881.2"  # liters
 
     averageUsageSensorName = "sensor.hub_drop_1_c0ffee_average_daily_water_usage"
     averageUsageSensor = hass.states.get(averageUsageSensorName)
     assert averageUsageSensor
-    assert averageUsageSensor.state == "76.0"
+    assert averageUsageSensor.state == "287.7"  # liters
 
     psiSensorName = "sensor.hub_drop_1_c0ffee_current_water_pressure"
     psiSensor = hass.states.get(psiSensorName)
     assert psiSensor
-    assert psiSensor.state == "62.2"
+    assert psiSensor.state == "428.9"  # liters
 
     psiHighSensorName = "sensor.hub_drop_1_c0ffee_high_water_pressure_today"
     psiHighSensor = hass.states.get(psiHighSensorName)
     assert psiHighSensor
-    assert psiHighSensor.state == "62"
+    assert psiHighSensor.state == "427"  # centibars
 
     psiLowSensorName = "sensor.hub_drop_1_c0ffee_low_water_pressure_today"
     psiLowSensor = hass.states.get(psiLowSensorName)
     assert psiLowSensor
-    assert psiLowSensor.state == "61"
+    assert psiLowSensor.state == "421"  # centibars
 
     batterySensorName = "sensor.hub_drop_1_c0ffee_battery"
     batterySensor = hass.states.get(batterySensorName)
@@ -117,12 +117,12 @@ async def test_sensors_softener(
     psiSensorName = "sensor.softener_current_water_pressure"
     psiSensor = hass.states.get(psiSensorName)
     assert psiSensor
-    assert psiSensor.state == "999.9"
+    assert psiSensor.state == "6894.1"  # centibars
 
     capacitySensorName = "sensor.softener_capacity_remaining"
     capacitySensor = hass.states.get(capacitySensorName)
     assert capacitySensor
-    assert capacitySensor.state == "1000.0"
+    assert capacitySensor.state == "3785.4"  # liters
 
 
 async def test_sensors_filter(
@@ -149,7 +149,7 @@ async def test_sensors_filter(
     psiSensorName = "sensor.filter_current_water_pressure"
     psiSensor = hass.states.get(psiSensorName)
     assert psiSensor
-    assert psiSensor.state == "999.9"
+    assert psiSensor.state == "6894.1"  # centibars
 
 
 async def test_sensors_protection_valve(
@@ -178,12 +178,17 @@ async def test_sensors_protection_valve(
     psiSensorName = "sensor.protection_valve_current_water_pressure"
     psiSensor = hass.states.get(psiSensorName)
     assert psiSensor
-    assert psiSensor.state == "61.3"
+    assert psiSensor.state == "422.6"  # centibars
 
     tempSensorName = "sensor.protection_valve_temperature_degc"
     tempSensor = hass.states.get(tempSensorName)
     assert tempSensor
     assert tempSensor.state == "21.2"
+
+    tempSensorFName = "sensor.protection_valve_temperature_degf"
+    tempSensorF = hass.states.get(tempSensorFName)
+    assert tempSensorF
+    assert tempSensorF.state == "21.2"  # C
 
 
 async def test_sensors_pump_controller(
@@ -207,7 +212,7 @@ async def test_sensors_pump_controller(
     psiSensorName = "sensor.pump_controller_current_water_pressure"
     psiSensor = hass.states.get(psiSensorName)
     assert psiSensor
-    assert psiSensor.state == "62.2"
+    assert psiSensor.state == "428.9"  # centibars
 
     tempSensorName = "sensor.pump_controller_temperature_degc"
     tempSensor = hass.states.get(tempSensorName)
@@ -217,7 +222,7 @@ async def test_sensors_pump_controller(
     tempSensorFName = "sensor.pump_controller_temperature_degf"
     tempSensorF = hass.states.get(tempSensorFName)
     assert tempSensorF
-    assert tempSensorF.state == "76.1"
+    assert tempSensorF.state == "24.5"  # C
 
 
 async def test_sensors_ro_filter(

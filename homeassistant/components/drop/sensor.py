@@ -3,8 +3,13 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -24,11 +29,8 @@ from .entity import DROP_Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-WATER_ICON = "mdi:water"
-GAUGE_ICON = "mdi:gauge"
 FLOW_ICON = "mdi:shower-head"
-BATTERY_ICON = "mdi:battery"
-TEMPERATURE_ICON = "mdi:thermometer"
+GAUGE_ICON = "mdi:gauge"
 TDS_ICON = "mdi:water-opacity"
 
 
@@ -223,9 +225,8 @@ class DROP_PeakFlowRateSensor(DROP_Entity, SensorEntity):
 class DROP_WaterUsedTodaySensor(DROP_Entity, SensorEntity):
     """Monitors the total water used for the day."""
 
-    _attr_icon = WATER_ICON
-    _attr_native_unit_of_measurement = "gallons"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_translation_key = "water_used_today"
 
     def __init__(self, device) -> None:
@@ -243,9 +244,8 @@ class DROP_WaterUsedTodaySensor(DROP_Entity, SensorEntity):
 class DROP_AverageWaterUsedSensor(DROP_Entity, SensorEntity):
     """Monitors the average water used over the last 90 days."""
 
-    _attr_icon = WATER_ICON
-    _attr_native_unit_of_measurement = "gallons"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_translation_key = "average_water_used"
 
     def __init__(self, device) -> None:
@@ -263,9 +263,8 @@ class DROP_AverageWaterUsedSensor(DROP_Entity, SensorEntity):
 class DROP_CapacityRemainingSensor(DROP_Entity, SensorEntity):
     """Monitors the soft water capacity remaining on a softener."""
 
-    _attr_icon = WATER_ICON
-    _attr_native_unit_of_measurement = "gallons"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_translation_key = "capacity_remaining"
 
     def __init__(self, device) -> None:
@@ -283,9 +282,8 @@ class DROP_CapacityRemainingSensor(DROP_Entity, SensorEntity):
 class DROP_CurrentSystemPressureSensor(DROP_Entity, SensorEntity):
     """Monitors the current system pressure."""
 
-    _attr_icon = GAUGE_ICON
+    _attr_device_class = SensorDeviceClass.PRESSURE
     _attr_native_unit_of_measurement = "psi"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key = "current_system_pressure"
 
     def __init__(self, device) -> None:
@@ -303,9 +301,8 @@ class DROP_CurrentSystemPressureSensor(DROP_Entity, SensorEntity):
 class DROP_HighSystemPressureSensor(DROP_Entity, SensorEntity):
     """Monitors the high system pressure today."""
 
-    _attr_icon = GAUGE_ICON
+    _attr_device_class = SensorDeviceClass.PRESSURE
     _attr_native_unit_of_measurement = "psi"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key = "high_system_pressure"
 
     def __init__(self, device) -> None:
@@ -323,9 +320,8 @@ class DROP_HighSystemPressureSensor(DROP_Entity, SensorEntity):
 class DROP_LowSystemPressureSensor(DROP_Entity, SensorEntity):
     """Monitors the low system pressure today."""
 
-    _attr_icon = GAUGE_ICON
+    _attr_device_class = SensorDeviceClass.PRESSURE
     _attr_native_unit_of_measurement = "psi"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key = "low_system_pressure"
 
     def __init__(self, device) -> None:
@@ -343,9 +339,8 @@ class DROP_LowSystemPressureSensor(DROP_Entity, SensorEntity):
 class DROP_BatterySensor(DROP_Entity, SensorEntity):
     """Monitors the battery level."""
 
-    _attr_icon = BATTERY_ICON
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = "%"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key = "battery"
 
     def __init__(self, device) -> None:
@@ -363,9 +358,8 @@ class DROP_BatterySensor(DROP_Entity, SensorEntity):
 class DROP_TemperatureSensorF(DROP_Entity, SensorEntity):
     """Monitors the temperature."""
 
-    _attr_icon = TEMPERATURE_ICON
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = "°F"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key = "temperature_f"
 
     def __init__(self, device) -> None:
@@ -383,9 +377,8 @@ class DROP_TemperatureSensorF(DROP_Entity, SensorEntity):
 class DROP_TemperatureSensorC(DROP_Entity, SensorEntity):
     """Monitors the temperature."""
 
-    _attr_icon = TEMPERATURE_ICON
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = "°C"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key = "temperature_c"
 
     def __init__(self, device) -> None:
