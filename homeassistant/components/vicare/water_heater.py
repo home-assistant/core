@@ -1,4 +1,6 @@
 """Viessmann ViCare water_heater device."""
+from __future__ import annotations
+
 from contextlib import suppress
 import logging
 from typing import Any
@@ -61,7 +63,7 @@ HA_TO_VICARE_HVAC_DHW = {
 def _build_entities(
     api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
-) -> list:
+) -> list[ViCareWater]:
     """Create ViCare water entities for a device."""
     return [
         ViCareWater(
