@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "not_supported": "Configuration for DROP is through MQTT discovery.  Use the DROP Connect app to connect your DROP Hub to your MQTT broker."
+      "not_supported": "Configuration for DROP is through MQTT discovery. Use the DROP Connect app to connect your DROP Hub to your MQTT broker."
     },
     "step": {
       "confirm": {
