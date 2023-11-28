@@ -79,17 +79,8 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 # No Errors
                 unique_id = username.lower()
-                existing_entry = await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-
-                if existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry, data=user_input
-                    )
-                    # Reload the config entry otherwise devices will remain unavailable
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    )
 
                 return self.async_create_entry(
                     title=username,
