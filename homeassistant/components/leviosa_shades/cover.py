@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
     BLIND_GROUPS,
@@ -82,6 +83,22 @@ class LeviosaBlindGroup(cover.CoverEntity):
         self._blind_group_id = blind_group_id
         self._blind_group_obj = blind_group_obj
         self._hass = hass
+
+        self._attr_name = self._blind_group_obj.name
+        self._attr_unique_id = self._blind_group_id
+        self._attr_device_class = cover.CoverDeviceClass.SHADE
+        self._attr_supported_features = (
+            cover.CoverEntityFeature.OPEN
+            | cover.CoverEntityFeature.CLOSE
+            | cover.CoverEntityFeature.STOP
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._blind_group_obj.Hub.hub_ip)},
+            name=self._blind_group_obj.Hub.name,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            via_device=(DOMAIN, self._blind_group_obj.Hub.hub_ip),
+        )
         _LOGGER.debug(
             "Creating cover.%s, UID: %s",
             self._blind_group_obj.name,
@@ -89,70 +106,9 @@ class LeviosaBlindGroup(cover.CoverEntity):
         )
 
     @property
-    def name(self):
-        """Name of the device."""
-        return self._blind_group_obj.name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID for this device."""
-
-        return self._blind_group_id
-
-    @property
-    def assumed_state(self):
-        """Indicate that we do not go to the device to know its state."""
-
-        return False
-
-    @property
     def current_cover_position(self):
         """Indicate that we do not go to the device to know its state."""
         return self._blind_group_obj.position
-
-    @property
-    def should_poll(self):
-        """Indicate that the device does not respond to polling."""
-
-        return True
-
-    @property
-    def supported_features(self):
-        """Bitmap indicating which features this device supports."""
-
-        return cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE | cover.SUPPORT_STOP
-
-    @property
-    def device_class(self):
-        """Indicate we're managing a Roller blind motor group."""
-
-        return cover.DEVICE_CLASS_SHADE
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-
-        device_info = {
-            "identifiers": {(DOMAIN, self._blind_group_obj.Hub.hub_ip)},
-            "name": self._blind_group_obj.Hub.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "via_device": (DOMAIN, self._blind_group_obj.Hub.hub_ip),
-        }
-
-        return device_info
-
-    @property
-    def is_opening(self):
-        """Is the blind group opening?."""
-
-        return False
-
-    @property
-    def is_closing(self):
-        """Is the blind closing?."""
-
-        return False
 
     @property
     def is_closed(self):

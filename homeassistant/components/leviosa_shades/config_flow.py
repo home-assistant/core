@@ -40,11 +40,7 @@ DATA_SCHEMA = vol.Schema(
 class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Manages the interaction with user when a Leviosa Zone needs to be setup."""
 
-    # The schema version below will be used by Home Assistant to determine
-    # if a call to the migrate method is needed; this is not implemented
-    # as of March 2021
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     GROUPS = [
         GROUP1_NAME,
         GROUP2_NAME,
