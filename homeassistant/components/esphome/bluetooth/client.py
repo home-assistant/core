@@ -169,7 +169,7 @@ class ESPHomeClient(BaseBleakClient):
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
-        return f"ESPHomeClient ({self.address})"
+        return f"ESPHomeClient ({self._description})"
 
     def _unsubscribe_connection_state(self) -> None:
         """Unsubscribe from connection state updates."""
