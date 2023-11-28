@@ -1,9 +1,10 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import requests
+from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +13,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
-from .entity import RingEntityMixin
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the lights for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator = hass.data[DOMAIN][config_entry.entry_id][
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
     lights = []
@@ -47,14 +49,14 @@ async def async_setup_entry(
     async_add_entities(lights)
 
 
-class RingLight(RingEntityMixin, LightEntity):
+class RingLight(RingEntity, LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
 
-    def __init__(self, device, coordinator):
+    def __init__(self, device: RingGeneric, coordinator) -> None:
         """Initialize the light."""
         super().__init__(device, coordinator)
         self._attr_unique_id = device.id
@@ -66,7 +68,8 @@ class RingLight(RingEntityMixin, LightEntity):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
-        if device := self._get_coordinator_device():
+        device: Optional[RingGeneric]
+        if (device := self._get_coordinator_device()) and hasattr(device, "lights"):
             self._attr_is_on = device.lights == ON_STATE
         super()._handle_coordinator_update()
 

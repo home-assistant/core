@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
+
+from ring_doorbell.generic import RingGeneric
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,7 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
-from .entity import RingEntityMixin
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 
 async def async_setup_entry(
@@ -25,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a sensor for a Ring device."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator = hass.data[DOMAIN][config_entry.entry_id][
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
 
@@ -41,15 +44,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingSensor(RingEntityMixin, SensorEntity):
+class RingSensor(RingEntity, SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription
 
     def __init__(
         self,
-        device,
-        coordinator,
+        device: RingGeneric,
+        coordinator: RingDataCoordinator,
         description: RingSensorEntityDescription,
     ) -> None:
         """Initialize a sensor for Ring device."""
@@ -93,6 +96,7 @@ class HistoryRingSensor(RingSensor):
     @callback
     def _handle_coordinator_update(self):
         """Call update method."""
+        history_data: Optional[RingGeneric]
         if not (history_data := self._get_coordinator_history()):
             return
 

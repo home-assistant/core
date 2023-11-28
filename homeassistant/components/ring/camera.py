@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import chain
 import logging
+from typing import Optional
 
 from haffmpeg.camera import CameraMjpeg
 import requests
@@ -17,7 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
-from .entity import RingEntityMixin
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 
@@ -31,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator = hass.data[DOMAIN][config_entry.entry_id][
+    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         RING_DEVICES_COORDINATOR
     ]
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
@@ -48,7 +50,7 @@ async def async_setup_entry(
     async_add_entities(cams)
 
 
-class RingCam(RingEntityMixin, Camera):
+class RingCam(RingEntity, Camera):
     """An implementation of a Ring Door Bell camera."""
 
     _attr_name = None
@@ -69,6 +71,7 @@ class RingCam(RingEntityMixin, Camera):
     @callback
     def _handle_coordinator_update(self):
         """Call update method."""
+        history_data: Optional[list]
         if not (history_data := self._get_coordinator_history()):
             return
         if history_data:

@@ -15,7 +15,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RING_API, RING_DEVICES, RING_NOTIFICATIONS_COORDINATOR
-from .entity import RingEntityMixin
+from .coordinator import RingNotificationsCoordinator
+from .entity import RingEntity
 
 
 @dataclass
@@ -55,9 +56,9 @@ async def async_setup_entry(
     """Set up the Ring binary sensors from a config entry."""
     ring = hass.data[DOMAIN][config_entry.entry_id][RING_API]
     devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    notifications_coordinator = hass.data[DOMAIN][config_entry.entry_id][
-        RING_NOTIFICATIONS_COORDINATOR
-    ]
+    notifications_coordinator: RingNotificationsCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][RING_NOTIFICATIONS_COORDINATOR]
 
     entities = [
         RingBinarySensor(ring, device, notifications_coordinator, description)
@@ -70,7 +71,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
+class RingBinarySensor(RingEntity, BinarySensorEntity):
     """A binary sensor implementation for Ring device."""
 
     _active_alert: dict[str, Any] | None = None

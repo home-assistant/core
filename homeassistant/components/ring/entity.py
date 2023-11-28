@@ -16,7 +16,7 @@ _RingCoordinatorT = TypeVar(
 )
 
 
-class RingEntityMixin(CoordinatorEntity[_RingCoordinatorT]):
+class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
@@ -25,7 +25,7 @@ class RingEntityMixin(CoordinatorEntity[_RingCoordinatorT]):
 
     def __init__(
         self,
-        device,
+        device: RingGeneric,
         coordinator: _RingCoordinatorT,
     ) -> None:
         """Initialize a sensor for Ring device."""
