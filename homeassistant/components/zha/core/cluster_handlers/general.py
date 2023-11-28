@@ -218,6 +218,14 @@ class GreenPowerProxy(ClusterHandler):
 
     BIND: bool = False
 
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle commands received to this cluster."""
+        cmd_name = parse_and_log_command(self, tsn, command_id, args)
+
+        if cmd_name == "notification":
+            self.zha_send_event(cmd_name, args)
+
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(general.Groups.cluster_id)
 class Groups(ClusterHandler):
