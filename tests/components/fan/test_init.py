@@ -143,14 +143,5 @@ async def test_preset_mode_validation(
         assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(NotValidPresetModeError) as exc:
-        await test_fan.valid_preset_mode_or_raise("invalid")
-    assert exc.value.translation_key == "not_valid_preset_mode"
-
-    with pytest.raises(NotValidPresetModeError) as exc:
         await test_fan._valid_preset_mode_or_raise("invalid")
     assert exc.value.translation_key == "not_valid_preset_mode"
-
-    assert (
-        "The integration test implements entity._valid_preset_mode_or_raise, "
-        "which is is deprecated" in caplog.text
-    )

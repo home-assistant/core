@@ -27,7 +27,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
@@ -80,7 +79,7 @@ ATTR_PRESET_MODES = "preset_modes"
 
 
 class NotValidPresetModeError(ServiceValidationError):
-    """Exception class when the preset_mode in not in the preset_modes list."""
+    """Raised when the preset_mode in not in the preset_modes list."""
 
 
 @bind_hass
@@ -109,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
-        "_async_turn_on",
+        "async_handle_turn_on_service",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
@@ -158,7 +157,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "_async_set_preset_mode",
+        "async_handle_set_preset_mode_on_service",
         [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )
 
@@ -239,47 +238,19 @@ class FanEntity(ToggleEntity):
         """Set new preset mode."""
         raise NotImplementedError()
 
-    async def _async_set_preset_mode(self, preset_mode: str) -> None:
-        """Validate and set new preset mode."""
-        self.valid_preset_mode_or_raise(preset_mode)
+    @final
+    async def async_handle_set_preset_mode_on_service(self, preset_mode: str) -> None:
+        """Validate and set new preset mode and set it."""
+        self._valid_preset_mode_or_raise(preset_mode)
         await self.async_set_preset_mode(preset_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
-    @callback
-    def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
-        """Raise NotValidPresetModeError on invalid preset_mode."""
-        integration_platform: str = "unknown"
-        if (entry := self.registry_entry) is not None:
-            integration_platform = entry.platform
-
-        _LOGGER.warning(
-            "The integration %s implements "
-            "entity._valid_preset_mode_or_raise, which is is deprecated. Support "
-            "will be removed with HA Core 2024.12. "
-            "The fan entity component already validates the preset_mode "
-            "when fan.async_turn_on or fan_entity._async_set_preset_mode is called. "
-            "If still needed, the function fan_entity.valid_preset_mode_or_raise "
-            "can be used instead",
-            integration_platform,
-        )
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_preset_mode_validator_{integration_platform}",
-            breaks_in_ha_version="2024.12.0",
-            is_fixable=False,
-            translation_key="deprecated_preset_mode_validator",
-            translation_placeholders={"integration": integration_platform},
-            severity=IssueSeverity.WARNING,
-        )
-        self.valid_preset_mode_or_raise(preset_mode)
-
     @final
     @callback
-    def valid_preset_mode_or_raise(self, preset_mode: str) -> None:
+    def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
         """Raise NotValidPresetModeError on invalid preset_mode."""
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
@@ -313,7 +284,7 @@ class FanEntity(ToggleEntity):
         raise NotImplementedError()
 
     @final
-    async def _async_turn_on(
+    async def async_handle_turn_on_service(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
@@ -321,7 +292,7 @@ class FanEntity(ToggleEntity):
     ) -> None:
         """Validate and turn on the fan."""
         if preset_mode is not None:
-            self.valid_preset_mode_or_raise(preset_mode)
+            self._valid_preset_mode_or_raise(preset_mode)
         await self.async_turn_on(percentage, preset_mode, **kwargs)
 
     async def async_turn_on(
