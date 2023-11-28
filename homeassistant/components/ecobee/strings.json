@@ -160,7 +160,7 @@
           "name": "Entity",
           "description": "Ecobee thermostat on which to set active sensors."
         },
-        "climate_name": {
+        "preset_mode": {
           "name": "Climate Name",
           "description": "Name of the climate program to set the sensors active on.\nDefaults to currently active program."
         },

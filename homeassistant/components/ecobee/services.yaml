@@ -136,14 +136,12 @@ set_occupancy_modes:
         boolean:
 
 set_sensors_used_in_climate:
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: ecobee
-          domain: climate
-    climate_name:
+    preset_mode:
       example: "Home"
       selector:
         text:

@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -55,7 +55,7 @@ ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
 ATTR_SENSOR_LIST = "sensors"
-ATTR_CLIMATE_NAME = "climate_name"
+ATTR_PRESET_MODE = "preset_mode"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -312,7 +312,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SENSORS_USED_IN_CLIMATE,
         {
-            vol.Optional(ATTR_CLIMATE_NAME): cv.string,
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
             vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
         },
         "set_sensors_used_in_climate",
@@ -560,13 +560,7 @@ class Thermostat(ClimateEntity):
             sensors_info = self.thermostat["remoteSensors"]
         except KeyError:
             sensors_info = []
-        sensors = []
-        if len(sensors_info) > 0:
-            for sensor in sensors_info:
-                sensor_name = sensor.get("name", None)
-                if sensor_name is not None:
-                    sensors.append(sensor_name)
-        return sensors
+        return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
@@ -756,17 +750,16 @@ class Thermostat(ClimateEntity):
         self.update_without_throttle = True
 
     def set_sensors_used_in_climate(
-        self, sensors: list[str], climate_name: str | None = None
+        self, sensors: list[str], preset_mode: str | None = None
     ) -> None:
         """Set the sensors used on a climate for a thermostat."""
-        if climate_name is None:
-            climate_name = self.preset_mode
+        if preset_mode is None:
+            preset_mode = self.preset_mode
 
         # Check if climate is an available preset option.
-        if climate_name not in self._preset_modes.values():
+        elif preset_mode not in self._preset_modes.values():
             msg = f"Invalid climate name, available options are: {', '.join(self.preset_modes)}"
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise ServiceValidationError(msg)
 
         # Get device name from device id.
         device_registry = dr.async_get(self.hass)
@@ -779,35 +772,31 @@ class Thermostat(ClimateEntity):
         # Ensure sensors provided are available for thermostat.
         if not set(sensor_names).issubset(set(self._sensors)):
             msg = f"Invalid sensor for thermosat, available options are: {', '.join(self._sensors)}"
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise ServiceValidationError(msg)
 
         # Check if sensors are currently used on the climate for the thermostat.
-        current_sensors_in_climate = self.sensors_in_climate(climate_name)
+        current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
         if set(sensor_names) == set(current_sensors_in_climate):
-            msg = f"This action would not be an update, current sensors on climate ({climate_name}) are: {', '.join(current_sensors_in_climate)}"
-            _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            msg = f"This action would not be an update, current sensors on climate ({preset_mode}) are: {', '.join(current_sensors_in_climate)}"
+            raise ServiceValidationError(msg)
 
         _LOGGER.debug(
             "Setting sensors %s to be used on thermostat %s for program %s",
             sensor_names,
             self.device_info.get("name"),
-            climate_name,
+            preset_mode,
         )
         self.data.ecobee.update_climate_sensors(
-            self.thermostat_index, climate_name, sensor_names
+            self.thermostat_index, preset_mode, sensor_names
         )
         self.update_without_throttle = True
 
-    def sensors_in_climate(self, climate_name: str | None = None) -> list[str]:
+    def _sensors_in_preset_mode(self, preset_mode: str) -> list[str]:
         """Return current sensors used in climate."""
-        if climate_name is None:
-            climate_name = self.preset_mode
         climates = self.thermostat["program"]["climates"]
         for climate in climates:
-            if climate.get("name") == climate_name:
-                sensors = [d.get("name", None) for d in climate.get("sensors")]
+            if climate.get("name") == preset_mode:
+                sensors = [d["name"] for d in climate["sensors"]]
                 break
 
         return sensors
