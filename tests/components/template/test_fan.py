@@ -12,10 +12,10 @@ from homeassistant.components.fan import (
     DIRECTION_REVERSE,
     DOMAIN,
     FanEntityFeature,
+    NotValidPresetModeError,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import assert_setup_component
 from tests.components.fan import common
@@ -491,7 +491,7 @@ async def test_preset_modes(hass: HomeAssistant, calls) -> None:
         ("invalid", "smart", 3),
     ]:
         if extra != state:
-            with pytest.raises(ServiceValidationError):
+            with pytest.raises(NotValidPresetModeError):
                 await common.async_set_preset_mode(hass, _TEST_FAN, extra)
         else:
             await common.async_set_preset_mode(hass, _TEST_FAN, extra)

@@ -16,6 +16,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
+    NotValidPresetModeError,
 )
 from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
 from homeassistant.const import (
@@ -29,7 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 
@@ -535,7 +536,7 @@ async def test_inovelli_lzw36(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -675,7 +676,7 @@ async def test_thermostat_fan(
     client.async_send_command.reset_mock()
 
     # Test setting unknown preset mode
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,

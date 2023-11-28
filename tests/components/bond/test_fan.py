@@ -26,6 +26,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
+    NotValidPresetModeError,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +35,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import utcnow
 
@@ -252,12 +253,12 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: HomeAssistant) -> Non
     )
 
     with patch_bond_action(), patch_bond_device_state(), pytest.raises(
-        ServiceValidationError
+        NotValidPresetModeError
     ):
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
     with patch_bond_action(), patch_bond_device_state(), pytest.raises(
-        ServiceValidationError
+        NotValidPresetModeError
     ):
         await hass.services.async_call(
             FAN_DOMAIN,

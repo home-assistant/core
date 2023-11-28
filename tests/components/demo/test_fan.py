@@ -20,7 +20,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 FULL_FAN_ENTITY_IDS = ["fan.living_room_fan", "fan.percentage_full_fan"]
@@ -183,7 +182,7 @@ async def test_turn_on_with_preset_mode_only(
     assert state.state == STATE_OFF
     assert state.attributes[fan.ATTR_PRESET_MODE] is None
 
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             SERVICE_TURN_ON,
@@ -257,7 +256,7 @@ async def test_turn_on_with_preset_mode_and_speed(
     assert state.attributes[fan.ATTR_PERCENTAGE] == 0
     assert state.attributes[fan.ATTR_PRESET_MODE] is None
 
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             SERVICE_TURN_ON,
@@ -356,7 +355,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
 
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             fan.SERVICE_SET_PRESET_MODE,
@@ -367,7 +366,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
     assert exc.value.translation_domain == fan.DOMAIN
     assert exc.value.translation_key == "not_valid_preset_mode"
 
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             SERVICE_TURN_ON,
