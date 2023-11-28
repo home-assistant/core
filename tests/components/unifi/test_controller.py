@@ -109,6 +109,7 @@ def mock_default_unifi_requests(
     dpiapp_response=None,
     dpigroup_response=None,
     port_forward_response=None,
+    traffic_rule_response=None,
     system_information_response=None,
     wlans_response=None,
 ):
@@ -174,7 +175,7 @@ def mock_default_unifi_requests(
     )
     aioclient_mock.get(
         f"https://{host}:1234/v2/api/site/{site_id}/trafficrules",
-        json=[{}],
+        json=traffic_rule_response,
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -192,6 +193,7 @@ async def setup_unifi_integration(
     dpiapp_response=None,
     dpigroup_response=None,
     port_forward_response=None,
+    traffic_rule_response=None,
     system_information_response=None,
     wlans_response=None,
     known_wireless_clients=None,
@@ -229,6 +231,7 @@ async def setup_unifi_integration(
             dpiapp_response=dpiapp_response,
             dpigroup_response=dpigroup_response,
             port_forward_response=port_forward_response,
+            traffic_rule_response=traffic_rule_response,
             system_information_response=system_information_response,
             wlans_response=wlans_response,
         )

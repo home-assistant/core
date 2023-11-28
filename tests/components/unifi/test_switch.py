@@ -1593,6 +1593,105 @@ async def test_port_forwarding_switches(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
+async def test_traffic_rules_switches(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    websocket_mock,
+) -> None:
+    """Test control of UniFi traffic rules."""
+    entity_id = "switch.unifi_network_test_traffic_rule"
+    _data = {
+        "_id": "6452cd9b859d5b11aa002ea1",
+        "action": "BLOCK",
+        "app_category_ids": [],
+        "app_ids": [],
+        "bandwidth_limit": {
+            "download_limit_kbps": 1024,
+            "enabled": False,
+            "upload_limit_kbps": 1024,
+        },
+        "description": "Test Traffic Rule",
+        "domains": [],
+        "enabled": True,
+        "ip_addresses": [],
+        "ip_ranges": [],
+        "matching_target": "INTERNET",
+        "network_ids": [],
+        "regions": [],
+        "schedule": {
+            "date_end": "2023-05-10",
+            "date_start": "2023-05-03",
+            "mode": "ALWAYS",
+            "repeat_on_days": [],
+            "time_all_day": False,
+            "time_range_end": "12:00",
+            "time_range_start": "09:00",
+        },
+        "target_devices": [{"client_mac": CLIENT_1["mac"], "type": "CLIENT"}],
+    }
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, traffic_rule_response=[_data.copy()]
+    )
+    assert config_entry
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    ent_reg = er.async_get(hass)
+    ent_reg_entry = ent_reg.async_get(entity_id)
+    assert ent_reg_entry
+    assert ent_reg_entry.unique_id == "traffic_rule-6452cd9b859d5b11aa002ea1"
+    assert ent_reg_entry.entity_category is EntityCategory.CONFIG
+
+    # Validate state object
+    switch_1 = hass.states.get(entity_id)
+    assert switch_1 is not None
+    assert switch_1.state == STATE_ON
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+
+    # Update state object
+    data = _data.copy()
+
+    # Disable traffic rule
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/v2/api/site/{controller.site}"
+        + f"/trafficrules/{data['_id']}",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    data = _data.copy()
+    data["enabled"] = False
+    assert aioclient_mock.mock_calls[0][2] == data
+
+    # Enable traffic rule
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == _data
+
+    # Availability signalling
+
+    # Controller disconnects
+    await websocket_mock.disconnect()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    await websocket_mock.reconnect()
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
 async def test_updating_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
