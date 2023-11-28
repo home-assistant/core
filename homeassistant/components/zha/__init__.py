@@ -14,7 +14,7 @@ from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionErr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -177,7 +177,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 old_state=exc.old_state,
                 new_state=exc.new_state,
             )
-            raise HomeAssistantError(
+            raise ConfigEntryError(
                 "Network settings do not match most recent backup"
             ) from exc
         except TransientConnectionError as exc:
