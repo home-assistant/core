@@ -177,7 +177,7 @@ class RensonFan(RensonEntity, FanEntity):
         """Set timer level."""
         level = Level[str(timer_level).upper()]
 
-        await self.hass.async_add_executor_job(self.api.set_timer_level, level, time)
+        await self.hass.async_add_executor_job(self.api.set_timer_level, level, minutes)
 
     async def set_breeze(self, call: ServiceCall) -> None:
         """Configure breeze feature."""
