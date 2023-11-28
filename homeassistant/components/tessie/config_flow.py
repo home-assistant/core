@@ -1,6 +1,8 @@
 """Config Flow for Advantage Air integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -17,7 +19,7 @@ from .const import DOMAIN
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
-class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config Tessie API connection."""
 
     VERSION = 1
@@ -25,7 +27,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     DOMAIN = DOMAIN
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
         """Get configuration from the user."""
         errors = {}
@@ -35,8 +37,12 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                     api_key=user_input[CONF_API_KEY],
                 )
-            except ClientResponseError:
-                errors["base"] = "invalid_auth"
+            except ClientResponseError as e:
+                if e.status == HTTPStatus.FORBIDDEN:
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
+
             else:
                 await self.async_set_unique_id(user_input[CONF_API_KEY])
                 self._abort_if_unique_id_configured()
@@ -51,3 +57,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=TESSIE_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+        """Handle re-auth."""
+        return await self.async_step_user(user_input)
