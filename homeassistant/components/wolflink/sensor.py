@@ -109,10 +109,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._device_id)
-            },
+            identifiers={(DOMAIN, self._device_id)},
             name=self._device_name,
             configuration_url="https://www.wolf-smartset.com/",
             manufacturer=MANUFACTURER,
