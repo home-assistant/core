@@ -58,27 +58,38 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
+def _build_entities(
+    device_config: PyViCareDeviceConfig,
+    api: PyViCareDevice,
+) -> list:
+    """Create ViCare water entities for a device."""
+    return [
+        ViCareWater(
+            api,
+            circuit,
+            device_config,
+            "water",
+        )
+        for circuit in get_circuits(api)
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    circuits = await hass.async_add_executor_job(get_circuits, api)
 
-    for circuit in circuits:
-        entity = ViCareWater(
-            api,
-            circuit,
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
             device_config,
-            "water",
+            api,
         )
-        entities.append(entity)
-
-    async_add_entities(entities)
+    )
 
 
 class ViCareWater(ViCareEntity, WaterHeaterEntity):
