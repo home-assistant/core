@@ -30,18 +30,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self._discovered_device_info: dict[str, Any] = {}
-        self._topic = DISCOVERY_TOPIC
-        self.__command_topic: str = ""
-        self.__data_topic: str = ""
-        self.__device_desc: str = ""
-        self.__device_id: str = ""
-        self.__device_type: str = ""
-        self.__hub_id: str = ""
-        self.__name: str = ""
-        self.__unique_id: str = ""
+    _discovered_device_info: dict[str, Any] = {}
+    _topic = DISCOVERY_TOPIC
+    __command_topic: str | None = None
+    __data_topic: str | None = None
+    __device_desc: str | None = None
+    __device_id: str | None = None
+    __device_type: str | None = None
+    __hub_id: str | None = None
+    __name: str = ""
+    __unique_id: str | None = None
 
     async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
         """Handle a flow initialized by MQTT discovery."""
