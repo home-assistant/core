@@ -22,6 +22,7 @@ from aioesphomeapi import (
     APIClient,
     APIVersion,
     BLEConnectionError,
+    BluetoothConnectionDroppedError,
     BluetoothProxyFeature,
     DeviceInfo,
 )
@@ -30,7 +31,6 @@ from aioesphomeapi.core import (
     BluetoothGATTAPIError,
     TimeoutAPIError,
 )
-from async_interrupt import interrupt
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -77,16 +77,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         # pylint: disable=protected-access
         if not self._is_connected:
             raise BleakError(f"{self._description} is not connected")
-        loop = self._loop
-        disconnected_futures = self._disconnected_futures
-        disconnected_future = loop.create_future()
-        disconnected_futures.add(disconnected_future)
-        disconnect_message = f"{self._description}: Disconnected during operation"
-        try:
-            async with interrupt(disconnected_future, BleakError, disconnect_message):
-                return await func(self, *args, **kwargs)
-        finally:
-            disconnected_futures.discard(disconnected_future)
+        return await func(self, *args, **kwargs)
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -97,10 +88,19 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     async def _async_wrap_bluetooth_operation(
         self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
+        # pylint: disable=protected-access
         try:
             return await func(self, *args, **kwargs)
         except TimeoutAPIError as err:
             raise asyncio.TimeoutError(str(err)) from err
+        except BluetoothConnectionDroppedError as ex:
+            _LOGGER.debug(
+                "%s: BLE device disconnected during %s operation",
+                self._description,
+                func.__name__,
+            )
+            self._async_ble_device_disconnected()
+            raise BleakError(str(ex)) from ex
         except BluetoothGATTAPIError as ex:
             # If the device disconnects in the middle of an operation
             # be sure to mark it as disconnected so any library using
@@ -111,7 +111,6 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             # before the callback is delivered.
 
             if ex.error.error == -1:
-                # pylint: disable=protected-access
                 _LOGGER.debug(
                     "%s: BLE device disconnected during %s operation",
                     self._description,
@@ -169,7 +168,6 @@ class ESPHomeClient(BaseBleakClient):
         self._notify_cancels: dict[
             int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
         ] = {}
-        self._disconnected_futures: set[asyncio.Future[None]] = set()
         self._device_info = client_data.device_info
         self._feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
             client_data.api_version
@@ -211,10 +209,6 @@ class ESPHomeClient(BaseBleakClient):
         for _, notify_abort in self._notify_cancels.values():
             notify_abort()
         self._notify_cancels.clear()
-        for future in self._disconnected_futures:
-            if not future.done():
-                future.set_result(None)
-        self._disconnected_futures.clear()
         self._disconnect_callbacks.discard(self._async_esp_disconnected)
         self._unsubscribe_connection_state()
 
