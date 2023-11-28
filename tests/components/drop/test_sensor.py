@@ -1,6 +1,6 @@
 """Test DROP sensor entities."""
 
-from homeassistant.components.drop.const import DOMAIN as DROP_DOMAIN
+from homeassistant.components.drop.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +30,7 @@ async def test_sensors_hub(
 ) -> None:
     """Test DROP sensors for hubs."""
     config_entry_hub.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB)
@@ -82,7 +82,7 @@ async def test_sensors_leak(
 ) -> None:
     """Test DROP sensors for leak detectors."""
     config_entry_leak.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, TEST_DATA_LEAK_TOPIC, TEST_DATA_LEAK)
@@ -99,7 +99,7 @@ async def test_sensors_softener(
 ) -> None:
     """Test DROP sensors for softeners."""
     config_entry_softener.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, TEST_DATA_SOFTENER_TOPIC, TEST_DATA_SOFTENER)
@@ -131,7 +131,7 @@ async def test_sensors_filter(
 ) -> None:
     """Test DROP sensors for filters."""
     config_entry_filter.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, TEST_DATA_FILTER_TOPIC, TEST_DATA_FILTER)
@@ -158,7 +158,7 @@ async def test_sensors_protection_valve(
 ) -> None:
     """Test DROP sensors for protection valves."""
     config_entry_protection_valve.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -192,7 +192,7 @@ async def test_sensors_pump_controller(
 ) -> None:
     """Test DROP sensors for pump controllers."""
     config_entry_pump_controller.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -226,7 +226,7 @@ async def test_sensors_ro_filter(
 ) -> None:
     """Test DROP sensors for RO filters."""
     config_entry_ro_filter.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, TEST_DATA_RO_FILTER_TOPIC, TEST_DATA_RO_FILTER)

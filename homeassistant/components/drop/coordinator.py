@@ -18,7 +18,7 @@ from .const import (
     CONF_HUB_ID,
     CONF_UNIQUE_ID,
     DEV_HUB,
-    DOMAIN as DROP_DOMAIN,
+    DOMAIN,
     KEY_STATUS,
 )
 
@@ -39,7 +39,7 @@ class DROP_DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._manufacturer: str = "Chandler Systems, Inc."
         self._device_name: str = config_entry.data["name"]
         self._device_information: dict[str, Any] = {}
-        super().__init__(hass, _LOGGER, name=f"{DROP_DOMAIN}-{self._drop_device_id}")
+        super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{self._drop_device_id}")
 
     async def DROP_MessageReceived(
         self, topic: str, payload: str, qos: int, retain: bool

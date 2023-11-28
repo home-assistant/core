@@ -1,6 +1,6 @@
 """Test DROP coordinator."""
 
-from homeassistant.components.drop.const import DOMAIN as DROP_DOMAIN
+from homeassistant.components.drop.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -16,7 +16,7 @@ async def test_bad_json(
 ) -> None:
     """Test bad JSON."""
     config_entry_hub.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     currentFlowSensorName = "sensor.hub_drop_1_c0ffee_water_flow_rate"
@@ -35,7 +35,7 @@ async def test_bad_json(
 async def test_no_mqtt(hass: HomeAssistant, config_entry_hub) -> None:
     """Test no MQTT."""
     config_entry_hub.add_to_hass(hass)
-    assert await async_setup_component(hass, DROP_DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     protectModeSelectName = "select.hub_drop_1_c0ffee_protect_mode"

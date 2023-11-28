@@ -11,7 +11,7 @@ from homeassistant.components.drop.const import (
     CONF_DEVICE_TYPE,
     CONF_HUB_ID,
     CONF_UNIQUE_ID,
-    DOMAIN as DROP_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 def config_entry_hub(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/255/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/255/#",
@@ -41,7 +41,7 @@ def config_entry_hub(hass: HomeAssistant):
 def config_entry_salt(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/8/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/8/#",
@@ -60,7 +60,7 @@ def config_entry_salt(hass: HomeAssistant):
 def config_entry_leak(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/20/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/20/#",
@@ -79,7 +79,7 @@ def config_entry_leak(hass: HomeAssistant):
 def config_entry_softener(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/0/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/0/#",
@@ -98,7 +98,7 @@ def config_entry_softener(hass: HomeAssistant):
 def config_entry_filter(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/4/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/4/#",
@@ -117,7 +117,7 @@ def config_entry_filter(hass: HomeAssistant):
 def config_entry_protection_valve(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/78/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/78/#",
@@ -136,7 +136,7 @@ def config_entry_protection_valve(hass: HomeAssistant):
 def config_entry_pump_controller(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/83/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/83/#",
@@ -155,7 +155,7 @@ def config_entry_pump_controller(hass: HomeAssistant):
 def config_entry_ro_filter(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=DROP_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/95/cmd",
             CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/95/#",

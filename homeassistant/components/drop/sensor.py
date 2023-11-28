@@ -19,7 +19,7 @@ from .const import (
     DEV_PUMP_CONTROLLER,
     DEV_RO_FILTER,
     DEV_SOFTENER,
-    DOMAIN as DROP_DOMAIN,
+    DOMAIN,
 )
 from .entity import DROP_Entity
 
@@ -50,28 +50,28 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_CurrentFlowRateSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_PeakFlowRateSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_WaterUsedTodaySensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_AverageWaterUsedSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_CurrentSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_HighSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_LowSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_BatterySensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )
@@ -79,16 +79,16 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_CurrentFlowRateSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_BatterySensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_CurrentSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_CapacityRemainingSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )
@@ -96,13 +96,13 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_CurrentFlowRateSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_BatterySensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_CurrentSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )
@@ -110,13 +110,13 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_BatterySensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_TemperatureSensorC(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_TemperatureSensorF(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )
@@ -124,19 +124,19 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_CurrentFlowRateSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_CurrentSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_BatterySensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_TemperatureSensorC(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_TemperatureSensorF(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )
@@ -144,16 +144,16 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_CurrentFlowRateSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_CurrentSystemPressureSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_TemperatureSensorC(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_TemperatureSensorF(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )
@@ -161,19 +161,19 @@ async def async_setup_entry(
         entities.extend(
             [
                 DROP_InletTdsSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_OutletTdsSensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_FilterCart1Sensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_FilterCart2Sensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
                 DROP_FilterCart3Sensor(
-                    hass.data[DROP_DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
                 ),
             ]
         )

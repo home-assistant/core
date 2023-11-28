@@ -14,7 +14,7 @@ from .const import (
     CONF_DATA_TOPIC,
     CONF_DEVICE_TYPE,
     CONF_UNIQUE_ID,
-    DOMAIN as DROP_DOMAIN,
+    DOMAIN,
 )
 from .coordinator import DROP_DeviceDataUpdateCoordinator
 
@@ -31,15 +31,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("MQTT integration is not available")
         return False
 
-    hass.data.setdefault(DROP_DOMAIN, {})[config_entry.entry_id] = {}
-    hass.data[DROP_DOMAIN][config_entry.entry_id][
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {}
+    hass.data[DOMAIN][config_entry.entry_id][
         CONF_COORDINATOR
     ] = DROP_DeviceDataUpdateCoordinator(hass, config_entry)
 
     # Thin wrapper used to pass MQTT messages to the data coordinator for this entry.
     async def message_received(msg):
-        if config_entry.entry_id in hass.data[DROP_DOMAIN]:
-            await hass.data[DROP_DOMAIN][config_entry.entry_id][
+        if config_entry.entry_id in hass.data[DOMAIN]:
+            await hass.data[DOMAIN][config_entry.entry_id][
                 CONF_COORDINATOR
             ].DROP_MessageReceived(msg.topic, msg.payload, msg.qos, msg.retain)
 
@@ -64,5 +64,5 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        hass.data[DROP_DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok

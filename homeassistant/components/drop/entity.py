@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as DROP_DOMAIN
+from .const import DOMAIN
 from .coordinator import DROP_DeviceDataUpdateCoordinator
 
 
@@ -27,7 +27,7 @@ class DROP_Entity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
-            identifiers={(DROP_DOMAIN, self._device.id)},
+            identifiers={(DOMAIN, self._device.id)},
             manufacturer=self._device.manufacturer,
             model=self._device.model,
             name=self._device.device_name,
