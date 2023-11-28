@@ -21,7 +21,7 @@ from .const import (
     CLIENT,
     DOMAIN,
     TRACKABLES,
-    TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
 
@@ -99,11 +99,10 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             client,
             item.trackable,
             item.tracker_details,
-            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{item.tracker_details['_id']}",
+            f"{TRACKER_SWITCH_STATUS_UPDATED}-{item.tracker_details['_id']}",
         )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
-        self._attr_available = False
         self._tracker = item.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
@@ -111,9 +110,15 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
+        if self.entity_description.key not in event:
+            return
+
+        # We received an event, so the service is online and the switch entities should
+        #  be available.
+        self._attr_available = True
         self._attr_is_on = event[self.entity_description.key]
 
-        super().handle_status_update(event)
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""
