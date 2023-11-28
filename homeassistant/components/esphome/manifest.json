@@ -15,8 +15,7 @@
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol"],
   "requirements": [
-    "async-interrupt==1.1.1",
-    "aioesphomeapi==19.1.4",
+    "aioesphomeapi==19.1.7",
     "bluetooth-data-tools==1.15.0",
     "esphome-dashboard-api==1.2.3"
   ],
