@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -179,32 +179,34 @@ class RensonFan(RensonEntity, FanEntity):
 
         await self.hass.async_add_executor_job(self.api.set_timer_level, level, minutes)
 
-    async def set_breeze(self, call: ServiceCall) -> None:
+    async def set_breeze(
+        self, breeze_level: str, temperature: int, activate: bool
+    ) -> None:
         """Configure breeze feature."""
-        level = call.data["breeze_level"]
-        temperature = call.data["temperature"]
-        activated = call.data["activate"]
+        level = Level[str(breeze_level).upper()]
 
         await self.hass.async_add_executor_job(
-            self.api.set_breeze, level, temperature, activated
+            self.api.set_breeze, level, temperature, activate
         )
 
-    async def set_day_night_time(self, call: ServiceCall) -> None:
+    async def set_day_night_time(self, day: str, night: str) -> None:
         """Configure day night times."""
-        day = call.data["day"]
-        night = call.data["night"]
 
         await self.hass.async_add_executor_job(self.api.set_time, day, night)
 
-    async def set_pollution_settings(self, call: ServiceCall) -> None:
+    async def set_pollution_settings(
+        self,
+        day_pollution_level: str,
+        night_pollution_level: str,
+        humidity_control: bool,
+        airquality_control: bool,
+        co2_control: str,
+        co2_threshold: int,
+        co2_hysteresis: int,
+    ) -> None:
         """Configure pollutions settings."""
-        day = call.data["day_pollution_level"]
-        night = call.data["night_pollution_level"]
-        humidity_control = call.data.get("humidity_control", False)
-        airquality_control = call.data.get("airquality_control", False)
-        co2_control = call.data.get("co2_control", False)
-        co2_threshold = call.data.get("co2_threshold", 0)
-        co2_hysteresis = call.data.get("co2_hysteresis", 0)
+        day = Level[str(day_pollution_level).upper()]
+        night = Level[str(night_pollution_level).upper()]
 
         await self.api.set_pollution(
             day,
