@@ -45,14 +45,34 @@ BOUNDARY = "batch_00972cc8-75bd-11ee-9692-0242ac110002"  # Arbitrary uuid
 
 LIST_TASKS_RESPONSE_WATER = {
     "items": [
-        {"id": "some-task-id", "title": "Water", "status": "needsAction"},
+        {
+            "id": "some-task-id",
+            "title": "Water",
+            "status": "needsAction",
+            "position": "00000000000000000001",
+        },
     ],
 }
 LIST_TASKS_RESPONSE_MULTIPLE = {
     "items": [
-        {"id": "some-task-id-1", "title": "Water", "status": "needsAction"},
-        {"id": "some-task-id-2", "title": "Milk", "status": "needsAction"},
-        {"id": "some-task-id-3", "title": "Cheese", "status": "needsAction"},
+        {
+            "id": "some-task-id-2",
+            "title": "Milk",
+            "status": "needsAction",
+            "position": "00000000000000000002",
+        },
+        {
+            "id": "some-task-id-1",
+            "title": "Water",
+            "status": "needsAction",
+            "position": "00000000000000000001",
+        },
+        {
+            "id": "some-task-id-3",
+            "title": "Cheese",
+            "status": "needsAction",
+            "position": "00000000000000000003",
+        },
     ],
 }
 
@@ -64,38 +84,21 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture
-def ws_req_id() -> Callable[[], int]:
-    """Fixture for incremental websocket requests."""
-
-    id = 0
-
-    def next_id() -> int:
-        nonlocal id
-        id += 1
-        return id
-
-    return next_id
-
-
-@pytest.fixture
 async def ws_get_items(
-    hass_ws_client: WebSocketGenerator, ws_req_id: Callable[[], int]
+    hass_ws_client: WebSocketGenerator,
 ) -> Callable[[], Awaitable[dict[str, str]]]:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
-        id = ws_req_id()
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": id,
                 "type": "todo/item/list",
                 "entity_id": ENTITY_ID,
             }
         )
         resp = await client.receive_json()
-        assert resp.get("id") == id
         assert resp.get("success")
         return resp.get("result", {}).get("items", [])
 
@@ -199,8 +202,18 @@ def mock_http_response(response_handler: list | Callable) -> Mock:
             LIST_TASK_LIST_RESPONSE,
             {
                 "items": [
-                    {"id": "task-1", "title": "Task 1", "status": "needsAction"},
-                    {"id": "task-2", "title": "Task 2", "status": "completed"},
+                    {
+                        "id": "task-1",
+                        "title": "Task 1",
+                        "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-2",
+                        "title": "Task 2",
+                        "status": "completed",
+                        "position": "0000000000000002",
+                    },
                 ],
             },
         ]
@@ -558,7 +571,7 @@ async def test_partial_update_status(
                     LIST_TASK_LIST_RESPONSE,
                     LIST_TASKS_RESPONSE_MULTIPLE,
                     [EMPTY_RESPONSE, EMPTY_RESPONSE, EMPTY_RESPONSE],  # Delete batch
-                    LIST_TASKS_RESPONSE,  # refresh after create
+                    LIST_TASKS_RESPONSE,  # refresh after delete
                 ]
             )
         )
@@ -714,3 +727,148 @@ async def test_delete_server_error(
             target={"entity_id": "todo.my_tasks"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            {
+                "items": [
+                    {
+                        "id": "task-3-2",
+                        "title": "Child 2",
+                        "status": "needsAction",
+                        "parent": "task-3",
+                        "position": "0000000000000002",
+                    },
+                    {
+                        "id": "task-3",
+                        "title": "Task 3 (Parent)",
+                        "status": "needsAction",
+                        "position": "0000000000000003",
+                    },
+                    {
+                        "id": "task-2",
+                        "title": "Task 2",
+                        "status": "needsAction",
+                        "position": "0000000000000002",
+                    },
+                    {
+                        "id": "task-1",
+                        "title": "Task 1",
+                        "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-3-1",
+                        "title": "Child 1",
+                        "status": "needsAction",
+                        "parent": "task-3",
+                        "position": "0000000000000001",
+                    },
+                    {
+                        "id": "task-4",
+                        "title": "Task 4",
+                        "status": "needsAction",
+                        "position": "0000000000000004",
+                    },
+                ],
+            },
+        ]
+    ],
+)
+async def test_parent_child_ordering(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting todo list items."""
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "4"
+
+    items = await ws_get_items()
+    assert items == snapshot
+
+
+@pytest.mark.parametrize(
+    "api_responses",
+    [
+        [
+            LIST_TASK_LIST_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
+            EMPTY_RESPONSE,  # update
+            # refresh after update
+            {
+                "items": [
+                    {
+                        "id": "some-task-id",
+                        "title": "Milk",
+                        "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
+                ],
+            },
+        ]
+    ],
+)
+async def test_susbcribe(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to item updates."""
+
+    assert await integration_setup()
+
+    # Subscribe and get the initial list
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": "todo.my_tasks",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Water"
+    assert items[0]["status"] == "needs_action"
+    uid = items[0]["uid"]
+    assert uid
+
+    # Rename item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"item": uid, "rename": "Milk"},
+        target={"entity_id": "todo.my_tasks"},
+        blocking=True,
+    )
+
+    # Verify update is published
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Milk"
+    assert items[0]["status"] == "needs_action"
+    assert "uid" in items[0]
