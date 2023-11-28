@@ -6,7 +6,7 @@ FROM ${BUILD_FROM}
 
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
-    S6_SERVICES_GRACETIME=220000
+    S6_SERVICES_GRACETIME=240000
 
 ARG QEMU_CPU
 
