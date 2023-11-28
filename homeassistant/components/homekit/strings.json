@@ -1,4 +1,5 @@
 {
+  "title": "HomeKit Bridge",
   "options": {
     "step": {
       "yaml": {
