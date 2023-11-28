@@ -84,20 +84,22 @@ def _build_entities(
     device_config: PyViCareDeviceConfig,
     api: PyViCareDevice,
 ) -> list[ViCareNumber]:
-    """Create ViCare number entities."""
+    """Create ViCare number entities for a device."""
+
     entities: list[ViCareNumber] = []
 
     for circuit in get_circuits(api):
-        for description in CIRCUIT_ENTITY_DESCRIPTIONS:
-            entity = None
-            if is_supported(description.key, description, circuit):
-                entity = ViCareNumber(
+        entities.extend(
+            [
+                ViCareNumber(
                     circuit,
                     device_config,
                     description,
                 )
-            if entity:
-                entities.append(entity)
+                for description in CIRCUIT_ENTITY_DESCRIPTIONS
+                if is_supported(description.key, description, circuit)
+            ]
+        )
     return entities
 
 
