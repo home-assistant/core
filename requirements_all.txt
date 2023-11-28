@@ -2603,6 +2603,9 @@ tesla-powerwall==0.3.19
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
 
+# homeassistant.components.tessie
+tessie-api==0.0.2
+
 # homeassistant.components.tensorflow
 # tf-models-official==2.5.0
 
