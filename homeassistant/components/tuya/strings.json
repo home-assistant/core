@@ -423,6 +423,7 @@
         }
       },
       "weather_delay": {
+        "name": "Weather delay",
         "state": {
           "cancel": "Cancel",
           "24h": "24h",
@@ -567,6 +568,9 @@
       },
       "water_level": {
         "name": "Water level"
+      },
+      "total_watering_time": {
+        "name": "Total watering time"
       },
       "filter_utilization": {
         "name": "Filter utilization"

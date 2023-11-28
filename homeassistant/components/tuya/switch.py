@@ -434,7 +434,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "sfkzq": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
-            name="Switch",
+            translation_key="switch",
             icon="mdi:sprinkler-variant",
         ),
     ),

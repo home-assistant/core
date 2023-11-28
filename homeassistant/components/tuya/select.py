@@ -80,10 +80,9 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         # Irrigation will not be run within this set delay period
         SelectEntityDescription(
             key=DPCode.WEATHER_DELAY,
-            name="Weather delay",
+            translation_key="weather_delay",
             icon="mdi:weather-cloudy-clock",
             entity_category=EntityCategory.CONFIG,
-            translation_key="weather_delay",
         ),
     ),
     # Siren Alarm
