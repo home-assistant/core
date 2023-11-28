@@ -125,7 +125,7 @@ WSDiscovery==2.0.0
 accuweather==2.1.1
 
 # homeassistant.components.adax
-adax==0.3.0
+adax==0.4.0
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.4.4
@@ -215,7 +215,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.1.4
+aioesphomeapi==19.1.7
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -414,9 +414,6 @@ aranet4==2.2.2
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
-
-# homeassistant.components.esphome
-async-interrupt==1.1.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
