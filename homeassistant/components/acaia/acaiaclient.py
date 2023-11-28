@@ -8,7 +8,7 @@ from pyacaia_async import AcaiaScale
 from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components import bluetooth
-from homeassistant.core import HomeAssistant, callback as callback_decorator
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +56,9 @@ class AcaiaClient(AcaiaScale):
                 )
                 if ble_device is None:
                     raise AcaiaDeviceNotFound(f"Device with MAC {self._mac} not found")
-                self.new_client_from_ble_device(ble_device)
 
+                self.new_client_from_ble_device(ble_device)
                 await super().connect(callback=callback)
-                interval = 1 if self._is_new_style_scale else 5
-                self.hass.async_create_task(
-                    self._send_heartbeats(
-                        interval=interval, new_style_heartbeat=self._is_new_style_scale
-                    )
-                )
-                self.hass.async_create_task(self._process_queue())
 
             self._last_action_timestamp = time.time()
         except (AcaiaDeviceNotFound, AcaiaError) as ex:
@@ -101,19 +94,3 @@ class AcaiaClient(AcaiaScale):
             # send auth to get the battery level and units
             await self.auth()
             await self.send_weight_notification_request()
-
-    @callback_decorator
-    async def tare(self) -> None:
-        """Tare the scale."""
-        await self.connect()
-        await super().tare()
-
-    async def start_stop_timer(self) -> None:
-        """Start/Stop the timer."""
-        await self.connect()
-        await super().start_stop_timer()
-
-    async def reset_timer(self) -> None:
-        """Reset the timer."""
-        await self.connect()
-        await super().reset_timer()
