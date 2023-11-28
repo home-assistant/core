@@ -129,6 +129,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
     # determine whether further device polling is required.
     _attr_should_poll = True
 
+    # Name of the current sound mode, not supported by DLNA
+    _attr_sound_mode = None
+
     def __init__(
         self,
         udn: str,
@@ -450,10 +453,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             for state_variable in state_variables:
                 # Force a state refresh when player begins or pauses playback
                 # to update the position info.
-                if (
-                    state_variable.name == "TransportState"
-                    and state_variable.value
-                    in (TransportState.PLAYING, TransportState.PAUSED_PLAYBACK)
+                if state_variable.name == "TransportState" and state_variable.value in (
+                    TransportState.PLAYING,
+                    TransportState.PAUSED_PLAYBACK,
                 ):
                     force_refresh = True
 
@@ -744,11 +746,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         _LOGGER.debug(
             "Couldn't find a suitable mode for shuffle=%s, repeat=%s", shuffle, repeat
         )
-
-    @property
-    def sound_mode(self) -> str | None:
-        """Name of the current sound mode, not supported by DLNA."""
-        return None
 
     @property
     def sound_mode_list(self) -> list[str] | None:

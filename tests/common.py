@@ -67,7 +67,10 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
@@ -264,7 +267,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start"
+            "homeassistant.helpers.restore_state.start.async_at_start",
         ):
             await asyncio.gather(
                 ar.async_load(hass),
@@ -304,8 +307,11 @@ def async_mock_service(
         calls.append(call)
         return response
 
-    if supports_response is None and response is not None:
-        supports_response = SupportsResponse.OPTIONAL
+    if supports_response is None:
+        if response is not None:
+            supports_response = SupportsResponse.OPTIONAL
+        else:
+            supports_response = SupportsResponse.NONE
 
     hass.services.async_register(
         domain,
@@ -891,7 +897,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         unique_id=None,
         disabled_by=None,
         reason=None,
-    ):
+    ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
             "entry_id": entry_id or uuid_util.random_uuid_hex(),
@@ -913,17 +919,15 @@ class MockConfigEntry(config_entries.ConfigEntry):
         if reason is not None:
             self.reason = reason
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, []).append(
-            self.entry_id
-        )
+        hass.config_entries._domain_index.setdefault(self.domain, []).append(self)
 
-    def add_to_manager(self, manager):
+    def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, []).append(self.entry_id)
+        manager._domain_index.setdefault(self.domain, []).append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -980,7 +984,10 @@ def assert_setup_component(count, domain=None):
     async def mock_psc(hass, config_input, integration):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
-        res = await async_process_component_config(hass, config_input, integration)
+        integration_config_info = await async_process_component_config(
+            hass, config_input, integration
+        )
+        res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug(
             "Configuration for %s, Validated: %s, Original %s",
@@ -988,7 +995,7 @@ def assert_setup_component(count, domain=None):
             config[domain_input],
             config_input.get(domain_input),
         )
-        return res
+        return integration_config_info
 
     assert isinstance(config, dict)
     with patch("homeassistant.config.async_process_component_config", mock_psc):
@@ -1297,11 +1304,12 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    assert domain not in config_entries.HANDLERS
+    handler = config_entries.HANDLERS.get(domain)
     config_entries.HANDLERS[domain] = config_flow
     _LOGGER.info("Adding mock config flow: %s", domain)
     yield
-    config_entries.HANDLERS.pop(domain)
+    if handler:
+        config_entries.HANDLERS[domain] = handler
 
 
 def mock_integration(
@@ -1333,18 +1341,6 @@ def mock_integration(
     module_cache[module.DOMAIN] = module
 
     return integration
-
-
-def mock_entity_platform(
-    hass: HomeAssistant, platform_path: str, module: MockPlatform | None
-) -> None:
-    """Mock a entity platform.
-
-    platform_path is in form light.hue. Will create platform
-    hue.light.
-    """
-    domain, platform_name = platform_path.split(".")
-    mock_platform(hass, f"{platform_name}.{domain}", module)
 
 
 def mock_platform(
@@ -1445,3 +1441,17 @@ def async_get_persistent_notifications(
 ) -> dict[str, pn.Notification]:
     """Get the current persistent notifications."""
     return pn._async_get_or_create_notifications(hass)
+
+
+def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
+    """Mock a signal the cloud disconnected."""
+    from homeassistant.components.cloud import (
+        SIGNAL_CLOUD_CONNECTION_STATE,
+        CloudConnectionState,
+    )
+
+    if connected:
+        state = CloudConnectionState.CLOUD_CONNECTED
+    else:
+        state = CloudConnectionState.CLOUD_DISCONNECTED
+    async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)

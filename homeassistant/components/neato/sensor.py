@@ -44,11 +44,16 @@ async def async_setup_entry(
 class NeatoSensor(NeatoEntity, SensorEntity):
     """Neato sensor."""
 
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_available: bool = False
+
     def __init__(self, neato: NeatoHub, robot: Robot) -> None:
         """Initialize Neato sensor."""
         super().__init__(robot)
-        self._available: bool = False
         self._robot_serial: str = self.robot.serial
+        self._attr_unique_id = self.robot.serial
         self._state: dict[str, Any] | None = None
 
     def update(self) -> None:
@@ -56,36 +61,16 @@ class NeatoSensor(NeatoEntity, SensorEntity):
         try:
             self._state = self.robot.state
         except NeatoRobotException as ex:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.error(
                     "Neato sensor connection error for '%s': %s", self.entity_id, ex
                 )
             self._state = None
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
+        self._attr_available = True
         _LOGGER.debug("self._state=%s", self._state)
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        return self._robot_serial
-
-    @property
-    def device_class(self) -> SensorDeviceClass:
-        """Return the device class."""
-        return SensorDeviceClass.BATTERY
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Device entity category."""
-        return EntityCategory.DIAGNOSTIC
-
-    @property
-    def available(self) -> bool:
-        """Return availability."""
-        return self._available
 
     @property
     def native_value(self) -> str | None:
@@ -93,8 +78,3 @@ class NeatoSensor(NeatoEntity, SensorEntity):
         if self._state is not None:
             return str(self._state["details"]["charge"])
         return None
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return unit of measurement."""
-        return PERCENTAGE

@@ -28,9 +28,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util.dt import utcnow
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .entity import SystemBridgeEntity
 
 ATTR_AVAILABLE: Final = "available"
 ATTR_FILESYSTEM: Final = "filesystem"
@@ -218,6 +218,13 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         translation_key="os",
         icon="mdi:devices",
         value=lambda data: f"{data.system.platform} {data.system.platform_version}",
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="processes_count",
+        translation_key="processes",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:counter",
+        value=lambda data: int(data.processes.count),
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load",

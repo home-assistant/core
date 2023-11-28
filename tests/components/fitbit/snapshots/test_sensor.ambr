@@ -1,0 +1,345 @@
+# serializer version: 1
+# name: test_nutrition_scope_config_entry[scopes0-unit_system0]
+  tuple(
+    '99',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes0-unit_system0].1
+  tuple(
+    '1600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories In',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes1-unit_system1]
+  tuple(
+    '99',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.FLUID_OUNCES: 'fl. oz.'>,
+    }),
+  )
+# ---
+# name: test_nutrition_scope_config_entry[scopes1-unit_system1].1
+  tuple(
+    '1600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories In',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+  )
+# ---
+# name: test_sensors[monitored_resources0-sensor.activity_calories-activities/activityCalories-135]
+  tuple(
+    '135',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Activity Calories',
+      'icon': 'mdi:fire',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+    'fitbit-api-user-id-1_activities/activityCalories',
+  )
+# ---
+# name: test_sensors[monitored_resources1-sensor.calories-activities/calories-139]
+  tuple(
+    '139',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Calories',
+      'icon': 'mdi:fire',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+    'fitbit-api-user-id-1_activities/calories',
+  )
+# ---
+# name: test_sensors[monitored_resources10-sensor.steps-activities/steps-5600]
+  tuple(
+    '5600',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Steps',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'steps',
+    }),
+    'fitbit-api-user-id-1_activities/steps',
+  )
+# ---
+# name: test_sensors[monitored_resources11-sensor.weight-body/weight-175]
+  tuple(
+    '175.0',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'weight',
+      'friendly_name': 'Weight',
+      'icon': 'mdi:human',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'fitbit-api-user-id-1_body/weight',
+  )
+# ---
+# name: test_sensors[monitored_resources12-sensor.body_fat-body/fat-18]
+  tuple(
+    '18.0',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Body Fat',
+      'icon': 'mdi:human',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'fitbit-api-user-id-1_body/fat',
+  )
+# ---
+# name: test_sensors[monitored_resources13-sensor.bmi-body/bmi-23.7]
+  tuple(
+    '23.7',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'BMI',
+      'icon': 'mdi:human',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'BMI',
+    }),
+    'fitbit-api-user-id-1_body/bmi',
+  )
+# ---
+# name: test_sensors[monitored_resources14-sensor.awakenings_count-sleep/awakeningsCount-7]
+  tuple(
+    '7',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Awakenings Count',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'times awaken',
+    }),
+    'fitbit-api-user-id-1_sleep/awakeningsCount',
+  )
+# ---
+# name: test_sensors[monitored_resources15-sensor.sleep_efficiency-sleep/efficiency-80]
+  tuple(
+    '80',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Sleep Efficiency',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'fitbit-api-user-id-1_sleep/efficiency',
+  )
+# ---
+# name: test_sensors[monitored_resources16-sensor.minutes_after_wakeup-sleep/minutesAfterWakeup-17]
+  tuple(
+    '17',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Minutes After Wakeup',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_sleep/minutesAfterWakeup',
+  )
+# ---
+# name: test_sensors[monitored_resources17-sensor.sleep_minutes_asleep-sleep/minutesAsleep-360]
+  tuple(
+    '360',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Sleep Minutes Asleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_sleep/minutesAsleep',
+  )
+# ---
+# name: test_sensors[monitored_resources18-sensor.sleep_minutes_awake-sleep/minutesAwake-35]
+  tuple(
+    '35',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Sleep Minutes Awake',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_sleep/minutesAwake',
+  )
+# ---
+# name: test_sensors[monitored_resources19-sensor.sleep_minutes_to_fall_asleep-sleep/minutesToFallAsleep-35]
+  tuple(
+    '35',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Sleep Minutes to Fall Asleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_sleep/minutesToFallAsleep',
+  )
+# ---
+# name: test_sensors[monitored_resources2-sensor.distance-activities/distance-12.7]
+  tuple(
+    '12.70',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'distance',
+      'friendly_name': 'Distance',
+      'icon': 'mdi:map-marker',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'fitbit-api-user-id-1_activities/distance',
+  )
+# ---
+# name: test_sensors[monitored_resources20-sensor.sleep_start_time-sleep/startTime-2020-01-27T00:17:30.000]
+  tuple(
+    '2020-01-27T00:17:30.000',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Sleep Start Time',
+      'icon': 'mdi:clock',
+    }),
+    'fitbit-api-user-id-1_sleep/startTime',
+  )
+# ---
+# name: test_sensors[monitored_resources21-sensor.sleep_time_in_bed-sleep/timeInBed-462]
+  tuple(
+    '462',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Sleep Time in Bed',
+      'icon': 'mdi:hotel',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_sleep/timeInBed',
+  )
+# ---
+# name: test_sensors[monitored_resources3-sensor.elevation-activities/elevation-7600.24]
+  tuple(
+    '7600.24',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'distance',
+      'friendly_name': 'Elevation',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'fitbit-api-user-id-1_activities/elevation',
+  )
+# ---
+# name: test_sensors[monitored_resources4-sensor.floors-activities/floors-8]
+  tuple(
+    '8',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Floors',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'floors',
+    }),
+    'fitbit-api-user-id-1_activities/floors',
+  )
+# ---
+# name: test_sensors[monitored_resources5-sensor.resting_heart_rate-activities/heart-api_value5]
+  tuple(
+    '76',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'Resting Heart Rate',
+      'icon': 'mdi:heart-pulse',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'bpm',
+    }),
+    'fitbit-api-user-id-1_activities/heart',
+  )
+# ---
+# name: test_sensors[monitored_resources6-sensor.minutes_fairly_active-activities/minutesFairlyActive-35]
+  tuple(
+    '35',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Minutes Fairly Active',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_activities/minutesFairlyActive',
+  )
+# ---
+# name: test_sensors[monitored_resources7-sensor.minutes_lightly_active-activities/minutesLightlyActive-95]
+  tuple(
+    '95',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Minutes Lightly Active',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_activities/minutesLightlyActive',
+  )
+# ---
+# name: test_sensors[monitored_resources8-sensor.minutes_sedentary-activities/minutesSedentary-18]
+  tuple(
+    '18',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Minutes Sedentary',
+      'icon': 'mdi:seat-recline-normal',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_activities/minutesSedentary',
+  )
+# ---
+# name: test_sensors[monitored_resources9-sensor.minutes_very_active-activities/minutesVeryActive-20]
+  tuple(
+    '20',
+    ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'Minutes Very Active',
+      'icon': 'mdi:run',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'fitbit-api-user-id-1_activities/minutesVeryActive',
+  )
+# ---

@@ -50,7 +50,7 @@ _BASE_STATES = (
     States.last_changed_ts,
     States.last_updated_ts,
 )
-_BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
+_BASE_STATES_NO_LAST_CHANGED = (
     States.entity_id,
     States.state,
     literal(value=None).label("last_changed_ts"),

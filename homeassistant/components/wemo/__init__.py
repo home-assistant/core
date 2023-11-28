@@ -16,7 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
 from .models import WemoConfigEntryData, WemoData, async_wemo_data
@@ -217,7 +217,7 @@ class WemoDispatcher:
         """Consider a platform as loaded and dispatch any backlog of discovered devices."""
         self._dispatch_callbacks[platform] = dispatch
 
-        await gather_with_concurrency(
+        await gather_with_limited_concurrency(
             MAX_CONCURRENCY,
             *(
                 dispatch(coordinator)
@@ -289,7 +289,7 @@ class WemoDiscovery:
         if not self._static_config:
             return
         _LOGGER.debug("Adding statically configured WeMo devices")
-        for device in await gather_with_concurrency(
+        for device in await gather_with_limited_concurrency(
             MAX_CONCURRENCY,
             *(
                 self._hass.async_add_executor_job(validate_static_config, host, port)

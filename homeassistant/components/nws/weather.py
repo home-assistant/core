@@ -32,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
@@ -121,6 +120,10 @@ class NWSWeather(CoordinatorWeatherEntity):
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_TWICE_DAILY
     )
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_pressure_unit = UnitOfPressure.PA
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_native_visibility_unit = UnitOfLength.METERS
 
     def __init__(
         self,
@@ -137,8 +140,8 @@ class NWSWeather(CoordinatorWeatherEntity):
             twice_daily_forecast_valid=FORECAST_VALID_TIME,
         )
         self.nws = nws_data.api
-        self.latitude = entry_data[CONF_LATITUDE]
-        self.longitude = entry_data[CONF_LONGITUDE]
+        latitude = entry_data[CONF_LATITUDE]
+        longitude = entry_data[CONF_LONGITUDE]
         if mode == DAYNIGHT:
             self.coordinator_forecast_legacy = nws_data.coordinator_forecast
         else:
@@ -146,6 +149,7 @@ class NWSWeather(CoordinatorWeatherEntity):
         self.station = self.nws.station
 
         self.mode = mode
+        self._attr_entity_registry_enabled_default = mode == DAYNIGHT
 
         self.observation: dict[str, Any] | None = None
         self._forecast_hourly: list[dict[str, Any]] | None = None
@@ -153,6 +157,8 @@ class NWSWeather(CoordinatorWeatherEntity):
         self._forecast_twice_daily: list[dict[str, Any]] | None = None
 
         self._attr_unique_id = _calculate_unique_id(entry_data, mode)
+        self._attr_device_info = device_info(latitude, longitude)
+        self._attr_name = f"{self.station} {self.mode.title()}"
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
@@ -194,11 +200,6 @@ class NWSWeather(CoordinatorWeatherEntity):
         self.async_write_ha_state()
 
     @property
-    def name(self) -> str:
-        """Return the name of the station."""
-        return f"{self.station} {self.mode.title()}"
-
-    @property
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.observation:
@@ -206,21 +207,11 @@ class NWSWeather(CoordinatorWeatherEntity):
         return None
 
     @property
-    def native_temperature_unit(self) -> str:
-        """Return the current temperature unit."""
-        return UnitOfTemperature.CELSIUS
-
-    @property
     def native_pressure(self) -> int | None:
         """Return the current pressure."""
         if self.observation:
             return self.observation.get("seaLevelPressure")
         return None
-
-    @property
-    def native_pressure_unit(self) -> str:
-        """Return the current pressure unit."""
-        return UnitOfPressure.PA
 
     @property
     def humidity(self) -> float | None:
@@ -235,11 +226,6 @@ class NWSWeather(CoordinatorWeatherEntity):
         if self.observation:
             return self.observation.get("windSpeed")
         return None
-
-    @property
-    def native_wind_speed_unit(self) -> str:
-        """Return the current windspeed."""
-        return UnitOfSpeed.KILOMETERS_PER_HOUR
 
     @property
     def wind_bearing(self) -> int | None:
@@ -266,11 +252,6 @@ class NWSWeather(CoordinatorWeatherEntity):
         if self.observation:
             return self.observation.get("visibility")
         return None
-
-    @property
-    def native_visibility_unit(self) -> str:
-        """Return visibility unit."""
-        return UnitOfLength.METERS
 
     def _forecast(
         self, nws_forecast: list[dict[str, Any]] | None, mode: str
@@ -372,13 +353,3 @@ class NWSWeather(CoordinatorWeatherEntity):
         """
         await self.coordinator.async_request_refresh()
         await self.coordinator_forecast_legacy.async_request_refresh()
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.mode == DAYNIGHT
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return device_info(self.latitude, self.longitude)

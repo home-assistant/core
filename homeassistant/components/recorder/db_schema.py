@@ -39,7 +39,8 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.core import Context, Event, EventOrigin, State
+from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -67,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 41
+SCHEMA_VERSION = 42
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,13 +176,17 @@ class NativeLargeBinary(LargeBinary):
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
 UINT_32_TYPE = BigInteger().with_variant(
-    mysql.INTEGER(unsigned=True), "mysql", "mariadb"  # type: ignore[no-untyped-call]
+    mysql.INTEGER(unsigned=True),  # type: ignore[no-untyped-call]
+    "mysql",
+    "mariadb",
 )
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True),  # type: ignore[no-untyped-call]
+    "postgresql",
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+    "postgresql",
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
@@ -558,8 +563,7 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, dict[str, str]],
-        exclude_attrs_by_domain: dict[str, set[str]],
+        entity_sources: dict[str, EntityInfo],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
@@ -567,14 +571,9 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if state is None:
             return b"{}"
-        domain = split_entity_id(state.entity_id)[0]
         exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
-        if base_platform_attrs := exclude_attrs_by_domain.get(domain):
-            exclude_attrs |= base_platform_attrs
-        if (entity_info := entity_sources.get(state.entity_id)) and (
-            integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
-        ):
-            exclude_attrs |= integration_attrs
+        if state_info := state.state_info:
+            exclude_attrs |= state_info["unrecorded_attributes"]
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}

@@ -93,9 +93,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         if self.registry_entry and (device_id := self.registry_entry.device_id):
             pipeline_data.pipeline_devices.add(device_id)
             self.async_on_remove(
-                lambda: pipeline_data.pipeline_devices.discard(
-                    device_id  # type: ignore[arg-type]
-                )
+                lambda: pipeline_data.pipeline_devices.discard(device_id)
             )
 
     async def async_select_option(self, option: str) -> None:

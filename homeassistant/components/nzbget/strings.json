@@ -23,15 +23,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update frequency (seconds)"
-        }
-      }
-    }
-  },
   "entity": {
     "sensor": {
       "article_cache": {

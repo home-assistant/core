@@ -62,6 +62,7 @@ from .const import (  # noqa: F401
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -105,6 +106,7 @@ from .const import (  # noqa: F401
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_REGISTERS,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
@@ -138,7 +140,8 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_SLAVE, default=0): cv.positive_int,
+        vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
@@ -159,18 +162,15 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
             [
-                DataType.INT8,
                 DataType.INT16,
                 DataType.INT32,
                 DataType.INT64,
-                DataType.UINT8,
                 DataType.UINT16,
                 DataType.UINT32,
                 DataType.UINT64,
                 DataType.FLOAT16,
                 DataType.FLOAT32,
                 DataType.FLOAT64,
-                DataType.STRING,
                 DataType.STRING,
                 DataType.CUSTOM,
             ]
@@ -230,8 +230,8 @@ CLIMATE_SCHEMA = vol.All(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
-            vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
+            vol.Optional(CONF_MAX_TEMP, default=35): number_validator,
+            vol.Optional(CONF_MIN_TEMP, default=5): number_validator,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
@@ -309,7 +309,8 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
+            vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
+            vol.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
             vol.Optional(CONF_MIN_VALUE): number_validator,
             vol.Optional(CONF_MAX_VALUE): number_validator,
             vol.Optional(CONF_NAN_VALUE): nan_validator,
@@ -329,7 +330,8 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
+        vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_bin_count"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE_COUNT, "vir_bin_count"): cv.positive_int,
     }
 )
 
@@ -337,10 +339,10 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
-        vol.Optional(CONF_CLOSE_COMM_ON_ERROR, default=True): cv.boolean,
+        vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
-        vol.Optional(CONF_RETRY_ON_EMPTY, default=False): cv.boolean,
+        vol.Optional(CONF_RETRY_ON_EMPTY): cv.boolean,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]

@@ -1,8 +1,9 @@
 {
   "domain": "fitbit",
   "name": "Fitbit",
-  "codeowners": [],
-  "dependencies": ["configurator", "http"],
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "http"],
   "documentation": "https://www.home-assistant.io/integrations/fitbit",
   "iot_class": "cloud_polling",
   "loggers": ["fitbit"],
