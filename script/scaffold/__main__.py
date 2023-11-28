@@ -103,10 +103,11 @@ def main():
 
     if args.develop:
         print("Running tests")
-        print(f"$ python3 -m pytest -vvv tests/components/{info.domain}")
+        print(f"$ python3 -b -m pytest -vvv tests/components/{info.domain}")
         subprocess.run(
             [
                 "python3",
+                "-b",
                 "-m",
                 "pytest",
                 "-vvv",
