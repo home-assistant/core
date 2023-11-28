@@ -26,6 +26,7 @@ class ViCareEntity(Entity):
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice | PyViCareHeatingDeviceComponent,
         unique_id_suffix: str,
+        custom_device_name: str | None = None,
     ) -> None:
         """Initialize the entity."""
         self._api = device
@@ -35,17 +36,9 @@ class ViCareEntity(Entity):
         if hasattr(device, "id"):
             self._attr_unique_id += f"-{device.id}"
 
-        if isinstance(device, HeatingCircuit):
+        if isinstance(device, PyViCareHeatingDeviceComponent):
             self._attr_device_info = self._get_info_for_component(
-                device_config, device, "Circuit"
-            )
-        elif isinstance(device, FuelCellBurner | GazBurner | OilBurner):
-            self._attr_device_info = self._get_info_for_component(
-                device_config, device, "Burner"
-            )
-        elif isinstance(device, Compressor):
-            self._attr_device_info = self._get_info_for_component(
-                device_config, device, "Compressor"
+                device_config, device, custom_device_name
             )
         else:
             self._attr_device_info = self._get_info_for_device(device_config)
@@ -54,19 +47,23 @@ class ViCareEntity(Entity):
         self,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component_type: str,
+        custom_device_name: str | None,
     ) -> DeviceInfo:
+        component_type = self._get_device_type(device)
+        component_name = (
+            component_type if custom_device_name is None else custom_device_name
+        )
         return DeviceInfo(
             via_device=(DOMAIN, device_config.getConfig().serial),
             identifiers={
                 (
                     DOMAIN,
-                    f"{device_config.getConfig().serial}-{component_type.lower()}-{device.id}",
+                    f"{device_config.getConfig().serial}-{component_type.lower().replace(' ', '_')}-{device.id}",
                 )
             },
-            name=component_type,
-            manufacturer="Viessmann",
+            name=component_name,
             model=component_type,
+            manufacturer="Viessmann",
             configuration_url="https://developer.viessmann.com/",
         )
 
@@ -79,3 +76,15 @@ class ViCareEntity(Entity):
             model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
         )
+
+    def _get_device_type(
+        self,
+        device: PyViCareDevice | PyViCareHeatingDeviceComponent,
+    ) -> str:
+        if isinstance(device, HeatingCircuit):
+            return "Heating Circuit"
+        if isinstance(device, FuelCellBurner | GazBurner | OilBurner):
+            return "Burner"
+        if isinstance(device, Compressor):
+            return "Compressor"
+        return ""
