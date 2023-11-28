@@ -134,7 +134,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.idx = idx
         self.config_entry = config_entry
 
-        self._attr_name = coordinator.data[self.idx]["name"]
+        self._attr_name = coordinator.data[idx]["name"]
         self._attr_unique_id = idx
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
