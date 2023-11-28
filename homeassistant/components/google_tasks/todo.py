@@ -37,6 +37,7 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str]:
     if item.status is not None:
         result["status"] = TODO_STATUS_MAP_INV[item.status]
     if item.due is not None:
+        # due API field is a timestamp string, but with only date resolution
         result["due"] = dt_util.start_of_local_day(item.due).isoformat()
     if item.description is not None:
         result["notes"] = item.description
@@ -47,13 +48,13 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
     """Convert tasks API items into a TodoItem."""
     due: date | None = None
     if (due_str := item.get("due")) is not None:
-        # The due date only records date information but is a timestamp string
         due = datetime.fromisoformat(due_str).date()
     return TodoItem(
         summary=item["title"],
         uid=item["id"],
         status=TODO_STATUS_MAP.get(
-            item.get("status"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
+            item.get("status", ""),
+            TodoItemStatus.NEEDS_ACTION,
         ),
         due=due,
         description=item.get("notes"),
@@ -90,8 +91,8 @@ class GoogleTaskTodoListEntity(
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
-        | TodoListEntityFeature.DUE_DATE
-        | TodoListEntityFeature.DESCRIPTION
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     def __init__(
