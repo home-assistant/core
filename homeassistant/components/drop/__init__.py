@@ -31,8 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("MQTT integration is not available")
         return False
 
-    hass.data.setdefault(DROP_DOMAIN, {})
-    hass.data[DROP_DOMAIN][config_entry.entry_id] = {}
+    hass.data.setdefault(DROP_DOMAIN, {})[config_entry.entry_id] = {}
     hass.data[DROP_DOMAIN][config_entry.entry_id][
         CONF_COORDINATOR
     ] = DROP_DeviceDataUpdateCoordinator(hass, config_entry)
