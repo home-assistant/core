@@ -635,10 +635,9 @@ def _build_entities(
     device: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareSensor]:
-    """Create ViCare number entities for a device."""
+    """Create ViCare sensor entities for a device."""
 
-    entities: list[ViCareSensor] = []
-    entities.extend(_build_entities_for_device(device, device_config))
+    entities: list[ViCareSensor] = _build_entities_for_device(device, device_config)
     entities.extend(
         _build_entities_for_component(
             get_circuits(device), device_config, CIRCUIT_SENSORS
@@ -661,7 +660,7 @@ def _build_entities_for_device(
     device: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareSensor]:
-    """Create ViCare number entities for a device."""
+    """Create device specific ViCare sensor entities."""
 
     return [
         ViCareSensor(
@@ -679,7 +678,7 @@ def _build_entities_for_component(
     device_config: PyViCareDeviceConfig,
     entity_descriptions: tuple[ViCareSensorEntityDescription, ...],
 ) -> list[ViCareSensor]:
-    """Create ViCare number entities for a device."""
+    """Create component specific ViCare sensor entities."""
 
     return [
         ViCareSensor(

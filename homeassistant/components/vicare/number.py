@@ -84,7 +84,7 @@ def _build_entities(
     api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareNumber]:
-    """Create ViCare number entities for a device."""
+    """Create ViCare number entities for a component."""
 
     return [
         ViCareNumber(
