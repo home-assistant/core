@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 
 from stookwijzer import Stookwijzer
 
@@ -64,14 +63,3 @@ class StookwijzerSensor(SensorEntity):
         if self._client.state is None:
             return None
         return StookwijzerState(self._client.state).value
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        return {
-            "alert": self._client.alert,
-            "windspeed bft": self._client.windspeed_bft,
-            "windspeed m/s": self._client.windspeed_ms,
-            "air quality index": self._client.lki,
-            "forecast": self._client.forecast,
-        }
