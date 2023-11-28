@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        # "maker" is currently hardcoded username but may change in the future
-        # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/f26c91ba57b004e570a73fb9c9cda0ce3e433b40/lib/WUI/wui_api.h#L19C9-L19C9
+        # "maker" is currently hardcoded in the firmware
+        # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
         vol.Required(CONF_USERNAME, default="maker"): str,
         vol.Required(CONF_PASSWORD): str,
     }

@@ -5,11 +5,13 @@ from unittest.mock import patch
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
+from homeassistant.components.prusalink import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unloading(
@@ -56,3 +58,29 @@ async def test_failed_update(
 
     for state in hass.states.async_all():
         assert state.state == "unavailable"
+
+
+async def test_migration_1_2(hass: HomeAssistant, mock_api) -> None:
+    """Test migrating from version 1 to 2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://prusaxl.local",
+            CONF_API_KEY: "api-key",
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+
+    # Ensure that we have username, password after migration
+    assert len(config_entries) == 1
+    assert config_entries[0].data == {
+        CONF_HOST: "http://prusaxl.local",
+        CONF_USERNAME: "maker",
+        CONF_PASSWORD: "api-key",
+    }
