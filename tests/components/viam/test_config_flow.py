@@ -54,7 +54,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "credential_type": "Org API Key",
+                "credential_type": "api-key",
             },
         )
         assert result["type"] == FlowResultType.FORM
@@ -117,7 +117,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "credential_type": "Org API Key",
+                "credential_type": "api-key",
             },
         )
         assert result["type"] == FlowResultType.FORM
@@ -163,7 +163,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "credential_type": "Org API Key",
+                "credential_type": "api-key",
             },
         )
         assert result["type"] == FlowResultType.FORM
@@ -209,7 +209,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "credential_type": "Org API Key",
+                "credential_type": "api-key",
             },
         )
         assert result["type"] == FlowResultType.FORM
