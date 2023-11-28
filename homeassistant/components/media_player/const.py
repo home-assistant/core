@@ -33,6 +33,7 @@ ATTR_MEDIA_TITLE = "media_title"
 ATTR_MEDIA_TRACK = "media_track"
 ATTR_MEDIA_VOLUME_LEVEL = "volume_level"
 ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
+ATTR_MEDIA_VOLUME_STEP = "volume_step"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 

@@ -93,6 +93,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_STEP,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -288,13 +289,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
-        {},
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Optional(ATTR_MEDIA_VOLUME_STEP, default=0.1): cv.small_float}
+            ),
+            _rename_keys(step=ATTR_MEDIA_VOLUME_STEP),
+        ),
         "async_volume_up",
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_DOWN,
-        {},
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Optional(ATTR_MEDIA_VOLUME_STEP, default=0.1): cv.small_float}
+            ),
+            _rename_keys(step=ATTR_MEDIA_VOLUME_STEP),
+        ),
         "async_volume_down",
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
@@ -942,7 +953,7 @@ class MediaPlayerEntity(Entity):
         else:
             await self.async_turn_off()
 
-    async def async_volume_up(self) -> None:
+    async def async_volume_up(self, step: float) -> None:
         """Turn volume up for media player.
 
         This method is a coroutine.
@@ -956,9 +967,9 @@ class MediaPlayerEntity(Entity):
             and self.volume_level < 1
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
-            await self.async_set_volume_level(min(1, self.volume_level + 0.1))
+            await self.async_set_volume_level(min(1, self.volume_level + step))
 
-    async def async_volume_down(self) -> None:
+    async def async_volume_down(self, step: float) -> None:
         """Turn volume down for media player.
 
         This method is a coroutine.
@@ -972,7 +983,7 @@ class MediaPlayerEntity(Entity):
             and self.volume_level > 0
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
-            await self.async_set_volume_level(max(0, self.volume_level - 0.1))
+            await self.async_set_volume_level(max(0, self.volume_level - step))
 
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""

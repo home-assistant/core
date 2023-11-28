@@ -47,15 +47,15 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
         """Set volume level, range 0..1."""
         self._volume = volume
 
-    def volume_up(self):
+    def volume_up(self, step):
         """Turn volume up for media player."""
         if self.volume_level < 1:
-            self.set_volume_level(min(1, self.volume_level + 0.1))
+            self.set_volume_level(min(1, self.volume_level + step))
 
-    def volume_down(self):
+    def volume_down(self, step):
         """Turn volume down for media player."""
         if self.volume_level > 0:
-            self.set_volume_level(max(0, self.volume_level - 0.1))
+            self.set_volume_level(max(0, self.volume_level - step))
 
     def media_play(self):
         """Play the media player."""
@@ -159,8 +159,8 @@ async def test_volume_up(player) -> None:
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
-    await player.async_volume_up()
-    assert player.volume_level == 0.6
+    await player.async_volume_up(0.01)
+    assert player.volume_level == 0.51
 
 
 async def test_volume_down(player) -> None:
@@ -168,8 +168,8 @@ async def test_volume_down(player) -> None:
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
-    await player.async_volume_down()
-    assert player.volume_level == 0.4
+    await player.async_volume_down(0.01)
+    assert player.volume_level == 0.39
 
 
 async def test_media_play_pause(player) -> None:
