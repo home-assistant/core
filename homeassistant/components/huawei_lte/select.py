@@ -103,7 +103,7 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
-        self.router.subscriptions[self.key].add(f"{SELECT_DOMAIN}/{self.item}")
+        self.router.subscriptions[self.key].append(f"{SELECT_DOMAIN}/{self.item}")
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
