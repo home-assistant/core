@@ -808,7 +808,12 @@ async def test_parent_child_ordering(
             # refresh after update
             {
                 "items": [
-                    {"id": "some-task-id", "title": "Milk", "status": "needsAction"},
+                    {
+                        "id": "some-task-id",
+                        "title": "Milk",
+                        "status": "needsAction",
+                        "position": "0000000000000001",
+                    },
                 ],
             },
         ]
