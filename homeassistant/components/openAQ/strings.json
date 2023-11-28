@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "location": {
+        "description": "To generate API key go to https://api.openaq.org/register",
+        "data": {
+          "location_id": "Location id",
+          "api_id": "API key"
+        }
+      }
+    },
+    "error": {
+      "not_found": "No location with that ID exist."
+    }
+  }
+}

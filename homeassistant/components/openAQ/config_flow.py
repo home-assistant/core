@@ -5,11 +5,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_SENSOR_ID, DOMAIN, SENSOR_ID
+from .aq_client import AQClient
+from .const import API_KEY_ID, DOMAIN, LOCATION_ID
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_LOCATION_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(SENSOR_ID, default=DEFAULT_SENSOR_ID): str,
+        vol.Required(LOCATION_ID): str,
+        vol.Required(API_KEY_ID): str,
     }
 )
 
@@ -28,12 +30,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user initiated configuration."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            # validate the user input
-            self._data = user_input
-            # self._data[CONF_MONITORED_VARIABLES] = DEFAULT_MONITORED_VARIABLES
-            return self.async_create_entry(title=self._data[SENSOR_ID], data=self._data)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=STEP_LOCATION_DATA_SCHEMA, errors=errors
+            )
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        self._data = user_input
+
+        res = get_device(
+            location_id=user_input[LOCATION_ID], api_key=user_input[API_KEY_ID]
+        ).sensors
+
+        name = get_device(
+            location_id=user_input[LOCATION_ID], api_key=user_input[API_KEY_ID]
+        ).locality
+
+        if len(res) == 0:
+            errors["location"] = "not_found"
+            return self.async_show_form(
+                step_id=self._data[LOCATION_ID],
+                data_schema=STEP_LOCATION_DATA_SCHEMA,
+                errors=errors,
+            )
+
+        return self.async_create_entry(title=name, data=user_input)
+
+
+def get_device(location_id, api_key):
+    """Return a location."""
+    client = AQClient(api_key, location_id, setup_device=False)
+    res = client.get_device()
+    return res
