@@ -8,8 +8,8 @@ from homeassistant.components import cover
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     BLIND_GROUPS,
@@ -30,7 +30,11 @@ PARALLEL_UPDATES = 1
 COVER_NEXT_POS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: cover.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Leviosa shade groups."""
     _LOGGER.debug(
         "Setting up %s[%s]: %s",
@@ -38,16 +42,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.title,
         entry.entry_id,
     )
-    hub_name = entry.title
+    hub: tZoneHub = hass.data[DOMAIN][entry.entry_id]
     hub_mac = entry.data["device_mac"]
-    hub_ip = entry.data["host"]
     blind_groups = entry.data[BLIND_GROUPS]
     _LOGGER.debug("Groups to create: %s", blind_groups)
-    hub = tZoneHub(
-        hub_ip=hub_ip, hub_name=hub_name, websession=async_get_clientsession(hass)
-    )
-    await hub.getHubInfo()  # Check all is good
-    _LOGGER.debug("Hub object created, FW: %s", hub.fwVer)
+
     entities = []
     for blind_group in blind_groups:
         _LOGGER.debug("Adding blind_group: %s", blind_group)
@@ -61,16 +60,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     _LOGGER.debug("Setting up Leviosa shade group services")
     platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_NEXT_DOWN_POS,
-        COVER_NEXT_POS_SCHEMA,
-        "next_down_position",
-    )
-    platform.async_register_entity_service(
-        SERVICE_NEXT_UP_POS,
-        COVER_NEXT_POS_SCHEMA,
-        "next_up_position",
-    )
+    if platform:
+        platform.async_register_entity_service(
+            SERVICE_NEXT_DOWN_POS,
+            COVER_NEXT_POS_SCHEMA,
+            "next_down_position",
+        )
+        platform.async_register_entity_service(
+            SERVICE_NEXT_UP_POS,
+            COVER_NEXT_POS_SCHEMA,
+            "next_up_position",
+        )
 
 
 class LeviosaBlindGroup(cover.CoverEntity):
@@ -104,6 +104,11 @@ class LeviosaBlindGroup(cover.CoverEntity):
             self._blind_group_obj.name,
             self._blind_group_id,
         )
+
+    @property
+    def assumed_state(self):
+        """Indicate that we do not go to the device to know its state."""
+        return True
 
     @property
     def current_cover_position(self):
