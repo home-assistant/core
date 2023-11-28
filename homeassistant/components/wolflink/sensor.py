@@ -19,15 +19,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    COORDINATOR,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DOMAIN,
-    MANUFACTURER,
-    PARAMETERS,
-    STATES,
-)
+from .const import COORDINATOR, DEVICE_ID, DOMAIN, MANUFACTURER, PARAMETERS, STATES
 
 
 async def async_setup_entry(
@@ -40,34 +32,21 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     parameters = hass.data[DOMAIN][config_entry.entry_id][PARAMETERS]
     device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
-    device_name = hass.data[DOMAIN][config_entry.entry_id][DEVICE_NAME]
 
     entities: list[WolfLinkSensor] = []
     for parameter in parameters:
         if isinstance(parameter, Temperature):
-            entities.append(
-                WolfLinkTemperature(coordinator, parameter, device_id, device_name)
-            )
+            entities.append(WolfLinkTemperature(coordinator, parameter, device_id))
         if isinstance(parameter, Pressure):
-            entities.append(
-                WolfLinkPressure(coordinator, parameter, device_id, device_name)
-            )
+            entities.append(WolfLinkPressure(coordinator, parameter, device_id))
         if isinstance(parameter, PercentageParameter):
-            entities.append(
-                WolfLinkPercentage(coordinator, parameter, device_id, device_name)
-            )
+            entities.append(WolfLinkPercentage(coordinator, parameter, device_id))
         if isinstance(parameter, ListItemParameter):
-            entities.append(
-                WolfLinkState(coordinator, parameter, device_id, device_name)
-            )
+            entities.append(WolfLinkState(coordinator, parameter, device_id))
         if isinstance(parameter, HoursParameter):
-            entities.append(
-                WolfLinkHours(coordinator, parameter, device_id, device_name)
-            )
+            entities.append(WolfLinkHours(coordinator, parameter, device_id))
         if isinstance(parameter, SimpleParameter):
-            entities.append(
-                WolfLinkSensor(coordinator, parameter, device_id, device_name)
-            )
+            entities.append(WolfLinkSensor(coordinator, parameter, device_id))
 
     async_add_entities(entities, True)
 
@@ -75,9 +54,7 @@ async def async_setup_entry(
 class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
-    def __init__(
-        self, coordinator, wolf_object: Parameter, device_id, device_name
-    ) -> None:
+    def __init__(self, coordinator, wolf_object: Parameter, device_id) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.wolf_object = wolf_object
@@ -85,7 +62,6 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
         self._state = None
         self._device_id = device_id
-        self._device_name = device_name
 
     @property
     def native_value(self):
@@ -110,7 +86,6 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=self._device_name,
             configuration_url="https://www.wolf-smartset.com/",
             manufacturer=MANUFACTURER,
         )
