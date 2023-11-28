@@ -73,6 +73,13 @@ class SuezSensor(SensorEntity):
         self.client = client
         self._attr_extra_state_attributes = {}
 
+    @property
+    def native_value(self) -> float | None:
+        """Return the day usage (the previous day) ."""
+        if self._attr_native_value is None or float(str(self._attr_native_value)) < 0:
+            return None
+        return float(str(self._attr_native_value))
+
     def _fetch_data(self):
         """Fetch latest data from Suez."""
         try:
@@ -107,9 +114,9 @@ class SuezSensor(SensorEntity):
                     item
                 ] = self.client.attributes["history"][item]
 
-        except PySuezError:
+        except PySuezError as e:
             self._attr_available = False
-            _LOGGER.warning("Unable to fetch data")
+            _LOGGER.warning("Unable to fetch data (%s)", e)
 
     def update(self) -> None:
         """Return the latest collected data from Suez."""
