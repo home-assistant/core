@@ -115,9 +115,9 @@ class WebDavTodoListEntity(TodoListEntity):
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
-        | TodoListEntityFeature.DUE_DATE
-        | TodoListEntityFeature.DUE_DATETIME
-        | TodoListEntityFeature.DESCRIPTION
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     def __init__(self, calendar: caldav.Calendar, config_entry_id: str) -> None:
