@@ -12,7 +12,8 @@ from wyoming.client import AsyncTcpClient
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
 from wyoming.tts import Synthesize, SynthesizeVoice
-from wyoming.wake import Detection
+from wyoming.vad import VoiceStarted, VoiceStopped
+from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
@@ -202,6 +203,8 @@ class WyomingSatellite:
             self._is_pipeline_running = False
             if self.device.is_active:
                 self.device.set_is_active(False)
+        elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
+            self.hass.add_job(self._client.write_event(Detect().event()))
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_END:
             # Wake word detection
             if not self.device.is_active:
@@ -218,6 +221,20 @@ class WyomingSatellite:
             # Speech-to-text
             if not self.device.is_active:
                 self.device.set_is_active(True)
+        elif event.type == assist_pipeline.PipelineEventType.STT_VAD_START:
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        VoiceStarted(timestamp=event.data["timestamp"]).event()
+                    )
+                )
+        elif event.type == assist_pipeline.PipelineEventType.STT_VAD_END:
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        VoiceStopped(timestamp=event.data["timestamp"]).event()
+                    )
+                )
         elif event.type == assist_pipeline.PipelineEventType.STT_END:
             # Speech-to-text transcript
             if event.data:
@@ -269,26 +286,29 @@ class WyomingSatellite:
             sample_channels = wav_file.getnchannels()
             _LOGGER.debug("Streaming %s TTS sample(s)", wav_file.getnframes())
 
+            timestamp = 0
             await self._client.write_event(
                 AudioStart(
                     rate=sample_rate,
                     width=sample_width,
                     channels=sample_channels,
+                    timestamp=timestamp,
                 ).event()
             )
 
             # Stream audio chunks
             while audio_bytes := wav_file.readframes(_SAMPLES_PER_CHUNK):
-                await self._client.write_event(
-                    AudioChunk(
-                        rate=sample_rate,
-                        width=sample_width,
-                        channels=sample_channels,
-                        audio=audio_bytes,
-                    ).event()
+                chunk = AudioChunk(
+                    rate=sample_rate,
+                    width=sample_width,
+                    channels=sample_channels,
+                    audio=audio_bytes,
+                    timestamp=timestamp,
                 )
+                await self._client.write_event(chunk.event())
+                timestamp += chunk.seconds
 
-            await self._client.write_event(AudioStop().event())
+            await self._client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
 
     async def _stt_stream(self) -> AsyncGenerator[bytes, None]:
