@@ -59,8 +59,8 @@ HA_TO_VICARE_HVAC_DHW = {
 
 
 def _build_entities(
-    device_config: PyViCareDeviceConfig,
     api: PyViCareDevice,
+    device_config: PyViCareDeviceConfig,
 ) -> list:
     """Create ViCare water entities for a device."""
     return [
@@ -86,8 +86,8 @@ async def async_setup_entry(
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_config,
             api,
+            device_config,
         )
     )
 

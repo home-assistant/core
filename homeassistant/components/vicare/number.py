@@ -81,8 +81,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
-    device_config: PyViCareDeviceConfig,
     api: PyViCareDevice,
+    device_config: PyViCareDeviceConfig,
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
@@ -110,8 +110,8 @@ async def async_setup_entry(
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_config,
             api,
+            device_config,
         )
     )
 

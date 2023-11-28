@@ -96,8 +96,8 @@ HA_TO_VICARE_PRESET_HEATING = {
 
 
 def _build_entities(
-    device_config: PyViCareDeviceConfig,
     api: PyViCareDevice,
+    device_config: PyViCareDeviceConfig,
 ) -> list[ViCareClimate]:
     """Create ViCare climate entities for a device."""
     return [
@@ -131,8 +131,8 @@ async def async_setup_entry(
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_config,
             api,
+            device_config,
         )
     )
 
