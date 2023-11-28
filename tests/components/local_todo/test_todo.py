@@ -94,7 +94,7 @@ async def test_add_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "replace batteries"},
+        {"item": "replace batteries", **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -103,6 +103,8 @@ async def test_add_item(
     assert len(items) == 1
     assert items[0]["summary"] == "replace batteries"
     assert items[0]["status"] == "needs_action"
+    for k, v in expected_item_data.items():
+        assert items[0][k] == v
     assert "uid" in items[0]
 
     state = hass.states.get(TEST_ENTITY)
@@ -110,10 +112,24 @@ async def test_add_item(
     assert state.state == "1"
 
 
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data"),
+    [
+        ({}, {}),
+        ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
+        (
+            {"due_date_time": "2023-11-17T11:30:00+00:00"},
+            {"due": "2023-11-17T05:30:00-06:00"},
+        ),
+        ({"description": "Additional detail"}, {"description": "Additional detail"}),
+    ],
+)
 async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
 ) -> None:
     """Test removing a todo item."""
     await hass.services.async_call(
