@@ -112,13 +112,13 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
 
-    entities: list[ViCareNumber] = await hass.async_add_executor_job(
-        _build_entities,
-        device_config,
-        api,
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
+            device_config,
+            api,
+        )
     )
-
-    async_add_entities(entities)
 
 
 class ViCareNumber(ViCareEntity, NumberEntity):
