@@ -59,6 +59,14 @@ class DecoraWifiLight(LightEntity):
         """Initialize the switch."""
         self._switch = switch
         self._attr_unique_id = switch.serial
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
+            manufacturer=self._switch.manufacturer,
+            model=self._switch.model,
+            sw_version=self._switch.version,
+            serial_number=self._switch.serial,
+        )
 
     @property
     def color_mode(self) -> str:
@@ -133,18 +141,3 @@ class DecoraWifiLight(LightEntity):
             self._switch.refresh()
         except ValueError:
             _LOGGER.error("Failed to update myLeviton switch data")
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            name=self.name,
-            manufacturer=self._switch.manufacturer,
-            model=self._switch.model,
-            sw_version=self._switch.version,
-            serial_number=self._switch.serial,
-        )
