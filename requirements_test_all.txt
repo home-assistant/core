@@ -215,7 +215,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.1.1
+aioesphomeapi==19.1.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -820,7 +820,7 @@ homepluscontrol==0.0.5
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.11
+huawei-lte-api==1.7.3
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
