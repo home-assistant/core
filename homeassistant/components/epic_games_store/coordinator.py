@@ -56,7 +56,8 @@ class EGSCalendarUpdateCoordinator(
 
         discount_games = filter(
             lambda game:
-            # Only accessible from the Store, without a voucher code (effectiveDate is also much in the future "2099-01-01T00:00:00.000Z")
+            # Only accessible from the Store, with a voucher code I guess
+            # (effectiveDate is also far in the future "2099-01-01T00:00:00.000Z")
             not game["isCodeRedemptionOnly"]
             # Seen some null promotions even with isCodeRedemptionOnly to false (why ?)
             and game.get("promotions")
