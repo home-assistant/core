@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -154,7 +155,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self._current_program = None
         self._attr_translation_key = translation_key
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             _room_temperature = None
@@ -205,15 +206,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._current_action = False
             # Update the specific device attributes
             with suppress(PyViCareNotSupportedFeatureError):
-                burners = await self.hass.async_add_executor_job(get_burners, self._api)
-                for burner in burners:
+                for burner in get_burners(self._api):
                     self._current_action = self._current_action or burner.getActive()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                compressors = await self.hass.async_add_executor_job(
-                    get_compressors, self._api
-                )
-                for compressor in compressors:
+                for compressor in get_compressors(self._api):
                     self._current_action = (
                         self._current_action or compressor.getActive()
                     )
@@ -292,22 +289,45 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
-        vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
-        if vicare_program is None:
-            raise ValueError(
-                f"Cannot set invalid vicare program: {preset_mode}/{vicare_program}"
+        target_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
+        if target_program is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="program_unknown",
+                translation_placeholders={
+                    "preset": preset_mode,
+                },
             )
 
-        _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        if self._current_program != VICARE_PROGRAM_NORMAL:
+        _LOGGER.debug("Current preset %s", self._current_program)
+        if self._current_program and self._current_program != VICARE_PROGRAM_NORMAL:
             # We can't deactivate "normal"
+            _LOGGER.debug("deactivating %s", self._current_program)
             try:
                 self._circuit.deactivateProgram(self._current_program)
-            except PyViCareCommandError:
-                _LOGGER.debug("Unable to deactivate program %s", self._current_program)
-        if vicare_program != VICARE_PROGRAM_NORMAL:
-            # And we can't explicitly activate normal, either
-            self._circuit.activateProgram(vicare_program)
+            except PyViCareCommandError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="program_not_deactivated",
+                    translation_placeholders={
+                        "program": self._current_program,
+                    },
+                ) from err
+
+        _LOGGER.debug("Setting preset to %s / %s", preset_mode, target_program)
+        if target_program != VICARE_PROGRAM_NORMAL:
+            # And we can't explicitly activate "normal", either
+            _LOGGER.debug("activating %s", target_program)
+            try:
+                self._circuit.activateProgram(target_program)
+            except PyViCareCommandError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="program_not_activated",
+                    translation_placeholders={
+                        "program": target_program,
+                    },
+                ) from err
 
     @property
     def extra_state_attributes(self):

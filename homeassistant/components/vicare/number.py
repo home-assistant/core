@@ -55,6 +55,9 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         value_setter=lambda api, shift: (
             api.setHeatingCurve(shift, api.getHeatingCurveSlope())
         ),
+        min_value_getter=lambda api: api.getHeatingCurveShiftMin(),
+        max_value_getter=lambda api: api.getHeatingCurveShiftMax(),
+        stepping_getter=lambda api: api.getHeatingCurveShiftStepping(),
         native_min_value=-13,
         native_max_value=40,
         native_step=1,
@@ -68,6 +71,9 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         value_setter=lambda api, slope: (
             api.setHeatingCurve(api.getHeatingCurveShift(), slope)
         ),
+        min_value_getter=lambda api: api.getHeatingCurveSlopeMin(),
+        max_value_getter=lambda api: api.getHeatingCurveSlopeMax(),
+        stepping_getter=lambda api: api.getHeatingCurveSlopeStepping(),
         native_min_value=0.2,
         native_max_value=3.5,
         native_step=0.1,
@@ -145,7 +151,6 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare number devices."""
     entities: list[ViCareNumber] = []
-
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
 
@@ -158,7 +163,7 @@ async def async_setup_entry(
                 device_config,
                 description,
             )
-            if entity is not None:
+            if entity:
                 entities.append(entity)
 
     async_add_entities(entities)
@@ -198,17 +203,20 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                     self._api
                 )
 
-                if self.entity_description.min_value_getter:
-                    if min_value := self.entity_description.min_value_getter(self._api):
-                        self._attr_native_min_value = min_value
+                if min_value := _get_value(
+                    self.entity_description.min_value_getter, self._api
+                ):
+                    self._attr_native_min_value = min_value
 
-                if self.entity_description.max_value_getter:
-                    if max_value := self.entity_description.max_value_getter(self._api):
-                        self._attr_native_max_value = max_value
+                if max_value := _get_value(
+                    self.entity_description.max_value_getter, self._api
+                ):
+                    self._attr_native_max_value = max_value
 
-                if self.entity_description.stepping_getter:
-                    if stepping := self.entity_description.stepping_getter(self._api):
-                        self._attr_native_step = stepping
+                if stepping_value := _get_value(
+                    self.entity_description.stepping_getter, self._api
+                ):
+                    self._attr_native_step = stepping_value
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
@@ -217,3 +225,10 @@ class ViCareNumber(ViCareEntity, NumberEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+
+
+def _get_value(
+    fn: Callable[[PyViCareDevice], float | None] | None,
+    api: PyViCareHeatingDeviceComponent,
+) -> float | None:
+    return None if fn is None else fn(api)
