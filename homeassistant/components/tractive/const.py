@@ -29,7 +29,7 @@ TRACKABLES = "trackables"
 TRACKER_ACTIVITY_STATUS_UPDATED = f"{DOMAIN}_tracker_activity_updated"
 TRACKER_HARDWARE_STATUS_UPDATED = f"{DOMAIN}_tracker_hardware_status_updated"
 TRACKER_POSITION_UPDATED = f"{DOMAIN}_tracker_position_updated"
-TRACKER_SWITCH_STATUS_UPDATED = f"{DOMAIN}_tracker_wellness_updated"
+TRACKER_SWITCH_STATUS_UPDATED = f"{DOMAIN}_tracker_switch_updated"
 TRACKER_WELLNESS_STATUS_UPDATED = f"{DOMAIN}_tracker_wellness_updated"
 
 SERVER_UNAVAILABLE = f"{DOMAIN}_server_unavailable"
