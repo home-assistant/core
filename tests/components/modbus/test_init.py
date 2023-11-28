@@ -43,6 +43,10 @@ from homeassistant.components.modbus.const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_VALUES,
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
@@ -68,6 +72,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
+    duplicate_fan_mode_validator,
     duplicate_modbus_validator,
     nan_validator,
     number_validator,
@@ -359,6 +364,25 @@ async def test_duplicate_modbus_validator(do_config) -> None:
     """Test duplicate modbus validator."""
     duplicate_modbus_validator(do_config)
     assert len(do_config) == 1
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_ADDRESS: 11,
+            CONF_FAN_MODE_VALUES: {
+                CONF_FAN_MODE_ON: 7,
+                CONF_FAN_MODE_OFF: 9,
+                CONF_FAN_MODE_HIGH: 9,
+            },
+        }
+    ],
+)
+async def test_duplicate_fan_mode_validator(do_config) -> None:
+    """Test duplicate modbus validator."""
+    duplicate_fan_mode_validator(do_config)
+    assert len(do_config[CONF_FAN_MODE_VALUES]) == 2
 
 
 @pytest.mark.parametrize(

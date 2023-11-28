@@ -26,6 +26,7 @@ from homeassistant.const import (
 from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_VALUES,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -314,4 +315,21 @@ def duplicate_modbus_validator(config: list) -> list:
 
     for i in reversed(errors):
         del config[i]
+    return config
+
+
+def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
+    """Control modbus climate fan mode values for duplicates."""
+    fan_modes: set[int] = set()
+    errors = []
+    for key, value in config[CONF_FAN_MODE_VALUES].items():
+        if value in fan_modes:
+            wrn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            _LOGGER.warning(wrn)
+            errors.append(key)
+        else:
+            fan_modes.add(value)
+
+    for key in reversed(errors):
+        del config[CONF_FAN_MODE_VALUES][key]
     return config
