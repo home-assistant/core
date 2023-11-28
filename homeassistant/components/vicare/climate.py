@@ -155,7 +155,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self._current_program = None
         self._attr_translation_key = translation_key
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             _room_temperature = None
@@ -206,15 +206,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._current_action = False
             # Update the specific device attributes
             with suppress(PyViCareNotSupportedFeatureError):
-                burners = await self.hass.async_add_executor_job(get_burners, self._api)
-                for burner in burners:
+                for burner in get_burners(self._api):
                     self._current_action = self._current_action or burner.getActive()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                compressors = await self.hass.async_add_executor_job(
-                    get_compressors, self._api
-                )
-                for compressor in compressors:
+                for compressor in get_compressors(self._api):
                     self._current_action = (
                         self._current_action or compressor.getActive()
                     )
