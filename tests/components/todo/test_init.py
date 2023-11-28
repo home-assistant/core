@@ -1152,8 +1152,20 @@ async def test_subscribe(
     event_message = msg["event"]
     assert event_message == {
         "items": [
-            {"summary": "Item #1", "uid": "1", "status": "needs_action"},
-            {"summary": "Item #2", "uid": "2", "status": "completed"},
+            {
+                "summary": "Item #1",
+                "uid": "1",
+                "status": "needs_action",
+                "due": None,
+                "description": None,
+            },
+            {
+                "summary": "Item #2",
+                "uid": "2",
+                "status": "completed",
+                "due": None,
+                "description": None,
+            },
         ]
     }
     test_entity._attr_todo_items = [
@@ -1166,9 +1178,27 @@ async def test_subscribe(
     event_message = msg["event"]
     assert event_message == {
         "items": [
-            {"summary": "Item #1", "uid": "1", "status": "needs_action"},
-            {"summary": "Item #2", "uid": "2", "status": "completed"},
-            {"summary": "Item #3", "uid": "3", "status": "needs_action"},
+            {
+                "summary": "Item #1",
+                "uid": "1",
+                "status": "needs_action",
+                "due": None,
+                "description": None,
+            },
+            {
+                "summary": "Item #2",
+                "uid": "2",
+                "status": "completed",
+                "due": None,
+                "description": None,
+            },
+            {
+                "summary": "Item #3",
+                "uid": "3",
+                "status": "needs_action",
+                "due": None,
+                "description": None,
+            },
         ]
     }
 
