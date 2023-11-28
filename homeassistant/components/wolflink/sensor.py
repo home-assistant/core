@@ -61,7 +61,11 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = wolf_object.name
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
         self._state = None
-        self._device_id = device_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            configuration_url="https://www.wolf-smartset.com/",
+            manufacturer=MANUFACTURER,
+        )
 
     @property
     def native_value(self):
@@ -80,15 +84,6 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
             "value_id": self.wolf_object.value_id,
             "parent": self.wolf_object.parent,
         }
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            configuration_url="https://www.wolf-smartset.com/",
-            manufacturer=MANUFACTURER,
-        )
 
 
 class WolfLinkHours(WolfLinkSensor):
