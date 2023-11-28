@@ -8,7 +8,7 @@
         },
         "data_description": {
           "county": "County used for outage number retrieval",
-          "phone_number": "Phone number associated with the PECO account"
+          "phone_number": "Phone number associated with the PECO account (optional). Adding a phone number adds a binary sensor confirming if your power is out or not, and not an issue with a breaker or an issue on your end."
         }
       }
     },

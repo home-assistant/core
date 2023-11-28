@@ -1,7 +1,6 @@
 """Config flow for PECO Outage Counter integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -63,11 +62,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if self.meter_verification is True:
-            if "phone_number" in self.meter_error:
-                if self.meter_error["phone_number"] == "invalid_phone_number":
-                    await asyncio.sleep(
-                        0.1
-                    )  # If I don't have this here, it will be stuck on the loading symbol
             return self.async_show_progress_done(next_step_id="finish_smart_meter")
 
         if user_input is None:

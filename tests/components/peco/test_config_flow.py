@@ -2,6 +2,8 @@
 from unittest.mock import patch
 
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError
+import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components.peco.const import DOMAIN
@@ -35,6 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "county": "PHILADELPHIA",
     }
+    assert result2["context"]["unique_id"] == "PHILADELPHIA"
 
 
 async def test_invalid_county(hass: HomeAssistant) -> None:
@@ -48,20 +51,14 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.peco.async_setup_entry",
         return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+    ), pytest.raises(MultipleInvalid):
+        await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "county": "PHILADELPHIA",
+                "county": "INVALID_COUNTY_THAT_SHOULDNT_EXIST",
             },
         )
         await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Philadelphia Outage Count"
-    assert result2["data"] == {
-        "county": "PHILADELPHIA",
-    }
 
 
 async def test_meter_value_error(hass: HomeAssistant) -> None:
@@ -205,3 +202,4 @@ async def test_smart_meter(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Philadelphia - 1234567890"
     assert result["data"]["phone_number"] == "1234567890"
+    assert result["context"]["unique_id"] == "PHILADELPHIA-1234567890"
