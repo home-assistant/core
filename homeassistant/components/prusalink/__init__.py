@@ -20,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -96,6 +97,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
     def __init__(self, hass: HomeAssistant, api: PrusaLink) -> None:
         """Initialize the update coordinator."""
         self.api = api
+        self.hass = hass
 
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=self._get_update_interval(None)
@@ -106,7 +108,24 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
         try:
             async with asyncio.timeout(5):
                 data = await self._fetch_data()
+                # Authentication is working again so we can safely remove it again
+                ir.async_delete_issue(self.hass, DOMAIN, "firmware_5_1_required")
         except InvalidAuth:
+            # We don't know for sure if the firmware is actually outdated
+            # If we hit an InvalidAuth error after the user configured this integration
+            # (where we already checked that credentials are correct)
+            # then its most likely an issue with unsupported firmware.
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "firmware_5_1_required",
+                is_fixable=False,
+                learn_more_url="https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="firmware_5_1_required",
+                translation_placeholders={"entry_title": self.config_entry.title},
+            )
+
             raise UpdateFailed("Invalid authentication") from None
         except PrusaLinkError as err:
             raise UpdateFailed(str(err)) from err
