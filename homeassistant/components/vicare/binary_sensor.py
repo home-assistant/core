@@ -135,7 +135,7 @@ async def _entities_from_descriptions(
                 hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
                 description,
             )
-            if entity is not None:
+            if entity:
                 entities.append(entity)
 
 
@@ -156,19 +156,22 @@ async def async_setup_entry(
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             description,
         )
-        if entity is not None:
+        if entity:
             entities.append(entity)
 
+    circuits = await hass.async_add_executor_job(get_circuits, api)
     await _entities_from_descriptions(
-        hass, entities, CIRCUIT_SENSORS, get_circuits(api), config_entry
+        hass, entities, CIRCUIT_SENSORS, circuits, config_entry
     )
 
+    burners = await hass.async_add_executor_job(get_burners, api)
     await _entities_from_descriptions(
-        hass, entities, BURNER_SENSORS, get_burners(api), config_entry
+        hass, entities, BURNER_SENSORS, burners, config_entry
     )
 
+    compressors = await hass.async_add_executor_job(get_compressors, api)
     await _entities_from_descriptions(
-        hass, entities, COMPRESSOR_SENSORS, get_compressors(api), config_entry
+        hass, entities, COMPRESSOR_SENSORS, compressors, config_entry
     )
 
     async_add_entities(entities)

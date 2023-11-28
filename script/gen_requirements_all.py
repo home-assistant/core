@@ -32,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     "pybluez",
     "pycocotools",
     "pycups",
-    "python-eq3bt",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
@@ -192,6 +191,7 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "no-commit-to-branch",
     "prettier",
     "python-typing-update",
+    "ruff-format",  # it's just ruff
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
@@ -394,7 +394,8 @@ def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
         for requirement, modules in reqs.items()
         if any(
             # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.") or
+            not mdl.startswith("homeassistant.components.")
+            or
             # Install tests for integrations that have tests
             has_tests(mdl)
             for mdl in modules

@@ -143,7 +143,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.1.0
+accuweather==2.1.1
 
 # homeassistant.components.adax
 adax==0.3.0
@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.0.1
+aioesphomeapi==19.1.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -257,7 +257,7 @@ aioharmony==0.2.10
 aiohomekit==3.0.9
 
 # homeassistant.components.http
-aiohttp-fast-url-dispatcher==0.1.0
+aiohttp-fast-url-dispatcher==0.3.0
 
 # homeassistant.components.http
 aiohttp-zlib-ng==0.1.1
@@ -392,7 +392,7 @@ aiowatttime==0.1.1
 aiowebostv==0.3.3
 
 # homeassistant.components.withings
-aiowithings==1.0.3
+aiowithings==2.0.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -636,7 +636,6 @@ concord232==0.15
 # homeassistant.components.upc_connect
 connect-box==0.2.8
 
-# homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
@@ -890,7 +889,7 @@ georss-qld-bushfire-alert-client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==3.2.1
+gios==3.2.2
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1036,7 +1035,7 @@ horimote==0.4.1
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.11
+huawei-lte-api==1.7.3
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -1298,7 +1297,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.1
+nettigo-air-monitor==2.2.2
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1313,7 +1312,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==2.0.1
+nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.5.2
@@ -1425,6 +1424,9 @@ oru==0.1.11
 # homeassistant.components.orvibo
 orvibo==1.1.1
 
+# homeassistant.components.ourgroceries
+ourgroceries==1.5.4
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 
@@ -1477,7 +1479,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.34.0
+plugwise==0.34.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2127,9 +2129,6 @@ python-digitalocean==1.13.2
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.17
 
-# homeassistant.components.eq3btsmart
-# python-eq3bt==0.2
-
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
 
@@ -2351,7 +2350,7 @@ rfk101py==0.0.1
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.2
+ring-doorbell[listen]==0.8.3
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -2433,7 +2432,7 @@ sensorpush-ble==1.5.5
 sentry-sdk==1.37.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.6
+sfrbox-api==0.0.8
 
 # homeassistant.components.sharkiq
 sharkiq==1.0.2

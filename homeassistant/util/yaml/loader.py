@@ -340,7 +340,12 @@ def _handle_mapping_tag(
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 
