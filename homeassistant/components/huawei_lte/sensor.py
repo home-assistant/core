@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 import logging
 import re
 
+from huawei_lte_api.enums.net import NetworkModeEnum
+
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -41,7 +43,6 @@ from .const import (
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
     KEY_SMS_SMS_COUNT,
-    NETWORKMODE_TO_STRING,
     SENSOR_KEYS,
 )
 
@@ -590,7 +591,15 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="preferred_mode",
                 icon="mdi:transmission-tower",
                 format_fn=lambda x: (
-                    NETWORKMODE_TO_STRING.get(x),
+                    {
+                        NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
+                        NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",
+                        NetworkModeEnum.MODE_4G_2G_AUTO.value: "4G/2G",
+                        NetworkModeEnum.MODE_4G_ONLY.value: "4G",
+                        NetworkModeEnum.MODE_3G_2G_AUTO.value: "3G/2G",
+                        NetworkModeEnum.MODE_3G_ONLY.value: "3G",
+                        NetworkModeEnum.MODE_2G_ONLY.value: "2G",
+                    }.get(x),
                     None,
                 ),
                 entity_category=EntityCategory.DIAGNOSTIC,
