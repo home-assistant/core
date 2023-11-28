@@ -1,5 +1,6 @@
 """Sensor platform for OpenAQ."""
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 
 import homeassistant
@@ -22,14 +23,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ICON
+from .const import DOMAIN, ICON, OPENAQ_PARAMETERS
+from .coordinator import OpenAQDataCoordinator
 
 
 class OpenAQDeviceSensors(str, Enum):
     """Sensors to report in home assistant."""
 
     Last_Update = SensorDeviceClass.TIMESTAMP
-    Air_Quality_index = SensorDeviceClass.AQI
     Particle_Matter_25 = SensorDeviceClass.PM25
     Particle_Matter_10 = SensorDeviceClass.PM10
     Particle_Matter_1 = SensorDeviceClass.PM1
@@ -55,10 +56,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
 ) -> None:
     """Configure the sensor platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    sensors = coordinator.get_sensors()
+    sensor_names = [sensor.parameter.name for sensor in sensors]
+    sensor_names.append("last_update")
+    sensors_metrics = [OPENAQ_PARAMETERS[j] for j in sensor_names]
+
     entities = []
 
-    for metric in list(OpenAQDeviceSensors):
-        match metric.value:
+    for metric in sensors_metrics:
+        match metric:
             case SensorDeviceClass.TIMESTAMP | SensorDeviceClass.AQI:
                 unit = None
             case SensorDeviceClass.CO | SensorDeviceClass.CO2:
@@ -72,36 +79,44 @@ async def async_setup_entry(
             case SensorDeviceClass.TEMPERATURE:
                 unit = UnitOfTemperature.CELSIUS
 
+        val_list = list(OPENAQ_PARAMETERS.values())
+        key_list = list(OPENAQ_PARAMETERS.keys())
+
+        metric_index = val_list.index(metric)
+
         entities.append(
-            Station(
+            OpenAQSensor(
                 hass,
-                "test",
+                str(coordinator.client.get_device().id),
                 OpenAQSensorDescription(
-                    key=metric.name.lower(),
+                    key=key_list[metric_index],
                     name=metric.name.replace("_", " "),
                     metric=metric,
                     entity_category=EntityCategory.DIAGNOSTIC,
                     native_unit_of_measurement=unit,
                 ),
+                coordinator,
             ),
         )
     async_add_devices(entities)
 
 
-class Station(SensorEntity):
-    """ASD."""
+class OpenAQSensor(SensorEntity):
+    """OpenAQ sensor."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         station_id,
         description: OpenAQSensorDescription,
+        coordinator: OpenAQDataCoordinator,
     ) -> None:
-        """ASD."""
+        """Init."""
         self.entity_description = description
         self.station_id = station_id
         self.metric = self.entity_description.metric
         self._hass = hass
+        self.coordinator = coordinator
         self._last_reset = homeassistant.util.dt.utc_from_timestamp(0)
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]
@@ -132,6 +147,10 @@ class Station(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor, rounding if a number."""
+        name = self.entity_description.key
         if self.metric == SensorDeviceClass.TIMESTAMP:
-            return None
-        return 1
+            return datetime.strptime(
+                self.coordinator.data.get("timestamp"), "%Y-%m-%dT%H:%M:%S%z"
+            )
+
+        return self.coordinator.data.get(name)
