@@ -1,10 +1,19 @@
 """Tessie parent entity class."""
 
 
+from typing import Any
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+
+MODELS = {
+    "model3": "Model 3",
+    "modelx": "Model X",
+    "modely": "Model Y",
+    "models": "Model S",
+}
 
 
 class TessieEntity(CoordinatorEntity):
@@ -20,8 +29,15 @@ class TessieEntity(CoordinatorEntity):
         self._attr_unique_id = f"{vin}:{category}:{name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vin)},
-            manufacturer="Tesla",
+            manufacturer="Tessie",
             configuration_url="https://my.tessie.com/",
             name=coordinator.data[vin]["display_name"],
-            model=coordinator.data[vin]["vehicle_config"]["car_type"],
+            model=MODELS.get(
+                coordinator.data[vin]["vehicle_config"]["car_type"],
+                coordinator.data[vin]["vehicle_config"]["car_type"],
+            ),
         )
+
+    def get(self, key: str) -> Any:
+        """Return value from coordinator data."""
+        return self.coordinator.data[self.vin][self.category].get(key)

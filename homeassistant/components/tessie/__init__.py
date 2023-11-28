@@ -28,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vehicles = await get_state_of_all_vehicles(
             session=session, api_key=api_key, only_active=False
         )
-        return {vehicle.vin: vehicle.last_state for vehicle in vehicles}
+        return {
+            vehicle["vin"]: vehicle["last_state"] for vehicle in vehicles["results"]
+        }
 
     coordinator = DataUpdateCoordinator(
         hass,

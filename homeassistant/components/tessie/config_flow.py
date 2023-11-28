@@ -31,18 +31,18 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input and CONF_API_KEY in user_input:
             try:
-                data = await get_state_of_all_vehicles(
+                await get_state_of_all_vehicles(
                     session=async_get_clientsession(self.hass),
                     api_key=user_input[CONF_API_KEY],
                 )
             except ClientResponseError:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(user_input[CONF_API_KEY])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=data["system"]["name"],
+                    title="Tessie",
                     data=user_input,
                 )
 
