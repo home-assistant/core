@@ -1,5 +1,4 @@
 """Base entity class for DROP entities."""
-
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo

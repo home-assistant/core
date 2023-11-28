@@ -1,5 +1,4 @@
 """Define fixtures available for all tests."""
-
 import pytest
 
 from homeassistant.components.drop.const import (
