@@ -79,6 +79,7 @@ class FlexitClimateEntity(ClimateEntity):
             name=self._device.device_name,
             manufacturer="Flexit",
             model="Nordic",
+            serial_number=device.serial_number,
         )
 
     async def async_update(self) -> None:
