@@ -105,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
     hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
+    hass.data[DOMAIN][entry.entry_id][DEVICE_NAME] = device_name
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
