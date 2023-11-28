@@ -79,7 +79,7 @@ ATTR_PRESET_MODES = "preset_modes"
 
 
 class NotValidPresetModeError(ServiceValidationError):
-    """Raised when the preset_mode in not in the preset_modes list."""
+    """Exception class when the preset_mode is not in the preset_modes list."""
 
 
 @bind_hass
