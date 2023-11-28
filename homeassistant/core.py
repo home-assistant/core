@@ -91,7 +91,7 @@ from .util.async_ import (
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.ulid import ulid, ulid_at_time
+from .util.ulid import ulid_at_time, ulid_now
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -874,8 +874,10 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during stage 3 shutdown", task
                 )
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Task %s error during stage 3 shutdown: %s", task, exc
+                )
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -930,7 +932,7 @@ class Context:
         id: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
         """Init the context."""
-        self.id = id or ulid()
+        self.id = id or ulid_now()
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
@@ -1176,12 +1178,9 @@ class EventBus:
         self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
-
-        def remove_listener() -> None:
-            """Remove the listener."""
-            self._async_remove_listener(event_type, filterable_job)
-
-        return remove_listener
+        return functools.partial(
+            self._async_remove_listener, event_type, filterable_job
+        )
 
     def listen_once(
         self,
@@ -1776,7 +1775,10 @@ class Service:
         self,
         func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None,
         domain: str,
@@ -1868,7 +1870,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
     ) -> None:
@@ -1887,7 +1889,10 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
