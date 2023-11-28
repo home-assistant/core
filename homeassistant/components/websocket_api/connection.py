@@ -281,7 +281,7 @@ class ActiveConnection:
             translation_placeholders = err.translation_placeholders
         elif isinstance(err, HomeAssistantError):
             err_message = str(err)
-            code = const.ERR_HOME_ASSISTANT_ERROR
+            code = const.ERR_UNKNOWN_ERROR
             translation_domain = err.translation_domain
             translation_key = err.translation_key
             translation_placeholders = err.translation_placeholders
