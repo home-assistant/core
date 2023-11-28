@@ -540,8 +540,8 @@ def _get_start_time_state_for_entities_stmt(
                     .filter(
                         (States.last_updated_ts >= run_start_ts)
                         & (States.last_updated_ts < epoch_time)
+                        & States.metadata_id.in_(metadata_ids)
                     )
-                    .filter(States.metadata_id.in_(metadata_ids))
                     .group_by(States.metadata_id)
                     .subquery()
                 )
@@ -556,8 +556,8 @@ def _get_start_time_state_for_entities_stmt(
         .filter(
             (States.last_updated_ts >= run_start_ts)
             & (States.last_updated_ts < epoch_time)
+            & States.metadata_id.in_(metadata_ids)
         )
-        .filter(States.metadata_id.in_(metadata_ids))
     )
     if no_attributes:
         return stmt
