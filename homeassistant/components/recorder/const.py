@@ -2,7 +2,13 @@
 
 from enum import StrEnum
 
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_RESTORED,
+    ATTR_SUPPORTED_FEATURES,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
+)
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
 
 DATA_INSTANCE = "recorder_instance"
@@ -12,9 +18,6 @@ MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
 MYSQLDB_URL_PREFIX = "mysql://"
 MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
 DOMAIN = "recorder"
-
-EVENT_RECORDER_5MIN_STATISTICS_GENERATED = "recorder_5min_statistics_generated"
-EVENT_RECORDER_HOURLY_STATISTICS_GENERATED = "recorder_hourly_statistics_generated"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
@@ -29,6 +32,12 @@ QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY = 0.65
 # We can increase this back to 1000 once most
 # have upgraded their sqlite version
 SQLITE_MAX_BIND_VARS = 998
+
+# The maximum bind vars for sqlite 3.32.0 and above, but
+# capped at 4000 to avoid performance issues
+SQLITE_MODERN_MAX_BIND_VARS = 4000
+
+DEFAULT_MAX_BIND_VARS = 4000
 
 DB_WORKER_PREFIX = "DbWorker"
 

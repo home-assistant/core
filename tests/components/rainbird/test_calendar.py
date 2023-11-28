@@ -12,11 +12,14 @@ from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import ComponentSetup, mock_response, mock_response_error
+from .conftest import CONFIG_ENTRY_DATA_OLD_FORMAT, mock_response, mock_response_error
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 TEST_ENTITY = "calendar.rain_bird_controller"
@@ -80,6 +83,15 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture(autouse=True)
+async def setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> list[Platform]:
+    """Fixture to setup the config entry."""
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
+@pytest.fixture(autouse=True)
 def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
     hass.config.set_time_zone("America/Regina")
@@ -120,12 +132,8 @@ def get_events_fixture(
 
 
 @pytest.mark.freeze_time("2023-01-21 09:32:00")
-async def test_get_events(
-    hass: HomeAssistant, setup_integration: ComponentSetup, get_events: GetEventsFn
-) -> None:
+async def test_get_events(hass: HomeAssistant, get_events: GetEventsFn) -> None:
     """Test calendar event fetching APIs."""
-
-    assert await setup_integration()
 
     events = await get_events("2023-01-20T00:00:00Z", "2023-02-05T00:00:00Z")
     assert events == [
@@ -157,30 +165,34 @@ async def test_get_events(
 
 
 @pytest.mark.parametrize(
-    ("freeze_time", "expected_state"),
+    ("freeze_time", "expected_state", "setup_config_entry"),
     [
         (
             datetime.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
             "off",
+            None,
         ),
         (
             datetime.datetime(2023, 1, 23, 4, 30, tzinfo=ZoneInfo("America/Regina")),
             "on",
+            None,
         ),
     ],
 )
 async def test_event_state(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     get_events: GetEventsFn,
     freezer: FrozenDateTimeFactory,
     freeze_time: datetime.datetime,
     expected_state: str,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test calendar upcoming event state."""
     freezer.move_to(freeze_time)
 
-    assert await setup_integration()
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None
@@ -196,6 +208,10 @@ async def test_event_state(
     }
     assert state.state == expected_state
 
+    entity = entity_registry.async_get(TEST_ENTITY)
+    assert entity
+    assert entity.unique_id == "4c:a1:61:00:11:22"
+
 
 @pytest.mark.parametrize(
     ("model_and_version_response", "has_entity"),
@@ -207,31 +223,26 @@ async def test_event_state(
 )
 async def test_calendar_not_supported_by_device(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     has_entity: bool,
 ) -> None:
     """Test calendar upcoming event state."""
-
-    assert await setup_integration()
 
     state = hass.states.get(TEST_ENTITY)
     assert (state is not None) == has_entity
 
 
 @pytest.mark.parametrize(
-    "mock_insert_schedule_response", [([None])]  # Disable success responses
+    "mock_insert_schedule_response",
+    [([None])],  # Disable success responses
 )
 async def test_no_schedule(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     get_events: GetEventsFn,
     responses: list[AiohttpClientMockResponse],
     hass_client: Callable[..., Awaitable[ClientSession]],
 ) -> None:
     """Test calendar error when fetching the calendar."""
     responses.extend([mock_response_error(HTTPStatus.BAD_GATEWAY)])  # Arbitrary error
-
-    assert await setup_integration()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.state == "unavailable"
@@ -254,12 +265,9 @@ async def test_no_schedule(
 )
 async def test_program_schedule_disabled(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
     get_events: GetEventsFn,
 ) -> None:
     """Test calendar when the program is disabled with no upcoming events."""
-
-    assert await setup_integration()
 
     events = await get_events("2023-01-20T00:00:00Z", "2023-02-05T00:00:00Z")
     assert events == []
@@ -270,3 +278,32 @@ async def test_program_schedule_disabled(
         "friendly_name": "Rain Bird Controller",
         "icon": "mdi:sprinkler",
     }
+
+
+@pytest.mark.parametrize(
+    ("config_entry_data", "config_entry_unique_id", "setup_config_entry"),
+    [
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None, None),
+    ],
+)
+async def test_no_unique_id(
+    hass: HomeAssistant,
+    get_events: GetEventsFn,
+    responses: list[AiohttpClientMockResponse],
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test calendar entity with no unique id."""
+
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state is not None
+    assert state.attributes.get("friendly_name") == "Rain Bird Controller"
+
+    entity_entry = entity_registry.async_get(TEST_ENTITY)
+    assert not entity_entry

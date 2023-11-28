@@ -23,19 +23,23 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import (
+    ATTR_CURRENT_WEATHER,
+    ATTR_FORECAST_DAILY,
+    ATTR_FORECAST_HOURLY,
+    ATTRIBUTION,
+    DOMAIN,
+)
 from .coordinator import WeatherKitDataUpdateCoordinator
+from .entity import WeatherKitEntity
 
 
 async def async_setup_entry(
@@ -121,13 +125,12 @@ def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
 
 
 class WeatherKitWeather(
-    SingleCoordinatorWeatherEntity[WeatherKitDataUpdateCoordinator]
+    SingleCoordinatorWeatherEntity[WeatherKitDataUpdateCoordinator], WeatherKitEntity
 ):
     """Weather entity for Apple WeatherKit integration."""
 
     _attr_attribution = ATTRIBUTION
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
@@ -140,17 +143,9 @@ class WeatherKitWeather(
         self,
         coordinator: WeatherKitDataUpdateCoordinator,
     ) -> None:
-        """Initialise the platform with a data instance and site."""
+        """Initialize the platform with a coordinator."""
         super().__init__(coordinator)
-        config_data = coordinator.config_entry.data
-        self._attr_unique_id = (
-            f"{config_data[CONF_LATITUDE]}-{config_data[CONF_LONGITUDE]}"
-        )
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer="Apple Weather",
-        )
+        WeatherKitEntity.__init__(self, coordinator, unique_id_suffix=None)
 
     @property
     def supported_features(self) -> WeatherEntityFeature:
@@ -174,7 +169,7 @@ class WeatherKitWeather(
     @property
     def current_weather(self) -> dict[str, Any]:
         """Return current weather data."""
-        return self.data["currentWeather"]
+        return self.data[ATTR_CURRENT_WEATHER]
 
     @property
     def condition(self) -> str | None:
@@ -245,7 +240,7 @@ class WeatherKitWeather(
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
-        daily_forecast = self.data.get("forecastDaily")
+        daily_forecast = self.data.get(ATTR_FORECAST_DAILY)
         if not daily_forecast:
             return None
 
@@ -255,7 +250,7 @@ class WeatherKitWeather(
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
-        hourly_forecast = self.data.get("forecastHourly")
+        hourly_forecast = self.data.get(ATTR_FORECAST_HOURLY)
         if not hourly_forecast:
             return None
 

@@ -247,7 +247,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: Size of structure is 0 bytes but `{CONF_COUNT}: 4` is 8 bytes",
         ),
         (
             {
@@ -276,7 +276,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` cannot be combined with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` illegal with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
     ],
 )
@@ -510,6 +510,20 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+            False,
+            "07-05-2020 14:35",
+        ),
+        (
+            {
+                CONF_COUNT: 8,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_DATA_TYPE: DataType.STRING,
+                CONF_SWAP: CONF_SWAP_BYTE,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x3730, 0x302D, 0x2D35, 0x3032, 0x3032, 0x3120, 0x3A34, 0x3533],
             False,
             "07-05-2020 14:35",
         ),
@@ -855,9 +869,10 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
         ),
     ],
 )
-async def test_virtual_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+async def test_virtual_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
+) -> None:
     """Run test for sensor."""
-    entity_registry = er.async_get(hass)
     for i in range(0, len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"

@@ -70,7 +70,10 @@ async def test_media_lookups(
         )
     assert "Library 'Not a Library' not found in" in str(excinfo.value)
 
-    with patch("plexapi.library.LibrarySection.search") as search:
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        __qualname__="search",
+    ) as search:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -261,7 +264,11 @@ async def test_media_lookups(
 
     with pytest.raises(MediaNotFound) as excinfo:
         payload = '{"library_name": "Movies", "title": "Not a Movie"}'
-        with patch("plexapi.library.LibrarySection.search", side_effect=BadRequest):
+        with patch(
+            "plexapi.library.LibrarySection.search",
+            side_effect=BadRequest,
+            __qualname__="search",
+        ):
             await hass.services.async_call(
                 MEDIA_PLAYER_DOMAIN,
                 SERVICE_PLAY_MEDIA,

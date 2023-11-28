@@ -5,14 +5,16 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "token": "[%key:common::config_flow::data::access_token%]"
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "encrypt_token": "Use an encrypted token for authentication."
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nuki integration needs to re-authenticate with your bridge.",
         "data": {
-          "token": "[%key:common::config_flow::data::access_token%]"
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "encrypt_token": "[%key:component::nuki::config::step::user::data::encrypt_token%]"
         }
       }
     },

@@ -188,7 +188,7 @@ async def _async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return list of custom integrations."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
 
     try:
@@ -403,9 +403,7 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[
-        str, list[dict[str, str | dict[str, str]]]
-    ] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -776,11 +774,9 @@ class Integration:
         if self._all_dependencies_resolved is not None:
             return self._all_dependencies_resolved
 
+        self._all_dependencies_resolved = False
         try:
             dependencies = await _async_component_dependencies(self.hass, self)
-            dependencies.discard(self.domain)
-            self._all_dependencies = dependencies
-            self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
@@ -790,7 +786,6 @@ class Integration:
                 self.domain,
                 err.domain,
             )
-            self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
                 (
@@ -801,7 +796,10 @@ class Integration:
                 err.from_domain,
                 err.to_domain,
             )
-            self._all_dependencies_resolved = False
+        else:
+            dependencies.discard(self.domain)
+            self._all_dependencies = dependencies
+            self._all_dependencies_resolved = True
 
         return self._all_dependencies_resolved
 
@@ -1013,9 +1011,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][  # type: ignore[no-any-return]
-            comp_or_platform
-        ]
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     cache = hass.data[DATA_COMPONENTS]
 
@@ -1179,7 +1175,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:
     """Return the lookup paths for legacy lookups."""
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 
@@ -1187,3 +1183,55 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
 def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
     """Test if a component module is loaded."""
     return module in hass.data[DATA_COMPONENTS]
+
+
+@callback
+def async_get_issue_tracker(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str | None:
+    """Return a URL for an integration's issue tracker."""
+    issue_tracker = (
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+    )
+    if not integration_domain and not module:
+        # If we know nothing about the entity, suggest opening an issue on HA core
+        return issue_tracker
+
+    if hass and integration_domain:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+            if not integration.is_built_in:
+                return integration.issue_tracker
+
+    if module and "custom_components" in module:
+        return None
+
+    if integration_domain:
+        issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
+    return issue_tracker
+
+
+@callback
+def async_suggest_report_issue(
+    hass: HomeAssistant | None,
+    *,
+    integration_domain: str | None = None,
+    module: str | None = None,
+) -> str:
+    """Generate a blurb asking the user to file a bug report."""
+    issue_tracker = async_get_issue_tracker(
+        hass, integration_domain=integration_domain, module=module
+    )
+
+    if not issue_tracker:
+        if not integration_domain:
+            return "report it to the custom integration author"
+        return (
+            f"report it to the author of the '{integration_domain}' "
+            "custom integration"
+        )
+
+    return f"create a bug report at {issue_tracker}"

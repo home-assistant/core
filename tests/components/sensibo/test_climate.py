@@ -742,7 +742,7 @@ async def test_climate_set_timer(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -761,7 +761,7 @@ async def test_climate_set_timer(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
     ), pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -845,7 +845,7 @@ async def test_climate_pure_boost(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -947,7 +947,7 @@ async def test_climate_climate_react(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_climate_react",
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1254,7 +1254,7 @@ async def test_climate_full_ac_state(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_states",
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
