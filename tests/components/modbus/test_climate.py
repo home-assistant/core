@@ -683,10 +683,10 @@ async def test_service_climate_set_temperature(
         ),
     ],
 )
-async def test_service_set_mode(
+async def test_service_set_hvac_mode(
     hass: HomeAssistant, hvac_mode, result, mock_modbus, mock_ha
 ) -> None:
-    """Test set mode."""
+    """Test set HVAC mode."""
     mock_modbus.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -694,6 +694,69 @@ async def test_service_set_mode(
         {
             "entity_id": ENTITY_ID,
             ATTR_HVAC_MODE: hvac_mode,
+        },
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("fan_mode", "result", "do_config"),
+    [
+        (
+            FAN_OFF,
+            [0x02],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 1,
+                                CONF_FAN_MODE_OFF: 2,
+                            },
+                        },
+                    }
+                ]
+            },
+        ),
+        (
+            FAN_ON,
+            [0x01],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 1,
+                                CONF_FAN_MODE_OFF: 2,
+                            },
+                        },
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_service_set_fan_mode(
+    hass: HomeAssistant, fan_mode, result, mock_modbus, mock_ha
+) -> None:
+    """Test set Fan mode."""
+    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_fan_mode",
+        {
+            "entity_id": ENTITY_ID,
+            ATTR_FAN_MODE: fan_mode,
         },
         blocking=True,
     )

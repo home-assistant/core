@@ -258,7 +258,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if self._fan_mode_register is not None:
             # Write a value to the mode register for the desired mode.
-            value = self._fan_mode_mapping_to_modbus[self._fan_mode_register]
+            value = self._fan_mode_mapping_to_modbus[fan_mode]
             await self._hub.async_pb_call(
                 self._slave,
                 self._fan_mode_register,
