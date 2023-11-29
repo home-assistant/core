@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sveriges_radio",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["sverigesradio==0.3"]
+  "requirements": []
 }
