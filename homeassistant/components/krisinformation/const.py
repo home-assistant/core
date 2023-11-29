@@ -1,5 +1,6 @@
 """Constants for the krisinformation integration."""
 DOMAIN = "krisinformation"
+FEED = "feed"
 
 DEFAULT_NAME = "Krisinformation"
 COUNTY_NAME = "Krisinformation County"

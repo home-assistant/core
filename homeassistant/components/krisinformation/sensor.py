@@ -22,14 +22,14 @@ async def async_setup_entry(
     config: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the departure sensor."""
+    """Set up the sensor."""
     name = config.data.get(CONF_NAME, DEFAULT_NAME + " - Sweden")
     county = config.data[CONF_COUNTY]
     language = hass.config.language
 
     all_news = CrisisAlerter(county, language=language)
 
-    sensor = CrisisAlerterSensorCounty(config.entry_id, name, all_news)
+    sensor = CrisisAlerterSensorCounty(hass, config.entry_id, name, all_news)
 
     async_add_entities([sensor], False)
 
@@ -41,7 +41,11 @@ class CrisisAlerterSensor(SensorEntity):
     _attr_icon = "mdi:alert"
 
     def __init__(
-        self, unique_id: str, name: str, crisis_alerter: CrisisAlerter
+        self,
+        hass: HomeAssistant,
+        unique_id: str,
+        name: str,
+        crisis_alerter: CrisisAlerter,
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = unique_id
@@ -49,6 +53,7 @@ class CrisisAlerterSensor(SensorEntity):
         self._crisis_alerter = crisis_alerter
         self._state: str | None = None
         self._web: str | None = None
+        self.hass = hass
         self._published: str | None = None
         self._area: str | None = None
 
@@ -87,7 +92,8 @@ class CrisisAlerterSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest alerts."""
         try:
-            response = self._crisis_alerter.news()
+            response = self._crisis_alerter.vmas(is_test=True)
+            _LOGGER.debug("wow 1")
             if len(response) > 0:
                 news = response[0]
                 self._state = news["PushMessage"]
@@ -96,7 +102,9 @@ class CrisisAlerterSensor(SensorEntity):
                 self._area = (
                     news["Area"][0]["Description"] if len(news["Area"]) > 0 else None
                 )
+
             else:
+                _LOGGER.debug("wow 2")
                 self._state = (
                     "Inga larm"
                     if self._crisis_alerter.language == "sv"
@@ -114,11 +122,16 @@ class CrisisAlerterSensorCounty(SensorEntity):
     _attr_icon = "mdi:alert"
 
     def __init__(
-        self, unique_id: str, name: str, crisis_alerter: CrisisAlerter
+        self,
+        hass: HomeAssistant,
+        unique_id: str,
+        name: str,
+        crisis_alerter: CrisisAlerter,
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = unique_id
         self._attr_name = name
+        self._hass = hass
         self._crisis_alerter = crisis_alerter
         self._state: str | None = None
         self._web: str | None = None
@@ -136,8 +149,8 @@ class CrisisAlerterSensorCounty(SensorEntity):
 
     def added_to_hass(self) -> None:
         """Handle when entity is added."""
-        if self.hass.state != CoreState.running:
-            self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, self.first_update)
+        if self._hass.state != CoreState.running:
+            self._hass.bus.listen_once(EVENT_HOMEASSISTANT_STARTED, self.first_update)
         else:
             self.first_update()
 
@@ -160,19 +173,17 @@ class CrisisAlerterSensorCounty(SensorEntity):
     def update(self) -> None:
         """Get the latest alerts."""
         try:
-            response = self._crisis_alerter.news()
+            response = self._crisis_alerter.vmas(is_test=True)
             location = self._crisis_alerter.get_location_user()
             if len(response) > 0:
                 news = response[0]
-                county = (
-                    news["Area"][1]["Description"] if len(news["Area"]) > 1 else "None"
-                )
+                county = news["Area"][0]["Description"]
                 if county == location:
                     self._state = news["PushMessage"][:255]  # Crashes if not capped
                     self._web = news["Web"]
                     self._published = news["Published"]
                     self._area = (
-                        news["Area"][1]["Description"]
+                        news["Area"][0]["Description"]
                         if len(news["Area"]) > 1
                         else None
                     )
