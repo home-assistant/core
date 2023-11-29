@@ -65,11 +65,91 @@ async def test_todo_item_state(
     assert state.state == expected_state
 
 
-@pytest.mark.parametrize(("tasks"), [[]])
+@pytest.mark.parametrize(
+    ("tasks", "item_data", "tasks_after_update", "add_kwargs", "expected_item"),
+    [
+        (
+            [],
+            {},
+            [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
+            {"content": "Soda"},
+            {"uid": "task-id-1", "summary": "Soda", "status": "needs_action"},
+        ),
+        (
+            [],
+            {"due_date": "2023-11-18"},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    is_completed=False,
+                    due=Due(is_recurring=False, date="2023-11-18", string="today"),
+                )
+            ],
+            {"due": {"date": "2023-11-18"}},
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+                "due": "2023-11-18",
+            },
+        ),
+        (
+            [],
+            {"due_datetime": "2023-11-18T06:30:00"},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    is_completed=False,
+                    due=Due(
+                        date="2023-11-18",
+                        is_recurring=False,
+                        datetime="2023-11-18T12:30:00.000000Z",
+                        string="today",
+                    ),
+                )
+            ],
+            {
+                "due": {"date": "2023-11-18", "datetime": "2023-11-18T06:30:00-06:00"},
+            },
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+                "due": "2023-11-18T06:30:00-06:00",
+            },
+        ),
+        (
+            [],
+            {"description": "6-pack"},
+            [
+                make_api_task(
+                    id="task-id-1",
+                    content="Soda",
+                    description="6-pack",
+                    is_completed=False,
+                )
+            ],
+            {"description": "6-pack"},
+            {
+                "uid": "task-id-1",
+                "summary": "Soda",
+                "status": "needs_action",
+                "description": "6-pack",
+            },
+        ),
+    ],
+    ids=["summary", "due_date", "due_datetime", "description"],
+)
 async def test_add_todo_list_item(
     hass: HomeAssistant,
     setup_integration: None,
     api: AsyncMock,
+    item_data: dict[str, Any],
+    tasks_after_update: list[Task],
+    add_kwargs: dict[str, Any],
+    expected_item: dict[str, Any],
 ) -> None:
     """Test for adding a To-do Item."""
 
@@ -79,27 +159,34 @@ async def test_add_todo_list_item(
 
     api.add_task = AsyncMock()
     # Fake API response when state is refreshed after create
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=False)
-    ]
+    api.get_tasks.return_value = tasks_after_update
 
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "Soda"},
+        {"item": "Soda", **item_data},
         target={"entity_id": "todo.name"},
         blocking=True,
     )
 
     args = api.add_task.call_args
     assert args
-    assert args.kwargs.get("content") == "Soda"
-    assert args.kwargs.get("project_id") == PROJECT_ID
+    assert args.kwargs == {"project_id": PROJECT_ID, **add_kwargs}
 
     # Verify state is refreshed
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "1"
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        "get_items",
+        {},
+        target={"entity_id": "todo.name"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"todo.name": {"items": [expected_item]}}
 
 
 @pytest.mark.parametrize(
