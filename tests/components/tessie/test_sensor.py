@@ -1,5 +1,4 @@
 """Tessie sensor platform tests."""
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -21,10 +20,7 @@ async def test_sensors(
         text=TEST_VEHICLES,
     )
 
-    await setup_platform(
-        hass,
-        [SENSOR_DOMAIN],
-    )
+    await setup_platform(hass)
 
     assert hass.states.get("sensor.homeassistant_battery_level").state == str(
         STATES["charge_state"]["battery_level"]
