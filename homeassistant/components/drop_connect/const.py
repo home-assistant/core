@@ -1,4 +1,4 @@
-"""Constants for the DROP integration."""
+"""Constants for the drop_connect integration."""
 
 # Keys for values used in the config_entry data dictionary
 CONF_COMMAND_TOPIC = "drop_command_topic"
@@ -21,9 +21,9 @@ DEV_RO_FILTER = "ro"
 DEV_SALT_SENSOR = "salt"
 DEV_SOFTENER = "soft"
 
-DISCOVERY_TOPIC = "drop/discovery/#"
+DISCOVERY_TOPIC = "drop_connect/discovery/#"
 
-DOMAIN = "drop"
+DOMAIN = "drop_connect"
 
 KEY_STATUS = "stat"
 

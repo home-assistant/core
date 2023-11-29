@@ -1,5 +1,5 @@
 """Test DROP coordinator."""
-from homeassistant.components.drop.const import DOMAIN
+from homeassistant.components.drop_connect.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

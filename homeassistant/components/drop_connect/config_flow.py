@@ -1,4 +1,4 @@
-"""Config flow for DROP."""
+"""Config flow for drop_connect integration."""
 from __future__ import annotations
 
 import logging
@@ -109,8 +109,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Define the data and command MQTT topics that will be used when this device is initialized.
-        self.__data_topic = f"drop/{self.__hub_id}/data/{self.__device_id}/#"
-        self.__command_topic = f"drop/{self.__hub_id}/cmd/{self.__device_id}"
+        self.__data_topic = f"drop_connect/{self.__hub_id}/data/{self.__device_id}/#"
+        self.__command_topic = f"drop_connect/{self.__hub_id}/cmd/{self.__device_id}"
 
         # Expose the device name to the 'Discovered' card
         self.context.update({"title_placeholders": {"name": self.__name}})

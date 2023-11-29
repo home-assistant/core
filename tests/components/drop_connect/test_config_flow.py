@@ -10,15 +10,17 @@ from tests.typing import MqttMockHAClient
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
-        topic="drop/discovery/DROP-1_C0FFEE/255",
+        topic="drop_connect/discovery/DROP-1_C0FFEE/255",
         payload=('{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}'),
         qos=0,
         retain=False,
-        subscribed_topic="drop/discovery/#",
+        subscribed_topic="drop_connect/discovery/#",
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "form"
@@ -31,8 +33,8 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result is not None
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "drop_command_topic": "drop/DROP-1_C0FFEE/cmd/255",
-        "drop_data_topic": "drop/DROP-1_C0FFEE/data/255/#",
+        "drop_command_topic": "drop_connect/DROP-1_C0FFEE/cmd/255",
+        "drop_data_topic": "drop_connect/DROP-1_C0FFEE/data/255/#",
         "device_desc": "Hub",
         "device_id": "255",
         "name": "Hub DROP-1_C0FFEE",
@@ -45,15 +47,17 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
 async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
-        topic="drop/discovery/DROP-1_C0FFEE/255",
+        topic="drop_connect/discovery/DROP-1_C0FFEE/255",
         payload=('{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}'),
         qos=0,
         retain=False,
-        subscribed_topic="drop/discovery/#",
+        subscribed_topic="drop_connect/discovery/#",
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "form"
@@ -68,7 +72,9 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
 
     # Attempting configuration of the same object should abort
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "abort"
@@ -80,15 +86,17 @@ async def test_mqtt_setup_incomplete_payload(
 ) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
-        topic="drop/discovery/DROP-1_C0FFEE/255",
+        topic="drop_connect/discovery/DROP-1_C0FFEE/255",
         payload=('{"devDesc":"Hub"}'),
         qos=0,
         retain=False,
-        subscribed_topic="drop/discovery/#",
+        subscribed_topic="drop_connect/discovery/#",
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "abort"
@@ -100,15 +108,17 @@ async def test_mqtt_setup_bad_json(
 ) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
-        topic="drop/discovery/DROP-1_C0FFEE/255",
+        topic="drop_connect/discovery/DROP-1_C0FFEE/255",
         payload=("{BAD JSON}"),
         qos=0,
         retain=False,
-        subscribed_topic="drop/discovery/#",
+        subscribed_topic="drop_connect/discovery/#",
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "abort"
@@ -120,15 +130,17 @@ async def test_mqtt_setup_bad_topic(
 ) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
-        topic="drop/discovery/FOO",
+        topic="drop_connect/discovery/FOO",
         payload=('{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}'),
         qos=0,
         retain=False,
-        subscribed_topic="drop/discovery/#",
+        subscribed_topic="drop_connect/discovery/#",
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "abort"
@@ -140,15 +152,17 @@ async def test_mqtt_setup_no_payload(
 ) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
-        topic="drop/discovery/DROP-1_C0FFEE/255",
+        topic="drop_connect/discovery/DROP-1_C0FFEE/255",
         payload=(""),
         qos=0,
         retain=False,
-        subscribed_topic="drop/discovery/#",
+        subscribed_topic="drop_connect/discovery/#",
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        "drop_connect",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
     )
     assert result is not None
     assert result["type"] == "abort"
@@ -158,7 +172,7 @@ async def test_mqtt_setup_no_payload(
 async def test_user_setup(hass: HomeAssistant) -> None:
     """Test user setup."""
     result = await hass.config_entries.flow.async_init(
-        "drop", context={"source": config_entries.SOURCE_USER}
+        "drop_connect", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_supported"

@@ -4,8 +4,8 @@ To update, run python3 -m script.hassfest
 """
 
 MQTT = {
-    "drop": [
-        "drop/discovery/#",
+    "drop_connect": [
+        "drop_connect/discovery/#",
     ],
     "dsmr_reader": [
         "dsmr/#",

@@ -1,4 +1,4 @@
-"""The DROP integration."""
+"""The drop_connect integration."""
 from __future__ import annotations
 
 import logging

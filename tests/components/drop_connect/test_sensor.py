@@ -1,5 +1,5 @@
 """Test DROP sensor entities."""
-from homeassistant.components.drop.const import DOMAIN
+from homeassistant.components.drop_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

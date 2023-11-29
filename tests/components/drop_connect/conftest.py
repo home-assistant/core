@@ -1,7 +1,7 @@
 """Define fixtures available for all tests."""
 import pytest
 
-from homeassistant.components.drop.const import (
+from homeassistant.components.drop_connect.const import (
     CONF_COMMAND_TOPIC,
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
@@ -23,8 +23,8 @@ def config_entry_hub(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/255/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/255/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/255/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/255/#",
             CONF_DEVICE_DESC: "Hub",
             CONF_DEVICE_ID: 255,
             CONF_DEVICE_NAME: "Hub DROP-1_C0FFEE",
@@ -42,8 +42,8 @@ def config_entry_salt(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/8/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/8/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/8/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/8/#",
             CONF_DEVICE_DESC: "Salt Sensor",
             CONF_DEVICE_ID: 8,
             CONF_DEVICE_NAME: "Salt Sensor",
@@ -61,8 +61,8 @@ def config_entry_leak(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/20/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/20/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/20/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/20/#",
             CONF_DEVICE_DESC: "Leak Detector",
             CONF_DEVICE_ID: 20,
             CONF_DEVICE_NAME: "Leak Detector",
@@ -80,8 +80,8 @@ def config_entry_softener(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/0/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/0/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/0/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/0/#",
             CONF_DEVICE_DESC: "Softener",
             CONF_DEVICE_ID: 0,
             CONF_DEVICE_NAME: "Softener",
@@ -99,8 +99,8 @@ def config_entry_filter(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/4/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/4/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/4/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/4/#",
             CONF_DEVICE_DESC: "Filter",
             CONF_DEVICE_ID: 4,
             CONF_DEVICE_NAME: "Filter",
@@ -118,8 +118,8 @@ def config_entry_protection_valve(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/78/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/78/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/78/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/78/#",
             CONF_DEVICE_DESC: "Protection Valve",
             CONF_DEVICE_ID: 78,
             CONF_DEVICE_NAME: "Protection Valve",
@@ -137,8 +137,8 @@ def config_entry_pump_controller(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/83/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/83/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/83/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/83/#",
             CONF_DEVICE_DESC: "Pump Controller",
             CONF_DEVICE_ID: 83,
             CONF_DEVICE_NAME: "Pump Controller",
@@ -156,8 +156,8 @@ def config_entry_ro_filter(hass: HomeAssistant):
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_COMMAND_TOPIC: "drop/DROP-1_C0FFEE/95/cmd",
-            CONF_DATA_TOPIC: "drop/DROP-1_C0FFEE/95/#",
+            CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/95/cmd",
+            CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/95/#",
             CONF_DEVICE_DESC: "RO Filter",
             CONF_DEVICE_ID: 95,
             CONF_DEVICE_NAME: "RO Filter",

@@ -1226,7 +1226,7 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "drop": {
+    "drop_connect": {
       "name": "DROP",
       "integration_type": "hub",
       "config_flow": true,
