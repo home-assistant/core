@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
-from .satellite.devices import SatelliteDevice
 
 if TYPE_CHECKING:
     from .models import DomainDataItem

@@ -10,12 +10,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .data import WyomingService
+from .devices import SatelliteDevices
 from .models import DomainDataItem
-from .satellite import SatelliteDevices, WyomingSatellite
+from .satellite import WyomingSatellite
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SWITCH]
 
 __all__ = [
     "DOMAIN",

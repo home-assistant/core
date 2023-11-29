@@ -8,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 
-from ..const import DOMAIN
-from ..data import WyomingService
+from .const import DOMAIN
+from .data import WyomingService
 
 
 @dataclass
@@ -19,6 +19,7 @@ class SatelliteDevice:
     satellite_id: str
     device_id: str
     is_active: bool = False
+    is_enabled: bool = True
     update_listeners: list[Callable[[SatelliteDevice], None]] = field(
         default_factory=list
     )
@@ -27,6 +28,13 @@ class SatelliteDevice:
     def set_is_active(self, active: bool) -> None:
         """Set active state."""
         self.is_active = active
+        for listener in self.update_listeners:
+            listener(self)
+
+    @callback
+    def set_is_enabled(self, enabled: bool) -> None:
+        """Set enabled state."""
+        self.is_enabled = enabled
         for listener in self.update_listeners:
             listener(self)
 

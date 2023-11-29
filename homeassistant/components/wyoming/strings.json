@@ -37,6 +37,11 @@
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
       }
+    },
+    "switch": {
+      "satellite_enabled": {
+        "name": "Satellite enabled"
+      }
     }
   }
 }

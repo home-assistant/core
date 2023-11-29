@@ -19,8 +19,8 @@ from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
 from homeassistant.core import Context, HomeAssistant
 
-from ..const import DOMAIN
-from ..data import WyomingService
+from .const import DOMAIN
+from .data import WyomingService
 from .devices import SatelliteDevice
 
 _LOGGER = logging.getLogger()
@@ -40,13 +40,28 @@ class WyomingSatellite:
         self.hass = hass
         self.service = service
         self.device = device
-        self.is_running = True
+        self.is_enabled = True
+        self._is_running = True
 
         self._client: AsyncTcpClient | None = None
         self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
         self._is_pipeline_running = False
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
+        self._device_updated_event = asyncio.Event()
+
+    @property
+    def is_running(self) -> bool:
+        """Return True if satellite is running."""
+        return self._is_running
+
+    @is_running.setter
+    def is_running(self, value: bool) -> None:
+        """Set whether satellite is running or not."""
+        self._is_running = value
+
+        # Unblock waiting for enabled
+        self._device_updated_event.set()
 
     async def run(self) -> None:
         """Run and maintain a connection to satellite."""
@@ -56,39 +71,58 @@ class WyomingSatellite:
             DOMAIN,
             self.device.satellite_id,
         )
-
+        self.is_enabled = self.device.is_enabled
         remove_listener = self.device.async_listen_update(self._device_updated)
 
-        while self.is_running:
-            try:
-                await self._run_once()
-            except asyncio.CancelledError:
-                raise
-            except Exception:  # pylint: disable=broad-exception-caught
-                _LOGGER.exception(
-                    "Unexpected error running satellite. Restarting in %s second(s)",
-                    _RECONNECT_SECONDS,
-                )
-                await asyncio.sleep(_RESTART_SECONDS)
-            finally:
-                # Ensure sensor is off
-                if self.device.is_active:
-                    self.device.set_is_active(False)
+        try:
+            while self.is_running:
+                try:
+                    if not self.is_enabled:
+                        await self._device_updated_event.wait()
+                        if not self.is_running:
+                            # Satellite was stopped while waiting to be enabled
+                            break
 
-                remove_listener()
+                    await self._run_once()
+                except asyncio.CancelledError:
+                    raise
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _LOGGER.exception(
+                        "Unexpected error running satellite. Restarting in %s second(s)",
+                        _RECONNECT_SECONDS,
+                    )
+                    await asyncio.sleep(_RESTART_SECONDS)
+        finally:
+            # Ensure sensor is off
+            if self.device.is_active:
+                self.device.set_is_active(False)
+
+            remove_listener()
 
         _LOGGER.debug("Satellite task stopped")
 
     def _device_updated(self, device: SatelliteDevice) -> None:
+        """Reacts to updated device settings."""
         pipeline_id = pipeline_select.get_chosen_pipeline(
             self.hass,
             DOMAIN,
             self.device.satellite_id,
         )
 
+        stop_pipeline = False
         if self._pipeline_id != pipeline_id:
             # Pipeline has changed
             self._pipeline_id = pipeline_id
+            stop_pipeline = True
+
+        if self.is_enabled and (not self.device.is_enabled):
+            stop_pipeline = True
+
+        self.is_enabled = self.device.is_enabled
+        self._device_updated_event.set()
+        self._device_updated_event.clear()
+
+        if stop_pipeline:
             self._audio_queue.put_nowait(None)
 
     async def _run_once(self) -> None:
@@ -141,7 +175,7 @@ class WyomingSatellite:
         end_stage = _convert_stage(run_pipeline.end_stage)
 
         # Each loop is a pipeline run
-        while True:
+        while self.is_running and self.is_enabled:
             # Use select to get pipeline each time in case it's changed
             pipeline = assist_pipeline.async_get_pipeline(self.hass, self._pipeline_id)
             assert pipeline is not None
@@ -197,7 +231,6 @@ class WyomingSatellite:
     def _event_callback(self, event: assist_pipeline.PipelineEvent) -> None:
         """Translate pipeline events into Wyoming events."""
         assert self._client is not None
-        _LOGGER.debug(event)
 
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
             self._is_pipeline_running = False
@@ -260,8 +293,8 @@ class WyomingSatellite:
                 )
         elif event.type == assist_pipeline.PipelineEventType.TTS_END:
             # TTS stream
-            if event.data:
-                media_id = event.data["tts_output"]["media_id"]
+            if event.data and (tts_output := event.data["tts_output"]):
+                media_id = tts_output["media_id"]
                 self.hass.add_job(self._stream_tts(media_id))
 
     async def _connect(self) -> None:

@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 from .data import WyomingService
-from .satellite import SatelliteDevices
+from .devices import SatelliteDevices
 
 
 @dataclass
