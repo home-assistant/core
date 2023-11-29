@@ -46,9 +46,6 @@ class ViCareEntity(Entity):
         custom_device_name: str | None,
     ) -> DeviceInfo:
         component_type = "Heating Circuit"
-        component_name = (
-            component_type if custom_device_name is None else custom_device_name
-        )
         return DeviceInfo(
             via_device=(DOMAIN, device_config.getConfig().serial),
             identifiers={
@@ -57,7 +54,7 @@ class ViCareEntity(Entity):
                     f"{device_config.getConfig().serial}-{component_type.lower().replace(' ', '_')}-{device.id}",
                 )
             },
-            name=component_name,
+            name=component_type if custom_device_name is None else custom_device_name,
             model=component_type,
             manufacturer=MANUFACTURER,
             configuration_url=DEVELOPER_PORTAL,
