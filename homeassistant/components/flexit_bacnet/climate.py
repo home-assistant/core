@@ -62,9 +62,7 @@ class FlexitClimateEntity(ClimateEntity):
     ]
 
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.AUX_HEAT
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
 
     _attr_target_temperature_step = PRECISION_WHOLE
@@ -146,27 +144,5 @@ class FlexitClimateEntity(ClimateEntity):
                 await self._device.set_ventilation_mode(VENTILATION_MODE_STOP)
             else:
                 await self._device.set_ventilation_mode(VENTILATION_MODE_HOME)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
-
-    @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater.
-
-        Requires ClimateEntityFeature.AUX_HEAT.
-        """
-        return self._device.electric_heater
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        try:
-            await self._device.enable_electric_heater()
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        try:
-            await self._device.disable_electric_heater()
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
