@@ -63,7 +63,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the ViCare climate platform."""
+    """Set up the ViCare water heater platform."""
     entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
@@ -74,7 +74,7 @@ async def async_setup_entry(
             api,
             circuit,
             device_config,
-            "water",
+            "domestic_hot_water",
         )
         entities.append(entity)
 
