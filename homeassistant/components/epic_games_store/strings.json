@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "locale": "Locale"
+          "language": "Language"
         }
       }
     },

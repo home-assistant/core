@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_LOCALE, DOMAIN
-from .helper import format_game_data, get_country_from_locale
+from .const import CONF_LANGUAGE, DOMAIN
+from .helper import format_game_data, get_country_from_language
 
 SCAN_INTERVAL = timedelta(days=1)
 
@@ -35,9 +35,10 @@ class EGSCalendarUpdateCoordinator(
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
         self._api = EpicGamesStoreAPI(
-            entry.data[CONF_LOCALE], get_country_from_locale(entry.data[CONF_LOCALE])
+            entry.data[CONF_LANGUAGE],
+            get_country_from_language(entry.data[CONF_LANGUAGE]),
         )
-        self.locale = entry.data[CONF_LOCALE]
+        self.language = entry.data[CONF_LANGUAGE]
 
         super().__init__(
             hass,
@@ -74,7 +75,7 @@ class EGSCalendarUpdateCoordinator(
             CalendarType.FREE: [],
         }
         for discount_game in discount_games:
-            game = format_game_data(discount_game, self.locale)
+            game = format_game_data(discount_game, self.language)
 
             if game["discount_type"]:
                 return_data[game["discount_type"]].append(game)

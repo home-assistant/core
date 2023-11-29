@@ -2,9 +2,9 @@
 
 DOMAIN = "epic_games_store"
 
-CONF_LOCALE = "locale"
+CONF_LANGUAGE = "language"
 
-CONF_SUPPORTED_LOCALES = (
+CONF_SUPPORTED_LANGUAGES = [
     "ar",
     "de",
     "en-US",
@@ -21,4 +21,4 @@ CONF_SUPPORTED_LOCALES = (
     "tr",
     "zh-CN",
     "zh-Hant",
-)
+]

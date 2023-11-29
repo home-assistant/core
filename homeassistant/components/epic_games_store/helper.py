@@ -5,17 +5,17 @@ from typing import Any
 from homeassistant.util import dt as dt_util
 
 
-def get_country_from_locale(locale: str) -> str:
-    """Get the country code from locale."""
+def get_country_from_language(language: str) -> str:
+    """Get the country code from language."""
     excepts = {"ja": "JP", "ko": "KR", "zh-Hant": "CN"}
     return (
-        excepts[locale]
-        if excepts.get(locale)
-        else (locale[3:] if ("-" in locale) else locale)
+        excepts[language]
+        if excepts.get(language)
+        else (language[3:] if ("-" in language) else language)
     ).upper()
 
 
-def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, Any]:
+def format_game_data(raw_game_data: dict[str, Any], language: str) -> dict[str, Any]:
     """Format raw API game data for Home Assistant users."""
     img_portrait = None
     img_landscape = None
@@ -48,7 +48,7 @@ def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, An
             "originalPrice"
         ].replace("\xa0", " "),
         "publisher": raw_game_data["seller"]["name"],
-        "url": get_game_url(raw_game_data, locale),
+        "url": get_game_url(raw_game_data, language),
         "img_portrait": img_portrait,
         "img_landscape": img_landscape,
         "discount_type": ("free" if is_free_game(raw_game_data) else "discount")
@@ -63,7 +63,7 @@ def format_game_data(raw_game_data: dict[str, Any], locale: str) -> dict[str, An
     }
 
 
-def get_game_url(raw_game_data: dict[str, Any], locale: str) -> str:
+def get_game_url(raw_game_data: dict[str, Any], language: str) -> str:
     """Format raw API game data for Home Assistant users."""
     url_bundle_or_product = "bundles" if raw_game_data["offerType"] == "BUNDLE" else "p"
     url_slug: str | None = None
@@ -76,7 +76,7 @@ def get_game_url(raw_game_data: dict[str, Any], locale: str) -> str:
     if not url_slug:
         url_slug = raw_game_data["urlSlug"]
 
-    return f"https://store.epicgames.com/{locale}/{url_bundle_or_product}/{url_slug}"
+    return f"https://store.epicgames.com/{language}/{url_bundle_or_product}/{url_slug}"
 
 
 def is_free_game(game: dict[str, Any]) -> bool:

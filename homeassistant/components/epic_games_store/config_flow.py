@@ -11,25 +11,28 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 
-from .const import CONF_LOCALE, CONF_SUPPORTED_LOCALES, DOMAIN
-from .helper import get_country_from_locale
+from .const import CONF_LANGUAGE, CONF_SUPPORTED_LANGUAGES, DOMAIN
+from .helper import get_country_from_language
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_LOCALE): vol.In(CONF_SUPPORTED_LOCALES),
+        vol.Required(CONF_LANGUAGE): LanguageSelector(
+            LanguageSelectorConfig(languages=CONF_SUPPORTED_LANGUAGES)
+        ),
     }
 )
 
 
-def get_default_locale(hass: HomeAssistant) -> str:
-    """Get default locale code based on Home Assistant config."""
-    locale_code = f"{hass.config.language}-{hass.config.country}"
-    if locale_code in CONF_SUPPORTED_LOCALES:
-        return locale_code
-    if hass.config.language in CONF_SUPPORTED_LOCALES:
+def get_default_language(hass: HomeAssistant) -> str:
+    """Get default language code based on Home Assistant config."""
+    language_code = f"{hass.config.language}-{hass.config.country}"
+    if language_code in CONF_SUPPORTED_LANGUAGES:
+        return language_code
+    if hass.config.language in CONF_SUPPORTED_LANGUAGES:
         return hass.config.language
     return "en-US"
 
@@ -37,7 +40,7 @@ def get_default_locale(hass: HomeAssistant) -> str:
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     api = EpicGamesStoreAPI(
-        user_input[CONF_LOCALE], get_country_from_locale(user_input[CONF_LOCALE])
+        user_input[CONF_LANGUAGE], get_country_from_language(user_input[CONF_LANGUAGE])
     )
     data = await hass.async_add_executor_job(api.get_free_games)
 
@@ -61,12 +64,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         data_schema = self.add_suggested_values_to_schema(
             STEP_USER_DATA_SCHEMA,
-            user_input or {CONF_LOCALE: get_default_locale(self.hass)},
+            user_input or {CONF_LANGUAGE: get_default_language(self.hass)},
         )
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=data_schema)
 
-        await self.async_set_unique_id(user_input[CONF_LOCALE])
+        await self.async_set_unique_id(user_input[CONF_LANGUAGE])
         self._abort_if_unique_id_configured()
 
         errors = {}
@@ -80,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title=f"Epic Games Store {user_input[CONF_LOCALE]}", data=user_input
+                title=f"Epic Games Store {user_input[CONF_LANGUAGE]}", data=user_input
             )
 
         return self.async_show_form(
