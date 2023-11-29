@@ -27,7 +27,7 @@ def mock_serial_number():
     """Mock serial number of the device."""
     with patch(
         "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.serial_number",
-        property(lambda _: "0000-0001"),
+        return_value="0000-0001",
     ):
         yield
 
