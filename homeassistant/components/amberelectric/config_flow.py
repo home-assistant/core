@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import amberelectric
 from amberelectric.api import amber_api
-from amberelectric.model.site import Site
+from amberelectric.model.site import Site, SiteStatus
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +13,15 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
 
 API_URL = "https://app.amber.com.au/developers"
+
+
+def generate_site_selector_name(site: Site) -> str:
+    """Generate the name to show in the site drop down in the configuration flow."""
+    if site.status == SiteStatus.CLOSED:
+        return site.nmi + " (Closed: " + site.closed_on.isoformat() + ")"
+    if site.status == SiteStatus.PENDING:
+        return site.nmi + " (Pending)"
+    return site.nmi
 
 
 class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,7 +98,11 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api_token = self._api_token
         if user_input is not None:
             site_nmi = user_input[CONF_SITE_NMI]
-            sites = [site for site in self._sites if site.nmi == site_nmi]
+            sites = [
+                site
+                for site in self._sites
+                if generate_site_selector_name(site) == site_nmi
+            ]
             site = sites[0]
             site_id = site.id
             name = user_input.get(CONF_SITE_NAME, site_id)
@@ -114,7 +127,9 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_SITE_NMI, default=user_input[CONF_SITE_NMI]
-                    ): vol.In([site.nmi for site in self._sites]),
+                    ): vol.In(
+                        [generate_site_selector_name(site) for site in self._sites]
+                    ),
                     vol.Optional(
                         CONF_SITE_NAME, default=user_input[CONF_SITE_NAME]
                     ): str,
