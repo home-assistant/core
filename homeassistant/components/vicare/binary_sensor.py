@@ -113,7 +113,9 @@ def _build_entities(
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
 
-    entities: list[ViCareBinarySensor] = _build_entities_for_device(device, device_config)
+    entities: list[ViCareBinarySensor] = _build_entities_for_device(
+        device, device_config
+    )
     entities.extend(
         _build_entities_for_component(
             get_circuits(device), device_config, CIRCUIT_SENSORS
