@@ -46,6 +46,8 @@ async def async_setup_entry(
 class FlexitClimateEntity(ClimateEntity):
     """Flexit air handling unit."""
 
+    _attr_name = None
+
     _attr_has_entity_name = True
 
     _attr_hvac_modes = [
@@ -85,8 +87,6 @@ class FlexitClimateEntity(ClimateEntity):
     async def async_update(self) -> None:
         """Refresh unit state."""
         await self._device.update()
-
-    _attr_name = None
 
     @property
     def current_temperature(self) -> float:
