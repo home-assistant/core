@@ -280,7 +280,7 @@ async def test_add_item_failure(
             {**RESULT_ITEM, "due": "2023-11-18"},
         ),
         (
-            {"due_date_time": "2023-11-18T08:30:00-06:00"},
+            {"due_datetime": "2023-11-18T08:30:00-06:00"},
             ["SUMMARY:Cheese", "DUE:20231118T143000Z"],
             "1",
             {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
@@ -298,7 +298,7 @@ async def test_add_item_failure(
         "status_completed",
         "rename_status",
         "due_date",
-        "due_date_time",
+        "due_datetime",
         "description",
     ],
 )
