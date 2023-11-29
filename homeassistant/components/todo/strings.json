@@ -28,7 +28,7 @@
           "name": "Due date",
           "description": "The date the to-do item is expected to be completed."
         },
-        "due_date_time": {
+        "due_datetime": {
           "name": "Due date time",
           "description": "The date and time the to-do item is expected to be completed."
         },
@@ -58,7 +58,7 @@
           "name": "Due date",
           "description": "The date the to-do item is expected to be completed."
         },
-        "due_date_time": {
+        "due_datetime": {
           "name": "Due date time",
           "description": "The date and time the to-do item is expected to be completed."
         },
