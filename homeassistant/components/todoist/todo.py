@@ -35,8 +35,8 @@ async def async_setup_entry(
 def _task_api_data(item: TodoItem) -> dict[str, Any]:
     """Convert a TodoItem to the set of add or update arguments."""
     item_data: dict[str, Any] = {}
-    if item.summary:
-        item_data["content"] = item.summary
+    if summary := item.summary:
+        item_data["content"] = summary
     if due := item.due:
         if isinstance(due, datetime.datetime):
             item_data["due"] = {
@@ -45,8 +45,8 @@ def _task_api_data(item: TodoItem) -> dict[str, Any]:
             }
         else:
             item_data["due"] = {"date": due.isoformat()}
-    if item.description:
-        item_data["description"] = item.description
+    if description := item.description:
+        item_data["description"] = description
     return item_data
 
 
