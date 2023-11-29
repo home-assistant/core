@@ -251,7 +251,7 @@ class FanEntity(ToggleEntity):
 
     @final
     async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
-        """Validate and set new preset mode and set it."""
+        """Validate and set new preset mode."""
         self._valid_preset_mode_or_raise(preset_mode)
         await self.async_set_preset_mode(preset_mode)
 
