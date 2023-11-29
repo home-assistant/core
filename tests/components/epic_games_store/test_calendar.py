@@ -4,9 +4,15 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.calendar import (
+    DOMAIN as CALENDAR_DOMAIN,
+    EVENT_END_DATETIME,
+    EVENT_START_DATETIME,
+    SERVICE_GET_EVENTS,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .common import setup_platform
 
@@ -111,3 +117,50 @@ async def test_attribute_not_found(
     cal_attrs = dict(state.attributes)
     cal_games = cal_attrs.pop("games")
     assert len(cal_games) == 3
+
+
+async def test_get_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_multiple: Mock,
+) -> None:
+    """Test setup component with calendars."""
+    freezer.move_to("2022-10-30T00:00:00.000Z")
+
+    await setup_platform(hass, CALENDAR_DOMAIN)
+
+    # Initial state
+    state = hass.states.get("calendar.epic_games_store_discount_games")
+    cal_attrs = dict(state.attributes)
+    cal_games = cal_attrs.pop("games")
+    assert len(cal_games) == 4
+
+    # 1 week in range of data
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: ["calendar.epic_games_store_discount_games"],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2022-10-20T00:00:00.000Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2022-10-27T00:00:00.000Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert len(result["calendar.epic_games_store_discount_games"]["events"]) == 3
+
+    # 1 week out of range of data
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: ["calendar.epic_games_store_discount_games"],
+            EVENT_START_DATETIME: dt_util.parse_datetime("1970-01-01T00:00:00.000Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("1970-01-08T00:00:00.000Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert len(result["calendar.epic_games_store_discount_games"]["events"]) == 0

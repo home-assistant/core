@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import namedtuple
 from datetime import datetime
 from typing import Any
 
@@ -14,6 +15,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CalendarType, EGSCalendarUpdateCoordinator
+
+DateRange = namedtuple("DateRange", ["start", "end"])
 
 
 async def async_setup_entry(
@@ -72,7 +75,14 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events: list[dict[str, Any]] = self.coordinator.data[self._cal_type]
+        assert start_date < end_date
+        events = filter(
+            lambda game: _are_date_range_overlapping(
+                DateRange(start=game["discount_start_at"], end=game["discount_end_at"]),
+                DateRange(start=start_date, end=end_date),
+            ),
+            self.coordinator.data[self._cal_type],
+        )
         return [_get_calendar_event(event) for event in events]
 
     async def async_update(self) -> None:
@@ -90,3 +100,12 @@ def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
         end=event["discount_end_at"],
         description=f"{event['description']}\n\n{event['url']}",
     )
+
+
+def _are_date_range_overlapping(range1: DateRange, range2: DateRange) -> bool:
+    """Return a CalendarEvent from an API event."""
+    latest_start = max(range1.start, range2.start)
+    earliest_end = min(range1.end, range2.end)
+    delta = (earliest_end - latest_start).days + 1
+    overlap = max(0, delta)
+    return overlap > 0
