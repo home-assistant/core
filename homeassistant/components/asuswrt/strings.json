@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "AsusWRT",
         "description": "Set required parameter to connect to your router",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -11,10 +10,12 @@
           "ssh_key": "Path to your SSH key file (instead of password)",
           "protocol": "Communication protocol to use",
           "port": "Port (leave empty for protocol default)"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your ASUSWRT router."
         }
       },
       "legacy": {
-        "title": "AsusWRT",
         "description": "Set required parameters to connect to your router",
         "data": {
           "mode": "Router operating mode"
@@ -37,7 +38,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "AsusWRT Options",
         "data": {
           "consider_home": "Seconds to wait before considering a device away",
           "track_unknown": "Track unknown / unnamed devices",

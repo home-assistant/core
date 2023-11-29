@@ -164,7 +164,7 @@ aio-geojson-usgs-earthquakes==0.2
 aio-georss-gdacs==0.8
 
 # homeassistant.components.airq
-aioairq==0.2.4
+aioairq==0.3.1
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.3.6
@@ -353,7 +353,7 @@ aiounifi==66
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.2
+aiovodafone==0.4.3
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -2114,7 +2114,7 @@ zeroconf==0.127.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.106
+zha-quirks==0.0.107
 
 # homeassistant.components.zha
 zigpy-deconz==0.21.1
