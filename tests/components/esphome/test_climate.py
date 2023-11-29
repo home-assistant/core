@@ -20,6 +20,8 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
+    ATTR_MAX_HUMIDITY,
+    ATTR_MIN_HUMIDITY,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -398,8 +400,8 @@ async def test_climate_entity_with_humidity(
             visual_max_temperature=30.0,
             supports_current_humidity=True,
             supports_target_humidity=True,
-            visual_min_humidity=10.0,
-            visual_max_humidity=30.0,
+            visual_min_humidity=10.1,
+            visual_max_humidity=29.7,
         )
     ]
     states = [
@@ -428,6 +430,8 @@ async def test_climate_entity_with_humidity(
     attributes = state.attributes
     assert attributes[ATTR_CURRENT_HUMIDITY] == 20
     assert attributes[ATTR_HUMIDITY] == 26
+    assert attributes[ATTR_MAX_HUMIDITY] == 30
+    assert attributes[ATTR_MIN_HUMIDITY] == 10
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
