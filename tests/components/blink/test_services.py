@@ -91,17 +91,19 @@ async def test_video_service_calls(
     assert mock_blink_api.refresh.call_count == 1
 
     caplog.clear()
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_VIDEO,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILENAME: FILENAME,
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_VIDEO,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILENAME: FILENAME,
+            },
+            blocking=True,
+        )
     assert "no access to path!" in caplog.text
+    assert "no access to path!" in str(execinfo)
 
     hass.config.is_allowed_path = Mock(return_value=True)
     caplog.clear()
@@ -135,17 +137,19 @@ async def test_video_service_calls(
     mock_blink_api.cameras[CAMERA_NAME].video_to_file = AsyncMock(side_effect=OSError)
     caplog.clear()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_VIDEO,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILENAME: FILENAME,
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_VIDEO,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILENAME: FILENAME,
+            },
+            blocking=True,
+        )
     assert "Can't write image" in caplog.text
+    assert "Can't write image" in str(execinfo)
 
     hass.config.is_allowed_path = Mock(return_value=False)
 
@@ -172,17 +176,19 @@ async def test_picture_service_calls(
     assert mock_blink_api.refresh.call_count == 1
 
     caplog.clear()
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_RECENT_CLIPS,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILE_PATH: FILENAME,
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_RECENT_CLIPS,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILE_PATH: FILENAME,
+            },
+            blocking=True,
+        )
     assert "no access to path!" in caplog.text
+    assert "no access to path!" in str(execinfo)
 
     hass.config.is_allowed_path = Mock(return_value=True)
     mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
@@ -203,18 +209,19 @@ async def test_picture_service_calls(
         side_effect=OSError
     )
     caplog.clear()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_RECENT_CLIPS,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILE_PATH: FILENAME,
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_RECENT_CLIPS,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILE_PATH: FILENAME,
+            },
+            blocking=True,
+        )
     assert "Can't write recent clips to directory" in caplog.text
+    assert "Can't write recent clips to directory" in str(execinfo)
 
     with pytest.raises(HomeAssistantError) as execinfo:
         await hass.services.async_call(
