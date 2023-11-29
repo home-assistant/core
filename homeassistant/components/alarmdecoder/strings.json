@@ -16,7 +16,7 @@
           "device_path": "Device Path"
         },
         "data_description": {
-          "host": "The hostname or IP address of the machine connected to the AlarmDecoder device.",
+          "host": "The hostname or IP address of the AlarmDecoder device that is connected to your alarm panel.",
           "port": "The port on which AlarmDecoder is accessible (for example, 10000)"
         }
       }
