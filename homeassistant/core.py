@@ -18,6 +18,7 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
+from dataclasses import dataclass
 import datetime
 import enum
 import functools
@@ -303,6 +304,14 @@ class HassJob(Generic[_P, _R_co]):
         return f"<Job {self.name} {self.job_type} {self.target}>"
 
 
+@dataclass(frozen=True)
+class HassJobWithArgs:
+    """Container for a HassJob and arguments."""
+
+    job: HassJob[..., Coroutine[Any, Any, Any] | Any]
+    args: Iterable[Any]
+
+
 def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
@@ -374,6 +383,7 @@ class HomeAssistant:
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
+        self._shutdown_jobs: list[HassJobWithArgs] = []
 
     @property
     def is_running(self) -> bool:
@@ -770,6 +780,42 @@ class HomeAssistant:
             for task in pending:
                 _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
+    @overload
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE:
+        ...
+
+    @overload
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        ...
+
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on shutdown.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._shutdown_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
@@ -807,8 +853,14 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOPPING)
         try:
             async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
-                if shutdown_jobs := self.data.get("homeassistant_triggers"):
-                    asyncio.gather(*shutdown_jobs)
+                tasks: list[asyncio.Future[Any]] = []
+                for job in self._shutdown_jobs:
+                    task_or_none = self.async_run_hass_job(job.job, *job.args)
+                    if not task_or_none:
+                        continue
+                    tasks.append(task_or_none)
+                if tasks:
+                    asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for stopping stage to complete, the shutdown will"
