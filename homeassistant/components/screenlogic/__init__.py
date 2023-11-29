@@ -129,9 +129,12 @@ async def _async_migrate_entries(
                     new_key,
                 )
                 continue
-            assert device is not None and (
-                device != "pump" or (device == "pump" and source_index is not None)
-            )
+            if device == "pump" and source_index is None:
+                _LOGGER.debug(
+                    "Unable to parse 'source_index' from existing unique_id for pump entity '%s'",
+                    source_key,
+                )
+                continue
             new_unique_id = (
                 f"{source_mac}_{generate_unique_id(device, source_index, new_key)}"
             )
@@ -152,7 +155,6 @@ async def _async_migrate_entries(
             updates["new_unique_id"] = new_unique_id
 
         if (old_name := migrations.get("old_name")) is not None:
-            assert old_name
             new_name = migrations["new_name"]
             if (s_old_name := slugify(old_name)) in entry.entity_id:
                 new_entity_id = entry.entity_id.replace(s_old_name, slugify(new_name))

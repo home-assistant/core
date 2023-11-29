@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-import functools
 import logging
 from typing import Any
 
@@ -47,7 +46,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import subscription
@@ -82,7 +81,12 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -90,7 +94,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -228,16 +232,16 @@ TOPIC_KEYS = (
 def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
     if PRESET_NONE in config[CONF_PRESET_MODES_LIST]:
-        raise ValueError("preset_modes must not include preset mode 'none'")
+        raise vol.Invalid("preset_modes must not include preset mode 'none'")
     return config
 
 
 def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
     """Validate a target_humidity range configuration, throws otherwise."""
     if config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]:
-        raise ValueError("target_humidity_max must be > target_humidity_min")
+        raise vol.Invalid("target_humidity_max must be > target_humidity_min")
     if config[CONF_HUMIDITY_MAX] > 100:
-        raise ValueError("max_humidity must be <= 100")
+        raise vol.Invalid("max_humidity must be <= 100")
 
     return config
 
@@ -252,7 +256,7 @@ def valid_humidity_state_configuration(config: ConfigType) -> ConfigType:
         CONF_HUMIDITY_STATE_TOPIC in config
         and CONF_HUMIDITY_COMMAND_TOPIC not in config
     ):
-        raise ValueError(
+        raise vol.Invalid(
             f"{CONF_HUMIDITY_STATE_TOPIC} cannot be used without"
             f" {CONF_HUMIDITY_COMMAND_TOPIC}"
         )
@@ -394,22 +398,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT climate device through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    """Set up MQTT climate through YAML and through MQTT discovery."""
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttClimate,
+        climate.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, climate.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT climate devices."""
-    async_add_entities([MqttClimate(hass, config, config_entry, discovery_data)])
 
 
 class MqttTemperatureControlEntity(MqttEntity, ABC):
@@ -419,27 +417,15 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     climate and water_heater platforms.
     """
 
-    _attr_target_temperature_low: float | None
-    _attr_target_temperature_high: float | None
+    _attr_target_temperature_low: float | None = None
+    _attr_target_temperature_high: float | None = None
 
+    _feature_preset_mode: bool = False
     _optimistic: bool
     _topic: dict[str, Any]
 
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the temperature controlled device."""
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature_high = None
-        self._feature_preset_mode = False
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     def add_subscription(
         self,
@@ -478,21 +464,21 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
             return
         if payload == PAYLOAD_NONE:
             setattr(self, attr, None)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
             return
         try:
             setattr(self, attr, float(payload))
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(
-        self, topics: dict[str, dict[str, Any]]
-    ) -> None:  # noqa: C901
+    def prepare_subscribe_topics(  # noqa: C901
+        self,
+        topics: dict[str, dict[str, Any]],
+    ) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_temperature"})
         def handle_current_temperature_received(msg: ReceiveMessage) -> None:
             """Handle current temperature coming via MQTT."""
             self.handle_climate_attribute_received(
@@ -505,6 +491,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_target_temperature"})
         def handle_target_temperature_received(msg: ReceiveMessage) -> None:
             """Handle target temperature coming via MQTT."""
             self.handle_climate_attribute_received(
@@ -517,6 +504,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_target_temperature_low"})
         def handle_temperature_low_received(msg: ReceiveMessage) -> None:
             """Handle target temperature low coming via MQTT."""
             self.handle_climate_attribute_received(
@@ -529,6 +517,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_target_temperature_high"})
         def handle_temperature_high_received(msg: ReceiveMessage) -> None:
             """Handle target temperature high coming via MQTT."""
             self.handle_climate_attribute_received(
@@ -612,26 +601,13 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
+    _attr_fan_mode: str | None = None
+    _attr_hvac_mode: HVACMode | None = None
+    _attr_is_aux_heat: bool | None = None
+    _attr_swing_mode: str | None = None
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the climate device."""
-        self._attr_fan_mode = None
-        self._attr_hvac_action = None
-        self._attr_hvac_mode = None
-        self._attr_is_aux_heat = None
-        self._attr_swing_mode = None
-        MqttTemperatureControlEntity.__init__(
-            self, hass, config, config_entry, discovery_data
-        )
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -789,6 +765,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_hvac_action"})
         def handle_action_received(msg: ReceiveMessage) -> None:
             """Handle receiving action via MQTT."""
             payload = self.render_template(msg, CONF_ACTION_TEMPLATE)
@@ -808,12 +785,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                     payload,
                 )
                 return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_current_humidity"})
         def handle_current_humidity_received(msg: ReceiveMessage) -> None:
             """Handle current humidity coming via MQTT."""
             self.handle_climate_attribute_received(
@@ -825,6 +802,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         )
 
         @callback
+        @write_state_on_attr_change(self, {"_attr_target_humidity"})
         @log_messages(self.hass, self.entity_id)
         def handle_target_humidity_received(msg: ReceiveMessage) -> None:
             """Handle target humidity coming via MQTT."""
@@ -848,10 +826,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
             else:
                 setattr(self, attr, payload)
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_hvac_mode"})
         def handle_current_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving mode via MQTT."""
             handle_mode_received(
@@ -864,6 +842,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_fan_mode"})
         def handle_fan_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving fan mode via MQTT."""
             handle_mode_received(
@@ -879,6 +858,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_swing_mode"})
         def handle_swing_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving swing mode via MQTT."""
             handle_mode_received(
@@ -913,13 +893,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             else:
                 _LOGGER.error("Invalid %s mode: %s", attr, payload)
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
         # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
         # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
         # Support will be removed in HA Core 2024.3
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_aux_heat"})
         def handle_aux_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving aux mode via MQTT."""
             handle_onoff_mode_received(
@@ -930,12 +909,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_preset_mode"})
         def handle_preset_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving preset mode via MQTT."""
             preset_mode = self.render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
             if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
                 self._attr_preset_mode = PRESET_NONE
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
@@ -952,8 +931,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 )
             else:
                 self._attr_preset_mode = str(preset_mode)
-
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(
             topics, CONF_PRESET_MODE_STATE_TOPIC, handle_preset_mode_received

@@ -57,9 +57,6 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
@@ -249,10 +246,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         LOGGER, DOMAIN, hass
     )
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     # Register automation as valid domain for Blueprint
     async_get_blueprints(hass)
 
@@ -314,6 +307,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class BaseAutomationEntity(ToggleEntity, ABC):
     """Base class for automation entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        (ATTR_LAST_TRIGGERED, ATTR_MODE, ATTR_CUR, ATTR_MAX, CONF_ID)
+    )
     raw_config: ConfigType | None
 
     @property
@@ -737,14 +733,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    def _log_callback(self, level: int, msg: str, **kwargs: Any) -> None:
+        """Log helper callback."""
+        self._logger.log(level, "%s %s", msg, self.name, **kwargs)
+
     async def _async_attach_triggers(
         self, home_assistant_start: bool
     ) -> Callable[[], None] | None:
         """Set up the triggers."""
-
-        def log_cb(level: int, msg: str, **kwargs: Any) -> None:
-            self._logger.log(level, "%s %s", msg, self.name, **kwargs)
-
         this = None
         self.async_write_ha_state()
         if state := self.hass.states.get(self.entity_id):
@@ -767,7 +763,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self.async_trigger,
             DOMAIN,
             str(self.name),
-            log_cb,
+            self._log_callback,
             home_assistant_start,
             variables,
         )

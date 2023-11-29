@@ -110,6 +110,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "EC0BAE*",
     },
     {
+        "domain": "broadlink",
+        "macaddress": "780F77*",
+    },
+    {
         "domain": "dlink",
         "hostname": "dsp-w215",
     },
@@ -315,10 +319,6 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
-    },
-    {
-        "domain": "myq",
-        "macaddress": "645299*",
     },
     {
         "domain": "nest",
@@ -783,6 +783,16 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "tplink",
         "hostname": "k[lps]*",
         "macaddress": "788CB5*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "3460F9*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "1C61B4*",
     },
     {
         "domain": "tuya",

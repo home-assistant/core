@@ -18,8 +18,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import RensonCoordinator
 from .const import DOMAIN
+from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)

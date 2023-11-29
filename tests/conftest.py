@@ -377,6 +377,13 @@ def verify_cleanup(
 
 
 @pytest.fixture(autouse=True)
+def reset_hass_threading_local_object() -> Generator[None, None, None]:
+    """Reset the _Hass threading.local object for every test case."""
+    yield
+    ha._hass.__dict__.clear()
+
+
+@pytest.fixture(autouse=True)
 def bcrypt_cost() -> Generator[None, None, None]:
     """Run with reduced rounds during tests, to speed up uses."""
     import bcrypt
@@ -1138,13 +1145,19 @@ def mock_zeroconf() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
-    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
+    from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel
+        AsyncZeroconf,
+    )
 
-    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
+    with patch(
+        "homeassistant.components.zeroconf.HaAsyncZeroconf", spec=AsyncZeroconf
+    ) as mock_aiozc:
         zc = mock_aiozc.return_value
         zc.async_unregister_service = AsyncMock()
         zc.async_register_service = AsyncMock()
         zc.async_update_service = AsyncMock()
+        zc.zeroconf = Mock(spec=Zeroconf)
         zc.zeroconf.async_wait_for_start = AsyncMock()
         # DNSCache has strong Cython type checks, and MagicMock does not work
         # so we must mock the class directly
@@ -1513,33 +1526,6 @@ async def recorder_mock(
 ) -> recorder.Recorder:
     """Fixture with in-memory recorder."""
     return await async_setup_recorder_instance(hass, recorder_config)
-
-
-@pytest.fixture
-def mock_integration_frame() -> Generator[Mock, None, None]:
-    """Mock as if we're calling code from inside an integration."""
-    correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
-        lineno="23",
-        line="self.light.is_on",
-    )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
-    ):
-        yield correct_frame
 
 
 @pytest.fixture(name="enable_bluetooth")

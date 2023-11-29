@@ -85,7 +85,7 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
 
     def _zha_name(self) -> str:
         """Return the ZHA name."""
-        return "Test Multi-PAN"
+        return "Test Multiprotocol"
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
@@ -293,7 +293,14 @@ async def test_option_flow_install_multi_pan_addon_zha(
     config_entry.add_to_hass(hass)
 
     zha_config_entry = MockConfigEntry(
-        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
+        data={
+            "device": {
+                "path": "/dev/ttyTEST123",
+                "baudrate": 115200,
+                "flow_control": None,
+            },
+            "radio_type": "ezsp",
+        },
         domain=ZHA_DOMAIN,
         options={},
         title="Test",
@@ -348,12 +355,12 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert zha_config_entry.data == {
         "device": {
             "path": "socket://core-silabs-multiprotocol:9999",
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
         },
         "radio_type": "ezsp",
     }
-    assert zha_config_entry.title == "Test Multi-PAN"
+    assert zha_config_entry.title == "Test Multiprotocol"
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
@@ -663,7 +670,7 @@ async def test_option_flow_addon_installed_same_device_uninstall(
         },
         domain=ZHA_DOMAIN,
         options={},
-        title="Test Multi-PAN",
+        title="Test Multiprotocol",
     )
     zha_config_entry.add_to_hass(hass)
 
@@ -928,7 +935,7 @@ async def test_option_flow_flasher_install_failure(
         },
         domain=ZHA_DOMAIN,
         options={},
-        title="Test Multi-PAN",
+        title="Test Multiprotocol",
     )
     zha_config_entry.add_to_hass(hass)
 
@@ -1071,7 +1078,7 @@ async def test_option_flow_uninstall_migration_initiate_failure(
         },
         domain=ZHA_DOMAIN,
         options={},
-        title="Test Multi-PAN",
+        title="Test Multiprotocol",
     )
     zha_config_entry.add_to_hass(hass)
 
@@ -1132,7 +1139,7 @@ async def test_option_flow_uninstall_migration_finish_failure(
         },
         domain=ZHA_DOMAIN,
         options={},
-        title="Test Multi-PAN",
+        title="Test Multiprotocol",
     )
     zha_config_entry.add_to_hass(hass)
 

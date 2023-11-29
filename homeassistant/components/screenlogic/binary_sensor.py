@@ -1,9 +1,12 @@
 """Support for a ScreenLogic Binary Sensor."""
+from copy import copy
 from dataclasses import dataclass
 import logging
 
-from screenlogicpy.const.common import DEVICE_TYPE, ON_OFF
+from screenlogicpy.const.common import ON_OFF
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
+from screenlogicpy.const.msg import CODE
+from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.binary_sensor import (
     DOMAIN,
@@ -12,85 +15,157 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN, ScreenLogicDataPath
+from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
-from .data import (
-    DEVICE_INCLUSION_RULES,
-    DEVICE_SUBSCRIPTION,
-    SupportedValueParameters,
-    build_base_entity_description,
-    iterate_expand_group_wildcard,
-    preprocess_supported_values,
-)
 from .entity import (
     ScreenlogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
-from .util import cleanup_excluded_entity, generate_unique_id
+from .util import cleanup_excluded_entity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class SupportedBinarySensorValueParameters(SupportedValueParameters):
-    """Supported predefined data for a ScreenLogic binary sensor entity."""
+class ScreenLogicBinarySensorDescription(
+    BinarySensorEntityDescription, ScreenLogicEntityDescription
+):
+    """A class that describes ScreenLogic binary sensor eneites."""
 
-    device_class: BinarySensorDeviceClass | None = None
+
+@dataclass
+class ScreenLogicPushBinarySensorDescription(
+    ScreenLogicBinarySensorDescription, ScreenLogicPushEntityDescription
+):
+    """Describes a ScreenLogicPushBinarySensor."""
 
 
-SUPPORTED_DATA: list[
-    tuple[ScreenLogicDataPath, SupportedValueParameters]
-] = preprocess_supported_values(
-    {
-        DEVICE.CONTROLLER: {
-            GROUP.SENSOR: {
-                VALUE.ACTIVE_ALERT: SupportedBinarySensorValueParameters(),
-                VALUE.CLEANER_DELAY: SupportedBinarySensorValueParameters(),
-                VALUE.FREEZE_MODE: SupportedBinarySensorValueParameters(),
-                VALUE.POOL_DELAY: SupportedBinarySensorValueParameters(),
-                VALUE.SPA_DELAY: SupportedBinarySensorValueParameters(),
-            },
-        },
-        DEVICE.PUMP: {
-            "*": {
-                VALUE.STATE: SupportedBinarySensorValueParameters(),
-            },
-        },
-        DEVICE.INTELLICHEM: {
-            GROUP.ALARM: {
-                VALUE.FLOW_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.ORP_HIGH_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.ORP_LOW_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.ORP_SUPPLY_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.PH_HIGH_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.PH_LOW_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.PH_SUPPLY_ALARM: SupportedBinarySensorValueParameters(),
-                VALUE.PROBE_FAULT_ALARM: SupportedBinarySensorValueParameters(),
-            },
-            GROUP.ALERT: {
-                VALUE.ORP_LIMIT: SupportedBinarySensorValueParameters(),
-                VALUE.PH_LIMIT: SupportedBinarySensorValueParameters(),
-                VALUE.PH_LOCKOUT: SupportedBinarySensorValueParameters(),
-            },
-            GROUP.WATER_BALANCE: {
-                VALUE.CORROSIVE: SupportedBinarySensorValueParameters(),
-                VALUE.SCALING: SupportedBinarySensorValueParameters(),
-            },
-        },
-        DEVICE.SCG: {
-            GROUP.SENSOR: {
-                VALUE.STATE: SupportedBinarySensorValueParameters(),
-            },
-        },
-    }
-)
+SUPPORTED_CORE_SENSORS = [
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.ACTIVE_ALERT,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.CLEANER_DELAY,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.FREEZE_MODE,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.POOL_DELAY,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.SPA_DELAY,
+    ),
+]
 
-SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: BinarySensorDeviceClass.PROBLEM}
+SUPPORTED_PUMP_SENSORS = [
+    ScreenLogicBinarySensorDescription(
+        data_root=(DEVICE.PUMP,),
+        key=VALUE.STATE,
+    )
+]
+
+SUPPORTED_INTELLICHEM_SENSORS = [
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.FLOW_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.ORP_HIGH_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.ORP_LOW_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.ORP_SUPPLY_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.PH_HIGH_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.PH_LOW_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.PH_SUPPLY_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
+        key=VALUE.PROBE_FAULT_ALARM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
+        key=VALUE.ORP_LIMIT,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
+        key=VALUE.PH_LIMIT,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
+        key=VALUE.PH_LOCKOUT,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.WATER_BALANCE),
+        key=VALUE.CORROSIVE,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ScreenLogicPushBinarySensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.WATER_BALANCE),
+        key=VALUE.SCALING,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+]
+
+SUPPORTED_SCG_SENSORS = [
+    ScreenLogicBinarySensorDescription(
+        data_root=(DEVICE.SCG, GROUP.SENSOR),
+        key=VALUE.STATE,
+    )
+]
 
 
 async def async_setup_entry(
@@ -104,72 +179,65 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
-    data_path: ScreenLogicDataPath
-    value_params: SupportedBinarySensorValueParameters
-    for data_path, value_params in iterate_expand_group_wildcard(
-        gateway, SUPPORTED_DATA
-    ):
-        entity_key = generate_unique_id(*data_path)
 
-        device = data_path[0]
-
-        if not (DEVICE_INCLUSION_RULES.get(device) or value_params.included).test(
-            gateway, data_path
-        ):
-            cleanup_excluded_entity(coordinator, DOMAIN, entity_key)
-            continue
-
-        try:
-            value_data = gateway.get_data(*data_path, strict=True)
-        except KeyError:
-            _LOGGER.debug("Failed to find %s", data_path)
-            continue
-
-        entity_description_kwargs = {
-            **build_base_entity_description(
-                gateway, entity_key, data_path, value_data, value_params
-            ),
-            "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
-                value_data.get(ATTR.DEVICE_TYPE)
-            ),
-        }
-
+    for core_sensor_description in SUPPORTED_CORE_SENSORS:
         if (
-            sub_code := (
-                value_params.subscription_code or DEVICE_SUBSCRIPTION.get(device)
+            gateway.get_data(
+                *core_sensor_description.data_root, core_sensor_description.key
             )
-        ) is not None:
+            is not None
+        ):
             entities.append(
-                ScreenLogicPushBinarySensor(
-                    coordinator,
-                    ScreenLogicPushBinarySensorDescription(
-                        subscription_code=sub_code, **entity_description_kwargs
-                    ),
+                ScreenLogicPushBinarySensor(coordinator, core_sensor_description)
+            )
+
+    for p_index, p_data in gateway.get_data(DEVICE.PUMP).items():
+        if not p_data or not p_data.get(VALUE.DATA):
+            continue
+        for proto_pump_sensor_description in SUPPORTED_PUMP_SENSORS:
+            entities.append(
+                ScreenLogicPumpBinarySensor(
+                    coordinator, copy(proto_pump_sensor_description), p_index
                 )
             )
-        else:
+
+    chem_sensor_description: ScreenLogicPushBinarySensorDescription
+    for chem_sensor_description in SUPPORTED_INTELLICHEM_SENSORS:
+        chem_sensor_data_path = (
+            *chem_sensor_description.data_root,
+            chem_sensor_description.key,
+        )
+        if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
+            continue
+        if gateway.get_data(*chem_sensor_data_path):
             entities.append(
-                ScreenLogicBinarySensor(
-                    coordinator,
-                    ScreenLogicBinarySensorDescription(**entity_description_kwargs),
-                )
+                ScreenLogicPushBinarySensor(coordinator, chem_sensor_description)
+            )
+
+    scg_sensor_description: ScreenLogicBinarySensorDescription
+    for scg_sensor_description in SUPPORTED_SCG_SENSORS:
+        scg_sensor_data_path = (
+            *scg_sensor_description.data_root,
+            scg_sensor_description.key,
+        )
+        if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
+            continue
+        if gateway.get_data(*scg_sensor_data_path):
+            entities.append(
+                ScreenLogicBinarySensor(coordinator, scg_sensor_description)
             )
 
     async_add_entities(entities)
 
 
-@dataclass
-class ScreenLogicBinarySensorDescription(
-    BinarySensorEntityDescription, ScreenLogicEntityDescription
-):
-    """A class that describes ScreenLogic binary sensor eneites."""
-
-
 class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
-    """Base class for all ScreenLogic binary sensor entities."""
+    """Representation of a ScreenLogic binary sensor entity."""
 
     entity_description: ScreenLogicBinarySensorDescription
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def is_on(self) -> bool:
@@ -177,14 +245,21 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
         return self.entity_data[ATTR.VALUE] == ON_OFF.ON
 
 
-@dataclass
-class ScreenLogicPushBinarySensorDescription(
-    ScreenLogicBinarySensorDescription, ScreenLogicPushEntityDescription
-):
-    """Describes a ScreenLogicPushBinarySensor."""
-
-
 class ScreenLogicPushBinarySensor(ScreenLogicPushEntity, ScreenLogicBinarySensor):
-    """Representation of a basic ScreenLogic sensor entity."""
+    """Representation of a ScreenLogic push binary sensor entity."""
 
     entity_description: ScreenLogicPushBinarySensorDescription
+
+
+class ScreenLogicPumpBinarySensor(ScreenLogicBinarySensor):
+    """Representation of a ScreenLogic binary sensor entity for pump data."""
+
+    def __init__(
+        self,
+        coordinator: ScreenlogicDataUpdateCoordinator,
+        entity_description: ScreenLogicBinarySensorDescription,
+        pump_index: int,
+    ) -> None:
+        """Initialize of the entity."""
+        entity_description.data_root = (DEVICE.PUMP, pump_index)
+        super().__init__(coordinator, entity_description)

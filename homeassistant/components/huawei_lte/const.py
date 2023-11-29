@@ -79,3 +79,6 @@ ALL_KEYS = (
     | SWITCH_KEYS
     | {KEY_DEVICE_BASIC_INFORMATION}
 )
+
+BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS = "clear_traffic_statistics"
+BUTTON_KEY_RESTART = "restart"

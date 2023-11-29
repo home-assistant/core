@@ -113,7 +113,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 raise AbortFlow("already_configured")
 
             # check if the camera is reachable at the new IP
-            host = ReolinkHost(self.hass, existing_entry.data, existing_entry.options)
+            new_config = dict(existing_entry.data)
+            new_config[CONF_HOST] = discovery_info.ip
+            host = ReolinkHost(self.hass, new_config, existing_entry.options)
             try:
                 await host.api.get_state("GetLocalLink")
                 await host.api.logout()
@@ -122,7 +124,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Reolink DHCP reported new IP '%s', "
                     "but got error '%s' trying to connect, so sticking to IP '%s'",
                     discovery_info.ip,
-                    str(err),
+                    err,
                     existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured") from err

@@ -57,7 +57,7 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
     await setup_platform(hass, mock_bridge_v2, "event")
 
-    test_entity_id = "event.hue_mocked_device_relative_rotary"
+    test_entity_id = "event.hue_mocked_device_rotary"
 
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
@@ -70,7 +70,7 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == "unknown"
-    assert state.name == "Hue mocked device Relative Rotary"
+    assert state.name == "Hue mocked device Rotary"
     # check event_types
     assert state.attributes[ATTR_EVENT_TYPES] == ["clock_wise", "counter_clock_wise"]
 

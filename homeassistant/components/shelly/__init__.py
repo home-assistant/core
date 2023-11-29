@@ -58,6 +58,7 @@ BLOCK_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -72,6 +73,7 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 RPC_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
     Platform.LIGHT,

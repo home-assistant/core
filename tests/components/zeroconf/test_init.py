@@ -859,6 +859,7 @@ async def test_info_from_service_with_link_local_address_first(
     service_info.addresses = ["169.254.12.3", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
     assert info.host == "192.168.66.12"
+    assert info.addresses == ["169.254.12.3", "192.168.66.12"]
 
 
 async def test_info_from_service_with_unspecified_address_first(
@@ -870,6 +871,7 @@ async def test_info_from_service_with_unspecified_address_first(
     service_info.addresses = ["0.0.0.0", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
     assert info.host == "192.168.66.12"
+    assert info.addresses == ["0.0.0.0", "192.168.66.12"]
 
 
 async def test_info_from_service_with_unspecified_address_only(
@@ -892,6 +894,7 @@ async def test_info_from_service_with_link_local_address_second(
     service_info.addresses = ["192.168.66.12", "169.254.12.3"]
     info = zeroconf.info_from_service(service_info)
     assert info.host == "192.168.66.12"
+    assert info.addresses == ["192.168.66.12", "169.254.12.3"]
 
 
 async def test_info_from_service_with_link_local_address_only(

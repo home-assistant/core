@@ -367,7 +367,10 @@ async def test_websocket_update_preload_prefs(
 
 
 async def test_websocket_update_orientation_prefs(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_camera
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_camera,
 ) -> None:
     """Test updating camera preferences."""
     await async_setup_component(hass, "homeassistant", {})
@@ -387,11 +390,10 @@ async def test_websocket_update_orientation_prefs(
     assert not response["success"]
     assert response["error"]["code"] == "update_failed"
 
-    registry = er.async_get(hass)
-    assert not registry.async_get("camera.demo_uniquecamera")
+    assert not entity_registry.async_get("camera.demo_uniquecamera")
     # Since we don't have a unique id, we need to create a registry entry
-    registry.async_get_or_create(DOMAIN, "demo", "uniquecamera")
-    registry.async_update_entity_options(
+    entity_registry.async_get_or_create(DOMAIN, "demo", "uniquecamera")
+    entity_registry.async_update_entity_options(
         "camera.demo_uniquecamera",
         DOMAIN,
         {},
@@ -408,7 +410,9 @@ async def test_websocket_update_orientation_prefs(
     response = await client.receive_json()
     assert response["success"]
 
-    er_camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
+    er_camera_prefs = entity_registry.async_get("camera.demo_uniquecamera").options[
+        DOMAIN
+    ]
     assert er_camera_prefs[PREF_ORIENTATION] == camera.Orientation.ROTATE_180
     assert response["result"][PREF_ORIENTATION] == er_camera_prefs[PREF_ORIENTATION]
     # Check that the preference was saved

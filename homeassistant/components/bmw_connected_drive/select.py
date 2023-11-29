@@ -44,7 +44,8 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         translation_key="ac_limit",
         is_available=lambda v: v.is_remote_set_ac_limit_enabled,
         dynamic_options=lambda v: [
-            str(lim) for lim in v.charging_profile.ac_available_limits  # type: ignore[union-attr]
+            str(lim)
+            for lim in v.charging_profile.ac_available_limits  # type: ignore[union-attr]
         ],
         current_option=lambda v: str(v.charging_profile.ac_current_limit),  # type: ignore[union-attr]
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(

@@ -223,6 +223,7 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
+        "_reauth_lock",
         "_tasks",
         "_background_tasks",
         "_integration_for_domain",
@@ -321,6 +322,8 @@ class ConfigEntry:
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
+        # Reauth lock to prevent concurrent reauth flows
+        self._reauth_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -403,8 +406,8 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryError as ex:
-            error_reason = str(ex) or "Unknown fatal config entry error"
+        except ConfigEntryError as exc:
+            error_reason = str(exc) or "Unknown fatal config entry error"
             _LOGGER.exception(
                 "Error setting up entry %s for %s: %s",
                 self.title,
@@ -413,8 +416,8 @@ class ConfigEntry:
             )
             await self._async_process_on_unload(hass)
             result = False
-        except ConfigEntryAuthFailed as ex:
-            message = str(ex)
+        except ConfigEntryAuthFailed as exc:
+            message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
             auth_message = (
@@ -429,35 +432,24 @@ class ConfigEntry:
             await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
             result = False
-        except ConfigEntryNotReady as ex:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
+        except ConfigEntryNotReady as exc:
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(ex)
+            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            if self._tries == 1:
-                _LOGGER.warning(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in"
-                        " background"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                )
-            else:
-                _LOGGER.debug(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in %d"
-                        " seconds"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                    wait_time,
-                )
+            _LOGGER.debug(
+                (
+                    "Config entry '%s' for %s integration not %s; Retrying in %d"
+                    " seconds"
+                ),
+                self.title,
+                self.domain,
+                ready_message,
+                wait_time,
+            )
 
             if hass.state == CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -573,13 +565,13 @@ class ConfigEntry:
             await self._async_process_on_unload(hass)
 
             return result
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(ex) or "Unknown error"
+                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
 
@@ -738,12 +730,28 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
-
         hass.async_create_task(
-            hass.config_entries.flow.async_init(
+            self._async_init_reauth(hass, context, data),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow."""
+        async with self._reauth_lock:
+            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+                # Reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -753,9 +761,7 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            ),
-            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-        )
+            )
 
     @callback
     def async_get_active_flows(
@@ -765,7 +771,9 @@ class ConfigEntry:
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(
-                self.domain, match_context={"entry_id": self.entry_id}
+                self.domain,
+                match_context={"entry_id": self.entry_id},
+                include_uninitialized=True,
             )
             if flow["context"].get("source") in sources
         )
@@ -1047,7 +1055,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
-        self._domain_index: dict[str, list[str]] = {}
+        self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1077,9 +1085,7 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return [
-            self._entries[entry_id] for entry_id in self._domain_index.get(domain, [])
-        ]
+        return list(self._domain_index.get(domain, []))
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
@@ -1088,7 +1094,7 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
-        self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
+        self._domain_index.setdefault(entry.domain, []).append(entry)
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1106,7 +1112,7 @@ class ConfigEntries:
         await entry.async_remove(self.hass)
 
         del self._entries[entry.entry_id]
-        self._domain_index[entry.domain].remove(entry.entry_id)
+        self._domain_index[entry.domain].remove(entry)
         if not self._domain_index[entry.domain]:
             del self._domain_index[entry.domain]
         self._async_schedule_save()
@@ -1173,7 +1179,7 @@ class ConfigEntries:
             return
 
         entries = {}
-        domain_index: dict[str, list[str]] = {}
+        domain_index: dict[str, list[ConfigEntry]] = {}
 
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
@@ -1188,7 +1194,7 @@ class ConfigEntries:
             domain = entry["domain"]
             entry_id = entry["entry_id"]
 
-            entries[entry_id] = ConfigEntry(
+            config_entry = ConfigEntry(
                 version=entry["version"],
                 domain=domain,
                 entry_id=entry_id,
@@ -1207,7 +1213,8 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            domain_index.setdefault(domain, []).append(entry_id)
+            entries[entry_id] = config_entry
+            domain_index.setdefault(domain, []).append(config_entry)
 
         self._domain_index = domain_index
         self._entries = entries
@@ -1348,7 +1355,7 @@ class ConfigEntries:
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
         ):
-            if value == UNDEFINED or getattr(entry, attr) == value:
+            if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
             setattr(entry, attr, value)

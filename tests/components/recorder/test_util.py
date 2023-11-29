@@ -25,6 +25,7 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
+    chunked_or_all,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -1023,3 +1024,24 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
+
+
+def test_chunked_or_all():
+    """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
+    all = []
+    incoming = (1, 2, 3, 4)
+    for chunk in chunked_or_all(incoming, 2):
+        assert len(chunk) == 2
+        all.extend(chunk)
+    assert all == [1, 2, 3, 4]
+
+    all = []
+    incoming = (1, 2, 3, 4)
+    for chunk in chunked_or_all(incoming, 5):
+        assert len(chunk) == 4
+        # Verify the chunk is the same object as the incoming
+        # collection since we want to avoid copying the collection
+        # if we don't need to
+        assert chunk is incoming
+        all.extend(chunk)
+    assert all == [1, 2, 3, 4]
