@@ -20,5 +20,108 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy_consumed": {
+        "name": "Energy Consumption"
+      },
+      "power_consumption": {
+        "name": "Power Consumption"
+      },
+      "energy_consumed_solar": {
+        "name": "Energy Consumption Solar"
+      },
+      "power_consumption_solar": {
+        "name": "Power Consumption Solar"
+      },
+      "energy_consumed_battery": {
+        "name": "Energy Consumption Battery"
+      },
+      "power_consumption_battery": {
+        "name": "Power Consumption Battery"
+      },
+      "energy_consumed_grid": {
+        "name": "Energy Consumption Grid"
+      },
+      "power_consumption_grid": {
+        "name": "Power Consumption Grid"
+      },
+      "solar_pv_energy_supplied": {
+        "name": "Energy Supplied"
+      },
+      "solar_pv_power_supply": {
+        "name": "Power Supplied"
+      },
+      "water_heater_available_energy": {
+        "name": "Hot Water Available"
+      },
+      "water_heater_max_energy": {
+        "name": "Hot Water Max"
+      },
+      "water_heater_output_temp": {
+        "name": "Output temperature"
+      },
+      "water_heater_temp_sensor1": {
+        "name": "Water Temp 1"
+      },
+      "water_heater_temp_sensor2": {
+        "name": "Water Temp 2"
+      },
+      "water_heater_temp_sensor3": {
+        "name": "Water Temp 3"
+      },
+      "water_heater_temp_sensor4": {
+        "name": "Water Temp 4"
+      },
+      "water_heater_temp_sensor5": {
+        "name": "Water Temp 5"
+      },
+      "water_heater_temp_sensor6": {
+        "name": "Water Temp 6"
+      },
+      "grid_meter_energy_supplied": {
+        "name": "Energy Import"
+      },
+      "grid_meter_power_supply": {
+        "name": "Power Import"
+      },
+      "grid_meter_energy_consumed": {
+        "name": "Energy Export"
+      },
+      "grid_meter_power_consumption": {
+        "name": "Power Export"
+      },
+      "grid_meter_energy_consumed_solar": {
+        "name": "Energy Export Solar"
+      },
+      "grid_meter_power_consumption_solar": {
+        "name": "Power Export Solar"
+      },
+      "grid_meter_energy_consumed_battery": {
+        "name": "Energy Export Battery"
+      },
+      "grid_meter_power_consumption_battery": {
+        "name": "Power Export Battery"
+      },
+      "grid_meter_power_factor_a": {
+        "name": "Power Factor A"
+      },
+      "grid_meter_power_factor_b": {
+        "name": "Power Factor B"
+      },
+      "grid_meter_power_factor_c": {
+        "name": "Power Factor C"
+      },
+      "grid_meter_voltage_a": {
+        "name": "Voltage A"
+      },
+      "grid_meter_voltage_b": {
+        "name": "Voltage B"
+      },
+      "grid_meter_voltage_c": {
+        "name": "Voltage C"
+      }
+    }
   }
 }

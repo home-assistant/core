@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["combined-energy-api==0.5"]
+  "requirements": ["combined-energy-api==0.7"]
 }

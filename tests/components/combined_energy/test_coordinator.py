@@ -9,8 +9,7 @@ import pytest
 
 from homeassistant.components.combined_energy import coordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
 class TestCombinedEnergyReadingsDataService:
@@ -23,10 +22,10 @@ class TestCombinedEnergyReadingsDataService:
         mock_api = AsyncMock(
             CombinedEnergy, readings=AsyncMock(side_effect=CombinedEnergyAuthError)
         )
-        target = coordinator.CombinedEnergyReadingsDataService(hass, mock_api)
+        target = coordinator.CombinedEnergyReadingsCoordinator(hass, mock_api)
 
         with pytest.raises(ConfigEntryAuthFailed):
-            await target.async_update_data()
+            await target.async_config_entry_first_refresh()
 
     async def test_update_data__where_api_raises_an_error(
         self, hass: HomeAssistant
@@ -35,7 +34,7 @@ class TestCombinedEnergyReadingsDataService:
         mock_api = AsyncMock(
             CombinedEnergy, readings=AsyncMock(side_effect=CombinedEnergyError)
         )
-        target = coordinator.CombinedEnergyReadingsDataService(hass, mock_api)
+        target = coordinator.CombinedEnergyReadingsCoordinator(hass, mock_api)
 
-        with pytest.raises(UpdateFailed):
-            await target.async_update_data()
+        with pytest.raises(ConfigEntryNotReady):
+            await target.async_config_entry_first_refresh()

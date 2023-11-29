@@ -1,8 +1,8 @@
 """Sensors and factory for enumerating devices from the Combined Energy API."""
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
@@ -30,289 +30,396 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DATA_API_CLIENT, DATA_INSTALLATION, DOMAIN
 from .coordinator import CombinedEnergyReadingsCoordinator
 
+
+def _generic_native_value(
+    raw_value: float | list[float], precision: int | None
+) -> float:
+    """Convert last measured value into a float."""
+    if isinstance(raw_value, Sequence):
+        raw_value = raw_value[-1]
+    return float(round(raw_value, precision))
+
+
+def _energy_native_value(raw_value: list[float], precision: int | None) -> float:
+    """Sum all values into a total value for the measurement range."""
+    value = sum(raw_value)
+    return float(round(value, precision))
+
+
+def _power_factor_native_value(raw_value: list[float], precision: int | None) -> float:
+    """Convert last measured power factor is expressed as a fraction into a %."""
+    return float(round(raw_value[-1] * 100, precision))
+
+
+def _water_volume_native_value(raw_value: list[float], precision: int | None) -> int:
+    """Convert last measured water volume into an integer."""
+    return int(round(raw_value[-1], precision))
+
+
+@dataclass
+class CombinedEnergySensorEntityDescriptionMixin:
+    """A class that describes sensor entities."""
+
+    native_value_fn: Callable[[Any, int | None], float | int]
+
+
+@dataclass
+class CombinedEnergySensorEntityDescription(
+    SensorEntityDescription,
+    CombinedEnergySensorEntityDescriptionMixin,
+):
+    """Class describing combined energy sensor entity."""
+
+
 # Common sensors for all consumer devices
 SENSOR_DESCRIPTIONS_GENERIC_CONSUMER = [
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="energy_consumed",
-        name="Energy Consumption",
+        translation_key="energy_consumed",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=2,
+        native_value_fn=_energy_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="power_consumption",
-        name="Power Consumption",
+        translation_key="power_consumption",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=2,
+        native_value_fn=_generic_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="energy_consumed_solar",
-        name="Energy Consumption Solar",
+        translation_key="energy_consumed_solar",
         icon="mdi:solar-power",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        native_value_fn=_generic_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="power_consumption_solar",
-        name="Power Consumption Solar",
+        translation_key="power_consumption_solar",
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        native_value_fn=_generic_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="energy_consumed_battery",
-        name="Energy Consumption Battery",
+        translation_key="energy_consumed_battery",
         icon="mdi:home-battery",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        native_value_fn=_energy_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="power_consumption_battery",
-        name="Power Consumption Battery",
+        translation_key="power_consumption_battery",
         icon="mdi:home-battery",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        native_value_fn=_generic_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="energy_consumed_grid",
-        name="Energy Consumption Grid",
+        translation_key="energy_consumed_grid",
         icon="mdi:transmission-tower",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        native_value_fn=_generic_native_value,
     ),
-    SensorEntityDescription(
+    CombinedEnergySensorEntityDescription(
         key="power_consumption_grid",
-        name="Power Consumption Grid",
+        translation_key="power_consumption_grid",
         icon="mdi:transmission-tower",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
+        native_value_fn=_generic_native_value,
     ),
 ]
 SENSOR_DESCRIPTIONS = {
     "SOLAR_PV": [
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="energy_supplied",
-            name="Energy Supplied",
+            translation_key="solar_pv_energy_supplied",
             icon="mdi:solar-power",
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_supply",
-            name="Power Supplied",
+            translation_key="solar_pv_power_supply",
             icon="mdi:solar-power",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
     ],
     "WATER_HEATER": (
         SENSOR_DESCRIPTIONS_GENERIC_CONSUMER
         + [
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="available_energy",
-                name="Hot Water Available",
+                translation_key="water_heater_available_energy",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfVolume.LITERS,
                 device_class=SensorDeviceClass.WATER,
+                suggested_display_precision=0,
+                native_value_fn=_water_volume_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="max_energy",
-                name="Hot Water Max",
+                translation_key="water_heater_max_energy",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfVolume.LITERS,
                 device_class=SensorDeviceClass.WATER,
+                suggested_display_precision=0,
+                native_value_fn=_water_volume_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="output_temp",
-                name="Output temperature",
+                translation_key="water_heater_output_temp",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
+                native_value_fn=_generic_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="temp_sensor1",
-                name="Temp Sensor 1",
+                translation_key="water_heater_temp_sensor1",
                 icon="mdi:thermometer-water",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
                 entity_registry_enabled_default=False,
+                native_value_fn=_generic_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="temp_sensor2",
-                name="Water Temp 2",
+                translation_key="water_heater_temp_sensor2",
                 icon="mdi:thermometer-water",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
                 entity_registry_enabled_default=False,
+                native_value_fn=_generic_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="temp_sensor3",
-                name="Water Temp 3",
+                translation_key="water_heater_temp_sensor3",
                 icon="mdi:thermometer-water",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
                 entity_registry_enabled_default=False,
+                native_value_fn=_generic_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="temp_sensor4",
-                name="Water Temp 4",
+                translation_key="water_heater_temp_sensor4",
                 icon="mdi:thermometer-water",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
                 entity_registry_enabled_default=False,
+                native_value_fn=_generic_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="temp_sensor5",
-                name="Water Temp 5",
+                translation_key="water_heater_temp_sensor5",
                 icon="mdi:thermometer-water",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
                 entity_registry_enabled_default=False,
+                native_value_fn=_generic_native_value,
             ),
-            SensorEntityDescription(
+            CombinedEnergySensorEntityDescription(
                 key="temp_sensor6",
-                name="Water Temp 6",
+                translation_key="water_heater_temp_sensor6",
                 icon="mdi:thermometer-water",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                suggested_display_precision=2,
                 entity_registry_enabled_default=False,
+                native_value_fn=_generic_native_value,
             ),
         ]
     ),
     "GRID_METER": [
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="energy_supplied",
-            name="Energy Import",
+            translation_key="grid_meter_energy_supplied",
             icon="mdi:transmission-tower",
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_supply",
-            name="Power Import",
+            translation_key="grid_meter_power_supply",
             icon="mdi:transmission-tower",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="energy_consumed",
-            name="Energy Export",
+            translation_key="grid_meter_energy_consumed",
             icon="mdi:transmission-tower",
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_consumption",
-            name="Power Export",
+            translation_key="grid_meter_power_consumption",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="energy_consumed_solar",
-            name="Energy Export Solar",
+            translation_key="grid_meter_energy_consumed_solar",
             icon="mdi:transmission-tower",
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
+            suggested_display_precision=2,
             entity_registry_enabled_default=False,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_consumption_solar",
-            name="Power Export Solar",
+            translation_key="grid_meter_power_consumption_solar",
             icon="mdi:solar-power",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+            suggested_display_precision=2,
             entity_registry_enabled_default=False,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="energy_consumed_battery",
-            name="Energy Export Battery",
+            translation_key="grid_meter_energy_consumed_battery",
             icon="mdi:transmission-tower",
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
+            suggested_display_precision=2,
             entity_registry_enabled_default=False,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_consumption_battery",
-            name="Power Export Battery",
+            translation_key="grid_meter_power_consumption_battery",
             icon="mdi:home-battery",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+            suggested_display_precision=2,
             entity_registry_enabled_default=False,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_factor_a",
-            name="Power Factor A",
+            translation_key="grid_meter_power_factor_a",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement="%",
             device_class=SensorDeviceClass.POWER_FACTOR,
+            suggested_display_precision=1,
+            native_value_fn=_power_factor_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_factor_b",
-            name="Power Factor B",
+            translation_key="grid_meter_power_factor_b",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement="%",
             device_class=SensorDeviceClass.POWER_FACTOR,
+            suggested_display_precision=1,
             entity_registry_enabled_default=False,
+            native_value_fn=_power_factor_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="power_factor_c",
-            name="Power Factor C",
+            translation_key="grid_meter_power_factor_c",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement="%",
             device_class=SensorDeviceClass.POWER_FACTOR,
+            suggested_display_precision=1,
             entity_registry_enabled_default=False,
+            native_value_fn=_power_factor_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="voltage_a",
-            name="Voltage A",
+            translation_key="grid_meter_voltage_a",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement="V",
             device_class=SensorDeviceClass.VOLTAGE,
+            suggested_display_precision=2,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="voltage_b",
-            name="Voltage B",
+            translation_key="grid_meter_voltage_b",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement="V",
             device_class=SensorDeviceClass.VOLTAGE,
+            suggested_display_precision=2,
             entity_registry_enabled_default=False,
+            native_value_fn=_generic_native_value,
         ),
-        SensorEntityDescription(
+        CombinedEnergySensorEntityDescription(
             key="voltage_c",
-            name="Voltage C",
+            translation_key="grid_meter_voltage_c",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement="V",
             device_class=SensorDeviceClass.VOLTAGE,
+            suggested_display_precision=2,
             entity_registry_enabled_default=False,
+            native_value_fn=_generic_native_value,
         ),
     ],
     "GENERIC_CONSUMER": SENSOR_DESCRIPTIONS_GENERIC_CONSUMER,
@@ -347,22 +454,20 @@ def _generate_sensors(
         if descriptions := SENSOR_DESCRIPTIONS.get(device.device_type):
             # Generate sensors from descriptions for the current device type
             for description in descriptions:
-                if sensor_type := SENSOR_TYPE_MAP.get(
-                    description.device_class, GenericSensor
-                ):
-                    yield sensor_type(device, description, readings)
+                yield CombinedEnergyReadingsSensor(device, description, readings)
 
 
 class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Combined Energy API reading energy sensor."""
 
-    data_service: CombinedEnergyReadingsCoordinator
-    entity_description: SensorEntityDescription
+    entity_description: CombinedEnergySensorEntityDescription
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
         device: Device,
-        description: SensorEntityDescription,
+        description: CombinedEnergySensorEntityDescription,
         coordinator: CombinedEnergyReadingsCoordinator,
     ) -> None:
         """Initialise Readings Sensor."""
@@ -370,8 +475,6 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
 
         self.device_id = device.device_id
         self.entity_description = description
-
-        self._attr_name = f"{device.display_name} {description.name}"
 
         identifier = (
             f"install_{self.coordinator.api.installation_id}-device_{device.device_id}"
@@ -395,7 +498,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     def _raw_value(self) -> Any:
         """Get raw reading value from device readings."""
         if device_readings := self.device_readings:
-            return getattr(device_readings, self.entity_description.key)
+            return getattr(device_readings, self.entity_description.key, None)
         return None
 
     @property
@@ -403,34 +506,14 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
         """Indicate if the entity is available."""
         return self._raw_value is not None
 
-    @abstractmethod
-    def _to_native_value(self, raw_value: Any) -> int | float | None:
-        """Convert non-none raw value into usable sensor value."""
-
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if (raw_value := self._raw_value) is not None:
-            return self._to_native_value(raw_value)
+            return self.entity_description.native_value_fn(
+                raw_value, self.suggested_display_precision
+            )
         return None
-
-
-class GenericSensor(CombinedEnergyReadingsSensor):
-    """Sensor that returns the last value of a sequence of readings."""
-
-    _attr_suggested_display_precision = 2
-
-    def _to_native_value(self, raw_value: Any) -> float:
-        """Convert non-none raw value into usable sensor value."""
-        if isinstance(raw_value, Sequence):
-            raw_value = raw_value[-1]
-        return float(round(raw_value, self.suggested_display_precision))
-
-
-class EnergySensor(CombinedEnergyReadingsSensor):
-    """Sensor for energy readings."""
-
-    _attr_suggested_display_precision = 2
 
     @property
     def last_reset(self) -> datetime | None:
@@ -439,48 +522,3 @@ class EnergySensor(CombinedEnergyReadingsSensor):
             # mypy is struggling with a Pydantic model here, the cast isn't technically required
             return cast(datetime | None, device_readings.range_start)
         return None
-
-    def _to_native_value(self, raw_value: Any) -> float:
-        """Convert non-none raw value into usable sensor value."""
-        value = sum(raw_value)
-        return float(round(value, self.suggested_display_precision))
-
-
-class PowerSensor(CombinedEnergyReadingsSensor):
-    """Sensor for power readings."""
-
-    _attr_suggested_display_precision = 2
-
-    def _to_native_value(self, raw_value: Any) -> float:
-        """Convert non-none raw value into usable sensor value."""
-        return float(round(raw_value, self.suggested_display_precision))
-
-
-class PowerFactorSensor(CombinedEnergyReadingsSensor):
-    """Sensor for power factor readings."""
-
-    _attr_suggested_display_precision = 1
-
-    def _to_native_value(self, raw_value: Any) -> float:
-        """Convert non-none raw value into usable sensor value."""
-        # The API expresses the power factor as a fraction convert to %
-        return float(round(raw_value[-1] * 100, self.suggested_display_precision))
-
-
-class WaterVolumeSensor(CombinedEnergyReadingsSensor):
-    """Sensor for water volume readings."""
-
-    def _to_native_value(self, raw_value: Any) -> int:
-        """Convert non-none raw value into usable sensor value."""
-        return int(round(raw_value[-1], 0))
-
-
-# Map of common device classes to specific sensor types
-SENSOR_TYPE_MAP: dict[
-    SensorDeviceClass | str | None, type[CombinedEnergyReadingsSensor]
-] = {
-    SensorDeviceClass.ENERGY: EnergySensor,
-    SensorDeviceClass.POWER: PowerSensor,
-    SensorDeviceClass.WATER: WaterVolumeSensor,
-    SensorDeviceClass.POWER_FACTOR: PowerFactorSensor,
-}

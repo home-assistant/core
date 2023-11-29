@@ -628,7 +628,7 @@ colorlog==6.7.0
 colorthief==0.2.1
 
 # homeassistant.components.combined_energy
-combined-energy-api==0.5
+combined-energy-api==0.7
 
 # homeassistant.components.concord232
 concord232==0.15

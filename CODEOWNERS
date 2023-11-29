@@ -212,7 +212,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
 /homeassistant/components/combined_energy/ @timsavage
-/tests/components/combined_energy/
+/tests/components/combined_energy/ @timsavage
 /homeassistant/components/comelit/ @chemelli74
 /tests/components/comelit/ @chemelli74
 /homeassistant/components/comfoconnect/ @michaelarnauts

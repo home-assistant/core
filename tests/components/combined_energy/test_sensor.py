@@ -7,29 +7,31 @@ import pytest
 
 from homeassistant.components.combined_energy import sensor
 from homeassistant.components.combined_energy.coordinator import (
-    CombinedEnergyReadingsDataService,
+    CombinedEnergyReadingsCoordinator,
 )
-from homeassistant.components.sensor import SensorEntityDescription
 
 from .common import mock_device
 
 
-def mock_description(key: str, name="Test Sensor") -> SensorEntityDescription:
+def mock_description(
+    key: str, native_value_fn=None, name: str = "Test Sensor"
+) -> sensor.CombinedEnergySensorEntityDescription:
     """Generate a mock entity description."""
-    return SensorEntityDescription(
+    return sensor.CombinedEnergySensorEntityDescription(
         key=key,
         name=name,
+        native_value_fn=native_value_fn,
     )
 
 
-class TestCombinedEnergyReadings:
-    """Tests for various implementations of readings sensors."""
+class TestCombinedEnergyReadingsSensor:
+    """Tests for combined energy readings sensor."""
 
     @pytest.fixture
-    def data_service(self):
+    def coordinator(self):
         """Mock data service."""
         return AsyncMock(
-            CombinedEnergyReadingsDataService,
+            CombinedEnergyReadingsCoordinator,
             api=AsyncMock(installation_id=999999),
             coordinator=AsyncMock(),
             data={
@@ -46,44 +48,107 @@ class TestCombinedEnergyReadings:
             },
         )
 
+    def test_available__where_device_and_entity_is_found(self, hass, coordinator):
+        """Test available is True when device and entity are found."""
+        device = mock_device(models.DeviceType.EnergyBalance, device_id=13)
+        description = mock_description("energy_value")
+        target = sensor.CombinedEnergyReadingsSensor(device, description, coordinator)
+
+        actual = target.available
+
+        assert actual is True
+
+    def test_available__where_no_data_is_returned(self, hass, coordinator):
+        """Test available is False when no data is returned."""
+        device = mock_device(models.DeviceType.EnergyBalance, device_id=7)
+        description = mock_description("energy_value")
+        coordinator.data = None
+        target = sensor.CombinedEnergyReadingsSensor(device, description, coordinator)
+
+        actual = target.available
+
+        assert actual is False
+
+    def test_available__where_device_is_not_found(self, hass, coordinator):
+        """Test available is False when device is not found."""
+        device = mock_device(models.DeviceType.EnergyBalance, device_id=7)
+        description = mock_description("energy_value")
+        target = sensor.CombinedEnergyReadingsSensor(device, description, coordinator)
+
+        actual = target.available
+
+        assert actual is False
+
+    def test_available__where_device_is_found_but_entity_is_not(
+        self, hass, coordinator
+    ):
+        """Test available is False when device is found but entity is not."""
+        device = mock_device(models.DeviceType.EnergyBalance, device_id=13)
+        description = mock_description("foo_value")
+        target = sensor.CombinedEnergyReadingsSensor(device, description, coordinator)
+
+        actual = target.available
+
+        assert actual is False
+
     @pytest.mark.parametrize(
-        ("sensor_type", "key", "expected_value", "expected_available"),
+        ("device_id", "description", "expected"),
         (
-            (sensor.GenericSensor, "generic_value", 67.9, True),
-            (sensor.EnergySensor, "energy_value", 0.03, True),
-            (sensor.PowerSensor, "power_value", 3.46, True),
-            (sensor.PowerFactorSensor, "power_factor_value", -99.7, True),
-            (sensor.WaterVolumeSensor, "water_volume_value", 127, True),
-            (sensor.GenericSensor, "no_value", None, False),
-            (sensor.EnergySensor, "no_value", None, False),
-            (sensor.PowerSensor, "no_value", None, False),
-            (sensor.PowerFactorSensor, "no_value", None, False),
-            (sensor.WaterVolumeSensor, "no_value", None, False),
+            (
+                13,
+                sensor.CombinedEnergySensorEntityDescription(
+                    key="foo",
+                    suggested_display_precision=2,
+                    native_value_fn=sensor._generic_native_value,
+                ),
+                None,
+            ),
+            (
+                13,
+                sensor.CombinedEnergySensorEntityDescription(
+                    key="generic_value",
+                    suggested_display_precision=2,
+                    native_value_fn=sensor._generic_native_value,
+                ),
+                67.9,
+            ),
+            (
+                13,
+                sensor.CombinedEnergySensorEntityDescription(
+                    key="energy_value",
+                    suggested_display_precision=2,
+                    native_value_fn=sensor._energy_native_value,
+                ),
+                0.03,
+            ),
+            (
+                13,
+                sensor.CombinedEnergySensorEntityDescription(
+                    key="power_factor_value",
+                    suggested_display_precision=1,
+                    native_value_fn=sensor._power_factor_native_value,
+                ),
+                -99.7,
+            ),
+            (
+                13,
+                sensor.CombinedEnergySensorEntityDescription(
+                    key="water_volume_value",
+                    suggested_display_precision=0,
+                    native_value_fn=sensor._water_volume_native_value,
+                ),
+                127,
+            ),
         ),
     )
-    def test_sensor_values(
-        self,
-        hass,
-        installation,
-        data_service,
-        sensor_type,
-        key,
-        expected_value,
-        expected_available,
-    ) -> None:
-        """Test that native values are correctly cast."""
-        factory = sensor.CombinedEnergyReadingsSensorFactory(
-            hass, installation, data_service
-        )
-        device = mock_device(models.DeviceType.EnergyBalance)
-        device_info = factory._generate_device_info(device)
-        description = mock_description(key)
-        target = sensor_type(device, device_info, description, data_service)
+    def test_native_value(self, hass, coordinator, device_id, description, expected):
+        """Test native value is correct."""
+        device = mock_device(models.DeviceType.EnergyBalance, device_id=device_id)
+        target = sensor.CombinedEnergyReadingsSensor(device, description, coordinator)
 
         actual = target.native_value
 
-        assert actual == expected_value
-        assert target.available is expected_available
+        assert actual == expected
 
     @pytest.mark.parametrize(
         ("device_id", "expected"),
@@ -93,16 +158,12 @@ class TestCombinedEnergyReadings:
         ),
     )
     def test_energy_sensor_last_reset(
-        self, hass, installation, data_service, device_id, expected
+        self, hass, installation, coordinator, device_id, expected
     ) -> None:
         """Test last reset value is correct for energy sensors."""
-        factory = sensor.CombinedEnergyReadingsSensorFactory(
-            hass, installation, data_service
-        )
         device = mock_device(models.DeviceType.EnergyBalance, device_id=device_id)
-        device_info = factory._generate_device_info(device)
         description = mock_description("energy_value")
-        target = sensor.EnergySensor(device, device_info, description, data_service)
+        target = sensor.CombinedEnergyReadingsSensor(device, description, coordinator)
 
         actual = target.last_reset
 

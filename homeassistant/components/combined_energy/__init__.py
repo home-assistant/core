@@ -10,7 +10,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_INSTALLATION_ID, DATA_API_CLIENT, DATA_INSTALLATION, DOMAIN
+from .const import (
+    CONF_INSTALLATION_ID,
+    DATA_API_CLIENT,
+    DATA_INSTALLATION,
+    DATA_LOG_SESSION,
+    DOMAIN,
+)
+from .coordinator import CombinedEnergyLogSessionCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -32,10 +39,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except CombinedEnergyError as ex:
         raise ConfigEntryNotReady from ex
 
+    # Initialise the "log session refresh" coordinator
+    log_session = CombinedEnergyLogSessionCoordinator(hass, api)
+    await log_session.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_API_CLIENT: api,
         DATA_INSTALLATION: installation,
+        DATA_LOG_SESSION: log_session,
     }
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
