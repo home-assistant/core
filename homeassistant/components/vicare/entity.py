@@ -1,14 +1,14 @@
 """Entities for the ViCare integration."""
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareFuelCell import FuelCellBurner
-from PyViCare.PyViCareGazBoiler import GazBurner
+from PyViCare.PyViCareFuelCell import FuelCellBurner as PyViCareFuelCellBurner
+from PyViCare.PyViCareGazBoiler import GazBurner as PyViCareGazBurner
 from PyViCare.PyViCareHeatingDevice import (
-    HeatingCircuit,
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
+    HeatingCircuit as PyViCareHeatingCircuit,
+    HeatingDeviceWithComponent as PyViCareHeatingDevicWithComponent,
 )
-from PyViCare.PyViCareHeatPump import Compressor
-from PyViCare.PyViCareOilBoiler import OilBurner
+from PyViCare.PyViCareHeatPump import Compressor as PyViCareCompressor
+from PyViCare.PyViCareOilBoiler import OilBurner as PyViCareOilBurner
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -24,7 +24,7 @@ class ViCareEntity(Entity):
     def __init__(
         self,
         device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice | PyViCareHeatingDeviceComponent,
+        device: PyViCareDevice | PyViCareHeatingDevicWithComponent,
         unique_id_suffix: str,
         custom_device_name: str | None = None,
     ) -> None:
@@ -36,7 +36,7 @@ class ViCareEntity(Entity):
         if hasattr(device, "id"):
             self._attr_unique_id += f"-{device.id}"
 
-        if isinstance(device, PyViCareHeatingDeviceComponent):
+        if isinstance(device, PyViCareHeatingDevicWithComponent):
             self._attr_device_info = self._get_info_for_component(
                 device_config, device, custom_device_name
             )
@@ -79,12 +79,14 @@ class ViCareEntity(Entity):
 
     def _get_device_type(
         self,
-        device: PyViCareDevice | PyViCareHeatingDeviceComponent,
+        device: PyViCareDevice | PyViCareHeatingDevicWithComponent,
     ) -> str:
-        if isinstance(device, HeatingCircuit):
+        if isinstance(device, PyViCareHeatingCircuit):
             return "Heating Circuit"
-        if isinstance(device, FuelCellBurner | GazBurner | OilBurner):
+        if isinstance(
+            device, PyViCareFuelCellBurner | PyViCareGazBurner | PyViCareOilBurner
+        ):
             return "Burner"
-        if isinstance(device, Compressor):
+        if isinstance(device, PyViCareCompressor):
             return "Compressor"
         return ""
