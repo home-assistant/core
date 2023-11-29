@@ -3047,15 +3047,10 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
-    "leviosa": {
-      "name": "Leviosa",
-      "integrations": {
-        "leviosa_shades": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "assumed_state"
-        }
-      }
+    "leviosa_shades": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "leviton": {
       "name": "Leviton",

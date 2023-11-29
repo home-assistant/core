@@ -4,8 +4,9 @@ import logging
 from leviosapy import LeviosaZoneHub as tZoneHub
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -18,11 +19,14 @@ PLATFORMS = [Platform.COVER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Leviosa shades Zone from a config entry."""
     hub_name = entry.title
-    hub_ip = entry.data["host"]
-    hub = tZoneHub(
-        hub_ip=hub_ip, hub_name=hub_name, websession=async_get_clientsession(hass)
-    )
-    await hub.getHubInfo()  # Check all is good
+    hub_ip = entry.data[CONF_HOST]
+    try:
+        hub = tZoneHub(
+            hub_ip=hub_ip, hub_name=hub_name, websession=async_get_clientsession(hass)
+        )
+        await hub.getHubInfo()  # Check all is good
+    except Exception as err:
+        raise ConfigEntryError("get hub info failed") from err
     _LOGGER.debug("Hub object created, FW: %s", hub.fwVer)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
 

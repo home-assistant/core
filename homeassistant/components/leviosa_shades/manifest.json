@@ -3,8 +3,8 @@
   "name": "Leviosa Motor Shades",
   "codeowners": ["@greg-ha-1990"],
   "config_flow": true,
-  "dependencies": ["cover"],
   "documentation": "https://www.home-assistant.io/integrations/leviosa_shades",
+  "integration_type": "hub",
   "iot_class": "assumed_state",
   "requirements": ["leviosapy==0.1.3"]
 }
