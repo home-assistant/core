@@ -527,31 +527,37 @@ def _get_start_time_state_for_entities_stmt(
 ) -> Select:
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
-    # in the inner query.
-    stmt = _stmt_and_join_attributes_for_start_state(
-        no_attributes, include_last_changed
-    ).join(
-        (
-            most_recent_states_for_entities_by_date := (
-                select(
-                    States.metadata_id.label("max_metadata_id"),
-                    func.max(States.last_updated_ts).label("max_last_updated"),
+    # in the inner and the outer query.
+    stmt = (
+        _stmt_and_join_attributes_for_start_state(no_attributes, include_last_changed)
+        .join(
+            (
+                most_recent_states_for_entities_by_date := (
+                    select(
+                        States.metadata_id.label("max_metadata_id"),
+                        func.max(States.last_updated_ts).label("max_last_updated"),
+                    )
+                    .filter(
+                        (States.last_updated_ts >= run_start_ts)
+                        & (States.last_updated_ts < epoch_time)
+                        & States.metadata_id.in_(metadata_ids)
+                    )
+                    .group_by(States.metadata_id)
+                    .subquery()
                 )
-                .filter(
-                    (States.last_updated_ts >= run_start_ts)
-                    & (States.last_updated_ts < epoch_time)
-                )
-                .filter(States.metadata_id.in_(metadata_ids))
-                .group_by(States.metadata_id)
-                .subquery()
-            )
-        ),
-        and_(
-            States.metadata_id
-            == most_recent_states_for_entities_by_date.c.max_metadata_id,
-            States.last_updated_ts
-            == most_recent_states_for_entities_by_date.c.max_last_updated,
-        ),
+            ),
+            and_(
+                States.metadata_id
+                == most_recent_states_for_entities_by_date.c.max_metadata_id,
+                States.last_updated_ts
+                == most_recent_states_for_entities_by_date.c.max_last_updated,
+            ),
+        )
+        .filter(
+            (States.last_updated_ts >= run_start_ts)
+            & (States.last_updated_ts < epoch_time)
+            & States.metadata_id.in_(metadata_ids)
+        )
     )
     if no_attributes:
         return stmt
