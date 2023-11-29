@@ -25,6 +25,7 @@ class FaaDelaysBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Mixin for required keys."""
 
     is_on_fn: Callable[[Airport], bool | None]
+    extra_state_attributes_fn: Callable[[Airport], Mapping[str, Any]]
 
 
 FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
@@ -33,30 +34,54 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
         name="Ground Delay",
         icon="mdi:airport",
         is_on_fn=lambda airport: airport.ground_delay.status,
+        extra_state_attributes_fn=lambda airport: {
+            "average": airport.ground_delay.average,
+            "reason": airport.ground_delay.reason,
+        },
     ),
     FaaDelaysBinarySensorEntityDescription(
         key="GROUND_STOP",
         name="Ground Stop",
         icon="mdi:airport",
         is_on_fn=lambda airport: airport.ground_stop.status,
+        extra_state_attributes_fn=lambda airport: {
+            "endtime": airport.ground_stop.endtime,
+            "reason": airport.ground_stop.reason,
+        },
     ),
     FaaDelaysBinarySensorEntityDescription(
         key="DEPART_DELAY",
         name="Departure Delay",
         icon="mdi:airplane-takeoff",
         is_on_fn=lambda airport: airport.depart_delay.status,
+        extra_state_attributes_fn=lambda airport: {
+            "minimum": airport.depart_delay.minimum,
+            "maximum": airport.depart_delay.maximum,
+            "trend": airport.depart_delay.trend,
+            "reason": airport.depart_delay.reason,
+        },
     ),
     FaaDelaysBinarySensorEntityDescription(
         key="ARRIVE_DELAY",
         name="Arrival Delay",
         icon="mdi:airplane-landing",
         is_on_fn=lambda airport: airport.arrive_delay.status,
+        extra_state_attributes_fn=lambda airport: {
+            "minimum": airport.arrive_delay.minimum,
+            "maximum": airport.arrive_delay.maximum,
+            "trend": airport.arrive_delay.trend,
+            "reason": airport.arrive_delay.reason,
+        },
     ),
     FaaDelaysBinarySensorEntityDescription(
         key="CLOSURE",
         name="Closure",
         icon="mdi:airplane:off",
         is_on_fn=lambda airport: airport.closure.status,
+        extra_state_attributes_fn=lambda airport: {
+            "begin": airport.closure.start,
+            "end": airport.closure.end,
+        },
     ),
 )
 
@@ -89,10 +114,6 @@ class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorE
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
-        self.coordinator = coordinator
-        self._entry_id = entry_id
-        self._attrs: dict[str, Any] = {}
         _id = coordinator.data.code
         self._attr_name = f"{_id} {description.name}"
         self._attr_unique_id = f"{_id}_{description.key}"
@@ -105,24 +126,4 @@ class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorE
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return attributes for sensor."""
-        sensor_type = self.entity_description.key
-        if sensor_type == "GROUND_DELAY":
-            self._attrs["average"] = self.coordinator.data.ground_delay.average
-            self._attrs["reason"] = self.coordinator.data.ground_delay.reason
-        elif sensor_type == "GROUND_STOP":
-            self._attrs["endtime"] = self.coordinator.data.ground_stop.endtime
-            self._attrs["reason"] = self.coordinator.data.ground_stop.reason
-        elif sensor_type == "DEPART_DELAY":
-            self._attrs["minimum"] = self.coordinator.data.depart_delay.minimum
-            self._attrs["maximum"] = self.coordinator.data.depart_delay.maximum
-            self._attrs["trend"] = self.coordinator.data.depart_delay.trend
-            self._attrs["reason"] = self.coordinator.data.depart_delay.reason
-        elif sensor_type == "ARRIVE_DELAY":
-            self._attrs["minimum"] = self.coordinator.data.arrive_delay.minimum
-            self._attrs["maximum"] = self.coordinator.data.arrive_delay.maximum
-            self._attrs["trend"] = self.coordinator.data.arrive_delay.trend
-            self._attrs["reason"] = self.coordinator.data.arrive_delay.reason
-        elif sensor_type == "CLOSURE":
-            self._attrs["begin"] = self.coordinator.data.closure.start
-            self._attrs["end"] = self.coordinator.data.closure.end
-        return self._attrs
+        return self.entity_description.extra_state_attributes_fn(self.coordinator.data)
