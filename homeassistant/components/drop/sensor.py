@@ -46,136 +46,75 @@ async def async_setup_entry(
         config_entry.entry_id,
     )
 
-    entities = []
-    if config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+    device_type: str = config_entry.data[CONF_DEVICE_TYPE]
+    entities: list[SensorEntity] = []
+
+    if device_type == DEV_HUB:
         entities.extend(
             [
-                DROP_CurrentFlowRateSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_PeakFlowRateSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_WaterUsedTodaySensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_AverageWaterUsedSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_CurrentSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_HighSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_LowSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_BatterySensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_AverageWaterUsedSensor(coordinator),
+                DROP_BatterySensor(coordinator),
+                DROP_CurrentFlowRateSensor(coordinator),
+                DROP_CurrentSystemPressureSensor(coordinator),
+                DROP_HighSystemPressureSensor(coordinator),
+                DROP_LowSystemPressureSensor(coordinator),
+                DROP_PeakFlowRateSensor(coordinator),
+                DROP_WaterUsedTodaySensor(coordinator),
             ]
         )
-    elif config_entry.data[CONF_DEVICE_TYPE] == DEV_SOFTENER:
+    elif device_type == DEV_SOFTENER:
         entities.extend(
             [
-                DROP_CurrentFlowRateSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_BatterySensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_CurrentSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_CapacityRemainingSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_BatterySensor(coordinator),
+                DROP_CapacityRemainingSensor(coordinator),
+                DROP_CurrentFlowRateSensor(coordinator),
+                DROP_CurrentSystemPressureSensor(coordinator),
             ]
         )
-    elif config_entry.data[CONF_DEVICE_TYPE] == DEV_FILTER:
+    elif device_type == DEV_FILTER:
         entities.extend(
             [
-                DROP_CurrentFlowRateSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_BatterySensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_CurrentSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_BatterySensor(coordinator),
+                DROP_CurrentFlowRateSensor(coordinator),
+                DROP_CurrentSystemPressureSensor(coordinator),
             ]
         )
-    elif config_entry.data[CONF_DEVICE_TYPE] == DEV_LEAK_DETECTOR:
+    elif device_type == DEV_LEAK_DETECTOR:
         entities.extend(
             [
-                DROP_BatterySensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_TemperatureSensorC(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_TemperatureSensorF(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_BatterySensor(coordinator),
+                DROP_TemperatureSensorC(coordinator),
+                DROP_TemperatureSensorF(coordinator),
             ]
         )
-    elif config_entry.data[CONF_DEVICE_TYPE] == DEV_PROTECTION_VALVE:
+    elif device_type == DEV_PROTECTION_VALVE:
         entities.extend(
             [
-                DROP_CurrentFlowRateSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_CurrentSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_BatterySensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_TemperatureSensorC(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_TemperatureSensorF(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_BatterySensor(coordinator),
+                DROP_CurrentFlowRateSensor(coordinator),
+                DROP_CurrentSystemPressureSensor(coordinator),
+                DROP_TemperatureSensorC(coordinator),
+                DROP_TemperatureSensorF(coordinator),
             ]
         )
-    elif config_entry.data[CONF_DEVICE_TYPE] == DEV_PUMP_CONTROLLER:
+    elif device_type == DEV_PUMP_CONTROLLER:
         entities.extend(
             [
-                DROP_CurrentFlowRateSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_CurrentSystemPressureSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_TemperatureSensorC(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_TemperatureSensorF(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_CurrentFlowRateSensor(coordinator),
+                DROP_CurrentSystemPressureSensor(coordinator),
+                DROP_TemperatureSensorC(coordinator),
+                DROP_TemperatureSensorF(coordinator),
             ]
         )
-    elif config_entry.data[CONF_DEVICE_TYPE] == DEV_RO_FILTER:
+    elif device_type == DEV_RO_FILTER:
         entities.extend(
             [
-                DROP_InletTdsSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_OutletTdsSensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_FilterCart1Sensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_FilterCart2Sensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
-                DROP_FilterCart3Sensor(
-                    hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
-                ),
+                DROP_FilterCart1Sensor(coordinator),
+                DROP_FilterCart2Sensor(coordinator),
+                DROP_FilterCart3Sensor(coordinator),
+                DROP_InletTdsSensor(coordinator),
+                DROP_OutletTdsSensor(coordinator),
             ]
         )
 
@@ -192,7 +131,7 @@ class DROP_CurrentFlowRateSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the current flow rate sensor."""
-        super().__init__("current_flow_rate", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -212,11 +151,11 @@ class DROP_PeakFlowRateSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the peak flow rate sensor."""
-        super().__init__("peak_flow_rate", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
-        """Return the current flow rate."""
+        """Return the peak flow rate."""
         if self._device.peak_flow_rate is None:
             return None
         return round(self._device.peak_flow_rate, 1)
@@ -231,7 +170,7 @@ class DROP_WaterUsedTodaySensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the water used today sensor."""
-        super().__init__("water_used_today", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -250,7 +189,7 @@ class DROP_AverageWaterUsedSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the average water used sensor."""
-        super().__init__("average_water_used", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -269,7 +208,7 @@ class DROP_CapacityRemainingSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the softener capacity remaining sensor."""
-        super().__init__("capacity_remaining", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -288,7 +227,7 @@ class DROP_CurrentSystemPressureSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the current system pressure sensor."""
-        super().__init__("current_system_pressure", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -307,7 +246,7 @@ class DROP_HighSystemPressureSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the high system pressure today sensor."""
-        super().__init__("high_system_pressure", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -326,7 +265,7 @@ class DROP_LowSystemPressureSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the low system pressure today sensor."""
-        super().__init__("low_system_pressure", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -345,7 +284,7 @@ class DROP_BatterySensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the battery sensor."""
-        super().__init__("battery", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -364,7 +303,7 @@ class DROP_TemperatureSensorF(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the temperature sensor."""
-        super().__init__("temperature_f", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -383,7 +322,7 @@ class DROP_TemperatureSensorC(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the temperature sensor."""
-        super().__init__("temperature_c", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -403,7 +342,7 @@ class DROP_InletTdsSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the inlet TDS sensor."""
-        super().__init__("inlet_tds", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -423,7 +362,7 @@ class DROP_OutletTdsSensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the outlet TDS sensor."""
-        super().__init__("outlet_tds", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -443,7 +382,7 @@ class DROP_FilterCart1Sensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the filter cartridge 1 life sensor."""
-        super().__init__("cart1", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -463,7 +402,7 @@ class DROP_FilterCart2Sensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the filter cartridge 2 life sensor."""
-        super().__init__("cart2", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
@@ -483,7 +422,7 @@ class DROP_FilterCart3Sensor(DROP_Entity, SensorEntity):
 
     def __init__(self, device) -> None:
         """Initialize the filter cartridge 3 life sensor."""
-        super().__init__("cart3", device)
+        super().__init__(self._attr_translation_key, device)
 
     @property
     def native_value(self) -> float | None:
