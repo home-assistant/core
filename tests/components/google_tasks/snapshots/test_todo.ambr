@@ -1,11 +1,29 @@
 # serializer version: 1
-# name: test_create_todo_list_item[api_responses0]
+# name: test_create_todo_list_item[description]
   tuple(
     'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks?alt=json',
     'POST',
   )
 # ---
-# name: test_create_todo_list_item[api_responses0].1
+# name: test_create_todo_list_item[description].1
+  '{"title": "Soda", "status": "needsAction", "notes": "6-pack"}'
+# ---
+# name: test_create_todo_list_item[due]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks?alt=json',
+    'POST',
+  )
+# ---
+# name: test_create_todo_list_item[due].1
+  '{"title": "Soda", "status": "needsAction", "due": "2023-11-18T00:00:00-08:00"}'
+# ---
+# name: test_create_todo_list_item[summary]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks?alt=json',
+    'POST',
+  )
+# ---
+# name: test_create_todo_list_item[summary].1
   '{"title": "Soda", "status": "needsAction"}'
 # ---
 # name: test_delete_todo_list_item[_handler]

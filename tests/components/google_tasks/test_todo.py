@@ -82,6 +82,12 @@ UPDATE_API_RESPONSES = [
     EMPTY_RESPONSE,  # update
     LIST_TASKS_RESPONSE,  # refresh after update
 ]
+CREATE_API_RESPONSES = [
+    LIST_TASK_LIST_RESPONSE,
+    LIST_TASKS_RESPONSE,
+    EMPTY_RESPONSE,  # create
+    LIST_TASKS_RESPONSE,  # refresh
+]
 
 
 @pytest.fixture
@@ -344,21 +350,20 @@ async def test_task_items_error_response(
 
 
 @pytest.mark.parametrize(
-    "api_responses",
+    ("api_responses", "item_data"),
     [
-        [
-            LIST_TASK_LIST_RESPONSE,
-            LIST_TASKS_RESPONSE,
-            EMPTY_RESPONSE,  # create
-            LIST_TASKS_RESPONSE,  # refresh after delete
-        ]
+        (CREATE_API_RESPONSES, {}),
+        (CREATE_API_RESPONSES, {"due_date": "2023-11-18"}),
+        (CREATE_API_RESPONSES, {"description": "6-pack"}),
     ],
+    ids=["summary", "due", "description"],
 )
 async def test_create_todo_list_item(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     mock_http_response: Mock,
+    item_data: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for creating a To-do Item."""
@@ -372,7 +377,7 @@ async def test_create_todo_list_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "Soda"},
+        {"item": "Soda", **item_data},
         target={"entity_id": "todo.my_tasks"},
         blocking=True,
     )
