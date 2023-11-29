@@ -40,9 +40,9 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_USERNAME: config[CONF_USERNAME],
-            CONF_PASSWORD: config[CONF_PASSWORD],
-            CONF_HOME_ID: config[CONF_HOME_ID],
+            CONF_USERNAME: config["device_tracker"][CONF_USERNAME],
+            CONF_PASSWORD: config["device_tracker"][CONF_PASSWORD],
+            CONF_HOME_ID: config["device_tracker"][CONF_HOME_ID],
         },
     )
 
