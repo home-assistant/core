@@ -36,11 +36,11 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str]:
         result["title"] = item.summary
     if item.status is not None:
         result["status"] = TODO_STATUS_MAP_INV[item.status]
-    if item.due is not None:
+    if (due := item.due) is not None:
         # due API field is a timestamp string, but with only date resolution
-        result["due"] = dt_util.start_of_local_day(item.due).isoformat()
-    if item.description is not None:
-        result["notes"] = item.description
+        result["due"] = dt_util.start_of_local_day(due).isoformat()
+    if (description := item.description) is not None:
+        result["notes"] = description
     return result
 
 
