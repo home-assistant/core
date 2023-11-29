@@ -4,12 +4,18 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.device_tracker import SourceType
+import voluptuous as vol
+
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    SourceType,
+)
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -18,6 +24,14 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_HOME_ID, DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HOME_ID): cv.string,
+    }
+)
 
 
 async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
