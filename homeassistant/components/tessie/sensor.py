@@ -30,7 +30,6 @@ PARALLEL_UPDATES = 0
 DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
     TessieApi.CHARGE_STATE: (
         SensorEntityDescription(
-            name="Battery Level",
             key="battery_level",
             translation_key="battery_level",
             state_class=SensorStateClass.MEASUREMENT,
@@ -38,7 +37,6 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.BATTERY,
         ),
         SensorEntityDescription(
-            name="Battery Range",
             key="battery_range",
             translation_key="battery_range",
             state_class=SensorStateClass.MEASUREMENT,
@@ -46,7 +44,6 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DISTANCE,
         ),
         SensorEntityDescription(
-            name="Charge Energy Added",
             key="charge_energy_added",
             translation_key="charge_energy_added",
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -56,7 +53,6 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
     ),
     TessieApi.DRIVE_STATE: (
         SensorEntityDescription(
-            name="Speed",
             key="speed",
             translation_key="speed",
             state_class=SensorStateClass.MEASUREMENT,
@@ -64,7 +60,6 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.SPEED,
         ),
         SensorEntityDescription(
-            name="Power",
             key="power",
             translation_key="power",
             state_class=SensorStateClass.MEASUREMENT,
@@ -72,43 +67,38 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
         ),
         SensorEntityDescription(
-            name="Shift State",
             key="shift_state",
             translation_key="shift_state",
         ),
     ),
     TessieApi.VEHICLE_STATE: (
         SensorEntityDescription(
-            name="Tyre Pressure Front Left",
             key="tpms_pressure_fl",
-            translation_key="tyre_pressure_front_left",
+            translation_key="tpms_pressure_fl",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
         ),
         SensorEntityDescription(
-            name="Tyre Pressure Front Right",
             key="tpms_pressure_fr",
-            translation_key="tyre_pressure_front_right",
+            translation_key="tpms_pressure_fr",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
         ),
         SensorEntityDescription(
-            name="Tyre Pressure Rear Left",
             key="tpms_pressure_rl",
-            translation_key="tyre_pressure_rear_left",
+            translation_key="tpms_pressure_rl",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
         ),
         SensorEntityDescription(
-            name="Tyre Pressure Rear Right",
             key="tpms_pressure_rr",
-            translation_key="tyre_pressure_rear_right",
+            translation_key="tpms_pressure_rr",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
