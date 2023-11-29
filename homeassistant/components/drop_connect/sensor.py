@@ -84,8 +84,7 @@ async def async_setup_entry(
         entities.extend(
             [
                 BatterySensor(coordinator),
-                TemperatureSensorC(coordinator),
-                TemperatureSensorF(coordinator),
+                TemperatureSensor(coordinator),
             ]
         )
     elif device_type == DEV_PROTECTION_VALVE:
@@ -94,8 +93,7 @@ async def async_setup_entry(
                 BatterySensor(coordinator),
                 CurrentFlowRateSensor(coordinator),
                 CurrentSystemPressureSensor(coordinator),
-                TemperatureSensorC(coordinator),
-                TemperatureSensorF(coordinator),
+                TemperatureSensor(coordinator),
             ]
         )
     elif device_type == DEV_PUMP_CONTROLLER:
@@ -103,8 +101,7 @@ async def async_setup_entry(
             [
                 CurrentFlowRateSensor(coordinator),
                 CurrentSystemPressureSensor(coordinator),
-                TemperatureSensorC(coordinator),
-                TemperatureSensorF(coordinator),
+                TemperatureSensor(coordinator),
             ]
         )
     elif device_type == DEV_RO_FILTER:
@@ -294,12 +291,12 @@ class BatterySensor(DROPEntity, SensorEntity):
         return round(self._device.battery, 1)
 
 
-class TemperatureSensorF(DROPEntity, SensorEntity):
+class TemperatureSensor(DROPEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = "°F"
-    _attr_translation_key = "temperature_f"
+    _attr_translation_key = "temperature"
 
     def __init__(self, device) -> None:
         """Initialize the temperature sensor."""
@@ -308,28 +305,9 @@ class TemperatureSensorF(DROPEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the temperature."""
-        if self._device.temperature_f is None:
+        if self._device.temperature is None:
             return None
-        return round(self._device.temperature_f, 1)
-
-
-class TemperatureSensorC(DROPEntity, SensorEntity):
-    """Monitors the temperature."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = "°C"
-    _attr_translation_key = "temperature_c"
-
-    def __init__(self, device) -> None:
-        """Initialize the temperature sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the temperature."""
-        if self._device.temperature_c is None:
-            return None
-        return round(self._device.temperature_c, 1)
+        return round(self._device.temperature, 1)
 
 
 class InletTdsSensor(DROPEntity, SensorEntity):

@@ -92,6 +92,11 @@ async def test_sensors_leak(
     assert batterySensor
     assert batterySensor.state == "100"
 
+    tempSensorName = "sensor.leak_detector_temperature"
+    tempSensor = hass.states.get(tempSensorName)
+    assert tempSensor
+    assert tempSensor.state == "20.1"  # C
+
 
 async def test_sensors_softener(
     hass: HomeAssistant, config_entry_softener, mqtt_mock: MqttMockHAClient
@@ -180,15 +185,10 @@ async def test_sensors_protection_valve(
     assert psiSensor
     assert psiSensor.state == "422.6"  # centibars
 
-    tempSensorName = "sensor.protection_valve_temperature_degc"
+    tempSensorName = "sensor.protection_valve_temperature"
     tempSensor = hass.states.get(tempSensorName)
     assert tempSensor
-    assert tempSensor.state == "21.2"
-
-    tempSensorFName = "sensor.protection_valve_temperature_degf"
-    tempSensorF = hass.states.get(tempSensorFName)
-    assert tempSensorF
-    assert tempSensorF.state == "21.2"  # C
+    assert tempSensor.state == "21.4"  # C
 
 
 async def test_sensors_pump_controller(
@@ -214,15 +214,10 @@ async def test_sensors_pump_controller(
     assert psiSensor
     assert psiSensor.state == "428.9"  # centibars
 
-    tempSensorName = "sensor.pump_controller_temperature_degc"
+    tempSensorName = "sensor.pump_controller_temperature"
     tempSensor = hass.states.get(tempSensorName)
     assert tempSensor
-    assert tempSensor.state == "24.5"
-
-    tempSensorFName = "sensor.pump_controller_temperature_degf"
-    tempSensorF = hass.states.get(tempSensorFName)
-    assert tempSensorF
-    assert tempSensorF.state == "24.5"  # C
+    assert tempSensor.state == "20.4"  # C
 
 
 async def test_sensors_ro_filter(

@@ -135,17 +135,9 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self.getIntVal(KEY_STATUS, "psiLow")
 
     @property
-    def temperature_c(self) -> float | None:
-        """Return temperature in Celsius."""
+    def temperature(self) -> float | None:
+        """Return temperature."""
         return self.getFloatVal(KEY_STATUS, "temp")
-
-    @property
-    def temperature_f(self) -> float | None:
-        """Return temperature in Fahrenheit."""
-        tempC = self.getFloatVal(KEY_STATUS, "temp")
-        if tempC is not None:
-            return tempC * (float(9) / 5) + 32
-        return None
 
     @property
     def inlet_tds(self) -> int | None:
