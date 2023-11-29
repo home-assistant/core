@@ -268,7 +268,7 @@ def parse_time(time_str: str) -> dt.time | None:
         return None
 
 
-def _get_timestring(timediff: float, depth: int = 1) -> str:
+def _get_timestring(timediff: float, precision: int = 1) -> str:
     """Return a string representation of a time diff."""
 
     def formatn(number: int, unit: str) -> str:
@@ -285,14 +285,14 @@ def _get_timestring(timediff: float, depth: int = 1) -> str:
     factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
 
     result_string: str = ""
-    current_depth = 0
+    current_precision = 0
 
     for i, current_factor in enumerate(factors):
         selected_unit = units[i]
         if timediff < current_factor:
             continue
-        current_depth = current_depth + 1
-        if current_depth == depth:
+        current_precision = current_precision + 1
+        if current_precision == precision:
             return (
                 result_string + formatn(round(timediff / current_factor), selected_unit)
             ).rstrip()
@@ -303,7 +303,7 @@ def _get_timestring(timediff: float, depth: int = 1) -> str:
     return result_string.rstrip()
 
 
-def get_age(date: dt.datetime, depth: int = 1) -> str:
+def get_age(date: dt.datetime, precision: int = 1) -> str:
     """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month and year.
@@ -319,10 +319,10 @@ def get_age(date: dt.datetime, depth: int = 1) -> str:
 
     if rounded_delta < 0:
         raise ValueError("Time value is in the future")
-    return _get_timestring(rounded_delta, depth)
+    return _get_timestring(rounded_delta, precision)
 
 
-def get_time_remaining(date: dt.datetime, depth: int = 1) -> str:
+def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
     """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month and year.
@@ -339,7 +339,7 @@ def get_time_remaining(date: dt.datetime, depth: int = 1) -> str:
     if rounded_delta < 0:
         raise ValueError("Time value is in the past")
 
-    return _get_timestring(rounded_delta, depth)
+    return _get_timestring(rounded_delta, precision)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
