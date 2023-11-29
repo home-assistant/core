@@ -12,6 +12,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -85,7 +86,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         )
 
         if not product_id:
-            raise ValueError("No product found or no product ID given")
+            raise ServiceValidationError("No product found or no product ID given")
 
         await self.hass.async_add_executor_job(
             self.coordinator.picnic_api_client.add_product, product_id, 1
