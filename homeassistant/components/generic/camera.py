@@ -129,6 +129,8 @@ class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
     _last_image: bytes | None
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -214,11 +216,6 @@ class GenericCamera(Camera):
 
         self._last_url = url
         return self._last_image
-
-    @property
-    def name(self):
-        """Return the name of this device."""
-        return self._name
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
