@@ -270,8 +270,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_state_property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        if not self._static_info.supports_target_humidity:
-            return None
         return round(self._state.target_humidity)
 
     @property
