@@ -907,6 +907,16 @@ def test_rgb_color_selector_schema(
             (100, 200),
             (99, 201),
         ),
+        (
+            {"unit": "mired", "min": 100, "max": 200},
+            (100, 200),
+            (99, 201),
+        ),
+        (
+            {"unit": "kelvin", "min": 1000, "max": 2000},
+            (1000, 2000),
+            (999, 2001),
+        ),
     ),
 )
 def test_color_tempselector_schema(
