@@ -16,7 +16,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN,
+    WirelessTagBaseSensor,
+    async_migrate_unique_id,
+)
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -70,7 +74,7 @@ async def async_setup_platform(
                 description.key in monitored_conditions
                 and description.key in tag.allowed_monitoring_types
             ):
-                platform.async_migrate_unique_id(tag, Platform.SWITCH, description.key)
+                async_migrate_unique_id(hass, tag, Platform.SWITCH, description.key)
                 entities.append(WirelessTagSwitch(platform, tag, description))
 
     async_add_entities(entities, True)

@@ -15,6 +15,7 @@ from . import (
     DOMAIN as WIRELESSTAG_DOMAIN,
     SIGNAL_BINARY_EVENT_UPDATE,
     WirelessTagBaseSensor,
+    async_migrate_unique_id,
 )
 
 # On means in range, Off means out of range
@@ -87,9 +88,7 @@ async def async_setup_platform(
         allowed_sensor_types = tag.supported_binary_events_types
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if sensor_type in allowed_sensor_types:
-                platform.async_migrate_unique_id(
-                    tag, Platform.BINARY_SENSOR, sensor_type
-                )
+                async_migrate_unique_id(hass, tag, Platform.BINARY_SENSOR, sensor_type)
                 sensors.append(WirelessTagBinarySensor(platform, tag, sensor_type))
 
     async_add_entities(sensors, True)

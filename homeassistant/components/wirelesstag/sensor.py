@@ -19,7 +19,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN,
+    SIGNAL_TAG_UPDATE,
+    WirelessTagBaseSensor,
+    async_migrate_unique_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +88,7 @@ async def async_setup_platform(
             if key not in tag.allowed_sensor_types:
                 continue
             description = SENSOR_TYPES[key]
-            platform.async_migrate_unique_id(tag, Platform.SENSOR, description.key)
+            async_migrate_unique_id(hass, tag, Platform.SENSOR, description.key)
             sensors.append(WirelessTagSensor(platform, tag, description))
 
     async_add_entities(sensors, True)
