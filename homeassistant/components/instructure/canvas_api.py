@@ -5,10 +5,12 @@ from typing import Any
 from datetime import datetime, timedelta
 from .const import (
     ANNOUNCEMENT_ENTITY_CONSTANT,
-    ASSIGNMENT__ENTITY_CONSTANT,
+    ASSIGNMENT_ENTITY_CONSTANT,
     CONVERSATION_ENTITY_CONSTANT,
     GRADES_ENTITY_CONSTANT,
 )
+
+ISO_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class CanvasAPI:
@@ -96,7 +98,7 @@ class CanvasAPI:
             for assignment in course_assignments:
                 if assignment["due_at"] is not None:
                     due_date = datetime.strptime(
-                        assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ"
+                        assignment["due_at"], ISO_DATETIME_FORMAT
                     )
                     next_two_weeks = datetime.utcnow() + timedelta(days=14)
                     if due_date <= next_two_weeks:
@@ -105,7 +107,7 @@ class CanvasAPI:
         if len(assignments) != 0:
             return assignments
         else:
-            return {f"assignment-{ASSIGNMENT__ENTITY_CONSTANT}": {}}
+            return {f"assignment-{ASSIGNMENT_ENTITY_CONSTANT}": {}}
 
     async def async_get_announcements(self, course_ids: list[str]) -> dict[str, Any]:
         """Retrieves a dictionary of announcements for given course IDs from the Canvas API.
@@ -160,7 +162,7 @@ class CanvasAPI:
         ]
         read_conversations = read_conversations = sorted(
             read_conversations,
-            key=lambda x: datetime.strptime(x["last_message_at"], "%Y-%m-%dT%H:%M:%SZ"),
+            key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
             reverse=True,
         )[:5]
         merged_conversations = read_conversations + unread_conversations
@@ -190,7 +192,7 @@ class CanvasAPI:
             for submission in course_submissions:
                 if submission["graded_at"] is not None:
                     graded_at = datetime.strptime(
-                        submission["graded_at"], "%Y-%m-%dT%H:%M:%SZ"
+                        submission["graded_at"], ISO_DATETIME_FORMAT
                     )
                     past_one_month = datetime.utcnow() - timedelta(days=30)
                     if graded_at >= past_one_month:
