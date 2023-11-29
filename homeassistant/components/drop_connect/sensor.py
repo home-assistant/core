@@ -25,7 +25,7 @@ from .const import (
     DEV_SOFTENER,
     DOMAIN,
 )
-from .entity import DROP_Entity
+from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,75 +53,75 @@ async def async_setup_entry(
     if device_type == DEV_HUB:
         entities.extend(
             [
-                DROP_AverageWaterUsedSensor(coordinator),
-                DROP_BatterySensor(coordinator),
-                DROP_CurrentFlowRateSensor(coordinator),
-                DROP_CurrentSystemPressureSensor(coordinator),
-                DROP_HighSystemPressureSensor(coordinator),
-                DROP_LowSystemPressureSensor(coordinator),
-                DROP_PeakFlowRateSensor(coordinator),
-                DROP_WaterUsedTodaySensor(coordinator),
+                AverageWaterUsedSensor(coordinator),
+                BatterySensor(coordinator),
+                CurrentFlowRateSensor(coordinator),
+                CurrentSystemPressureSensor(coordinator),
+                HighSystemPressureSensor(coordinator),
+                LowSystemPressureSensor(coordinator),
+                PeakFlowRateSensor(coordinator),
+                WaterUsedTodaySensor(coordinator),
             ]
         )
     elif device_type == DEV_SOFTENER:
         entities.extend(
             [
-                DROP_BatterySensor(coordinator),
-                DROP_CapacityRemainingSensor(coordinator),
-                DROP_CurrentFlowRateSensor(coordinator),
-                DROP_CurrentSystemPressureSensor(coordinator),
+                BatterySensor(coordinator),
+                CapacityRemainingSensor(coordinator),
+                CurrentFlowRateSensor(coordinator),
+                CurrentSystemPressureSensor(coordinator),
             ]
         )
     elif device_type == DEV_FILTER:
         entities.extend(
             [
-                DROP_BatterySensor(coordinator),
-                DROP_CurrentFlowRateSensor(coordinator),
-                DROP_CurrentSystemPressureSensor(coordinator),
+                BatterySensor(coordinator),
+                CurrentFlowRateSensor(coordinator),
+                CurrentSystemPressureSensor(coordinator),
             ]
         )
     elif device_type == DEV_LEAK_DETECTOR:
         entities.extend(
             [
-                DROP_BatterySensor(coordinator),
-                DROP_TemperatureSensorC(coordinator),
-                DROP_TemperatureSensorF(coordinator),
+                BatterySensor(coordinator),
+                TemperatureSensorC(coordinator),
+                TemperatureSensorF(coordinator),
             ]
         )
     elif device_type == DEV_PROTECTION_VALVE:
         entities.extend(
             [
-                DROP_BatterySensor(coordinator),
-                DROP_CurrentFlowRateSensor(coordinator),
-                DROP_CurrentSystemPressureSensor(coordinator),
-                DROP_TemperatureSensorC(coordinator),
-                DROP_TemperatureSensorF(coordinator),
+                BatterySensor(coordinator),
+                CurrentFlowRateSensor(coordinator),
+                CurrentSystemPressureSensor(coordinator),
+                TemperatureSensorC(coordinator),
+                TemperatureSensorF(coordinator),
             ]
         )
     elif device_type == DEV_PUMP_CONTROLLER:
         entities.extend(
             [
-                DROP_CurrentFlowRateSensor(coordinator),
-                DROP_CurrentSystemPressureSensor(coordinator),
-                DROP_TemperatureSensorC(coordinator),
-                DROP_TemperatureSensorF(coordinator),
+                CurrentFlowRateSensor(coordinator),
+                CurrentSystemPressureSensor(coordinator),
+                TemperatureSensorC(coordinator),
+                TemperatureSensorF(coordinator),
             ]
         )
     elif device_type == DEV_RO_FILTER:
         entities.extend(
             [
-                DROP_FilterCart1Sensor(coordinator),
-                DROP_FilterCart2Sensor(coordinator),
-                DROP_FilterCart3Sensor(coordinator),
-                DROP_InletTdsSensor(coordinator),
-                DROP_OutletTdsSensor(coordinator),
+                FilterCart1Sensor(coordinator),
+                FilterCart2Sensor(coordinator),
+                FilterCart3Sensor(coordinator),
+                InletTdsSensor(coordinator),
+                OutletTdsSensor(coordinator),
             ]
         )
 
     async_add_entities(entities)
 
 
-class DROP_CurrentFlowRateSensor(DROP_Entity, SensorEntity):
+class CurrentFlowRateSensor(DROPEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
     _attr_icon = FLOW_ICON
@@ -141,7 +141,7 @@ class DROP_CurrentFlowRateSensor(DROP_Entity, SensorEntity):
         return round(self._device.current_flow_rate, 1)
 
 
-class DROP_PeakFlowRateSensor(DROP_Entity, SensorEntity):
+class PeakFlowRateSensor(DROPEntity, SensorEntity):
     """Monitors the peak water flow rate for the day."""
 
     _attr_icon = FLOW_ICON
@@ -161,7 +161,7 @@ class DROP_PeakFlowRateSensor(DROP_Entity, SensorEntity):
         return round(self._device.peak_flow_rate, 1)
 
 
-class DROP_WaterUsedTodaySensor(DROP_Entity, SensorEntity):
+class WaterUsedTodaySensor(DROPEntity, SensorEntity):
     """Monitors the total water used for the day."""
 
     _attr_device_class = SensorDeviceClass.WATER
@@ -180,7 +180,7 @@ class DROP_WaterUsedTodaySensor(DROP_Entity, SensorEntity):
         return round(self._device.water_used_today, 1)
 
 
-class DROP_AverageWaterUsedSensor(DROP_Entity, SensorEntity):
+class AverageWaterUsedSensor(DROPEntity, SensorEntity):
     """Monitors the average water used over the last 90 days."""
 
     _attr_device_class = SensorDeviceClass.WATER
@@ -199,7 +199,7 @@ class DROP_AverageWaterUsedSensor(DROP_Entity, SensorEntity):
         return round(self._device.average_water_used, 1)
 
 
-class DROP_CapacityRemainingSensor(DROP_Entity, SensorEntity):
+class CapacityRemainingSensor(DROPEntity, SensorEntity):
     """Monitors the soft water capacity remaining on a softener."""
 
     _attr_device_class = SensorDeviceClass.WATER
@@ -218,7 +218,7 @@ class DROP_CapacityRemainingSensor(DROP_Entity, SensorEntity):
         return round(self._device.capacity_remaining, 1)
 
 
-class DROP_CurrentSystemPressureSensor(DROP_Entity, SensorEntity):
+class CurrentSystemPressureSensor(DROPEntity, SensorEntity):
     """Monitors the current system pressure."""
 
     _attr_device_class = SensorDeviceClass.PRESSURE
@@ -237,7 +237,7 @@ class DROP_CurrentSystemPressureSensor(DROP_Entity, SensorEntity):
         return round(self._device.current_system_pressure, 1)
 
 
-class DROP_HighSystemPressureSensor(DROP_Entity, SensorEntity):
+class HighSystemPressureSensor(DROPEntity, SensorEntity):
     """Monitors the high system pressure today."""
 
     _attr_device_class = SensorDeviceClass.PRESSURE
@@ -256,7 +256,7 @@ class DROP_HighSystemPressureSensor(DROP_Entity, SensorEntity):
         return round(self._device.high_system_pressure, 1)
 
 
-class DROP_LowSystemPressureSensor(DROP_Entity, SensorEntity):
+class LowSystemPressureSensor(DROPEntity, SensorEntity):
     """Monitors the low system pressure today."""
 
     _attr_device_class = SensorDeviceClass.PRESSURE
@@ -275,7 +275,7 @@ class DROP_LowSystemPressureSensor(DROP_Entity, SensorEntity):
         return round(self._device.low_system_pressure, 1)
 
 
-class DROP_BatterySensor(DROP_Entity, SensorEntity):
+class BatterySensor(DROPEntity, SensorEntity):
     """Monitors the battery level."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -294,7 +294,7 @@ class DROP_BatterySensor(DROP_Entity, SensorEntity):
         return round(self._device.battery, 1)
 
 
-class DROP_TemperatureSensorF(DROP_Entity, SensorEntity):
+class TemperatureSensorF(DROPEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -313,7 +313,7 @@ class DROP_TemperatureSensorF(DROP_Entity, SensorEntity):
         return round(self._device.temperature_f, 1)
 
 
-class DROP_TemperatureSensorC(DROP_Entity, SensorEntity):
+class TemperatureSensorC(DROPEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -332,7 +332,7 @@ class DROP_TemperatureSensorC(DROP_Entity, SensorEntity):
         return round(self._device.temperature_c, 1)
 
 
-class DROP_InletTdsSensor(DROP_Entity, SensorEntity):
+class InletTdsSensor(DROPEntity, SensorEntity):
     """Monitors the inlet TDS."""
 
     _attr_icon = TDS_ICON
@@ -352,7 +352,7 @@ class DROP_InletTdsSensor(DROP_Entity, SensorEntity):
         return round(self._device.inlet_tds, 1)
 
 
-class DROP_OutletTdsSensor(DROP_Entity, SensorEntity):
+class OutletTdsSensor(DROPEntity, SensorEntity):
     """Monitors the outlet TDS."""
 
     _attr_icon = TDS_ICON
@@ -372,7 +372,7 @@ class DROP_OutletTdsSensor(DROP_Entity, SensorEntity):
         return round(self._device.outlet_tds, 1)
 
 
-class DROP_FilterCart1Sensor(DROP_Entity, SensorEntity):
+class FilterCart1Sensor(DROPEntity, SensorEntity):
     """Monitors the cartridge 1 life sensor."""
 
     _attr_icon = GAUGE_ICON
@@ -392,7 +392,7 @@ class DROP_FilterCart1Sensor(DROP_Entity, SensorEntity):
         return round(self._device.cart1, 1)
 
 
-class DROP_FilterCart2Sensor(DROP_Entity, SensorEntity):
+class FilterCart2Sensor(DROPEntity, SensorEntity):
     """Monitors the cartridge 2 life sensor."""
 
     _attr_icon = GAUGE_ICON
@@ -412,7 +412,7 @@ class DROP_FilterCart2Sensor(DROP_Entity, SensorEntity):
         return round(self._device.cart2, 1)
 
 
-class DROP_FilterCart3Sensor(DROP_Entity, SensorEntity):
+class FilterCart3Sensor(DROPEntity, SensorEntity):
     """Monitors the cartridge 3 life sensor."""
 
     _attr_icon = GAUGE_ICON

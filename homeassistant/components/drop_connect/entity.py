@@ -5,10 +5,10 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import DROP_DeviceDataUpdateCoordinator
+from .coordinator import DROPDeviceDataUpdateCoordinator
 
 
-class DROP_Entity(CoordinatorEntity[DROP_DeviceDataUpdateCoordinator]):
+class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
     """Representation of a DROP device entity."""
 
     _attr_force_update = False
@@ -16,12 +16,12 @@ class DROP_Entity(CoordinatorEntity[DROP_DeviceDataUpdateCoordinator]):
     _attr_should_poll = False
 
     def __init__(
-        self, entity_type: str, coordinator: DROP_DeviceDataUpdateCoordinator
+        self, entity_type: str, coordinator: DROPDeviceDataUpdateCoordinator
     ) -> None:
         """Init DROP entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.id}_{entity_type}"
-        self._device: DROP_DeviceDataUpdateCoordinator = coordinator
+        self._device: DROPDeviceDataUpdateCoordinator = coordinator
 
     @property
     def device_info(self) -> DeviceInfo:

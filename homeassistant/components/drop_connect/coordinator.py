@@ -24,7 +24,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class DROP_DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """DROP device object."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -40,7 +40,7 @@ class DROP_DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._device_information: dict[str, Any] = {}
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{self._drop_device_id}")
 
-    async def DROP_MessageReceived(
+    async def DROPMessageReceived(
         self, topic: str, payload: str, qos: int, retain: bool
     ) -> None:
         """Process a received MQTT message."""

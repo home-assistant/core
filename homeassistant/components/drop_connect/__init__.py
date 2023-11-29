@@ -15,7 +15,7 @@ from .const import (
     CONF_UNIQUE_ID,
     DOMAIN,
 )
-from .coordinator import DROP_DeviceDataUpdateCoordinator
+from .coordinator import DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +33,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {}
     hass.data[DOMAIN][config_entry.entry_id][
         CONF_COORDINATOR
-    ] = DROP_DeviceDataUpdateCoordinator(hass, config_entry)
+    ] = DROPDeviceDataUpdateCoordinator(hass, config_entry)
 
     # Thin wrapper used to pass MQTT messages to the data coordinator for this entry.
     async def message_received(msg):
         if config_entry.entry_id in hass.data[DOMAIN]:
             await hass.data[DOMAIN][config_entry.entry_id][
                 CONF_COORDINATOR
-            ].DROP_MessageReceived(msg.topic, msg.payload, msg.qos, msg.retain)
+            ].DROPMessageReceived(msg.topic, msg.payload, msg.qos, msg.retain)
 
     # Subscribe to the incoming data topic defined by the config flow using the wrapper defined above.
     _LOGGER.debug(
