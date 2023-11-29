@@ -1,5 +1,6 @@
 """Constants for the ViCare integration."""
 import enum
+from typing import Final
 
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfVolume
 
@@ -18,6 +19,8 @@ VICARE_DEVICE_CONFIG = "device_conf"
 VICARE_DEVICE_CONFIG_LIST = "device_config_list"
 VICARE_API = "api"
 VICARE_NAME = "ViCare"
+MANUFACTURER: Final = "Viessmann"
+DEVELOPER_PORTAL: Final = "https://app.developer.viessmann.com/"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
