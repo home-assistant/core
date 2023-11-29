@@ -782,9 +782,21 @@ async def handle_execute_script(
         script_result = await script_obj.async_run(
             msg.get("variables"), context=context
         )
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
     except Exception as exc:  # pylint: disable=broad-except
         connection.async_handle_exception(msg, exc)
-
+        return
     connection.send_result(
         msg["id"],
         {

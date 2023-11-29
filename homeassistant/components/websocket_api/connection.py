@@ -12,11 +12,7 @@ import voluptuous as vol
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    ServiceValidationError,
-    Unauthorized,
-)
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -273,12 +269,6 @@ class ActiveConnection:
         elif isinstance(err, asyncio.TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
-        elif isinstance(err, ServiceValidationError):
-            err_message = str(err)
-            code = const.ERR_SERVICE_VALIDATION_ERROR
-            translation_domain = err.translation_domain
-            translation_key = err.translation_key
-            translation_placeholders = err.translation_placeholders
         elif isinstance(err, HomeAssistantError):
             err_message = str(err)
             code = const.ERR_UNKNOWN_ERROR
