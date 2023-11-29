@@ -2163,20 +2163,34 @@ def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     return datetime.combine(today, time_today, today.tzinfo)
 
 
-def relative_time(
-    hass: HomeAssistant, value: Any | datetime, is_future: bool = False, depth: int = 1
-) -> Any:
+def relative_time(hass: HomeAssistant, value: Any) -> Any:
     """Take a datetime and return its "age" as a string.
 
-    The age can be in second, minute, hour, day, month and year.
+    The age can be in second, minute, hour, day, month or year. Only the
+    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
+    be returned.
+    Make sure date is not in the future, or else it will return None.
 
-    depth number of units will be returned, with the last unit rounded.
+    If the input are not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
 
-    If is_future is False, the date must be in the past, or else the object
-    will be returned unmodified.
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+    return dt_util.get_age(value)
 
-    If is_future is True, the date must be in the future, or else
-    "0 seconds" will be returned
+
+def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in seconds, minutes, hours, days, months and year.
+
+    precision is the number of units will be returned, with the last unit rounded.
 
     If the value not a datetime object the input will be returned unmodified.
     """
@@ -2187,10 +2201,32 @@ def relative_time(
         return value
     if not value.tzinfo:
         value = dt_util.as_local(value)
-    if dt_util.now() < value and not is_future:
+    if dt_util.now() < value:
         return value
 
-    return dt_util.get_age(value, is_future=is_future, depth=depth)
+    return dt_util.get_age(value, precision)
+
+
+def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return the amount of time until that time as a string.
+
+    The time until can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units will be returned, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() > value:
+        return value
+
+    return dt_util.get_time_remaining(value, precision)
 
 
 def urlencode(value):
@@ -2548,6 +2584,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_id",
                 "area_name",
                 "relative_time",
+                "time_since",
+                "time_until",
                 "today_at",
             ]
             hass_filters = [
@@ -2596,6 +2634,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
         self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["time_since"] = hassfunction(time_since)
+        self.filters["time_since"] = self.globals["time_since"]
+        self.globals["time_until"] = hassfunction(time_until)
+        self.filters["time_until"] = self.globals["time_until"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
 
