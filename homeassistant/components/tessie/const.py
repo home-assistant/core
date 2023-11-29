@@ -5,6 +5,13 @@ from enum import StrEnum
 
 DOMAIN = "tessie"
 
+MODELS = {
+    "model3": "Model 3",
+    "modelx": "Model X",
+    "modely": "Model Y",
+    "models": "Model S",
+}
+
 
 class TessieApi(StrEnum):
     """API response keys for Tessie."""

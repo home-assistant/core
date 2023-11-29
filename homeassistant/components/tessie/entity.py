@@ -9,14 +9,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, TessieApi
-
-MODELS = {
-    "model3": "Model 3",
-    "modelx": "Model X",
-    "modely": "Model Y",
-    "models": "Model S",
-}
+from .const import DOMAIN, MODELS, TessieApi
 
 
 class TessieEntity(CoordinatorEntity):
