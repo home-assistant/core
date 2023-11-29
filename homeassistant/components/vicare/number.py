@@ -144,7 +144,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         """Set new value."""
         if self.entity_description.value_setter:
             self.entity_description.value_setter(self._api, value)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def update(self) -> None:
         """Update state of number."""
