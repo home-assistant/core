@@ -8,6 +8,7 @@ import logging
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
+    HeatingCircuit as PyViCareHeatingCircuit,
     HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
 )
 from PyViCare.PyViCareUtils import (
@@ -157,12 +158,15 @@ def _build_entities_for_component(
     entity_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
 ) -> list[ViCareBinarySensor]:
     """Create component specific ViCare binary sensor entities."""
-
+    is_heating_circuit: bool = len(components) > 0 and isinstance(
+        components[0], PyViCareHeatingCircuit
+    )
     return [
         ViCareBinarySensor(
             component,
             device_config,
             description,
+            None if not is_heating_circuit else component.getName(),
         )
         for component in components
         for description in entity_descriptions
@@ -198,9 +202,10 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         api: PyViCareDevice,
         device_config: PyViCareDeviceConfig,
         description: ViCareBinarySensorEntityDescription,
+        custom_device_name: str | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(device_config, api, description.key, custom_device_name)
         self.entity_description = description
 
     @property
