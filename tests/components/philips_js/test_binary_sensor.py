@@ -1,7 +1,7 @@
 """The tests for philips_js binary_sensor."""
 import pytest
 
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_NAME, MOCK_RECORDINGS_LIST
@@ -63,10 +63,10 @@ async def test_recordings_list_valid(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     state = hass.states.get(ID_RECORDING_AVAILABLE)
-    assert state.state is STATE_ON
+    assert state.state == STATE_ON
 
     state = hass.states.get(ID_RECORDING_ONGOING)
-    assert state.state is STATE_ON
+    assert state.state == STATE_ON
 
 
 async def test_recordings_list_unavailable(
@@ -77,7 +77,7 @@ async def test_recordings_list_unavailable(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     state = hass.states.get(ID_RECORDING_AVAILABLE)
-    assert state.state is False
+    assert state.state == STATE_OFF
 
     state = hass.states.get(ID_RECORDING_ONGOING)
-    assert state.state is False
+    assert state.state == STATE_OFF
