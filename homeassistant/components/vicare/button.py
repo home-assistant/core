@@ -47,19 +47,21 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    vicare_api: PyViCareDevice,
+def _build_entities(
+    api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
-    entity_description: ViCareButtonEntityDescription,
-):
-    """Create a ViCare button entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
-        return ViCareButton(
-            vicare_api,
+) -> list[ViCareButton]:
+    """Create ViCare button entities for a device."""
+
+    return [
+        ViCareButton(
+            api,
             device_config,
-            entity_description,
+            description,
         )
-    return None
+        for description in BUTTON_DESCRIPTIONS
+        if is_supported(description.key, description, api)
+    ]
 
 
 async def async_setup_entry(
@@ -69,20 +71,15 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare button entities."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
 
-    entities = []
-
-    for description in BUTTON_DESCRIPTIONS:
-        entity = await hass.async_add_executor_job(
-            _build_entity,
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
             api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            description,
+            device_config,
         )
-        if entity is not None:
-            entities.append(entity)
-
-    async_add_entities(entities)
+    )
 
 
 class ViCareButton(ViCareEntity, ButtonEntity):

@@ -10,6 +10,8 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import PROJECT_ID, make_api_task
 
+from tests.typing import WebSocketGenerator
+
 
 @pytest.fixture(autouse=True)
 def platforms() -> list[Platform]:
@@ -230,3 +232,61 @@ async def test_remove_todo_item(
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "0"
+
+
+@pytest.mark.parametrize(
+    ("tasks"), [[make_api_task(id="task-id-1", content="Cheese", is_completed=False)]]
+)
+async def test_subscribe(
+    hass: HomeAssistant,
+    setup_integration: None,
+    api: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test for subscribing to state updates."""
+
+    # Subscribe and get the initial list
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": "todo.name",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Cheese"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]
+
+    # Fake API response when state is refreshed
+    api.get_tasks.return_value = [
+        make_api_task(id="test-id-1", content="Wine", is_completed=False)
+    ]
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"item": "Cheese", "rename": "Wine"},
+        target={"entity_id": "todo.name"},
+        blocking=True,
+    )
+
+    # Verify update is published
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Wine"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]
