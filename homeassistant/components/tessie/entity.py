@@ -22,7 +22,7 @@ class TessieEntity(CoordinatorEntity):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator, vin: str, category: str, name: str) -> None:
-        """Initialize common aspects of an Tessie entity."""
+        """Initialize common aspects of a Tessie entity."""
         super().__init__(coordinator)
         self.vin = vin
         self.category = category
