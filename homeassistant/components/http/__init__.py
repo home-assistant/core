@@ -540,11 +540,7 @@ class HomeAssistantHTTP:
         # pylint: disable-next=protected-access
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
-        self.runner = web.AppRunner(
-            self.app,
-            access_log_class=HomeAssistantAccessLogger,
-            handler_cancellation=True,
-        )
+        self.runner = web.AppRunner(self.app, handler_cancellation=True)
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(
