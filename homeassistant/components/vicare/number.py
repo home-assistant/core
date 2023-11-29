@@ -87,11 +87,7 @@ def _build_entities(
     """Create ViCare number entities for a component."""
 
     return [
-        ViCareNumber(
-            circuit,
-            device_config,
-            description,
-        )
+        ViCareNumber(circuit, device_config, description, circuit.getName())
         for circuit in get_circuits(api)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
         if is_supported(description.key, description, circuit)
@@ -126,9 +122,10 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
+        custom_device_name: str | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(device_config, api, description.key, custom_device_name)
         self.entity_description = description
 
     @property
