@@ -24,7 +24,6 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config Tessie API connection."""
 
     VERSION = 1
-    DOMAIN = DOMAIN
 
     def __init__(self) -> None:
         """Initialize."""
