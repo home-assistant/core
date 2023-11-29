@@ -2,7 +2,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pydiscovergy import Discovergy
 from pydiscovergy.models import Reading
 import pytest
 
@@ -27,14 +26,16 @@ def _meter_last_reading(meter_id: str) -> Reading:
 @pytest.fixture(name="discovergy")
 def mock_discovergy() -> Generator[AsyncMock, None, None]:
     """Mock the pydiscovergy client."""
-    mock = AsyncMock(spec=Discovergy)
-    mock.meters.return_value = GET_METERS
-    mock.meter_last_reading.side_effect = _meter_last_reading
-
     with patch(
-        "homeassistant.components.discovergy.pydiscovergy.Discovergy",
-        return_value=mock,
+        "homeassistant.components.discovergy.Discovergy",
+        autospec=True,
+    ) as mock_discovergy, patch(
+        "homeassistant.components.discovergy.config_flow.Discovergy",
+        new=mock_discovergy,
     ):
+        mock = mock_discovergy.return_value
+        mock.meters.return_value = GET_METERS
+        mock.meter_last_reading.side_effect = _meter_last_reading
         yield mock
 
 

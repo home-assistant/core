@@ -77,6 +77,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             midnightMode=self.midnight_mode,
             school=self.school,
             date=str(dt_util.now().date()),
+            iso8601=True,
         )
         return cast(dict[str, Any], calc.fetch_prayer_times())
 
@@ -145,9 +146,12 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             async_call_later(self.hass, 60, self.async_request_update)
             raise UpdateFailed from err
 
+        # introduced in prayer-times-calculator 0.0.8
+        prayer_times.pop("date", None)
+
         prayer_times_info: dict[str, datetime] = {}
         for prayer, time in prayer_times.items():
-            if prayer_time := dt_util.parse_datetime(f"{dt_util.now().date()} {time}"):
+            if prayer_time := dt_util.parse_datetime(time):
                 prayer_times_info[prayer] = dt_util.as_utc(prayer_time)
 
         self.async_schedule_future_update(prayer_times_info["Midnight"])
