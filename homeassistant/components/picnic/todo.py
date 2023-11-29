@@ -31,7 +31,7 @@ async def async_setup_entry(
     """Set up the Picnic shopping cart todo platform config entry."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
-    async_add_entities([PicnicCart(hass, picnic_coordinator, config_entry)])
+    async_add_entities([PicnicCart(picnic_coordinator, config_entry)])
 
 
 class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
@@ -44,7 +44,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: PicnicUpdateCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
@@ -56,7 +55,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
             manufacturer="Picnic",
             model=config_entry.unique_id,
         )
-        self.hass = hass
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
 
     @property
