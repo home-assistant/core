@@ -1,7 +1,11 @@
 """Platform for FAA Delays sensor component."""
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any
+
+from faadelays import Airport
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -12,33 +16,47 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FAADataUpdateCoordinator
 from .const import DOMAIN
 
-FAA_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+
+@dataclass(kw_only=True)
+class FaaDelaysBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Mixin for required keys."""
+
+    is_on_fn: Callable[[Airport], bool | None]
+
+
+FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
+    FaaDelaysBinarySensorEntityDescription(
         key="GROUND_DELAY",
         name="Ground Delay",
         icon="mdi:airport",
+        is_on_fn=lambda airport: airport.ground_delay.status,
     ),
-    BinarySensorEntityDescription(
+    FaaDelaysBinarySensorEntityDescription(
         key="GROUND_STOP",
         name="Ground Stop",
         icon="mdi:airport",
+        is_on_fn=lambda airport: airport.ground_stop.status,
     ),
-    BinarySensorEntityDescription(
+    FaaDelaysBinarySensorEntityDescription(
         key="DEPART_DELAY",
         name="Departure Delay",
         icon="mdi:airplane-takeoff",
+        is_on_fn=lambda airport: airport.depart_delay.status,
     ),
-    BinarySensorEntityDescription(
+    FaaDelaysBinarySensorEntityDescription(
         key="ARRIVE_DELAY",
         name="Arrival Delay",
         icon="mdi:airplane-landing",
+        is_on_fn=lambda airport: airport.arrive_delay.status,
     ),
-    BinarySensorEntityDescription(
+    FaaDelaysBinarySensorEntityDescription(
         key="CLOSURE",
         name="Closure",
         icon="mdi:airplane:off",
+        is_on_fn=lambda airport: airport.closure.status,
     ),
 )
 
@@ -57,11 +75,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
+class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorEntity):
     """Define a binary sensor for FAA Delays."""
 
+    entity_description: FaaDelaysBinarySensorEntityDescription
+
     def __init__(
-        self, coordinator, entry_id, description: BinarySensorEntityDescription
+        self,
+        coordinator: FAADataUpdateCoordinator,
+        entry_id: str,
+        description: FaaDelaysBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -75,23 +98,12 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{_id}_{description.key}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the status of the sensor."""
-        sensor_type = self.entity_description.key
-        if sensor_type == "GROUND_DELAY":
-            return self.coordinator.data.ground_delay.status
-        if sensor_type == "GROUND_STOP":
-            return self.coordinator.data.ground_stop.status
-        if sensor_type == "DEPART_DELAY":
-            return self.coordinator.data.depart_delay.status
-        if sensor_type == "ARRIVE_DELAY":
-            return self.coordinator.data.arrive_delay.status
-        if sensor_type == "CLOSURE":
-            return self.coordinator.data.closure.status
-        return None
+        return self.entity_description.is_on_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return attributes for sensor."""
         sensor_type = self.entity_description.key
         if sensor_type == "GROUND_DELAY":
