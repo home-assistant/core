@@ -146,7 +146,7 @@ WSDiscovery==2.0.0
 accuweather==2.1.1
 
 # homeassistant.components.adax
-adax==0.3.0
+adax==0.4.0
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.4.4
@@ -185,7 +185,7 @@ aio-geojson-usgs-earthquakes==0.2
 aio-georss-gdacs==0.8
 
 # homeassistant.components.airq
-aioairq==0.2.4
+aioairq==0.3.1
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.3.6
@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.1.4
+aioesphomeapi==19.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -380,7 +380,7 @@ aiounifi==66
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.2
+aiovodafone==0.4.3
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -463,9 +463,6 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
-# homeassistant.components.esphome
-async-interrupt==1.1.1
-
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
@@ -526,7 +523,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.8
+bellows==0.37.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.3
@@ -2666,7 +2663,7 @@ unifi-discovery==1.1.7
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.14
+universal-silabs-flasher==0.0.15
 
 # homeassistant.components.upb
 upb-lib==0.5.4
@@ -2825,7 +2822,7 @@ zeroconf==0.127.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.106
+zha-quirks==0.0.107
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
@@ -2834,19 +2831,19 @@ zhong-hong-hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.21.1
+zigpy-deconz==0.22.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.19.0
+zigpy-xbee==0.20.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.11.0
+zigpy-zigate==0.12.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.6
+zigpy-znp==0.12.0
 
 # homeassistant.components.zha
-zigpy==0.59.0
+zigpy==0.60.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

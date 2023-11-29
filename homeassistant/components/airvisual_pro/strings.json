@@ -14,7 +14,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "ip_address": "The hostname or IP address of the device running your AirVisual Pro."
+          "ip_address": "The hostname or IP address of your AirVisual Pro device."
         }
       }
     },
