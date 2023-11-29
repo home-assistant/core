@@ -16,9 +16,10 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -113,3 +114,35 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version == 1:
+        _LOGGER.debug("Migrating from version %s", entry.version)
+
+        @callback
+        def update_unique_id(entity_entry: er.RegistryEntry):
+            """Convert the unique_id of climate entities from '<serial>-<n>' to '<serial>-<entitiy-key>-<n>'.
+
+            Example: 'xyz-1' --> 'xyz-heating-1'.
+            """
+
+            new_unique_id = entity_entry.unique_id
+            if entity_entry.platform == Platform.CLIMATE:
+                parts = new_unique_id.split("-")
+                if len(parts) == 2:
+                    new_unique_id = "-heating-".join(parts)
+                    _LOGGER.info(
+                        "Migrating unique id of climate entity from %s to %s",
+                        entity_entry.unique_id,
+                        new_unique_id,
+                    )
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
+        entry.version = 2
+        _LOGGER.info("Migration to version %s successful", entry.version)
+
+    return True
