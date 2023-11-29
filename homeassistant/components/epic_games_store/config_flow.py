@@ -34,9 +34,7 @@ def get_default_locale(hass: HomeAssistant) -> str:
     return "en-US"
 
 
-async def validate_input(
-    hass: HomeAssistant, user_input: dict[str, Any]
-) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     api = EpicGamesStoreAPI(
         user_input[CONF_LOCALE], get_country_from_locale(user_input[CONF_LOCALE])
@@ -50,11 +48,6 @@ async def validate_input(
         data["data"]["Catalog"]["searchStore"]["elements"]
     except Exception:  # pylint: disable=broad-except
         raise CannotConnect
-
-    # Return info that you want to store in the config entry.
-    return {
-        CONF_LOCALE: user_input[CONF_LOCALE],
-    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -79,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await validate_input(self.hass, user_input)
+            await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
@@ -87,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title=f"Epic Games Store {info[CONF_LOCALE]}", data=info
+                title=f"Epic Games Store {user_input[CONF_LOCALE]}", data=user_input
             )
 
         return self.async_show_form(
