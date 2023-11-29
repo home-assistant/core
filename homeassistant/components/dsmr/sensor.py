@@ -392,7 +392,7 @@ def create_mbus_entity(
     ):
         return DSMRSensorEntityDescription(
             key=f"mbus{mbus}_gas_reading",
-            name=f"Gas consumption mbus{mbus}",
+            translation_key="gas_meter_reading",
             obis_reference=obis_reference,
             is_gas=True,
             device_class=SensorDeviceClass.GAS,
@@ -409,7 +409,7 @@ def create_mbus_entity(
     ):
         return DSMRSensorEntityDescription(
             key=f"mbus{mbus}_water_reading",
-            name=f"Water consumption mbus{mbus}",
+            translation_key="water_meter_reading",
             obis_reference=obis_reference,
             is_water=True,
             device_class=SensorDeviceClass.WATER,
@@ -451,7 +451,9 @@ def rename_old_gas_to_mbus(
             if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
                 try:
                     ent_reg.async_update_entity(
-                        entity.entity_id, new_unique_id=mbus_device_id
+                        entity.entity_id,
+                        new_unique_id=mbus_device_id,
+                        device_id=mbus_device_id,
                     )
                 except ValueError:
                     LOGGER.warning(
@@ -748,7 +750,10 @@ class DSMREntity(SensorEntity):
             name=device_name,
         )
         if mbus_id != 0:
-            self._attr_unique_id = f"{device_serial}"
+            if serial_id:
+                self._attr_unique_id = f"{device_serial}"
+            else:
+                self._attr_unique_id = f"{device_serial}_{mbus_id}"
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 

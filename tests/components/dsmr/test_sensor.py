@@ -624,7 +624,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     assert max_demand.attributes.get(ATTR_STATE_CLASS) is None
 
     # check if gas consumption mbus1 is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus1")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -637,7 +637,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
     # check if water usage mbus2 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_mbus2")
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption")
     assert water_consumption.state == "678.695"
     assert (
         water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
@@ -652,7 +652,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
     # check if gas consumption mbus1 is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus3")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
     assert gas_consumption.state == "12.12"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -665,7 +665,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
     # check if water usage mbus2 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_mbus4")
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
     assert water_consumption.state == "13.13"
     assert (
         water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
@@ -789,7 +789,7 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     await hass.async_block_till_done()
 
     # check if water usage mbus1 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_mbus1")
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption")
     assert water_consumption.state == "123.456"
     assert (
         water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
@@ -804,7 +804,7 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     )
 
     # check if gas consumption mbus2 is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus2")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "678.901"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -817,7 +817,7 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     )
 
     # check if water usage mbus3 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_mbus3")
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
     assert water_consumption.state == "12.12"
     assert (
         water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
@@ -832,7 +832,7 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     )
 
     # check if gas consumption mbus4 is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus4")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
     assert gas_consumption.state == "13.13"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -858,7 +858,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
         BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
         BELGIUM_MBUS3_METER_READING2,
         BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
         BELGIUM_MBUS4_METER_READING1,
         ELECTRICITY_ACTIVE_TARIFF,
     )
@@ -910,10 +909,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
         ),
         BELGIUM_MBUS4_DEVICE_TYPE: CosemObject(
             BELGIUM_MBUS4_DEVICE_TYPE, [{"value": "003", "unit": ""}]
-        ),
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER: CosemObject(
-            BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
-            [{"value": "37464C4F32313139303333373334", "unit": ""}],
         ),
         BELGIUM_MBUS4_METER_READING1: MBusObject(
             BELGIUM_MBUS4_METER_READING1,
