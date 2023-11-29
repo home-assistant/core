@@ -1,7 +1,7 @@
 """The tests for philips_js binary_sensor."""
 import pytest
 
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_NAME, MOCK_RECORDINGS_LIST
