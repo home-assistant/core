@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -11,10 +11,16 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Authenticate to your Tessie account.",
-        "title": "[%key:common::action::connect%]"
+        "description": "Enter your access token from [my.tessie.com/settings/api](https://my.tessie.com/settings/api)."
+      },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "Enter your access token from [my.tessie.com/settings/api](https://my.tessie.com/settings/api)",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   }
