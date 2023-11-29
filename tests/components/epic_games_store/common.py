@@ -1,11 +1,11 @@
 """Common methods used across tests for Epic Games Store."""
 from unittest.mock import patch
 
-from homeassistant.components.epic_games_store.const import CONF_LOCALE, DOMAIN
+from homeassistant.components.epic_games_store.const import CONF_LANGUAGE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_LOCALE
+from .const import MOCK_LANGUAGE
 
 from tests.common import MockConfigEntry
 
@@ -14,8 +14,8 @@ async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
     """Set up the Epic Games Store platform."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_LOCALE: MOCK_LOCALE},
-        unique_id=MOCK_LOCALE,
+        data={CONF_LANGUAGE: MOCK_LANGUAGE},
+        unique_id=MOCK_LANGUAGE,
     )
     mock_entry.add_to_hass(hass)
 

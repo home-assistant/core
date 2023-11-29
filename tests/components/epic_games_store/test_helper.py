@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.components.epic_games_store.helper import (
     format_game_data,
-    get_country_from_locale,
+    get_country_from_language,
     get_game_url,
     is_free_game,
 )
@@ -18,7 +18,7 @@ NOT_FREE_GAME = FREE_GAMES_API[0]
 
 
 @pytest.mark.parametrize(
-    ("locale", "country"),
+    ("language", "country"),
     [
         ("en-US", "US"),
         ("fr", "FR"),
@@ -27,9 +27,9 @@ NOT_FREE_GAME = FREE_GAMES_API[0]
         ("zh-Hant", "CN"),
     ],
 )
-async def test_get_country_from_locale(locale: str, country: str) -> None:
+async def test_get_country_from_language(language: str, country: str) -> None:
     """Test that the country is well created."""
-    assert get_country_from_locale(locale) == country
+    assert get_country_from_language(language) == country
 
 
 def test_format_game_data() -> None:

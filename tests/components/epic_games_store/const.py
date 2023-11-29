@@ -3,7 +3,7 @@ from homeassistant.components.epic_games_store.const import DOMAIN
 
 from tests.common import load_json_object_fixture
 
-MOCK_LOCALE = "fr"
+MOCK_LANGUAGE = "fr"
 
 DATA_ERROR_ATTRIBUTE_NOT_FOUND = load_json_object_fixture(
     "error_1004_attribute_not_found.json", DOMAIN
