@@ -82,9 +82,7 @@ async def test_migrate_device_and_config_entry(
     ), patch(
         "homeassistant.components.gios.Gios._get_all_sensors",
         return_value=sensors,
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes", return_value=indexes
-    ):
+    ), patch("homeassistant.components.gios.Gios._get_indexes", return_value=indexes):
         config_entry.add_to_hass(hass)
 
         device_entry = device_registry.async_get_or_create(
