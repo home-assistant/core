@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, TessieApi
 from .entity import TessieEntity
@@ -134,8 +135,8 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        api_key,
-        coordinator,
+        api_key: str,
+        coordinator: DataUpdateCoordinator,
         vin: str,
         category: str,
         description: SensorEntityDescription,
