@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.6
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.22
+AIOSomecomfort==0.0.24
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -146,7 +146,7 @@ WSDiscovery==2.0.0
 accuweather==2.1.1
 
 # homeassistant.components.adax
-adax==0.3.0
+adax==0.4.0
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.4.4
@@ -185,7 +185,7 @@ aio-geojson-usgs-earthquakes==0.2
 aio-georss-gdacs==0.8
 
 # homeassistant.components.airq
-aioairq==0.2.4
+aioairq==0.3.1
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.3.6
@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.1.4
+aioesphomeapi==19.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -380,7 +380,7 @@ aiounifi==66
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.4.2
+aiovodafone==0.4.3
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -462,9 +462,6 @@ asmog==0.0.6
 
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
-
-# homeassistant.components.esphome
-async-interrupt==1.1.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -682,6 +679,9 @@ demetriek==0.4.0
 
 # homeassistant.components.denonavr
 denonavr==0.11.4
+
+# homeassistant.components.devialet
+devialet==1.4.3
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
@@ -2522,7 +2522,7 @@ steamodd==4.21
 stookalert==0.1.4
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.3.0
+stookwijzer==1.4.2
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -2819,7 +2819,7 @@ zeroconf==0.127.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.106
+zha-quirks==0.0.107
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
