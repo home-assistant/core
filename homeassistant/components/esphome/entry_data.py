@@ -107,7 +107,7 @@ class RuntimeEntryData:
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
-    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    disconnect_callbacks: set[Callable[[], None]] = field(default_factory=set)
     state_subscriptions: dict[
         tuple[type[EntityState], int], Callable[[], None]
     ] = field(default_factory=dict)
@@ -321,7 +321,6 @@ class RuntimeEntryData:
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
         subscription_key = (state_type, key)
-        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
         if (
             current_state == state
             and subscription_key not in stale_state
@@ -333,21 +332,7 @@ class RuntimeEntryData:
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
-            if debug_enabled:
-                _LOGGER.debug(
-                    "%s: ignoring duplicate update with key %s: %s",
-                    self.name,
-                    key,
-                    state,
-                )
             return
-        if debug_enabled:
-            _LOGGER.debug(
-                "%s: dispatching update with key %s: %s",
-                self.name,
-                key,
-                state,
-            )
         stale_state.discard(subscription_key)
         current_state_by_type[key] = state
         if subscription := self.state_subscriptions.get(subscription_key):
@@ -427,3 +412,19 @@ class RuntimeEntryData:
         if self.original_options == entry.options:
             return
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+    @callback
+    def async_on_disconnect(self) -> None:
+        """Call when the entry has been disconnected.
+
+        Safe to call multiple times.
+        """
+        self.available = False
+        # Make a copy since calling the disconnect callbacks
+        # may also try to discard/remove themselves.
+        for disconnect_cb in self.disconnect_callbacks.copy():
+            disconnect_cb()
+        # Make sure to clear the set to give up the reference
+        # to it and make sure all the callbacks can be GC'd.
+        self.disconnect_callbacks.clear()
+        self.disconnect_callbacks = set()

@@ -140,7 +140,7 @@ def _ws_handle_cloud_errors(
     handler: Callable[
         [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
         Coroutine[None, None, None],
-    ]
+    ],
 ) -> Callable[
     [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
     Coroutine[None, None, None],
@@ -362,8 +362,11 @@ def _require_cloud_login(
     handler: Callable[
         [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
         None,
-    ]
-) -> Callable[[HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]], None,]:
+    ],
+) -> Callable[
+    [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any]],
+    None,
+]:
     """Websocket decorator that requires cloud to be logged in."""
 
     @wraps(handler)
