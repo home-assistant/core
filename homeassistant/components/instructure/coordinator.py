@@ -73,7 +73,7 @@ def filter_assignments(assignments: dict[str, Any]) -> dict[str, Any]:
     current_time = datetime.now()
 
     for id, assignment in assignments.copy().items():
-        if not assignment["due_at"]:
+        if "due_at" not in assignment:
             continue
         due_time = datetime.strptime(assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ")
         if due_time < current_time:
