@@ -505,9 +505,7 @@ def create_mbus_entities(
                     description,
                     entry,
                     telegram,
-                    *device_class_and_uom(
-                        telegram, description
-                    ),  # type: ignore[arg-type]
+                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
                     serial_,
                     idx,
                 )
