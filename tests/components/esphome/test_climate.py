@@ -15,8 +15,13 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_AUX_HEAT,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_FAN_MODE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
+    ATTR_MAX_HUMIDITY,
+    ATTR_MIN_HUMIDITY,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -24,7 +29,9 @@ from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
+    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
@@ -32,7 +39,7 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 
 
@@ -311,4 +318,126 @@ async def test_climate_entity_with_step_and_target_temp(
     mock_client.climate_command.assert_has_calls(
         [call(key=1, swing_mode=ClimateSwingMode.BOTH)]
     )
+    mock_client.climate_command.reset_mock()
+
+
+async def test_climate_entity_with_aux_heat(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic climate entity with aux heat."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            unique_id="my_climate",
+            supports_current_temperature=True,
+            supports_two_point_target_temperature=True,
+            supports_action=True,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supports_aux_heat=True,
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.HEAT,
+            action=ClimateAction.HEATING,
+            current_temperature=30,
+            target_temperature=20,
+            fan_mode=ClimateFanMode.AUTO,
+            swing_mode=ClimateSwingMode.BOTH,
+            aux_heat=True,
+        )
+    ]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("climate.test_myclimate")
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    attributes = state.attributes
+    assert attributes[ATTR_AUX_HEAT] == STATE_ON
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_AUX_HEAT: False},
+        blocking=True,
+    )
+    mock_client.climate_command.assert_has_calls([call(key=1, aux_heat=False)])
+    mock_client.climate_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_AUX_HEAT: True},
+        blocking=True,
+    )
+    mock_client.climate_command.assert_has_calls([call(key=1, aux_heat=True)])
+    mock_client.climate_command.reset_mock()
+
+
+async def test_climate_entity_with_humidity(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic climate entity with humidity."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            unique_id="my_climate",
+            supports_current_temperature=True,
+            supports_two_point_target_temperature=True,
+            supports_action=True,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supports_current_humidity=True,
+            supports_target_humidity=True,
+            visual_min_humidity=10.1,
+            visual_max_humidity=29.7,
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.AUTO,
+            action=ClimateAction.COOLING,
+            current_temperature=30,
+            target_temperature=20,
+            fan_mode=ClimateFanMode.AUTO,
+            swing_mode=ClimateSwingMode.BOTH,
+            current_humidity=20.1,
+            target_humidity=25.7,
+        )
+    ]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("climate.test_myclimate")
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    attributes = state.attributes
+    assert attributes[ATTR_CURRENT_HUMIDITY] == 20
+    assert attributes[ATTR_HUMIDITY] == 26
+    assert attributes[ATTR_MAX_HUMIDITY] == 30
+    assert attributes[ATTR_MIN_HUMIDITY] == 10
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_HUMIDITY: 23},
+        blocking=True,
+    )
+    mock_client.climate_command.assert_has_calls([call(key=1, target_humidity=23)])
     mock_client.climate_command.reset_mock()
