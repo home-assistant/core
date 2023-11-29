@@ -8,7 +8,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfSpeed
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -54,6 +60,44 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
             device_class=SensorDeviceClass.SPEED,
+        ),
+    ),
+    "vehicle_state": (
+        SensorEntityDescription(
+            name="Tyre Pressure Front Left",
+            key="tpms_pressure_fl",
+            translation_key="tyre_pressure_front_left",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.BAR,
+            suggested_unit_of_measurement=UnitOfPressure.PSI,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),
+        SensorEntityDescription(
+            name="Tyre Pressure Front Right",
+            key="tpms_pressure_fr",
+            translation_key="tyre_pressure_front_right",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.BAR,
+            suggested_unit_of_measurement=UnitOfPressure.PSI,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),
+        SensorEntityDescription(
+            name="Tyre Pressure Rear Left",
+            key="tpms_pressure_rl",
+            translation_key="tyre_pressure_rear_left",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.BAR,
+            suggested_unit_of_measurement=UnitOfPressure.PSI,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),
+        SensorEntityDescription(
+            name="Tyre Pressure Rear Right",
+            key="tpms_pressure_rr",
+            translation_key="tyre_pressure_rear_right",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.BAR,
+            suggested_unit_of_measurement=UnitOfPressure.PSI,
+            device_class=SensorDeviceClass.PRESSURE,
         ),
     ),
 }
