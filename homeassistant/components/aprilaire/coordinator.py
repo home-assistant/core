@@ -9,10 +9,10 @@ from typing import Any, Optional
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
 from .const import DOMAIN
 
@@ -23,16 +23,16 @@ WAIT_TIMEOUT = 30
 _LOGGER = logging.getLogger(__name__)
 
 
-class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     """Coordinator for interacting with the thermostat."""
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-        )
+
+        self.hass = hass
+        self.data: dict[str, Any] = {}
+
+        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
         self.client = pyaprilaire.client.AprilaireClient(
             host,
@@ -43,15 +43,35 @@ class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             RETRY_CONNECTION_INTERVAL,
         )
 
+    @callback
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        """Listen for data updates."""
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._listeners.pop(remove_listener)
+
+        self._listeners[remove_listener] = (update_callback, context)
+
+        return remove_listener
+
+    @callback
+    def async_update_listeners(self) -> None:
+        """Update all registered listeners."""
+        for update_callback, _ in list(self._listeners.values()):
+            update_callback()
+
     def async_set_updated_data(self, data: Any) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
 
         old_device_info = self.create_device_info(self.data)
 
-        if self.data is not None:
-            data = self.data | data
+        self.data = self.data | data
 
-        super().async_set_updated_data(data)
+        self.async_update_listeners()
 
         new_device_info = self.create_device_info(data)
 

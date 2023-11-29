@@ -6,15 +6,14 @@ import logging
 
 from pyaprilaire.const import Attribute
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .coordinator import AprilaireCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BaseAprilaireEntity(CoordinatorEntity[AprilaireCoordinator], Entity):
+class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
     """Base for Aprilaire entities."""
 
     _attr_available = False
@@ -23,6 +22,7 @@ class BaseAprilaireEntity(CoordinatorEntity[AprilaireCoordinator], Entity):
 
     def __init__(self, coordinator: AprilaireCoordinator) -> None:
         """Initialize the entity."""
+
         super().__init__(coordinator)
 
         self._attr_device_info = coordinator.device_info
@@ -58,3 +58,6 @@ class BaseAprilaireEntity(CoordinatorEntity[AprilaireCoordinator], Entity):
             + "_"
             + self.translation_key
         )
+
+    async def async_update(self) -> None:
+        """Implement abstract base method."""
