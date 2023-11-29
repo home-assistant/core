@@ -1,4 +1,4 @@
-"""Config Flow for Advantage Air integration."""
+"""Config Flow for Tessie integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
