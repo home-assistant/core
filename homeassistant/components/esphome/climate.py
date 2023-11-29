@@ -274,9 +274,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     @property
     @esphome_state_property
-    def is_aux_heat(self) -> bool | None:
+    def is_aux_heat(self) -> bool:
         """Return the auxiliary heater state."""
-        return self._state.aux_heat if self._static_info.supports_aux_heat else None
+        return self._state.aux_heat
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
