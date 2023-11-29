@@ -187,7 +187,6 @@ class CanvasAPI:
                 {"per_page": "50"},
             )
             course_submissions = json.loads(response.content.decode("utf-8"))
-            course_submissions = json.loads(response.content.decode("utf-8"))
             for submission in course_submissions:
                 if submission["graded_at"] is not None:
                     graded_at = datetime.strptime(
@@ -201,5 +200,3 @@ class CanvasAPI:
             return submissions
         else:
             return {f"submission-{GRADES_ENTITY_CONSTANT}": {}}
-
-        return submissions
