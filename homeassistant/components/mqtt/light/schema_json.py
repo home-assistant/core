@@ -590,13 +590,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._set_flash_and_transition(message, **kwargs)
 
         if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
-            # Make sure the brightness is not rounded down to 0
-            device_brightness = max(
-                round(
-                    self._config[CONF_BRIGHTNESS_SCALE] * kwargs[ATTR_BRIGHTNESS] / 255
-                ),
-                1,
+            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
+            brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
+            device_brightness = min(
+                round(brightness_normalized * brightness_scale), brightness_scale
             )
+            # Make sure the brightness is not rounded down to 0
+            device_brightness = max(device_brightness, 1)
             message["brightness"] = device_brightness
 
             if self._optimistic:
