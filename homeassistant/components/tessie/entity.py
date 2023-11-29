@@ -4,7 +4,10 @@
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN, TessieApi
 
@@ -21,9 +24,17 @@ class TessieEntity(CoordinatorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, vin: str, category: str, key: str) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        coordinator: DataUpdateCoordinator,
+        vin: str,
+        category: str,
+        key: str,
+    ) -> None:
         """Initialize common aspects of a Tessie entity."""
         super().__init__(coordinator)
+        self.api_key = api_key
         self.vin = vin
         self.category = category
         self.key = key
