@@ -310,6 +310,9 @@ aiopvpc==4.2.2
 # homeassistant.components.sonarr
 aiopyarr==23.4.0
 
+# homeassistant.components.tessie
+tessie-api==0.0.2
+
 # homeassistant.components.qnap_qsw
 aioqsw==0.3.5
 
