@@ -16,7 +16,7 @@ async def test_notify(hass: HomeAssistant, setup_integration: None) -> None:
     """Test sending a message."""
     assert hass.services.has_service(NOTIFY_DOMAIN, "netgear_lm1200")
 
-    with patch("homeassistant.components.netgear_lte.Modem.sms") as mock:
+    with patch("homeassistant.components.netgear_lte.eternalegypt.Modem.sms") as mock:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "netgear_lm1200",
