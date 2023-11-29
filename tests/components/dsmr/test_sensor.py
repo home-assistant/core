@@ -908,7 +908,7 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
             ],
         ),
         BELGIUM_MBUS4_DEVICE_TYPE: CosemObject(
-            BELGIUM_MBUS4_DEVICE_TYPE, [{"value": "003", "unit": ""}]
+            BELGIUM_MBUS4_DEVICE_TYPE, [{"value": "007", "unit": ""}]
         ),
         BELGIUM_MBUS4_METER_READING1: MBusObject(
             BELGIUM_MBUS4_METER_READING1,
@@ -940,21 +940,32 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "unknown"
 
-    # check if water usage mbus1 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_mbus1")
-    assert water_consumption is None
-
     # check if gas consumption mbus2 is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus2")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption is None
 
     # check if water usage mbus3 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_mbus3")
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
     assert water_consumption is None
 
     # check if gas consumption mbus4 is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_mbus4")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
     assert gas_consumption is None
+
+    # check if gas consumption mbus4 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption")
+    assert water_consumption.state == "13.13"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
 
 
 async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -> None:

@@ -476,12 +476,10 @@ def rename_old_gas_to_mbus(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant, telegram: dict[str, DSMRObject] | None, entry: ConfigEntry
+    hass: HomeAssistant, telegram: dict[str, DSMRObject], entry: ConfigEntry
 ) -> list[DSMREntity]:
     """Create MBUS Entities."""
     entities = []
-    if not telegram:
-        return []
     for idx in range(1, 5):
         if (
             device_type := getattr(obis_references, f"BELGIUM_MBUS{idx}_DEVICE_TYPE")
