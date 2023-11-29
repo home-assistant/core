@@ -18,12 +18,12 @@ PLATFORMS = [Platform.COVER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Leviosa shades Zone from a config entry."""
-    hub_name = entry.title
-    hub_ip = entry.data[CONF_HOST]
+    hub = tZoneHub(
+        hub_ip=entry.data[CONF_HOST],
+        hub_name=entry.title,
+        websession=async_get_clientsession(hass),
+    )
     try:
-        hub = tZoneHub(
-            hub_ip=hub_ip, hub_name=hub_name, websession=async_get_clientsession(hass)
-        )
         await hub.getHubInfo()  # Check all is good
     except Exception as err:
         raise ConfigEntryError("get hub info failed") from err
@@ -37,4 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok

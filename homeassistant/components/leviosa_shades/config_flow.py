@@ -100,21 +100,12 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow user to enter details for a Leviosa Zone."""
         errors = {}
         if user_input is not None:
-            _LOGGER.debug(
-                "Config User step - validate and save [%s] @%s",
-                self._host_uid,
-                self._host,
-            )
-            for i in user_input:
-                _LOGGER.debug("UI %s -> %s", i, user_input[i])
-
             fw_ver = await validate_zone(async_get_clientsession(self.hass), self._host)
             if fw_ver == "invalid":
                 errors["base"] = "cannot_connect"
             elif fw_ver is None:
                 errors["base"] = "unknown"
             else:
-                _LOGGER.debug("Saving Integration data")
                 await self.async_set_unique_id(self._host_uid)
                 bgs = []
                 bgs.append("All " + user_input[CONF_NAME])
