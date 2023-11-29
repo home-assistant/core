@@ -1,2 +1,2 @@
-"""Constants used by Advantage Air integration."""
+"""Constants used by Tessie integration."""
 DOMAIN = "tessie"
