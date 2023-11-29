@@ -5,7 +5,7 @@
         },
         "step": {
             "confirm": {
-                "title": "Confirm Association",
+                "title": "Confirm association",
                 "description": "Do you want to configure the DROP {device_type} named {device_name}?"
             }
         }
