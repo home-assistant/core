@@ -10,6 +10,8 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.pylint",
         "ms-python.vscode-pylance",
         "visualstudioexptteam.vscodeintellicode",
         "redhat.vscode-yaml",
@@ -19,14 +21,6 @@
       // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
         "python.pythonPath": "/usr/local/bin/python",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": true,
-        "python.formatting.blackPath": "/usr/local/bin/black",
-        "python.linting.pycodestylePath": "/usr/local/bin/pycodestyle",
-        "python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
-        "python.linting.mypyPath": "/usr/local/bin/mypy",
-        "python.linting.pylintPath": "/usr/local/bin/pylint",
-        "python.formatting.provider": "black",
         "python.testing.pytestArgs": ["--no-cov"],
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
@@ -45,7 +39,10 @@
           "!include_dir_list scalar",
           "!include_dir_merge_list scalar",
           "!include_dir_merge_named scalar"
-        ]
+        ],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
       }
     }
   }

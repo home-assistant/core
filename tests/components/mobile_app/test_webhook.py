@@ -854,12 +854,13 @@ async def test_webhook_camera_stream_stream_available_but_errors(
 
 
 async def test_webhook_handle_scan_tag(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that we can scan tags."""
-    device = dr.async_get(hass).async_get_device(
-        identifiers={(DOMAIN, "mock-device-id")}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
     assert device is not None
 
     events = async_capture_events(hass, EVENT_TAG_SCANNED)
@@ -920,7 +921,10 @@ async def test_register_sensor_limits_state_class(
 
 
 async def test_reregister_sensor(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that we can add more info in re-registration."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -941,8 +945,7 @@ async def test_reregister_sensor(
 
     assert reg_resp.status == HTTPStatus.CREATED
 
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 Battery State"
     assert entry.device_class is None
     assert entry.unit_of_measurement is None
@@ -970,7 +973,7 @@ async def test_reregister_sensor(
     )
 
     assert reg_resp.status == HTTPStatus.CREATED
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 New Name"
     assert entry.device_class == "battery"
     assert entry.unit_of_measurement == "%"
@@ -992,7 +995,7 @@ async def test_reregister_sensor(
     )
 
     assert reg_resp.status == HTTPStatus.CREATED
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.disabled_by is None
 
     reg_resp = await webhook_client.post(
@@ -1014,7 +1017,7 @@ async def test_reregister_sensor(
     )
 
     assert reg_resp.status == HTTPStatus.CREATED
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 New Name 2"
     assert entry.device_class is None
     assert entry.unit_of_measurement is None
@@ -1067,6 +1070,7 @@ async def test_webhook_handle_conversation_process(
 
 async def test_sending_sensor_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     create_registrations,
     webhook_client,
     caplog: pytest.LogCaptureFixture,
@@ -1105,8 +1109,7 @@ async def test_sending_sensor_state(
 
     assert reg_resp.status == HTTPStatus.CREATED
 
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 Battery State"
     assert entry.device_class is None
     assert entry.unit_of_measurement is None

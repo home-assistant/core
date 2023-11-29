@@ -26,6 +26,7 @@ from . import (
     TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN,
     TEST_CONFIG_NO_COUNTRY,
     TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
+    TEST_CONFIG_NO_LANGUAGE_CONFIGURED,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
     TEST_CONFIG_REMOVE_HOLIDAY,
@@ -34,6 +35,8 @@ from . import (
     TEST_CONFIG_WITH_PROVINCE,
     TEST_CONFIG_WITH_STATE,
     TEST_CONFIG_YESTERDAY,
+    TEST_LANGUAGE_CHANGE,
+    TEST_LANGUAGE_NO_CHANGE,
     init_integration,
 )
 
@@ -51,6 +54,7 @@ from . import (
         (TEST_CONFIG_TOMORROW, "off"),
         (TEST_CONFIG_DAY_AFTER_TOMORROW, "off"),
         (TEST_CONFIG_YESTERDAY, "on"),
+        (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off"),
     ],
 )
 async def test_setup(
@@ -311,3 +315,21 @@ async def test_check_date_service(
         return_response=True,
     )
     assert response == {"binary_sensor.workday_sensor": {"workday": True}}
+
+
+async def test_language_difference_english_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling difference in English language naming."""
+    await init_integration(hass, TEST_LANGUAGE_CHANGE)
+    assert "Changing language from en to en_US" in caplog.text
+
+
+async def test_language_difference_no_change_other_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test skipping if no difference in language naming."""
+    await init_integration(hass, TEST_LANGUAGE_NO_CHANGE)
+    assert "Changing language from en to en_US" not in caplog.text

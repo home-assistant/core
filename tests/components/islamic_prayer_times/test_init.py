@@ -13,8 +13,9 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
-from . import NEW_PRAYER_TIMES, NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
+from . import NEW_PRAYER_TIMES, NOW, PRAYER_TIMES
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -90,7 +91,7 @@ async def test_options_listener(hass: HomeAssistant) -> None:
     with patch(
         "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
         return_value=PRAYER_TIMES,
-    ) as mock_fetch_prayer_times:
+    ) as mock_fetch_prayer_times, freeze_time(NOW):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert mock_fetch_prayer_times.call_count == 1
@@ -123,7 +124,9 @@ async def test_update_failed(hass: HomeAssistant) -> None:
             InvalidResponseError,
             NEW_PRAYER_TIMES,
         ]
-        future = PRAYER_TIMES_TIMESTAMPS["Midnight"] + timedelta(days=1, minutes=1)
+        midnight_time = dt_util.parse_datetime(PRAYER_TIMES["Midnight"])
+        assert midnight_time
+        future = midnight_time + timedelta(days=1, minutes=1)
         with freeze_time(future):
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -154,15 +157,16 @@ async def test_update_failed(hass: HomeAssistant) -> None:
     ],
 )
 async def test_migrate_unique_id(
-    hass: HomeAssistant, object_id: str, old_unique_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    object_id: str,
+    old_unique_id: str,
 ) -> None:
     """Test unique id migration."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)
 
-    ent_reg = er.async_get(hass)
-
-    entity: er.RegistryEntry = ent_reg.async_get_or_create(
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id=object_id,
         domain=SENSOR_DOMAIN,
         platform=islamic_prayer_times.DOMAIN,
@@ -178,6 +182,6 @@ async def test_migrate_unique_id(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_migrated = ent_reg.async_get(entity.entity_id)
+    entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == f"{entry.entry_id}-{old_unique_id}"
