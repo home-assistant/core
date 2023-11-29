@@ -1,11 +1,9 @@
 """Support for Netgear LTE modems."""
-import asyncio
 from datetime import timedelta
 
 from aiohttp.cookiejar import CookieJar
 import attr
 import eternalegypt
-from eternalegypt import Error, Modem
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
@@ -18,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -185,18 +183,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.data[DOMAIN] = LTEData(websession)
 
-    modem = Modem(
-        hostname=host,
-        password=password,
-        websession=hass.data[DOMAIN].websession,
-    )
-    try:
-        await modem.login()
-    except Error as ex:
-        raise ConfigEntryNotReady("Cannot connect/authenticate") from ex
+    modem = eternalegypt.Modem(hostname=host, websession=hass.data[DOMAIN].websession)
+    modem_data = ModemData(hass, host, modem)
 
-    # Set up modem
-    await _setup_lte(hass, entry.data)
+    await _login(hass, modem_data, password)
 
     await async_setup_services(hass)
 
@@ -225,34 +215,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _setup_lte(hass, lte_config):
-    """Set up a Netgear LTE modem."""
-
-    host = lte_config[CONF_HOST]
-    password = lte_config[CONF_PASSWORD]
-
-    websession = hass.data[DOMAIN].websession
-    modem = eternalegypt.Modem(hostname=host, websession=websession)
-
-    modem_data = ModemData(hass, host, modem)
-
-    try:
-        await _login(hass, modem_data, password)
-    except eternalegypt.Error:
-        retry_task = hass.loop.create_task(_retry_login(hass, modem_data, password))
-
-        @callback
-        def cleanup_retry(event):
-            """Clean up retry task resources."""
-            if not retry_task.done():
-                retry_task.cancel()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_retry)
-
-
 async def _login(hass, modem_data, password):
     """Log in and complete setup."""
-    await modem_data.modem.login(password=password)
+    try:
+        await modem_data.modem.login(password=password)
+    except eternalegypt.Error as ex:
+        raise ConfigEntryNotReady("Cannot connect/authenticate") from ex
 
     def fire_sms_event(sms):
         """Send an SMS event."""
@@ -283,23 +251,6 @@ async def _login(hass, modem_data, password):
             del hass.data[DOMAIN].modem_data[modem_data.host]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
-
-
-async def _retry_login(hass, modem_data, password):
-    """Sleep and retry setup."""
-
-    LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
-
-    modem_data.connected = False
-    delay = 15
-
-    while not modem_data.connected:
-        await asyncio.sleep(delay)
-
-        try:
-            await _login(hass, modem_data, password)
-        except eternalegypt.Error:
-            delay = min(2 * delay, 300)
 
 
 def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
