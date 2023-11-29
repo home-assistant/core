@@ -369,7 +369,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     if brightness := values["brightness"]:
                         scale = self._config[CONF_BRIGHTNESS_SCALE]
                         self._attr_brightness = min(
-                            255, round(brightness * 255 / scale)  # type: ignore[operator]
+                            255,
+                            round(brightness * 255 / scale),  # type: ignore[operator]
                         )
                     else:
                         _LOGGER.debug(
