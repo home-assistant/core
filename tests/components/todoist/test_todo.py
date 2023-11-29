@@ -196,7 +196,7 @@ async def test_update_todo_item_status(
         ),
         (
             [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
-            {"due_date_time": "2023-11-18T06:30:00"},
+            {"due_datetime": "2023-11-18T06:30:00"},
             [
                 make_api_task(
                     id="task-id-1",
@@ -241,7 +241,7 @@ async def test_update_todo_item_status(
             },
         ),
     ],
-    ids=["rename", "due_date", "due_date_time", "description"],
+    ids=["rename", "due_date", "due_datetime", "description"],
 )
 async def test_update_todo_items(
     hass: HomeAssistant,
