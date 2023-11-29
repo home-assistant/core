@@ -188,7 +188,7 @@ class RadioMediaSource(MediaSource):
         if radio is None:
             raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
-        podcasts = await radio.podcasts(program.station_id)
+        podcasts = await radio.podcasts(program_id=program.station_id, podcasts_list=[])
 
         media_sources = []
         for podcast in podcasts:

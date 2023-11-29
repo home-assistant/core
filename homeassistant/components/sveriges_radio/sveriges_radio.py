@@ -139,6 +139,9 @@ class SverigesRadio:
 
         data = await self.call(f"programs?page={page_nr}", payload)
 
+        if not data:
+            return programs_list
+
         if data.find("pagination") is not None:
             if not data.find("pagination/page").text == str(page_nr):
                 raise Unresolvable(f"Page {page_nr} doesn't exist")
@@ -195,15 +198,19 @@ class SverigesRadio:
 
         return program
 
-    async def podcasts(self, program_id):
+    async def podcasts(self, program_id, podcasts_list, page_nr=1):
         """Asynchronously get all podcasts."""
         payload = {}
-        data = await self.call(f"podfiles?programid={program_id}", payload)
-
-        podcasts = []
+        data = await self.call(
+            f"podfiles?programid={program_id}&page={page_nr}", payload
+        )
 
         if not data:
-            return podcasts
+            return podcasts_list
+
+        if data.find("pagination") is not None:
+            if not data.find("pagination/page").text == str(page_nr):
+                raise Unresolvable(f"Page {page_nr} doesn't exist")
 
         for podcast_data in data.find("podfiles"):
             station_id = podcast_data.attrib.get("id")
@@ -217,9 +224,21 @@ class SverigesRadio:
                 url=url,
             )
 
-            podcasts.append(podcast)
+            podcasts_list.append(podcast)
 
-        return podcasts
+        if data.find("pagination") is not None:
+            if (
+                page_nr < int(data.find("pagination/totalpages").text)
+                and page_nr < 24
+                and data.find("pagination/nextpage") is not None
+            ):
+                podcasts_list = await self.podcasts(
+                    program_id=program_id,
+                    podcasts_list=podcasts_list,
+                    page_nr=page_nr + 1,
+                )
+
+        return podcasts_list
 
     async def podcast(self, podcast_id):
         """Asynchronously get a podcast."""
