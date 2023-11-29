@@ -23,5 +23,39 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "battery_level": {
+        "name": "Battery Level"
+      },
+      "battery_range": {
+        "name": "Battery Range"
+      },
+      "charge_energy_added": {
+        "name": "Charge Energy Added"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "shift_state": {
+        "name": "Shift State"
+      },
+      "tpms_pressure_fl": {
+        "name": "Tyre Pressure Front Left"
+      },
+      "tpms_pressure_fr": {
+        "name": "Tyre Pressure Front Right"
+      },
+      "tpms_pressure_rl": {
+        "name": "Tyre Pressure Rear Left"
+      },
+      "tpms_pressure_rr": {
+        "name": "Tyre Pressure Rear Right"
+      }
+    }
   }
 }
