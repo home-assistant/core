@@ -16,7 +16,7 @@ from .const import DOMAIN, LOGGER
 
 
 def _schema_with_defaults(
-    default_values: Optional[dict[str, Any]] = None,
+    default_values: dict[str, Any] | None = None,
     requires_password: bool = False,
 ) -> vol.Schema:
     if default_values is None:
