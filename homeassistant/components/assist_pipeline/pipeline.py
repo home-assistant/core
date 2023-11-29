@@ -1024,7 +1024,7 @@ class PipelineRun:
             )
         )
 
-        if tts_input.strip():
+        if tts_input := tts_input.strip():
             try:
                 # Synthesize audio and get URL
                 tts_media_id = tts_generate_media_source_id(
