@@ -77,7 +77,7 @@ async def test_recordings_list_unavailable(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     state = hass.states.get(ID_RECORDING_AVAILABLE)
-    assert state.state is STATE_UNKNOWN
+    assert state.state is False
 
     state = hass.states.get(ID_RECORDING_ONGOING)
-    assert state.state is STATE_UNKNOWN
+    assert state.state is False
