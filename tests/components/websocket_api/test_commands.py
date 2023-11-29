@@ -2327,7 +2327,7 @@ async def test_execute_script(
                 translation_key="test_error",
                 translation_placeholders={"option": "bla"},
             ),
-            "unknown_error",
+            "home_assistant_error",
         ),
         (
             ServiceValidationError(
