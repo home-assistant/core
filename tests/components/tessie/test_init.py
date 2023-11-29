@@ -1,46 +1,67 @@
 """Test the Tessie init."""
 
-from http import HTTPStatus
-
-from aiohttp import ClientConnectionError, ClientResponseError
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .common import setup_platform
+from .common import (
+    ERROR_AUTH,
+    ERROR_CONNECTION,
+    ERROR_UNKNOWN,
+    TEST_VEHICLES,
+    URL_VEHICLES,
+    setup_platform,
+)
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_unload(hass: HomeAssistant) -> None:
-    """Test unload."""
+async def test_load_unload(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test load and unload."""
+    aioclient_mock.get(
+        URL_VEHICLES,
+        text=TEST_VEHICLES,
+    )
     entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_auth_failure(hass: HomeAssistant) -> None:
+async def test_auth_failure(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test init with an authentication failure."""
-    entry = await setup_platform(
-        hass,
-        side_effect=ClientResponseError(
-            request_info=None, history=None, status=HTTPStatus.UNAUTHORIZED
-        ),
+
+    aioclient_mock.get(
+        URL_VEHICLES,
+        exc=ERROR_AUTH,
     )
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_unknown_failure(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test init with an authentication failure."""
+    aioclient_mock.get(
+        URL_VEHICLES,
+        exc=ERROR_UNKNOWN,
+    )
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unknown_failure(hass: HomeAssistant) -> None:
-    """Test init with an authentication failure."""
-    entry = await setup_platform(
-        hass,
-        side_effect=ClientResponseError(
-            request_info=None, history=None, status=HTTPStatus.BAD_REQUEST
-        ),
+async def test_connection_failure(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test init with a network connection failure."""
+    aioclient_mock.get(
+        URL_VEHICLES,
+        exc=ERROR_CONNECTION,
     )
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_net_failure(hass: HomeAssistant) -> None:
-    """Test init with a network failure."""
-    entry = await setup_platform(hass, side_effect=ClientConnectionError())
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY

@@ -11,13 +11,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 
 
 class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,21 +35,21 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Get configuration from the user."""
         errors = {}
-        if user_input and CONF_API_KEY in user_input:
+        if user_input and CONF_ACCESS_TOKEN in user_input:
             try:
                 await get_state_of_all_vehicles(
                     session=async_get_clientsession(self.hass),
-                    api_key=user_input[CONF_API_KEY],
+                    api_key=user_input[CONF_ACCESS_TOKEN],
                 )
             except ClientResponseError as e:
                 if e.status == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_api_key"
+                    errors["base"] = "invalid_access_token"
                 else:
                     errors["base"] = "unknown"
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_API_KEY])
+                await self.async_set_unique_id(user_input[CONF_ACCESS_TOKEN])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -76,15 +76,15 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get update API Key from the user."""
         errors = {}
         assert self._reauth_entry
-        if user_input and CONF_API_KEY in user_input:
+        if user_input and CONF_ACCESS_TOKEN in user_input:
             try:
                 await get_state_of_all_vehicles(
                     session=async_get_clientsession(self.hass),
-                    api_key=user_input[CONF_API_KEY],
+                    api_key=user_input[CONF_ACCESS_TOKEN],
                 )
             except ClientResponseError as e:
                 if e.status == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_api_key"
+                    errors["base"] = "invalid_access_token"
                 else:
                     errors["base"] = "unknown"
             except ClientConnectionError:

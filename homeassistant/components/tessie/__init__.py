@@ -7,7 +7,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tessie config."""
-    api_key = entry.data[CONF_API_KEY]
+    api_key = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
     async def async_get():
