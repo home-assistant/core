@@ -244,11 +244,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_state_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return (
-            self._state.current_humidity
-            if self._static_info.supports_current_humidity
-            else None
-        )
+        if not self._static_info.supports_current_humidity:
+            return None
+        return self._state.current_humidity
 
     @property
     @esphome_state_property
@@ -272,11 +270,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_state_property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        return (
-            self._state.target_humidity
-            if self._static_info.supports_target_humidity
-            else None
-        )
+        if not self._static_info.supports_target_humidity:
+            return None
+        return self._state.target_humidity
 
     @property
     @esphome_state_property
