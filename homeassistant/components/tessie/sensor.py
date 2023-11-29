@@ -124,7 +124,6 @@ async def async_setup_entry(
 class TessieSensorEntity(TessieEntity, SensorEntity):
     """Base class for Tessie metric sensors."""
 
-    _attr_has_entity_name = True
     entity_description: SensorEntityDescription
 
     def __init__(
