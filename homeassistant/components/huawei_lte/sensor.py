@@ -718,10 +718,6 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     _unit: str | None = field(default=None, init=False)
     _last_reset: datetime | None = field(default=None, init=False)
 
-    def __post_init__(self) -> None:
-        """Initialize remaining attributes."""
-        self._attr_name = self.entity_description.name or self.item
-
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
