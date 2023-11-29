@@ -663,6 +663,9 @@ ephem==4.1.5
 # homeassistant.components.epion
 epion==0.0.3
 
+# homeassistant.components.epic_games_store
+epicstore-api==0.1.4
+
 # homeassistant.components.epson
 epson-projector==0.5.1
 

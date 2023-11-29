@@ -153,6 +153,7 @@ FLOWS = {
         "enphase_envoy",
         "environment_canada",
         "epion",
+        "epic_games_store",
         "epson",
         "eq3btsmart",
         "escea",

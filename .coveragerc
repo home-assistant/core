@@ -364,6 +364,8 @@ omit =
     homeassistant/components/epion/__init__.py
     homeassistant/components/epion/coordinator.py
     homeassistant/components/epion/sensor.py
+    homeassistant/components/epic_games_store/__init__.py
+    homeassistant/components/epic_games_store/coordinator.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/eq3btsmart/__init__.py
