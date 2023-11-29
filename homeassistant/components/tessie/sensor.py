@@ -19,14 +19,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieApi
 from .entity import TessieEntity
 
 PARALLEL_UPDATES = 0
 
 
 DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
-    "charge_state": (
+    TessieApi.CHARGE_STATE: (
         SensorEntityDescription(
             name="Battery Level",
             key="battery_level",
@@ -52,7 +52,7 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENERGY,
         ),
     ),
-    "drive_state": (
+    TessieApi.DRIVE_STATE: (
         SensorEntityDescription(
             name="Speed",
             key="speed",
@@ -62,7 +62,7 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.SPEED,
         ),
     ),
-    "vehicle_state": (
+    TessieApi.VEHICLE_STATE: (
         SensorEntityDescription(
             name="Tyre Pressure Front Left",
             key="tpms_pressure_fl",
