@@ -1,4 +1,6 @@
 """Test Home Assistant color util methods."""
+import math
+
 import pytest
 import voluptuous as vol
 
@@ -578,3 +580,88 @@ def test_white_levels_to_color_temperature() -> None:
         2000,
         0,
     )
+
+
+async def test_ranged_value_to_brightness_large() -> None:
+    """Test a large scale and convert a single value to a brightness."""
+    scale = (1, 511)
+
+    # test min==255 clamp
+    assert color_util.value_to_brightness(scale, 530) == 255
+
+    assert color_util.value_to_brightness(scale, 511) == 255
+    assert color_util.value_to_brightness(scale, 255) == 127
+    assert color_util.value_to_brightness(scale, 49) == 24
+    assert color_util.value_to_brightness(scale, 1) == 1
+
+    # test max==1 clamp
+    assert color_util.value_to_brightness(scale, 0) == 1
+
+
+async def test_brightness_to_ranged_value_large() -> None:
+    """Test a large scale and convert a brightness to a single value."""
+    scale = (1, 511)
+
+    assert color_util.brightness_to_value(scale, 255) == 511.0
+    assert color_util.brightness_to_value(scale, 127) == 254.49803921568628
+    assert color_util.brightness_to_value(scale, 24) == 48.09411764705882
+
+    assert math.ceil(color_util.brightness_to_value(scale, 255)) == 511
+    assert math.ceil(color_util.brightness_to_value(scale, 127)) == 255
+    assert math.ceil(color_util.brightness_to_value(scale, 24)) == 49
+
+
+async def test_ranged_value_to_brightness_small() -> None:
+    """Test a small scale and convert a single value to a brightness."""
+    scale = (1, 4)
+    assert color_util.value_to_brightness(scale, 1) == 63
+    assert color_util.value_to_brightness(scale, 2) == 127
+    assert color_util.value_to_brightness(scale, 3) == 191
+    assert color_util.value_to_brightness(scale, 4) == 255
+
+    scale = (1, 6)
+
+    assert color_util.value_to_brightness(scale, 1) == 42
+    assert color_util.value_to_brightness(scale, 2) == 85
+    assert color_util.value_to_brightness(scale, 3) == 127
+    assert color_util.value_to_brightness(scale, 4) == 170
+    assert color_util.value_to_brightness(scale, 5) == 212
+    assert color_util.value_to_brightness(scale, 6) == 255
+
+
+async def test_brightness_to_ranged_value_small() -> None:
+    """Test a small scale and convert a brightness to a single value."""
+    scale = (1, 4)
+    assert math.ceil(color_util.brightness_to_value(scale, 63)) == 1
+    assert math.ceil(color_util.brightness_to_value(scale, 127)) == 2
+    assert math.ceil(color_util.brightness_to_value(scale, 191)) == 3
+    assert math.ceil(color_util.brightness_to_value(scale, 255)) == 4
+
+    scale = (1, 6)
+    assert math.ceil(color_util.brightness_to_value(scale, 42)) == 1
+    assert math.ceil(color_util.brightness_to_value(scale, 85)) == 2
+    assert math.ceil(color_util.brightness_to_value(scale, 127)) == 3
+    assert math.ceil(color_util.brightness_to_value(scale, 170)) == 4
+    assert math.ceil(color_util.brightness_to_value(scale, 212)) == 5
+    assert math.ceil(color_util.brightness_to_value(scale, 255)) == 6
+
+
+async def test_ranged_value_to_brightness_starting_high() -> None:
+    """Test a range that does not start with 1."""
+    scale = (101, 255)
+
+    assert color_util.value_to_brightness(scale, 101) == 1
+    assert color_util.value_to_brightness(scale, 139) == 64
+    assert color_util.value_to_brightness(scale, 178) == 128
+    assert color_util.value_to_brightness(scale, 217) == 192
+    assert color_util.value_to_brightness(scale, 255) == 255
+
+
+async def test_ranged_value_to_brightness_starting_zero() -> None:
+    """Test a range that starts with 0."""
+    scale = (0, 3)
+
+    assert color_util.value_to_brightness(scale, 0) == 63
+    assert color_util.value_to_brightness(scale, 1) == 127
+    assert color_util.value_to_brightness(scale, 2) == 191
+    assert color_util.value_to_brightness(scale, 3) == 255
