@@ -1,5 +1,6 @@
 """The test for the Trend sensor platform."""
 from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -484,3 +485,34 @@ async def test_restore_state(
 
     # sensor should detect an upwards trend and turn on
     assert hass.states.get("binary_sensor.test_trend_sensor").state == "on"
+
+
+async def test_invalid_min_sample(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if error is logged when min_sample is larger than max_samples."""
+    with caplog.at_level(logging.ERROR):
+        assert await setup.async_setup_component(
+            hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": "trend",
+                    "sensors": {
+                        "test_trend_sensor": {
+                            "entity_id": "sensor.test_state",
+                            "max_samples": 25,
+                            "min_samples": 30,
+                        }
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    record = caplog.records[0]
+    assert record.levelname == "ERROR"
+    assert (
+        "Invalid config for 'binary_sensor.trend': min_samples must be smaller than or equal to max_samples"
+        in record.message
+    )

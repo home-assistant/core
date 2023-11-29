@@ -66,7 +66,7 @@ def _validate_min_max(data: dict[str, Any]) -> dict[str, Any]:
         and CONF_MAX_SAMPLES in data
         and data[CONF_MAX_SAMPLES] < data[CONF_MIN_SAMPLES]
     ):
-        raise vol.Invalid("min_samples must be smaller than max_samples")
+        raise vol.Invalid("min_samples must be smaller than or equal to max_samples")
     return data
 
 
