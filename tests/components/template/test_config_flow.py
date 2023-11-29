@@ -845,4 +845,4 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"] == {"code": "unknown_error", "message": "Unknown error"}
+    assert msg["error"] == {"code": "home_assistant_error", "message": "Unknown error"}
