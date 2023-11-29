@@ -190,10 +190,49 @@ async def test_supported_components(
     assert (state is not None) == has_entity
 
 
+@pytest.mark.parametrize(
+    ("item_data", "expcted_save_args", "expected_item"),
+    [
+        (
+            {},
+            {"status": "NEEDS-ACTION", "summary": "Cheese"},
+            RESULT_ITEM,
+        ),
+        (
+            {"due_date": "2023-11-18"},
+            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": "20231118"},
+            {**RESULT_ITEM, "due": "2023-11-18"},
+        ),
+        (
+            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": "20231118T143000Z"},
+            {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
+        ),
+        (
+            {"description": "Make sure to get Swiss"},
+            {
+                "status": "NEEDS-ACTION",
+                "summary": "Cheese",
+                "description": "Make sure to get Swiss",
+            },
+            {**RESULT_ITEM, "description": "Make sure to get Swiss"},
+        ),
+    ],
+    ids=[
+        "summary",
+        "due_date",
+        "due_datetime",
+        "description",
+    ],
+)
 async def test_add_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    dav_client: Mock,
     calendar: Mock,
+    item_data: dict[str, Any],
+    expcted_save_args: dict[str, Any],
+    expected_item: dict[str, Any],
 ) -> None:
     """Test adding an item to the list."""
     calendar.search.return_value = []
@@ -209,16 +248,13 @@ async def test_add_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "Cheese"},
+        {"item": "Cheese", **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
 
     assert calendar.save_todo.call_args
-    assert calendar.save_todo.call_args.kwargs == {
-        "status": "NEEDS-ACTION",
-        "summary": "Cheese",
-    }
+    assert calendar.save_todo.call_args.kwargs == expcted_save_args
 
     # Verify state was updated
     state = hass.states.get(TEST_ENTITY)
@@ -312,7 +348,7 @@ async def test_update_item(
     expected_state: str,
     expected_item: dict[str, Any],
 ) -> None:
-    """Test creating a an item on the list."""
+    """Test updating an item on the list."""
 
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
@@ -568,7 +604,7 @@ async def test_subscribe(
     calendar: Mock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test creating a an item on the list."""
+    """Test subscription to item updates."""
 
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
