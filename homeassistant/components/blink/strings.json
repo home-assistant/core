@@ -47,6 +47,11 @@
       "camera_armed": {
         "name": "Camera armed"
       }
+    },
+    "switch": {
+      "camera_motion": {
+        "name": "Camera motion detection"
+      }
     }
   },
   "services": {
