@@ -1,4 +1,4 @@
-"""Test the Aussie Broadband config flow."""
+"""Test the Tessie config flow."""
 
 from unittest.mock import patch
 
