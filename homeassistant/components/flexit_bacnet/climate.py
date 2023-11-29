@@ -78,7 +78,7 @@ class FlexitClimateEntity(ClimateEntity):
             identifiers={
                 (DOMAIN, device.serial_number),
             },
-            name=self._device.device_name,
+            name=device.device_name,
             manufacturer="Flexit",
             model="Nordic",
             serial_number=device.serial_number,
