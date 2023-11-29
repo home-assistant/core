@@ -5,7 +5,11 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT, TUYA_PLUG_MANUFACTURER
+from zhaquirks.quirk_ids import (
+    DANFOSS_ALLY_THERMOSTAT,
+    TUYA_PLUG_MANUFACTURER,
+    XIAOMI_AQARA_VIBRATION_AQ1,
+)
 import zigpy.zcl
 from zigpy.zcl import clusters
 from zigpy.zcl.clusters.closures import DoorLock
@@ -411,7 +415,7 @@ class IkeaRemote(ClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    DoorLock.cluster_id, "xiaomi_aqara_vibration_aq1"
+    DoorLock.cluster_id, XIAOMI_AQARA_VIBRATION_AQ1
 )
 class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
     """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
