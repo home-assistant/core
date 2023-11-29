@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevices
 from .models import DomainDataItem
@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SWITCH]
 
 __all__ = [
+    "ATTR_SPEAKER",
     "DOMAIN",
     "async_setup_entry",
     "async_unload_entry",
