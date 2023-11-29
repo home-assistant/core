@@ -2522,7 +2522,7 @@ steamodd==4.21
 stookalert==0.1.4
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.4.2
+stookwijzer==1.3.0
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
