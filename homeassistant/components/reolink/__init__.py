@@ -89,9 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
-    async def async_check_firmware_update() -> str | Literal[
-        False
-    ] | NewSoftwareVersion:
+    async def async_check_firmware_update() -> (
+        str | Literal[False] | NewSoftwareVersion
+    ):
         """Check for firmware updates."""
         if not host.api.supported(None, "update"):
             return False

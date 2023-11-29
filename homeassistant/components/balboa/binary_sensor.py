@@ -47,31 +47,27 @@ class BalboaBinarySensorEntityDescription(
 ):
     """A class that describes Balboa binary sensor entities."""
 
-    # BalboaBinarySensorEntity does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
 
 FILTER_CYCLE_ICONS = ("mdi:sync", "mdi:sync-off")
 BINARY_SENSOR_DESCRIPTIONS = (
     BalboaBinarySensorEntityDescription(
-        key="filter_cycle_1",
-        name="Filter1",
+        key="Filter1",
+        translation_key="filter_1",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=lambda spa: spa.filter_cycle_1_running,
         on_off_icons=FILTER_CYCLE_ICONS,
     ),
     BalboaBinarySensorEntityDescription(
-        key="filter_cycle_2",
-        name="Filter2",
+        key="Filter2",
+        translation_key="filter_2",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=lambda spa: spa.filter_cycle_2_running,
         on_off_icons=FILTER_CYCLE_ICONS,
     ),
 )
 CIRCULATION_PUMP_DESCRIPTION = BalboaBinarySensorEntityDescription(
-    key="circulation_pump",
-    name="Circ Pump",
+    key="Circ Pump",
+    translation_key="circ_pump",
     device_class=BinarySensorDeviceClass.RUNNING,
     is_on_fn=lambda spa: (pump := spa.circulation_pump) is not None and pump.state > 0,
     on_off_icons=("mdi:pump", "mdi:pump-off"),
@@ -87,7 +83,7 @@ class BalboaBinarySensorEntity(BalboaEntity, BinarySensorEntity):
         self, spa: SpaClient, description: BalboaBinarySensorEntityDescription
     ) -> None:
         """Initialize a Balboa binary sensor entity."""
-        super().__init__(spa, description.name)
+        super().__init__(spa, description.key)
         self.entity_description = description
 
     @property

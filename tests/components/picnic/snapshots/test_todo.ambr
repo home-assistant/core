@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_cart_list_with_items
+  list([
+    dict({
+      'status': 'needs_action',
+      'summary': 'Knoflook (2 stuks)',
+      'uid': '763-s1001194',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Picnic magere melk (2 x 1 liter)',
+      'uid': '765_766-s1046297',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Picnic magere melk (1 liter)',
+      'uid': '767-s1010532',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Robijn wascapsules wit (40 wasbeurten)',
+      'uid': '774_775-s1018253',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Robijn wascapsules kleur (15 wasbeurten)',
+      'uid': '774_775-s1007025',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Chinese wokgroenten (600 gram)',
+      'uid': '776_777_778_779_780-s1012699',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Picnic boerderij-eitjes (6 stuks M/L)',
+      'uid': '776_777_778_779_780-s1003425',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Picnic witte snelkookrijst (400 gram)',
+      'uid': '776_777_778_779_780-s1016692',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Conimex kruidenmix nasi (20 gram)',
+      'uid': '776_777_778_779_780-s1012503',
+    }),
+    dict({
+      'status': 'needs_action',
+      'summary': 'Conimex satésaus mild kant & klaar (400 gram)',
+      'uid': '776_777_778_779_780-s1005028',
+    }),
+  ])
+# ---

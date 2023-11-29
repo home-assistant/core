@@ -1,17 +1,22 @@
 """Mock data for Roborock tests."""
 from __future__ import annotations
 
+from PIL import Image
 from roborock.containers import (
     CleanRecord,
     CleanSummary,
     Consumable,
     DnDTimer,
     HomeData,
+    MultiMapsList,
     NetworkInfo,
     S7Status,
     UserData,
 )
 from roborock.roborock_typing import DeviceProp
+from vacuum_map_parser_base.config.image_config import ImageConfig
+from vacuum_map_parser_base.map_data import ImageData
+from vacuum_map_parser_roborock.map_data_parser import MapData
 
 from homeassistant.components.roborock import CONF_BASE_URL, CONF_USER_DATA
 from homeassistant.const import CONF_USERNAME
@@ -417,4 +422,33 @@ PROP = DeviceProp(
 
 NETWORK_INFO = NetworkInfo(
     ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90
+)
+
+MULTI_MAP_LIST = MultiMapsList.from_dict(
+    {
+        "maxMultiMap": 4,
+        "maxBakMap": 1,
+        "multiMapCount": 2,
+        "mapInfo": [
+            {
+                "mapFlag": 0,
+                "addTime": 1686235489,
+                "length": 8,
+                "name": "Upstairs",
+                "bakMaps": [{"addTime": 1673304288}],
+            },
+            {
+                "mapFlag": 1,
+                "addTime": 1697579901,
+                "length": 10,
+                "name": "Downstairs",
+                "bakMaps": [{"addTime": 1695521431}],
+            },
+        ],
+    }
+)
+
+MAP_DATA = MapData(0, 0)
+MAP_DATA.image = ImageData(
+    100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (1, 1)), lambda p: p
 )
