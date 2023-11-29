@@ -1,24 +1,13 @@
 """Tessie integration."""
-from datetime import timedelta
-from http import HTTPStatus
-import logging
-
-from aiohttp import ClientResponseError
-from tessie_api import get_state_of_all_vehicles
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import TessieDataUpdateCoordinator
 
-TESSIE_SYNC_INTERVAL = 15
 PLATFORMS = [Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -26,25 +15,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
-    async def async_get():
-        try:
-            vehicles = await get_state_of_all_vehicles(
-                session=session, api_key=api_key, only_active=False
-            )
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed from e
-            raise e
-        return {
-            vehicle["vin"]: vehicle["last_state"] for vehicle in vehicles["results"]
-        }
-
-    coordinator = DataUpdateCoordinator(
+    coordinator = TessieDataUpdateCoordinator(
         hass,
-        _LOGGER,
-        name="Tessie",
-        update_method=async_get,
-        update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
+        api_key=api_key,
+        session=session,
     )
 
     await coordinator.async_config_entry_first_refresh()
