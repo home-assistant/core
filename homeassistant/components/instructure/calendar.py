@@ -35,6 +35,9 @@ class CanvasCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         assignments = self.get_assignments_with_due_date()
 
+        if not assignments:
+            return None
+
         current_time = datetime.datetime.now(timezone.utc)
 
         next_assignment = min(
