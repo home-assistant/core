@@ -86,10 +86,7 @@ class FlexitClimateEntity(ClimateEntity):
         """Refresh unit state."""
         await self._device.update()
 
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return self._device.device_name
+    _attr_name = None
 
     @property
     def current_temperature(self) -> float:
