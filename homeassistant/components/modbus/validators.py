@@ -52,6 +52,12 @@ ENTRY = namedtuple(
         "validate_parm",
     ],
 )
+
+
+ILLEGAL = "I"
+OPTIONAL = "O"
+DEMANDED = "D"
+
 PARM_IS_LEGAL = namedtuple(
     "PARM_IS_LEGAL",
     [
@@ -62,28 +68,40 @@ PARM_IS_LEGAL = namedtuple(
         "swap_word",
     ],
 )
-# PARM_IS_LEGAL defines if the keywords:
-#    count:
-#    structure:
-#    swap: byte
-#    swap: word
-#    swap: word_byte (identical to swap: word)
-# are legal to use.
-# These keywords are only legal with some datatype: ...
-# As expressed in DEFAULT_STRUCT_FORMAT
-
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, True, False)),
-    DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
+    DataType.INT16: ENTRY(
+        "h", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.UINT16: ENTRY(
+        "H", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.FLOAT16: ENTRY(
+        "e", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.INT32: ENTRY(
+        "i", 2, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.UINT32: ENTRY(
+        "I", 2, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.FLOAT32: ENTRY(
+        "f", 2, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.INT64: ENTRY(
+        "q", 4, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.UINT64: ENTRY(
+        "Q", 4, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.FLOAT64: ENTRY(
+        "d", 4, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.STRING: ENTRY(
+        "s", 0, PARM_IS_LEGAL(DEMANDED, ILLEGAL, ILLEGAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.CUSTOM: ENTRY(
+        "?", 0, PARM_IS_LEGAL(DEMANDED, DEMANDED, ILLEGAL, ILLEGAL, ILLEGAL)
+    ),
 }
 
 
@@ -96,32 +114,37 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         data_type = config[CONF_DATA_TYPE] = DataType.INT16
     count = config.get(CONF_COUNT, None)
     structure = config.get(CONF_STRUCTURE, None)
-    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, 0))
+    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     for entry in (
         (count, validator.count, CONF_COUNT),
         (structure, validator.structure, CONF_STRUCTURE),
+        (
+            slave_count,
+            validator.slave_count,
+            f"{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}",
+        ),
     ):
-        if bool(entry[0]) != entry[1]:
-            error = "cannot be combined" if not entry[1] else "missing, demanded"
+        if entry[0] is None:
+            if entry[1] == DEMANDED:
+                error = f"{name}: `{entry[2]}:` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
+                raise vol.Invalid(error)
+        elif entry[1] == ILLEGAL:
             error = (
-                f"{name}: `{entry[2]}:` {error} with `{CONF_DATA_TYPE}: {data_type}`"
+                f"{name}: `{entry[2]}:` illegal with `{CONF_DATA_TYPE}: {data_type}`"
             )
             raise vol.Invalid(error)
 
-    if slave_count and not validator.slave_count:
-        error = f"{name}: `{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}:` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
     if swap_type != CONF_SWAP_NONE:
         swap_type_validator = {
-            CONF_SWAP_NONE: False,
+            CONF_SWAP_NONE: validator.swap_byte,
             CONF_SWAP_BYTE: validator.swap_byte,
             CONF_SWAP_WORD: validator.swap_word,
             CONF_SWAP_WORD_BYTE: validator.swap_word,
         }[swap_type]
-        if not swap_type_validator:
-            error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        if swap_type_validator == ILLEGAL:
+            error = f"{name}: `{CONF_SWAP}:{swap_type}` illegal with `{CONF_DATA_TYPE}: {data_type}`"
             raise vol.Invalid(error)
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
