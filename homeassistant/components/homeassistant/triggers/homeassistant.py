@@ -34,7 +34,7 @@ async def async_attach_trigger(
         @callback
         def hass_shutdown(event):
             """Execute when Home Assistant is shutting down."""
-            hass.async_run_hass_job(
+            fut_or_none = hass.async_run_hass_job(
                 job,
                 {
                     "trigger": {
@@ -46,6 +46,9 @@ async def async_attach_trigger(
                 },
                 event.context,
             )
+            if not fut_or_none:
+                return
+            hass.data.setdefault("homeassistant_triggers", []).append(fut_or_none)
 
         return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOPPING, hass_shutdown)
 

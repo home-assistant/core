@@ -803,6 +803,21 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # stage 1
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STOPPING)
+        try:
+            async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
+                if shutdown_jobs := self.data.get("homeassistant_triggers"):
+                    asyncio.gather(*shutdown_jobs)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for stopping stage to complete, the shutdown will"
+                " continue"
+            )
+            self._async_log_running_tasks(1)
+
+        # stage 2
+
         # Keep holding the reference to the tasks but do not allow them
         # to block shutdown. Only tasks created after this point will
         # be waited for.
@@ -820,19 +835,6 @@ class HomeAssistant:
 
         self.exit_code = exit_code
 
-        # stage 1
-        self.bus.async_fire(EVENT_HOMEASSISTANT_STOPPING)
-        try:
-            async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done()
-        except asyncio.TimeoutError:
-            _LOGGER.warning(
-                "Timed out waiting for stopping stage to complete, the shutdown will"
-                " continue"
-            )
-            self._async_log_running_tasks(1)
-
-        # stage 2
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
