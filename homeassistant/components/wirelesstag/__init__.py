@@ -135,8 +135,7 @@ class WirelessTagPlatform:
             return
 
         old_unique_id = f"{tag.tag_id}_{key}"
-        entity_id = registry.async_get_entity_id(domain, DOMAIN, old_unique_id)
-        if entity_id is not None:
+        if entity_id := registry.async_get_entity_id(domain, DOMAIN, old_unique_id):
             _LOGGER.debug("Updating unique id for %s %s", key, entity_id)
             registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
