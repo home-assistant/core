@@ -16,6 +16,12 @@ _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 _MEDIA_ID = "12345"
 
 
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
+
+
 def _empty_wav() -> bytes:
     """Return bytes of an empty WAV file."""
     with io.BytesIO() as wav_io:
