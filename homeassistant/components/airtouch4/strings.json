@@ -14,7 +14,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device running your AirTouch controller."
+          "host": "The hostname or IP address of your AirTouch controller."
         }
       }
     }
