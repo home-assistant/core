@@ -67,12 +67,6 @@ class RadioMediaSource(MediaSource):
         if radio is None:
             raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
-        # Check if the item is the root of the media source
-        # if item.identifier is None:
-        # Fetch all channels
-        programs = await radio.programs()
-        channels = await radio.channels()
-
         category, _, program_info = (item.identifier or "").partition("/")
 
         if category == FOLDERNAME and program_info:
@@ -94,24 +88,27 @@ class RadioMediaSource(MediaSource):
             can_expand=True,
             children_media_class=MediaClass.DIRECTORY,
             children=[
-                *await self._async_build_channels(channels, item),
-                *await self._async_build_programs(programs, item),
+                *await self._async_build_channels(item),
+                *await self._async_build_programs(item),
             ],
         )
-
-        # Fallback for unhandled cases
-        # raise BrowseError("Item not found")
 
     @callback
     async def _async_build_channels(
         self,
-        channels: list[Channel],
         item: MediaSourceItem,
     ) -> list[BrowseMediaSource]:
         """Build list of channels."""
         category, _, _ = (item.identifier or "").partition("/")
 
         if not category:
+            radio = self.radio
+
+            if radio is None:
+                raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
+
+            channels = await radio.channels()
+
             media_sources = []
             for channel in channels:
                 channel_media = BrowseMediaSource(
@@ -133,7 +130,6 @@ class RadioMediaSource(MediaSource):
     @callback
     async def _async_build_programs(
         self,
-        programs: list[Channel],
         item: MediaSourceItem,
     ) -> list[BrowseMediaSource]:
         """Build list of programs."""
@@ -143,13 +139,16 @@ class RadioMediaSource(MediaSource):
             raise BrowseError(ERROR_MESSAGE_NOT_INITIALIZED)
 
         category, _, program_code = (item.identifier or "").partition("/")
-        media_sources = []
 
         if program_code and category == FOLDERNAME:
             program = await radio.program(program_code)
             return await self._async_build_podcasts(program)
 
         if category == FOLDERNAME:
+            programs = await radio.programs(programs_list=[])
+
+            media_sources: list[BrowseMediaSource] = []
+
             for program in programs:
                 program_media = BrowseMediaSource(
                     domain=DOMAIN,

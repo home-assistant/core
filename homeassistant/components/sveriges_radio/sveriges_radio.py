@@ -1,10 +1,14 @@
 """Sveriges radio classes."""
 
 
+import sys
+
 import aiohttp
 from defusedxml import ElementTree
 
 from homeassistant.components.media_source.error import Unresolvable
+
+sys.setrecursionlimit(10**4)
 
 
 class Channel:
@@ -129,15 +133,16 @@ class SverigesRadio:
 
         return channel
 
-    async def programs(self):
+    async def programs(self, programs_list, page_nr=1):
         """Asynchronously get all programs that contains podcasts."""
         payload = {}
-        data = await self.call("programs", payload)
 
-        if data.find("pagination/nextpage") is None:
-            return None
+        data = await self.call(f"programs?page={page_nr}", payload)
 
-        programs = []
+        if data.find("pagination") is not None:
+            if not data.find("pagination/page").text == str(page_nr):
+                raise Unresolvable(f"Page {page_nr} doesn't exist")
+
         for program_data in data.find("programs"):
             if program_data.find("haspod").text != "true":
                 continue
@@ -155,9 +160,18 @@ class SverigesRadio:
                 image=program_image,
             )
 
-            programs.append(program)
+            programs_list.append(program)
 
-        return programs
+        if data.find("pagination") is not None:
+            if (
+                page_nr < int(data.find("pagination/totalpages").text)
+                and data.find("pagination/nextpage") is not None
+            ):
+                programs_list = await self.programs(
+                    programs_list=programs_list, page_nr=page_nr + 1
+                )
+
+        return programs_list
 
     async def program(self, program_id):
         """Asynchronously get a program."""
