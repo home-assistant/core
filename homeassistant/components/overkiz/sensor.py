@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -412,6 +412,22 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["open", "tilt", "closed"],
         translation_key="three_way_handle_direction",
+    ),
+    # Hitachi air to air heatpump outdoor temperature sensors (HLRRWIFI protocol)
+    OverkizSensorDescription(
+        key=OverkizState.HLRRWIFI_OUTDOOR_TEMPERATURE,
+        name="Outdoor temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    # Hitachi air to air heatpump outdoor temperature sensors (OVP protocol)
+    OverkizSensorDescription(
+        key=OverkizState.OVP_OUTDOOR_TEMPERATURE,
+        name="Outdoor temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
 ]
 

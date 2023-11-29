@@ -1,5 +1,6 @@
 """Test the Smappee component config flow module."""
 from http import HTTPStatus
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow, setup
@@ -59,8 +60,8 @@ async def test_show_zeroconf_connection_error_form(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -91,8 +92,8 @@ async def test_show_zeroconf_connection_error_form_next_generation(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee5001000212.local.",
                 type="_ssh._tcp.local.",
@@ -145,9 +146,7 @@ async def test_user_local_connection_error(hass: HomeAssistant) -> None:
         "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
     ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True), patch(
         "pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True
-    ), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None
-    ):
+    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -174,8 +173,8 @@ async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             port=22,
             hostname="example.local.",
             type="_ssh._tcp.local.",
@@ -285,8 +284,8 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -335,8 +334,8 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass: HomeAssistant) -> Non
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             port=22,
             hostname="Smappee1006000212.local.",
             type="_ssh._tcp.local.",
@@ -357,8 +356,8 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             port=22,
             hostname="Smappee1006000212.local.",
             type="_ssh._tcp.local.",
@@ -473,15 +472,13 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee1006000212.local.",
                 type="_ssh._tcp.local.",
@@ -515,9 +512,7 @@ async def test_full_user_local_flow(hass: HomeAssistant) -> None:
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -559,8 +554,8 @@ async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="1.2.3.4",
-                addresses=["1.2.3.4"],
+                ip_address=ip_address("1.2.3.4"),
+                ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
                 hostname="Smappee5001000212.local.",
                 type="_ssh._tcp.local.",

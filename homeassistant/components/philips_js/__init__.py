@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
@@ -36,6 +36,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.REMOTE,
     Platform.SWITCH,
+    Platform.BINARY_SENSOR,
 ]
 
 LOGGER = logging.getLogger(__name__)

@@ -145,9 +145,7 @@ class MatterAdapter:
             get_clean_name(basic_info.nodeLabel)
             or get_clean_name(basic_info.productLabel)
             or get_clean_name(basic_info.productName)
-            or device_type.__name__
-            if device_type
-            else None
+            or (device_type.__name__ if device_type else None)
         )
 
         # handle bridged devices

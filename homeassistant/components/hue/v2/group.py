@@ -1,6 +1,7 @@
 """Support for Hue groups (room/zone)."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -17,12 +18,12 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
@@ -44,18 +45,26 @@ async def async_setup_entry(
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
-    @callback
-    def async_add_light(event_type: EventType, resource: GroupedLight) -> None:
+    async def async_add_light(event_type: EventType, resource: GroupedLight) -> None:
         """Add Grouped Light for Hue Room/Zone."""
-        group = api.groups.grouped_light.get_zone(resource.id)
+        # delay group creation a bit due to a race condition where the
+        # grouped_light resource is created before the zone/room
+        retries = 5
+        while (
+            retries
+            and (group := api.groups.grouped_light.get_zone(resource.id)) is None
+        ):
+            retries -= 1
+            await asyncio.sleep(0.5)
         if group is None:
+            # guard, just in case
             return
         light = GroupedHueLight(bridge, resource, group)
         async_add_entities([light])
 
     # add current items
     for item in api.groups.grouped_light.items:
-        async_add_light(EventType.RESOURCE_ADDED, item)
+        await async_add_light(EventType.RESOURCE_ADDED, item)
 
     # register listener for new grouped_light
     config_entry.async_on_unload(
@@ -68,7 +77,12 @@ async def async_setup_entry(
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
-    _attr_icon = "mdi:lightbulb-group"
+    entity_description = LightEntityDescription(
+        key="hue_grouped_light",
+        icon="mdi:lightbulb-group",
+        has_entity_name=True,
+        name=None,
+    )
 
     def __init__(
         self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
@@ -82,7 +96,13 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self.api: HueBridgeV2 = bridge.api
         self._attr_supported_features |= LightEntityFeature.FLASH
         self._attr_supported_features |= LightEntityFeature.TRANSITION
-
+        self._restore_brightness: float | None = None
+        self._brightness_pct: float = 0
+        # we create a virtual service/device for Hue zones/rooms
+        # so we have a parent for grouped lights and scenes
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.group.id)},
+        )
         self._dynamic_mode_active = False
         self._update_values()
 
@@ -103,11 +123,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self.async_on_remove(
                 self.api.lights.subscribe(self._handle_event, light_ids)
             )
-
-    @property
-    def name(self) -> str:
-        """Return name of room/zone for this grouped light."""
-        return self.group.metadata.name
 
     @property
     def is_on(self) -> bool:
@@ -132,22 +147,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             "dynamics": self._dynamic_mode_active,
         }
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device (service) info."""
-        # we create a virtual service/device for Hue zones/rooms
-        # so we have a parent for grouped lights and scenes
-        model = self.group.type.value.title()
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
-            entry_type=DeviceEntryType.SERVICE,
-            name=self.group.metadata.name,
-            manufacturer=self.api.config.bridge_device.product_data.manufacturer_name,
-            model=model,
-            suggested_area=self.group.metadata.name if model == "Room" else None,
-            via_device=(DOMAIN, self.api.config.bridge_device.id),
-        )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -155,6 +154,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
+
+        if self._restore_brightness and brightness is None:
+            # The Hue bridge sets the brightness to 1% when turning on a bulb
+            # when a transition was used to turn off the bulb.
+            # This issue has been reported on the Hue forum several times:
+            # https://developers.meethue.com/forum/t/brightness-turns-down-to-1-automatically-shortly-after-sending-off-signal-hue-bug/5692
+            # https://developers.meethue.com/forum/t/lights-turn-on-with-lowest-brightness-via-siri-if-turned-off-via-api/6700
+            # https://developers.meethue.com/forum/t/using-transitiontime-with-on-false-resets-bri-to-1/4585
+            # https://developers.meethue.com/forum/t/bri-value-changing-in-switching-lights-on-off/6323
+            # https://developers.meethue.com/forum/t/fade-in-fade-out/6673
+            brightness = self._restore_brightness
+            self._restore_brightness = None
 
         if flash is not None:
             await self.async_set_flash(flash)
@@ -173,6 +184,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        if transition is not None:
+            self._restore_brightness = self._brightness_pct
         flash = kwargs.get(ATTR_FLASH)
 
         if flash is not None:
@@ -247,6 +260,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             if len(supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
+            self._brightness_pct = total_brightness / lights_with_dimming_support
             self._attr_brightness = round(
                 ((total_brightness / lights_with_dimming_support) / 100) * 255
             )

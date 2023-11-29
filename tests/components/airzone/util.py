@@ -3,6 +3,12 @@
 from unittest.mock import patch
 
 from aioairzone.const import (
+    API_ACS_MAX_TEMP,
+    API_ACS_MIN_TEMP,
+    API_ACS_ON,
+    API_ACS_POWER_MODE,
+    API_ACS_SET_POINT,
+    API_ACS_TEMP,
     API_AIR_DEMAND,
     API_COLD_ANGLE,
     API_COLD_STAGE,
@@ -44,6 +50,8 @@ from aioairzone.const import (
     API_VERSION,
     API_WIFI_CHANNEL,
     API_WIFI_RSSI,
+    API_WS_AZ,
+    API_WS_TYPE,
     API_ZONE_ID,
 )
 
@@ -266,6 +274,18 @@ HVAC_MOCK = {
     ]
 }
 
+HVAC_DHW_MOCK = {
+    API_DATA: {
+        API_SYSTEM_ID: 0,
+        API_ACS_TEMP: 43,
+        API_ACS_SET_POINT: 45,
+        API_ACS_MAX_TEMP: 75,
+        API_ACS_MIN_TEMP: 30,
+        API_ACS_ON: 1,
+        API_ACS_POWER_MODE: 0,
+    }
+}
+
 HVAC_SYSTEMS_MOCK = {
     API_SYSTEMS: [
         {
@@ -283,6 +303,7 @@ HVAC_VERSION_MOCK = {
 
 HVAC_WEBSERVER_MOCK = {
     API_MAC: "11:22:33:44:55:66",
+    API_WS_TYPE: API_WS_AZ,
     API_WIFI_CHANNEL: 6,
     API_WIFI_RSSI: -42,
 }
@@ -295,12 +316,16 @@ async def async_init_integration(
 
     config_entry = MockConfigEntry(
         data=CONFIG,
+        entry_id="6e7a0798c1734ba81d26ced0e690eaec",
         domain=DOMAIN,
         unique_id="airzone_unique_id",
     )
     config_entry.add_to_hass(hass)
 
     with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ), patch(

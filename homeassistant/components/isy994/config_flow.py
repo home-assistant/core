@@ -1,13 +1,13 @@
 """Config flow for Universal Devices ISY/IoX integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
 from pyisy.connection import Connection
@@ -97,7 +97,7 @@ async def validate_input(
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error

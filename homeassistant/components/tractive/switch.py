@@ -11,19 +11,17 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables
+from . import Trackables, TractiveClient
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     CLIENT,
     DOMAIN,
-    SERVER_UNAVAILABLE,
     TRACKABLES,
-    TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
 
@@ -77,7 +75,7 @@ async def async_setup_entry(
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = [
-        TractiveSwitch(client.user_id, item, description)
+        TractiveSwitch(client, item, description)
         for description in SWITCH_TYPES
         for item in trackables
     ]
@@ -92,52 +90,35 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     def __init__(
         self,
-        user_id: str,
+        client: TractiveClient,
         item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
-        super().__init__(user_id, item.trackable, item.tracker_details)
+        super().__init__(
+            client,
+            item.trackable,
+            item.tracker_details,
+            f"{TRACKER_SWITCH_STATUS_UPDATED}-{item.tracker_details['_id']}",
+        )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
-        self._attr_available = False
         self._tracker = item.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
 
     @callback
-    def handle_server_unavailable(self) -> None:
-        """Handle server unavailable."""
-        self._attr_available = False
-        self.async_write_ha_state()
-
-    @callback
-    def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
-        """Handle hardware status update."""
-        if (state := event[self.entity_description.key]) is None:
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle status update."""
+        if self.entity_description.key not in event:
             return
-        self._attr_is_on = state
+
+        # We received an event, so the service is online and the switch entities should
+        #  be available.
         self._attr_available = True
+        self._attr_is_on = event[self.entity_description.key]
+
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
-                self.handle_hardware_status_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""

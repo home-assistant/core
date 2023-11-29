@@ -1,4 +1,13 @@
 """Tests for Shelly light platform."""
+from aioshelly.const import (
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_DUO,
+    MODEL_RGBW2,
+    MODEL_VINTAGE_V2,
+)
 import pytest
 
 from homeassistant.components.light import (
@@ -33,7 +42,7 @@ LIGHT_BLOCK_ID = 2
 
 async def test_block_device_rgbw_bulb(hass: HomeAssistant, mock_block_device) -> None:
     """Test block device RGBW bulb."""
-    await init_integration(hass, 1, model="SHBLB-1")
+    await init_integration(hass, 1, model=MODEL_BULB)
 
     # Test initial
     state = hass.states.get("light.test_name_channel_1")
@@ -113,7 +122,7 @@ async def test_block_device_rgb_bulb(
 ) -> None:
     """Test block device RGB bulb."""
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "mode")
-    await init_integration(hass, 1, model="SHCB-1")
+    await init_integration(hass, 1, model=MODEL_BULB_RGBW)
 
     # Test initial
     state = hass.states.get("light.test_name_channel_1")
@@ -215,7 +224,7 @@ async def test_block_device_white_bulb(
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "mode")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "colorTemp")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "effect")
-    await init_integration(hass, 1, model="SHVIN-1")
+    await init_integration(hass, 1, model=MODEL_VINTAGE_V2)
 
     # Test initial
     state = hass.states.get("light.test_name_channel_1")
@@ -259,12 +268,12 @@ async def test_block_device_white_bulb(
 @pytest.mark.parametrize(
     "model",
     [
-        "SHBDUO-1",
-        "SHCB-1",
-        "SHDM-1",
-        "SHDM-2",
-        "SHRGBW2",
-        "SHVIN-1",
+        MODEL_DUO,
+        MODEL_BULB_RGBW,
+        MODEL_DIMMER,
+        MODEL_DIMMER_2,
+        MODEL_RGBW2,
+        MODEL_VINTAGE_V2,
     ],
 )
 async def test_block_device_support_transition(

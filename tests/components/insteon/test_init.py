@@ -44,7 +44,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
-        # pylint: disable-next=no-member
         assert insteon.devices.async_save.call_count == 1
         assert mock_close.called
 
@@ -77,7 +76,8 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
     ), patch.object(insteon, "close_insteon_connection"), patch.object(
         insteon, "devices", new=MockDevices()
     ), patch(
-        PATCH_CONNECTION, new=mock_successful_connection
+        PATCH_CONNECTION,
+        new=mock_successful_connection,
     ):
         assert await async_setup_component(
             hass,

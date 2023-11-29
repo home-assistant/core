@@ -19,7 +19,6 @@ from urllib.parse import quote, urlparse
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
-import async_timeout
 import voluptuous as vol
 from yarl import URL
 
@@ -28,6 +27,7 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -458,6 +458,17 @@ class MediaPlayerEntityDescription(EntityDescription):
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_ENTITY_PICTURE_LOCAL,
+            ATTR_ENTITY_PICTURE,
+            ATTR_INPUT_SOURCE_LIST,
+            ATTR_MEDIA_POSITION_UPDATED_AT,
+            ATTR_MEDIA_POSITION,
+            ATTR_SOUND_MODE_LIST,
+        }
+    )
 
     entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
@@ -1126,8 +1137,7 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url
-        + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
@@ -1259,7 +1269,7 @@ async def async_fetch_image(
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
     with suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             response = await websession.get(url)
             if response.status == HTTPStatus.OK:
                 content = await response.read()

@@ -27,7 +27,6 @@ from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONDITION_CLASSES: dict[str, list[str]] = {
@@ -46,6 +45,11 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}
 
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=30)
 
@@ -56,17 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Demo weather."""
-    add_entities(
+    async_add_entities(
         [
             DemoWeather(
                 "South",
@@ -237,9 +231,7 @@ class DemoWeather(WeatherEntity):
     @property
     def condition(self) -> str:
         """Return the weather condition."""
-        return [
-            k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
-        ][0]
+        return CONDITION_MAP[self._condition.lower()]
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast."""

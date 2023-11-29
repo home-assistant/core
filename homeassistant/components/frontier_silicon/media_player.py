@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .browse_media import browse_node, browse_top_level
@@ -126,7 +126,8 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 

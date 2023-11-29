@@ -6,7 +6,6 @@ from contextlib import suppress
 import logging
 import shlex
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -89,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         process = await create_process
         try:
-            async with async_timeout.timeout(COMMAND_TIMEOUT):
+            async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except asyncio.TimeoutError:
             _LOGGER.error(

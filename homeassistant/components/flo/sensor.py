@@ -68,7 +68,6 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
         super().__init__("daily_consumption", device)
-        self._state: float = None
 
     @property
     def native_value(self) -> float | None:
@@ -86,7 +85,6 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
     def __init__(self, device):
         """Initialize the system mode sensor."""
         super().__init__("current_system_mode", device)
-        self._state: str = None
 
     @property
     def native_value(self) -> str | None:
@@ -107,7 +105,6 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     def __init__(self, device):
         """Initialize the flow rate sensor."""
         super().__init__("current_flow_rate", device)
-        self._state: float = None
 
     @property
     def native_value(self) -> float | None:
@@ -129,7 +126,6 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
         super().__init__("temperature", device)
         if is_water:
             self._attr_translation_key = "water_temperature"
-        self._state: float = None
 
     @property
     def native_value(self) -> float | None:
@@ -149,7 +145,6 @@ class FloHumiditySensor(FloEntity, SensorEntity):
     def __init__(self, device):
         """Initialize the humidity sensor."""
         super().__init__("humidity", device)
-        self._state: float = None
 
     @property
     def native_value(self) -> float | None:
@@ -170,7 +165,6 @@ class FloPressureSensor(FloEntity, SensorEntity):
     def __init__(self, device):
         """Initialize the pressure sensor."""
         super().__init__("water_pressure", device)
-        self._state: float = None
 
     @property
     def native_value(self) -> float | None:
@@ -190,7 +184,6 @@ class FloBatterySensor(FloEntity, SensorEntity):
     def __init__(self, device):
         """Initialize the battery sensor."""
         super().__init__("battery", device)
-        self._state: float = None
 
     @property
     def native_value(self) -> float | None:

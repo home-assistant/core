@@ -22,6 +22,11 @@ class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
 
     char: CharacteristicBool = field(default_factory=lambda: CharacteristicBool(""))
 
+    @property
+    def context(self) -> set[str]:
+        """Context needed for update coordinator."""
+        return {self.char.uuid}
+
 
 DESCRIPTIONS = (
     GardenaBluetoothButtonEntityDescription(
@@ -40,7 +45,7 @@ async def async_setup_entry(
     """Set up button based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
-        GardenaBluetoothButton(coordinator, description)
+        GardenaBluetoothButton(coordinator, description, description.context)
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]

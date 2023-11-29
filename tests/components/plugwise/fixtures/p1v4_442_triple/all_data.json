@@ -2,7 +2,7 @@
   "devices": {
     "03e65b16e4b247a29ae0d75a78cb492e": {
       "binary_sensors": {
-        "plugwise_notification": false
+        "plugwise_notification": true
       },
       "dev_class": "gateway",
       "firmware": "4.4.2",
@@ -51,7 +51,11 @@
   },
   "gateway": {
     "gateway_id": "03e65b16e4b247a29ae0d75a78cb492e",
-    "notifications": {},
+    "notifications": {
+      "97a04c0c263049b29350a660b4cdd01e": {
+        "warning": "The Smile P1 is not connected to a smart meter."
+      }
+    },
     "smile_name": "Smile P1"
   }
 }

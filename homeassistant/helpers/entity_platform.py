@@ -20,8 +20,10 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
+    SupportsResponse,
     callback,
     split_entity_id,
     valid_entity_id,
@@ -618,8 +620,13 @@ class EntityPlatform:
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
-                    self.logger.error("Ignoring invalid device info: %s", str(exc))
-                    device = None
+                    self.logger.error(
+                        "%s: Not adding entity with invalid device info: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return
             else:
                 device = None
 
@@ -806,9 +813,10 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service.
 
@@ -820,9 +828,9 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> None:
+        async def handle_service(call: ServiceCall) -> EntityServiceResponse | None:
             """Handle the service."""
-            await service.entity_service_call(
+            return await service.entity_service_call(
                 self.hass,
                 [
                     plf
@@ -835,7 +843,7 @@ class EntityPlatform:
             )
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema
+            self.platform_name, name, handle_service, schema, supports_response
         )
 
     async def _update_entity_states(self, now: datetime) -> None:

@@ -13,8 +13,8 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -56,38 +56,19 @@ class KonnectedSwitch(SwitchEntity):
         self._momentary = self._data.get(CONF_MOMENTARY)
         self._pause = self._data.get(CONF_PAUSE)
         self._repeat = self._data.get(CONF_REPEAT)
-        self._state = self._boolean_state(self._data.get(ATTR_STATE))
-        self._name = self._data.get(CONF_NAME)
-        self._unique_id = (
+        self._attr_is_on = self._boolean_state(self._data.get(ATTR_STATE))
+        self._attr_name = self._data.get(CONF_NAME)
+        self._attr_unique_id = (
             f"{device_id}-{self._zone_num}-{self._momentary}-"
             f"{self._pause}-{self._repeat}"
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state
+        self._attr_device_info = DeviceInfo(identifiers={(KONNECTED_DOMAIN, device_id)})
 
     @property
     def panel(self):
         """Return the Konnected HTTP client."""
         device_data = self.hass.data[KONNECTED_DOMAIN][CONF_DEVICES][self._device_id]
         return device_data.get("panel")
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
 
     @property
     def available(self) -> bool:
@@ -129,7 +110,7 @@ class KonnectedSwitch(SwitchEntity):
             return self._activation == STATE_HIGH
 
     def _set_state(self, state):
-        self._state = state
+        self._attr_is_on = state
         self.async_write_ha_state()
         _LOGGER.debug(
             "Setting status of %s actuator zone %s to %s",

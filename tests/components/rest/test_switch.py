@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template_entity import CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -61,7 +61,10 @@ async def test_setup_missing_config(
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert_setup_component(0, SWITCH_DOMAIN)
-    assert "Invalid config for [switch.rest]: required key not provided" in caplog.text
+    assert (
+        "Invalid config for 'switch.rest': required key 'resource' not provided"
+        in caplog.text
+    )
 
 
 async def test_setup_missing_schema(
@@ -72,7 +75,7 @@ async def test_setup_missing_schema(
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert_setup_component(0, SWITCH_DOMAIN)
-    assert "Invalid config for [switch.rest]: invalid url" in caplog.text
+    assert "Invalid config for 'switch.rest': invalid url" in caplog.text
 
 
 @respx.mock
@@ -111,7 +114,7 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
     with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
 
 
 @respx.mock
@@ -129,7 +132,7 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert route.call_count == 1
+    assert route.call_count == 2
 
 
 @respx.mock
@@ -148,7 +151,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
@@ -170,7 +173,7 @@ async def test_setup_with_state_resource(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
@@ -195,7 +198,7 @@ async def test_setup_with_templated_headers_params(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
     assert last_request.headers.get("Accept") == CONTENT_TYPE_JSON

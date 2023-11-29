@@ -13,7 +13,8 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import ToggleEntity
 
 from .const import MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator

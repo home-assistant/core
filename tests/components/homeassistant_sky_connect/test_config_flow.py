@@ -1,10 +1,13 @@
 """Test the Home Assistant SkyConnect config flow."""
+from collections.abc import Generator
 import copy
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha import (
     CONF_DEVICE_PATH,
     DOMAIN as ZHA_DOMAIN,
     RadioType,
@@ -23,6 +26,15 @@ USB_DATA = usb.UsbServiceInfo(
     manufacturer="bla_manufacturer",
     description="bla_description",
 )
+
+
+@pytest.fixture(autouse=True)
+def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Fixture for a test config flow."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -325,8 +337,8 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert zha_config_entry.data == {
         "device": {
             "path": "socket://core-silabs-multiprotocol:9999",
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
         },
         "radio_type": "ezsp",
     }

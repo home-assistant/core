@@ -1,8 +1,11 @@
 """The sensor tests for the Ruckus Unleashed platform."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
-from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
+from aioruckus.const import ERROR_CONNECT_EOF, ERROR_LOGIN_INCORRECT
+from aioruckus.exceptions import AuthenticationError
+
+from homeassistant.components.ruckus_unleashed import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -10,12 +13,9 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import utcnow
 
 from . import (
-    DEFAULT_AP_INFO,
-    DEFAULT_SYSTEM_INFO,
-    DEFAULT_TITLE,
-    DEFAULT_UNIQUE_ID,
-    TEST_CLIENT,
+    DEFAULT_UNIQUEID,
     TEST_CLIENT_ENTITY_ID,
+    RuckusAjaxApiPatchContext,
     init_integration,
     mock_config_entry,
 )
@@ -28,12 +28,7 @@ async def test_client_connected(hass: HomeAssistant) -> None:
     await init_integration(hass)
 
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={
-            TEST_CLIENT[API_MAC]: TEST_CLIENT,
-        },
-    ):
+    with RuckusAjaxApiPatchContext():
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
@@ -47,10 +42,7 @@ async def test_client_disconnected(hass: HomeAssistant) -> None:
     await init_integration(hass)
 
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={},
-    ):
+    with RuckusAjaxApiPatchContext(active_clients={}):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -64,9 +56,24 @@ async def test_clients_update_failed(hass: HomeAssistant) -> None:
     await init_integration(hass)
 
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        side_effect=ConnectionError,
+    with RuckusAjaxApiPatchContext(
+        active_clients=AsyncMock(side_effect=ConnectionError(ERROR_CONNECT_EOF))
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
+        test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
+        assert test_client.state == STATE_UNAVAILABLE
+
+
+async def test_clients_update_auth_failed(hass: HomeAssistant) -> None:
+    """Test failed update with bad auth."""
+    await init_integration(hass)
+
+    future = utcnow() + timedelta(minutes=60)
+    with RuckusAjaxApiPatchContext(
+        active_clients=AsyncMock(side_effect=AuthenticationError(ERROR_LOGIN_INCORRECT))
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -85,27 +92,12 @@ async def test_restoring_clients(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
-        DEFAULT_UNIQUE_ID,
+        DEFAULT_UNIQUEID,
         suggested_object_id="ruckus_test_device",
         config_entry=entry,
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.ap_info",
-        return_value=DEFAULT_AP_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={},
-    ):
+    with RuckusAjaxApiPatchContext(active_clients={}):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

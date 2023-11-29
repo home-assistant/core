@@ -58,6 +58,9 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
+    _attr_entity_registry_enabled_default = False
+    _attr_name = "Buienradar"
+
     def __init__(
         self, latitude: float, longitude: float, delta: float, country: str
     ) -> None:
@@ -66,8 +69,6 @@ class BuienradarCam(Camera):
         This constructor must be run in the event loop.
         """
         super().__init__()
-
-        self._name = "Buienradar"
 
         # dimension (x and y) of returned radar image
         self._dimension = DEFAULT_DIMENSION
@@ -94,12 +95,7 @@ class BuienradarCam(Camera):
         # deadline for image refresh - self.delta after last successful load
         self._deadline: datetime | None = None
 
-        self._unique_id = f"{latitude:2.6f}{longitude:2.6f}"
-
-    @property
-    def name(self) -> str:
-        """Return the component name."""
-        return self._name
+        self._attr_unique_id = f"{latitude:2.6f}{longitude:2.6f}"
 
     def __needs_refresh(self) -> bool:
         if not (self._delta and self._deadline and self._last_image):
@@ -187,13 +183,3 @@ class BuienradarCam(Camera):
             async with self._condition:
                 self._loading = False
                 self._condition.notify_all()
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Disable entity by default."""
-        return False

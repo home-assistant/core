@@ -7,8 +7,6 @@ from typing import overload
 
 import homeassistant.util.dt as dt_util
 
-# pylint: disable=invalid-name
-
 _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"

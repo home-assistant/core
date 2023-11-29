@@ -16,7 +16,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -89,10 +96,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # when it was already checked during setup.
         self.data: _DataT = None  # type: ignore[assignment]
 
-        # Pick a random microsecond to stagger the refreshes
+        # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
         # and avoid a thundering herd.
-        self._microsecond = randint(
-            event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX
+        self._microsecond = (
+            randint(event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX) / 10**6
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -103,7 +110,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         job_name += f" {name}"
         if entry := self.config_entry:
             job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
-        self._job = HassJob(self._handle_refresh_interval, job_name)
+        self._job = HassJob(
+            self._handle_refresh_interval,
+            job_name,
+            job_type=HassJobType.Coroutinefunction,
+        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -214,20 +225,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        # We _floor_ utcnow to create a schedule on a rounded second,
-        # minimizing the time between the point and the real activation.
-        # That way we obtain a constant update frequency,
-        # as long as the update process takes less than 500ms
-        #
-        # We do not align everything to happen at microsecond 0
-        # since it increases the risk of a thundering herd
-        # when multiple coordinators are scheduled to update at the same time.
-        #
-        # https://github.com/home-assistant/core/issues/82231
-        self._unsub_refresh = event.async_track_point_in_utc_time(
+        # We use event.async_call_at because DataUpdateCoordinator does
+        # not need an exact update interval.
+        now = self.hass.loop.time()
+
+        next_refresh = int(now) + self._microsecond
+        next_refresh += self.update_interval.total_seconds()
+        self._unsub_refresh = event.async_call_at(
             self.hass,
             self._job,
-            utcnow().replace(microsecond=self._microsecond) + self.update_interval,
+            next_refresh,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -417,6 +424,29 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._schedule_refresh()
 
         self.async_update_listeners()
+
+
+class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+    """DataUpdateCoordinator which keeps track of the last successful update."""
+
+    last_update_success_time: datetime | None = None
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data."""
+        await super()._async_refresh(
+            log_failures,
+            raise_on_auth_failed,
+            scheduled,
+            raise_on_entry_error,
+        )
+        if self.last_update_success:
+            self.last_update_success_time = utcnow()
 
 
 class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):

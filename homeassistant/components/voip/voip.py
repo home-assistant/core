@@ -10,7 +10,6 @@ from pathlib import Path
 import time
 from typing import TYPE_CHECKING
 
-import async_timeout
 from voip_utils import (
     CallInfo,
     RtcpState,
@@ -30,12 +29,15 @@ from homeassistant.components.assist_pipeline import (
     select as pipeline_select,
 )
 from homeassistant.components.assist_pipeline.vad import (
+    AudioBuffer,
     VadSensitivity,
+    VoiceActivityDetector,
     VoiceCommandSegmenter,
+    WebRtcVad,
 )
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.util.ulid import ulid
+from homeassistant.util.ulid import ulid_now
 
 from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 
@@ -109,11 +111,13 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
             valid_protocol_factory=lambda call_info, rtcp_state: make_protocol(
                 hass, devices, call_info, rtcp_state
             ),
-            invalid_protocol_factory=lambda call_info, rtcp_state: PreRecordMessageProtocol(
-                hass,
-                "not_configured.pcm",
-                opus_payload_type=call_info.opus_payload_type,
-                rtcp_state=rtcp_state,
+            invalid_protocol_factory=(
+                lambda call_info, rtcp_state: PreRecordMessageProtocol(
+                    hass,
+                    "not_configured.pcm",
+                    opus_payload_type=call_info.opus_payload_type,
+                    rtcp_state=rtcp_state,
+                )
             ),
         )
         self.hass = hass
@@ -217,7 +221,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     ) -> None:
         """Forward audio to pipeline STT and handle TTS."""
         if self._session_id is None:
-            self._session_id = ulid()
+            self._session_id = ulid_now()
 
         # Play listening tone at the start of each cycle
         if self.listening_tone_enabled:
@@ -226,11 +230,13 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         try:
             # Wait for speech before starting pipeline
             segmenter = VoiceCommandSegmenter(silence_seconds=self.silence_seconds)
+            vad = WebRtcVad()
             chunk_buffer: deque[bytes] = deque(
                 maxlen=self.buffered_chunks_before_speech,
             )
             speech_detected = await self._wait_for_speech(
                 segmenter,
+                vad,
                 chunk_buffer,
             )
             if not speech_detected:
@@ -244,6 +250,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 try:
                     async for chunk in self._segment_audio(
                         segmenter,
+                        vad,
                         chunk_buffer,
                     ):
                         yield chunk
@@ -259,7 +266,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     self._clear_audio_queue()
 
             # Run pipeline with a timeout
-            async with async_timeout.timeout(self.pipeline_timeout):
+            async with asyncio.timeout(self.pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
                     context=self._context,
@@ -307,6 +314,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     async def _wait_for_speech(
         self,
         segmenter: VoiceCommandSegmenter,
+        vad: VoiceActivityDetector,
         chunk_buffer: MutableSequence[bytes],
     ):
         """Buffer audio chunks until speech is detected.
@@ -315,18 +323,24 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
+
+        assert vad.samples_per_chunk is not None
+        vad_buffer = AudioBuffer(vad.samples_per_chunk * WIDTH)
 
         while chunk:
             chunk_buffer.append(chunk)
 
-            segmenter.process(chunk)
+            segmenter.process_with_vad(chunk, vad, vad_buffer)
             if segmenter.in_command:
                 # Buffer until command starts
+                if len(vad_buffer) > 0:
+                    chunk_buffer.append(vad_buffer.bytes())
+
                 return True
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
 
         return False
@@ -334,6 +348,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     async def _segment_audio(
         self,
         segmenter: VoiceCommandSegmenter,
+        vad: VoiceActivityDetector,
         chunk_buffer: Sequence[bytes],
     ) -> AsyncIterable[bytes]:
         """Yield audio chunks until voice command has finished."""
@@ -343,17 +358,20 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
+        assert vad.samples_per_chunk is not None
+        vad_buffer = AudioBuffer(vad.samples_per_chunk * WIDTH)
+
         while chunk:
-            if not segmenter.process(chunk):
+            if not segmenter.process_with_vad(chunk, vad, vad_buffer):
                 # Voice command is finished
                 break
 
             yield chunk
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
 
     def _clear_audio_queue(self) -> None:
@@ -395,7 +413,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             tts_samples = len(audio_bytes) / (WIDTH * CHANNELS)
             tts_seconds = tts_samples / RATE
 
-            async with async_timeout.timeout(tts_seconds + self.tts_extra_timeout):
+            async with asyncio.timeout(tts_seconds + self.tts_extra_timeout):
                 # Assume TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
         except asyncio.TimeoutError as err:

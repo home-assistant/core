@@ -87,6 +87,7 @@ async def test_lock_popp_electric_strike_lock_control(
         hass.states.get("binary_sensor.node_62_the_current_status_of_the_door")
         is not None
     )
+    assert hass.states.get("select.node_62_current_lock_mode") is not None
 
 
 async def test_fortrez_ssa3_siren(
@@ -227,7 +228,9 @@ async def test_indicator_test(
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1  # only ping
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2  # include node status
+    assert (
+        len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    )  # include node + controller status
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"

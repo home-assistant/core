@@ -1,5 +1,5 @@
 """The tests for Octoptint binary sensor module."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     }
     with patch(
         "homeassistant.util.dt.utcnow",
-        return_value=datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=timezone.utc),
+        return_value=datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=UTC),
     ):
         await init_integration(hass, "sensor", printer=printer, job=job)
 

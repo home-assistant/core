@@ -114,7 +114,7 @@ async def test_switch_read_light_state_dimmer(hass: HomeAssistant, utcnow) -> No
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -177,7 +177,7 @@ async def test_switch_read_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -246,7 +246,7 @@ async def test_switch_read_light_state_color_temp(hass: HomeAssistant, utcnow) -
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
-    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_COLOR_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -343,9 +343,10 @@ async def test_light_unloaded_removed(hass: HomeAssistant, utcnow) -> None:
     assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a light unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     light_entry = entity_registry.async_get_or_create(
         "light",
@@ -360,9 +361,10 @@ async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_only_migrate_once(hass: HomeAssistant, utcnow) -> None:
+async def test_only_migrate_once(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we handle migration happening after an upgrade and than a downgrade and then an upgrade."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     old_light_entry = entity_registry.async_get_or_create(
         "light",

@@ -6,7 +6,7 @@ import logging
 from epson_projector import Projector, ProjectorUnavailableError
 from epson_projector.const import (
     BACK,
-    BUSY,
+    BUSY_CODES,
     CMODE,
     CMODE_LIST,
     CMODE_LIST_SET,
@@ -37,7 +37,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_get as async_get_device_registry,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
@@ -55,8 +58,7 @@ async def async_setup_entry(
     projector: Projector = hass.data[DOMAIN][config_entry.entry_id]
     projector_entity = EpsonProjectorMediaPlayer(
         projector=projector,
-        name=config_entry.title,
-        unique_id=config_entry.unique_id,
+        unique_id=config_entry.unique_id or config_entry.entry_id,
         entry=config_entry,
     )
     async_add_entities([projector_entity], True)
@@ -71,6 +73,9 @@ async def async_setup_entry(
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
@@ -82,38 +87,38 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     )
 
     def __init__(
-        self, projector: Projector, name: str, unique_id: str | None, entry: ConfigEntry
+        self, projector: Projector, unique_id: str, entry: ConfigEntry
     ) -> None:
         """Initialize entity to control Epson projector."""
         self._projector = projector
         self._entry = entry
-        self._attr_name = name
         self._attr_available = False
         self._cmode = None
         self._attr_source_list = list(DEFAULT_SOURCES.values())
         self._attr_unique_id = unique_id
-        if unique_id:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, unique_id)},
-                manufacturer="Epson",
-                model="Epson",
-                name="Epson projector",
-                via_device=(DOMAIN, unique_id),
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Epson",
+            model="Epson",
+        )
 
     async def set_unique_id(self) -> bool:
         """Set unique id for projector config entry."""
         _LOGGER.debug("Setting unique_id for projector")
-        if self.unique_id:
+        if self._entry.unique_id:
             return False
         if uid := await self._projector.get_serial_number():
             self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
-            registry = async_get_entity_registry(self.hass)
-            old_entity_id = registry.async_get_entity_id(
+            ent_reg = async_get_entity_registry(self.hass)
+            old_entity_id = ent_reg.async_get_entity_id(
                 "media_player", DOMAIN, self._entry.entry_id
             )
             if old_entity_id is not None:
-                registry.async_update_entity(old_entity_id, new_unique_id=uid)
+                ent_reg.async_update_entity(old_entity_id, new_unique_id=uid)
+            dev_reg = async_get_device_registry(self.hass)
+            device = dev_reg.async_get_device({(DOMAIN, self._entry.entry_id)})
+            if device is not None:
+                dev_reg.async_update_device(device.id, new_identifiers={(DOMAIN, uid)})
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self._entry.entry_id)
             )
@@ -147,7 +152,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                     self._attr_volume_level = float(volume)
                 except ValueError:
                     self._attr_volume_level = None
-        elif power_state == BUSY:
+        elif power_state in BUSY_CODES:
             self._attr_state = MediaPlayerState.ON
         else:
             self._attr_state = MediaPlayerState.OFF

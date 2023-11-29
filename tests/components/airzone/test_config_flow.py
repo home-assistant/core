@@ -5,6 +5,7 @@ from unittest.mock import patch
 from aioairzone.const import API_MAC, API_SYSTEMS
 from aioairzone.exceptions import (
     AirzoneError,
+    HotWaterNotAvailable,
     InvalidMethod,
     InvalidSystem,
     SystemOutOfRange,
@@ -19,7 +20,14 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .util import CONFIG, CONFIG_ID1, HVAC_MOCK, HVAC_VERSION_MOCK, HVAC_WEBSERVER_MOCK
+from .util import (
+    CONFIG,
+    CONFIG_ID1,
+    HVAC_DHW_MOCK,
+    HVAC_MOCK,
+    HVAC_VERSION_MOCK,
+    HVAC_WEBSERVER_MOCK,
+)
 
 from tests.common import MockConfigEntry
 
@@ -41,6 +49,9 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ), patch(
@@ -87,6 +98,9 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        side_effect=HotWaterNotAvailable,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         side_effect=InvalidSystem,
     ) as mock_hvac, patch(
@@ -186,6 +200,9 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ), patch(
@@ -264,6 +281,9 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ), patch(
@@ -317,6 +337,9 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        side_effect=HotWaterNotAvailable,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         side_effect=InvalidSystem,
     ) as mock_hvac, patch(
