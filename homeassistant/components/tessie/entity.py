@@ -17,12 +17,12 @@ MODELS = {
 
 
 class TessieEntity(CoordinatorEntity):
-    """Parent class for Advantage Air Entities."""
+    """Parent class for Tessie Entities."""
 
     _attr_has_entity_name = True
 
     def __init__(self, coordinator, vin: str, category: str, name: str) -> None:
-        """Initialize common aspects of an Advantage Air entity."""
+        """Initialize common aspects of an Tessie entity."""
         super().__init__(coordinator)
         self.vin = vin
         self.category = category
