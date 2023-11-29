@@ -107,6 +107,20 @@ async def test_local_client_fails_props(
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_fails_maps_continue(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
+) -> None:
+    """Test that if we fail to get the maps, we still setup."""
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
+        side_effect=RoborockException(),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+        # No map data means no images
+        assert len(hass.states.async_all("image")) == 0
+
+
 async def test_reauth_started(
     hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
