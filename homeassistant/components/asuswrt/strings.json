@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "ASUSWRT connection settings",
         "description": "Set required parameter to connect to your router",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -39,7 +38,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "ASUSWRT Options",
         "data": {
           "consider_home": "Seconds to wait before considering a device away",
           "track_unknown": "Track unknown / unnamed devices",
