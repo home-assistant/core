@@ -70,6 +70,7 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
         SensorEntityDescription(
             key="shift_state",
             translation_key="shift_state",
+            icon="mdi:car-shift-pattern",
         ),
     ),
     TessieApi.VEHICLE_STATE: (
