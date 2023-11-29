@@ -59,10 +59,21 @@ RETRY_DELAY_S = 1.0
 BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
+
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("path"): str,
+        vol.Optional("baudrate", default=115200): int,
+        vol.Optional("flow_control", default=None): vol.In(
+            ["hardware", "software", None]
+        ),
+    }
+)
+
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
-        vol.Required("port"): dict,
+        vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
     }
 )
