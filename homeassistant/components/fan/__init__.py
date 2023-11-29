@@ -79,7 +79,18 @@ ATTR_PRESET_MODES = "preset_modes"
 
 
 class NotValidPresetModeError(ServiceValidationError):
-    """Exception class when the preset_mode is not in the preset_modes list."""
+    """Raised when the preset_mode is not in the preset_modes list."""
+
+    def __init__(
+        self, *args: object, translation_placeholders: dict[str, str] | None = None
+    ) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            *args,
+            translation_domain=DOMAIN,
+            translation_key="not_valid_preset_mode",
+            translation_placeholders=translation_placeholders,
+        )
 
 
 @bind_hass
@@ -157,7 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "async_handle_set_preset_mode_on_service",
+        "async_handle_set_preset_mode_service",
         [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )
 
@@ -239,7 +250,7 @@ class FanEntity(ToggleEntity):
         raise NotImplementedError()
 
     @final
-    async def async_handle_set_preset_mode_on_service(self, preset_mode: str) -> None:
+    async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
         """Validate and set new preset mode and set it."""
         self._valid_preset_mode_or_raise(preset_mode)
         await self.async_set_preset_mode(preset_mode)
@@ -258,8 +269,6 @@ class FanEntity(ToggleEntity):
             raise NotValidPresetModeError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode:"
                 f" {preset_modes}",
-                translation_domain=DOMAIN,
-                translation_key="not_valid_preset_mode",
                 translation_placeholders={
                     "preset_mode": preset_mode,
                     "preset_modes": preset_modes_str,
