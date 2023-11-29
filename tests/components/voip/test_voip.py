@@ -528,3 +528,75 @@ async def test_tts_wrong_wav_format(
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(1):
             await done.wait()
+
+
+async def test_empty_tts_output(
+    hass: HomeAssistant,
+    voip_device: VoIPDevice,
+) -> None:
+    """Test that TTS will not stream when output is empty."""
+    assert await async_setup_component(hass, "voip", {})
+
+    def is_speech(self, chunk):
+        """Anything non-zero is speech."""
+        return sum(chunk) > 0
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        stt_stream = kwargs["stt_stream"]
+        event_callback = kwargs["event_callback"]
+        async for _chunk in stt_stream:
+            # Stream will end when VAD detects end of "speech"
+            pass
+
+        # Fake intent result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.INTENT_END,
+                data={
+                    "intent_output": {
+                        "conversation_id": "fake-conversation",
+                    }
+                },
+            )
+        )
+
+        # Empty TTS output
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.TTS_END,
+                data={"tts_output": {}},
+            )
+        )
+
+    with patch(
+        "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
+        new=is_speech,
+    ), patch(
+        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ), patch(
+        "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._send_tts",
+    ) as mock_send_tts:
+        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
+            hass,
+            hass.config.language,
+            voip_device,
+            Context(),
+            opus_payload_type=123,
+        )
+        rtp_protocol.transport = Mock()
+
+        # silence
+        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+
+        # "speech"
+        rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
+
+        # silence (assumes relaxed VAD sensitivity)
+        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
+
+        # Wait for mock pipeline to finish
+        async with asyncio.timeout(1):
+            await rtp_protocol._tts_done.wait()
+
+        mock_send_tts.assert_not_called()
