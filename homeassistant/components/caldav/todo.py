@@ -93,17 +93,17 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
 def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
     """Convert a TodoItem to the set of add or update arguments."""
     item_data: dict[str, Any] = {}
-    if item.summary:
-        item_data["summary"] = item.summary
-    if item.status:
-        item_data["status"] = TODO_STATUS_MAP_INV.get(item.status, "NEEDS-ACTION")
+    if (summary := item.summary):
+        item_data["summary"] = summary
+    if (status := item.status):
+        item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
     if due := item.due:
         if isinstance(due, datetime):
             item_data["due"] = dt_util.as_utc(due).strftime("%Y%m%dT%H%M%SZ")
         else:
             item_data["due"] = due.strftime("%Y%m%d")
-    if item.description:
-        item_data["description"] = item.description
+    if (description := item.description):
+        item_data["description"] = description
     return item_data
 
 
