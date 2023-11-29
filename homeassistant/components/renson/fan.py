@@ -45,36 +45,38 @@ SPEED_MAPPING = {
 }
 
 SET_TIMER_LEVEL_SCHEMA = {
-    vol.Required("timer_level"): vol.In(
+    vol.Required("timer_level", default="level1"): vol.In(
         ["level1", "level2", "level3", "level4", "holiday", "breeze"]
     ),
-    vol.Required("minutes"): cv.positive_int,
+    vol.Required("minutes", default=0): cv.positive_int,
 }
 
 SET_DAY_NIGHT_TIME_SCHEMA = {
-    vol.Required("day"): cv.time,
-    vol.Required("night"): cv.time,
+    vol.Required("day", default="7:00:00"): cv.time,
+    vol.Required("night", default="22:00:00"): cv.time,
 }
 
 
 SET_BREEZE_SCHEMA = {
-    vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
-    vol.Required("temperature"): cv.positive_int,
-    vol.Required("activate"): bool,
+    vol.Required("breeze_level", default="level3"): vol.In(
+        ["level1", "level2", "level3", "level4"]
+    ),
+    vol.Required("temperature", default=18): cv.positive_int,
+    vol.Required("activate", default=False): bool,
 }
 
 SET_POLLUTION_SETTINGS_SCHEMA = {
-    vol.Required("day_pollution_level"): vol.In(
+    vol.Required("day_pollution_level", default="level3"): vol.In(
         ["level1", "level2", "level3", "level4"]
     ),
-    vol.Required("night_pollution_level"): vol.In(
+    vol.Required("night_pollution_level", default="level2"): vol.In(
         ["level1", "level2", "level3", "level4"]
     ),
-    vol.Optional("humidity_control"): bool,
-    vol.Optional("airquality_control"): bool,
-    vol.Optional("co2_control"): bool,
-    vol.Optional("co2_threshold"): cv.positive_int,
-    vol.Optional("co2_hysteresis"): cv.positive_int,
+    vol.Optional("humidity_control", default=True): bool,
+    vol.Optional("airquality_control", default=True): bool,
+    vol.Optional("co2_control", default=True): bool,
+    vol.Optional("co2_threshold", default=600): cv.positive_int,
+    vol.Optional("co2_hysteresis", default=100): cv.positive_int,
 }
 
 
