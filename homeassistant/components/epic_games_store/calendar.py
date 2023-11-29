@@ -63,11 +63,10 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
         """Return the next upcoming event."""
         return self._event
 
-    @property  # type: ignore[misc]
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return the entity state attributes."""
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
         return {
-            **(super().state_attributes or {}),
             "games": self.coordinator.data[self._cal_type],
         }
 
