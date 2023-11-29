@@ -140,4 +140,4 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.get(self.entity_description.key)
+        return self.get()

@@ -21,12 +21,13 @@ class TessieEntity(CoordinatorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, vin: str, category: str, name: str) -> None:
+    def __init__(self, coordinator, vin: str, category: str, key: str) -> None:
         """Initialize common aspects of a Tessie entity."""
         super().__init__(coordinator)
         self.vin = vin
         self.category = category
-        self._attr_unique_id = f"{vin}:{category}:{name}"
+        self.key = key
+        self._attr_unique_id = f"{vin}:{category}:{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vin)},
             manufacturer="Tessie",
@@ -38,6 +39,6 @@ class TessieEntity(CoordinatorEntity):
             ),
         )
 
-    def get(self, key: str) -> Any:
+    def get(self) -> Any:
         """Return value from coordinator data."""
-        return self.coordinator.data[self.vin][self.category].get(key)
+        return self.coordinator.data[self.vin][self.category].get(self.key)
