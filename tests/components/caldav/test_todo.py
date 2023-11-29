@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
@@ -190,7 +191,7 @@ async def test_add_item(
     assert state
     assert state.state == "0"
 
-    # Simulat return value for the state update after the service call
+    # Simulate return value for the state update after the service call
     calendar.search.return_value = [create_todo(calendar, "2", TODO_NEEDS_ACTION)]
 
     await hass.services.async_call(
@@ -496,3 +497,71 @@ async def test_remove_item_not_found(
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
+
+
+async def test_subscribe(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test creating a an item on the list."""
+
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    # Subscribe and get the initial list
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": TEST_ENTITY,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Cheese"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]
+
+    calendar.todo_by_uid = MagicMock(return_value=item)
+    dav_client.put.return_value.status = 204
+    # Reflect update for state refresh after update
+    calendar.search.return_value = [
+        Todo(
+            dav_client, None, TODO_NEEDS_ACTION.replace("Cheese", "Milk"), calendar, "2"
+        )
+    ]
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {
+            "item": "Cheese",
+            "rename": "Milk",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify update is published
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Milk"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]

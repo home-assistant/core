@@ -44,6 +44,12 @@ from tests.common import MockUser
             "Error handling message: Failed to do X (unknown_error) Mock User from 127.0.0.42 (Browser)",
         ),
         (
+            exceptions.ServiceValidationError("Failed to do X"),
+            websocket_api.ERR_UNKNOWN_ERROR,
+            "Failed to do X",
+            "Error handling message: Failed to do X (unknown_error) Mock User from 127.0.0.42 (Browser)",
+        ),
+        (
             ValueError("Really bad"),
             websocket_api.ERR_UNKNOWN_ERROR,
             "Unknown error",
