@@ -12,6 +12,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
     UnitOfLength,
+    UnitOfPower,
     UnitOfPressure,
     UnitOfSpeed,
 )
@@ -60,6 +61,19 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
             device_class=SensorDeviceClass.SPEED,
+        ),
+        SensorEntityDescription(
+            name="Power",
+            key="power",
+            translation_key="power",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            name="Shift State",
+            key="shift_state",
+            translation_key="shift_state",
         ),
     ),
     TessieApi.VEHICLE_STATE: (
