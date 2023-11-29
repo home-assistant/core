@@ -55,7 +55,6 @@ from .const import (
     CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
@@ -158,8 +157,6 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Initialize the switch."""
         super().__init__(hub, config)
         self._swap = config[CONF_SWAP]
-        if self._swap == CONF_SWAP_NONE:
-            self._swap = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
         self._precision = config[CONF_PRECISION]
