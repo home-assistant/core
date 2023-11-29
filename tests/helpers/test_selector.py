@@ -602,6 +602,11 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ({"multiline": True}, (), ()),
         ({"multiline": False, "type": "email"}, (), ()),
         ({"prefix": "before", "suffix": "after"}, (), ()),
+        (
+            {"multiple": True},
+            (["abc123", "def456"],),
+            ("abc123", None, ["abc123", None]),
+        ),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
