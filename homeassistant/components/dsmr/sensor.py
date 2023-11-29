@@ -456,12 +456,12 @@ def rename_old_gas_to_mbus(
                         device_id=mbus_device_id,
                     )
                 except ValueError:
-                    LOGGER.warning(
+                    LOGGER.debug(
                         "Skip migration of %s because it already exists",
                         entity.entity_id,
                     )
                 else:
-                    LOGGER.info(
+                    LOGGER.debug(
                         "Migrated entity %s from unique id %s to %s",
                         entity.entity_id,
                         entity.unique_id,
