@@ -56,6 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
+    await _async_migrate_unique_ids(hass, entry)
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
 
@@ -116,33 +118,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
+async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entities."""
 
-    if entry.version == 1:
-        _LOGGER.debug("Migrating from version %s", entry.version)
+    @callback
+    def update_unique_id(entity_entry: er.RegistryEntry):
+        """Convert the unique_id of climate entities from '<serial>-<n>' to '<serial>-<entitiy-key>-<n>'.
 
-        @callback
-        def update_unique_id(entity_entry: er.RegistryEntry):
-            """Convert the unique_id of climate entities from '<serial>-<n>' to '<serial>-<entitiy-key>-<n>'.
+        Example: 'xyz-1' --> 'xyz-heating-1'.
+        """
 
-            Example: 'xyz-1' --> 'xyz-heating-1'.
-            """
-
+        if entity_entry.platform == Platform.CLIMATE:
             new_unique_id = entity_entry.unique_id
-            if entity_entry.platform == Platform.CLIMATE:
-                parts = new_unique_id.split("-")
-                if len(parts) == 2:
-                    new_unique_id = "-heating-".join(parts)
-                    _LOGGER.info(
-                        "Migrating unique id of climate entity from %s to %s",
-                        entity_entry.unique_id,
-                        new_unique_id,
-                    )
-            return {"new_unique_id": new_unique_id}
+            parts = new_unique_id.split("-")
+            if len(parts) == 2:
+                new_unique_id = "-heating-".join(parts)
+                _LOGGER.debug(
+                    "Migrating unique id of climate entity from %s to %s",
+                    entity_entry.unique_id,
+                    new_unique_id,
+                )
+                return {"new_unique_id": new_unique_id}
+        return None
 
-        await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
-        entry.version = 2
-        _LOGGER.info("Migration to version %s successful", entry.version)
+    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     return True
