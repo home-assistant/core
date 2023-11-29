@@ -181,21 +181,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
-    name = entry.options.get(CONF_NAME, entry.title)
-    lights = entry.options.get(CONF_LIGHTS)
+    name = entry.options[CONF_NAME]
+    lights = entry.options[CONF_LIGHTS]
 
     start_time = parse_time(entry.options.get(CONF_START_TIME))  # type: ignore[arg-type]
     stop_time = parse_time(entry.options.get(CONF_STOP_TIME))  # type: ignore[arg-type]
 
-    start_colortemp = entry.options.get(CONF_START_CT)
-    sunset_colortemp = entry.options.get(CONF_SUNSET_CT)
-    stop_colortemp = entry.options.get(CONF_STOP_CT)
+    start_colortemp = entry.options[CONF_START_CT]
+    sunset_colortemp = entry.options[CONF_SUNSET_CT]
+    stop_colortemp = entry.options[CONF_STOP_CT]
 
     brightness = None
-    disable_brightness_adjust = not entry.options.get(CONF_ADJUST_BRIGHTNESS)
-    mode = entry.options.get(CONF_MODE)
-    interval = timedelta(**entry.options.get(CONF_INTERVAL))  # type: ignore[arg-type]
-    transition = timedelta(**entry.options.get(ATTR_TRANSITION))  # type: ignore[arg-type]
+    disable_brightness_adjust = not entry.options[CONF_ADJUST_BRIGHTNESS]
+    mode = entry.options[CONF_MODE]
+    interval = timedelta(**entry.options[CONF_INTERVAL])
+    transition = timedelta(**entry.options[ATTR_TRANSITION])
 
     flux = FluxSwitch(
         name,
