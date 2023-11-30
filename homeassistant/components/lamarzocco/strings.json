@@ -51,12 +51,21 @@
     }
   },
   "entity": {
-    "water_heater": {
-      "coffee_boiler": {
-        "name": "Coffee Boiler"
+    "switch": {
+      "main": {
+        "name": "Main"
       },
-      "steam_boiler": {
-        "name": "Steam Boiler"
+      "auto_on_off": {
+        "name": "Auto On/Off"
+      },
+      "prebrew": {
+        "name": "Prebrew"
+      },
+      "preinfusion": {
+        "name": "Preinfusion"
+      },
+      "steam_boiler_enable": {
+        "name": "Steam Boiler Enable"
       }
     }
   }

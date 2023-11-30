@@ -9,7 +9,7 @@ from .const import DOMAIN
 from .coordinator import LmApiCoordinator
 
 PLATFORMS = [
-    Platform.WATER_HEATER,
+    Platform.SWITCH,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -18,9 +18,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up La Marzocco as config entry."""
 
-    coordinator = LmApiCoordinator(
-        hass, entry
-    )
+    coordinator = LmApiCoordinator(hass, entry)
 
     async def async_close_connection(event: Event) -> None:
         """Close WebSocket connection on HA Stop."""
