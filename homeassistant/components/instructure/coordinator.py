@@ -50,7 +50,6 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             async with async_timeout.timeout(10):
-                print("************ coordinator running")
                 assignments = await self.api.async_get_upcoming_assignments(course_ids)
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
