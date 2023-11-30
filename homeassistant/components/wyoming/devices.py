@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 
@@ -51,6 +51,27 @@ class SatelliteDevice:
         self.update_listeners.append(listener)
         return lambda: self.update_listeners.remove(listener)
 
+    def get_assist_in_progress_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for assist in progress binary sensor."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{self.satellite_id}-assist_in_progress"
+        )
+
+    def get_satellite_enabled_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for satellite enabled switch."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "switch", DOMAIN, f"{self.satellite_id}-satellite_enabled"
+        )
+
+    def get_pipeline_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for pipeline select."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "select", DOMAIN, f"{self.satellite_id}-pipeline"
+        )
+
 
 class SatelliteDevices:
     """Class to store devices."""
@@ -60,6 +81,8 @@ class SatelliteDevices:
         self.hass = hass
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[SatelliteDevice], None]] = []
+
+        # satellite_id -> device
         self.devices: dict[str, SatelliteDevice] = {}
 
     @callback
@@ -82,7 +105,11 @@ class SatelliteDevices:
         def async_device_removed(ev: Event) -> None:
             """Handle device removed."""
             removed_id = ev.data["device_id"]
-            self.devices.pop(removed_id, None)
+            self.devices = {
+                satellite_id: satellite_device
+                for satellite_id, satellite_device in self.devices.items()
+                if satellite_device.device_id != removed_id
+            }
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen(
@@ -100,10 +127,15 @@ class SatelliteDevices:
         self._new_device_listeners.append(listener)
 
     @callback
-    def async_get_or_create(self, suggested_area: str | None = None) -> SatelliteDevice:
+    def async_get_or_create(
+        self, name: str | None = None, suggested_area: str | None = None
+    ) -> SatelliteDevice:
         """Get or create a device."""
+        if not self.config_entry.unique_id:
+            raise ValueError("No unique id is set for config entry")
+
         dev_reg = dr.async_get(self.hass)
-        satellite_id = self.config_entry.entry_id
+        satellite_id = self.config_entry.unique_id
         satellite_device = self.devices.get(satellite_id)
 
         if satellite_device is not None:
@@ -112,7 +144,7 @@ class SatelliteDevices:
         device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, satellite_id)},
-            name=satellite_id,
+            name=name or satellite_id,
             suggested_area=suggested_area,
         )
 

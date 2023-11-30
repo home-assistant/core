@@ -79,6 +79,7 @@ SATELLITE_INFO = Info(
         description="Test Satellite",
         installed=True,
         attribution=TEST_ATTR,
+        area="Office",
     )
 )
 EMPTY_INFO = Info()
