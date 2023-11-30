@@ -3,10 +3,12 @@ import asyncio.exceptions
 
 from flexit_bacnet import DecodingError
 
+from homeassistant.components.flexit_bacnet.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from ...common import MockConfigEntry
 from .conftest import _patch_update
 
 
@@ -70,6 +72,30 @@ async def test_form_invalid_device(
         CONF_DEVICE_ID: 2,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_device_already_exist(hass: HomeAssistant, flow_id: str) -> None:
+    """Test that we cannot add already added device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_DEVICE_ID: 2,
+        },
+        unique_id="0000-0001",
+    )
+    entry.add_to_hass(hass)
+    with _patch_update():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_DEVICE_ID: 2,
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_connection_error(
