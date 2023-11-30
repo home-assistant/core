@@ -10,12 +10,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_UPDATED, DOMAIN
+from .const import DOMAIN
+from .coordinator import FastdotcomDataUpdateCoordindator
 
 
 async def async_setup_entry(
@@ -24,11 +24,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(entry.entry_id, hass.data[DOMAIN])])
+    coordinator: FastdotcomDataUpdateCoordindator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([SpeedtestSensor(entry.entry_id, coordinator)])
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SpeedtestSensor(RestoreEntity, SensorEntity):
+class SpeedtestSensor(
+    CoordinatorEntity[FastdotcomDataUpdateCoordindator], SensorEntity
+):
     """Implementation of a Fast.com sensor."""
 
     _attr_name = "Fast.com Download"
@@ -38,31 +41,19 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
 
-    def __init__(self, entry_id: str, speedtest_data: dict[str, Any]) -> None:
+    def __init__(
+        self, entry_id: str, coordinator: FastdotcomDataUpdateCoordindator
+    ) -> None:
         """Initialize the sensor."""
-        self._speedtest_data = speedtest_data
+        super().__init__(coordinator)
         self._attr_unique_id = entry_id
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DATA_UPDATED, self._schedule_immediate_update
-            )
-        )
-
-        if not (state := await self.async_get_last_state()):
-            return
-        self._attr_native_value = state.state
-
-    def update(self) -> None:
-        """Get the latest data and update the states."""
-        if (data := self._speedtest_data.data) is None:  # type: ignore[attr-defined]
-            return
-        self._attr_native_value = data["download"]
-
-    @callback
-    def _schedule_immediate_update(self) -> None:
-        self.async_schedule_update_ha_state(True)
+    @property
+    # Disabling the pylint, since it's an old function of fastdotcom that's being used
+    # which isn't giving a proper type back
+    # pylint: disable=hass-return-type
+    def native_value(
+        self,
+    ) -> Any:
+        """Return the state of the sensor."""
+        return self.coordinator.data
