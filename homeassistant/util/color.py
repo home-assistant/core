@@ -579,7 +579,7 @@ def _white_levels_to_color_temperature(
 def color_xy_to_temperature(x: float, y: float) -> int:
     """Convert an xy color to a color temperature in Kelvin.
 
-    Uses McCamy's approximation, close enough for uses between 2000 K and 10000 K.
+    Uses McCamy's approximation (https://doi.org/10.1002/col.5080170211), close enough for uses between 2000 K and 10000 K.
     """
     n = (x - 0.3320) / (0.1858 - y)
     CCT = 437 * (n**3) + 3601 * (n**2) + 6861 * n + 5517
