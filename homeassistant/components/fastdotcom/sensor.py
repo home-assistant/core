@@ -1,7 +1,7 @@
 """Support for Fast.com internet speed testing sensor."""
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -47,13 +48,12 @@ class SpeedtestSensor(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = entry_id
+        self._state: StateType = None
 
     @property
-    # Disabling the pylint, since it's an old function of fastdotcom that's being used
-    # which isn't giving a proper type back
-    # pylint: disable=hass-return-type
     def native_value(
         self,
-    ) -> Any:
+    ) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data
+        self._state = cast(StateType, self.coordinator.data)
+        return self._state
