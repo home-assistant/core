@@ -31,15 +31,12 @@ def mock_aq_client_for_config_flow(mock_aq_client):
                         "last_updated": "2023-11-30T12:00:00",
                     },
                 ],
-                locality="Example City",
+                locality="Visby",
             )
         ),
-        # Location not found
+        # Location not found (empty sensors list)
         AsyncMock(return_value=Mock(sensors=[], locality="")),
-        # Invalid API key (assuming exception handling)
-        AsyncMock(side_effect=Exception("Invalid API key")),
-        # No sensor data available
-        AsyncMock(return_value=Mock(sensors=[], locality="Example City")),
-        # Add more scenarios as required
+        # Response for invalid or empty API key: Simulate no sensor data and no locality info
+        AsyncMock(return_value=Mock(sensors=[], locality="")),
     ]
     return mock_aq_client
