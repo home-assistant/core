@@ -9,8 +9,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
+from .const import CONF_SITE_ID, CONF_SITE_NAME, DOMAIN
 
 API_URL = "https://app.amber.com.au/developers"
 
@@ -97,27 +103,16 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         api_token = self._api_token
         if user_input is not None:
-            site_nmi = user_input[CONF_SITE_NMI]
-            sites = [
-                site
-                for site in self._sites
-                if generate_site_selector_name(site) == site_nmi
-            ]
-            site = sites[0]
-            site_id = site.id
+            site_id = user_input[CONF_SITE_ID]
             name = user_input.get(CONF_SITE_NAME, site_id)
             return self.async_create_entry(
                 title=name,
-                data={
-                    CONF_SITE_ID: site_id,
-                    CONF_API_TOKEN: api_token,
-                    CONF_SITE_NMI: site.nmi,
-                },
+                data={CONF_SITE_ID: site_id, CONF_API_TOKEN: api_token},
             )
 
         user_input = {
             CONF_API_TOKEN: api_token,
-            CONF_SITE_NMI: "",
+            CONF_SITE_ID: "",
             CONF_SITE_NAME: "",
         }
 
@@ -126,9 +121,18 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_SITE_NMI, default=user_input[CONF_SITE_NMI]
-                    ): vol.In(
-                        [generate_site_selector_name(site) for site in self._sites]
+                        CONF_SITE_ID, default=user_input[CONF_SITE_ID]
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=site.id,
+                                    label=generate_site_selector_name(site),
+                                )
+                                for site in self._sites
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
                     ),
                     vol.Optional(
                         CONF_SITE_NAME, default=user_input[CONF_SITE_NAME]

@@ -12,7 +12,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.amberelectric.const import (
     CONF_SITE_ID,
     CONF_SITE_NAME,
-    CONF_SITE_NMI,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -141,7 +140,7 @@ async def test_single_pending_site(
 
     select_site_result = await hass.config_entries.flow.async_configure(
         enter_api_key_result["flow_id"],
-        {CONF_SITE_NMI: "11111111111 (Pending)", CONF_SITE_NAME: "Home"},
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
     )
 
     # Show available sites
@@ -151,7 +150,6 @@ async def test_single_pending_site(
     assert data
     assert data[CONF_API_TOKEN] == API_KEY
     assert data[CONF_SITE_ID] == "01FG0AGP818PXK0DWHXJRRT2DH"
-    assert data[CONF_SITE_NMI] == "11111111111"
 
 
 async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
@@ -173,7 +171,7 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
 
     select_site_result = await hass.config_entries.flow.async_configure(
         enter_api_key_result["flow_id"],
-        {CONF_SITE_NMI: "11111111111", CONF_SITE_NAME: "Home"},
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
     )
 
     # Show available sites
@@ -183,7 +181,6 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     assert data
     assert data[CONF_API_TOKEN] == API_KEY
     assert data[CONF_SITE_ID] == "01FG0AGP818PXK0DWHXJRRT2DH"
-    assert data[CONF_SITE_NMI] == "11111111111"
 
 
 async def test_single_site_rejoin(
@@ -207,7 +204,7 @@ async def test_single_site_rejoin(
 
     select_site_result = await hass.config_entries.flow.async_configure(
         enter_api_key_result["flow_id"],
-        {CONF_SITE_NMI: "11111111111", CONF_SITE_NAME: "Home"},
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
     )
 
     # Show available sites
@@ -217,7 +214,6 @@ async def test_single_site_rejoin(
     assert data
     assert data[CONF_API_TOKEN] == API_KEY
     assert data[CONF_SITE_ID] == "01FG0AGP818PXK0DWHXJRRT2DH"
-    assert data[CONF_SITE_NMI] == "11111111111"
 
 
 async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
