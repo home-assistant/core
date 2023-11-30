@@ -142,7 +142,10 @@ class SafeLoader(FastSafeLoader):
 
     def __init__(*args: Any, **kwargs: Any) -> None:
         """Log a warning and call super."""
-        report("uses deprecated 'SafeLoader' instead of 'FastSafeLoader'")
+        report(
+            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
         FastSafeLoader.__init__(*args, **kwargs)
 
 
@@ -160,7 +163,10 @@ class SafeLineLoader(PythonSafeLoader):
 
     def __init__(*args: Any, **kwargs: Any) -> None:
         """Log a warning and call super."""
-        report("uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader'")
+        report(
+            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
         PythonSafeLoader.__init__(*args, **kwargs)
 
 
