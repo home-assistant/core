@@ -63,6 +63,25 @@ def mock_single_site_api() -> Generator:
         yield instance
 
 
+@pytest.fixture(name="single_site_pending_api")
+def mock_single_site_pending_api() -> Generator:
+    """Return a single site."""
+    instance = Mock()
+    site = Site(
+        "01FG0AGP818PXK0DWHXJRRT2DH",
+        "11111111111",
+        [],
+        "Jemena",
+        SiteStatus.PENDING,
+        None,
+        None,
+    )
+    instance.get_sites.return_value = [site]
+
+    with patch("amberelectric.api.AmberApi.create", return_value=instance):
+        yield instance
+
+
 @pytest.fixture(name="single_site_rejoin_api")
 def mock_single_site_rejoin_api() -> Generator:
     """Return a single site."""
@@ -99,6 +118,40 @@ def mock_no_site_api() -> Generator:
 
     with patch("amberelectric.api.AmberApi.create", return_value=instance):
         yield instance
+
+
+async def test_single_pending_site(
+    hass: HomeAssistant, single_site_pending_api: Mock
+) -> None:
+    """Test single site."""
+    initial_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert initial_result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert initial_result.get("step_id") == "user"
+
+    # Test filling in API key
+    enter_api_key_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_TOKEN: API_KEY},
+    )
+    assert enter_api_key_result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert enter_api_key_result.get("step_id") == "site"
+
+    select_site_result = await hass.config_entries.flow.async_configure(
+        enter_api_key_result["flow_id"],
+        {CONF_SITE_NMI: "11111111111 (Pending)", CONF_SITE_NAME: "Home"},
+    )
+
+    # Show available sites
+    assert select_site_result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert select_site_result.get("title") == "Home"
+    data = select_site_result.get("data")
+    assert data
+    assert data[CONF_API_TOKEN] == API_KEY
+    assert data[CONF_SITE_ID] == "01FG0AGP818PXK0DWHXJRRT2DH"
+    assert data[CONF_SITE_NMI] == "11111111111"
 
 
 async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
