@@ -1,6 +1,7 @@
 """API for Google Tasks bound to Home Assistant OAuth."""
 
 import json
+import logging
 from typing import Any
 
 from google.oauth2.credentials import Credentials
@@ -13,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .exceptions import GoogleTasksApiError
+
+_LOGGER = logging.getLogger(__name__)
 
 MAX_TASK_RESULTS = 100
 
