@@ -29,7 +29,6 @@ async def async_setup_entry(
     async_add_entities([SpeedtestSensor(entry.entry_id, coordinator)])
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SpeedtestSensor(
     CoordinatorEntity[FastdotcomDataUpdateCoordindator], SensorEntity
 ):
