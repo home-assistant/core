@@ -9,17 +9,22 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect/authenticate",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "issues": {
     "deprecated_notify": {
       "title": "The Netgear LTE notify service is changing",
       "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nThis created a service for a specified recipient without having to include the phone number.\n\nPlease adjust any automations or scripts you may have to use the `{name}` service and include target for specifying a recipient."
+    },
+    "import_failure": {
+      "title": "The Netgear LTE integration failed to import",
+      "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nAn error occurred when trying to communicate with the device. Please remove it from your YAML configuration and set it up."
     }
   },
   "services": {
@@ -75,6 +80,5 @@
         }
       }
     }
-  },
-  "selector": {}
+  }
 }
