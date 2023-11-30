@@ -1,11 +1,12 @@
 """Test Home Assistant yaml loader."""
+from collections.abc import Generator
 import importlib
 import io
 import os
 import pathlib
 from typing import Any
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import yaml as pyyaml
@@ -582,6 +583,58 @@ async def test_loading_actual_file_with_syntax_error(
             "fixtures", "bad.yaml.txt"
         )
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
+
+
+@pytest.fixture
+def mock_integration_frame() -> Generator[Mock, None, None]:
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame
+
+
+@pytest.mark.parametrize(
+    ("loader_class", "message"),
+    [
+        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
+        (
+            yaml.loader.SafeLineLoader,
+            "'SafeLineLoader' instead of 'PythonSafeLoader'",
+        ),
+    ],
+)
+async def test_deprecated_loaders(
+    hass: HomeAssistant,
+    mock_integration_frame: Mock,
+    caplog: pytest.LogCaptureFixture,
+    loader_class,
+    message: str,
+) -> None:
+    """Test instantiating the deprecated yaml loaders logs a warning."""
+    with pytest.raises(TypeError), patch(
+        "homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()
+    ):
+        loader_class()
+    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
 
 
 def test_string_annotated(try_both_loaders) -> None:
