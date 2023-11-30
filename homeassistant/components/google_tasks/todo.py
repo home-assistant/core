@@ -1,9 +1,7 @@
 """Google Tasks todo platform."""
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date, datetime, timedelta
-import logging
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -22,7 +20,6 @@ from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import TaskUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=15)
 
 TODO_STATUS_MAP = {
@@ -148,6 +145,7 @@ class GoogleTaskTodoListEntity(
         """Re-order a To-do item."""
         await self.coordinator.api.move(self._task_list_id, uid, previous=previous_uid)
         await self.coordinator.async_refresh()
+
 
 def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Order the task items response.
