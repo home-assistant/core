@@ -1,11 +1,14 @@
 """Support for DROP sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +28,7 @@ from .const import (
     DEV_SOFTENER,
     DOMAIN,
 )
+from .coordinator import DROPDeviceDataUpdateCoordinator
 from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +36,147 @@ _LOGGER = logging.getLogger(__name__)
 FLOW_ICON = "mdi:shower-head"
 GAUGE_ICON = "mdi:gauge"
 TDS_ICON = "mdi:water-opacity"
+
+
+@dataclass(kw_only=True)
+class DROPSensorEntityDescription(SensorEntityDescription):
+    """Describes DROP sensor entity."""
+
+    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], float | int | None]
+
+
+SENSORS: dict[str, DROPSensorEntityDescription] = {
+    "current_flow_rate": DROPSensorEntityDescription(
+        key="current_flow_rate",
+        icon="mdi:shower-head",
+        native_unit_of_measurement="gpm",
+        suggested_display_precision=1,
+        value_fn=lambda device: device.current_flow_rate,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "peak_flow_rate": DROPSensorEntityDescription(
+        key="peak_flow_rate",
+        icon="mdi:shower-head",
+        native_unit_of_measurement="gpm",
+        suggested_display_precision=1,
+        value_fn=lambda device: device.peak_flow_rate,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "water_used_today": DROPSensorEntityDescription(
+        key="water_used_today",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=1,
+        value_fn=lambda device: device.water_used_today,
+    ),
+    "average_water_used": DROPSensorEntityDescription(
+        key="average_water_used",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.average_water_used,
+    ),
+    "capacity_remaining": DROPSensorEntityDescription(
+        key="capacity_remaining",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.capacity_remaining,
+    ),
+    "current_system_pressure": DROPSensorEntityDescription(
+        key="current_system_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement="psi",
+        suggested_display_precision=1,
+        value_fn=lambda device: device.current_system_pressure,
+    ),
+    "high_system_pressure": DROPSensorEntityDescription(
+        key="high_system_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement="psi",
+        suggested_display_precision=0,
+        value_fn=lambda device: device.high_system_pressure,
+    ),
+    "low_system_pressure": DROPSensorEntityDescription(
+        key="low_system_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement="psi",
+        suggested_display_precision=0,
+        value_fn=lambda device: device.low_system_pressure,
+    ),
+    "battery": DROPSensorEntityDescription(
+        key="battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement="%",
+        suggested_display_precision=0,
+        value_fn=lambda device: device.battery,
+    ),
+    "temperature": DROPSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°F",
+        suggested_display_precision=1,
+        value_fn=lambda device: device.temperature,
+    ),
+    "inlet_tds": DROPSensorEntityDescription(
+        key="inlet_tds",
+        icon=TDS_ICON,
+        native_unit_of_measurement="ppm",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.inlet_tds,
+    ),
+    "outlet_tds": DROPSensorEntityDescription(
+        key="outlet_tds",
+        icon=TDS_ICON,
+        native_unit_of_measurement="ppm",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.outlet_tds,
+    ),
+    "cart1": DROPSensorEntityDescription(
+        key="cart1",
+        icon=GAUGE_ICON,
+        native_unit_of_measurement="%",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.cart1,
+    ),
+    "cart2": DROPSensorEntityDescription(
+        key="cart2",
+        icon=GAUGE_ICON,
+        native_unit_of_measurement="%",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.cart2,
+    ),
+    "cart3": DROPSensorEntityDescription(
+        key="cart3",
+        icon=GAUGE_ICON,
+        native_unit_of_measurement="%",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda device: device.cart3,
+    ),
+}
+
+
+class DROPSensor(DROPEntity, SensorEntity):
+    """Representation of a DROP sensor."""
+
+    entity_description: DROPSensorEntityDescription
+
+    def __init__(self, device, entity_description) -> None:
+        """Initialize the sensor."""
+        super().__init__(entity_description.key, device)
+        self.entity_description = entity_description
+        self.device = device
+        self._attr_translation_key = entity_description.key
+
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.device)
 
 
 async def async_setup_entry(
@@ -46,365 +191,82 @@ async def async_setup_entry(
         config_entry.entry_id,
     )
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+    coordinator: DROPDeviceDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][CONF_COORDINATOR]
     device_type: str = config_entry.data[CONF_DEVICE_TYPE]
     entities: list[SensorEntity] = []
 
     if device_type == DEV_HUB:
         entities.extend(
-            [
-                AverageWaterUsedSensor(coordinator),
-                BatterySensor(coordinator),
-                CurrentFlowRateSensor(coordinator),
-                CurrentSystemPressureSensor(coordinator),
-                HighSystemPressureSensor(coordinator),
-                LowSystemPressureSensor(coordinator),
-                PeakFlowRateSensor(coordinator),
-                WaterUsedTodaySensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "average_water_used",
+                "battery",
+                "current_flow_rate",
+                "current_system_pressure",
+                "high_system_pressure",
+                "low_system_pressure",
+                "peak_flow_rate",
+                "water_used_today",
+            )
         )
     elif device_type == DEV_SOFTENER:
         entities.extend(
-            [
-                BatterySensor(coordinator),
-                CapacityRemainingSensor(coordinator),
-                CurrentFlowRateSensor(coordinator),
-                CurrentSystemPressureSensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "battery",
+                "capacity_remaining",
+                "current_flow_rate",
+                "current_system_pressure",
+            )
         )
     elif device_type == DEV_FILTER:
         entities.extend(
-            [
-                BatterySensor(coordinator),
-                CurrentFlowRateSensor(coordinator),
-                CurrentSystemPressureSensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "battery",
+                "current_flow_rate",
+                "current_system_pressure",
+            )
         )
     elif device_type == DEV_LEAK_DETECTOR:
         entities.extend(
-            [
-                BatterySensor(coordinator),
-                TemperatureSensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "battery",
+                "temperature",
+            )
         )
     elif device_type == DEV_PROTECTION_VALVE:
         entities.extend(
-            [
-                BatterySensor(coordinator),
-                CurrentFlowRateSensor(coordinator),
-                CurrentSystemPressureSensor(coordinator),
-                TemperatureSensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "battery",
+                "current_flow_rate",
+                "current_system_pressure",
+                "temperature",
+            )
         )
     elif device_type == DEV_PUMP_CONTROLLER:
         entities.extend(
-            [
-                CurrentFlowRateSensor(coordinator),
-                CurrentSystemPressureSensor(coordinator),
-                TemperatureSensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "current_flow_rate",
+                "current_system_pressure",
+                "temperature",
+            )
         )
     elif device_type == DEV_RO_FILTER:
         entities.extend(
-            [
-                FilterCart1Sensor(coordinator),
-                FilterCart2Sensor(coordinator),
-                FilterCart3Sensor(coordinator),
-                InletTdsSensor(coordinator),
-                OutletTdsSensor(coordinator),
-            ]
+            DROPSensor(coordinator, SENSORS[sensor_type])
+            for sensor_type in (
+                "cart1",
+                "cart2",
+                "cart3",
+                "inlet_tds",
+                "outlet_tds",
+            )
         )
 
     async_add_entities(entities)
-
-
-class CurrentFlowRateSensor(DROPEntity, SensorEntity):
-    """Monitors the current water flow rate."""
-
-    _attr_icon = FLOW_ICON
-    _attr_native_unit_of_measurement = "gpm"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "current_flow_rate"
-
-    def __init__(self, device) -> None:
-        """Initialize the current flow rate sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current flow rate."""
-        if self._device.current_flow_rate is None:
-            return None
-        return round(self._device.current_flow_rate, 1)
-
-
-class PeakFlowRateSensor(DROPEntity, SensorEntity):
-    """Monitors the peak water flow rate for the day."""
-
-    _attr_icon = FLOW_ICON
-    _attr_native_unit_of_measurement = "gpm"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "peak_flow_rate"
-
-    def __init__(self, device) -> None:
-        """Initialize the peak flow rate sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the peak flow rate."""
-        if self._device.peak_flow_rate is None:
-            return None
-        return round(self._device.peak_flow_rate, 1)
-
-
-class WaterUsedTodaySensor(DROPEntity, SensorEntity):
-    """Monitors the total water used for the day."""
-
-    _attr_device_class = SensorDeviceClass.WATER
-    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
-    _attr_translation_key = "water_used_today"
-
-    def __init__(self, device) -> None:
-        """Initialize the water used today sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the total used today."""
-        if self._device.water_used_today is None:
-            return None
-        return round(self._device.water_used_today, 1)
-
-
-class AverageWaterUsedSensor(DROPEntity, SensorEntity):
-    """Monitors the average water used over the last 90 days."""
-
-    _attr_device_class = SensorDeviceClass.WATER
-    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
-    _attr_translation_key = "average_water_used"
-
-    def __init__(self, device) -> None:
-        """Initialize the average water used sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the average used over the last 90 days."""
-        if self._device.average_water_used is None:
-            return None
-        return round(self._device.average_water_used, 1)
-
-
-class CapacityRemainingSensor(DROPEntity, SensorEntity):
-    """Monitors the soft water capacity remaining on a softener."""
-
-    _attr_device_class = SensorDeviceClass.WATER
-    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
-    _attr_translation_key = "capacity_remaining"
-
-    def __init__(self, device) -> None:
-        """Initialize the softener capacity remaining sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the softener capacity remaining ."""
-        if self._device.capacity_remaining is None:
-            return None
-        return round(self._device.capacity_remaining, 1)
-
-
-class CurrentSystemPressureSensor(DROPEntity, SensorEntity):
-    """Monitors the current system pressure."""
-
-    _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = "psi"
-    _attr_translation_key = "current_system_pressure"
-
-    def __init__(self, device) -> None:
-        """Initialize the current system pressure sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current system pressure."""
-        if self._device.current_system_pressure is None:
-            return None
-        return round(self._device.current_system_pressure, 1)
-
-
-class HighSystemPressureSensor(DROPEntity, SensorEntity):
-    """Monitors the high system pressure today."""
-
-    _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = "psi"
-    _attr_translation_key = "high_system_pressure"
-
-    def __init__(self, device) -> None:
-        """Initialize the high system pressure today sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the high system pressure today."""
-        if self._device.high_system_pressure is None:
-            return None
-        return round(self._device.high_system_pressure, 1)
-
-
-class LowSystemPressureSensor(DROPEntity, SensorEntity):
-    """Monitors the low system pressure today."""
-
-    _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = "psi"
-    _attr_translation_key = "low_system_pressure"
-
-    def __init__(self, device) -> None:
-        """Initialize the low system pressure today sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the low system pressure today."""
-        if self._device.low_system_pressure is None:
-            return None
-        return round(self._device.low_system_pressure, 1)
-
-
-class BatterySensor(DROPEntity, SensorEntity):
-    """Monitors the battery level."""
-
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_native_unit_of_measurement = "%"
-    _attr_translation_key = "battery"
-
-    def __init__(self, device) -> None:
-        """Initialize the battery sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the battery level."""
-        if self._device.battery is None:
-            return None
-        return round(self._device.battery, 1)
-
-
-class TemperatureSensor(DROPEntity, SensorEntity):
-    """Monitors the temperature."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = "°F"
-    _attr_translation_key = "temperature"
-
-    def __init__(self, device) -> None:
-        """Initialize the temperature sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the temperature."""
-        if self._device.temperature is None:
-            return None
-        return round(self._device.temperature, 1)
-
-
-class InletTdsSensor(DROPEntity, SensorEntity):
-    """Monitors the inlet TDS."""
-
-    _attr_icon = TDS_ICON
-    _attr_native_unit_of_measurement = "ppm"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "inlet_tds"
-
-    def __init__(self, device) -> None:
-        """Initialize the inlet TDS sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the inlet TDS."""
-        if self._device.inlet_tds is None:
-            return None
-        return round(self._device.inlet_tds, 1)
-
-
-class OutletTdsSensor(DROPEntity, SensorEntity):
-    """Monitors the outlet TDS."""
-
-    _attr_icon = TDS_ICON
-    _attr_native_unit_of_measurement = "ppm"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "outlet_tds"
-
-    def __init__(self, device) -> None:
-        """Initialize the outlet TDS sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the outlet TDS."""
-        if self._device.outlet_tds is None:
-            return None
-        return round(self._device.outlet_tds, 1)
-
-
-class FilterCart1Sensor(DROPEntity, SensorEntity):
-    """Monitors the cartridge 1 life sensor."""
-
-    _attr_icon = GAUGE_ICON
-    _attr_native_unit_of_measurement = "%"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "cart1"
-
-    def __init__(self, device) -> None:
-        """Initialize the filter cartridge 1 life sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the filter cartridge 1 life."""
-        if self._device.cart1 is None:
-            return None
-        return round(self._device.cart1, 1)
-
-
-class FilterCart2Sensor(DROPEntity, SensorEntity):
-    """Monitors the cartridge 2 life sensor."""
-
-    _attr_icon = GAUGE_ICON
-    _attr_native_unit_of_measurement = "%"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "cart2"
-
-    def __init__(self, device) -> None:
-        """Initialize the filter cartridge 2 life sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the filter cartridge 2 life."""
-        if self._device.cart2 is None:
-            return None
-        return round(self._device.cart2, 1)
-
-
-class FilterCart3Sensor(DROPEntity, SensorEntity):
-    """Monitors the cartridge 3 life sensor."""
-
-    _attr_icon = GAUGE_ICON
-    _attr_native_unit_of_measurement = "%"
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "cart3"
-
-    def __init__(self, device) -> None:
-        """Initialize the filter cartridge 3 life sensor."""
-        super().__init__(self._attr_translation_key, device)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the filter cartridge 3 life."""
-        if self._device.cart3 is None:
-            return None
-        return round(self._device.cart3, 1)

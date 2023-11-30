@@ -170,6 +170,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         if (
             structure in self._device_information
             and key in self._device_information[structure]
+            and self._device_information[structure][key] is not None
         ):
             return int(self._device_information[structure][key])
         return None
@@ -179,6 +180,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         if (
             structure in self._device_information
             and key in self._device_information[structure]
+            and self._device_information[structure][key] is not None
         ):
             return float(self._device_information[structure][key])
         return None
