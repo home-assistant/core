@@ -27,7 +27,17 @@ def mock_serial_number():
     """Mock serial number of the device."""
     with patch(
         "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.serial_number",
-        return_value="0000-0001",
+        "0000-0001",
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_device_name():
+    """Mock serial number of the device."""
+    with patch(
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.device_name",
+        "Device Name",
     ):
         yield
 

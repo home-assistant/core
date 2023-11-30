@@ -23,7 +23,8 @@ async def test_form(hass: HomeAssistant, flow_id: str, mock_setup_entry) -> None
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "0000-0001"
+    assert result["title"] == "Device Name"
+    assert result["context"]["unique_id"] == "0000-0001"
     assert result["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_DEVICE_ID: 2,
@@ -62,7 +63,8 @@ async def test_form_invalid_device(
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "0000-0001"
+    assert result2["title"] == "Device Name"
+    assert result2["context"]["unique_id"] == "0000-0001"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_DEVICE_ID: 2,
@@ -100,7 +102,8 @@ async def test_form_connection_error(
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "0000-0001"
+    assert result2["title"] == "Device Name"
+    assert result2["context"]["unique_id"] == "0000-0001"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_DEVICE_ID: 2,
@@ -138,7 +141,8 @@ async def test_form_decoding_error(
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "0000-0001"
+    assert result2["title"] == "Device Name"
+    assert result2["context"]["unique_id"] == "0000-0001"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_DEVICE_ID: 2,
