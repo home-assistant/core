@@ -1,5 +1,6 @@
 """Test the Flexit Nordic (BACnet) config flow."""
 import asyncio.exceptions
+from unittest.mock import patch
 
 from flexit_bacnet import DecodingError
 import pytest
@@ -10,12 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-from .conftest import _patch_update
 
 
 async def test_form(hass: HomeAssistant, flow_id: str, mock_setup_entry) -> None:
     """Test we get the form and the happy path works."""
-    with _patch_update():
+    with patch(
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update"
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             {
@@ -54,7 +56,10 @@ async def test_flow_fails(
 
     The flexit_bacnet library raises asyncio.exceptions.TimeoutError in that scenario.
     """
-    with _patch_update(side_effect=error):
+    with patch(
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update",
+        side_effect=error,
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             {
@@ -68,7 +73,9 @@ async def test_flow_fails(
     assert len(mock_setup_entry.mock_calls) == 0
 
     # ensure that user can recover from this error
-    with _patch_update():
+    with patch(
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update"
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -98,7 +105,9 @@ async def test_form_device_already_exist(hass: HomeAssistant, flow_id: str) -> N
         unique_id="0000-0001",
     )
     entry.add_to_hass(hass)
-    with _patch_update():
+    with patch(
+        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update"
+    ):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             {

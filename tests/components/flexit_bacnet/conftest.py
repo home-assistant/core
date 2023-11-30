@@ -49,11 +49,3 @@ def mock_setup_entry():
         "homeassistant.components.flexit_bacnet.async_setup_entry", return_value=True
     ) as setup_entry_mock:
         yield setup_entry_mock
-
-
-def _patch_update(side_effect=None):
-    """Shortcut for mocking device update call (with optional side effects)."""
-    return patch(
-        "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.update",
-        side_effect=side_effect,
-    )
