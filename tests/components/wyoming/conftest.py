@@ -5,11 +5,13 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components import stt
+from homeassistant.components.wyoming import DOMAIN
+from homeassistant.components.wyoming.devices import SatelliteDevices
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import STT_INFO, TTS_INFO, WAKE_WORD_INFO
+from . import SATELLITE_INFO, STT_INFO, TTS_INFO, WAKE_WORD_INFO
 
 from tests.common import MockConfigEntry
 
@@ -117,3 +119,34 @@ def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
         sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
         channel=stt.AudioChannels.CHANNEL_MONO,
     )
+
+
+@pytest.fixture
+def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Satellite",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntry):
+    """Initialize Wyoming satellite."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ):
+        await hass.config_entries.async_setup(satellite_config_entry.entry_id)
+
+
+@pytest.fixture
+async def satellite_devices(hass: HomeAssistant, init_satellite) -> SatelliteDevices:
+    """Get satellite devices object from a configured instance."""
+    return hass.data[DOMAIN].satellite_devices

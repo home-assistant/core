@@ -32,6 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _hassio_discovery: hassio.HassioServiceInfo
     _service: WyomingService | None = None
+    _name: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -110,15 +111,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         service = await WyomingService.create(discovery_info.host, discovery_info.port)
         if (service is None) or (not (name := service.get_name())):
+            # No supported services
             return self.async_abort(reason="no_services")
 
-        self.context[CONF_NAME] = name
-        self.context["title_placeholders"] = {"name": name}
+        self._name = name
 
-        uuid = f"wyoming_{service.host}_{service.port}"
-
-        await self.async_set_unique_id(uuid)
+        # Use zeroconf name + service name as unique id.
+        # The satellite will use its own MAC as the zeroconf name by default.
+        unique_id = f"{discovery_info.name}_{self._name}"
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
+
+        self.context[CONF_NAME] = self._name
+        self.context["title_placeholders"] = {"name": self._name}
 
         self._service = service
         return await self.async_step_zeroconf_confirm()
@@ -127,22 +132,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
-        if (
-            (self._service is None)
-            or (not self._service.has_services())
-            or (not (name := self._service.get_name()))
-        ):
-            return self.async_abort(reason="no_services")
+        assert self._service is not None
+        assert self._name is not None
 
         if user_input is None:
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={"name": name},
+                description_placeholders={"name": self._name},
                 errors={},
             )
 
         return self.async_create_entry(
-            title=name,
+            title=self._name,
             data={
                 CONF_HOST: self._service.host,
                 CONF_PORT: self._service.port,

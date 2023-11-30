@@ -29,6 +29,14 @@ _SAMPLES_PER_CHUNK: Final = 1024
 _RECONNECT_SECONDS: Final = 10
 _RESTART_SECONDS: Final = 3
 
+# Wyoming stage -> Assist stage
+_STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
+    PipelineStage.WAKE: assist_pipeline.PipelineStage.WAKE_WORD,
+    PipelineStage.ASR: assist_pipeline.PipelineStage.STT,
+    PipelineStage.HANDLE: assist_pipeline.PipelineStage.INTENT,
+    PipelineStage.TTS: assist_pipeline.PipelineStage.TTS,
+}
+
 
 class WyomingSatellite:
     """Remove voice satellite running the Wyoming protocol."""
@@ -41,7 +49,7 @@ class WyomingSatellite:
         self.service = service
         self.device = device
         self.is_enabled = True
-        self._is_running = True
+        self.is_running = True
 
         self._client: AsyncTcpClient | None = None
         self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
@@ -49,19 +57,6 @@ class WyomingSatellite:
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
         self._device_updated_event = asyncio.Event()
-
-    @property
-    def is_running(self) -> bool:
-        """Return True if satellite is running."""
-        return self._is_running
-
-    @is_running.setter
-    def is_running(self, value: bool) -> None:
-        """Set whether satellite is running or not."""
-        self._is_running = value
-
-        # Unblock waiting for enabled
-        self._device_updated_event.set()
 
     async def run(self) -> None:
         """Run and maintain a connection to satellite."""
@@ -101,6 +96,15 @@ class WyomingSatellite:
 
         _LOGGER.debug("Satellite task stopped")
 
+    def stop(self) -> None:
+        """Signal satellite task to stop running."""
+        self.is_running = False
+
+        # Unblock waiting for enabled
+        self._device_updated_event.set()
+
+    # -------------------------------------------------------------------------
+
     def _device_updated(self, device: SatelliteDevice) -> None:
         """Reacts to updated device settings."""
         pipeline_id = pipeline_select.get_chosen_pipeline(
@@ -135,7 +139,7 @@ class WyomingSatellite:
                 await self._connect()
                 break
             except ConnectionError:
-                _LOGGER.exception(
+                _LOGGER.debug(
                     "Failed to connect to satellite. Reconnecting in %s second(s)",
                     _RECONNECT_SECONDS,
                 )
@@ -171,8 +175,14 @@ class WyomingSatellite:
             # Run was cancelled
             return
 
-        start_stage = _convert_stage(run_pipeline.start_stage)
-        end_stage = _convert_stage(run_pipeline.end_stage)
+        start_stage = _STAGES.get(run_pipeline.start_stage)
+        end_stage = _STAGES.get(run_pipeline.end_stage)
+
+        if start_stage is None:
+            raise ValueError(f"Invalid start stage: {start_stage}")
+
+        if end_stage is None:
+            raise ValueError(f"Invalid end stage: {end_stage}")
 
         # Each loop is a pipeline run
         while self.is_running and self.is_enabled:
@@ -353,23 +363,3 @@ class WyomingSatellite:
                 _LOGGER.debug("Receiving audio from satellite")
 
             yield chunk
-
-
-# -----------------------------------------------------------------------------
-
-
-def _convert_stage(wyoming_stage: PipelineStage) -> assist_pipeline.PipelineStage:
-    """Convert Wyoming pipeline stage to Assist pipeline stage."""
-    if wyoming_stage == PipelineStage.WAKE:
-        return assist_pipeline.PipelineStage.WAKE_WORD
-
-    if wyoming_stage == PipelineStage.ASR:
-        return assist_pipeline.PipelineStage.STT
-
-    if wyoming_stage == PipelineStage.HANDLE:
-        return assist_pipeline.PipelineStage.INTENT
-
-    if wyoming_stage == PipelineStage.TTS:
-        return assist_pipeline.PipelineStage.TTS
-
-    raise ValueError(f"Unknown Wyoming pipeline stage: {wyoming_stage}")

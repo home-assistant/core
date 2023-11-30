@@ -6,10 +6,9 @@ from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .data import WyomingService
 
 
 @dataclass
@@ -83,11 +82,7 @@ class SatelliteDevices:
         def async_device_removed(ev: Event) -> None:
             """Handle device removed."""
             removed_id = ev.data["device_id"]
-            self.devices = {
-                satellite_id: satellite_device
-                for satellite_id, satellite_device in self.devices.items()
-                if satellite_device.device_id != removed_id
-            }
+            self.devices.pop(removed_id, None)
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen(
@@ -105,30 +100,21 @@ class SatelliteDevices:
         self._new_device_listeners.append(listener)
 
     @callback
-    def async_get_or_create(self, service: WyomingService) -> SatelliteDevice:
+    def async_get_or_create(self, suggested_area: str | None = None) -> SatelliteDevice:
         """Get or create a device."""
         dev_reg = dr.async_get(self.hass)
-        satellite_id = f"{service.host}_{service.port}"
+        satellite_id = self.config_entry.entry_id
         satellite_device = self.devices.get(satellite_id)
 
         if satellite_device is not None:
             return satellite_device
 
-        satellite_info = service.info.satellite
-        if not satellite_info:
-            raise ValueError("No satellite info")
-
         device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, satellite_id)},
             name=satellite_id,
+            suggested_area=suggested_area,
         )
-
-        if satellite_info.area:
-            # Use area hint
-            area_reg = ar.async_get(self.hass)
-            if area := area_reg.async_get_area_by_name(satellite_info.area):
-                dev_reg.async_update_device(device.id, area_id=area.id)
 
         satellite_device = self.devices[satellite_id] = SatelliteDevice(
             satellite_id=satellite_id,

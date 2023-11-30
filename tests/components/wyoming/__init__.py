@@ -6,6 +6,7 @@ from wyoming.info import (
     AsrProgram,
     Attribution,
     Info,
+    Satellite,
     TtsProgram,
     TtsVoice,
     TtsVoiceSpeaker,
@@ -71,6 +72,14 @@ WAKE_WORD_INFO = Info(
             ],
         )
     ]
+)
+SATELLITE_INFO = Info(
+    satellite=Satellite(
+        name="Test Satellite",
+        description="Test Satellite",
+        installed=True,
+        attribution=TEST_ATTR,
+    )
 )
 EMPTY_INFO = Info()
 

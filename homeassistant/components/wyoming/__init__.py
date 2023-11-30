@@ -46,16 +46,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Set up satellite sensors, switches, etc.
         await hass.config_entries.async_forward_entry_setups(entry, SATELLITE_PLATFORMS)
 
-        satellite_device = satellite_devices.async_get_or_create(item.service)
+        # Run satellite connection in a separate task
+        satellite_device = satellite_devices.async_get_or_create(
+            suggested_area=item.service.info.satellite.area
+        )
         wyoming_satellite = WyomingSatellite(hass, service, satellite_device)
-        hass.async_create_background_task(
-            wyoming_satellite.run(), f"Satellite {item.service.info.satellite.name}"
+        entry.async_create_background_task(
+            hass,
+            wyoming_satellite.run(),
+            f"Satellite {item.service.info.satellite.name}",
         )
 
-        def stop_satellite():
-            wyoming_satellite.is_running = False
-
-        entry.async_on_unload(stop_satellite)
+        entry.async_on_unload(wyoming_satellite.stop)
 
     return True
 

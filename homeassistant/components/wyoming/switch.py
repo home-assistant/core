@@ -45,9 +45,7 @@ async def async_setup_entry(
 class WyomingSatelliteEnabledSwitch(
     WyomingSatelliteEntity, restore_state.RestoreEntity, SwitchEntity
 ):
-    """Entity to represent voip is allowed."""
-
-    _attr_is_on = True
+    """Entity to represent if satellite is enabled."""
 
     entity_description = SwitchEntityDescription(
         key="satellite_enabled",
@@ -60,7 +58,9 @@ class WyomingSatelliteEnabledSwitch(
         await super().async_added_to_hass()
 
         state = await self.async_get_last_state()
-        self._attr_is_on = state is not None and state.state == STATE_ON
+
+        # Default to on
+        self._attr_is_on = (state is None) or (state.state == STATE_ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
