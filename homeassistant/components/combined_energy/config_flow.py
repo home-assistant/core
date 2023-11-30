@@ -90,15 +90,16 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
-                    vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
-                    vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
-                    vol.Required(
-                        CONF_INSTALLATION_ID, default=user_input[CONF_INSTALLATION_ID]
-                    ): int,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_NAME): str,
+                        vol.Required(CONF_USERNAME): str,
+                        vol.Required(CONF_PASSWORD): str,
+                        vol.Required(CONF_INSTALLATION_ID): int,
+                    }
+                ),
+                user_input,
             ),
             errors=self._errors,
         )
