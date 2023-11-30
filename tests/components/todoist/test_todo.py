@@ -171,7 +171,7 @@ async def test_add_todo_list_item(
 
     args = api.add_task.call_args
     assert args
-    assert args.kwargs == {"project_id": PROJECT_ID, **add_kwargs}
+    assert args.kwargs == {"project_id": PROJECT_ID, "content": "Soda", **add_kwargs}
 
     # Verify state is refreshed
     state = hass.states.get("todo.name")
