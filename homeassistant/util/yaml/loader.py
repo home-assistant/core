@@ -23,6 +23,7 @@ except ImportError:
     )
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -136,6 +137,18 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
+class SafeLoader(FastSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        report(
+            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
+        FastSafeLoader.__init__(*args, **kwargs)
+
+
 class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
     """Python safe loader."""
 
@@ -143,6 +156,18 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         """Initialize a safe line loader."""
         super().__init__(stream)
         self.secrets = secrets
+
+
+class SafeLineLoader(PythonSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        report(
+            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
+        PythonSafeLoader.__init__(*args, **kwargs)
 
 
 LoaderType = FastSafeLoader | PythonSafeLoader
@@ -340,7 +365,12 @@ def _handle_mapping_tag(
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 

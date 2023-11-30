@@ -83,6 +83,18 @@ async def async_setup_entry(
             years=year,
             language=language,
         )
+        if (
+            supported_languages := obj_holidays.supported_languages
+        ) and language == "en":
+            for lang in supported_languages:
+                if lang.startswith("en"):
+                    obj_holidays = country_holidays(
+                        country,
+                        subdiv=province,
+                        years=year,
+                        language=lang,
+                    )
+                LOGGER.debug("Changing language from %s to %s", language, lang)
     else:
         obj_holidays = HolidayBase()
 

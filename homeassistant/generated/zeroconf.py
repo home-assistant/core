@@ -116,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Nightvision": {
         "always_discover": True,
         "domain": "lifx",
@@ -125,6 +129,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX String": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -354,6 +362,11 @@ ZEROCONF = {
     "_daap._tcp.local.": [
         {
             "domain": "forked_daapd",
+        },
+    ],
+    "_devialet-http._tcp.local.": [
+        {
+            "domain": "devialet",
         },
     ],
     "_dkapi._tcp.local.": [

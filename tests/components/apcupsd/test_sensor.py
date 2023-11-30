@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.apcupsd import REQUEST_REFRESH_COOLDOWN
+from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,

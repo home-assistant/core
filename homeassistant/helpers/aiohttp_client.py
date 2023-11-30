@@ -298,7 +298,7 @@ def _async_get_connector(
         return connectors[connector_key]
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.get_default_context()
+        ssl_context: SSLContext = ssl_util.get_default_context()
     else:
         ssl_context = ssl_util.get_default_no_verify_context()
 

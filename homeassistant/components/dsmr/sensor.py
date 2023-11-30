@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -57,6 +58,7 @@ from .const import (
     DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
+    DEVICE_NAME_WATER,
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
@@ -73,6 +75,7 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 
     dsmr_versions: set[str] | None = None
     is_gas: bool = False
+    is_water: bool = False
     obis_reference: str
 
 
@@ -374,28 +377,138 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 )
 
 
-def add_gas_sensor_5B(telegram: dict[str, DSMRObject]) -> DSMRSensorEntityDescription:
-    """Return correct entity for 5B Gas meter."""
-    ref = None
-    if obis_references.BELGIUM_MBUS1_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS1_METER_READING2
-    elif obis_references.BELGIUM_MBUS2_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS2_METER_READING2
-    elif obis_references.BELGIUM_MBUS3_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS3_METER_READING2
-    elif obis_references.BELGIUM_MBUS4_METER_READING2 in telegram:
-        ref = obis_references.BELGIUM_MBUS4_METER_READING2
-    elif ref is None:
-        ref = obis_references.BELGIUM_MBUS1_METER_READING2
-    return DSMRSensorEntityDescription(
-        key="belgium_5min_gas_meter_reading",
-        translation_key="gas_meter_reading",
-        obis_reference=ref,
-        dsmr_versions={"5B"},
-        is_gas=True,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    )
+def create_mbus_entity(
+    mbus: int, mtype: int, telegram: dict[str, DSMRObject]
+) -> DSMRSensorEntityDescription | None:
+    """Create a new MBUS Entity."""
+    if (
+        mtype == 3
+        and (
+            obis_reference := getattr(
+                obis_references, f"BELGIUM_MBUS{mbus}_METER_READING2"
+            )
+        )
+        in telegram
+    ):
+        return DSMRSensorEntityDescription(
+            key=f"mbus{mbus}_gas_reading",
+            translation_key="gas_meter_reading",
+            obis_reference=obis_reference,
+            is_gas=True,
+            device_class=SensorDeviceClass.GAS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+    if (
+        mtype == 7
+        and (
+            obis_reference := getattr(
+                obis_references, f"BELGIUM_MBUS{mbus}_METER_READING1"
+            )
+        )
+        in telegram
+    ):
+        return DSMRSensorEntityDescription(
+            key=f"mbus{mbus}_water_reading",
+            translation_key="water_meter_reading",
+            obis_reference=obis_reference,
+            is_water=True,
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+    return None
+
+
+def device_class_and_uom(
+    telegram: dict[str, DSMRObject],
+    entity_description: DSMRSensorEntityDescription,
+) -> tuple[SensorDeviceClass | None, str | None]:
+    """Get native unit of measurement from telegram,."""
+    dsmr_object = telegram[entity_description.obis_reference]
+    uom: str | None = getattr(dsmr_object, "unit") or None
+    with suppress(ValueError):
+        if entity_description.device_class == SensorDeviceClass.GAS and (
+            enery_uom := UnitOfEnergy(str(uom))
+        ):
+            return (SensorDeviceClass.ENERGY, enery_uom)
+    if uom in UNIT_CONVERSION:
+        return (entity_description.device_class, UNIT_CONVERSION[uom])
+    return (entity_description.device_class, uom)
+
+
+def rename_old_gas_to_mbus(
+    hass: HomeAssistant, entry: ConfigEntry, mbus_device_id: str
+) -> None:
+    """Rename old gas sensor to mbus variant."""
+    dev_reg = dr.async_get(hass)
+    device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    if device_entry_v1 is not None:
+        device_id = device_entry_v1.id
+
+        ent_reg = er.async_get(hass)
+        entries = er.async_entries_for_device(ent_reg, device_id)
+
+        for entity in entries:
+            if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
+                try:
+                    ent_reg.async_update_entity(
+                        entity.entity_id,
+                        new_unique_id=mbus_device_id,
+                        device_id=mbus_device_id,
+                    )
+                except ValueError:
+                    LOGGER.debug(
+                        "Skip migration of %s because it already exists",
+                        entity.entity_id,
+                    )
+                else:
+                    LOGGER.debug(
+                        "Migrated entity %s from unique id %s to %s",
+                        entity.entity_id,
+                        entity.unique_id,
+                        mbus_device_id,
+                    )
+        # Cleanup old device
+        dev_entities = er.async_entries_for_device(
+            ent_reg, device_id, include_disabled_entities=True
+        )
+        if not dev_entities:
+            dev_reg.async_remove_device(device_id)
+
+
+def create_mbus_entities(
+    hass: HomeAssistant, telegram: dict[str, DSMRObject], entry: ConfigEntry
+) -> list[DSMREntity]:
+    """Create MBUS Entities."""
+    entities = []
+    for idx in range(1, 5):
+        if (
+            device_type := getattr(obis_references, f"BELGIUM_MBUS{idx}_DEVICE_TYPE")
+        ) not in telegram:
+            continue
+        if (type_ := int(telegram[device_type].value)) not in (3, 7):
+            continue
+        if (
+            identifier := getattr(
+                obis_references,
+                f"BELGIUM_MBUS{idx}_EQUIPMENT_IDENTIFIER",
+            )
+        ) in telegram:
+            serial_ = telegram[identifier].value
+            rename_old_gas_to_mbus(hass, entry, serial_)
+        else:
+            serial_ = ""
+        if description := create_mbus_entity(idx, type_, telegram):
+            entities.append(
+                DSMREntity(
+                    description,
+                    entry,
+                    telegram,
+                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                    serial_,
+                    idx,
+                )
+            )
+    return entities
 
 
 async def async_setup_entry(
@@ -415,25 +528,10 @@ async def async_setup_entry(
         add_entities_handler()
         add_entities_handler = None
 
-        def device_class_and_uom(
-            telegram: dict[str, DSMRObject],
-            entity_description: DSMRSensorEntityDescription,
-        ) -> tuple[SensorDeviceClass | None, str | None]:
-            """Get native unit of measurement from telegram,."""
-            dsmr_object = telegram[entity_description.obis_reference]
-            uom: str | None = getattr(dsmr_object, "unit") or None
-            with suppress(ValueError):
-                if entity_description.device_class == SensorDeviceClass.GAS and (
-                    enery_uom := UnitOfEnergy(str(uom))
-                ):
-                    return (SensorDeviceClass.ENERGY, enery_uom)
-            if uom in UNIT_CONVERSION:
-                return (entity_description.device_class, UNIT_CONVERSION[uom])
-            return (entity_description.device_class, uom)
-
-        all_sensors = SENSORS
         if dsmr_version == "5B":
-            all_sensors += (add_gas_sensor_5B(telegram),)
+            mbus_entities = create_mbus_entities(hass, telegram, entry)
+            for mbus_entity in mbus_entities:
+                entities.append(mbus_entity)
 
         entities.extend(
             [
@@ -441,11 +539,9 @@ async def async_setup_entry(
                     description,
                     entry,
                     telegram,
-                    *device_class_and_uom(
-                        telegram, description
-                    ),  # type: ignore[arg-type]
+                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
                 )
-                for description in all_sensors
+                for description in SENSORS
                 if (
                     description.dsmr_versions is None
                     or dsmr_version in description.dsmr_versions
@@ -620,6 +716,8 @@ class DSMREntity(SensorEntity):
         telegram: dict[str, DSMRObject],
         device_class: SensorDeviceClass,
         native_unit_of_measurement: str | None,
+        serial_id: str = "",
+        mbus_id: int = 0,
     ) -> None:
         """Initialize entity."""
         self.entity_description = entity_description
@@ -631,8 +729,15 @@ class DSMREntity(SensorEntity):
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
         if entity_description.is_gas:
-            device_serial = entry.data[CONF_SERIAL_ID_GAS]
+            if serial_id:
+                device_serial = serial_id
+            else:
+                device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
+        if entity_description.is_water:
+            if serial_id:
+                device_serial = serial_id
+            device_name = DEVICE_NAME_WATER
         if device_serial is None:
             device_serial = entry.entry_id
 
@@ -640,7 +745,13 @@ class DSMREntity(SensorEntity):
             identifiers={(DOMAIN, device_serial)},
             name=device_name,
         )
-        self._attr_unique_id = f"{device_serial}_{entity_description.key}"
+        if mbus_id != 0:
+            if serial_id:
+                self._attr_unique_id = f"{device_serial}"
+            else:
+                self._attr_unique_id = f"{device_serial}_{mbus_id}"
+        else:
+            self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:

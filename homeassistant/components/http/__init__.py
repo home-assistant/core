@@ -16,7 +16,6 @@ from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
-from aiohttp.web_log import AccessLogger
 from aiohttp.web_protocol import RequestHandler
 from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
 from aiohttp_zlib_ng import enable_zlib_ng
@@ -236,25 +235,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-class HomeAssistantAccessLogger(AccessLogger):
-    """Access logger for Home Assistant that does not log when disabled."""
-
-    def log(
-        self, request: web.BaseRequest, response: web.StreamResponse, time: float
-    ) -> None:
-        """Log the request.
-
-        The default implementation logs the request to the logger
-        with the INFO level and than throws it away if the logger
-        is not enabled for the INFO level. This implementation
-        does not log the request if the logger is not enabled for
-        the INFO level.
-        """
-        if not self.logger.isEnabledFor(logging.INFO):
-            return
-        super().log(request, response, time)
 
 
 class HomeAssistantRequest(web.Request):
@@ -540,9 +520,7 @@ class HomeAssistantHTTP:
         # pylint: disable-next=protected-access
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
-        self.runner = web.AppRunner(
-            self.app, access_log_class=HomeAssistantAccessLogger
-        )
+        self.runner = web.AppRunner(self.app, handler_cancellation=True)
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(

@@ -60,8 +60,7 @@ async def async_setup_entry(
                 data.static,
                 entry,
             )
-        ],
-        True,
+        ]
     )
 
 
