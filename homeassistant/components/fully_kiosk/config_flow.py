@@ -30,7 +30,7 @@ from .const import DEFAULT_PORT, DOMAIN, LOGGER
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fully Kiosk Browser."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
