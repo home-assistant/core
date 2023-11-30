@@ -70,8 +70,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Fast.com config entry."""
     hass.services.async_remove(DOMAIN, "speedtest")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: FastdotcomDataUpdateCoordindator = hass.data[DOMAIN].pop(
-            entry.entry_id
-        )
-        await coordinator.async_shutdown()
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
