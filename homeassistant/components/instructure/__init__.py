@@ -12,6 +12,7 @@ from .const import (
     CONVERSATIONS_KEY,
     DOMAIN,
     GRADES_KEY,
+    QUICK_LINKS_KEY,
 )
 from .coordinator import CanvasUpdateCoordinator
 
@@ -27,6 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(ANNOUNCEMENTS_KEY, {})
     hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(CONVERSATIONS_KEY, {})
     hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(GRADES_KEY, {})
+    hass.data[DOMAIN][entry.entry_id]["entities"].setdefault(QUICK_LINKS_KEY, {})
 
     api = CanvasAPI(
         f"https://{entry.data['host_prefix']}.instructure.com/api/v1",
