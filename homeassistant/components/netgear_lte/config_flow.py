@@ -10,14 +10,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 
 from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
 
@@ -32,18 +26,6 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await self._async_validate_input(host, password)
         except InputValidationError:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "import_failure",
-                is_fixable=False,
-                is_persistent=True,
-                severity=IssueSeverity.ERROR,
-                translation_key="import_failure",
-            )
-            async_delete_issue(
-                self.hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-            )
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(info.serial_number)
         self._abort_if_unique_id_configured()

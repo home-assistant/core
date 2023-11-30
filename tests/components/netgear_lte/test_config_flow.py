@@ -6,7 +6,6 @@ from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from .conftest import CONF_DATA
 
@@ -106,6 +105,3 @@ async def test_flow_import_failure(hass: HomeAssistant, cannot_connect: None) ->
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
-
-    issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue(DOMAIN, "import_failure")

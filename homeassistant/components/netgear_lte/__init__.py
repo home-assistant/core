@@ -6,6 +6,7 @@ import attr
 import eternalegypt
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -150,25 +151,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if lte_config := config.get(DOMAIN):
         for entry in lte_config:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
             )
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Netgear LTE",
-            },
-        )
+            if result["type"] == data_entry_flow.RESULT_TYPE_ABORT:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "import_failure",
+                    is_fixable=False,
+                    is_persistent=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="import_failure",
+                )
+            else:
+                async_create_issue(
+                    hass,
+                    HOMEASSISTANT_DOMAIN,
+                    f"deprecated_yaml_{DOMAIN}",
+                    breaks_in_ha_version="2024.7.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "Netgear LTE",
+                    },
+                )
 
     return True
 
