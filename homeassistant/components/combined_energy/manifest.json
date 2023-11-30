@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/combined_energy",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
   "requirements": ["combined-energy-api==0.7"]
 }
