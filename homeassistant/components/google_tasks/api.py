@@ -132,7 +132,7 @@ class AsyncConfigEntryAuth:
         task_id: str,
         previous: str | None,
     ) -> None:
-        """Update a task resource."""
+        """Move a task resource to a specific position within the task list."""
         service = await self._get_service()
         cmd: HttpRequest = service.tasks().move(
             tasklist=task_list_id,
