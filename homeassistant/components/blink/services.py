@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_PIN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
@@ -106,7 +106,7 @@ def setup_services(hass: HomeAssistant) -> None:
         clips_dir = call.data[CONF_FILE_PATH]
         if not hass.config.is_allowed_path(clips_dir):
             _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 f"Can't write to directory {clips_dir}, no access to path!"
             )
 
@@ -119,7 +119,7 @@ def setup_services(hass: HomeAssistant) -> None:
                     )
                 except OSError as err:
                     _LOGGER.error("Can't write recent clips to directory: %s", err)
-                    raise HomeAssistantError(
+                    raise ServiceValidationError(
                         "Can't write recent clips to directory"
                     ) from err
 

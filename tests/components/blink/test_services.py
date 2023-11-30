@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
@@ -176,7 +176,7 @@ async def test_picture_service_calls(
     assert mock_blink_api.refresh.call_count == 1
 
     caplog.clear()
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(ServiceValidationError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SAVE_RECENT_CLIPS,
@@ -209,7 +209,7 @@ async def test_picture_service_calls(
         side_effect=OSError
     )
     caplog.clear()
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(ServiceValidationError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SAVE_RECENT_CLIPS,
