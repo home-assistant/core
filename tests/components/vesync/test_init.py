@@ -32,7 +32,7 @@ async def test_async_setup_entry__not_login(
     ) as setups_mock, patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ) as setup_mock, patch(
-        "homeassistant.components.vesync.async_process_devices"
+        "homeassistant.components.vesync._async_process_devices"
     ) as process_mock:
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
@@ -90,11 +90,18 @@ async def test_async_setup_entry__loads_fans(
         await hass.async_block_till_done()
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
-        assert setups_mock.call_args.args[1] == [Platform.FAN, Platform.SENSOR]
+        assert setups_mock.call_args.args[1] == [
+            Platform.SWITCH,
+            Platform.FAN,
+            Platform.LIGHT,
+            Platform.SENSOR,
+            Platform.NUMBER,
+            Platform.BINARY_SENSOR,
+        ]
         assert setup_mock.call_count == 0
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_SWITCHES]
+    assert hass.data[DOMAIN][VS_SWITCHES]
     assert hass.data[DOMAIN][VS_FANS] == [fan]
-    assert not hass.data[DOMAIN][VS_LIGHTS]
+    assert hass.data[DOMAIN][VS_LIGHTS]
     assert hass.data[DOMAIN][VS_SENSORS] == [fan]

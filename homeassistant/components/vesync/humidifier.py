@@ -1,12 +1,18 @@
 """Support for VeSync humidifiers."""
-from __future__ import annotations
-
+from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any
 
+from pyvesync.vesyncfan import VeSyncHumid200S, VeSyncHumid200300S
+
 from homeassistant.components.humidifier import (
+    MODE_AUTO,
+    MODE_NORMAL,
+    MODE_SLEEP,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityDescription,
     HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -14,24 +20,40 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncDevice
-from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_HUMIDIFIERS
+from .common import DEVICE_HELPER, VeSyncDevice
+from .const import DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEV_TYPE_TO_HA = {
-    "LUH-D301S-WEU": "humidifier",
-}
-
-HUMIDIFIER_MODE_AUTO = "auto"
-HUMIDIFIER_MODE_LOW = "low"
-HUMIDIFIER_MODE_HIGH = "high"
+MAX_HUMIDITY = 80
+MIN_HUMIDITY = 30
 
 PRESET_MODES = {
-    "LUH-D301S-WEU": [HUMIDIFIER_MODE_AUTO, HUMIDIFIER_MODE_LOW, HUMIDIFIER_MODE_HIGH],
+    "Classic200S": [MODE_NORMAL, MODE_AUTO],
+    "Classic300S": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
+    "Dual200S": [MODE_NORMAL, MODE_AUTO],
+    "LV600S": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
+    "OASISMIST": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
 }
 
-MIST_LEVELS_MAP = {HUMIDIFIER_MODE_LOW: 1, HUMIDIFIER_MODE_HIGH: 2}
+MODE_MAP = {
+    "normal": MODE_NORMAL,
+    "manual": MODE_NORMAL,
+    "humidity": MODE_AUTO,
+    "auto": MODE_AUTO,
+    "sleep": MODE_SLEEP,
+}
+
+
+@dataclass
+class VeSyncHumidifierEntityDescription(HumidifierEntityDescription):
+    """Describe VeSync humidifier entity."""
+
+    def __init__(self) -> None:
+        """Initialize the VeSync humidifier entity description."""
+        super().__init__(key="humidifier")
+        self.icon = "mdi:air-humidifier"
+        self.device_class = HumidifierDeviceClass.HUMIDIFIER
 
 
 async def async_setup_entry(
@@ -42,133 +64,128 @@ async def async_setup_entry(
     """Set up the VeSync humidifier platform."""
 
     @callback
-    def discover(devices):
+    def discover(devices: list):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        entities = []
+        for dev in devices:
+            if DEVICE_HELPER.is_humidifier(dev.device_type):
+                entities.append(
+                    VeSyncHumidifierHA(dev, VeSyncHumidifierEntityDescription())
+                )
+            else:
+                _LOGGER.warning(
+                    "%s - Unknown device type - %s", dev.device_name, dev.device_type
+                )
+                continue
+
+        async_add_entities(entities, update_before_add=True)
+
+    discover(hass.data[DOMAIN][VS_HUMIDIFIERS])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_HUMIDIFIERS], async_add_entities)
-
-
-@callback
-def _setup_entities(devices, async_add_entities):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type)) == "humidifier":
-            entities.append(VeSyncHumidifierHA(dev))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
-
-    async_add_entities(entities, update_before_add=True)
-
 
 class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
-    _attr_supported_features = HumidifierEntityFeature.MODES
-    _attr_name = None
+    device: VeSyncHumid200300S | VeSyncHumid200S
+    entity_description: VeSyncHumidifierEntityDescription
 
-    def __init__(self, humidifier) -> None:
+    def __init__(
+        self, humidifier, description: VeSyncHumidifierEntityDescription
+    ) -> None:
         """Initialize the VeSync humidifier device."""
         super().__init__(humidifier)
-        self.smarthumidifier = humidifier
+        self.entity_description = description
 
-    @property
-    def device_class(self) -> HumidifierDeviceClass | None:
-        """Return the device class."""
-        return HumidifierDeviceClass.HUMIDIFIER
+        if image := humidifier.device_image:
+            self._attr_entity_picture = image
 
-    @property
-    def current_humidity(self) -> int | None:
-        """Return the current humidity."""
-        return self.smarthumidifier.humidity
+        # From pyvesync set_humidity validation
+        self._attr_min_humidity = MIN_HUMIDITY
+        self._attr_max_humidity = MAX_HUMIDITY
 
-    @property
-    def target_humidity(self) -> int | None:
-        """Return the humidity we try to reach."""
-        return self.smarthumidifier.auto_humidity
+        if mode := MODE_MAP[humidifier.details["mode"]]:
+            self._attr_mode = mode
 
-    @property
-    def mode(self) -> str | None:
-        """Return the current mode, e.g., home, auto, baby.
+        if mist_modes := humidifier.config_dict["mist_modes"]:
+            self._attr_available_modes = [MODE_MAP[mmode] for mmode in mist_modes]
 
-        Requires HumidifierEntityFeature.MODES.
-        """
-        if self.smarthumidifier.auto_enabled:
-            return HUMIDIFIER_MODE_AUTO
-        return list(MIST_LEVELS_MAP.keys())[
-            list(MIST_LEVELS_MAP.values()).index(self.smarthumidifier.mist_level)
-        ]
-
-    @property
-    def available_modes(self) -> list[str] | None:
-        """Return a list of available modes.
-
-        Requires HumidifierEntityFeature.MODES.
-        """
-        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
-
-    def set_humidity(self, humidity: int) -> None:
-        """Set new target humidity."""
-        self.smarthumidifier.set_humidity(humidity)
-
-    def set_mode(self, mode: str) -> None:
-        """Set new mode."""
-        if mode in (HUMIDIFIER_MODE_AUTO, None):
-            self.smarthumidifier.set_auto_mode()
-        else:
-            self.smarthumidifier.set_manual_mode()
-            self.smarthumidifier.set_mist_level(MIST_LEVELS_MAP[mode])
-
-    @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return 30
-
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return 80
+        self._attr_supported_features = HumidifierEntityFeature(0)
+        if mode is not None:
+            self._attr_supported_features |= HumidifierEntityFeature.MODES
 
     @property
     def unique_info(self):
         """Return the ID of this humidifier."""
-        return self.smarthumidifier.uuid
+        return self.device.uuid
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the humidifier."""
-        attr = {}
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the state attributes of the fan."""
+        extra_attr = {}
 
-        if hasattr(self.smarthumidifier, "water_lacks"):
-            attr["water_lacks"] = self.smarthumidifier.water_lacks
+        if hasattr(self.device, "warm_mist_feature"):
+            extra_attr["warm_mist_feature"] = self.device.warm_mist_feature
 
-        if "water_tank_lifted" in self.smarthumidifier.details:
-            attr["water_tank_lifted"] = self.smarthumidifier.details[
-                "water_tank_lifted"
-            ]
+        return extra_attr
 
-        if "display" in self.smarthumidifier.details:
-            attr["display"] = self.smarthumidifier.details["display"]
+    @property
+    def is_on(self) -> bool:
+        """Return True if humidifier is on."""
+        return self.device.is_on
 
-        if "automatic_stop_reach_target" in self.smarthumidifier.details:
-            attr["automatic_stop_reach_target"] = self.smarthumidifier.details[
-                "automatic_stop_reach_target"
-            ]
-
-        return attr
-
-    def turn_on(
-        self,
-        mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self.smarthumidifier.turn_on()
+        self.device.turn_on()
+        self.schedule_update_ha_state()
+
+    @property
+    def mode(self) -> str | None:
+        """Get the current preset mode."""
+        mmode = MODE_MAP[self.device.details["mode"]]
+        if self.available_modes and mmode in self.available_modes:
+            return mmode
+        return None
+
+    def set_mode(self, mode: str) -> None:
+        """Set the preset mode of device."""
+        if not self.available_modes:
+            raise ValueError("No available modes were specified")
+        if mode is None or mode not in self.available_modes:
+            raise ValueError(
+                f"{mode} is not one of the available modes: {self.available_modes}"
+            )
+
+        if not self.device.is_on:
+            self.device.turn_on()
+
+        self._attr_mode = MODE_MAP[mode]
+        if self._attr_mode == MODE_NORMAL:
+            self.device.set_manual_mode()
+        elif self._attr_mode == MODE_SLEEP:
+            self.device.set_humidity_mode(MODE_SLEEP)
+        elif self._attr_mode == MODE_AUTO:
+            self.device.set_auto_mode()
+
+        self.schedule_update_ha_state()
+
+    @property
+    def target_humidity(self) -> int | None:
+        """Return the current target humidity."""
+        return self.device.auto_humidity
+
+    def set_humidity(self, humidity: int) -> None:
+        """Set the humidity of device."""
+        if humidity not in range(self.min_humidity, self.max_humidity + 1):
+            raise ValueError(
+                "{humidity} is not between {self.min_humidity} and {self.max_humidity} (inclusive)"
+            )
+
+        if not self.device.is_on:
+            self.device.turn_on()
+
+        self.device.set_humidity(humidity)
+        self.schedule_update_ha_state()

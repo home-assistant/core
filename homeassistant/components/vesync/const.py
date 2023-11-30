@@ -8,10 +8,26 @@ VS_SWITCHES = "switches"
 VS_FANS = "fans"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
-VS_MANAGER = "manager"
 VS_HUMIDIFIERS = "humidifiers"
+VS_NUMBERS = "numbers"
+VS_BINARY_SENSORS = "binary_sensors"
+VS_MANAGER = "manager"
 
 DEV_TYPE_TO_HA = {
+    "LV-PUR131S": "fan",
+    "Core200S": "fan",
+    "Core300S": "fan",
+    "Core400S": "fan",
+    "Core600S": "fan",
+    "Classic200S": "humidifier",
+    "Classic300S": "humidifier",
+    "Dual200S": "humidifier",
+    "LV600S": "humidifier",
+    "OASISMIST": "humidifier",
+    "ESD16": "walldimmer",
+    "ESWD16": "walldimmer",
+    "ESL100": "bulb-dimmable",
+    "ESL100CW": "bulb-tunable-white",
     "wifi-switch-1.3": "outlet",
     "ESW03-USA": "outlet",
     "ESW01-EU": "outlet",
@@ -48,14 +64,21 @@ SKU_TO_BASE_DEVICE = {
     "Core600S": "Core600S",
     "LAP-C601S-WUS": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WUSR": "Core600S",  # Alt ID Model Core600S
-    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S,
-    "Vital200S": "Vital200S",
-    "LAP-V201S-AASR": "Vital200S",  # Alt ID Model Vital200S
-    "LAP-V201S-WJP": "Vital200S",  # Alt ID Model Vital200S
-    "LAP-V201S-WEU": "Vital200S",  # Alt ID Model Vital200S
-    "LAP-V201S-WUS": "Vital200S",  # Alt ID Model Vital200S
-    "LAP-V201-AUSR": "Vital200S",  # Alt ID Model Vital200S
-    "Vital100S": "Vital100S",
-    "LAP-V102S-WUS": "Vital100S",  # Alt ID Model Vital100S,
-    "LUH-D301S-WEU": "LUH-D301S-WEU",
+    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S
+    # Humidifiers
+    "Classic200S": "Classic200S",
+    "Classic300S": "Classic300S",
+    "LUH-A601S-WUSB": "Classic300S",  # Alt ID Model Classic300S
+    "Dual200S": "Dual200S",
+    "LUH-D301S-WUSR": "Dual200S",  # Alt ID Model Dual200S
+    "LUH-D301S-WJP": "Dual200S",  # Alt ID Model Dual200S
+    "LUH-D301S-WEU": "Dual200S",  # Alt ID Model Dual200S
+    "LV600S": "LV600S",
+    "LUH-A602S-WUSR": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WUS": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WEUR": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WEU": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WJP": "LV600S",  # Alt ID Model LV600S
+    "OASISMIST": "OASISMIST",
+    "LUH-O451S-WUS": "OASISMIST",  # Alt ID Model OASISMIST
 }
