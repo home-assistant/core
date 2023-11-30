@@ -128,7 +128,7 @@ def async_setup_rpc_entry(
 
         # Wall Display relay is used as the thermostat actuator,
         # we need to remove a switch entity
-        if coordinator.device.shelly["relay_in_thermostat"]:
+        if coordinator.device.shelly.get("relay_in_thermostat", False):
             unique_id = f"{coordinator.mac}-switch:{id_}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 

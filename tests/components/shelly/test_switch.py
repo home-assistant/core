@@ -283,9 +283,15 @@ async def test_block_device_gas_valve(
 
 
 async def test_wall_display_thermostat_mode(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch,
 ) -> None:
     """Test Wall Display in thermostat mode."""
+    new_shelly = deepcopy(mock_rpc_device.shelly)
+    new_shelly["relay_in_thermostat"] = True
+    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
+
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the switch entity should not be created, only the climate entity
@@ -294,7 +300,9 @@ async def test_wall_display_thermostat_mode(
 
 
 async def test_wall_display_relay_mode(
-    hass: HomeAssistant, entity_registry, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device,
 ) -> None:
     """Test Wall Display in thermostat mode."""
     entity_id = register_entity(
@@ -303,11 +311,6 @@ async def test_wall_display_relay_mode(
         "test_name",
         "thermostat:0",
     )
-
-    new_shelly = deepcopy(mock_rpc_device.shelly)
-    new_shelly["relay_operational"] = True
-
-    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
