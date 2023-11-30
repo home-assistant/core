@@ -1,19 +1,77 @@
-"""Support for Stookwijzer Sensor."""
+"""Support for Stookwijzer Sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
 
-from stookwijzer import Stookwijzer
-
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfSpeed
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, StookwijzerState
+from .coordinator import StookwijzerCoordinator, StookwijzerData
+from .entity import StookwijzerEntity
 
-SCAN_INTERVAL = timedelta(minutes=60)
+
+@dataclass
+class StookwijzerSensorDescriptionMixin:
+    """Required values for Stookwijzer sensors."""
+
+    value_fn: Callable[[StookwijzerCoordinator], int | float | str | None]
+    attr_fn: Callable[[StookwijzerCoordinator], list | None] | None
+
+
+@dataclass
+class StookwijzerSensorDescription(
+    SensorEntityDescription,
+    StookwijzerSensorDescriptionMixin,
+):
+    """Class describing Stookwijzer sensor entities."""
+
+
+STOOKWIJZER_SENSORS = (
+    StookwijzerSensorDescription(
+        key="windspeed",
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda StookwijzerCoordinator: cast(
+            float | None, StookwijzerCoordinator.client.windspeed_ms
+        ),
+        attr_fn=None,
+    ),
+    StookwijzerSensorDescription(
+        key="air quality index",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda StookwijzerCoordinator: cast(
+            int | None, StookwijzerCoordinator.client.lki
+        ),
+        attr_fn=None,
+    ),
+    StookwijzerSensorDescription(
+        key="stookwijzer",
+        translation_key="stookwijzer",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda StookwijzerCoordinator: cast(
+            str | None, StookwijzerState(StookwijzerCoordinator.client.advice).value
+        ),
+        attr_fn=lambda StookwijzerCoordinator: cast(
+            list | None, StookwijzerCoordinator.client.forecast_advice
+        ),
+        options=[cls.value for cls in StookwijzerState],
+    ),
+)
 
 
 async def async_setup_entry(
@@ -22,44 +80,34 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Stookwijzer sensor from a config entry."""
-    client = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([StookwijzerSensor(client, entry)], update_before_add=True)
+    data: StookwijzerData = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data.coordinator
+
+    assert coordinator is not None
+    async_add_entities(
+        StookwijzerSensor(description, coordinator, entry)
+        for description in STOOKWIJZER_SENSORS
+    )
 
 
-class StookwijzerSensor(SensorEntity):
-    """Defines a Stookwijzer binary sensor."""
+class StookwijzerSensor(
+    StookwijzerEntity, CoordinatorEntity[StookwijzerCoordinator], SensorEntity
+):
+    """Defines a Stookwijzer sensor."""
 
-    _attr_attribution = "Data provided by atlasleefomgeving.nl"
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_has_entity_name = True
-    _attr_name = None
-    _attr_translation_key = "stookwijzer"
+    entity_description: StookwijzerSensorDescription
 
-    def __init__(self, client: Stookwijzer, entry: ConfigEntry) -> None:
-        """Initialize a Stookwijzer device."""
-        self._client = client
-        self._attr_options = [cls.value for cls in StookwijzerState]
-        self._attr_unique_id = entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}")},
-            name="Stookwijzer",
-            manufacturer="Atlas Leefomgeving",
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://www.atlasleefomgeving.nl/stookwijzer",
-        )
-
-    def update(self) -> None:
-        """Update the data from the Stookwijzer handler."""
-        self._client.update()
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._client.state is not None
+    def __init__(
+        self,
+        description: StookwijzerSensorDescription,
+        coordinator: StookwijzerCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(description, coordinator, entry)
 
     @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
-        if self._client.state is None:
-            return None
-        return StookwijzerState(self._client.state).value
+        value = self.entity_description.value_fn(self._coordinator)
+        return str(value) if value is not None else value
