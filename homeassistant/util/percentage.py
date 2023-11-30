@@ -5,7 +5,7 @@ from typing import TypeVar
 
 from .scaling import (  # noqa: F401
     int_states_in_range,
-    scale_from_ranged_value_to_int_range,
+    scale_ranged_value_to_int_range,
     scale_to_ranged_value,
     states_in_range,
 )
@@ -76,7 +76,7 @@ def ranged_value_to_percentage(
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    return scale_from_ranged_value_to_int_range(low_high_range, (1, 100), value)
+    return scale_ranged_value_to_int_range(low_high_range, (1, 100), value)
 
 
 def percentage_to_ranged_value(

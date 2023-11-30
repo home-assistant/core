@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 
-def scale_from_ranged_value_to_int_range(
+def scale_ranged_value_to_int_range(
     source_low_high_range: tuple[float, float],
     target_low_high_range: tuple[float, float],
     value: float,
