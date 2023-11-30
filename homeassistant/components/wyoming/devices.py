@@ -131,11 +131,10 @@ class SatelliteDevices:
         self, name: str | None = None, suggested_area: str | None = None
     ) -> SatelliteDevice:
         """Get or create a device."""
-        if not self.config_entry.unique_id:
-            raise ValueError("No unique id is set for config entry")
-
         dev_reg = dr.async_get(self.hass)
-        satellite_id = self.config_entry.unique_id
+
+        # Use config entry id since only one satellite per entry is supported
+        satellite_id = self.config_entry.entry_id
         satellite_device = self.devices.get(satellite_id)
 
         if satellite_device is not None:

@@ -131,7 +131,6 @@ def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
             "port": 1234,
         },
         title="Test Satellite",
-        unique_id="1234_test",
     )
     entry.add_to_hass(hass)
     return entry
@@ -143,7 +142,10 @@ async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntr
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=SATELLITE_INFO,
-    ):
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+    ) as _run_mock:
+        # _run_mock: satellite task does not actually run
         await hass.config_entries.async_setup(satellite_config_entry.entry_id)
 
 

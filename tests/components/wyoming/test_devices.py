@@ -17,11 +17,12 @@ async def test_device_registry_info(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test info in device registry."""
-    assert satellite_config_entry.unique_id
     satellite_device = satellite_devices.async_get_or_create()
 
+    # Satellite uses config entry id since only one satellite per entry is
+    # supported.
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, satellite_config_entry.unique_id)}
+        identifiers={(DOMAIN, satellite_config_entry.entry_id)}
     )
     assert device is not None
     assert device.name == "Test Satellite"
