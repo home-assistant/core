@@ -124,7 +124,10 @@ async def async_publish(
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot publish to topic '{topic}', MQTT is not enabled"
+            f"Cannot publish to topic '{topic}', MQTT is not enabled",
+            translation_key="mqtt_not_setup_cannot_publish",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic},
         )
     mqtt_data = get_mqtt_data(hass)
     outgoing_payload = payload
@@ -174,15 +177,21 @@ async def async_subscribe(
     """
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
+            f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
+            translation_key="mqtt_not_setup_cannot_subscribe",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic},
         )
     try:
         mqtt_data = get_mqtt_data(hass)
-    except KeyError as ex:
+    except KeyError as exc:
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', "
-            "make sure MQTT is set up correctly"
-        ) from ex
+            "make sure MQTT is set up correctly",
+            translation_key="mqtt_not_setup_cannot_subscribe",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic},
+        ) from exc
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
@@ -606,8 +615,8 @@ class MQTT:
                     del simple_subscriptions[topic]
             else:
                 self._wildcard_subscriptions.remove(subscription)
-        except (KeyError, ValueError) as ex:
-            raise HomeAssistantError("Can't remove subscription twice") from ex
+        except (KeyError, ValueError) as exc:
+            raise HomeAssistantError("Can't remove subscription twice") from exc
 
     @callback
     def _async_queue_subscriptions(

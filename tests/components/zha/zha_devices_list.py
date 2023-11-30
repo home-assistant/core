@@ -1492,7 +1492,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45852_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1547,7 +1547,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45856_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1602,7 +1602,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45857_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2177,6 +2177,16 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_power_factor",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],

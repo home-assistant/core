@@ -1,6 +1,6 @@
 """Test ESPHome manager."""
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 from aioesphomeapi import APIClient, DeviceInfo, EntityInfo, EntityState, UserService
 import pytest
@@ -16,6 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDevice
 
@@ -332,3 +333,39 @@ async def test_connection_aborted_wrong_device(
     await hass.async_block_till_done()
     assert len(new_info.mock_calls) == 1
     assert "Unexpected device found at" not in caplog.text
+
+
+async def test_debug_logging(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_generic_device_entry: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockConfigEntry],
+    ],
+) -> None:
+    """Test enabling and disabling debug logging."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "DEBUG"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mock_client.set_debug.assert_has_calls([call(True)])
+
+    mock_client.reset_mock()
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "WARNING"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mock_client.set_debug.assert_has_calls([call(False)])

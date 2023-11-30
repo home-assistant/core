@@ -435,16 +435,24 @@ class ModbusHub:
         try:
             result: ModbusResponse = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
-            self._log_error(str(exception_error))
+            error = (
+                f"Error: device: {slave} address: {address} -> {str(exception_error)}"
+            )
+            self._log_error(error)
             return None
         if not result:
-            self._log_error("Error: pymodbus returned None")
+            error = (
+                f"Error: device: {slave} address: {address} -> pymodbus returned None"
+            )
+            self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            self._log_error(str(result))
+            error = f"Error: device: {slave} address: {address} -> {str(result)}"
+            self._log_error(error)
             return None
         if result.isError():
-            self._log_error("Error: pymodbus returned isError True")
+            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            self._log_error(error)
             return None
         self._in_error = False
         return result

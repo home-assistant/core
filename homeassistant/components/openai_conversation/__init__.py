@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(
             partial(
-                openai.Engine.list,
+                openai.Model.list,
                 api_key=entry.data[CONF_API_KEY],
                 request_timeout=10,
             )
@@ -141,7 +141,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
         else:
-            conversation_id = ulid.ulid()
+            conversation_id = ulid.ulid_now()
             try:
                 prompt = self._async_generate_prompt(raw_prompt)
             except TemplateError as err:
