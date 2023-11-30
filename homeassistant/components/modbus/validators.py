@@ -135,7 +135,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             )
             raise vol.Invalid(error)
 
-    if swap_type is not None:
+    if swap_type:
         swap_type_validator = {
             CONF_SWAP_BYTE: validator.swap_byte,
             CONF_SWAP_WORD: validator.swap_word,
