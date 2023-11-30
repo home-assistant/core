@@ -23,7 +23,12 @@ ATTR_QUOTES: Final = "quotes"
 ATTR_SELECTED_TAGS: Final = "selected_tags"
 ATTR_SELECTED_AUTHORS: Final = "selected_authors"
 ATTR_UPDATE_FREQUENCY: Final = "update_frequency"
+ATTR_STYLES: Final = "styles"
+ATTR_BG_COLOR: Final = "bg_color"
+ATTR_TEXT_COLOR: Final = "text_color"
 
+DEFAULT_BG_COLOR: Final = "#038fc7"
+DEFAULT_TEXT_COLOR: Final = "#212121"
 DEFAULT_UPDATE_FREQUENCY: Final = 1800
 
 EVENT_NEW_QUOTE_FETCHED: Final = f"{DOMAIN}_new_quote_fetched"

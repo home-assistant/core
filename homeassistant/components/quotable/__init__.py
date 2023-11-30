@@ -14,10 +14,15 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_BG_COLOR,
     ATTR_QUOTES,
     ATTR_SELECTED_AUTHORS,
     ATTR_SELECTED_TAGS,
+    ATTR_STYLES,
+    ATTR_TEXT_COLOR,
     ATTR_UPDATE_FREQUENCY,
+    DEFAULT_BG_COLOR,
+    DEFAULT_TEXT_COLOR,
     DEFAULT_UPDATE_FREQUENCY,
     DOMAIN,
     ENTITY_ID,
@@ -39,6 +44,16 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     ATTR_UPDATE_FREQUENCY, default=DEFAULT_UPDATE_FREQUENCY
                 ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(ATTR_STYLES, default={}): vol.Schema(
+                    {
+                        vol.Optional(
+                            ATTR_BG_COLOR, default=DEFAULT_BG_COLOR
+                        ): cv.string,
+                        vol.Optional(
+                            ATTR_TEXT_COLOR, default=DEFAULT_TEXT_COLOR
+                        ): cv.string,
+                    }
+                ),
             }
         )
     },
@@ -85,10 +100,13 @@ class Quotable:
         """Attributes that are saved in state."""
         return {**self.config, **{ATTR_QUOTES: json.dumps(self.quotes)}}
 
-    def update_configuration(self, selected_tags, selected_authors, update_frequency):
+    def update_configuration(
+        self, selected_tags, selected_authors, update_frequency, styles
+    ):
         """Update configuration."""
         self.config[ATTR_SELECTED_TAGS] = selected_tags
         self.config[ATTR_SELECTED_AUTHORS] = selected_authors
+        self.config[ATTR_STYLES] = styles
 
         if self.config[ATTR_UPDATE_FREQUENCY] != update_frequency:
             self.config[ATTR_UPDATE_FREQUENCY] = update_frequency

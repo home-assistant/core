@@ -17,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     ATTR_SELECTED_AUTHORS,
     ATTR_SELECTED_TAGS,
+    ATTR_STYLES,
     ATTR_UPDATE_FREQUENCY,
     DOMAIN,
     EVENT_NEW_QUOTE_FETCHED,
@@ -164,4 +165,5 @@ def _update_configuration_service(hass: HomeAssistant, service: ServiceCall) -> 
             service.data[ATTR_SELECTED_TAGS],
             service.data[ATTR_SELECTED_AUTHORS],
             service.data[ATTR_UPDATE_FREQUENCY],
+            service.data[ATTR_STYLES],
         )
