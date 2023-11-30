@@ -45,34 +45,38 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         courses = self.selected_courses
         course_ids = courses.keys()
 
-        async with async_timeout.timeout(10):
-            assignments = await self.api.async_get_assignments(course_ids)
-            announcements = await self.api.async_get_announcements(course_ids)
-            conversations = await self.api.async_get_conversations()
-            grades = await self.api.async_get_grades(course_ids)
-            quick_links = self.get_quick_links()
+        try:
+            async with async_timeout.timeout(10):
+                assignments = await self.api.async_get_assignments(course_ids)
+                announcements = await self.api.async_get_announcements(course_ids)
+                conversations = await self.api.async_get_conversations()
+                grades = await self.api.async_get_grades(course_ids)
+                quick_links = self.get_quick_links()
 
-            # TODO - filtering, put it in canvas_api?
-            assignments = filter_assignments(assignments)
+                # TODO - filtering, put it in canvas_api?
+                assignments = filter_assignments(assignments)
 
-            new_data = {
-                ASSIGNMENTS_KEY: assignments,
-                ANNOUNCEMENTS_KEY: announcements,
-                CONVERSATIONS_KEY: conversations,
-                GRADES_KEY: grades,
-                QUICK_LINKS_KEY: quick_links,
-            }
+                new_data = {
+                    ASSIGNMENTS_KEY: assignments,
+                    ANNOUNCEMENTS_KEY: announcements,
+                    CONVERSATIONS_KEY: conversations,
+                    GRADES_KEY: grades,
+                    QUICK_LINKS_KEY: quick_links,
+                }
 
-            if self.update_entities:
-                for data_type in new_data:
-                    self.update_entities(
-                        data_type,
-                        new_data.get(data_type, {}),
-                        self.old_data.get(data_type, {}),
-                    )
-                self.old_data = new_data
+                if self.update_entities:
+                    for data_type in new_data:
+                        self.update_entities(
+                            data_type,
+                            new_data.get(data_type, {}),
+                            self.old_data.get(data_type, {}),
+                        )
+                    self.old_data = new_data
 
-            return new_data
+                return new_data
+
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}")
 
     def get_quick_links(self):
         config_path = self.hass.config.path("canvas.yaml")
