@@ -83,9 +83,6 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             user_input = {
                 CONF_NAME: DEFAULT_NAME,
-                CONF_USERNAME: "",
-                CONF_PASSWORD: "",
-                CONF_INSTALLATION_ID: "",
             }
 
         return self.async_show_form(
