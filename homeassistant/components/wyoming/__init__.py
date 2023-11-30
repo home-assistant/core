@@ -16,7 +16,7 @@ from .satellite import WyomingSatellite
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SWITCH]
+SATELLITE_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SWITCH]
 
 __all__ = [
     "ATTR_SPEAKER",
@@ -39,14 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     item = DomainDataItem(service=service, satellite_devices=satellite_devices)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = item
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        service.platforms + PLATFORMS,
-    )
-
+    await hass.config_entries.async_forward_entry_setups(entry, service.platforms)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     if service.info.satellite is not None:
+        # Set up satellite sensors, switches, etc.
+        await hass.config_entries.async_forward_entry_setups(entry, SATELLITE_PLATFORMS)
+
         satellite_device = satellite_devices.async_get_or_create(item.service)
         wyoming_satellite = WyomingSatellite(hass, service, satellite_device)
         hass.async_create_background_task(
