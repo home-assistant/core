@@ -18,6 +18,7 @@ from .const import (
     CONVERSATIONS_KEY,
     GRADES_KEY,
     QUICK_LINKS_KEY,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="Canvas Sensor",
+            name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
         self.config_entry = entry
@@ -47,14 +48,12 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             async with async_timeout.timeout(10):
-                assignments = await self.api.async_get_assignments(course_ids)
+                print("************ coordinator running")
+                assignments = await self.api.async_get_upcoming_assignments(course_ids)
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
                 grades = await self.api.async_get_grades(course_ids)
                 quick_links = self.get_quick_links()
-
-                # TODO - filtering, put it in canvas_api?
-                assignments = filter_assignments(assignments)
 
                 new_data = {
                     ASSIGNMENTS_KEY: assignments,
@@ -71,7 +70,8 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                             new_data.get(data_type, {}),
                             self.old_data.get(data_type, {}),
                         )
-                    self.old_data = new_data
+                    if self.old_data != new_data:
+                        self.old_data = new_data
 
                 return new_data
 
@@ -94,16 +94,3 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
             print(f"An error occurred: {e}")
 
         return {}
-
-
-def filter_assignments(assignments: dict[str, Any]) -> dict[str, Any]:
-    current_time = datetime.now()
-
-    for id, assignment in assignments.copy().items():
-        if "due_at" not in assignment or not assignment["due_date"]:
-            continue
-        due_time = datetime.strptime(assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ")
-        if due_time < current_time:
-            del assignments[id]
-
-    return assignments

@@ -80,8 +80,8 @@ class CanvasAPI:
         courses = json.loads(response.content.decode("utf-8"))
         return courses
 
-    async def async_get_assignments(self, course_ids: list[str]) -> dict[str, Any]:
-        """Retrieves a dictionary of assignments for given course IDs from the Canvas API.
+    async def async_get_upcoming_assignments(self, course_ids: list[str]) -> dict[str, Any]:
+        """Retrieves a dictionary of upcoming assignments in 14 days for given course IDs from the Canvas API.
 
         Args:
         course_ids (list[str]): A list of course IDs to fetch assignments from.
@@ -105,6 +105,16 @@ class CanvasAPI:
                     next_two_weeks = datetime.utcnow() + timedelta(days=14)
                     if due_date <= next_two_weeks:
                         assignments[f"assignment-{assignment['id']}"] = assignment
+        
+        # assignments.update({
+        #     "chalmers-new-assignment": {
+        #         "id": 76160,
+        #         "due_at": "2023-08-30T21:59:59Z",
+        #         "course_id": 25271,
+        #         "name": "chalmers Assignment",
+        #         "html_url": "https://chalmers.instructure.com/courses/25271/assignments/76160"
+        #     }
+        # })
 
         if len(assignments) != 0:
             return assignments
