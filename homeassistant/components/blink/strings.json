@@ -104,7 +104,7 @@
   },
   "exceptions": {
     "invalid_device": {
-      "message": "Device '{target}' is not a {DOMAIN} device"
+      "message": "Device '{target}' is not a {domain} device"
     },
     "device_not_found": {
       "message": "Device '{target}' not found in device registry"
