@@ -9,7 +9,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from ...common import MockConfigEntry
+from tests.common import MockConfigEntry
 from .conftest import _patch_update
 
 
