@@ -512,8 +512,7 @@ class EvoBroker:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
         finally:
-            assert self.client_v1 and self.client_v1.broker  # mypy check
-            if session_id != self.client_v1.broker.session_id:
+            if self.client_v1 and session_id != self.client_v1.broker.session_id:
                 await self.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
