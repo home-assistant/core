@@ -2,6 +2,7 @@
 import math
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 import homeassistant.util.color as color_util
@@ -667,14 +668,18 @@ async def test_ranged_value_to_brightness_starting_zero() -> None:
     assert color_util.value_to_brightness(scale, 3) == 255
 
 
-async def test_brightness_to_254_range() -> None:
+async def test_brightness_to_254_range(snapshot: SnapshotAssertion) -> None:
     """Test brightness scaling to a 254 range and back."""
-    brightness_range = range(1, 256)
+    brightness_range = range(1, 256)  # (1..255)
     scale = (1, 254)
-
     scaled_values = {
         brightness: color_util.brightness_to_value(scale, brightness)
         for brightness in brightness_range
     }
+    assert scaled_values == snapshot
+    restored_values = {}
     for expected_brightness, value in scaled_values.items():
+        restored_values[value] = color_util.value_to_brightness(scale, value)
         assert color_util.value_to_brightness(scale, value) == expected_brightness
+    assert restored_values == snapshot
+    assert scaled_values == snapshot
