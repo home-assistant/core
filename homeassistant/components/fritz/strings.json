@@ -28,7 +28,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box."
+          "host": "The hostname or IP address of your FRITZ!Box router."
         }
       }
     },
