@@ -80,11 +80,11 @@ class DecoraWifiLight(LightEntity):
         self._attr_unique_id = switch.serial
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
-            manufacturer=self._switch.manufacturer,
-            model=self._switch.model,
-            sw_version=self._switch.version,
-            serial_number=self._switch.serial,
+            name=switch.name,
+            manufacturer=switch.manufacturer,
+            model=switch.model,
+            sw_version=switch.version,
+            serial_number=switch.serial,
         )
 
     @property
