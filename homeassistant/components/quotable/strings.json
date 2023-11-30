@@ -37,6 +37,10 @@
         "update_frequency": {
           "name": "Update frequency",
           "description": "The frequency of fetching new quotes (in seconds)."
+        },
+        "styles": {
+          "name": "Styles",
+          "description": "Custom styles"
         }
       }
     }

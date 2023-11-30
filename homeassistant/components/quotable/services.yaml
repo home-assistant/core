@@ -37,3 +37,10 @@ update_configuration:
           max: 3600
           step: 1
           mode: box
+    styles:
+      required: true
+      example:
+        bg_color: "#038fc7"
+        text_color: "#212121"
+      selector:
+        object:
