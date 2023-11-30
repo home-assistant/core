@@ -549,10 +549,6 @@ async def test_rpc_climate_hvac_mode(
     monkeypatch,
 ) -> None:
     """Test climate hvac mode service."""
-    new_shelly = deepcopy(mock_rpc_device.shelly)
-    new_shelly["relay_in_thermostat"] = True
-    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
-
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
@@ -591,10 +587,6 @@ async def test_rpc_climate_set_temperature(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
     """Test climate set target temperature."""
-    new_shelly = deepcopy(mock_rpc_device.shelly)
-    new_shelly["relay_in_thermostat"] = True
-    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
-
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
@@ -636,10 +628,6 @@ async def test_rpc_climate_hvac_mode_cool(
     new_config = deepcopy(mock_rpc_device.config)
     new_config["thermostat:0"]["type"] = "cooling"
     monkeypatch.setattr(mock_rpc_device, "config", new_config)
-
-    new_shelly = deepcopy(mock_rpc_device.shelly)
-    new_shelly["relay_in_thermostat"] = True
-    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 

@@ -180,7 +180,7 @@ MOCK_SHELLY_RPC = {
     "auth_en": False,
     "auth_domain": None,
     "profile": "cover",
-    "relay_in_thermostat": False,
+    "relay_in_thermostat": True,
 }
 
 MOCK_STATUS_COAP = {
