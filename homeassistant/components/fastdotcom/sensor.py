@@ -48,12 +48,10 @@ class SpeedtestSensor(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = entry_id
-        self._state: StateType = None
 
     @property
     def native_value(
         self,
     ) -> StateType:
         """Return the state of the sensor."""
-        self._state = cast(StateType, self.coordinator.data)
-        return self._state
+        return cast(StateType, self.coordinator.data)
