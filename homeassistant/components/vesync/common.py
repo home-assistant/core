@@ -7,7 +7,7 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
-from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import DOMAIN, VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,11 +19,16 @@ async def async_process_devices(hass, manager):
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
+    devices[VS_HUMIDIFIERS] = []
 
     await hass.async_add_executor_job(manager.update)
 
     if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
+        for fan in manager.fans:
+            if hasattr(fan, "humidity"):
+                devices[VS_HUMIDIFIERS].append(fan)
+            else:
+                devices[VS_FANS].append(fan)
         # Expose fan sensors separately
         devices[VS_SENSORS].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))

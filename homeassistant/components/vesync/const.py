@@ -9,6 +9,7 @@ VS_FANS = "fans"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
 VS_MANAGER = "manager"
+VS_HUMIDIFIERS = "humidifiers"
 
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
@@ -56,4 +57,5 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V201-AUSR": "Vital200S",  # Alt ID Model Vital200S
     "Vital100S": "Vital100S",
     "LAP-V102S-WUS": "Vital100S",  # Alt ID Model Vital100S,
+    "LUH-D301S-WEU": "LUH-D301S-WEU",
 }
