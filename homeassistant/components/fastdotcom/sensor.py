@@ -1,8 +1,6 @@
 """Support for Fast.com internet speed testing sensor."""
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -12,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -51,6 +48,6 @@ class SpeedtestSensor(
     @property
     def native_value(
         self,
-    ) -> StateType:
+    ) -> float:
         """Return the state of the sensor."""
-        return cast(StateType, self.coordinator.data)
+        return self.coordinator.data
