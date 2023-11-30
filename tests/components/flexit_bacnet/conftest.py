@@ -23,19 +23,12 @@ async def flow_id(hass: HomeAssistant) -> str:
 
 
 @pytest.fixture(autouse=True)
-def mock_serial_number():
+def mock_serial_number_and_device_name():
     """Mock serial number of the device."""
     with patch(
         "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.serial_number",
         "0000-0001",
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def mock_device_name():
-    """Mock serial number of the device."""
-    with patch(
+    ), patch(
         "homeassistant.components.flexit_bacnet.config_flow.FlexitBACnet.device_name",
         "Device Name",
     ):
