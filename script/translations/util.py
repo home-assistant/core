@@ -62,6 +62,6 @@ def get_current_branch():
 def load_json_from_path(path: pathlib.Path) -> Any:
     """Load JSON from path."""
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding='utf-8'))
     except json.JSONDecodeError as err:
         raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err

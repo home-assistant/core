@@ -28,6 +28,9 @@
         "files.trimTrailingWhitespace": true,
         "terminal.integrated.profiles.linux": {
           "zsh": {
+            "env": {  // <-
+              "PATH": "/home/vscode/.local/bin/:$PATH"
+            },        // <-
             "path": "/usr/bin/zsh"
           }
         },
