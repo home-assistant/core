@@ -15,7 +15,7 @@ class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator):
     """Class to manage fetching Fast.com data API."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the coordintor for Fast.com."""
+        """Initialize the coordinator for Fast.com."""
         super().__init__(
             hass,
             LOGGER,
