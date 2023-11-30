@@ -68,13 +68,13 @@ class ComelitSerialBridge(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update device data."""
         _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
+
         try:
             await self.api.login()
+            return await self.api.get_all_devices()
         except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
             await self.api.close()
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except exceptions.CannotAuthenticate:
             raise ConfigEntryAuthFailed
-
-        return await self.api.get_all_devices()

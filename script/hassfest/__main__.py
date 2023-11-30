@@ -16,6 +16,7 @@ from . import (
     coverage,
     dependencies,
     dhcp,
+    docker,
     json,
     manifest,
     metadata,
@@ -50,6 +51,7 @@ INTEGRATION_PLUGINS = [
 ]
 HASS_PLUGINS = [
     coverage,
+    docker,
     mypy_config,
     metadata,
 ]
