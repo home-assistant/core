@@ -32,15 +32,14 @@ class TessieEntity(CoordinatorEntity):
         self.category = category
         self.key = key
         self._attr_unique_id = f"{vin}:{category}:{key}"
+        car_data = coordinator.data[vin]
+        car_type = car_data[TessieApi.VEHICLE_CONFIG]["car_type"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vin)},
             manufacturer="Tessie",
             configuration_url="https://my.tessie.com/",
-            name=coordinator.data[vin][TessieApi.DISPLAY_NAME],
-            model=MODELS.get(
-                coordinator.data[vin][TessieApi.VEHICLE_CONFIG]["car_type"],
-                coordinator.data[vin][TessieApi.VEHICLE_CONFIG]["car_type"],
-            ),
+            name=car_data[TessieApi.DISPLAY_NAME],
+            model=MODELS.get(car_type, car_type),
         )
 
     def get(self) -> Any:
