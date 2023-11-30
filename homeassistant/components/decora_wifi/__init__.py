@@ -8,7 +8,6 @@ from decora_wifi.models.permission import Permission
 from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,15 +19,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .config_flow import BASE_SCHEMA
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.LIGHT]
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: BASE_SCHEMA},
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
