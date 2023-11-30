@@ -96,7 +96,7 @@ class CanvasAPI:
             )
             course_assignments = json.loads(response.content.decode("utf-8"))
             for assignment in course_assignments:
-                if assignment["due_at"] is not None:
+                if "due_at" in assignment and assignment["due_at"] is not None:
                     due_date = datetime.strptime(
                         assignment["due_at"], ISO_DATETIME_FORMAT
                     )
