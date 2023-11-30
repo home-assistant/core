@@ -32,7 +32,7 @@ def async_handle_api_call(
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
 
-        LOGGER.debug("Result %s for entity %s with arguments %s", res, args[0], kwargs)
+        LOGGER.debug("Result %s for entity %s with arguments %s", res, entity, kwargs)
         if res is not True:
             raise HomeAssistantError(f"Could not execute service for {entity.name}")
         if (
