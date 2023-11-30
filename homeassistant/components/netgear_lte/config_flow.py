@@ -23,6 +23,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a configuration from config.yaml."""
         host = config[CONF_HOST]
         password = config[CONF_PASSWORD]
+        self._async_abort_entries_match({CONF_HOST: host})
         try:
             info = await self._async_validate_input(host, password)
         except InputValidationError:
@@ -88,7 +89,9 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as ex:
             LOGGER.exception("Unexpected exception")
             raise InputValidationError("unknown") from ex
-        return await modem.information()
+        info = await modem.information()
+        await modem.logout()
+        return info
 
 
 class InputValidationError(exceptions.HomeAssistantError):

@@ -6,7 +6,6 @@ import attr
 import eternalegypt
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -154,13 +153,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
             )
-            if result["type"] == data_entry_flow.RESULT_TYPE_ABORT:
+            if result.get("reason") == "cannot_connect":
                 async_create_issue(
                     hass,
                     DOMAIN,
                     "import_failure",
                     is_fixable=False,
-                    is_persistent=True,
                     severity=IssueSeverity.ERROR,
                     translation_key="import_failure",
                 )
