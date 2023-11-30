@@ -125,7 +125,6 @@ class MatterEntity(Entity):
             self.get_matter_attribute_path(self._entity_info.primary_attribute),
         )
         self._update_from_device()
-        self.async_write_ha_state()
 
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
