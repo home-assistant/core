@@ -15,7 +15,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device hosting your kiosk browser."
+          "host": "The hostname or IP address of the device running fully kiosk browser."
         }
       }
     },
