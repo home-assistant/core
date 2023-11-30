@@ -1,8 +1,10 @@
-import httpx
-import urllib.parse
+from datetime import datetime, timedelta
 import json
 from typing import Any
-from datetime import datetime, timedelta
+import urllib.parse
+
+import httpx
+
 from .const import (
     ANNOUNCEMENT_ENTITY_CONSTANT,
     ASSIGNMENT_ENTITY_CONSTANT,
@@ -96,7 +98,7 @@ class CanvasAPI:
             )
             course_assignments = json.loads(response.content.decode("utf-8"))
             for assignment in course_assignments:
-                if assignment["due_at"] is not None:
+                if "due_at" in assignment and assignment["due_at"] is not None:
                     due_date = datetime.strptime(
                         assignment["due_at"], ISO_DATETIME_FORMAT
                     )
@@ -153,19 +155,22 @@ class CanvasAPI:
             "/conversations", {"per_page": "50"}
         )
         conversations = json.loads(response_unread.content.decode("utf-8"))
-        # get unreads and 5 latest reads
-        read_conversations = [
-            conv for conv in conversations if conv["workflow_state"] == "read"
-        ]
-        unread_conversations = [
-            conv for conv in conversations if conv["workflow_state"] == "unread"
-        ]
-        read_conversations = read_conversations = sorted(
-            read_conversations,
+        # get unread and read messages
+        show_read = 5
+        read_conversations = sorted(
+            [conv for conv in conversations if conv["workflow_state"] == "read"],
             key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
             reverse=True,
-        )[:5]
-        merged_conversations = read_conversations + unread_conversations
+        )
+        unread_conversations = sorted(
+            [conv for conv in conversations if conv["workflow_state"] == "unread"],
+            key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
+            reverse=True,
+        )
+        # pick the latest 5 read messages
+        if len(read_conversations) >= show_read:
+            read_conversations = read_conversations[:show_read]
+        merged_conversations = unread_conversations + read_conversations
         if len(merged_conversations) != 0:
             return {
                 f"conversation-{conversation['id']}": conversation
@@ -190,7 +195,7 @@ class CanvasAPI:
             )
             course_submissions = json.loads(response.content.decode("utf-8"))
             for submission in course_submissions:
-                if submission["graded_at"] is not None:
+                if "graded_at" in submission and submission["graded_at"] is not None:
                     graded_at = datetime.strptime(
                         submission["graded_at"], ISO_DATETIME_FORMAT
                     )
