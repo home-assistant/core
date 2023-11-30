@@ -7,7 +7,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Hue device."
+          "host": "The hostname or IP address of your Hue bridge."
         }
       },
       "manual": {
@@ -16,7 +16,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Hue device."
+          "host": "The hostname or IP address of your Hue bridge."
         }
       },
       "link": {
