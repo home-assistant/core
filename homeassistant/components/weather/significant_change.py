@@ -1,7 +1,6 @@
 """Helper to test significant Weather state changes."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
@@ -27,8 +26,6 @@ from .const import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 INSIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_WEATHER_PRECIPITATION_UNIT,
