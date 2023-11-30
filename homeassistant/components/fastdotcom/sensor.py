@@ -53,10 +53,6 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
             )
         )
 
-        if not (state := await self.async_get_last_state()):
-            return
-        self._attr_native_value = state.state
-
     def update(self) -> None:
         """Get the latest data and update the states."""
         if (data := self._speedtest_data.data) is None:  # type: ignore[attr-defined]
