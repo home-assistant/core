@@ -18,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema(
     {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -64,8 +64,8 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            username = user_input["username"]
-            password = user_input["password"]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
 
             try:
                 await async_validate_input(self.hass, username, password)
