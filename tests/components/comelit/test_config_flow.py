@@ -24,7 +24,7 @@ async def test_user(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.comelit.async_setup_entry"
     ) as mock_setup_entry, patch(
-        "requests.get"
+        "requests.get",
     ) as mock_request_get:
         mock_request_get.return_value.status_code = 200
 
@@ -70,7 +70,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     ), patch(
         "aiocomelit.api.ComeliteSerialBridgeApi.logout",
     ), patch(
-        "homeassistant.components.comelit.async_setup_entry"
+        "homeassistant.components.comelit.async_setup_entry",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -135,9 +135,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         "aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect
     ), patch(
         "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch(
-        "homeassistant.components.comelit.async_setup_entry"
-    ):
+    ), patch("homeassistant.components.comelit.async_setup_entry"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},

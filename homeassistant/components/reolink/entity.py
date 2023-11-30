@@ -20,7 +20,7 @@ from .const import DOMAIN
 _T = TypeVar("_T")
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkChannelEntityDescription(EntityDescription):
     """A class that describes entities for a camera channel."""
 
@@ -28,7 +28,7 @@ class ReolinkChannelEntityDescription(EntityDescription):
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkHostEntityDescription(EntityDescription):
     """A class that describes host entities."""
 
@@ -61,6 +61,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
             manufacturer=self._host.api.manufacturer,
             hw_version=self._host.api.hardware_version,
             sw_version=self._host.api.sw_version,
+            serial_number=self._host.api.uid,
             configuration_url=self._conf_url,
         )
 

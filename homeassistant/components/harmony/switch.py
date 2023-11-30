@@ -1,12 +1,15 @@
 """Support for Harmony Hub activities."""
 import logging
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, HARMONY_DATA
 from .data import HarmonyData
@@ -20,6 +23,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up harmony activity switches."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_switches",
+        breaks_in_ha_version="2023.8.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_switches",
+    )
     data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     activities = data.activities
 
@@ -72,6 +84,22 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
                 )
             )
         )
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        for item in entity_automations + entity_scripts:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_switches_{self.entity_id}_{item}",
+                breaks_in_ha_version="2023.8.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_switches_entity",
+                translation_placeholders={
+                    "entity": f"{SWITCH_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                    "info": item,
+                },
+            )
 
     @callback
     def _async_activity_update(self, activity_info: tuple):

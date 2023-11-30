@@ -101,7 +101,7 @@ EMAIL_DATA = [
     (
         "Test msg",
         {"images": ["tests/testing_config/notify/test.jpg"]},
-        "Content-Type: multipart/related",
+        "Content-Type: multipart/mixed",
     ),
     (
         "Test msg",
