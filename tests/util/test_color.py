@@ -583,89 +583,122 @@ def test_white_levels_to_color_temperature() -> None:
     )
 
 
-async def test_ranged_value_to_brightness_large() -> None:
-    """Test a large scale and convert a single value to a brightness."""
+@pytest.mark.parametrize(
+    ("value", "brightness"),
+    [
+        (530, 255),  # test min==255 clamp
+        (511, 255),
+        (255, 127),
+        (49, 24),
+        (1, 1),
+        (0, 1),  # test max==1 clamp
+    ],
+)
+async def test_ranged_value_to_brightness_large(value: float, brightness: int) -> None:
+    """Test a large scale and clamping and convert a single value to a brightness."""
     scale = (1, 511)
 
-    # test min==255 clamp
-    assert color_util.value_to_brightness(scale, 530) == 255
-
-    assert color_util.value_to_brightness(scale, 511) == 255
-    assert color_util.value_to_brightness(scale, 255) == 127
-    assert color_util.value_to_brightness(scale, 49) == 24
-    assert color_util.value_to_brightness(scale, 1) == 1
-
-    # test max==1 clamp
-    assert color_util.value_to_brightness(scale, 0) == 1
+    assert color_util.value_to_brightness(scale, value) == brightness
 
 
-async def test_brightness_to_ranged_value_large() -> None:
+@pytest.mark.parametrize(
+    ("brightness", "value", "math_ceil"),
+    [
+        (255, 511.0, 511),
+        (127, 254.49803921568628, 255),
+        (24, 48.09411764705882, 49),
+    ],
+)
+async def test_brightness_to_ranged_value_large(
+    brightness: int, value: float, math_ceil: int
+) -> None:
     """Test a large scale and convert a brightness to a single value."""
     scale = (1, 511)
 
-    assert color_util.brightness_to_value(scale, 255) == 511.0
-    assert color_util.brightness_to_value(scale, 127) == 254.49803921568628
-    assert color_util.brightness_to_value(scale, 24) == 48.09411764705882
+    assert color_util.brightness_to_value(scale, brightness) == value
 
-    assert math.ceil(color_util.brightness_to_value(scale, 255)) == 511
-    assert math.ceil(color_util.brightness_to_value(scale, 127)) == 255
-    assert math.ceil(color_util.brightness_to_value(scale, 24)) == 49
+    assert math.ceil(color_util.brightness_to_value(scale, brightness)) == math_ceil
 
 
-async def test_ranged_value_to_brightness_small() -> None:
+@pytest.mark.parametrize(
+    ("scale", "value", "brightness"),
+    [
+        ((1, 4), 1, 64),
+        ((1, 4), 2, 128),
+        ((1, 4), 3, 191),
+        ((1, 4), 4, 255),
+        ((1, 6), 1, 42),
+        ((1, 6), 2, 85),
+        ((1, 6), 3, 128),
+        ((1, 6), 4, 170),
+        ((1, 6), 5, 212),
+        ((1, 6), 6, 255),
+    ],
+)
+async def test_ranged_value_to_brightness_small(
+    scale: tuple[float, float], value: float, brightness: int
+) -> None:
     """Test a small scale and convert a single value to a brightness."""
-    scale = (1, 4)
-    assert color_util.value_to_brightness(scale, 1) == 64
-    assert color_util.value_to_brightness(scale, 2) == 128
-    assert color_util.value_to_brightness(scale, 3) == 191
-    assert color_util.value_to_brightness(scale, 4) == 255
-
-    scale = (1, 6)
-
-    assert color_util.value_to_brightness(scale, 1) == 42
-    assert color_util.value_to_brightness(scale, 2) == 85
-    assert color_util.value_to_brightness(scale, 3) == 128
-    assert color_util.value_to_brightness(scale, 4) == 170
-    assert color_util.value_to_brightness(scale, 5) == 212
-    assert color_util.value_to_brightness(scale, 6) == 255
+    assert color_util.value_to_brightness(scale, value) == brightness
 
 
-async def test_brightness_to_ranged_value_small() -> None:
+@pytest.mark.parametrize(
+    ("scale", "brightness", "value"),
+    [
+        ((1, 4), 63, 1),
+        ((1, 4), 127, 2),
+        ((1, 4), 191, 3),
+        ((1, 4), 255, 4),
+        ((1, 6), 42, 1),
+        ((1, 6), 85, 2),
+        ((1, 6), 127, 3),
+        ((1, 6), 170, 4),
+        ((1, 6), 212, 5),
+        ((1, 6), 255, 6),
+    ],
+)
+async def test_brightness_to_ranged_value_small(
+    scale: tuple[float, float], brightness: int, value: float
+) -> None:
     """Test a small scale and convert a brightness to a single value."""
-    scale = (1, 4)
-    assert math.ceil(color_util.brightness_to_value(scale, 63)) == 1
-    assert math.ceil(color_util.brightness_to_value(scale, 127)) == 2
-    assert math.ceil(color_util.brightness_to_value(scale, 191)) == 3
-    assert math.ceil(color_util.brightness_to_value(scale, 255)) == 4
-
-    scale = (1, 6)
-    assert math.ceil(color_util.brightness_to_value(scale, 42)) == 1
-    assert math.ceil(color_util.brightness_to_value(scale, 85)) == 2
-    assert math.ceil(color_util.brightness_to_value(scale, 127)) == 3
-    assert math.ceil(color_util.brightness_to_value(scale, 170)) == 4
-    assert math.ceil(color_util.brightness_to_value(scale, 212)) == 5
-    assert math.ceil(color_util.brightness_to_value(scale, 255)) == 6
+    assert math.ceil(color_util.brightness_to_value(scale, brightness)) == value
 
 
-async def test_ranged_value_to_brightness_starting_high() -> None:
+@pytest.mark.parametrize(
+    ("value", "brightness"),
+    [
+        (101, 2),
+        (139, 64),
+        (178, 128),
+        (217, 192),
+        (255, 255),
+    ],
+)
+async def test_ranged_value_to_brightness_starting_high(
+    value: float, brightness: int
+) -> None:
     """Test a range that does not start with 1."""
     scale = (101, 255)
 
-    assert color_util.value_to_brightness(scale, 101) == 2
-    assert color_util.value_to_brightness(scale, 139) == 64
-    assert color_util.value_to_brightness(scale, 178) == 128
-    assert color_util.value_to_brightness(scale, 217) == 192
-    assert color_util.value_to_brightness(scale, 255) == 255
+    assert color_util.value_to_brightness(scale, value) == brightness
 
 
-async def test_ranged_value_to_brightness_starting_zero() -> None:
+@pytest.mark.parametrize(
+    ("value", "brightness"),
+    [
+        (0, 64),
+        (1, 128),
+        (2, 191),
+        (3, 255),
+    ],
+)
+async def test_ranged_value_to_brightness_starting_zero(
+    value: float, brightness: int
+) -> None:
     """Test a range that starts with 0."""
     scale = (0, 3)
 
-    assert color_util.value_to_brightness(scale, 0) == 64
-    assert color_util.value_to_brightness(scale, 1) == 128
-    assert color_util.value_to_brightness(scale, 2) == 191
-    assert color_util.value_to_brightness(scale, 3) == 255
+    assert color_util.value_to_brightness(scale, value) == brightness
 
 
 async def test_brightness_to_254_range(snapshot: SnapshotAssertion) -> None:
