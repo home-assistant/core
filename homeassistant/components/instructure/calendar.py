@@ -35,6 +35,9 @@ class CanvasCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         assignments = self.get_assignments_with_due_date()
 
+        if not assignments:
+            return None
+
         current_time = datetime.datetime.now(timezone.utc)
 
         next_assignment = min(
@@ -57,7 +60,7 @@ class CanvasCalendarEntity(CalendarEntity):
 
     def get_assignments_with_due_date(self):
         assignments = self.coordinator.data[ASSIGNMENTS_KEY].values()
-        return [i for i in assignments if i["due_at"]]
+        return [i for i in assignments if "due_at" in i]
 
     def parse_date(self, date_str):
         return datetime.datetime.fromisoformat(date_str)

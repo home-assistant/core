@@ -19,6 +19,7 @@ from .const import (
     CONVERSATIONS_KEY,
     DOMAIN,
     GRADES_KEY,
+    QUICK_LINKS_KEY,
 )
 from .coordinator import CanvasUpdateCoordinator
 
@@ -120,6 +121,18 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         }
         if data
         else {"Score": "Default Score", "Submission Type": "Default Submission Type"},
+    ),
+    QUICK_LINKS_KEY: CanvasSensorEntityDescription(
+        device_name="Quick links",
+        key=QUICK_LINKS_KEY,
+        translation_key=QUICK_LINKS_KEY,
+        icon="mdi:link",
+        avabl_fn=lambda data: data is not None,
+        name_fn=lambda data: data["name"],
+        value_fn=lambda data: "",
+        attr_fn=lambda data, courses: {
+            "URL": data["url"],
+        },
     ),
 }
 

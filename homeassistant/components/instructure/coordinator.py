@@ -1,6 +1,8 @@
+import os
 from datetime import datetime, timedelta
 import logging
 from typing import Any
+import yaml
 
 import async_timeout
 
@@ -10,7 +12,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from datetime import datetime
 
 from .canvas_api import CanvasAPI
-from .const import ANNOUNCEMENTS_KEY, ASSIGNMENTS_KEY, CONVERSATIONS_KEY, GRADES_KEY
+from .const import (
+    ANNOUNCEMENTS_KEY,
+    ASSIGNMENTS_KEY,
+    CONVERSATIONS_KEY,
+    GRADES_KEY,
+    QUICK_LINKS_KEY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +51,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
                 grades = await self.api.async_get_grades(course_ids)
+                quick_links = self.get_quick_links()
 
                 # TODO - filtering, put it in canvas_api?
                 assignments = filter_assignments(assignments)
@@ -52,6 +61,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                     ANNOUNCEMENTS_KEY: announcements,
                     CONVERSATIONS_KEY: conversations,
                     GRADES_KEY: grades,
+                    QUICK_LINKS_KEY: quick_links,
                 }
 
                 if self.update_entities:
@@ -68,12 +78,29 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
+    def get_quick_links(self):
+        config_path = self.hass.config.path("canvas.yaml")
+
+        try:
+            with open(config_path, "r") as file:
+                config_dict = yaml.safe_load(file)
+                links = config_dict["quick_links"]
+                return {f"quick_link-{link['name']}": link for link in links}
+        except FileNotFoundError:
+            print("The YAML file was not found.")
+        except yaml.YAMLError as exc:
+            print(f"Error in YAML file: {exc}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        return {}
+
 
 def filter_assignments(assignments: dict[str, Any]) -> dict[str, Any]:
     current_time = datetime.now()
 
     for id, assignment in assignments.copy().items():
-        if not assignment["due_at"]:
+        if "due_at" not in assignment:
             continue
         due_time = datetime.strptime(assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ")
         if due_time < current_time:
