@@ -83,13 +83,17 @@ class DecoraWifiAsyncClient:
 
     async def get_residences(self, permissions: list[Permission]) -> list[Residence]:
         """Get all residences for the provided permissions."""
+        return await self.hass.async_add_executor_job(
+            lambda: self._get_residences(permissions)
+        )
+
+    def _get_residences(self, permissions: list[Permission]) -> list[Residence]:
+        """Get all residences for the provided permissions."""
         residences: list[Residence] = []
         for perm in permissions:
             if perm.residentialAccountId is not None:
                 account = ResidentialAccount(self.session, perm.residentialAccountId)
-                residences.extend(
-                    await self.hass.async_add_executor_job(account.get_residences)
-                )
+                residences.extend(account.get_residences())
             elif perm.residenceId is not None:
                 residences.append(Residence(self.session, perm.residenceId))
         return residences
