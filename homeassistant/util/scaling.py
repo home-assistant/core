@@ -13,9 +13,9 @@ def scale_ranged_value_to_int_range(
     a target range from 1 to 100 this function
     will return:
 
-    (1,255), 255: 100
-    (1,255), 127: 50
-    (1,255), 10: 4
+    (1,255), (1,100), 255: 100
+    (1,255), (1,100), 127: 49
+    (1,255), (1,100), 10: 3
     """
     source_offset = source_low_high_range[0] - 1
     target_offset = target_low_high_range[0] - 1
