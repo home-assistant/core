@@ -113,7 +113,7 @@
       "message": "Can't write to directory {target}, no access to path!"
     },
     "cant_write": {
-      "message": "Can't write image to file"
+      "message": "Can't write to file"
     },
     "not_loaded": {
       "message": "{target} is not loaded"
