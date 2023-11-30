@@ -58,4 +58,6 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
             self._attr_extra_state_attributes = {
                 "release_type": self.coordinator.event.release_type
             }
+        else:
+            self._attr_extra_state_attributes = {}
         super().async_write_ha_state()

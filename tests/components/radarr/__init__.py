@@ -77,12 +77,6 @@ def mock_connection(
     )
 
     aioclient_mock.get(
-        f"{url}/api/v3/calendar",
-        text=load_fixture("radarr/calendar.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
         f"{url}/api/v3/queue",
         text=load_fixture("radarr/queue.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
@@ -104,6 +98,18 @@ def mock_connection(
     aioclient_mock.get(
         f"{url}/api/v3/movie",
         text=load_fixture("radarr/movie.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+
+def mock_calendar(
+    aioclient_mock: AiohttpClientMocker,
+    url: str = URL,
+) -> None:
+    """Mock radarr connection."""
+    aioclient_mock.get(
+        f"{url}/api/v3/calendar",
+        text=load_fixture("radarr/calendar.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -181,6 +187,8 @@ async def setup_integration(
         windows=windows,
         single_return=single_return,
     )
+
+    mock_calendar(aioclient_mock, url)
 
     if not skip_entry_setup:
         await hass.config_entries.async_setup(entry.entry_id)

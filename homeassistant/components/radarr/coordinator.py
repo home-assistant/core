@@ -149,9 +149,9 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         while self.event is None:
             await self.async_get_events(_date, _date + timedelta(days=1))
             for event in self._events:
-                if event.start != _date.date():
+                if event.start >= _date.date():
+                    self.event = event
                     break
-                self.event = event
             # Prevent infinite loop in case there is nothing recent in the calendar
             if (_date - datetime.today()).days > 45:
                 break
@@ -161,6 +161,12 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self, start_date: datetime, end_date: datetime
     ) -> list[RadarrEvent]:
         """Get cached events and request missing dates."""
+        # remove older events to prevent memory leak
+        self._events = [
+            e
+            for e in self._events
+            if e.start >= datetime.now().date() - timedelta(days=30)
+        ]
         _days = (end_date - start_date).days
         await asyncio.gather(
             *(
@@ -176,7 +182,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self._events.extend(
             _get_calendar_event(evt)
             for evt in await self.api_client.async_get_calendar(
-                start_date=_date - timedelta(days=1), end_date=_date
+                start_date=_date, end_date=_date + timedelta(days=1)
             )
             if evt.title not in (e.summary for e in self._events)
         )
@@ -187,8 +193,8 @@ def _get_calendar_event(event: RadarrCalendarItem) -> RadarrEvent:
     _date, _type = event.releaseDateType()
     return RadarrEvent(
         summary=event.title,
-        start=_date,
-        end=_date + timedelta(days=1),
+        start=_date - timedelta(days=1),
+        end=_date,
         description=event.overview.replace(":", ";"),
         release_type=_type,
     )

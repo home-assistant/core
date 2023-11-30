@@ -14,6 +14,7 @@ from . import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 @pytest.mark.parametrize(
     ("windows", "single", "root_folder"),
     [
