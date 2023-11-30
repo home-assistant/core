@@ -89,7 +89,9 @@ def setup_services(hass: HomeAssistant) -> None:
         video_path = call.data[CONF_FILENAME]
         if not hass.config.is_allowed_path(video_path):
             _LOGGER.error("Can't write %s, no access to path!", video_path)
-            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+            raise ServiceValidationError(
+                f"Can't write {video_path}, no access to path!"
+            )
 
         for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
             all_cameras = coordinator.api.cameras
@@ -98,7 +100,7 @@ def setup_services(hass: HomeAssistant) -> None:
                     await all_cameras[camera_name].video_to_file(video_path)
                 except OSError as err:
                     _LOGGER.error("Can't write image to file: %s", err)
-                    raise HomeAssistantError("Can't write image to file") from err
+                    raise ServiceValidationError("Can't write image to file") from err
 
     async def async_handle_save_recent_clips_service(call: ServiceCall) -> None:
         """Save multiple recent clips to output directory."""

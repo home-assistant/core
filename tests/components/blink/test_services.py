@@ -137,7 +137,7 @@ async def test_video_service_calls(
     mock_blink_api.cameras[CAMERA_NAME].video_to_file = AsyncMock(side_effect=OSError)
     caplog.clear()
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(ServiceValidationError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SAVE_VIDEO,
