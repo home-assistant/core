@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfVolume
+from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -36,6 +36,23 @@ FLOW_ICON = "mdi:shower-head"
 GAUGE_ICON = "mdi:gauge"
 TDS_ICON = "mdi:water-opacity"
 
+# Sensor type constants
+CURRENT_FLOW_RATE = "current_flow_rate"
+PEAK_FLOW_RATE = "peak_flow_rate"
+WATER_USED_TODAY = "water_used_today"
+AVERAGE_WATER_USED = "average_water_used"
+CAPACITY_REMAINING = "capacity_remaining"
+CURRENT_SYSTEM_PRESSURE = "current_system_pressure"
+HIGH_SYSTEM_PRESSURE = "high_system_pressure"
+LOW_SYSTEM_PRESSURE = "low_system_pressure"
+BATTERY = "battery"
+TEMPERATURE = "temperature"
+INLET_TDS = "inlet_tds"
+OUTLET_TDS = "outlet_tds"
+CARTRIDGE_1_LIFE = "cart1"
+CARTRIDGE_2_LIFE = "cart2"
+CARTRIDGE_3_LIFE = "cart3"
+
 
 @dataclass(kw_only=True)
 class DROPSensorEntityDescription(SensorEntityDescription):
@@ -44,138 +61,120 @@ class DROPSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[DROPDeviceDataUpdateCoordinator], float | int | None]
 
 
-SENSORS: dict[str, DROPSensorEntityDescription] = {
-    "current_flow_rate": DROPSensorEntityDescription(
-        key="current_flow_rate",
+SENSORS: list[DROPSensorEntityDescription] = [
+    DROPSensorEntityDescription(
+        key=CURRENT_FLOW_RATE,
         icon="mdi:shower-head",
         native_unit_of_measurement="gpm",
         suggested_display_precision=1,
         value_fn=lambda device: device.current_flow_rate,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "peak_flow_rate": DROPSensorEntityDescription(
-        key="peak_flow_rate",
+    DROPSensorEntityDescription(
+        key=PEAK_FLOW_RATE,
         icon="mdi:shower-head",
         native_unit_of_measurement="gpm",
         suggested_display_precision=1,
         value_fn=lambda device: device.peak_flow_rate,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "water_used_today": DROPSensorEntityDescription(
-        key="water_used_today",
+    DROPSensorEntityDescription(
+        key=WATER_USED_TODAY,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=lambda device: device.water_used_today,
     ),
-    "average_water_used": DROPSensorEntityDescription(
-        key="average_water_used",
+    DROPSensorEntityDescription(
+        key=AVERAGE_WATER_USED,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
         value_fn=lambda device: device.average_water_used,
     ),
-    "capacity_remaining": DROPSensorEntityDescription(
-        key="capacity_remaining",
+    DROPSensorEntityDescription(
+        key=CAPACITY_REMAINING,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
         value_fn=lambda device: device.capacity_remaining,
     ),
-    "current_system_pressure": DROPSensorEntityDescription(
-        key="current_system_pressure",
+    DROPSensorEntityDescription(
+        key=CURRENT_SYSTEM_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement="psi",
+        native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=1,
         value_fn=lambda device: device.current_system_pressure,
     ),
-    "high_system_pressure": DROPSensorEntityDescription(
-        key="high_system_pressure",
+    DROPSensorEntityDescription(
+        key=HIGH_SYSTEM_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement="psi",
+        native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=0,
         value_fn=lambda device: device.high_system_pressure,
     ),
-    "low_system_pressure": DROPSensorEntityDescription(
-        key="low_system_pressure",
+    DROPSensorEntityDescription(
+        key=LOW_SYSTEM_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement="psi",
+        native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=0,
         value_fn=lambda device: device.low_system_pressure,
     ),
-    "battery": DROPSensorEntityDescription(
-        key="battery",
+    DROPSensorEntityDescription(
+        key=BATTERY,
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
         value_fn=lambda device: device.battery,
     ),
-    "temperature": DROPSensorEntityDescription(
-        key="temperature",
+    DROPSensorEntityDescription(
+        key=TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement="°F",
         suggested_display_precision=1,
         value_fn=lambda device: device.temperature,
     ),
-    "inlet_tds": DROPSensorEntityDescription(
-        key="inlet_tds",
+    DROPSensorEntityDescription(
+        key=INLET_TDS,
         icon=TDS_ICON,
         native_unit_of_measurement="ppm",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.inlet_tds,
     ),
-    "outlet_tds": DROPSensorEntityDescription(
-        key="outlet_tds",
+    DROPSensorEntityDescription(
+        key=OUTLET_TDS,
         icon=TDS_ICON,
         native_unit_of_measurement="ppm",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.outlet_tds,
     ),
-    "cart1": DROPSensorEntityDescription(
-        key="cart1",
+    DROPSensorEntityDescription(
+        key=CARTRIDGE_1_LIFE,
         icon=GAUGE_ICON,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.cart1,
     ),
-    "cart2": DROPSensorEntityDescription(
-        key="cart2",
+    DROPSensorEntityDescription(
+        key=CARTRIDGE_2_LIFE,
         icon=GAUGE_ICON,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.cart2,
     ),
-    "cart3": DROPSensorEntityDescription(
-        key="cart3",
+    DROPSensorEntityDescription(
+        key=CARTRIDGE_3_LIFE,
         icon=GAUGE_ICON,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.cart3,
     ),
-}
-
-
-class DROPSensor(DROPEntity, SensorEntity):
-    """Representation of a DROP sensor."""
-
-    entity_description: DROPSensorEntityDescription
-
-    def __init__(self, device, entity_description) -> None:
-        """Initialize the sensor."""
-        super().__init__(entity_description.key, device)
-        self.entity_description = entity_description
-        self.device = device
-        self._attr_translation_key = entity_description.key
-
-    @property
-    def native_value(self) -> float | int | None:
-        """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.device)
+]
 
 
 async def async_setup_entry(
@@ -198,74 +197,106 @@ async def async_setup_entry(
 
     if device_type == DEV_HUB:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "average_water_used",
-                "battery",
-                "current_flow_rate",
-                "current_system_pressure",
-                "high_system_pressure",
-                "low_system_pressure",
-                "peak_flow_rate",
-                "water_used_today",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                AVERAGE_WATER_USED,
+                BATTERY,
+                CURRENT_FLOW_RATE,
+                CURRENT_SYSTEM_PRESSURE,
+                HIGH_SYSTEM_PRESSURE,
+                LOW_SYSTEM_PRESSURE,
+                PEAK_FLOW_RATE,
+                WATER_USED_TODAY,
             )
         )
     elif device_type == DEV_SOFTENER:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "battery",
-                "capacity_remaining",
-                "current_flow_rate",
-                "current_system_pressure",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                BATTERY,
+                CAPACITY_REMAINING,
+                CURRENT_FLOW_RATE,
+                CURRENT_SYSTEM_PRESSURE,
             )
         )
     elif device_type == DEV_FILTER:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "battery",
-                "current_flow_rate",
-                "current_system_pressure",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                BATTERY,
+                CURRENT_FLOW_RATE,
+                CURRENT_SYSTEM_PRESSURE,
             )
         )
     elif device_type == DEV_LEAK_DETECTOR:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "battery",
-                "temperature",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                BATTERY,
+                TEMPERATURE,
             )
         )
     elif device_type == DEV_PROTECTION_VALVE:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "battery",
-                "current_flow_rate",
-                "current_system_pressure",
-                "temperature",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                BATTERY,
+                CURRENT_FLOW_RATE,
+                CURRENT_SYSTEM_PRESSURE,
+                TEMPERATURE,
             )
         )
     elif device_type == DEV_PUMP_CONTROLLER:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "current_flow_rate",
-                "current_system_pressure",
-                "temperature",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                CURRENT_FLOW_RATE,
+                CURRENT_SYSTEM_PRESSURE,
+                TEMPERATURE,
             )
         )
     elif device_type == DEV_RO_FILTER:
         entities.extend(
-            DROPSensor(coordinator, SENSORS[sensor_type])
-            for sensor_type in (
-                "cart1",
-                "cart2",
-                "cart3",
-                "inlet_tds",
-                "outlet_tds",
+            DROPSensor(coordinator, sensor)
+            for sensor in SENSORS
+            if sensor.key
+            in (
+                CARTRIDGE_1_LIFE,
+                CARTRIDGE_2_LIFE,
+                CARTRIDGE_3_LIFE,
+                INLET_TDS,
+                OUTLET_TDS,
             )
         )
 
     async_add_entities(entities)
+
+
+class DROPSensor(DROPEntity, SensorEntity):
+    """Representation of a DROP sensor."""
+
+    entity_description: DROPSensorEntityDescription
+
+    def __init__(self, device, entity_description) -> None:
+        """Initialize the sensor."""
+        super().__init__(entity_description.key, device)
+        self.entity_description = entity_description
+        self.device = device
+        self._attr_translation_key = entity_description.key
+
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.device)
