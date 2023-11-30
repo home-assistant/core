@@ -1,14 +1,8 @@
 """Sveriges radio classes."""
-
-
-import sys
-
 import aiohttp
 from defusedxml import ElementTree
 
 from homeassistant.components.media_source.error import Unresolvable
-
-sys.setrecursionlimit(10**4)
 
 
 class Channel:

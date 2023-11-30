@@ -5,6 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sveriges_radio",
   "integration_type": "service",
-  "iot_class": "cloud_polling",
-  "requirements": []
+  "iot_class": "cloud_polling"
 }

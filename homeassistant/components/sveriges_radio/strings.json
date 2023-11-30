@@ -2,11 +2,29 @@
   "config": {
     "step": {
       "user": {
-        "description": "Do you want to add Sveriges Radio to Home Assistant?"
+        "description": "Choose your traffic area!",
+        "data": {
+          "area": "area"
+        }
       }
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "area": "area"
+        }
+      }
     }
   }
 }
