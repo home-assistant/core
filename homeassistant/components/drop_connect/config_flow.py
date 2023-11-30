@@ -24,6 +24,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+KEY_DEVICE_TYPE = "devType"
+KEY_DEVICE_DESCRIPTION = "devDesc"
+KEY_DEVICE_NAME = "name"
+
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle DROP config flow."""
@@ -89,13 +93,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Discovery data must include the DROP device type and name.
         if (
-            "devType" in payloadData
-            and "devDesc" in payloadData
-            and "name" in payloadData
+            KEY_DEVICE_TYPE in payloadData
+            and KEY_DEVICE_DESCRIPTION in payloadData
+            and KEY_DEVICE_NAME in payloadData
         ):
-            self.__device_type = payloadData["devType"]
-            self.__device_desc = payloadData["devDesc"]
-            self.__name = payloadData["name"]
+            self.__device_type = payloadData[KEY_DEVICE_TYPE]
+            self.__device_desc = payloadData[KEY_DEVICE_DESCRIPTION]
+            self.__name = payloadData[KEY_DEVICE_NAME]
         else:
             _LOGGER.error(
                 "Incomplete MQTT discovery payload on %s: %s",
