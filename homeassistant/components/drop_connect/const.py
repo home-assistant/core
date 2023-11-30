@@ -2,7 +2,6 @@
 
 # Keys for values used in the config_entry data dictionary
 CONF_COMMAND_TOPIC = "drop_command_topic"
-CONF_COORDINATOR = "drop_coordinator"
 CONF_DATA_TOPIC = "drop_data_topic"
 CONF_DEVICE_DESC = "device_desc"
 CONF_DEVICE_ID = "device_id"

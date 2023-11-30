@@ -8,13 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_COORDINATOR,
-    CONF_DATA_TOPIC,
-    CONF_DEVICE_TYPE,
-    CONF_UNIQUE_ID,
-    DOMAIN,
-)
+from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, CONF_UNIQUE_ID, DOMAIN
 from .coordinator import DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,17 +24,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("MQTT integration is not available")
         return False
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {}
-    hass.data[DOMAIN][config_entry.entry_id][
-        CONF_COORDINATOR
+    hass.data.setdefault(DOMAIN, {})[
+        config_entry.entry_id
     ] = DROPDeviceDataUpdateCoordinator(hass, config_entry)
 
     # Thin wrapper used to pass MQTT messages to the data coordinator for this entry.
     async def message_received(msg):
         if config_entry.entry_id in hass.data[DOMAIN]:
-            await hass.data[DOMAIN][config_entry.entry_id][
-                CONF_COORDINATOR
-            ].DROPMessageReceived(msg.topic, msg.payload, msg.qos, msg.retain)
+            await hass.data[DOMAIN][config_entry.entry_id].DROPMessageReceived(
+                msg.topic, msg.payload, msg.qos, msg.retain
+            )
 
     # Subscribe to the incoming data topic defined by the config flow using the wrapper defined above.
     _LOGGER.debug(

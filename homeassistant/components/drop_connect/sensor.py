@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_COORDINATOR,
     CONF_DEVICE_TYPE,
     DEV_FILTER,
     DEV_HUB,
@@ -193,7 +192,7 @@ async def async_setup_entry(
 
     coordinator: DROPDeviceDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
-    ][CONF_COORDINATOR]
+    ]
     device_type: str = config_entry.data[CONF_DEVICE_TYPE]
     entities: list[SensorEntity] = []
 
