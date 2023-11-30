@@ -7,12 +7,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import StookwijzerCoordinator
 
 
-class StookwijzerEntity(Entity):
+class StookwijzerEntity(CoordinatorEntity, Entity):
     """Base class for Stookwijzer entities."""
 
     _attr_attribution = "Data provided by atlasleefomgeving.nl"
@@ -27,7 +28,7 @@ class StookwijzerEntity(Entity):
         """Initialize a Stookwijzer device."""
 
         self.entity_description = description
-        super().__init__()
+        super().__init__(coordinator)
 
         self._coordinator = coordinator
         self._attr_unique_id = DOMAIN + description.key
