@@ -11,21 +11,20 @@ async def test_api_key_incorrect(hass: HomeAssistant, mock_aq_client_for_config_
     mock_aq_client_for_config_flow(hass)
     await hass.async_block_till_done()
 
-    # Start the flow
+    # Starting the flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Simulate user input with incorrect API key and a location id
+    # Simulating user input with incorrect API key and a location id
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "api_id": "wrong_api_key",  # Corrected field name
+            "api_id": "wrong_api_key",
             "location_id": "test_location",
         },
     )
 
     # Check the result
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    # Adjust the assertion to expect the step_id to be 'test_location'
     assert result["step_id"] == "test_location"
