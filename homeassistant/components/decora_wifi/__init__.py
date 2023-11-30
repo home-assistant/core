@@ -75,14 +75,14 @@ class DecoraWifiAsyncClient:
         self.session = session
         self.hass = hass
 
-    async def get_permissions(self):
+    async def get_permissions(self) -> list[Permission]:
         """Get all permissions for the provided session."""
         assert self.session.user
         return await self.hass.async_add_executor_job(
             self.session.user.get_residential_permissions
         )
 
-    async def get_residences(self, permissions: list[Permission]):
+    async def get_residences(self, permissions: list[Permission]) -> list[Residence]:
         """Get all residences for the provided permissions."""
         residences: list[Residence] = []
         for perm in permissions:
@@ -97,8 +97,9 @@ class DecoraWifiAsyncClient:
 
     async def get_iot_switches(self, residences: list[Residence]) -> list[IotSwitch]:
         """Get all the iot switches for the provided residences."""
-        return [
-            sw
-            for res in residences
-            for sw in (await self.hass.async_add_executor_job(res.get_iot_switches))
-        ]
+        return await self.hass.async_add_executor_job(
+            lambda: self._get_iot_switches(residences)
+        )
+
+    def _get_iot_switches(self, residences: list[Residence]) -> list[IotSwitch]:
+        return [sw for res in residences for sw in (res.get_iot_switches())]

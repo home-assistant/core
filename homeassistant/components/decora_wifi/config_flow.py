@@ -1,4 +1,4 @@
-"""Will write later."""
+"""Config flow for Decora Wifi integration."""
 
 import logging
 
@@ -100,7 +100,13 @@ async def async_validate_input(
 ) -> None:
     """Validate user input. Will throw if cannot authenticated with provided credentials."""
     session = DecoraWiFiSession()
-    user = await hass.async_add_executor_job(lambda: session.login(username, password))
+    try:
+        user = await hass.async_add_executor_job(
+            lambda: session.login(username, password)
+        )
+    # As of the current release of the decora wifi lib (1.4), all api errors raise a generic ValueError
+    except ValueError as err:
+        raise CannotConnect("request failed") from err
     if not user:
         raise InvalidAuth("invalid authentication")
 

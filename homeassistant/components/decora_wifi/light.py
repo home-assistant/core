@@ -19,6 +19,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,11 +62,13 @@ async def async_setup_entry(
         permissions = await asyncSession.get_permissions()
         residences = await asyncSession.get_residences(permissions)
         iot_switches = await asyncSession.get_iot_switches(residences)
-        async_add_entities([DecoraWifiLight(e) for e in iot_switches])
 
     # As of the current release of the decora wifi lib (1.4), all api errors raise a generic ValueError
-    except ValueError:
+    except ValueError as err:
         _LOGGER.error("Failed to communicate with myLeviton Service")
+        raise ConfigEntryNotReady from err
+
+    async_add_entities([DecoraWifiLight(e) for e in iot_switches])
 
 
 class DecoraWifiLight(LightEntity):
