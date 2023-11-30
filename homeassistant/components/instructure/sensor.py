@@ -254,13 +254,24 @@ async def async_setup_entry(
     """Set up Canvas sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    def update_entities(data_type: str, new_data: dict, curr_data: dict):
+    def remove_unavailable_entities(all_new_unique_id: [str]):
+        all_new_entity_id = []
+        registry = er.async_get(hass)
+        for id in all_new_unique_id:
+            all_new_entity_id.append(registry.async_get_entity_id(domain="sensor", platform=DOMAIN, unique_id=id))
+
+        canvas_sensors = {entity_id: entry for entity_id, entry in registry.entities.items() if entry.platform == 'instructure' and entity_id.split(".")[0]=="sensor"}
+        for entity_id, _ in canvas_sensors.items():
+            if entity_id not in all_new_entity_id:
+                registry.async_remove(entity_id)
+
+    def update_new_entities(data_type: str, new_data: dict, curr_data: dict):
         """Add or remove sensor entities based on new data"""
         current_ids = set(curr_data.keys())
         new_ids = set(new_data.keys())
 
         to_add = new_ids - current_ids
-        to_remove = current_ids - new_ids
+        #to_remove = current_ids - new_ids
 
         new_entities = []
 
@@ -274,16 +285,7 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(tuple(new_entities))
         
-        print(f"******** to_remove is {len(to_remove)}")
-        registry = er.async_get(hass)
-        for entity_id in to_remove:
-            #entity = hass.data[DOMAIN][entry.entry_id]["entities"][data_type][entity_id]
-            #print(f"***************** entity is {entity}")
-            #print(f"******** state is {hass.states.get(entity_id)}")
-            #print(f"********** available: {entity.available}")
-            #if entity.native_value == "unavailable" and entity.extra_state_attributes["restored"] == True:
-            registry.async_remove(entity_id)
-            print(f"*************{entity_id} is removed!")
 
-    coordinator.update_entities = update_entities
+    coordinator.update_new_entities = update_new_entities
+    coordinator.remove_unavailable_entities = remove_unavailable_entities
     await coordinator.async_refresh()

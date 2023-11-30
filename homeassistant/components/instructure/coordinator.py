@@ -33,15 +33,17 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
+            update_method = self.async_update_data,
             update_interval=timedelta(seconds=30),
         )
         self.config_entry = entry
         self.api = api
-        self.update_entities = None
+        self.update_new_entities = None
+        self.remove_unavailable_entities = None
         self.old_data = {}
         self.selected_courses = entry.options["courses"]
 
-    async def _async_update_data(self):
+    async def async_update_data(self):
         """Fetch data from API endpoint."""
         courses = self.selected_courses
         course_ids = courses.keys()
@@ -63,15 +65,20 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                     QUICK_LINKS_KEY: quick_links,
                 }
 
-                if self.update_entities:
+                if self.update_new_entities:
                     for data_type in new_data:
-                        self.update_entities(
+                        self.update_new_entities(
                             data_type,
                             new_data.get(data_type, {}),
                             self.old_data.get(data_type, {}),
                         )
-                    if self.old_data != new_data:
-                        self.old_data = new_data
+                    self.old_data = new_data
+                
+                if self.remove_unavailable_entities:
+                    all_new_id = []
+                    for data_type, data in new_data.items():
+                        all_new_id.extend(data.keys())
+                    self.remove_unavailable_entities(all_new_id)
 
                 return new_data
 
