@@ -131,6 +131,8 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        if code != str(self._api.device_pin):
+            return
         await self._api.set_zone_status(self._area.index, ALARM_ACTIONS["disable"])
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
