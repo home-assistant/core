@@ -19,13 +19,13 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
-    UnitOfPower,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
