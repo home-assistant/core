@@ -794,9 +794,6 @@ async def handle_execute_script(
             translation_placeholders=err.translation_placeholders,
         )
         return
-    except Exception as exc:  # pylint: disable=broad-except
-        connection.async_handle_exception(msg, exc)
-        return
     connection.send_result(
         msg["id"],
         {

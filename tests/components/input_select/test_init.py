@@ -740,7 +740,7 @@ async def test_update_duplicates(
     )
     resp = await client.receive_json()
     assert not resp["success"]
-    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["code"] == "home_assistant_error"
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     state = hass.states.get(input_entity_id)
@@ -812,7 +812,7 @@ async def test_ws_create_duplicates(
     )
     resp = await client.receive_json()
     assert not resp["success"]
-    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["code"] == "home_assistant_error"
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     assert not hass.states.get(input_entity_id)

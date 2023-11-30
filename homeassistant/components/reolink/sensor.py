@@ -21,31 +21,32 @@ from homeassistant.helpers.typing import StateType
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 
 
 @dataclass(kw_only=True)
-class ReolinkSensorEntityDescription(SensorEntityDescription):
+class ReolinkSensorEntityDescription(
+    SensorEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes sensor entities for a camera channel."""
 
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], int]
 
 
-@dataclass
-class ReolinkHostSensorEntityDescriptionMixin:
-    """Mixin values for Reolink host sensor entities."""
-
-    value: Callable[[Host], int | None]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkHostSensorEntityDescription(
-    SensorEntityDescription, ReolinkHostSensorEntityDescriptionMixin
+    SensorEntityDescription,
+    ReolinkHostEntityDescription,
 ):
     """A class that describes host sensor entities."""
 
-    supported: Callable[[Host], bool] = lambda api: True
+    value: Callable[[Host], int | None]
 
 
 SENSORS = (
@@ -110,12 +111,8 @@ class ReolinkSensorEntity(ReolinkChannelCoordinatorEntity, SensorEntity):
         entity_description: ReolinkSensorEntityDescription,
     ) -> None:
         """Initialize Reolink sensor."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -134,10 +131,8 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         entity_description: ReolinkHostSensorEntityDescription,
     ) -> None:
         """Initialize Reolink host sensor."""
-        super().__init__(reolink_data)
         self.entity_description = entity_description
-
-        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
+        super().__init__(reolink_data)
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
