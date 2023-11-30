@@ -38,7 +38,7 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
 
-    def __init__(self, config: ConfigEntry, speedtest_data: dict[str, Any]) -> None:
+    def __init__(self, entry_id: str, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
         self._speedtest_data = speedtest_data
         self._attr_unique_id = entry_id
