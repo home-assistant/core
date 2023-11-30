@@ -55,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.error("Failed to log out of myLeviton Service: %s", err)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
 
     return True
 
