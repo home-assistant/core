@@ -30,7 +30,7 @@ def scale_ranged_value_to_int_range(
 def scale_to_ranged_value(
     source_low_high_range: tuple[float, float],
     target_low_high_range: tuple[float, float],
-    value: int,
+    value: float,
 ) -> float:
     """Given a range of low and high values convert a single value to another range.
 

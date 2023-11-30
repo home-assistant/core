@@ -7,7 +7,7 @@ from typing import NamedTuple
 
 import attr
 
-from .scaling import scale_ranged_value_to_int_range, scale_to_ranged_value
+from .scaling import scale_to_ranged_value
 
 
 class RGBColor(NamedTuple):
@@ -760,12 +760,12 @@ def value_to_brightness(low_high_range: tuple[float, float], value: float) -> in
     will return:
 
     100: 255
-    50: 127
+    50: 128
     4: 10
 
     The value will be clamped between 1..255 to ensure valid value.
     """
     return min(
         255,
-        max(1, scale_ranged_value_to_int_range(low_high_range, (1, 255), value)),
+        max(1, round(scale_to_ranged_value(low_high_range, (1, 255), value))),
     )

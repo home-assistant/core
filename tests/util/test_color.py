@@ -614,8 +614,8 @@ async def test_brightness_to_ranged_value_large() -> None:
 async def test_ranged_value_to_brightness_small() -> None:
     """Test a small scale and convert a single value to a brightness."""
     scale = (1, 4)
-    assert color_util.value_to_brightness(scale, 1) == 63
-    assert color_util.value_to_brightness(scale, 2) == 127
+    assert color_util.value_to_brightness(scale, 1) == 64
+    assert color_util.value_to_brightness(scale, 2) == 128
     assert color_util.value_to_brightness(scale, 3) == 191
     assert color_util.value_to_brightness(scale, 4) == 255
 
@@ -623,7 +623,7 @@ async def test_ranged_value_to_brightness_small() -> None:
 
     assert color_util.value_to_brightness(scale, 1) == 42
     assert color_util.value_to_brightness(scale, 2) == 85
-    assert color_util.value_to_brightness(scale, 3) == 127
+    assert color_util.value_to_brightness(scale, 3) == 128
     assert color_util.value_to_brightness(scale, 4) == 170
     assert color_util.value_to_brightness(scale, 5) == 212
     assert color_util.value_to_brightness(scale, 6) == 255
@@ -650,7 +650,7 @@ async def test_ranged_value_to_brightness_starting_high() -> None:
     """Test a range that does not start with 1."""
     scale = (101, 255)
 
-    assert color_util.value_to_brightness(scale, 101) == 1
+    assert color_util.value_to_brightness(scale, 101) == 2
     assert color_util.value_to_brightness(scale, 139) == 64
     assert color_util.value_to_brightness(scale, 178) == 128
     assert color_util.value_to_brightness(scale, 217) == 192
@@ -661,7 +661,20 @@ async def test_ranged_value_to_brightness_starting_zero() -> None:
     """Test a range that starts with 0."""
     scale = (0, 3)
 
-    assert color_util.value_to_brightness(scale, 0) == 63
-    assert color_util.value_to_brightness(scale, 1) == 127
+    assert color_util.value_to_brightness(scale, 0) == 64
+    assert color_util.value_to_brightness(scale, 1) == 128
     assert color_util.value_to_brightness(scale, 2) == 191
     assert color_util.value_to_brightness(scale, 3) == 255
+
+
+async def test_brightness_to_254_range() -> None:
+    """Test brightness scaling to a 254 range and back."""
+    brightness_range = range(1, 256)
+    scale = (1, 254)
+
+    scaled_values = {
+        brightness: color_util.brightness_to_value(scale, brightness)
+        for brightness in brightness_range
+    }
+    for expected_brightness, value in scaled_values.items():
+        assert color_util.value_to_brightness(scale, value) == expected_brightness
