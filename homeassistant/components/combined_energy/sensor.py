@@ -468,7 +468,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
         identifier = (
-            f"install_{self.coordinator.api.installation_id}-device_{device.device_id}"
+            f"{self.coordinator.api.installation_id}_{device.device_id}"
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
