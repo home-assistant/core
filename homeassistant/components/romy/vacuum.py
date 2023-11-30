@@ -5,7 +5,7 @@ https://home-assistant.io/components/vacuum.romy/.
 """
 
 
-from typing import Any, Optional
+from typing import Any
 
 from romy import RomyRobot
 
@@ -72,10 +72,10 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
     """Representation of a ROMY vacuum cleaner robot."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = SUPPORT_ROMY_ROBOT
     _attr_fan_speed_list = FAN_SPEEDS
     _attr_icon = ICON
-    _attr_name: Optional[str] = None
 
     def __init__(
         self,
@@ -100,7 +100,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
         self._attr_battery_level = self.romy.battery_level
         self._attr_state = self.romy.status
-        self._attr_name = self.romy.name
 
         self._device_info[ATTR_NAME] = self.romy.name
         self._device_info[ATTR_SW_VERSION] = self.romy.firmware

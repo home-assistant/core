@@ -1,7 +1,7 @@
 """Config flow for ROMY integration."""
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 import romy
 import voluptuous as vol
@@ -54,6 +54,8 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             new_romy = await romy.create_romy(
                 user_input[CONF_HOST], user_input.get(CONF_PASSWORD, "")
             )
+
+            await self.async_set_unique_id(new_romy.unique_id)
 
             # get robots name in case none was provided
             if not user_input[CONF_NAME]:

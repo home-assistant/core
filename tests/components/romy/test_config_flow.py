@@ -1,6 +1,6 @@
 """Test the ROMY config flow."""
 from ipaddress import ip_address
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
@@ -9,11 +9,36 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 
-def _create_mocked_romy(is_initialized, is_unlocked, name="Nadine"):
-    mocked_romy = MagicMock()
+def _create_mocked_romy(
+    is_initialized,
+    is_unlocked,
+    name="Nadine",
+    unique_id="aicu-aicgsbksisfapcjqmqjq",
+    port=8080,
+    model="005:000:000:000:005",
+    firmware="CHRON-0.0.1-new-wifi-release-3.15.3175",
+):
+    mocked_romy = AsyncMock(MagicMock)
     type(mocked_romy).is_initialized = PropertyMock(return_value=is_initialized)
     type(mocked_romy).is_unlocked = PropertyMock(return_value=is_unlocked)
     type(mocked_romy).name = PropertyMock(return_value=name)
+    type(mocked_romy).unique_id = PropertyMock(return_value=unique_id)
+    type(mocked_romy).port = PropertyMock(return_value=port)
+    type(mocked_romy).model = PropertyMock(return_value=model)
+    type(mocked_romy).firmware = PropertyMock(return_value=firmware)
+
+    # Mock async methods
+    async def mock_set_name(new_name):
+        mocked_romy.name = PropertyMock(return_value=new_name)
+        return True, '{"success": true}'
+
+    type(mocked_romy).set_name = AsyncMock(side_effect=mock_set_name)
+
+    async def mock_async_update():
+        return
+
+    type(mocked_romy).async_update = AsyncMock(side_effect=mock_async_update)
+
     return mocked_romy
 
 
@@ -117,6 +142,7 @@ async def test_show_user_form_with_config_which_contains_password(
 
     assert "errors" not in result
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["context"]["unique_id"] == "aicu-aicgsbksisfapcjqmqjq"
 
 
 async def test_show_user_form_with_config_which_contains_wrong_host(
@@ -177,7 +203,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     hostname="aicu-aicgsbksisfapcjqmqjq.local",
     type="mock_type",
     name="myROMY",
-    properties={zeroconf.ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjq"},
+    properties={zeroconf.ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjqZERO"},
 )
 
 
