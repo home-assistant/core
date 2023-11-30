@@ -1137,8 +1137,7 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url
-        + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:

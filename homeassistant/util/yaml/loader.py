@@ -238,7 +238,7 @@ def _add_reference(  # type: ignore[no-untyped-def]
 
 
 def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
-    """Load another YAML file and embeds it using the !include tag.
+    """Load another YAML file and embed it using the !include tag.
 
     Example:
         device_tracker: !include device_tracker.yaml
@@ -340,7 +340,12 @@ def _handle_mapping_tag(
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 

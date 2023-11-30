@@ -27,23 +27,23 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import DiscovergyData, DiscovergyUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER
 
-PARALLEL_UPDATES = 1
+
+def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
+    """Get a value from a Reading and divide with scale it."""
+    if (value := reading.values.get(key)) is not None:
+        return value / scale
+    return None
 
 
-@dataclass
-class DiscovergyMixin:
-    """Mixin for alternative keys."""
+@dataclass(kw_only=True)
+class DiscovergySensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Discovergy sensor entity."""
 
     value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
-        default=lambda reading, key, scale: float(reading.values[key] / scale)
+        default=_get_and_scale
     )
     alternative_keys: list[str] = field(default_factory=lambda: [])
     scale: int = field(default_factory=lambda: 1000)
-
-
-@dataclass
-class DiscovergySensorEntityDescription(DiscovergyMixin, SensorEntityDescription):
-    """Define Sensor entity description class."""
 
 
 GAS_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
@@ -166,37 +166,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Discovergy sensors."""
     data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
-    meters: list[Meter] = data.meters  # always returns a list
 
     entities: list[DiscovergySensor] = []
-    for meter in meters:
-        sensors = None
-        if meter.measurement_type == "ELECTRICITY":
-            sensors = ELECTRICITY_SENSORS
-        elif meter.measurement_type == "GAS":
-            sensors = GAS_SENSORS
-
+    for meter in data.meters:
+        sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
         coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
 
-        if sensors is not None:
-            for description in sensors:
-                # check if this meter has this data, then add this sensor
-                for key in {description.key, *description.alternative_keys}:
-                    if key in coordinator.data.values:
-                        entities.append(
-                            DiscovergySensor(key, description, meter, coordinator)
-                        )
+        # select sensor descriptions based on meter type and combine with additional sensors
+        if meter.measurement_type == "ELECTRICITY":
+            sensors = ELECTRICITY_SENSORS + ADDITIONAL_SENSORS
+        elif meter.measurement_type == "GAS":
+            sensors = GAS_SENSORS + ADDITIONAL_SENSORS
 
-        for description in ADDITIONAL_SENSORS:
-            entities.append(
-                DiscovergySensor(description.key, description, meter, coordinator)
-            )
+        entities.extend(
+            DiscovergySensor(value_key, description, meter, coordinator)
+            for description in sensors
+            for value_key in {description.key, *description.alternative_keys}
+            if description.value_fn(coordinator.data, value_key, description.scale)
+        )
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEntity):
-    """Represents a discovergy smart meter sensor."""
+    """Represents a Discovergy smart meter sensor."""
 
     entity_description: DiscovergySensorEntityDescription
     data_key: str
