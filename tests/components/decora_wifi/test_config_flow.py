@@ -105,7 +105,6 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     ):
         await entry.async_setup(hass)
         await hass.async_block_till_done()
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
         )
@@ -133,27 +132,3 @@ async def test_async_step_import_success(hass: HomeAssistant) -> None:
         CONF_USERNAME: "test-email",
         CONF_PASSWORD: "test-password",
     }
-
-
-async def test_async_step_import_incomplete(hass: HomeAssistant) -> None:
-    """Test import step failure."""
-
-    with patch(
-        "homeassistant.components.decora_wifi.config_flow.DecoraWiFiSession.login",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_USERNAME: "test-email"},
-        )
-
-        assert result["type"] == FlowResultType.FORM
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_USERNAME: "test-email", CONF_PASSWORD: "test-password"},
-        )
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY

@@ -79,7 +79,7 @@ class DecoraWifiLight(LightEntity):
         self._switch = switch
         self._attr_unique_id = switch.serial
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, switch.serial)},
+            identifiers={(DOMAIN, self.unique_id)},
             name=switch.name,
             manufacturer=switch.manufacturer,
             model=switch.model,
