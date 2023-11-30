@@ -768,7 +768,6 @@ async def test_move_todo_item(
     integration_setup: Callable[[], Awaitable[bool]],
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
     hass_ws_client: WebSocketGenerator,
-    ws_req_id: Callable[[], int],
     mock_http_response: Any,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -785,7 +784,6 @@ async def test_move_todo_item(
 
     # Move to second in the list
     client = await hass_ws_client()
-    id = ws_req_id()
     data = {
         "id": id,
         "type": "todo/item/move",
@@ -793,9 +791,8 @@ async def test_move_todo_item(
         "uid": "some-task-id-3",
         "previous_uid": "some-task-id-1",
     }
-    await client.send_json(data)
+    await client.send_json_auto_id(data)
     resp = await client.receive_json()
-    assert resp.get("id") == id
     assert resp.get("success")
 
     assert len(mock_http_response.call_args_list) == 4
