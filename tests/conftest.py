@@ -383,7 +383,7 @@ def reset_hass_threading_local_object() -> Generator[None, None, None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def bcrypt_cost() -> Generator[None, None, None]:
     """Run with reduced rounds during tests, to speed up uses."""
     import bcrypt
@@ -1096,7 +1096,7 @@ async def mqtt_mock_entry(
         yield _setup_mqtt_entry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def mock_network() -> Generator[None, None, None]:
     """Mock network."""
     mock_adapter = Adapter(
@@ -1115,7 +1115,7 @@ def mock_network() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def mock_get_source_ip() -> Generator[None, None, None]:
     """Mock network util's async_get_source_ip."""
     with patch(
@@ -1544,7 +1544,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
     with patch(
