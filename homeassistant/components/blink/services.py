@@ -1,8 +1,6 @@
 """Services for the Blink integration."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -26,8 +24,6 @@ from .const import (
     SERVICE_SEND_PIN,
 )
 from .coordinator import BlinkUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {
@@ -68,18 +64,28 @@ def setup_services(hass: HomeAssistant) -> None:
                     if entry and entry.domain == DOMAIN:
                         device_entries.append(entry)
                 if not device_entries:
-                    raise HomeAssistantError(
-                        f"Device '{target}' is not a {DOMAIN} device"
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_device",
+                        translation_placeholders={"target": target, "domain": DOMAIN},
                     )
                 config_entries.extend(device_entries)
             else:
                 raise HomeAssistantError(
-                    f"Device '{target}' not found in device registry"
+                    translation_domain=DOMAIN,
+                    translation_key="device_not_found",
+                    translation_placeholders={"target": target},
                 )
+
         coordinators: list[BlinkUpdateCoordinator] = []
         for config_entry in config_entries:
             if config_entry.state != ConfigEntryState.LOADED:
-                raise HomeAssistantError(f"{config_entry.title} is not loaded")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_loaded",
+                    translation_placeholders={"target": config_entry.title},
+                )
+
             coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
         return coordinators
 
@@ -88,9 +94,10 @@ def setup_services(hass: HomeAssistant) -> None:
         camera_name = call.data[CONF_NAME]
         video_path = call.data[CONF_FILENAME]
         if not hass.config.is_allowed_path(video_path):
-            _LOGGER.error("Can't write %s, no access to path!", video_path)
             raise ServiceValidationError(
-                f"Can't write {video_path}, no access to path!"
+                translation_domain=DOMAIN,
+                translation_key="no_path",
+                translation_placeholders={"target": video_path},
             )
 
         for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
@@ -99,17 +106,21 @@ def setup_services(hass: HomeAssistant) -> None:
                 try:
                     await all_cameras[camera_name].video_to_file(video_path)
                 except OSError as err:
-                    _LOGGER.error("Can't write image to file: %s", err)
-                    raise ServiceValidationError("Can't write image to file") from err
+                    raise ServiceValidationError(
+                        str(err),
+                        translation_domain=DOMAIN,
+                        translation_key="cant_write",
+                    ) from err
 
     async def async_handle_save_recent_clips_service(call: ServiceCall) -> None:
         """Save multiple recent clips to output directory."""
         camera_name = call.data[CONF_NAME]
         clips_dir = call.data[CONF_FILE_PATH]
         if not hass.config.is_allowed_path(clips_dir):
-            _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
             raise ServiceValidationError(
-                f"Can't write to directory {clips_dir}, no access to path!"
+                translation_domain=DOMAIN,
+                translation_key="no_path",
+                translation_placeholders={"target": clips_dir},
             )
 
         for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
@@ -120,9 +131,10 @@ def setup_services(hass: HomeAssistant) -> None:
                         output_dir=clips_dir
                     )
                 except OSError as err:
-                    _LOGGER.error("Can't write recent clips to directory: %s", err)
                     raise ServiceValidationError(
-                        "Can't write recent clips to directory"
+                        str(err),
+                        translation_domain=DOMAIN,
+                        translation_key="cant_write",
                     ) from err
 
     async def send_pin(call: ServiceCall):
