@@ -219,6 +219,40 @@
   list([
   ])
 # ---
+# name: test_switch_state[Humidifier D301S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'd301s-humidifier',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'VeSync',
+      'model': 'LUH-D301S-WEU',
+      'name': 'Humidifier D301S',
+      'name_by_user': None,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Humidifier D301S][entities]
+  list([
+  ])
+# ---
 # name: test_switch_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({

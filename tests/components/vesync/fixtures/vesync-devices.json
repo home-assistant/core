@@ -25,6 +25,19 @@
         "subDeviceType": null
       },
       {
+        "cid": "d301s-humidifier",
+        "deviceType": "LUH-D301S-WEU",
+        "deviceName": "Humidifier D301S",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-555555555555",
+        "deviceImg": "https://image.vesync.com/defaultImages/deviceDefaultImages/wfon_ahm_luh-d301s-weu_eu_240.png",
+        "configModule": "WFON_AHM_LUH-D301S-WEU_EU",
+        "currentFirmVersion": null,
+        "subDeviceType": null
+      },
+      {
         "cid": "air-purifier",
         "deviceType": "LV-PUR131S",
         "deviceName": "Air Purifier 131s",
