@@ -1,6 +1,7 @@
 """Config flow for Decora Wifi integration."""
 
 import logging
+from typing import Any
 
 from decora_wifi import DecoraWiFiSession
 import voluptuous as vol
@@ -47,19 +48,11 @@ class DecoreWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-        if CONF_USERNAME not in import_data or CONF_PASSWORD not in import_data:
-            _LOGGER.error(
-                "Could not import config data from yaml. Required Fields not found "
-                "in decora_wifi config: %s, %s",
-                CONF_USERNAME,
-                CONF_PASSWORD,
-            )
-            # We don't have enough to auto-import, so skip to new setup
-            return await self.async_step_user(None)
-
         return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
         errors: dict[str, str] = {}
