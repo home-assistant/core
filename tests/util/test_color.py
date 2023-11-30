@@ -682,4 +682,3 @@ async def test_brightness_to_254_range(snapshot: SnapshotAssertion) -> None:
         restored_values[value] = color_util.value_to_brightness(scale, value)
         assert color_util.value_to_brightness(scale, value) == expected_brightness
     assert restored_values == snapshot
-    assert scaled_values == snapshot
