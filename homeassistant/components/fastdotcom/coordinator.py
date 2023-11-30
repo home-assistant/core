@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from fastdotcom import fast_com
 
@@ -11,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 
 
-class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator):
+class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Fast.com data API."""
 
     def __init__(self, hass: HomeAssistant) -> None:
