@@ -56,19 +56,11 @@ def _water_volume_native_value(raw_value: list[float], precision: int | None) ->
     return int(round(raw_value[-1], precision))
 
 
-@dataclass
-class CombinedEnergySensorEntityDescriptionMixin:
-    """A class that describes sensor entities."""
+@dataclass(kw_only = True)
+class CombinedEnergySensorEntityDescription(SensorEntityDescription):
+    """Class describing combined energy sensor entity."""
 
     native_value_fn: Callable[[Any, int | None], float | int]
-
-
-@dataclass
-class CombinedEnergySensorEntityDescription(
-    SensorEntityDescription,
-    CombinedEnergySensorEntityDescriptionMixin,
-):
-    """Class describing combined energy sensor entity."""
 
 
 # Common sensors for all consumer devices
