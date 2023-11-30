@@ -20,14 +20,14 @@ from .const import DOMAIN
 _T = TypeVar("_T")
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkChannelEntityDescription(EntityDescription):
     """A class that describes entities for a camera channel."""
 
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkHostEntityDescription(EntityDescription):
     """A class that describes host entities."""
 
