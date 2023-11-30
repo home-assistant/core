@@ -28,5 +28,6 @@ async def async_get_config_entry_diagnostics(
         "air_quality_index": client.lki,
         "windspeed_bft": client.windspeed_bft,
         "windspeed_ms": client.windspeed_ms,
-        "forecast": client.forecast,
+        "forecast_advice": client.forecast_advice,
+        "forecast_alert": client.forecast_alert,
     }
