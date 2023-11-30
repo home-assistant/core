@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-import math
 from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
@@ -592,10 +591,14 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._set_flash_and_transition(message, **kwargs)
 
         if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
-            message["brightness"] = math.ceil(
-                color_util.brightness_to_value(
-                    (1, self._config[CONF_BRIGHTNESS_SCALE]), kwargs[ATTR_BRIGHTNESS]
-                )
+            message["brightness"] = max(
+                1,
+                round(
+                    color_util.brightness_to_value(
+                        (1, self._config[CONF_BRIGHTNESS_SCALE]),
+                        kwargs[ATTR_BRIGHTNESS],
+                    )
+                ),
             )
 
             if self._optimistic:

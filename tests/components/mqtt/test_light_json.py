@@ -1481,7 +1481,7 @@ async def test_sending_scaled_white(
 
     await common.async_turn_on(hass, "light.test", brightness=128)
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", JsonValidator('{"state":"ON", "brightness":51}'), 0, False
+        "test_light_rgb/set", JsonValidator('{"state":"ON", "brightness":50}'), 0, False
     )
     mqtt_mock.async_publish.reset_mock()
 
