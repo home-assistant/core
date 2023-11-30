@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     session = DecoraWiFiSession()
-    user = await hass.async_add_executor_job(lambda: session.login(username, password))
+    user = await hass.async_add_executor_job(session.login, username, password)
     if not user:
         raise ConfigEntryError("could not authenticate")
 
@@ -77,9 +77,7 @@ class DecoraWifiAsyncClient:
 
     async def get_residences(self, permissions: list[Permission]) -> list[Residence]:
         """Get all residences for the provided permissions."""
-        return await self.hass.async_add_executor_job(
-            lambda: self._get_residences(permissions)
-        )
+        return await self.hass.async_add_executor_job(self._get_residences, permissions)
 
     def _get_residences(self, permissions: list[Permission]) -> list[Residence]:
         """Get all residences for the provided permissions."""
@@ -95,7 +93,7 @@ class DecoraWifiAsyncClient:
     async def get_iot_switches(self, residences: list[Residence]) -> list[IotSwitch]:
         """Get all the iot switches for the provided residences."""
         return await self.hass.async_add_executor_job(
-            lambda: self._get_iot_switches(residences)
+            self._get_iot_switches, residences
         )
 
     def _get_iot_switches(self, residences: list[Residence]) -> list[IotSwitch]:
