@@ -25,7 +25,7 @@ from .const import (
 _T = TypeVar("_T")
 
 
-class CombinedEnergyCoordinator(DataUpdateCoordinator[_T]):
+class _CombinedEnergyCoordinator(DataUpdateCoordinator[_T]):
     """Get and update the latest data."""
 
     def __init__(
@@ -55,7 +55,7 @@ class CombinedEnergyCoordinator(DataUpdateCoordinator[_T]):
         return self.data
 
 
-class CombinedEnergyLogSessionCoordinator(CombinedEnergyCoordinator[None]):
+class CombinedEnergyLogSessionCoordinator(_CombinedEnergyCoordinator[None]):
     """Triggers a log session refresh event keep readings data flowing.
 
     If this is not done periodically, the log session will expire and
@@ -78,7 +78,7 @@ class CombinedEnergyLogSessionCoordinator(CombinedEnergyCoordinator[None]):
 
 
 class CombinedEnergyReadingsCoordinator(
-    CombinedEnergyCoordinator[dict[int, DeviceReadings]]
+    _CombinedEnergyCoordinator[dict[int, DeviceReadings]]
 ):
     """Get and update the latest readings data."""
 
