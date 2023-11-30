@@ -128,7 +128,9 @@ class WirelessTagPlatform:
         self.api.start_monitoring(push_callback)
 
 
-def async_migrate_unique_id(hass: HomeAssistant, tag: SensorTag, domain: str, key: str):
+def async_migrate_unique_id(
+    hass: HomeAssistant, tag: SensorTag, domain: str, key: str
+) -> None:
     """Migrate old unique id to new one with use of tag's uuid."""
     registry = er.async_get(hass)
     new_unique_id = f"{tag.uuid}_{key}"

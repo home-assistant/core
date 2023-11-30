@@ -651,6 +651,9 @@ fivem-api==0.1.2
 # homeassistant.components.fjaraskupan
 fjaraskupan==2.2.0
 
+# homeassistant.components.flexit_bacnet
+flexit_bacnet==2.1.0
+
 # homeassistant.components.flipr
 flipr-api==1.5.0
 
@@ -801,7 +804,7 @@ hole==0.8.0
 holidays==0.36
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231129.1
+home-assistant-frontend==20231130.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.11.29
@@ -1623,7 +1626,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.5.4
 
 # homeassistant.components.matter
-python-matter-server==4.0.2
+python-matter-server==5.0.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
