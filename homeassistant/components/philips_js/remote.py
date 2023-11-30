@@ -13,13 +13,12 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
 
 
@@ -33,10 +32,10 @@ async def async_setup_entry(
     async_add_entities([PhilipsTVRemote(coordinator)])
 
 
-class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteEntity):
+class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
     """Device that sends commands."""
 
-    _attr_has_entity_name = True
+    _attr_translation_key = "remote"
 
     def __init__(
         self,
@@ -45,17 +44,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
         """Initialize the Philips TV."""
         super().__init__(coordinator)
         self._tv = coordinator.api
-        self._attr_name = "Remote"
         self._attr_unique_id = coordinator.unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, coordinator.unique_id),
-            },
-            manufacturer="Philips",
-            model=coordinator.system.get("model"),
-            name=coordinator.system["name"],
-            sw_version=coordinator.system.get("softwareversion"),
-        )
         self._turn_on = PluggableAction(self.async_write_ha_state)
 
     async def async_added_to_hass(self) -> None:

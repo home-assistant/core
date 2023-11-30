@@ -1,4 +1,5 @@
 """Test aiohttp request helper."""
+
 from aiohttp import web
 
 from homeassistant.util import aiohttp
@@ -12,10 +13,17 @@ async def test_request_json() -> None:
 
 
 async def test_request_text() -> None:
-    """Test a JSON request."""
+    """Test bytes in request."""
     request = aiohttp.MockRequest(b"hello", status=201, mock_source="test")
+    assert request.body_exists
     assert request.status == 201
     assert await request.text() == "hello"
+
+
+async def test_request_body_exists() -> None:
+    """Test body exists."""
+    request = aiohttp.MockRequest(b"", mock_source="test")
+    assert not request.body_exists
 
 
 async def test_request_post_query() -> None:
@@ -44,7 +52,7 @@ def test_serialize_body_str() -> None:
     assert aiohttp.serialize_response(response) == {
         "status": 201,
         "body": "Hello",
-        "headers": {"Content-Length": "5", "Content-Type": "text/plain; charset=utf-8"},
+        "headers": {"Content-Type": "text/plain; charset=utf-8"},
     }
 
 

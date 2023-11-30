@@ -1,5 +1,4 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=invalid-name
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -15,9 +14,12 @@ from homeassistant.components.recorder.db_schema import Statistics, StatisticsSh
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
@@ -215,9 +217,7 @@ async def test_statistics_during_period(
     }
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize("offset", (0, 1, 2))
 async def test_statistic_during_period(
     recorder_mock: Recorder,
@@ -304,6 +304,13 @@ async def test_statistic_during_period(
         StatisticsShortTerm,
     )
     await async_wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={"sensor.test"})
+    metadata_id = metadata["sensor.test"][0]
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Verify the import of the short term statistics
+    # also updates the run cache
+    assert run_cache.get_latest_ids({metadata_id}) is not None
 
     # No data for this period yet
     await client.send_json(
@@ -630,11 +637,29 @@ async def test_statistic_during_period(
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         * 1000,
     }
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+    start = imported_stats_5min[-1]["start"].timestamp()
+    end = start + (5 * 60)
+    assert stats == {
+        "sensor.test": [
+            {
+                "end": end,
+                "last_reset": None,
+                "start": start,
+                "state": None,
+                "sum": 38.0,
+            }
+        ]
+    }
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -797,9 +822,7 @@ async def test_statistic_during_period_hole(
     }
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     (
@@ -2204,9 +2227,7 @@ async def test_recorder_info_migration_queue_exhausted(
     ), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
-    ), patch.object(
-        recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1
-    ), patch.object(
+    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
         recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",

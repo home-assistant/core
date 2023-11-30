@@ -387,8 +387,12 @@ class ONVIFDevice:
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
+            # Even if the camera claims it does not support PullPoint, try anyway
+            # since at least some AXIS and Bosch models do. The reverse is also
+            # true where some cameras claim they support PullPoint but don't so
+            # the only way to know is to try.
             return await self.events.async_start(
-                pull_point_support is not False,
+                True,
                 self.config_entry.options.get(
                     CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                 ),

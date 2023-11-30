@@ -1,8 +1,6 @@
 """Provides the constants needed for component."""
 
-from enum import IntFlag
-
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
 
 
 class HVACMode(StrEnum):

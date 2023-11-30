@@ -74,5 +74,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "name": "[%key:component::shopping_list::title%]"
+      }
+    }
   }
 }

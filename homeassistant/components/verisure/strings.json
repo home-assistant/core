@@ -48,13 +48,9 @@
     "step": {
       "init": {
         "data": {
-          "lock_code_digits": "Number of digits in PIN code for locks",
-          "lock_default_code": "Default PIN code for locks, used if none is given"
+          "lock_code_digits": "Number of digits in PIN code for locks"
         }
       }
-    },
-    "error": {
-      "code_format_mismatch": "The default PIN code does not match the required number of digits"
     }
   },
   "entity": {

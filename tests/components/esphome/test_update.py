@@ -4,24 +4,12 @@ from collections.abc import Awaitable, Callable
 import dataclasses
 from unittest.mock import Mock, patch
 
-from aioesphomeapi import (
-    APIClient,
-    EntityInfo,
-    EntityState,
-    UserService,
-)
+from aioesphomeapi import APIClient, EntityInfo, EntityState, UserService
 import pytest
 
-from homeassistant.components.esphome.dashboard import (
-    async_get_dashboard,
-)
+from homeassistant.components.esphome.dashboard import async_get_dashboard
 from homeassistant.components.update import UpdateEntityFeature
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -112,7 +100,8 @@ async def test_update_entity(
     ) as mock_compile, patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
     ) as mock_upload, pytest.raises(
-        HomeAssistantError, match="compiling"
+        HomeAssistantError,
+        match="compiling",
     ):
         await hass.services.async_call(
             "update",
@@ -132,7 +121,8 @@ async def test_update_entity(
     ) as mock_compile, patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
     ) as mock_upload, pytest.raises(
-        HomeAssistantError, match="OTA"
+        HomeAssistantError,
+        match="OTA",
     ):
         await hass.services.async_call(
             "update",

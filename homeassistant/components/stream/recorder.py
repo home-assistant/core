@@ -1,6 +1,7 @@
 """Provide functionality to record stream."""
 from __future__ import annotations
 
+from collections import deque
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import os
@@ -19,8 +20,6 @@ from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
 from .fmp4utils import read_init, transform_init
 
 if TYPE_CHECKING:
-    import deque
-
     from homeassistant.components.camera import DynamicStreamSettings
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +78,9 @@ class RecorderOutput(StreamOutput):
 
         def write_segment(segment: Segment) -> None:
             """Write a segment to output."""
+            # fmt: off
             nonlocal output, output_v, output_a, last_stream_id, running_duration, last_sequence
+            # fmt: on
             # Because the stream_worker is in a different thread from the record service,
             # the lookback segments may still have some overlap with the recorder segments
             if segment.sequence <= last_sequence:

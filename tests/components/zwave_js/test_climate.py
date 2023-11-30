@@ -40,6 +40,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .common import (
     CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
@@ -414,6 +415,77 @@ async def test_setpoint_thermostat(
     client.async_send_command_no_wait.reset_mock()
 
 
+async def test_thermostat_heatit_z_trm6(
+    hass: HomeAssistant, client, climate_heatit_z_trm6, integration
+) -> None:
+    """Test a heatit Z-TRM6 entity."""
+    node = climate_heatit_z_trm6
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+    ]
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_TEMPERATURE] == 19
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    assert state.attributes[ATTR_MIN_TEMP] == 5
+    assert state.attributes[ATTR_MAX_TEMP] == 40
+
+    # Try switching to external sensor (not connected so defaults to 0)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 101,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 4,
+                "prevValue": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
+
+    # Try switching to floor sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 101,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 0,
+                "prevValue": 4,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.9
+
+
 async def test_thermostat_heatit_z_trm3_no_value(
     hass: HomeAssistant, client, climate_heatit_z_trm3_no_value, integration
 ) -> None:
@@ -722,14 +794,16 @@ async def test_thermostat_dry_and_fan_both_hvac_mode_and_preset(
     ]
 
 
-async def test_thermostat_warning_when_setting_dry_preset(
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset(
     hass: HomeAssistant,
     client,
     climate_airzone_aidoo_control_hvac_unit,
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when setting Dry preset."""
+    """Test raise of repair issue and warning when setting Dry preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 
@@ -743,20 +817,28 @@ async def test_thermostat_warning_when_setting_dry_preset(
         blocking=True,
     )
 
+    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_registry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )
 
 
-async def test_thermostat_warning_when_setting_fan_preset(
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset(
     hass: HomeAssistant,
     client,
     climate_airzone_aidoo_control_hvac_unit,
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when setting Fan preset."""
+    """Test raise of repair issue and warning when setting Fan preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 
@@ -770,7 +852,14 @@ async def test_thermostat_warning_when_setting_fan_preset(
         blocking=True,
     )
 
+    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_registry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )

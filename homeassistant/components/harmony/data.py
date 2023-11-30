@@ -11,7 +11,7 @@ from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin

@@ -21,12 +21,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
@@ -118,6 +117,10 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
 class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
+    _attr_available = False
+    _attr_should_poll = False
+    _attr_state = MediaPlayerState.IDLE
+
     def __init__(self, plex_server, device, player_source, session=None):
         """Initialize the Plex device."""
         self.plex_server = plex_server
@@ -137,9 +140,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
 
-        self._attr_available = False
-        self._attr_should_poll = False
-        self._attr_state = MediaPlayerState.IDLE
         self._attr_unique_id = (
             f"{self.plex_server.machine_identifier}:{self.machine_identifier}"
         )

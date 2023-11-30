@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ness_alarm",
   "iot_class": "local_push",
   "loggers": ["nessclient"],
-  "requirements": ["nessclient==0.10.0"]
+  "requirements": ["nessclient==1.0.0"]
 }

@@ -14,13 +14,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import Coordinator, DeviceUnavailable
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0
 DISCONNECT_DELAY = 5

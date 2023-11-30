@@ -38,7 +38,7 @@ from tests.common import async_fire_time_changed
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -48,7 +48,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,
@@ -80,7 +80,6 @@ async def test_setup(hass: HomeAssistant) -> None:
             + len(hass.states.async_entity_ids("sensor"))
             == 4
         )
-        entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.title_1")
@@ -93,9 +92,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             ATTR_FRIENDLY_NAME: "Title 1",
             ATTR_LOCALITY: "Locality 1",
             ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_TIME: datetime.datetime(
-                2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
-            ),
+            ATTR_TIME: datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
             ATTR_MAGNITUDE: 5.7,
             ATTR_DEPTH: 10.5,
             ATTR_MMI: 5,

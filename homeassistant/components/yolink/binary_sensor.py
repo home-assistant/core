@@ -51,42 +51,35 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         key="door_state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
-        name="State",
         value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
-        name="Motion",
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MOTION_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="leak_state",
-        name="Leak",
-        icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_LEAK_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="vibration_state",
-        name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_VIBRATION_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="co_detected",
-        name="Co Detected",
         device_class=BinarySensorDeviceClass.CO,
         value=lambda state: state.get("gasAlarm"),
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="smoke_detected",
-        name="Smoke Detected",
         device_class=BinarySensorDeviceClass.SMOKE,
         value=lambda state: state.get("smokeAlarm"),
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -135,9 +128,6 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
         )
-        self._attr_name = (
-            f"{coordinator.device.device_name} ({self.entity_description.name})"
-        )
 
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
@@ -146,3 +136,8 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
             state.get(self.entity_description.state_key)
         )
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

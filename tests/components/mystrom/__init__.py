@@ -1,5 +1,5 @@
 """Tests for the myStrom integration."""
-from typing import Any, Optional
+from typing import Any
 
 
 def get_default_device_response(device_type: int | None) -> dict[str, Any]:
@@ -79,49 +79,49 @@ class MyStromBulbMock(MyStromDeviceMock):
         self.mac = mac
 
     @property
-    def firmware(self) -> Optional[str]:
+    def firmware(self) -> str | None:
         """Return current firmware."""
         if not self._requested_state:
             return None
         return self._state["fw_version"]
 
     @property
-    def consumption(self) -> Optional[float]:
+    def consumption(self) -> float | None:
         """Return current firmware."""
         if not self._requested_state:
             return None
         return self._state["power"]
 
     @property
-    def color(self) -> Optional[str]:
+    def color(self) -> str | None:
         """Return current color settings."""
         if not self._requested_state:
             return None
         return self._state["color"]
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         """Return current mode."""
         if not self._requested_state:
             return None
         return self._state["mode"]
 
     @property
-    def transition_time(self) -> Optional[int]:
+    def transition_time(self) -> int | None:
         """Return current transition time (ramp)."""
         if not self._requested_state:
             return None
         return self._state["ramp"]
 
     @property
-    def bulb_type(self) -> Optional[str]:
+    def bulb_type(self) -> str | None:
         """Return the type of the bulb."""
         if not self._requested_state:
             return None
         return self._state["type"]
 
     @property
-    def state(self) -> Optional[bool]:
+    def state(self) -> bool | None:
         """Return the current state of the bulb."""
         if not self._requested_state:
             return None
@@ -132,42 +132,42 @@ class MyStromSwitchMock(MyStromDeviceMock):
     """MyStrom Switch mock."""
 
     @property
-    def relay(self) -> Optional[bool]:
+    def relay(self) -> bool | None:
         """Return the relay state."""
         if not self._requested_state:
             return None
         return self._state["on"]
 
     @property
-    def consumption(self) -> Optional[float]:
+    def consumption(self) -> float | None:
         """Return the current power consumption in mWh."""
         if not self._requested_state:
             return None
         return self._state["power"]
 
     @property
-    def consumedWs(self) -> Optional[float]:
+    def consumedWs(self) -> float | None:
         """The average of energy consumed per second since last report call."""
         if not self._requested_state:
             return None
         return self._state["Ws"]
 
     @property
-    def firmware(self) -> Optional[str]:
+    def firmware(self) -> str | None:
         """Return the current firmware."""
         if not self._requested_state:
             return None
         return self._state["version"]
 
     @property
-    def mac(self) -> Optional[str]:
+    def mac(self) -> str | None:
         """Return the MAC address."""
         if not self._requested_state:
             return None
         return self._state["mac"]
 
     @property
-    def temperature(self) -> Optional[float]:
+    def temperature(self) -> float | None:
         """Return the current temperature in celsius."""
         if not self._requested_state:
             return None

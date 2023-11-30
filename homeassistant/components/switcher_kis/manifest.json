@@ -3,7 +3,7 @@
   "name": "Switcher",
   "codeowners": ["@thecode"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/switcher_kis/",
+  "documentation": "https://www.home-assistant.io/integrations/switcher_kis",
   "iot_class": "local_push",
   "loggers": ["aioswitcher"],
   "quality_scale": "platinum",

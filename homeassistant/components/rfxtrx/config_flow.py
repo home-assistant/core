@@ -8,7 +8,6 @@ import itertools
 import os
 from typing import Any, TypedDict, cast
 
-from async_timeout import timeout
 import RFXtrx as rfxtrxmod
 import serial
 import serial.tools.list_ports
@@ -374,7 +373,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish cleanup
         with suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
 
@@ -409,7 +408,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish renaming
         with suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
 
@@ -567,10 +566,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = {}
         for port in ports:
-            list_of_ports[
-                port.device
-            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
-                f" - {port.manufacturer}" if port.manufacturer else ""
+            list_of_ports[port.device] = (
+                f"{port}, s/n: {port.serial_number or 'n/a'}"
+                + (f" - {port.manufacturer}" if port.manufacturer else "")
             )
         list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 

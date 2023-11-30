@@ -53,7 +53,7 @@ async def test_device_remove_devices(
         is False
     )
 
-    entity = registry.entities["sensor.master_suite_relative_humidity"]
+    entity = registry.entities["sensor.master_suite_humidity"]
     live_thermostat_device_entry = device_registry.async_get(entity.device_id)
     assert (
         await remove_device(

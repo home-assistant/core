@@ -1,0 +1,3086 @@
+{
+  "success": true,
+  "error": null,
+  "result": {
+    "id": 2293892,
+    "name": "Master Suite",
+    "name_editable": true,
+    "features": [
+      {
+        "name": "advanced_info",
+        "items": [
+          {
+            "type": "label_value",
+            "label": "Model",
+            "value": "XL1050"
+          },
+          {
+            "type": "label_value",
+            "label": "AUID",
+            "value": "0281B02C"
+          },
+          {
+            "type": "label_value",
+            "label": "Firmware Build Number",
+            "value": "1581321824"
+          },
+          {
+            "type": "label_value",
+            "label": "Firmware Build Date",
+            "value": "2020-02-10 08:03:44 UTC"
+          },
+          {
+            "type": "label_value",
+            "label": "Firmware Version",
+            "value": "5.9.1"
+          },
+          {
+            "type": "label_value",
+            "label": "Zoning Enabled",
+            "value": "yes"
+          }
+        ]
+      },
+      {
+        "name": "thermostat",
+        "temperature": 73,
+        "status": "Cooling",
+        "status_icon": {
+          "name": "cooling",
+          "modifiers": []
+        },
+        "actions": {},
+        "setpoint_delta": 3,
+        "scale": "f",
+        "setpoint_increment": 1.0,
+        "setpoint_heat_min": 55,
+        "setpoint_heat_max": 90,
+        "setpoint_cool_min": 60,
+        "setpoint_cool_max": 99
+      },
+      {
+        "name": "connection",
+        "signal_strength": "unknown",
+        "is_connected": true
+      },
+      {
+        "name": "group",
+        "members": [
+          {
+            "type": "xxl_zone",
+            "id": 83394133,
+            "name": "Bath Closet",
+            "current_zone_mode": "AUTO",
+            "temperature": 73,
+            "setpoints": {
+              "heat": 63,
+              "cool": 79
+            },
+            "operating_state": "Relieving Air",
+            "heating_setpoint": 63,
+            "cooling_setpoint": 79,
+            "zone_status": "Relieving Air",
+            "settings": [
+              {
+                "type": "preset_selected",
+                "title": "Preset",
+                "current_value": 0,
+                "options": [
+                  {
+                    "value": 0,
+                    "label": "None"
+                  },
+                  {
+                    "value": 1,
+                    "label": "Home"
+                  },
+                  {
+                    "value": 2,
+                    "label": "Away"
+                  },
+                  {
+                    "value": 3,
+                    "label": "Sleep"
+                  }
+                ],
+                "labels": ["None", "Home", "Away", "Sleep"],
+                "values": [0, 1, 2, 3],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/preset_selected"
+                  }
+                }
+              },
+              {
+                "type": "zone_mode",
+                "title": "Zone Mode",
+                "current_value": "AUTO",
+                "options": [
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "labels": ["Auto", "Cooling", "Heating", "Off"],
+                "values": ["AUTO", "COOL", "HEAT", "OFF"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode"
+                  }
+                }
+              },
+              {
+                "type": "run_mode",
+                "title": "Run Mode",
+                "current_value": "permanent_hold",
+                "options": [
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "labels": ["Permanent Hold", "Run Schedule"],
+                "values": ["permanent_hold", "run_schedule"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode"
+                  }
+                }
+              },
+              {
+                "type": "scheduling_enabled",
+                "title": "Scheduling",
+                "current_value": true,
+                "options": [
+                  {
+                    "value": true,
+                    "label": "ON"
+                  },
+                  {
+                    "value": false,
+                    "label": "OFF"
+                  }
+                ],
+                "labels": ["ON", "OFF"],
+                "values": [true, false],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled"
+                  }
+                }
+              }
+            ],
+            "icon": {
+              "name": "thermostat",
+              "modifiers": ["temperature-73"]
+            },
+            "features": [
+              {
+                "name": "thermostat",
+                "temperature": 73,
+                "status": "Relieving Air",
+                "status_icon": {
+                  "name": "cooling",
+                  "modifiers": []
+                },
+                "actions": {
+                  "set_heat_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+                  },
+                  "set_cool_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+                  }
+                },
+                "setpoint_delta": 3,
+                "scale": "f",
+                "setpoint_increment": 1.0,
+                "setpoint_heat_min": 55,
+                "setpoint_heat_max": 90,
+                "setpoint_cool_min": 60,
+                "setpoint_cool_max": 99,
+                "setpoint_heat": 63,
+                "setpoint_cool": 79,
+                "system_status": "Cooling"
+              },
+              {
+                "name": "connection",
+                "signal_strength": "unknown",
+                "is_connected": true
+              },
+              {
+                "name": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "AUTO",
+                "display_value": "Auto",
+                "options": [
+                  {
+                    "id": "thermostat_mode",
+                    "label": "Zone Mode",
+                    "value": "thermostat_mode",
+                    "header": true
+                  },
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "actions": {
+                  "update_thermostat_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode"
+                  }
+                }
+              },
+              {
+                "name": "thermostat_run_mode",
+                "label": "Run Mode",
+                "options": [
+                  {
+                    "id": "thermostat_run_mode",
+                    "label": "Run Mode",
+                    "value": "thermostat_run_mode",
+                    "header": true
+                  },
+                  {
+                    "id": "info_text",
+                    "label": "Follow or override the schedule.",
+                    "value": "info_text",
+                    "info": true
+                  },
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "value": "permanent_hold",
+                "display_value": "Hold",
+                "actions": {
+                  "update_thermostat_run_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode"
+                  }
+                }
+              },
+              {
+                "name": "schedule",
+                "enabled": true,
+                "max_period_name_length": 10,
+                "setpoint_increment": 1,
+                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394133\u0026house_id=123456",
+                "actions": {
+                  "get_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394133",
+                    "method": "POST"
+                  },
+                  "set_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394133",
+                    "method": "POST"
+                  },
+                  "get_default_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394133",
+                    "method": "GET"
+                  },
+                  "enable_scheduling": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled",
+                    "method": "POST",
+                    "data": {
+                      "value": true
+                    }
+                  }
+                },
+                "can_add_remove_periods": true,
+                "max_periods_per_day": 4
+              }
+            ],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133"
+              }
+            }
+          },
+          {
+            "type": "xxl_zone",
+            "id": 83394130,
+            "name": "Master",
+            "current_zone_mode": "AUTO",
+            "temperature": 74,
+            "setpoints": {
+              "heat": 63,
+              "cool": 71
+            },
+            "operating_state": "Damper Open",
+            "heating_setpoint": 63,
+            "cooling_setpoint": 71,
+            "zone_status": "Damper Open",
+            "settings": [
+              {
+                "type": "preset_selected",
+                "title": "Preset",
+                "current_value": 0,
+                "options": [
+                  {
+                    "value": 0,
+                    "label": "None"
+                  },
+                  {
+                    "value": 1,
+                    "label": "Home"
+                  },
+                  {
+                    "value": 2,
+                    "label": "Away"
+                  },
+                  {
+                    "value": 3,
+                    "label": "Sleep"
+                  }
+                ],
+                "labels": ["None", "Home", "Away", "Sleep"],
+                "values": [0, 1, 2, 3],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/preset_selected"
+                  }
+                }
+              },
+              {
+                "type": "zone_mode",
+                "title": "Zone Mode",
+                "current_value": "AUTO",
+                "options": [
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "labels": ["Auto", "Cooling", "Heating", "Off"],
+                "values": ["AUTO", "COOL", "HEAT", "OFF"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode"
+                  }
+                }
+              },
+              {
+                "type": "run_mode",
+                "title": "Run Mode",
+                "current_value": "permanent_hold",
+                "options": [
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "labels": ["Permanent Hold", "Run Schedule"],
+                "values": ["permanent_hold", "run_schedule"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode"
+                  }
+                }
+              },
+              {
+                "type": "scheduling_enabled",
+                "title": "Scheduling",
+                "current_value": true,
+                "options": [
+                  {
+                    "value": true,
+                    "label": "ON"
+                  },
+                  {
+                    "value": false,
+                    "label": "OFF"
+                  }
+                ],
+                "labels": ["ON", "OFF"],
+                "values": [true, false],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled"
+                  }
+                }
+              }
+            ],
+            "icon": {
+              "name": "thermostat",
+              "modifiers": ["temperature-74"]
+            },
+            "features": [
+              {
+                "name": "thermostat",
+                "temperature": 74,
+                "status": "Damper Open",
+                "status_icon": {
+                  "name": "cooling",
+                  "modifiers": []
+                },
+                "actions": {
+                  "set_heat_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+                  },
+                  "set_cool_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+                  }
+                },
+                "setpoint_delta": 3,
+                "scale": "f",
+                "setpoint_increment": 1.0,
+                "setpoint_heat_min": 55,
+                "setpoint_heat_max": 90,
+                "setpoint_cool_min": 60,
+                "setpoint_cool_max": 99,
+                "setpoint_heat": 63,
+                "setpoint_cool": 71,
+                "system_status": "Cooling"
+              },
+              {
+                "name": "connection",
+                "signal_strength": "unknown",
+                "is_connected": true
+              },
+              {
+                "name": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "AUTO",
+                "display_value": "Auto",
+                "options": [
+                  {
+                    "id": "thermostat_mode",
+                    "label": "Zone Mode",
+                    "value": "thermostat_mode",
+                    "header": true
+                  },
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "actions": {
+                  "update_thermostat_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode"
+                  }
+                }
+              },
+              {
+                "name": "thermostat_run_mode",
+                "label": "Run Mode",
+                "options": [
+                  {
+                    "id": "thermostat_run_mode",
+                    "label": "Run Mode",
+                    "value": "thermostat_run_mode",
+                    "header": true
+                  },
+                  {
+                    "id": "info_text",
+                    "label": "Follow or override the schedule.",
+                    "value": "info_text",
+                    "info": true
+                  },
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "value": "permanent_hold",
+                "display_value": "Hold",
+                "actions": {
+                  "update_thermostat_run_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode"
+                  }
+                }
+              },
+              {
+                "name": "schedule",
+                "enabled": true,
+                "max_period_name_length": 10,
+                "setpoint_increment": 1,
+                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394130\u0026house_id=123456",
+                "actions": {
+                  "get_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394130",
+                    "method": "POST"
+                  },
+                  "set_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394130",
+                    "method": "POST"
+                  },
+                  "get_default_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394130",
+                    "method": "GET"
+                  },
+                  "enable_scheduling": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled",
+                    "method": "POST",
+                    "data": {
+                      "value": true
+                    }
+                  }
+                },
+                "can_add_remove_periods": true,
+                "max_periods_per_day": 4
+              }
+            ],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130"
+              }
+            }
+          },
+          {
+            "type": "xxl_zone",
+            "id": 83394136,
+            "name": "Nick Office",
+            "current_zone_mode": "AUTO",
+            "temperature": 73,
+            "setpoints": {
+              "heat": 63,
+              "cool": 79
+            },
+            "operating_state": "Relieving Air",
+            "heating_setpoint": 63,
+            "cooling_setpoint": 79,
+            "zone_status": "Relieving Air",
+            "settings": [
+              {
+                "type": "preset_selected",
+                "title": "Preset",
+                "current_value": 0,
+                "options": [
+                  {
+                    "value": 0,
+                    "label": "None"
+                  },
+                  {
+                    "value": 1,
+                    "label": "Home"
+                  },
+                  {
+                    "value": 2,
+                    "label": "Away"
+                  },
+                  {
+                    "value": 3,
+                    "label": "Sleep"
+                  }
+                ],
+                "labels": ["None", "Home", "Away", "Sleep"],
+                "values": [0, 1, 2, 3],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/preset_selected"
+                  }
+                }
+              },
+              {
+                "type": "zone_mode",
+                "title": "Zone Mode",
+                "current_value": "AUTO",
+                "options": [
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "labels": ["Auto", "Cooling", "Heating", "Off"],
+                "values": ["AUTO", "COOL", "HEAT", "OFF"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode"
+                  }
+                }
+              },
+              {
+                "type": "run_mode",
+                "title": "Run Mode",
+                "current_value": "permanent_hold",
+                "options": [
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "labels": ["Permanent Hold", "Run Schedule"],
+                "values": ["permanent_hold", "run_schedule"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode"
+                  }
+                }
+              },
+              {
+                "type": "scheduling_enabled",
+                "title": "Scheduling",
+                "current_value": true,
+                "options": [
+                  {
+                    "value": true,
+                    "label": "ON"
+                  },
+                  {
+                    "value": false,
+                    "label": "OFF"
+                  }
+                ],
+                "labels": ["ON", "OFF"],
+                "values": [true, false],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled"
+                  }
+                }
+              }
+            ],
+            "icon": {
+              "name": "thermostat",
+              "modifiers": ["temperature-73"]
+            },
+            "features": [
+              {
+                "name": "thermostat",
+                "temperature": 73,
+                "status": "Relieving Air",
+                "status_icon": {
+                  "name": "cooling",
+                  "modifiers": []
+                },
+                "actions": {
+                  "set_heat_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+                  },
+                  "set_cool_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+                  }
+                },
+                "setpoint_delta": 3,
+                "scale": "f",
+                "setpoint_increment": 1.0,
+                "setpoint_heat_min": 55,
+                "setpoint_heat_max": 90,
+                "setpoint_cool_min": 60,
+                "setpoint_cool_max": 99,
+                "setpoint_heat": 63,
+                "setpoint_cool": 79,
+                "system_status": "Cooling"
+              },
+              {
+                "name": "connection",
+                "signal_strength": "unknown",
+                "is_connected": true
+              },
+              {
+                "name": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "AUTO",
+                "display_value": "Auto",
+                "options": [
+                  {
+                    "id": "thermostat_mode",
+                    "label": "Zone Mode",
+                    "value": "thermostat_mode",
+                    "header": true
+                  },
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "actions": {
+                  "update_thermostat_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode"
+                  }
+                }
+              },
+              {
+                "name": "thermostat_run_mode",
+                "label": "Run Mode",
+                "options": [
+                  {
+                    "id": "thermostat_run_mode",
+                    "label": "Run Mode",
+                    "value": "thermostat_run_mode",
+                    "header": true
+                  },
+                  {
+                    "id": "info_text",
+                    "label": "Follow or override the schedule.",
+                    "value": "info_text",
+                    "info": true
+                  },
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "value": "permanent_hold",
+                "display_value": "Hold",
+                "actions": {
+                  "update_thermostat_run_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode"
+                  }
+                }
+              },
+              {
+                "name": "schedule",
+                "enabled": true,
+                "max_period_name_length": 10,
+                "setpoint_increment": 1,
+                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394136\u0026house_id=123456",
+                "actions": {
+                  "get_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394136",
+                    "method": "POST"
+                  },
+                  "set_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394136",
+                    "method": "POST"
+                  },
+                  "get_default_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394136",
+                    "method": "GET"
+                  },
+                  "enable_scheduling": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled",
+                    "method": "POST",
+                    "data": {
+                      "value": true
+                    }
+                  }
+                },
+                "can_add_remove_periods": true,
+                "max_periods_per_day": 4
+              }
+            ],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136"
+              }
+            }
+          },
+          {
+            "type": "xxl_zone",
+            "id": 83394127,
+            "name": "Snooze Room",
+            "current_zone_mode": "AUTO",
+            "temperature": 72,
+            "setpoints": {
+              "heat": 63,
+              "cool": 79
+            },
+            "operating_state": "Damper Closed",
+            "heating_setpoint": 63,
+            "cooling_setpoint": 79,
+            "zone_status": "Damper Closed",
+            "settings": [
+              {
+                "type": "preset_selected",
+                "title": "Preset",
+                "current_value": 0,
+                "options": [
+                  {
+                    "value": 0,
+                    "label": "None"
+                  },
+                  {
+                    "value": 1,
+                    "label": "Home"
+                  },
+                  {
+                    "value": 2,
+                    "label": "Away"
+                  },
+                  {
+                    "value": 3,
+                    "label": "Sleep"
+                  }
+                ],
+                "labels": ["None", "Home", "Away", "Sleep"],
+                "values": [0, 1, 2, 3],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/preset_selected"
+                  }
+                }
+              },
+              {
+                "type": "zone_mode",
+                "title": "Zone Mode",
+                "current_value": "AUTO",
+                "options": [
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "labels": ["Auto", "Cooling", "Heating", "Off"],
+                "values": ["AUTO", "COOL", "HEAT", "OFF"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode"
+                  }
+                }
+              },
+              {
+                "type": "run_mode",
+                "title": "Run Mode",
+                "current_value": "permanent_hold",
+                "options": [
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "labels": ["Permanent Hold", "Run Schedule"],
+                "values": ["permanent_hold", "run_schedule"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode"
+                  }
+                }
+              },
+              {
+                "type": "scheduling_enabled",
+                "title": "Scheduling",
+                "current_value": true,
+                "options": [
+                  {
+                    "value": true,
+                    "label": "ON"
+                  },
+                  {
+                    "value": false,
+                    "label": "OFF"
+                  }
+                ],
+                "labels": ["ON", "OFF"],
+                "values": [true, false],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled"
+                  }
+                }
+              }
+            ],
+            "icon": {
+              "name": "thermostat",
+              "modifiers": ["temperature-72"]
+            },
+            "features": [
+              {
+                "name": "thermostat",
+                "temperature": 72,
+                "status": "Damper Closed",
+                "status_icon": {
+                  "name": "cooling",
+                  "modifiers": []
+                },
+                "actions": {
+                  "set_heat_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+                  },
+                  "set_cool_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+                  }
+                },
+                "setpoint_delta": 3,
+                "scale": "f",
+                "setpoint_increment": 1.0,
+                "setpoint_heat_min": 55,
+                "setpoint_heat_max": 90,
+                "setpoint_cool_min": 60,
+                "setpoint_cool_max": 99,
+                "setpoint_heat": 63,
+                "setpoint_cool": 79,
+                "system_status": "Cooling"
+              },
+              {
+                "name": "connection",
+                "signal_strength": "unknown",
+                "is_connected": true
+              },
+              {
+                "name": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "AUTO",
+                "display_value": "Auto",
+                "options": [
+                  {
+                    "id": "thermostat_mode",
+                    "label": "Zone Mode",
+                    "value": "thermostat_mode",
+                    "header": true
+                  },
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "actions": {
+                  "update_thermostat_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode"
+                  }
+                }
+              },
+              {
+                "name": "thermostat_run_mode",
+                "label": "Run Mode",
+                "options": [
+                  {
+                    "id": "thermostat_run_mode",
+                    "label": "Run Mode",
+                    "value": "thermostat_run_mode",
+                    "header": true
+                  },
+                  {
+                    "id": "info_text",
+                    "label": "Follow or override the schedule.",
+                    "value": "info_text",
+                    "info": true
+                  },
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "value": "permanent_hold",
+                "display_value": "Hold",
+                "actions": {
+                  "update_thermostat_run_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode"
+                  }
+                }
+              },
+              {
+                "name": "schedule",
+                "enabled": true,
+                "max_period_name_length": 10,
+                "setpoint_increment": 1,
+                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394127\u0026house_id=123456",
+                "actions": {
+                  "get_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394127",
+                    "method": "POST"
+                  },
+                  "set_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394127",
+                    "method": "POST"
+                  },
+                  "get_default_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394127",
+                    "method": "GET"
+                  },
+                  "enable_scheduling": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled",
+                    "method": "POST",
+                    "data": {
+                      "value": true
+                    }
+                  }
+                },
+                "can_add_remove_periods": true,
+                "max_periods_per_day": 4
+              }
+            ],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127"
+              }
+            }
+          },
+          {
+            "type": "xxl_zone",
+            "id": 83394139,
+            "name": "Safe Room",
+            "current_zone_mode": "AUTO",
+            "temperature": 74,
+            "setpoints": {
+              "heat": 63,
+              "cool": 79
+            },
+            "operating_state": "Damper Closed",
+            "heating_setpoint": 63,
+            "cooling_setpoint": 79,
+            "zone_status": "Damper Closed",
+            "settings": [
+              {
+                "type": "preset_selected",
+                "title": "Preset",
+                "current_value": 0,
+                "options": [
+                  {
+                    "value": 0,
+                    "label": "None"
+                  },
+                  {
+                    "value": 1,
+                    "label": "Home"
+                  },
+                  {
+                    "value": 2,
+                    "label": "Away"
+                  },
+                  {
+                    "value": 3,
+                    "label": "Sleep"
+                  }
+                ],
+                "labels": ["None", "Home", "Away", "Sleep"],
+                "values": [0, 1, 2, 3],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/preset_selected"
+                  }
+                }
+              },
+              {
+                "type": "zone_mode",
+                "title": "Zone Mode",
+                "current_value": "AUTO",
+                "options": [
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "labels": ["Auto", "Cooling", "Heating", "Off"],
+                "values": ["AUTO", "COOL", "HEAT", "OFF"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode"
+                  }
+                }
+              },
+              {
+                "type": "run_mode",
+                "title": "Run Mode",
+                "current_value": "permanent_hold",
+                "options": [
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "labels": ["Permanent Hold", "Run Schedule"],
+                "values": ["permanent_hold", "run_schedule"],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode"
+                  }
+                }
+              },
+              {
+                "type": "scheduling_enabled",
+                "title": "Scheduling",
+                "current_value": true,
+                "options": [
+                  {
+                    "value": true,
+                    "label": "ON"
+                  },
+                  {
+                    "value": false,
+                    "label": "OFF"
+                  }
+                ],
+                "labels": ["ON", "OFF"],
+                "values": [true, false],
+                "_links": {
+                  "self": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled"
+                  }
+                }
+              }
+            ],
+            "icon": {
+              "name": "thermostat",
+              "modifiers": ["temperature-74"]
+            },
+            "features": [
+              {
+                "name": "thermostat",
+                "temperature": 74,
+                "status": "Damper Closed",
+                "status_icon": {
+                  "name": "cooling",
+                  "modifiers": []
+                },
+                "actions": {
+                  "set_heat_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+                  },
+                  "set_cool_setpoint": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+                  }
+                },
+                "setpoint_delta": 3,
+                "scale": "f",
+                "setpoint_increment": 1.0,
+                "setpoint_heat_min": 55,
+                "setpoint_heat_max": 90,
+                "setpoint_cool_min": 60,
+                "setpoint_cool_max": 99,
+                "setpoint_heat": 63,
+                "setpoint_cool": 79,
+                "system_status": "Cooling"
+              },
+              {
+                "name": "connection",
+                "signal_strength": "unknown",
+                "is_connected": true
+              },
+              {
+                "name": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "AUTO",
+                "display_value": "Auto",
+                "options": [
+                  {
+                    "id": "thermostat_mode",
+                    "label": "Zone Mode",
+                    "value": "thermostat_mode",
+                    "header": true
+                  },
+                  {
+                    "value": "AUTO",
+                    "label": "Auto"
+                  },
+                  {
+                    "value": "COOL",
+                    "label": "Cooling"
+                  },
+                  {
+                    "value": "HEAT",
+                    "label": "Heating"
+                  },
+                  {
+                    "value": "OFF",
+                    "label": "Off"
+                  }
+                ],
+                "actions": {
+                  "update_thermostat_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode"
+                  }
+                }
+              },
+              {
+                "name": "thermostat_run_mode",
+                "label": "Run Mode",
+                "options": [
+                  {
+                    "id": "thermostat_run_mode",
+                    "label": "Run Mode",
+                    "value": "thermostat_run_mode",
+                    "header": true
+                  },
+                  {
+                    "id": "info_text",
+                    "label": "Follow or override the schedule.",
+                    "value": "info_text",
+                    "info": true
+                  },
+                  {
+                    "value": "permanent_hold",
+                    "label": "Permanent Hold"
+                  },
+                  {
+                    "value": "run_schedule",
+                    "label": "Run Schedule"
+                  }
+                ],
+                "value": "permanent_hold",
+                "display_value": "Hold",
+                "actions": {
+                  "update_thermostat_run_mode": {
+                    "method": "POST",
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode"
+                  }
+                }
+              },
+              {
+                "name": "schedule",
+                "enabled": true,
+                "max_period_name_length": 10,
+                "setpoint_increment": 1,
+                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394139\u0026house_id=123456",
+                "actions": {
+                  "get_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394139",
+                    "method": "POST"
+                  },
+                  "set_active_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394139",
+                    "method": "POST"
+                  },
+                  "get_default_schedule": {
+                    "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394139",
+                    "method": "GET"
+                  },
+                  "enable_scheduling": {
+                    "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled",
+                    "method": "POST",
+                    "data": {
+                      "value": true
+                    }
+                  }
+                },
+                "can_add_remove_periods": true,
+                "max_periods_per_day": 4
+              }
+            ],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "thermostat_fan_mode",
+        "label": "Fan Mode",
+        "options": [
+          {
+            "id": "thermostat_fan_mode",
+            "label": "Fan Mode",
+            "value": "thermostat_fan_mode",
+            "header": true
+          },
+          {
+            "value": "auto",
+            "label": "Auto"
+          },
+          {
+            "value": "on",
+            "label": "On"
+          },
+          {
+            "value": "circulate",
+            "label": "Circulate"
+          }
+        ],
+        "value": "auto",
+        "display_value": "Auto",
+        "status_icon": {
+          "name": "thermostat_fan_on",
+          "modifiers": []
+        },
+        "actions": {
+          "update_thermostat_fan_mode": {
+            "method": "POST",
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_mode"
+          }
+        }
+      },
+      {
+        "name": "thermostat_compressor_speed",
+        "compressor_speed": 0.69
+      },
+      {
+        "name": "runtime_history",
+        "actions": {
+          "get_runtime_history": {
+            "method": "GET",
+            "href": "https://www.mynexia.com/mobile/runtime_history/2293892?report_type=daily"
+          },
+          "get_monthly_runtime_history": {
+            "method": "GET",
+            "href": "https://www.mynexia.com/mobile/runtime_history/2293892?report_type=monthly"
+          }
+        }
+      }
+    ],
+    "icon": [
+      {
+        "name": "thermostat",
+        "modifiers": ["temperature-73"]
+      },
+      {
+        "name": "thermostat",
+        "modifiers": ["temperature-74"]
+      },
+      {
+        "name": "thermostat",
+        "modifiers": ["temperature-73"]
+      },
+      {
+        "name": "thermostat",
+        "modifiers": ["temperature-72"]
+      },
+      {
+        "name": "thermostat",
+        "modifiers": ["temperature-74"]
+      }
+    ],
+    "_links": {
+      "self": {
+        "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892"
+      },
+      "nexia:history": {
+        "href": "https://www.mynexia.com/mobile/houses/123456/events?device_id=2293892"
+      },
+      "filter_events": {
+        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=e3fc90c7-2885-4f57-ae76-99e9ec81eef0"
+      },
+      "pending_request": {
+        "polling_path": "https://www.mynexia.com/backstage/announcements/967361e8aed874aa5230930fd0e0bbd8b653261e982a6e0e"
+      }
+    },
+    "last_updated_at": "2020-03-11T15:15:53.000-05:00",
+    "settings": [
+      {
+        "type": "fan_mode",
+        "title": "Fan Mode",
+        "current_value": "auto",
+        "options": [
+          {
+            "value": "auto",
+            "label": "Auto"
+          },
+          {
+            "value": "on",
+            "label": "On"
+          },
+          {
+            "value": "circulate",
+            "label": "Circulate"
+          }
+        ],
+        "labels": ["Auto", "On", "Circulate"],
+        "values": ["auto", "on", "circulate"],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_mode"
+          }
+        }
+      },
+      {
+        "type": "fan_speed",
+        "title": "Fan Speed",
+        "current_value": 0.5,
+        "options": [
+          {
+            "value": 0.35,
+            "label": "35%"
+          },
+          {
+            "value": 0.4,
+            "label": "40%"
+          },
+          {
+            "value": 0.45,
+            "label": "45%"
+          },
+          {
+            "value": 0.5,
+            "label": "50%"
+          },
+          {
+            "value": 0.55,
+            "label": "55%"
+          },
+          {
+            "value": 0.6,
+            "label": "60%"
+          },
+          {
+            "value": 0.65,
+            "label": "65%"
+          },
+          {
+            "value": 0.7,
+            "label": "70%"
+          },
+          {
+            "value": 0.75,
+            "label": "75%"
+          },
+          {
+            "value": 0.8,
+            "label": "80%"
+          },
+          {
+            "value": 0.85,
+            "label": "85%"
+          },
+          {
+            "value": 0.9,
+            "label": "90%"
+          },
+          {
+            "value": 0.95,
+            "label": "95%"
+          },
+          {
+            "value": 1.0,
+            "label": "100%"
+          }
+        ],
+        "labels": [
+          "35%",
+          "40%",
+          "45%",
+          "50%",
+          "55%",
+          "60%",
+          "65%",
+          "70%",
+          "75%",
+          "80%",
+          "85%",
+          "90%",
+          "95%",
+          "100%"
+        ],
+        "values": [
+          0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9,
+          0.95, 1.0
+        ],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_speed"
+          }
+        }
+      },
+      {
+        "type": "fan_circulation_time",
+        "title": "Fan Circulation Time",
+        "current_value": 30,
+        "options": [
+          {
+            "value": 10,
+            "label": "10 minutes"
+          },
+          {
+            "value": 15,
+            "label": "15 minutes"
+          },
+          {
+            "value": 20,
+            "label": "20 minutes"
+          },
+          {
+            "value": 25,
+            "label": "25 minutes"
+          },
+          {
+            "value": 30,
+            "label": "30 minutes"
+          },
+          {
+            "value": 35,
+            "label": "35 minutes"
+          },
+          {
+            "value": 40,
+            "label": "40 minutes"
+          },
+          {
+            "value": 45,
+            "label": "45 minutes"
+          },
+          {
+            "value": 50,
+            "label": "50 minutes"
+          },
+          {
+            "value": 55,
+            "label": "55 minutes"
+          }
+        ],
+        "labels": [
+          "10 minutes",
+          "15 minutes",
+          "20 minutes",
+          "25 minutes",
+          "30 minutes",
+          "35 minutes",
+          "40 minutes",
+          "45 minutes",
+          "50 minutes",
+          "55 minutes"
+        ],
+        "values": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_circulation_time"
+          }
+        }
+      },
+      {
+        "type": "air_cleaner_mode",
+        "title": "Air Cleaner Mode",
+        "current_value": "auto",
+        "options": [
+          {
+            "value": "auto",
+            "label": "Auto"
+          },
+          {
+            "value": "quick",
+            "label": "Quick"
+          },
+          {
+            "value": "allergy",
+            "label": "Allergy"
+          }
+        ],
+        "labels": ["Auto", "Quick", "Allergy"],
+        "values": ["auto", "quick", "allergy"],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/air_cleaner_mode"
+          }
+        }
+      },
+      {
+        "type": "dehumidify",
+        "title": "Cooling Dehumidify Set Point",
+        "current_value": 0.45,
+        "options": [
+          {
+            "value": 0.35,
+            "label": "35%"
+          },
+          {
+            "value": 0.4,
+            "label": "40%"
+          },
+          {
+            "value": 0.45,
+            "label": "45%"
+          },
+          {
+            "value": 0.5,
+            "label": "50%"
+          },
+          {
+            "value": 0.55,
+            "label": "55%"
+          },
+          {
+            "value": 0.6,
+            "label": "60%"
+          },
+          {
+            "value": 0.65,
+            "label": "65%"
+          }
+        ],
+        "labels": ["35%", "40%", "45%", "50%", "55%", "60%", "65%"],
+        "values": [0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/dehumidify"
+          }
+        }
+      },
+      {
+        "type": "scale",
+        "title": "Temperature Scale",
+        "current_value": "f",
+        "options": [
+          {
+            "value": "f",
+            "label": "F"
+          },
+          {
+            "value": "c",
+            "label": "C"
+          }
+        ],
+        "labels": ["F", "C"],
+        "values": ["f", "c"],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/scale"
+          }
+        }
+      }
+    ],
+    "status_secondary": null,
+    "status_tertiary": null,
+    "type": "xxl_thermostat",
+    "has_outdoor_temperature": true,
+    "outdoor_temperature": "87",
+    "has_indoor_humidity": true,
+    "connected": true,
+    "indoor_humidity": "52",
+    "system_status": "Cooling",
+    "delta": 3,
+    "zones": [
+      {
+        "type": "xxl_zone",
+        "id": 83394133,
+        "name": "Bath Closet",
+        "current_zone_mode": "AUTO",
+        "temperature": 73,
+        "setpoints": {
+          "heat": 63,
+          "cool": 79
+        },
+        "operating_state": "Relieving Air",
+        "heating_setpoint": 63,
+        "cooling_setpoint": 79,
+        "zone_status": "Relieving Air",
+        "settings": [
+          {
+            "type": "preset_selected",
+            "title": "Preset",
+            "current_value": 0,
+            "options": [
+              {
+                "value": 0,
+                "label": "None"
+              },
+              {
+                "value": 1,
+                "label": "Home"
+              },
+              {
+                "value": 2,
+                "label": "Away"
+              },
+              {
+                "value": 3,
+                "label": "Sleep"
+              }
+            ],
+            "labels": ["None", "Home", "Away", "Sleep"],
+            "values": [0, 1, 2, 3],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/preset_selected"
+              }
+            }
+          },
+          {
+            "type": "zone_mode",
+            "title": "Zone Mode",
+            "current_value": "AUTO",
+            "options": [
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "labels": ["Auto", "Cooling", "Heating", "Off"],
+            "values": ["AUTO", "COOL", "HEAT", "OFF"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode"
+              }
+            }
+          },
+          {
+            "type": "run_mode",
+            "title": "Run Mode",
+            "current_value": "permanent_hold",
+            "options": [
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "labels": ["Permanent Hold", "Run Schedule"],
+            "values": ["permanent_hold", "run_schedule"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode"
+              }
+            }
+          },
+          {
+            "type": "scheduling_enabled",
+            "title": "Scheduling",
+            "current_value": true,
+            "options": [
+              {
+                "value": true,
+                "label": "ON"
+              },
+              {
+                "value": false,
+                "label": "OFF"
+              }
+            ],
+            "labels": ["ON", "OFF"],
+            "values": [true, false],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled"
+              }
+            }
+          }
+        ],
+        "icon": {
+          "name": "thermostat",
+          "modifiers": ["temperature-73"]
+        },
+        "features": [
+          {
+            "name": "thermostat",
+            "temperature": 73,
+            "status": "Relieving Air",
+            "status_icon": {
+              "name": "cooling",
+              "modifiers": []
+            },
+            "actions": {
+              "set_heat_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+              },
+              "set_cool_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+              }
+            },
+            "setpoint_delta": 3,
+            "scale": "f",
+            "setpoint_increment": 1.0,
+            "setpoint_heat_min": 55,
+            "setpoint_heat_max": 90,
+            "setpoint_cool_min": 60,
+            "setpoint_cool_max": 99,
+            "setpoint_heat": 63,
+            "setpoint_cool": 79,
+            "system_status": "Cooling"
+          },
+          {
+            "name": "connection",
+            "signal_strength": "unknown",
+            "is_connected": true
+          },
+          {
+            "name": "thermostat_mode",
+            "label": "Zone Mode",
+            "value": "AUTO",
+            "display_value": "Auto",
+            "options": [
+              {
+                "id": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "thermostat_mode",
+                "header": true
+              },
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "actions": {
+              "update_thermostat_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode"
+              }
+            }
+          },
+          {
+            "name": "thermostat_run_mode",
+            "label": "Run Mode",
+            "options": [
+              {
+                "id": "thermostat_run_mode",
+                "label": "Run Mode",
+                "value": "thermostat_run_mode",
+                "header": true
+              },
+              {
+                "id": "info_text",
+                "label": "Follow or override the schedule.",
+                "value": "info_text",
+                "info": true
+              },
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "value": "permanent_hold",
+            "display_value": "Hold",
+            "actions": {
+              "update_thermostat_run_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode"
+              }
+            }
+          },
+          {
+            "name": "schedule",
+            "enabled": true,
+            "max_period_name_length": 10,
+            "setpoint_increment": 1,
+            "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394133\u0026house_id=123456",
+            "actions": {
+              "get_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394133",
+                "method": "POST"
+              },
+              "set_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394133",
+                "method": "POST"
+              },
+              "get_default_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394133",
+                "method": "GET"
+              },
+              "enable_scheduling": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled",
+                "method": "POST",
+                "data": {
+                  "value": true
+                }
+              }
+            },
+            "can_add_remove_periods": true,
+            "max_periods_per_day": 4
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_zones/83394133"
+          }
+        }
+      },
+      {
+        "type": "xxl_zone",
+        "id": 83394130,
+        "name": "Master",
+        "current_zone_mode": "AUTO",
+        "temperature": 74,
+        "setpoints": {
+          "heat": 63,
+          "cool": 71
+        },
+        "operating_state": "Damper Open",
+        "heating_setpoint": 63,
+        "cooling_setpoint": 71,
+        "zone_status": "Damper Open",
+        "settings": [
+          {
+            "type": "preset_selected",
+            "title": "Preset",
+            "current_value": 0,
+            "options": [
+              {
+                "value": 0,
+                "label": "None"
+              },
+              {
+                "value": 1,
+                "label": "Home"
+              },
+              {
+                "value": 2,
+                "label": "Away"
+              },
+              {
+                "value": 3,
+                "label": "Sleep"
+              }
+            ],
+            "labels": ["None", "Home", "Away", "Sleep"],
+            "values": [0, 1, 2, 3],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/preset_selected"
+              }
+            }
+          },
+          {
+            "type": "zone_mode",
+            "title": "Zone Mode",
+            "current_value": "AUTO",
+            "options": [
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "labels": ["Auto", "Cooling", "Heating", "Off"],
+            "values": ["AUTO", "COOL", "HEAT", "OFF"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode"
+              }
+            }
+          },
+          {
+            "type": "run_mode",
+            "title": "Run Mode",
+            "current_value": "permanent_hold",
+            "options": [
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "labels": ["Permanent Hold", "Run Schedule"],
+            "values": ["permanent_hold", "run_schedule"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode"
+              }
+            }
+          },
+          {
+            "type": "scheduling_enabled",
+            "title": "Scheduling",
+            "current_value": true,
+            "options": [
+              {
+                "value": true,
+                "label": "ON"
+              },
+              {
+                "value": false,
+                "label": "OFF"
+              }
+            ],
+            "labels": ["ON", "OFF"],
+            "values": [true, false],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled"
+              }
+            }
+          }
+        ],
+        "icon": {
+          "name": "thermostat",
+          "modifiers": ["temperature-74"]
+        },
+        "features": [
+          {
+            "name": "thermostat",
+            "temperature": 74,
+            "status": "Damper Open",
+            "status_icon": {
+              "name": "cooling",
+              "modifiers": []
+            },
+            "actions": {
+              "set_heat_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+              },
+              "set_cool_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+              }
+            },
+            "setpoint_delta": 3,
+            "scale": "f",
+            "setpoint_increment": 1.0,
+            "setpoint_heat_min": 55,
+            "setpoint_heat_max": 90,
+            "setpoint_cool_min": 60,
+            "setpoint_cool_max": 99,
+            "setpoint_heat": 63,
+            "setpoint_cool": 71,
+            "system_status": "Cooling"
+          },
+          {
+            "name": "connection",
+            "signal_strength": "unknown",
+            "is_connected": true
+          },
+          {
+            "name": "thermostat_mode",
+            "label": "Zone Mode",
+            "value": "AUTO",
+            "display_value": "Auto",
+            "options": [
+              {
+                "id": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "thermostat_mode",
+                "header": true
+              },
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "actions": {
+              "update_thermostat_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode"
+              }
+            }
+          },
+          {
+            "name": "thermostat_run_mode",
+            "label": "Run Mode",
+            "options": [
+              {
+                "id": "thermostat_run_mode",
+                "label": "Run Mode",
+                "value": "thermostat_run_mode",
+                "header": true
+              },
+              {
+                "id": "info_text",
+                "label": "Follow or override the schedule.",
+                "value": "info_text",
+                "info": true
+              },
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "value": "permanent_hold",
+            "display_value": "Hold",
+            "actions": {
+              "update_thermostat_run_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode"
+              }
+            }
+          },
+          {
+            "name": "schedule",
+            "enabled": true,
+            "max_period_name_length": 10,
+            "setpoint_increment": 1,
+            "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394130\u0026house_id=123456",
+            "actions": {
+              "get_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394130",
+                "method": "POST"
+              },
+              "set_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394130",
+                "method": "POST"
+              },
+              "get_default_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394130",
+                "method": "GET"
+              },
+              "enable_scheduling": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled",
+                "method": "POST",
+                "data": {
+                  "value": true
+                }
+              }
+            },
+            "can_add_remove_periods": true,
+            "max_periods_per_day": 4
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_zones/83394130"
+          }
+        }
+      },
+      {
+        "type": "xxl_zone",
+        "id": 83394136,
+        "name": "Nick Office",
+        "current_zone_mode": "AUTO",
+        "temperature": 73,
+        "setpoints": {
+          "heat": 63,
+          "cool": 79
+        },
+        "operating_state": "Relieving Air",
+        "heating_setpoint": 63,
+        "cooling_setpoint": 79,
+        "zone_status": "Relieving Air",
+        "settings": [
+          {
+            "type": "preset_selected",
+            "title": "Preset",
+            "current_value": 0,
+            "options": [
+              {
+                "value": 0,
+                "label": "None"
+              },
+              {
+                "value": 1,
+                "label": "Home"
+              },
+              {
+                "value": 2,
+                "label": "Away"
+              },
+              {
+                "value": 3,
+                "label": "Sleep"
+              }
+            ],
+            "labels": ["None", "Home", "Away", "Sleep"],
+            "values": [0, 1, 2, 3],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/preset_selected"
+              }
+            }
+          },
+          {
+            "type": "zone_mode",
+            "title": "Zone Mode",
+            "current_value": "AUTO",
+            "options": [
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "labels": ["Auto", "Cooling", "Heating", "Off"],
+            "values": ["AUTO", "COOL", "HEAT", "OFF"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode"
+              }
+            }
+          },
+          {
+            "type": "run_mode",
+            "title": "Run Mode",
+            "current_value": "permanent_hold",
+            "options": [
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "labels": ["Permanent Hold", "Run Schedule"],
+            "values": ["permanent_hold", "run_schedule"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode"
+              }
+            }
+          },
+          {
+            "type": "scheduling_enabled",
+            "title": "Scheduling",
+            "current_value": true,
+            "options": [
+              {
+                "value": true,
+                "label": "ON"
+              },
+              {
+                "value": false,
+                "label": "OFF"
+              }
+            ],
+            "labels": ["ON", "OFF"],
+            "values": [true, false],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled"
+              }
+            }
+          }
+        ],
+        "icon": {
+          "name": "thermostat",
+          "modifiers": ["temperature-73"]
+        },
+        "features": [
+          {
+            "name": "thermostat",
+            "temperature": 73,
+            "status": "Relieving Air",
+            "status_icon": {
+              "name": "cooling",
+              "modifiers": []
+            },
+            "actions": {
+              "set_heat_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+              },
+              "set_cool_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+              }
+            },
+            "setpoint_delta": 3,
+            "scale": "f",
+            "setpoint_increment": 1.0,
+            "setpoint_heat_min": 55,
+            "setpoint_heat_max": 90,
+            "setpoint_cool_min": 60,
+            "setpoint_cool_max": 99,
+            "setpoint_heat": 63,
+            "setpoint_cool": 79,
+            "system_status": "Cooling"
+          },
+          {
+            "name": "connection",
+            "signal_strength": "unknown",
+            "is_connected": true
+          },
+          {
+            "name": "thermostat_mode",
+            "label": "Zone Mode",
+            "value": "AUTO",
+            "display_value": "Auto",
+            "options": [
+              {
+                "id": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "thermostat_mode",
+                "header": true
+              },
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "actions": {
+              "update_thermostat_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode"
+              }
+            }
+          },
+          {
+            "name": "thermostat_run_mode",
+            "label": "Run Mode",
+            "options": [
+              {
+                "id": "thermostat_run_mode",
+                "label": "Run Mode",
+                "value": "thermostat_run_mode",
+                "header": true
+              },
+              {
+                "id": "info_text",
+                "label": "Follow or override the schedule.",
+                "value": "info_text",
+                "info": true
+              },
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "value": "permanent_hold",
+            "display_value": "Hold",
+            "actions": {
+              "update_thermostat_run_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode"
+              }
+            }
+          },
+          {
+            "name": "schedule",
+            "enabled": true,
+            "max_period_name_length": 10,
+            "setpoint_increment": 1,
+            "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394136\u0026house_id=123456",
+            "actions": {
+              "get_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394136",
+                "method": "POST"
+              },
+              "set_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394136",
+                "method": "POST"
+              },
+              "get_default_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394136",
+                "method": "GET"
+              },
+              "enable_scheduling": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled",
+                "method": "POST",
+                "data": {
+                  "value": true
+                }
+              }
+            },
+            "can_add_remove_periods": true,
+            "max_periods_per_day": 4
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_zones/83394136"
+          }
+        }
+      },
+      {
+        "type": "xxl_zone",
+        "id": 83394127,
+        "name": "Snooze Room",
+        "current_zone_mode": "AUTO",
+        "temperature": 72,
+        "setpoints": {
+          "heat": 63,
+          "cool": 79
+        },
+        "operating_state": "Damper Closed",
+        "heating_setpoint": 63,
+        "cooling_setpoint": 79,
+        "zone_status": "Damper Closed",
+        "settings": [
+          {
+            "type": "preset_selected",
+            "title": "Preset",
+            "current_value": 0,
+            "options": [
+              {
+                "value": 0,
+                "label": "None"
+              },
+              {
+                "value": 1,
+                "label": "Home"
+              },
+              {
+                "value": 2,
+                "label": "Away"
+              },
+              {
+                "value": 3,
+                "label": "Sleep"
+              }
+            ],
+            "labels": ["None", "Home", "Away", "Sleep"],
+            "values": [0, 1, 2, 3],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/preset_selected"
+              }
+            }
+          },
+          {
+            "type": "zone_mode",
+            "title": "Zone Mode",
+            "current_value": "AUTO",
+            "options": [
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "labels": ["Auto", "Cooling", "Heating", "Off"],
+            "values": ["AUTO", "COOL", "HEAT", "OFF"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode"
+              }
+            }
+          },
+          {
+            "type": "run_mode",
+            "title": "Run Mode",
+            "current_value": "permanent_hold",
+            "options": [
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "labels": ["Permanent Hold", "Run Schedule"],
+            "values": ["permanent_hold", "run_schedule"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode"
+              }
+            }
+          },
+          {
+            "type": "scheduling_enabled",
+            "title": "Scheduling",
+            "current_value": true,
+            "options": [
+              {
+                "value": true,
+                "label": "ON"
+              },
+              {
+                "value": false,
+                "label": "OFF"
+              }
+            ],
+            "labels": ["ON", "OFF"],
+            "values": [true, false],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled"
+              }
+            }
+          }
+        ],
+        "icon": {
+          "name": "thermostat",
+          "modifiers": ["temperature-72"]
+        },
+        "features": [
+          {
+            "name": "thermostat",
+            "temperature": 72,
+            "status": "Damper Closed",
+            "status_icon": {
+              "name": "cooling",
+              "modifiers": []
+            },
+            "actions": {
+              "set_heat_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+              },
+              "set_cool_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+              }
+            },
+            "setpoint_delta": 3,
+            "scale": "f",
+            "setpoint_increment": 1.0,
+            "setpoint_heat_min": 55,
+            "setpoint_heat_max": 90,
+            "setpoint_cool_min": 60,
+            "setpoint_cool_max": 99,
+            "setpoint_heat": 63,
+            "setpoint_cool": 79,
+            "system_status": "Cooling"
+          },
+          {
+            "name": "connection",
+            "signal_strength": "unknown",
+            "is_connected": true
+          },
+          {
+            "name": "thermostat_mode",
+            "label": "Zone Mode",
+            "value": "AUTO",
+            "display_value": "Auto",
+            "options": [
+              {
+                "id": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "thermostat_mode",
+                "header": true
+              },
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "actions": {
+              "update_thermostat_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode"
+              }
+            }
+          },
+          {
+            "name": "thermostat_run_mode",
+            "label": "Run Mode",
+            "options": [
+              {
+                "id": "thermostat_run_mode",
+                "label": "Run Mode",
+                "value": "thermostat_run_mode",
+                "header": true
+              },
+              {
+                "id": "info_text",
+                "label": "Follow or override the schedule.",
+                "value": "info_text",
+                "info": true
+              },
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "value": "permanent_hold",
+            "display_value": "Hold",
+            "actions": {
+              "update_thermostat_run_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode"
+              }
+            }
+          },
+          {
+            "name": "schedule",
+            "enabled": true,
+            "max_period_name_length": 10,
+            "setpoint_increment": 1,
+            "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394127\u0026house_id=123456",
+            "actions": {
+              "get_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394127",
+                "method": "POST"
+              },
+              "set_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394127",
+                "method": "POST"
+              },
+              "get_default_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394127",
+                "method": "GET"
+              },
+              "enable_scheduling": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled",
+                "method": "POST",
+                "data": {
+                  "value": true
+                }
+              }
+            },
+            "can_add_remove_periods": true,
+            "max_periods_per_day": 4
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_zones/83394127"
+          }
+        }
+      },
+      {
+        "type": "xxl_zone",
+        "id": 83394139,
+        "name": "Safe Room",
+        "current_zone_mode": "AUTO",
+        "temperature": 74,
+        "setpoints": {
+          "heat": 63,
+          "cool": 79
+        },
+        "operating_state": "Damper Closed",
+        "heating_setpoint": 63,
+        "cooling_setpoint": 79,
+        "zone_status": "Damper Closed",
+        "settings": [
+          {
+            "type": "preset_selected",
+            "title": "Preset",
+            "current_value": 0,
+            "options": [
+              {
+                "value": 0,
+                "label": "None"
+              },
+              {
+                "value": 1,
+                "label": "Home"
+              },
+              {
+                "value": 2,
+                "label": "Away"
+              },
+              {
+                "value": 3,
+                "label": "Sleep"
+              }
+            ],
+            "labels": ["None", "Home", "Away", "Sleep"],
+            "values": [0, 1, 2, 3],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/preset_selected"
+              }
+            }
+          },
+          {
+            "type": "zone_mode",
+            "title": "Zone Mode",
+            "current_value": "AUTO",
+            "options": [
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "labels": ["Auto", "Cooling", "Heating", "Off"],
+            "values": ["AUTO", "COOL", "HEAT", "OFF"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode"
+              }
+            }
+          },
+          {
+            "type": "run_mode",
+            "title": "Run Mode",
+            "current_value": "permanent_hold",
+            "options": [
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "labels": ["Permanent Hold", "Run Schedule"],
+            "values": ["permanent_hold", "run_schedule"],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode"
+              }
+            }
+          },
+          {
+            "type": "scheduling_enabled",
+            "title": "Scheduling",
+            "current_value": true,
+            "options": [
+              {
+                "value": true,
+                "label": "ON"
+              },
+              {
+                "value": false,
+                "label": "OFF"
+              }
+            ],
+            "labels": ["ON", "OFF"],
+            "values": [true, false],
+            "_links": {
+              "self": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled"
+              }
+            }
+          }
+        ],
+        "icon": {
+          "name": "thermostat",
+          "modifiers": ["temperature-74"]
+        },
+        "features": [
+          {
+            "name": "thermostat",
+            "temperature": 74,
+            "status": "Damper Closed",
+            "status_icon": {
+              "name": "cooling",
+              "modifiers": []
+            },
+            "actions": {
+              "set_heat_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+              },
+              "set_cool_setpoint": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+              }
+            },
+            "setpoint_delta": 3,
+            "scale": "f",
+            "setpoint_increment": 1.0,
+            "setpoint_heat_min": 55,
+            "setpoint_heat_max": 90,
+            "setpoint_cool_min": 60,
+            "setpoint_cool_max": 99,
+            "setpoint_heat": 63,
+            "setpoint_cool": 79,
+            "system_status": "Cooling"
+          },
+          {
+            "name": "connection",
+            "signal_strength": "unknown",
+            "is_connected": true
+          },
+          {
+            "name": "thermostat_mode",
+            "label": "Zone Mode",
+            "value": "AUTO",
+            "display_value": "Auto",
+            "options": [
+              {
+                "id": "thermostat_mode",
+                "label": "Zone Mode",
+                "value": "thermostat_mode",
+                "header": true
+              },
+              {
+                "value": "AUTO",
+                "label": "Auto"
+              },
+              {
+                "value": "COOL",
+                "label": "Cooling"
+              },
+              {
+                "value": "HEAT",
+                "label": "Heating"
+              },
+              {
+                "value": "OFF",
+                "label": "Off"
+              }
+            ],
+            "actions": {
+              "update_thermostat_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode"
+              }
+            }
+          },
+          {
+            "name": "thermostat_run_mode",
+            "label": "Run Mode",
+            "options": [
+              {
+                "id": "thermostat_run_mode",
+                "label": "Run Mode",
+                "value": "thermostat_run_mode",
+                "header": true
+              },
+              {
+                "id": "info_text",
+                "label": "Follow or override the schedule.",
+                "value": "info_text",
+                "info": true
+              },
+              {
+                "value": "permanent_hold",
+                "label": "Permanent Hold"
+              },
+              {
+                "value": "run_schedule",
+                "label": "Run Schedule"
+              }
+            ],
+            "value": "permanent_hold",
+            "display_value": "Hold",
+            "actions": {
+              "update_thermostat_run_mode": {
+                "method": "POST",
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode"
+              }
+            }
+          },
+          {
+            "name": "schedule",
+            "enabled": true,
+            "max_period_name_length": 10,
+            "setpoint_increment": 1,
+            "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394139\u0026house_id=123456",
+            "actions": {
+              "get_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394139",
+                "method": "POST"
+              },
+              "set_active_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394139",
+                "method": "POST"
+              },
+              "get_default_schedule": {
+                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394139",
+                "method": "GET"
+              },
+              "enable_scheduling": {
+                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled",
+                "method": "POST",
+                "data": {
+                  "value": true
+                }
+              }
+            },
+            "can_add_remove_periods": true,
+            "max_periods_per_day": 4
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://www.mynexia.com/mobile/xxl_zones/83394139"
+          }
+        }
+      }
+    ]
+  }
+}

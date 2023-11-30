@@ -46,6 +46,17 @@
         }
       }
     },
+    "event": {
+      "push": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "pressed": "Pressed"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "speed": {
         "state": {

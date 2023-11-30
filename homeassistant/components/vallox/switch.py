@@ -21,7 +21,6 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
 
     entity_description: ValloxSwitchEntityDescription
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -79,7 +78,7 @@ class ValloxSwitchEntityDescription(SwitchEntityDescription, ValloxMetricKeyMixi
 SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
     ValloxSwitchEntityDescription(
         key="bypass_locked",
-        name="Bypass locked",
+        translation_key="bypass_locked",
         icon="mdi:arrow-horizontal-lock",
         metric_key="A_CYC_BYPASS_LOCKED",
     ),

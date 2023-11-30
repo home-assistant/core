@@ -17,7 +17,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, is_cloud_connection
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import network
@@ -145,16 +145,21 @@ async def async_handle_webhook(
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
-        if TYPE_CHECKING:
-            assert isinstance(request, Request)
-            assert request.remote is not None
-        try:
-            remote = ip_address(request.remote)
-        except ValueError:
-            _LOGGER.debug("Unable to parse remote ip %s", request.remote)
-            return Response(status=HTTPStatus.OK)
+        is_local = not is_cloud_connection(hass)
+        if is_local:
+            if TYPE_CHECKING:
+                assert isinstance(request, Request)
+                assert request.remote is not None
 
-        if not network.is_local(remote):
+            try:
+                request_remote = ip_address(request.remote)
+            except ValueError:
+                _LOGGER.debug("Unable to parse remote ip %s", request.remote)
+                return Response(status=HTTPStatus.OK)
+
+            is_local = network.is_local(request_remote)
+
+        if not is_local:
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
             if webhook["local_only"]:
                 return Response(status=HTTPStatus.OK)

@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 from dataclasses import asdict as dataclass_asdict, dataclass
 from datetime import datetime
 from typing import Any
 import uuid
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
@@ -22,9 +22,7 @@ from homeassistant.components.recorder import (
     get_instance as get_recorder_instance,
 )
 import homeassistant.config as conf_util
-from homeassistant.config_entries import (
-    SOURCE_IGNORE,
-)
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -315,7 +313,7 @@ class Analytics:
             )
 
         try:
-            async with async_timeout.timeout(30):
+            async with timeout(30):
                 response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(

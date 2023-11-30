@@ -1,7 +1,6 @@
 """Configure update platform in a device through MQTT topic."""
 from __future__ import annotations
 
-import functools
 import logging
 from typing import Any, TypedDict, cast
 
@@ -19,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import subscription
@@ -33,9 +32,14 @@ from .const import (
     PAYLOAD_EMPTY_JSON,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +61,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
         vol.Optional(CONF_RELEASE_SUMMARY): cv.string,
         vol.Optional(CONF_RELEASE_URL): cv.string,
@@ -86,46 +90,24 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT update through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    """Set up MQTT update entity through YAML and through MQTT discovery."""
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttUpdate,
+        update.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, update.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT update."""
-    async_add_entities([MqttUpdate(hass, config, config_entry, discovery_data)])
 
 
 class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     """Representation of the MQTT update entity."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Initialize the MQTT update."""
-        self._config = config
-        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
-        self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
-        self._attr_release_url = self._config.get(CONF_RELEASE_URL)
-        self._attr_title = self._config.get(CONF_TITLE)
-        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
-
-        UpdateEntity.__init__(self)
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+    _entity_picture: str | None
 
     @property
     def entity_picture(self) -> str | None:
@@ -142,6 +124,11 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
+        self._attr_release_url = self._config.get(CONF_RELEASE_URL)
+        self._attr_title = self._config.get(CONF_TITLE)
+        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
         self._templates = {
             CONF_VALUE_TEMPLATE: MqttValueTemplate(
                 config.get(CONF_VALUE_TEMPLATE),
@@ -170,6 +157,17 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_installed_version",
+                "_attr_latest_version",
+                "_attr_title",
+                "_attr_release_summary",
+                "_attr_release_url",
+                "_entity_picture",
+            },
+        )
         def handle_state_message_received(msg: ReceiveMessage) -> None:
             """Handle receiving state message via MQTT."""
             payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
@@ -218,39 +216,33 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
             if "installed_version" in json_payload:
                 self._attr_installed_version = json_payload["installed_version"]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if "latest_version" in json_payload:
                 self._attr_latest_version = json_payload["latest_version"]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if "title" in json_payload:
                 self._attr_title = json_payload["title"]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if "release_summary" in json_payload:
                 self._attr_release_summary = json_payload["release_summary"]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if "release_url" in json_payload:
                 self._attr_release_url = json_payload["release_url"]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
             if "entity_picture" in json_payload:
                 self._entity_picture = json_payload["entity_picture"]
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_latest_version"})
         def handle_latest_version_received(msg: ReceiveMessage) -> None:
             """Handle receiving latest version via MQTT."""
             latest_version = self._templates[CONF_LATEST_VERSION_TEMPLATE](msg.payload)
 
             if isinstance(latest_version, str) and latest_version != "":
                 self._attr_latest_version = latest_version
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(
             topics, CONF_LATEST_VERSION_TOPIC, handle_latest_version_received
@@ -277,8 +269,6 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
         )
-
-        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
     def supported_features(self) -> UpdateEntityFeature:

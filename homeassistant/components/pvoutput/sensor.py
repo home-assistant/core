@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -28,18 +28,11 @@ from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PVOutputDataUpdateCoordinator
 
 
-@dataclass
-class PVOutputSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class PVOutputSensorEntityDescription(SensorEntityDescription):
+    """Describes a PVOutput sensor entity."""
 
     value_fn: Callable[[Status], int | float | None]
-
-
-@dataclass
-class PVOutputSensorEntityDescription(
-    SensorEntityDescription, PVOutputSensorEntityDescriptionMixin
-):
-    """Describes a PVOutput sensor entity."""
 
 
 SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (

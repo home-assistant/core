@@ -4,13 +4,8 @@ from __future__ import annotations
 import json
 import logging
 
-# pylint: disable-next=import-error, no-name-in-module
 from azure.servicebus import ServiceBusMessage
-
-# pylint: disable-next=import-error, no-name-in-module
 from azure.servicebus.aio import ServiceBusClient, ServiceBusSender
-
-# pylint: disable-next=import-error, no-name-in-module
 from azure.servicebus.exceptions import (
     MessagingEntityNotFoundError,
     ServiceBusConnectionError,

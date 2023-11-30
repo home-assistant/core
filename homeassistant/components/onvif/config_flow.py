@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
@@ -218,7 +219,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not configured:
                 self.devices.append(device)
 
-        LOGGER.debug("Discovered ONVIF devices %s", pformat(self.devices))
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("Discovered ONVIF devices %s", pformat(self.devices))
 
         if self.devices:
             devices = {CONF_MANUAL_INPUT: CONF_MANUAL_INPUT}
@@ -274,9 +276,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, configure_unique_id: bool = True
     ) -> tuple[dict[str, str], dict[str, str]]:
         """Fetch ONVIF device profiles."""
-        LOGGER.debug(
-            "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
-        )
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(
+                "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
+            )
 
         device = get_device(
             self.hass,

@@ -16,6 +16,34 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "filter_life": {
+        "name": "Filter lifetime"
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "energy_today": {
+        "name": "Energy use today"
+      },
+      "energy_week": {
+        "name": "Energy use weekly"
+      },
+      "energy_month": {
+        "name": "Energy use monthly"
+      },
+      "energy_year": {
+        "name": "Energy use yearly"
+      },
+      "current_voltage": {
+        "name": "Current voltage"
+      }
+    }
+  },
   "services": {
     "update_devices": {
       "name": "Update devices",

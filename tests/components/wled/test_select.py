@@ -2,6 +2,7 @@
 import json
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
@@ -17,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, load_fixture
 
@@ -125,6 +125,7 @@ async def test_color_palette_state(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_color_palette_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
@@ -137,7 +138,8 @@ async def test_color_palette_dynamically_handle_segments(
         json.loads(load_fixture("wled/rgb.json"))
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
@@ -149,7 +151,8 @@ async def test_color_palette_dynamically_handle_segments(
 
     # Test adding if segment shows up again, including the master entity
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
@@ -175,13 +178,15 @@ async def test_playlist_unavailable_without_playlists(hass: HomeAssistant) -> No
 @pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_old_style_preset_active(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test unknown preset returned (when old style/unknown) preset is active."""
     # Set device preset state to a random number
     mock_wled.update.return_value.state.preset = 99
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("select.wled_rgbw_light_preset"))
@@ -191,13 +196,15 @@ async def test_old_style_preset_active(
 @pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_old_style_playlist_active(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test when old style playlist cycle is active."""
     # Set device playlist to 0, which meant "cycle" previously.
     mock_wled.update.return_value.state.playlist = 0
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("select.wled_rgbw_light_playlist"))

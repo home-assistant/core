@@ -5,6 +5,9 @@
         "description": "Ensure that your TV is turned on before trying to set it up.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Sony Bravia TV to control."
         }
       },
       "authorize": {
@@ -47,9 +50,6 @@
   },
   "entity": {
     "button": {
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      },
       "terminate_apps": {
         "name": "Terminate apps"
       }

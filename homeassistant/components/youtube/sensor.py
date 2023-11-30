@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import StateType
 from . import YouTubeDataUpdateCoordinator
 from .const import (
     ATTR_LATEST_VIDEO,
+    ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
@@ -29,9 +30,10 @@ from .entity import YouTubeChannelEntity
 class YouTubeMixin:
     """Mixin for required keys."""
 
+    available_fn: Callable[[Any], bool]
     value_fn: Callable[[Any], StateType]
     entity_picture_fn: Callable[[Any], str | None]
-    attributes_fn: Callable[[Any], dict[str, Any]] | None
+    attributes_fn: Callable[[Any], dict[str, Any] | None] | None
 
 
 @dataclass
@@ -44,10 +46,12 @@ SENSOR_TYPES = [
         key="latest_upload",
         translation_key="latest_upload",
         icon="mdi:youtube",
+        available_fn=lambda channel: channel[ATTR_LATEST_VIDEO] is not None,
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
         entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
         attributes_fn=lambda channel: {
-            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID]
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO][ATTR_PUBLISHED_AT],
         },
     ),
     YouTubeSensorEntityDescription(
@@ -55,6 +59,7 @@ SENSOR_TYPES = [
         translation_key="subscribers",
         icon="mdi:youtube-subscription",
         native_unit_of_measurement="subscribers",
+        available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
@@ -82,6 +87,13 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     entity_description: YouTubeSensorEntityDescription
 
     @property
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data[self._channel_id]
+        )
+
+    @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
@@ -89,6 +101,8 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
+        if not self.available:
+            return None
         return self.entity_description.entity_picture_fn(
             self.coordinator.data[self._channel_id]
         )

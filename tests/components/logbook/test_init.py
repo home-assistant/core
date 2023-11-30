@@ -1,5 +1,4 @@
 """The tests for the logbook component."""
-# pylint: disable=invalid-name
 import asyncio
 import collections
 from collections.abc import Callable
@@ -494,9 +493,13 @@ async def test_logbook_describe_event(
         hass,
         "fake_integration.logbook",
         Mock(
-            async_describe_events=lambda hass, async_describe_event: async_describe_event(
-                "test_domain", "some_event", _describe
-            )
+            async_describe_events=(
+                lambda hass, async_describe_event: async_describe_event(
+                    "test_domain",
+                    "some_event",
+                    _describe,
+                )
+            ),
         ),
     )
 

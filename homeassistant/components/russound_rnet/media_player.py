@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 from russound import russound
 import voluptuous as vol
@@ -85,17 +86,25 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._attr_name = extra["name"]
         self._russ = russ
         self._attr_source_list = sources
-        self._zone_id = zone_id
+        # Each controller has a maximum of 6 zones, every increment of 6 zones
+        # maps to an additional controller for easier backward compatibility
+        self._controller_id = str(math.ceil(zone_id / 6))
+        # Each zone resets to 1-6 per controller
+        self._zone_id = (zone_id - 1) % 6 + 1
 
     def update(self) -> None:
         """Retrieve latest state."""
         # Updated this function to make a single call to get_zone_info, so that
         # with a single call we can get On/Off, Volume and Source, reducing the
         # amount of traffic and speeding up the update process.
-        ret = self._russ.get_zone_info("1", self._zone_id, 4)
+        ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
         _LOGGER.debug("ret= %s", ret)
         if ret is not None:
-            _LOGGER.debug("Updating status for zone %s", self._zone_id)
+            _LOGGER.debug(
+                "Updating status for RNET zone %s on controller %s",
+                self._zone_id,
+                self._controller_id,
+            )
             if ret[0] == 0:
                 self._attr_state = MediaPlayerState.OFF
             else:
@@ -118,23 +127,23 @@ class RussoundRNETDevice(MediaPlayerEntity):
         Translate this to a range of (0..100) as expected
         by _russ.set_volume()
         """
-        self._russ.set_volume("1", self._zone_id, volume * 100)
+        self._russ.set_volume(self._controller_id, self._zone_id, volume * 100)
 
     def turn_on(self) -> None:
         """Turn the media player on."""
-        self._russ.set_power("1", self._zone_id, "1")
+        self._russ.set_power(self._controller_id, self._zone_id, "1")
 
     def turn_off(self) -> None:
         """Turn off media player."""
-        self._russ.set_power("1", self._zone_id, "0")
+        self._russ.set_power(self._controller_id, self._zone_id, "0")
 
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._russ.toggle_mute("1", self._zone_id)
+        self._russ.toggle_mute(self._controller_id, self._zone_id)
 
     def select_source(self, source: str) -> None:
         """Set the input source."""
         if self.source_list and source in self.source_list:
             index = self.source_list.index(source)
             # 0 based value for source
-            self._russ.set_source("1", self._zone_id, index)
+            self._russ.set_source(self._controller_id, self._zone_id, index)

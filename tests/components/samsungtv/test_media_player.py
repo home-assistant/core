@@ -694,7 +694,7 @@ async def test_device_class(hass: HomeAssistant) -> None:
     """Test for device_class property."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV.value
+    assert state.attributes[ATTR_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
 
 
 @pytest.mark.usefixtures("rest_api")

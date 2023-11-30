@@ -16,6 +16,7 @@ from tests.common import MockConfigEntry
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
     "headline_filter": ".*corona.*",
+    "area_filter": ".*",
     "regions": {"083350000000": "Aach, Stadt"},
 }
 

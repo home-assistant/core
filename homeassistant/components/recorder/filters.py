@@ -187,8 +187,6 @@ class Filters:
         if self._included_domains or self._included_entity_globs:
             return or_(
                 i_entities,
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9190
-                # pylint: disable-next=invalid-unary-operand-type
                 (~e_entities & (i_entity_globs | (~e_entity_globs & i_domains))),
             ).self_group()
 
@@ -246,7 +244,8 @@ class Filters:
             ),
             # Needs https://github.com/bdraco/home-assistant/commit/bba91945006a46f3a01870008eb048e4f9cbb1ef
             self._generate_filter_for_columns(
-                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder  # type: ignore[arg-type]
+                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT),  # type: ignore[arg-type]
+                _encoder,
             ).self_group(),
         )
 

@@ -1,5 +1,6 @@
 """Configuration for Sonos tests."""
 from copy import copy
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -69,8 +70,8 @@ class SonosMockEvent:
 def zeroconf_payload():
     """Return a default zeroconf payload."""
     return zeroconf.ZeroconfServiceInfo(
-        host="192.168.4.2",
-        addresses=["192.168.4.2"],
+        ip_address=ip_address("192.168.4.2"),
+        ip_addresses=[ip_address("192.168.4.2")],
         hostname="Sonos-aaa",
         name="Sonos-aaa@Living Room._sonos._tcp.local.",
         port=None,
@@ -106,6 +107,9 @@ def config_entry_fixture():
 
 class MockSoCo(MagicMock):
     """Mock the Soco Object."""
+
+    audio_delay = 2
+    sub_gain = 5
 
     @property
     def visible_zones(self):
@@ -226,9 +230,9 @@ async def silent_ssdp_scanner(hass):
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
     ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
     ):
         yield
 

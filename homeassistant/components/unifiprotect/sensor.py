@@ -710,19 +710,27 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
 
     entity_description: ProtectSensorEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
-    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the native value and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_value = self._attr_native_value
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_native_value != previous_value
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()
 
 
 class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
@@ -730,19 +738,27 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
 
     entity_description: ProtectSensorEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: NVR,
-        description: ProtectSensorEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
-    @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the native value and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_value = self._attr_native_value
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_native_value != previous_value
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):
@@ -750,32 +766,22 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
     entity_description: ProtectSensorEventEntityDescription
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSensorEventEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
-
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
-        is_on = self.entity_description.get_is_on(device)
+        event = self._event
+        entity_description = self.entity_description
+        is_on = entity_description.get_is_on(event)
         is_license_plate = (
-            self.entity_description.ufp_event_obj == "last_license_plate_detect_event"
+            entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
         if (
             not is_on
-            or self._event is None
+            or event is None
             or (
                 is_license_plate
-                and (
-                    self._event.metadata is None
-                    or self._event.metadata.license_plate is None
-                )
+                and (event.metadata is None or event.metadata.license_plate is None)
             )
         ):
             self._attr_native_value = OBJECT_TYPE_NONE
@@ -785,6 +791,6 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
         if is_license_plate:
             # type verified above
-            self._attr_native_value = self._event.metadata.license_plate.name  # type: ignore[union-attr]
+            self._attr_native_value = event.metadata.license_plate.name  # type: ignore[union-attr]
         else:
-            self._attr_native_value = self._event.smart_detect_types[0].value
+            self._attr_native_value = event.smart_detect_types[0].value

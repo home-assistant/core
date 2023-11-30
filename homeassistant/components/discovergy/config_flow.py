@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import pydiscovergy
+from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 import voluptuous as vol
@@ -16,7 +16,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import APP_NAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,15 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         self.existing_entry = await self.async_set_unique_id(self.context["unique_id"])
 
-        if entry_data is None:
-            return self.async_show_form(
-                step_id="reauth",
-                data_schema=make_schema(
-                    self.existing_entry.data[CONF_EMAIL] or "",
-                    self.existing_entry.data[CONF_PASSWORD] or "",
-                ),
-            )
-
         return await self._validate_and_save(entry_data, step_id="reauth")
 
     async def _validate_and_save(
@@ -79,14 +70,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                await pydiscovergy.Discovergy(
+                await Discovergy(
                     email=user_input[CONF_EMAIL],
                     password=user_input[CONF_PASSWORD],
-                    app_name=APP_NAME,
                     httpx_client=get_async_client(self.hass),
                     authentication=BasicAuth(),
-                ).get_meters()
-            except discovergyError.HTTPError:
+                ).meters()
+            except (discovergyError.HTTPError, discovergyError.DiscovergyClientError):
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
