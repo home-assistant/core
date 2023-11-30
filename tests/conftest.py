@@ -1096,7 +1096,7 @@ async def mqtt_mock_entry(
         yield _setup_mqtt_entry
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def mock_network() -> Generator[None, None, None]:
     """Mock network."""
     mock_adapter = Adapter(
