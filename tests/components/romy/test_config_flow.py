@@ -9,10 +9,11 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 
-def _create_mocked_romy(is_initialized, is_unlocked):
+def _create_mocked_romy(is_initialized, is_unlocked, name="Nadine"):
     mocked_romy = MagicMock()
     type(mocked_romy).is_initialized = PropertyMock(return_value=is_initialized)
     type(mocked_romy).is_unlocked = PropertyMock(return_value=is_unlocked)
+    type(mocked_romy).name = PropertyMock(return_value=name)
     return mocked_romy
 
 
@@ -29,6 +30,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 
 
 CONFIG = {CONF_HOST: "1.2.3.4", CONF_NAME: "myROMY", CONF_PASSWORD: "12345678"}
+
 
 INPUT_CONFIG = {
     CONF_HOST: CONFIG[CONF_HOST],
@@ -52,6 +54,34 @@ async def test_show_user_form_with_config(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=INPUT_CONFIG,
+        )
+
+    assert "errors" not in result
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+INPUT_CONFIG_WITHOUT_NAME = {
+    CONF_HOST: CONFIG[CONF_HOST],
+    CONF_NAME: None,
+}
+
+
+async def test_show_user_form_with_config_without_name(hass: HomeAssistant) -> None:
+    """Test that the user set up form with config."""
+
+    mocked_romy = _create_mocked_romy(
+        is_initialized=True,
+        is_unlocked=True,
+    )
+
+    with patch(
+        "homeassistant.components.romy.config_flow.romy.create_romy",
+        return_value=mocked_romy,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=INPUT_CONFIG_WITHOUT_NAME,
         )
 
     assert "errors" not in result
