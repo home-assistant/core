@@ -7,7 +7,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.combined_energy.const import CONF_INSTALLATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -32,6 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "Combined Energy",
                 CONF_USERNAME: "user@example.com",
                 CONF_PASSWORD: "AbCDeF",
                 CONF_INSTALLATION_ID: 99999999,
@@ -81,6 +82,7 @@ async def test_form__where_api_returns_an_expected_error(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "Combined Energy",
                 CONF_USERNAME: "user@example.com",
                 CONF_PASSWORD: "AbCDeF",
                 CONF_INSTALLATION_ID: 99999999,
@@ -110,6 +112,7 @@ async def test_form__where_api_returns_an_unexpected_error(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "Combined Energy",
                 CONF_USERNAME: "user@example.com",
                 CONF_PASSWORD: "AbCDeF",
                 CONF_INSTALLATION_ID: 99999999,
@@ -156,6 +159,7 @@ async def test_form__where_installation_id_already_configured(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_NAME: "Combined Energy",
                 CONF_USERNAME: "user@example.com",
                 CONF_PASSWORD: "AbCDeF",
                 CONF_INSTALLATION_ID: 99999999,
