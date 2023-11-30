@@ -56,7 +56,7 @@ def _water_volume_native_value(raw_value: list[float], precision: int | None) ->
     return int(round(raw_value[-1], precision))
 
 
-@dataclass(kw_only = True)
+@dataclass(kw_only=True)
 class CombinedEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing combined energy sensor entity."""
 
@@ -454,7 +454,6 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
 
     entity_description: CombinedEnergySensorEntityDescription
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
