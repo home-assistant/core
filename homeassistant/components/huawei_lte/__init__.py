@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -50,6 +51,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -57,6 +59,8 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
+    BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
+    BUTTON_KEY_RESTART,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -86,7 +90,7 @@ from .const import (
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +131,7 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -302,10 +307,11 @@ class Router:
         """Log out router session."""
         try:
             self.client.user.logout()
-        except ResponseErrorNotSupportedException:
-            _LOGGER.debug("Logout not supported by device", exc_info=True)
-        except ResponseErrorLoginRequiredException:
-            _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
+        except (
+            ResponseErrorLoginRequiredException,
+            ResponseErrorNotSupportedException,
+        ):
+            pass  # Ok, normal, nothing to do
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
 
@@ -331,16 +337,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def _connect() -> Connection:
         """Set up a connection."""
+        kwargs: dict[str, Any] = {
+            "timeout": CONNECTION_TIMEOUT,
+        }
+        if url.startswith("https://") and not entry.data.get(CONF_VERIFY_SSL):
+            kwargs["requests_session"] = non_verifying_requests_session(url)
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
-            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
+            connection = Connection(url, **kwargs)
         else:
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = Connection(
-                url, username=username, password=password, timeout=CONNECTION_TIMEOUT
-            )
+            connection = Connection(url, username=username, password=password, **kwargs)
         return connection
 
     try:
@@ -524,12 +533,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            create_issue(
+                hass,
+                DOMAIN,
+                "service_clear_traffic_statistics_moved_to_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_changed_to_button",
+                translation_placeholders={
+                    "service": service.service,
+                    "button": BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
+                },
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            create_issue(
+                hass,
+                DOMAIN,
+                "service_reboot_moved_to_button",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_changed_to_button",
+                translation_placeholders={
+                    "service": service.service,
+                    "button": BUTTON_KEY_RESTART,
+                },
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return

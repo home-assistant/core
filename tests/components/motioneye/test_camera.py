@@ -135,10 +135,12 @@ async def test_setup_camera_new_data_same(hass: HomeAssistant) -> None:
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
 
 
-async def test_setup_camera_new_data_camera_removed(hass: HomeAssistant) -> None:
+async def test_setup_camera_new_data_camera_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a data refresh with a removed camera."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
@@ -315,12 +317,15 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     assert not entity_state.attributes.get("motion_detection")
 
 
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Verify device information includes expected details."""
     entry = await setup_mock_motioneye_config_entry(hass)
 
     device_identifier = get_motioneye_device_identifier(entry.entry_id, TEST_CAMERA_ID)
-    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device(identifiers={device_identifier})
     assert device
@@ -330,7 +335,6 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == MOTIONEYE_MANUFACTURER
     assert device.name == TEST_CAMERA_NAME
 
-    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

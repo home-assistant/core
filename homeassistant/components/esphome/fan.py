@@ -117,7 +117,8 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Return the current speed percentage."""
         if not self._supports_speed_levels:
             return ordered_list_item_to_percentage(
-                ORDERED_NAMED_FAN_SPEEDS, self._state.speed  # type: ignore[misc]
+                ORDERED_NAMED_FAN_SPEEDS,
+                self._state.speed,  # type: ignore[misc]
             )
 
         return ranged_value_to_percentage(
