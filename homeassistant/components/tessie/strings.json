@@ -41,8 +41,8 @@
       "charger_current": {
         "name": "Charger Current"
       },
-      "charger_rate": {
-        "name": "Charger Rate"
+      "charge_rate": {
+        "name": "Charge Rate"
       },
       "battery_range": {
         "name": "Battery Range"
