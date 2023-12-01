@@ -6,7 +6,7 @@ import logging
 from typing import Final
 import wave
 
-from wyoming.asr import Transcript
+from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.pipeline import PipelineStage, RunPipeline
@@ -134,7 +134,7 @@ class WyomingSatellite:
         if self.device.is_active:
             self.device.set_is_active(False)
 
-        while True:
+        while self.is_running and self.is_enabled:
             try:
                 await self._connect()
                 break
@@ -148,8 +148,8 @@ class WyomingSatellite:
         assert self._client is not None
         _LOGGER.debug("Connected to satellite")
 
-        if not self.is_running:
-            # Run was cancelled
+        if (not self.is_running) or (not self.is_enabled):
+            # Run was cancelled or satellite was disabled
             return
 
         # Tell satellite that we're ready
@@ -264,7 +264,15 @@ class WyomingSatellite:
             # Speech-to-text
             if not self.device.is_active:
                 self.device.set_is_active(True)
+
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        Transcribe(language=event.data["metadata"]["language"]).event()
+                    )
+                )
         elif event.type == assist_pipeline.PipelineEventType.STT_VAD_START:
+            # User started speaking
             if event.data:
                 self.hass.add_job(
                     self._client.write_event(
@@ -272,6 +280,7 @@ class WyomingSatellite:
                     )
                 )
         elif event.type == assist_pipeline.PipelineEventType.STT_VAD_END:
+            # User stopped speaking
             if event.data:
                 self.hass.add_job(
                     self._client.write_event(
@@ -295,8 +304,8 @@ class WyomingSatellite:
                         Synthesize(
                             text=event.data["tts_input"],
                             voice=SynthesizeVoice(
-                                name=event.data["voice"],
-                                language=event.data["language"],
+                                name=event.data.get("voice"),
+                                language=event.data.get("language"),
                             ),
                         ).event()
                     )

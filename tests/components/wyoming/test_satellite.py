@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+import io
 from unittest.mock import patch
+import wave
 
-from wyoming.audio import AudioChunk
+from wyoming.asr import Transcribe, Transcript
+from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import Event
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
+from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
@@ -19,6 +23,41 @@ from homeassistant.setup import async_setup_component
 from . import SATELLITE_INFO, MockAsyncTcpClient
 
 from tests.common import MockConfigEntry
+
+
+async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up config entry for Wyoming satellite.
+
+    This is separated from the satellite_config_entry method in conftest.py so
+    we can patch functions before the satellite task is run during setup.
+    """
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Satellite",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
+def get_test_wav() -> bytes:
+    """Get bytes for test WAV file."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(22050)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+
+            # Single frame
+            wav_file.writeframes(b"123")
+
+        return wav_io.getvalue()
 
 
 class SatelliteAsyncTcpClient(MockAsyncTcpClient):
@@ -35,13 +74,27 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.detection_event = asyncio.Event()
         self.detection: Detection | None = None
 
-        self.stt_vad_start_event = asyncio.Event()
+        self.transcribe_event = asyncio.Event()
+        self.transcribe: Transcribe | None = None
+
+        self.voice_started_event = asyncio.Event()
         self.voice_started: VoiceStarted | None = None
 
-        self.stt_vad_end_event = asyncio.Event()
+        self.voice_stopped_event = asyncio.Event()
         self.voice_stopped: VoiceStopped | None = None
 
-        self._audio_chunk = AudioChunk(
+        self.transcript_event = asyncio.Event()
+        self.transcript: Transcript | None = None
+
+        self.synthesize_event = asyncio.Event()
+        self.synthesize: Synthesize | None = None
+
+        self.tts_audio_start_event = asyncio.Event()
+        self.tts_audio_chunk_event = asyncio.Event()
+        self.tts_audio_stop_event = asyncio.Event()
+        self.tts_audio_chunk: AudioChunk | None = None
+
+        self._mic_audio_chunk = AudioChunk(
             rate=16000, width=2, channels=1, audio=b"chunk"
         ).event()
 
@@ -56,24 +109,40 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         elif Detect.is_type(event.type):
             self.detect_event.set()
         elif Detection.is_type(event.type):
-            self.detection_event.set()
             self.detection = Detection.from_event(event)
+            self.detection_event.set()
+        elif Transcribe.is_type(event.type):
+            self.transcribe = Transcribe.from_event(event)
+            self.transcribe_event.set()
         elif VoiceStarted.is_type(event.type):
-            self.stt_vad_start_event.set()
             self.voice_started = VoiceStarted.from_event(event)
+            self.voice_started_event.set()
         elif VoiceStopped.is_type(event.type):
-            self.stt_vad_end_event.set()
             self.voice_stopped = VoiceStopped.from_event(event)
+            self.voice_stopped_event.set()
+        elif Transcript.is_type(event.type):
+            self.transcript = Transcript.from_event(event)
+            self.transcript_event.set()
+        elif Synthesize.is_type(event.type):
+            self.synthesize = Synthesize.from_event(event)
+            self.synthesize_event.set()
+        elif AudioStart.is_type(event.type):
+            self.tts_audio_start_event.set()
+        elif AudioChunk.is_type(event.type):
+            self.tts_audio_chunk = AudioChunk.from_event(event)
+            self.tts_audio_chunk_event.set()
+        elif AudioStop.is_type(event.type):
+            self.tts_audio_stop_event.set()
 
     async def read_event(self) -> Event | None:
         """Receive."""
         event = await super().read_event()
 
-        # Keep sending audio chunks
-        return event or self._audio_chunk
+        # Keep sending audio chunks instead of None
+        return event or self._mic_audio_chunk
 
 
-async def test_satellite(hass: HomeAssistant) -> None:
+async def test_satellite_pipeline(hass: HomeAssistant) -> None:
     """Test running a pipeline with a satellite."""
     assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
 
@@ -91,20 +160,11 @@ async def test_satellite(hass: HomeAssistant) -> None:
         SatelliteAsyncTcpClient(events),
     ) as mock_client, patch(
         "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
-    ) as mock_run_pipeline:
-        entry = MockConfigEntry(
-            domain="wyoming",
-            data={
-                "host": "1.2.3.4",
-                "port": 1234,
-            },
-            title="Test Satellite",
-            unique_id="1234_test",
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
+    ) as mock_run_pipeline, patch(
+        "homeassistant.components.wyoming.satellite.tts.async_get_media_source_audio",
+        return_value=("wav", get_test_wav()),
+    ):
+        entry = await setup_config_entry(hass)
         satellite_devices: SatelliteDevices = hass.data[wyoming.DOMAIN][
             entry.entry_id
         ].satellite_devices
@@ -146,21 +206,92 @@ async def test_satellite(hass: HomeAssistant) -> None:
         # "Assist in progress" sensor should be active now
         assert device.is_active
 
-        # Speech to text started
+        # Speech-to-text started
         event_callback(
-            assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.STT_START)
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.STT_START,
+                {"metadata": {"language": "en"}},
+            )
         )
+        async with asyncio.timeout(1):
+            await mock_client.transcribe_event.wait()
 
+        assert mock_client.transcribe is not None
+        assert mock_client.transcribe.language == "en"
+
+        # User started speaking
         event_callback(
             assist_pipeline.PipelineEvent(
                 assist_pipeline.PipelineEventType.STT_VAD_START, {"timestamp": 1234}
             )
         )
         async with asyncio.timeout(1):
-            await mock_client.stt_vad_start_event.wait()
+            await mock_client.voice_started_event.wait()
 
         assert mock_client.voice_started is not None
         assert mock_client.voice_started.timestamp == 1234
+
+        # User stopped speaking
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.STT_VAD_END, {"timestamp": 5678}
+            )
+        )
+        async with asyncio.timeout(1):
+            await mock_client.voice_stopped_event.wait()
+
+        assert mock_client.voice_stopped is not None
+        assert mock_client.voice_stopped.timestamp == 5678
+
+        # Speech-to-text transcription
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.STT_END,
+                {"stt_output": {"text": "test transcript"}},
+            )
+        )
+        async with asyncio.timeout(1):
+            await mock_client.transcript_event.wait()
+
+        assert mock_client.transcript is not None
+        assert mock_client.transcript.text == "test transcript"
+
+        # Text-to-speech text
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_START,
+                {
+                    "tts_input": "test text to speak",
+                    "voice": "test voice",
+                },
+            )
+        )
+        async with asyncio.timeout(1):
+            await mock_client.synthesize_event.wait()
+
+        assert mock_client.synthesize is not None
+        assert mock_client.synthesize.text == "test text to speak"
+        assert mock_client.synthesize.voice is not None
+        assert mock_client.synthesize.voice.name == "test voice"
+
+        # Text-to-speech media
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_END,
+                {"tts_output": {"media_id": "test media id"}},
+            )
+        )
+        async with asyncio.timeout(1):
+            await mock_client.tts_audio_start_event.wait()
+            await mock_client.tts_audio_chunk_event.wait()
+            await mock_client.tts_audio_stop_event.wait()
+
+        # Verify audio chunk from test WAV
+        assert mock_client.tts_audio_chunk is not None
+        assert mock_client.tts_audio_chunk.rate == 22050
+        assert mock_client.tts_audio_chunk.width == 2
+        assert mock_client.tts_audio_chunk.channels == 1
+        assert mock_client.tts_audio_chunk.audio == b"123"
 
         # Pipeline finished
         event_callback(

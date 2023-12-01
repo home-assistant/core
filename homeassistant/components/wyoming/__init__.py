@@ -51,14 +51,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             name=satellite_info.name,
             suggested_area=satellite_info.area,
         )
-        wyoming_satellite = WyomingSatellite(hass, service, satellite_device)
+        item.satellite = WyomingSatellite(hass, service, satellite_device)
         entry.async_create_background_task(
             hass,
-            wyoming_satellite.run(),
+            item.satellite.run(),
             f"Satellite {satellite_info.name}",
         )
 
-        entry.async_on_unload(wyoming_satellite.stop)
+        entry.async_on_unload(item.satellite.stop)
 
     return True
 
