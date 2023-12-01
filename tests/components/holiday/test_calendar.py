@@ -159,3 +159,44 @@ async def test_default_language(
             ]
         }
     }
+
+
+async def test_no_language(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test language defaults to English if language not exist."""
+    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "AL"},
+        title="Albania",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.albania",
+            "end_date_time": dt_util.now(),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.albania": {
+            "events": [
+                {
+                    "start": "2023-01-01",
+                    "end": "2023-01-02",
+                    "summary": "New Year's Day",
+                    "location": "Albania",
+                }
+            ]
+        }
+    }

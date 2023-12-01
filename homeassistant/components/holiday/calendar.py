@@ -23,7 +23,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Holiday Calendar config entry."""
     country: str = config_entry.data[CONF_COUNTRY]
-    province: str | None = config_entry.data.get(CONF_PROVINCE)language = hass.config.language
+    province: str | None = config_entry.data.get(CONF_PROVINCE)
+    language = hass.config.language
 
     obj_holidays = country_holidays(
         country,
@@ -87,7 +88,7 @@ class HolidayCalendarEntity(CalendarEntity):
         self._obj_holidays = obj_holidays
 
     @property
-    def event(self) -> CalendarEvent:
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         next_holiday = None
         for holiday_date, holiday_name in sorted(
@@ -97,18 +98,6 @@ class HolidayCalendarEntity(CalendarEntity):
                 next_holiday = (holiday_date, holiday_name)
                 break
 
-        if next_holiday is None:
-            self._obj_holidays.update(
-                dict(
-                    country_holidays(
-                        self._country,
-                        subdiv=self._province,
-                        language=self._default_language,
-                        years=dt_util.now().year + 1,
-                    )
-                )
-            )
-
             for holiday_date, holiday_name in sorted(
                 self._obj_holidays.items(), key=lambda x: x[0]
             ):
@@ -116,7 +105,8 @@ class HolidayCalendarEntity(CalendarEntity):
                     next_holiday = (holiday_date, holiday_name)
                     break
 
-        assert next_holiday is not None
+        if next_holiday is None:
+            return None
 
         return CalendarEvent(
             summary=next_holiday[1],
@@ -129,13 +119,11 @@ class HolidayCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        obj_holidays = dict(
-            country_holidays(
-                self._country,
-                subdiv=self._province,
-                years=list({start_date.year, end_date.year}),
-                language=self._default_language,
-            )
+        obj_holidays = country_holidays(
+            self._country,
+            subdiv=self._province,
+            years=list({start_date.year, end_date.year}),
+            language=self._language,
         )
 
         event_list: list[CalendarEvent] = []

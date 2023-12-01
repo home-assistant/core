@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "Already configured. Only a single configuration for country/province combination possible."
     },
     "step": {
       "user": {

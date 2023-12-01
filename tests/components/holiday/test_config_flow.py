@@ -89,7 +89,7 @@ async def test_form_translated_title(hass: HomeAssistant) -> None:
     assert result2["title"] == "Schweden"
 
 
-async def test_single_instance(hass: HomeAssistant) -> None:
+async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     data_de = {
         CONF_COUNTRY: "DE",

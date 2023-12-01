@@ -1,7 +1,6 @@
 """Config flow for Holiday integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from babel import Locale
@@ -20,7 +19,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_PROVINCE, DOMAIN
-
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
