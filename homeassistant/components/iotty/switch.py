@@ -30,8 +30,10 @@ class IottyLightSwitch(SwitchEntity):
 
     def __init__(self, iotty: IottyProxy, iotty_device: LightSwitch) -> None:
         """Initialize the LightSwitch device."""
-        _LOGGER.debug(
-            "__init__ (%s) %s", iotty_device.device_type, iotty_device.device_id
+        _LOGGER.info(
+            "Creating new SWITCH (%s) %s",
+            iotty_device.device_type,
+            iotty_device.device_id,
         )
 
         super().__init__()
@@ -51,21 +53,23 @@ class IottyLightSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the LightSwitch is on."""
-        _LOGGER.debug(
-            "is_on %s ? %s", self._iotty_device.device_id, self._iotty_device.is_on
+        _LOGGER.info(
+            "Retrieve device status for %s ? %s",
+            self._iotty_device.device_id,
+            self._iotty_device.is_on,
         )
         return self._iotty_device.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightSwitch on."""
-        _LOGGER.debug("[%s] async_turn_on", self._iotty_device.device_id)
+        _LOGGER.info("[%s] Turning on", self._iotty_device.device_id)
         await self._iotty_cloud.command(
             self._iotty_device.device_id, self._iotty_device.cmd_turn_on()
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the LightSwitch off."""
-        _LOGGER.debug("[%s] async_turn_off", self._iotty_device.device_id)
+        _LOGGER.info("[%s] Turning off", self._iotty_device.device_id)
         await self._iotty_cloud.command(
             self._iotty_device.device_id, self._iotty_device.cmd_turn_off()
         )
@@ -77,12 +81,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Activate the iotty LightSwitch component."""
-    _LOGGER.debug("async_setup_entry id is %s", config_entry.entry_id)
+    _LOGGER.info("Setup SWITCH entry id is %s", config_entry.entry_id)
 
-    iotty = hass.data[DOMAIN][config_entry.entry_id]
+    tmp = hass.data[DOMAIN]
+    if tmp is None:
+        _LOGGER.error("Cannot retrieve iotty domain component")
+
+    iotty = tmp[config_entry.entry_id]
+    if iotty is None:
+        _LOGGER.error("Cannot retrieve iotty MW component")
+
     _ls_list = await iotty.devices(LS_DEVICE_TYPE_UID)
 
-    _LOGGER.debug("Found %d LightSwitches", len(_ls_list))
+    _LOGGER.info("Found %d LightSwitches", len(_ls_list))
 
     entities = []
     for _ls in _ls_list:
