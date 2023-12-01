@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
+from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -15,22 +16,25 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
 @dataclass(kw_only=True)
-class ReolinkNumberEntityDescription(NumberEntityDescription):
+class ReolinkNumberEntityDescription(
+    NumberEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes number entities."""
 
     get_max_value: Callable[[Host, int], float] | None = None
     get_min_value: Callable[[Host, int], float] | None = None
     method: Callable[[Host, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], float | None]
 
 
@@ -162,7 +166,23 @@ NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: (
-            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "dog_cat")
+            api.supported(ch, "ai_sensitivity")
+            and api.ai_supported(ch, "dog_cat")
+            and not api.supported(ch, "ai_animal")
+        ),
+        value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_pet_sensititvity",
+        translation_key="ai_animal_sensititvity",
+        icon="mdi:paw",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity") and api.supported(ch, "ai_animal")
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
@@ -226,7 +246,25 @@ NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=8,
         supported=lambda api, ch: (
-            api.supported(ch, "ai_delay") and api.ai_supported(ch, "dog_cat")
+            api.supported(ch, "ai_delay")
+            and api.ai_supported(ch, "dog_cat")
+            and not api.supported(ch, "ai_animal")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "dog_cat"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "dog_cat"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_pet_delay",
+        translation_key="ai_animal_delay",
+        icon="mdi:paw",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.supported(ch, "ai_animal")
         ),
         value=lambda api, ch: api.ai_delay(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "dog_cat"),
@@ -298,6 +336,19 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.auto_track_stop_time(ch),
         method=lambda api, ch, value: api.set_auto_tracking(ch, stop_time=int(value)),
     ),
+    ReolinkNumberEntityDescription(
+        key="day_night_switch_threshold",
+        translation_key="day_night_switch_threshold",
+        icon="mdi:theme-light-dark",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "dayNightThreshold"),
+        value=lambda api, ch: api.daynight_threshold(ch),
+        method=lambda api, ch, value: api.set_daynight_threshold(ch, int(value)),
+    ),
 )
 
 
@@ -329,8 +380,8 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         entity_description: ReolinkNumberEntityDescription,
     ) -> None:
         """Initialize Reolink number entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
 
         if entity_description.get_min_value is not None:
             self._attr_native_min_value = entity_description.get_min_value(
@@ -341,9 +392,6 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
                 self._host.api, channel
             )
         self._attr_mode = entity_description.mode
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
 
     @property
     def native_value(self) -> float | None:
@@ -352,5 +400,10 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self.entity_description.method(self._host.api, self._channel, value)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, value)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()

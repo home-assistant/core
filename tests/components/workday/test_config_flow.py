@@ -551,7 +551,7 @@ pytestmark = pytest.mark.usefixtures()
     ("language", "holiday"),
     [
         ("de", "Weihnachtstag"),
-        ("en_US", "Christmas"),
+        ("en", "Christmas"),
     ],
 )
 async def test_language(

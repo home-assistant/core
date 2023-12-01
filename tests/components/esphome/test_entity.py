@@ -13,7 +13,13 @@ from aioesphomeapi import (
     UserService,
 )
 
-from homeassistant.const import ATTR_RESTORED, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_RESTORED,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDevice
@@ -230,6 +236,19 @@ async def test_deep_sleep_device(
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    # Verify we do not dispatch any more state updates or
+    # availability updates after the stop event is fired
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_esphome_device_without_friendly_name(

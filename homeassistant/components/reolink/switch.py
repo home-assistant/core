@@ -6,33 +6,44 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 
 
 @dataclass(kw_only=True)
-class ReolinkSwitchEntityDescription(SwitchEntityDescription):
+class ReolinkSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes switch entities."""
 
     method: Callable[[Host, int, bool], Any]
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], bool]
 
 
 @dataclass(kw_only=True)
-class ReolinkNVRSwitchEntityDescription(SwitchEntityDescription):
+class ReolinkNVRSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkHostEntityDescription,
+):
     """A class that describes NVR switch entities."""
 
     method: Callable[[Host, bool], Any]
-    supported: Callable[[Host], bool] = lambda api: True
     value: Callable[[Host], bool]
 
 
@@ -233,12 +244,8 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
     @property
     def is_on(self) -> bool:
@@ -247,12 +254,18 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.method(self._host.api, self._channel, True)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, True)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_description.method(self._host.api, self._channel, False)
+        try:
+            await self.entity_description.method(self._host.api, self._channel, False)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
 
 
@@ -267,8 +280,8 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkNVRSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data)
         self.entity_description = entity_description
+        super().__init__(reolink_data)
 
         self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 
@@ -279,10 +292,16 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.method(self._host.api, True)
+        try:
+            await self.entity_description.method(self._host.api, True)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_description.method(self._host.api, False)
+        try:
+            await self.entity_description.method(self._host.api, False)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
         self.async_write_ha_state()

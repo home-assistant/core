@@ -27,12 +27,18 @@ COMMANDS_OPEN: list[OverkizCommand] = [
     OverkizCommand.OPEN,
     OverkizCommand.UP,
 ]
-COMMANDS_OPEN_TILT: list[OverkizCommand] = [OverkizCommand.OPEN_SLATS]
+COMMANDS_OPEN_TILT: list[OverkizCommand] = [
+    OverkizCommand.OPEN_SLATS,
+    OverkizCommand.TILT_DOWN,
+]
 COMMANDS_CLOSE: list[OverkizCommand] = [
     OverkizCommand.CLOSE,
     OverkizCommand.DOWN,
 ]
-COMMANDS_CLOSE_TILT: list[OverkizCommand] = [OverkizCommand.CLOSE_SLATS]
+COMMANDS_CLOSE_TILT: list[OverkizCommand] = [
+    OverkizCommand.CLOSE_SLATS,
+    OverkizCommand.TILT_UP,
+]
 
 COMMANDS_SET_TILT_POSITION: list[OverkizCommand] = [OverkizCommand.SET_ORIENTATION]
 

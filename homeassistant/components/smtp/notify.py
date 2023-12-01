@@ -185,9 +185,8 @@ class MailNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Build and send a message to a user.
 
-        Will send plain text normally, or will build a multipart HTML message
-        with inline image attachments if images config is defined, or will
-        build a multipart HTML if html config is defined.
+        Will send plain text normally, with pictures as attachments if images config is
+        defined, or will build a multipart HTML if html config is defined.
         """
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
@@ -242,8 +241,12 @@ def _build_text_msg(message):
     return MIMEText(message)
 
 
-def _attach_file(atch_name, content_id):
-    """Create a message attachment."""
+def _attach_file(atch_name, content_id=""):
+    """Create a message attachment.
+
+    If MIMEImage is successful and content_id is passed (HTML), add images in-line.
+    Otherwise add them as attachments.
+    """
     try:
         with open(atch_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
@@ -258,32 +261,34 @@ def _attach_file(atch_name, content_id):
             "Attachment %s has an unknown MIME type. Falling back to file",
             atch_name,
         )
-        attachment = MIMEApplication(file_bytes, Name=atch_name)
-        attachment["Content-Disposition"] = f'attachment; filename="{atch_name}"'
+        attachment = MIMEApplication(file_bytes, Name=os.path.basename(atch_name))
+        attachment[
+            "Content-Disposition"
+        ] = f'attachment; filename="{os.path.basename(atch_name)}"'
+    else:
+        if content_id:
+            attachment.add_header("Content-ID", f"<{content_id}>")
+        else:
+            attachment.add_header(
+                "Content-Disposition",
+                f"attachment; filename={os.path.basename(atch_name)}",
+            )
 
-    attachment.add_header("Content-ID", f"<{content_id}>")
     return attachment
 
 
 def _build_multipart_msg(message, images):
-    """Build Multipart message with in-line images."""
-    _LOGGER.debug("Building multipart email with embedded attachment(s)")
-    msg = MIMEMultipart("related")
-    msg_alt = MIMEMultipart("alternative")
-    msg.attach(msg_alt)
+    """Build Multipart message with images as attachments."""
+    _LOGGER.debug("Building multipart email with image attachment(s)")
+    msg = MIMEMultipart()
     body_txt = MIMEText(message)
-    msg_alt.attach(body_txt)
-    body_text = [f"<p>{message}</p><br>"]
+    msg.attach(body_txt)
 
-    for atch_num, atch_name in enumerate(images):
-        cid = f"image{atch_num}"
-        body_text.append(f'<img src="cid:{cid}"><br>')
-        attachment = _attach_file(atch_name, cid)
+    for atch_name in images:
+        attachment = _attach_file(atch_name)
         if attachment:
             msg.attach(attachment)
 
-    body_html = MIMEText("".join(body_text), "html")
-    msg_alt.attach(body_html)
     return msg
 
 

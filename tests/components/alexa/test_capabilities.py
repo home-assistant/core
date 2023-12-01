@@ -183,7 +183,7 @@ async def test_api_increase_color_temp(
     ("domain", "payload", "source_list", "idx"),
     [
         ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
-        ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),
+        ("media_player", "SATELLITE TV", ["satellite-tv", "game console", None], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
     ],
@@ -864,6 +864,7 @@ async def test_report_playback_state(hass: HomeAssistant) -> None:
             | MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP,
             "volume_level": 0.75,
+            "source_list": [None],
         },
     )
 
