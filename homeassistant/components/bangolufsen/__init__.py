@@ -47,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     websocket.connect_websocket()
-    # async_call_later(hass, WEBSOCKET_CONNECTION_DELAY, websocket.connect_websocket)
 
     return True
 
