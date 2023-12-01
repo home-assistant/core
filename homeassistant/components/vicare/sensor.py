@@ -509,16 +509,7 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:clipboard-list-outline",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            ViCareProgram.ACTIVE,
-            ViCareProgram.COMFORT,
-            ViCareProgram.ECO,
-            ViCareProgram.EXTERNAL,
-            ViCareProgram.HOLIDAY,
-            ViCareProgram.NORMAL,
-            ViCareProgram.REDUCED,
-            ViCareProgram.STANDBY,
-        ],
+        options=[program.value for program in ViCareProgram],
         value_getter=lambda api: api.getActiveProgram(),
     ),
 )
