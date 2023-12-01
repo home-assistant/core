@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.jellyfin.const import CONF_CLIENT_DEVICE_ID, DOMAIN
@@ -433,3 +434,66 @@ async def test_reauth_exception(
     )
     assert result3["type"] == data_entry_flow.FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.options == {}
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Audio Codec
+    # Default
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options["audio_codec"] == "None"
+
+    # Manual aac
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "aac"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options["audio_codec"] == "aac"
+
+    # Manual mp3
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "mp3"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options["audio_codec"] == "mp3"
+
+    # Manual vorbis
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "vorbis"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options["audio_codec"] == "vorbis"
+
+    # Manual wma
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "wma"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options["audio_codec"] == "wma"
+
+    # Bad
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with pytest.raises(MultipleInvalid):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"audio_codec": "ogg"}
+        )

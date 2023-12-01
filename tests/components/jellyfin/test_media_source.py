@@ -40,7 +40,76 @@ async def test_resolve(
     mock_api.get_item.side_effect = None
     mock_api.get_item.return_value = load_json_fixture("track.json")
 
+    # audio_codec not set
     play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+
+    assert play_media.mime_type == "audio/flac"
+    assert play_media.url == snapshot
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID")
+    assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
+
+    # audio_codec set to mp3
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "mp3"}
+    )
+    assert init_integration.options["audio_codec"] == "mp3"
+
+    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+
+    assert play_media.mime_type == "audio/flac"
+    assert play_media.url == snapshot
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec="mp3")
+    assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
+
+    # audio_codec set to aac
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "aac"}
+    )
+    assert init_integration.options["audio_codec"] == "aac"
+
+    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec="aac")
+    assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
+
+    assert play_media.mime_type == "audio/flac"
+    assert play_media.url == snapshot
+
+    # audio_codec set to vorbis
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "vorbis"}
+    )
+    assert init_integration.options["audio_codec"] == "vorbis"
+
+    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec="vorbis")
+    assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
+
+    assert play_media.mime_type == "audio/flac"
+    assert play_media.url == snapshot
+
+    # audio_codec set to wma
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": "wma"}
+    )
+    assert init_integration.options["audio_codec"] == "wma"
+
+    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec="wma")
+    assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
 
     assert play_media.mime_type == "audio/flac"
     assert play_media.url == snapshot

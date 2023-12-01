@@ -26,5 +26,14 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "audio_codec": "Audio Codec"
+        }
+      }
+    }
   }
 }

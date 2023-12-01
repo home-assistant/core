@@ -8,12 +8,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.uuid import random_uuid_hex
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import CONF_CLIENT_DEVICE_ID, DOMAIN
+from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, SUPPORTED_AUDIO_CODECS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +30,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 REAUTH_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PASSWORD, default=""): str,
+    }
+)
+
+
+OPTIONAL_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional("audio_codec", default="None"): vol.In(
+            ["None", *SUPPORTED_AUDIO_CODECS]
+        )
     }
 )
 
@@ -128,4 +139,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=REAUTH_DATA_SCHEMA, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an option flow for jellyfin."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=OPTIONAL_DATA_SCHEMA,
         )
