@@ -33,7 +33,7 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
 
-            if x and not y:
+            if x and y:
                 return self.async_create_entry(
                     title="Stookwijzer",
                     data={CONF_LATITUDE: x, CONF_LONGITUDE: y},
