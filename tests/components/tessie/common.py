@@ -1,6 +1,7 @@
 """Tessie common helpers for tests."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
@@ -30,12 +31,18 @@ ERROR_CONNECTION = ClientConnectionError()
 
 async def setup_platform(hass: HomeAssistant, side_effect=None):
     """Set up the Tessie platform."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_DATA,
-        unique_id=TEST_DATA[CONF_ACCESS_TOKEN],
-    )
-    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tessie.coordinator.get_state_of_all_vehicles",
+        text=TEST_VEHICLES,
+        side_effect=ERROR_AUTH,
+    ):
+        mock_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=TEST_DATA,
+            unique_id=TEST_DATA[CONF_ACCESS_TOKEN],
+        )
+        mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
