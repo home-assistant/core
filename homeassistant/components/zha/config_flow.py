@@ -27,12 +27,13 @@ from homeassistant.util import dt as dt_util
 
 from .core.const import (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
     RadioType,
 )
 from .radio_manager import (
+    DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
     RECOMMENDED_RADIOS,
     ProbeResult,
@@ -42,7 +43,7 @@ from .radio_manager import (
 CONF_MANUAL_PATH = "Enter Manually"
 SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
-    CONF_FLOWCONTROL,
+    CONF_FLOW_CONTROL,
 )
 DECONZ_DOMAIN = "deconz"
 
@@ -160,7 +161,7 @@ class BaseZhaFlow(FlowHandler):
         return self.async_create_entry(
             title=self._title,
             data={
-                CONF_DEVICE: device_settings,
+                CONF_DEVICE: DEVICE_SCHEMA(device_settings),
                 CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
             },
         )
@@ -281,7 +282,7 @@ class BaseZhaFlow(FlowHandler):
         for (
             param,
             value,
-        ) in self._radio_mgr.radio_type.controller.SCHEMA_DEVICE.schema.items():
+        ) in DEVICE_SCHEMA.schema.items():
             if param not in SUPPORTED_PORT_SETTINGS:
                 continue
 
@@ -488,7 +489,7 @@ class BaseZhaFlow(FlowHandler):
 class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def _set_unique_id_or_update_path(
         self, unique_id: str, device_path: str
@@ -646,22 +647,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         name = discovery_data["name"]
         radio_type = self._radio_mgr.parse_radio_type(discovery_data["radio_type"])
-
-        try:
-            device_settings = radio_type.controller.SCHEMA_DEVICE(
-                discovery_data["port"]
-            )
-        except vol.Invalid:
-            return self.async_abort(reason="invalid_hardware_data")
+        device_settings = discovery_data["port"]
+        device_path = device_settings[CONF_DEVICE_PATH]
 
         await self._set_unique_id_or_update_path(
-            unique_id=f"{name}_{radio_type.name}_{device_settings[CONF_DEVICE_PATH]}",
-            device_path=device_settings[CONF_DEVICE_PATH],
+            unique_id=f"{name}_{radio_type.name}_{device_path}",
+            device_path=device_path,
         )
 
         self._title = name
         self._radio_mgr.radio_type = radio_type
-        self._radio_mgr.device_path = device_settings[CONF_DEVICE_PATH]
+        self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
         self.context["title_placeholders"] = {CONF_NAME: name}
 
