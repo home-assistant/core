@@ -22,7 +22,7 @@ class CanvasCalendarEntity(CalendarEntity):
         self.hass = hass
         self.coordinator = coordinator
         self.entity_id = entity_id
-        self._attr_unique_id = ""
+        self._attr_unique_id = "assignment-calendar-unique-id"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "calendar_canvas_assignments")},
             entry_type=DeviceEntryType.SERVICE,
@@ -33,34 +33,23 @@ class CanvasCalendarEntity(CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        assignments = self.get_assignments_with_due_date()
+        assignments = self.coordinator.data[ASSIGNMENTS_KEY].values()
 
         if not assignments:
             return None
 
-        current_time = datetime.datetime.now(timezone.utc)
-
         next_assignment = min(
-            (
-                item
-                for item in assignments
-                if self.parse_date(item["due_at"]) > current_time
-            ),
+            assignments,
             key=lambda item: self.parse_date(item["due_at"]),
             default=None,
         )
 
         return CalendarEvent(
             start=self.parse_date(next_assignment["due_at"]),
-            end=self.parse_date(next_assignment["due_at"])
-            + datetime.timedelta(hours=1),
+            end=self.parse_date(next_assignment["due_at"]) + datetime.timedelta(hours=1),
             summary=next_assignment["name"],
             description=next_assignment["html_url"],
         )
-
-    def get_assignments_with_due_date(self):
-        assignments = self.coordinator.data[ASSIGNMENTS_KEY].values()
-        return [assignment for assignment in assignments if "due_at" in assignment and assignment["due_at"]]
 
     def parse_date(self, date_str):
         return datetime.datetime.fromisoformat(date_str)
@@ -72,7 +61,7 @@ class CanvasCalendarEntity(CalendarEntity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        assignments = self.get_assignments_with_due_date()
+        assignments = self.coordinator.data[ASSIGNMENTS_KEY].values()
         filtered_assignments = [
             item
             for item in assignments
@@ -84,8 +73,7 @@ class CanvasCalendarEntity(CalendarEntity):
             event_list.append(
                 CalendarEvent(
                     start=self.parse_date(assignment["due_at"]),
-                    end=self.parse_date(assignment["due_at"])
-                    + datetime.timedelta(hours=1),
+                    end=self.parse_date(assignment["due_at"]) + datetime.timedelta(hours=1),
                     summary=assignment["name"],
                     description=assignment["html_url"],
                 )

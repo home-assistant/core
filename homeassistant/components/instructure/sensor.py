@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     ANNOUNCEMENTS_KEY,
@@ -56,16 +57,16 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=ASSIGNMENTS_KEY,
         icon="mdi:note-outline",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["name"] if data else "Default Assignment Name",
+        name_fn=lambda data: data["name"] if data else "There are no upcoming assignments",
         value_fn=lambda data: datetime_process(data["due_at"])
         if data
-        else "Default Due Date",
+        else "",
         attr_fn=lambda data, courses: {
-            # "Course": courses[data["course_id"]],
+            #"Course": courses[data["course_id"]],
             "Link": data["html_url"]
         }
         if data
-        else {"Link": "Default Assignment Link"},
+        else {"Link": ""},
     ),
     ANNOUNCEMENTS_KEY: CanvasSensorEntityDescription(
         device_name="Announcements",
@@ -73,15 +74,15 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=ANNOUNCEMENTS_KEY,
         icon="mdi:message-alert",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["title"] if data else "Default Announcement Title",
-        value_fn=lambda data: data["read_state"] if data else "Default Read State",
+        name_fn=lambda data: data["title"] if data else "There are no announcements",
+        value_fn=lambda data: data["read_state"] if data else "",
         attr_fn=lambda data, courses: {
-            # "Course": courses[data["context_code"].split("_")[1]],
+            #"Course": courses[data["context_code"].split("_")[1]],
             "Link": data["html_url"],
             "Post Time": datetime_process(data["posted_at"]),
         }
         if data
-        else {"Link": "Default Link", "Post Time": "Default Post Time"},
+        else {},
     ),
     CONVERSATIONS_KEY: CanvasSensorEntityDescription(
         device_name="Inbox",
@@ -89,10 +90,10 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=CONVERSATIONS_KEY,
         icon="mdi:email",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["subject"] if data else "Default Inbox Subject",
+        name_fn=lambda data: data["subject"] if data else "There are no messages",
         value_fn=lambda data: data["workflow_state"]
         if data
-        else "Default Workflow State",
+        else "",
         attr_fn=lambda data, courses: {
             "Course": data["context_name"],
             "Initial Sender": data["participants"][0]["name"],
@@ -100,12 +101,7 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
             "Last Message Time": datetime_process(data["last_message_at"]),
         }
         if data
-        else {
-            "Course": "Default Course",
-            "Initial Sender": "Default Sender",
-            "Last Message": "Default Message",
-            "Last Message Time": "Default Time",
-        },
+        else {},
     ),
     GRADES_KEY: CanvasSensorEntityDescription(
         device_name="Grades",
@@ -113,14 +109,14 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=GRADES_KEY,
         icon="mdi:star",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["assignment_id"] if data else "Default Assignment ID",
-        value_fn=lambda data: data["grade"] if data else "Default Grade",
+        name_fn=lambda data: data["assignment_id"] if data else "There are no graded assignments",
+        value_fn=lambda data: data["grade"] if data else "",
         attr_fn=lambda data, courses: {
             "Score": data["score"],
             "Submission Type": data["submission_type"],
         }
         if data
-        else {"Score": "Default Score", "Submission Type": "Default Submission Type"},
+        else {},
     ),
     QUICK_LINKS_KEY: CanvasSensorEntityDescription(
         device_name="Quick links",
@@ -169,16 +165,58 @@ class CanvasSensorEntity(SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
         )
 
+        self._name = ""
+        self._available = False
+        self._native_value = ""
+        self._extra_state_attributes = {}
+
     @property
     def name(self):
+        """Return the name of the sensor."""
+        return self._get_name()
+
+    @name.setter
+    def name(self, new_value):
+        self._name = new_value
+    
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._get_available()
+    
+    @available.setter
+    def available(self, new_value):
+        self._available = new_value
+
+    @property
+    def native_value(self):
+        """Return the due time."""
+        return self._get_native_value()
+    
+    @native_value.setter
+    def native_value(self, new_value):
+        self._native_value = new_value
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra state attributes."""
+        return self._get_extra_state_attributes()
+
+    @extra_state_attributes.setter
+    def extra_state_attributes(self, new_value):
+        self._extra_state_attributes = new_value
+
+    def get_data(self):
+        return self.coordinator.data[self.entity_description.key][self._attr_unique_id]
+    
+    def _get_name(self) -> str | None:
         """Return the name of the sensor."""
         if not self.available:
             return None
 
         return f"{self.entity_description.name_fn(self.get_data())}"
-
-    @property
-    def available(self) -> bool:
+    
+    def _get_available(self) -> bool:
         """Return True if entity is available."""
         return (
             super().available
@@ -186,24 +224,30 @@ class CanvasSensorEntity(SensorEntity):
             and self.entity_description.avabl_fn(self.get_data())
         )
 
-    @property
-    def native_value(self):
+    def _get_native_value(self):
         """Return the due time."""
         if not self.available:
             return None
 
         return self.entity_description.value_fn(self.get_data())
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    
+    def _get_extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
         return self.entity_description.attr_fn(
             self.get_data(), self.coordinator.selected_courses
         )
+    
+    async def async_update(self) -> None:
+        """Update the sensor"""
+        self.name = self._get_name()
+        self.available = self._get_available()
+        self.native_value = self._get_native_value()
+        self.extra_state_attributes = self._get_extra_state_attributes()
 
-    def get_data(self):
-        return self.coordinator.data[self.entity_description.key][self._attr_unique_id]
 
+
+def get_sensor_entity_id(registry: er.EntityRegistry, id: str) -> str:
+    return registry.async_get_entity_id(domain="sensor", platform=DOMAIN, unique_id=id)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -213,31 +257,36 @@ async def async_setup_entry(
     """Set up Canvas sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    def update_entities(data_type: str, new_data: dict, curr_data: dict):
-        """Add or remove sensor entities based on new data"""
-        current_ids = set(curr_data.keys())
-        new_ids = set(new_data.keys())
-
-        to_add = new_ids - current_ids
-        to_remove = current_ids - new_ids
-
-        for entity_id in to_remove:
-            entity = hass.data[DOMAIN][entry.entry_id]["entities"][data_type][entity_id]
-            entity.async_remove(force_remove=True)
-
+    def add_new_entities(data_type: str, entity_ids: [str]) -> None:
         new_entities = []
-
-        for entity_id in to_add:
+        for entity_id in entity_ids:
             description = SENSOR_DESCRIPTIONS[data_type]
             new_entity = CanvasSensorEntity(description, entity_id, coordinator)
             new_entities.append(new_entity)
 
-            hass.data[DOMAIN][entry.entry_id]["entities"][data_type][
-                entity_id
-            ] = new_entity
+            hass.data[DOMAIN][entry.entry_id]["entities"][data_type][entity_id] = new_entity
 
         if new_entities:
             async_add_entities(tuple(new_entities))
+
+    def update_entities(new_data: dict[str, Any]):
+        """Add or remove sensor entities based on new data"""
+        registry = er.async_get(hass)
+        existing_sensors = {entity_id: entry for entity_id, entry in registry.entities.items() if entry.platform == 'instructure' and entity_id.split(".")[0]=="sensor"}
+        existing_sensor_ids = {entity_id for entity_id, _ in existing_sensors.items()}
+
+        all_new_entity_ids = set()
+        
+        # Add entities
+        for data_type, entity_data in new_data.items():
+            all_new_entity_ids.update([get_sensor_entity_id(registry, unique_id) for unique_id in entity_data.keys()])
+            add_new_entities(data_type, entity_data.keys())
+    
+        # Remove entities
+        to_remove = existing_sensor_ids - all_new_entity_ids
+        for entity_id in to_remove:
+            registry.async_remove(entity_id)
+        
 
     coordinator.update_entities = update_entities
     await coordinator.async_refresh()

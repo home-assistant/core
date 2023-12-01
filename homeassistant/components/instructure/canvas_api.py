@@ -1,8 +1,10 @@
-import httpx
-import urllib.parse
+from datetime import datetime, timedelta
 import json
 from typing import Any
-from datetime import datetime, timedelta
+import urllib.parse
+
+import httpx
+
 from .const import (
     ANNOUNCEMENT_ENTITY_CONSTANT,
     ASSIGNMENT_ENTITY_CONSTANT,
@@ -78,8 +80,8 @@ class CanvasAPI:
         courses = json.loads(response.content.decode("utf-8"))
         return courses
 
-    async def async_get_assignments(self, course_ids: list[str]) -> dict[str, Any]:
-        """Retrieves a dictionary of assignments for given course IDs from the Canvas API.
+    async def async_get_upcoming_assignments(self, course_ids: list[str]) -> dict[str, Any]:
+        """Retrieves a dictionary of upcoming assignments in 14 days for given course IDs from the Canvas API.
 
         Args:
         course_ids (list[str]): A list of course IDs to fetch assignments from.
@@ -153,19 +155,27 @@ class CanvasAPI:
             "/conversations", {"per_page": "50"}
         )
         conversations = json.loads(response_unread.content.decode("utf-8"))
-        # get unreads and 5 latest reads
-        read_conversations = [
-            conv for conv in conversations if conv["workflow_state"] == "read"
-        ]
-        unread_conversations = [
-            conv for conv in conversations if conv["workflow_state"] == "unread"
-        ]
-        read_conversations = read_conversations = sorted(
-            read_conversations,
+        
+        # get unread and read messages
+        unread_conversations = sorted(
+            [conv for conv in conversations if conv["workflow_state"] == "unread"],
             key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
             reverse=True,
-        )[:5]
-        merged_conversations = read_conversations + unread_conversations
+        )
+        
+        read_conversations = []
+        if len(unread_conversations) < 5:
+            show_read = 5 - len(unread_conversations)
+            read_conversations = sorted(
+                [conv for conv in conversations if conv["workflow_state"] == "read"],
+                key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
+                reverse=True,
+            )
+            # pick the latest 5 read messages
+            if len(read_conversations) >= show_read:
+                read_conversations = read_conversations[:show_read]
+        
+        merged_conversations = unread_conversations + read_conversations
         if len(merged_conversations) != 0:
             return {
                 f"conversation-{conversation['id']}": conversation
@@ -190,7 +200,7 @@ class CanvasAPI:
             )
             course_submissions = json.loads(response.content.decode("utf-8"))
             for submission in course_submissions:
-                if submission["graded_at"] is not None:
+                if "graded_at" in submission and submission["graded_at"] is not None:
                     graded_at = datetime.strptime(
                         submission["graded_at"], ISO_DATETIME_FORMAT
                     )

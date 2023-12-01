@@ -18,6 +18,7 @@ from .const import (
     CONVERSATIONS_KEY,
     GRADES_KEY,
     QUICK_LINKS_KEY,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,30 +32,26 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="Canvas Sensor",
+            name=DOMAIN,
+            update_method = self.async_update_data,
             update_interval=timedelta(seconds=30),
         )
         self.config_entry = entry
         self.api = api
         self.update_entities = None
-        self.old_data = {}
         self.selected_courses = entry.options["courses"]
 
-    async def _async_update_data(self):
+    async def async_update_data(self):
         """Fetch data from API endpoint."""
         courses = self.selected_courses
         course_ids = courses.keys()
-
         try:
             async with async_timeout.timeout(10):
-                assignments = await self.api.async_get_assignments(course_ids)
+                assignments = await self.api.async_get_upcoming_assignments(course_ids)
                 announcements = await self.api.async_get_announcements(course_ids)
                 conversations = await self.api.async_get_conversations()
                 grades = await self.api.async_get_grades(course_ids)
                 quick_links = self.get_quick_links()
-
-                # TODO - filtering, put it in canvas_api?
-                assignments = filter_assignments(assignments)
 
                 new_data = {
                     ASSIGNMENTS_KEY: assignments,
@@ -65,13 +62,7 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                 }
 
                 if self.update_entities:
-                    for data_type in new_data:
-                        self.update_entities(
-                            data_type,
-                            new_data.get(data_type, {}),
-                            self.old_data.get(data_type, {}),
-                        )
-                    self.old_data = new_data
+                    self.update_entities(new_data)
 
                 return new_data
 
@@ -95,15 +86,3 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
 
         return {}
 
-
-def filter_assignments(assignments: dict[str, Any]) -> dict[str, Any]:
-    current_time = datetime.now()
-
-    for id, assignment in assignments.copy().items():
-        if "due_at" not in assignment or not assignment["due_at"]:
-            continue
-        due_time = datetime.strptime(assignment["due_at"], "%Y-%m-%dT%H:%M:%SZ")
-        if due_time < current_time:
-            del assignments[id]
-
-    return assignments
