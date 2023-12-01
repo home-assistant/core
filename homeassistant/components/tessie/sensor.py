@@ -11,25 +11,28 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     PERCENTAGE,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
     UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TessieApi
+from .const import DOMAIN, TessieGroup
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 PARALLEL_UPDATES = 0
 
 
-DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
-    TessieApi.CHARGE_STATE: (
+DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
+    TessieGroup.CHARGE_STATE: (
         SensorEntityDescription(
             key="usable_battery_level",
             translation_key="battery_level",
@@ -38,21 +41,49 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.BATTERY,
         ),
         SensorEntityDescription(
-            key="battery_range",
-            translation_key="battery_range",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.KILOMETERS,
-            device_class=SensorDeviceClass.DISTANCE,
-        ),
-        SensorEntityDescription(
             key="charge_energy_added",
             translation_key="charge_energy_added",
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
         ),
+        SensorEntityDescription(
+            key="charger_power",
+            translation_key="charger_power",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="charger_voltage",
+            translation_key="charger_voltage",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            device_class=SensorDeviceClass.VOLTAGE,
+        ),
+        SensorEntityDescription(
+            key="charger_actual_current",
+            translation_key="charger_current",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            device_class=SensorDeviceClass.CURRENT,
+        ),
+        SensorEntityDescription(
+            key="charge_rate",
+            translation_key="charge_rate",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+            device_class=SensorDeviceClass.SPEED,
+        ),
+        SensorEntityDescription(
+            key="battery_range",
+            translation_key="battery_range",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.MILES,
+            device_class=SensorDeviceClass.DISTANCE,
+        ),
     ),
-    TessieApi.DRIVE_STATE: (
+    TessieGroup.DRIVE_STATE: (
         SensorEntityDescription(
             key="speed",
             translation_key="speed",
@@ -75,12 +106,20 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENUM,
         ),
     ),
-    TessieApi.VEHICLE_STATE: (
+    TessieGroup.VEHICLE_STATE: (
+        SensorEntityDescription(
+            key="odometer",
+            translation_key="odometer",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfLength.MILES,
+            device_class=SensorDeviceClass.DISTANCE,
+        ),
         SensorEntityDescription(
             key="tpms_pressure_fl",
             translation_key="tpms_pressure_fl",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.BAR,
+            suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
         ),
         SensorEntityDescription(
@@ -106,6 +145,36 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
+        ),
+    ),
+    TessieGroup.CLIMATE_STATE: (
+        SensorEntityDescription(
+            key="inside_temp",
+            translation_key="inside_temp",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+        SensorEntityDescription(
+            key="outside_temp",
+            translation_key="outside_temp",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+        SensorEntityDescription(
+            key="driver_temp_setting",
+            translation_key="driver_temp_setting",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+        SensorEntityDescription(
+            key="passenger_temp_setting",
+            translation_key="passenger_temp_setting",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
         ),
     ),
 }

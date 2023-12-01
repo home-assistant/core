@@ -13,7 +13,7 @@ MODELS = {
 }
 
 
-class TessieApi(StrEnum):
+class TessieGroup(StrEnum):
     """API response keys for Tessie."""
 
     CHARGE_STATE = "charge_state"

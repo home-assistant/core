@@ -29,11 +29,23 @@
       "battery_level": {
         "name": "Battery Level"
       },
-      "battery_range": {
-        "name": "Battery Range"
-      },
       "charge_energy_added": {
         "name": "Charge Energy Added"
+      },
+      "charger_power": {
+        "name": "Charger Power"
+      },
+      "charger_voltage": {
+        "name": "Charger Voltage"
+      },
+      "charger_current": {
+        "name": "Charger Current"
+      },
+      "charger_rate": {
+        "name": "Charger Rate"
+      },
+      "battery_range": {
+        "name": "Battery Range"
       },
       "speed": {
         "name": "Speed"
@@ -43,6 +55,9 @@
       },
       "shift_state": {
         "name": "Shift State"
+      },
+      "odometer": {
+        "name": "Odometer"
       },
       "tpms_pressure_fl": {
         "name": "Tyre Pressure Front Left"
@@ -55,6 +70,18 @@
       },
       "tpms_pressure_rr": {
         "name": "Tyre Pressure Rear Right"
+      },
+      "inside_temp": {
+        "name": "Inside Temperature"
+      },
+      "outside_temp": {
+        "name": "Outside Temperature"
+      },
+      "driver_temp_setting": {
+        "name": "Driver Temperature Setting"
+      },
+      "passenger_temp_setting": {
+        "name": "Passenger Temperature Setting"
       }
     }
   }
