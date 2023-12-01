@@ -25,7 +25,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         api_key: str,
     ) -> None:
         """Initialize Tessie Data Update Coordinator."""
-        self.api_key = api_key
+        self.api_key: str = api_key
         self.session: ClientSession = async_get_clientsession(hass)
 
         super().__init__(
