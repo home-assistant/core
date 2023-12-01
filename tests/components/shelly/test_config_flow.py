@@ -55,6 +55,7 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
     [
         (1, MODEL_1),
         (2, MODEL_PLUS_2PM),
+        (3, MODEL_PLUS_2PM),
     ],
 )
 async def test_form(
@@ -105,6 +106,12 @@ async def test_form(
         ),
         (
             2,
+            MODEL_PLUS_2PM,
+            {"password": "test2 password"},
+            "admin",
+        ),
+        (
+            3,
             MODEL_PLUS_2PM,
             {"password": "test2 password"},
             "admin",
@@ -464,6 +471,11 @@ async def test_form_auth_errors_test_connection_gen2(
             2,
             MODEL_PLUS_2PM,
             {"mac": "test-mac", "model": MODEL_PLUS_2PM, "auth": False, "gen": 2},
+        ),
+        (
+            3,
+            MODEL_PLUS_2PM,
+            {"mac": "test-mac", "model": MODEL_PLUS_2PM, "auth": False, "gen": 3},
         ),
     ],
 )
