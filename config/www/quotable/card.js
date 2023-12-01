@@ -2,9 +2,6 @@ class QuotableCard extends HTMLElement {
   constructor() {
     super();
     this.currentImageIndex = 0;
-    this.imageUrls = [
-      "https://cdn.pixabay.com/photo/2016/11/29/05/45/astronomy-1867616_1280.jpg",
-    ];
     this.updateInProgress = false;
     this.renderCalled = false;
     this.DEFAULT_AUTHOR = "Quotable";
@@ -12,6 +9,7 @@ class QuotableCard extends HTMLElement {
       "Today is a gift, that's why they call it the present. Make the most of it!";
     this.quotes = [];
     this.quoteIndex = 0;
+    this._attributes = {};
   }
 
   set hass(hass) {
@@ -26,8 +24,8 @@ class QuotableCard extends HTMLElement {
     this._config = config;
   }
 
+  // Update quote on card
   async updateQuoteAndAuthor() {
-    // Update quote on card
     if (this.updateInProgress) {
       return;
     }
@@ -39,10 +37,9 @@ class QuotableCard extends HTMLElement {
 
       // Check if the entity state and its attributes exist
       if (entityState && entityState.attributes) {
-        const attributes = entityState.attributes;
+        this._attributes = entityState.attributes;
 
-        const newQuotes = JSON.parse(attributes.quotes) || [];
-
+        const newQuotes = JSON.parse(this._attributes.quotes) || [];
         if (newQuotes.length > 0) {
           this.quotes = newQuotes;
           const quote = this.quotes[this.quoteIndex].content;
@@ -55,7 +52,6 @@ class QuotableCard extends HTMLElement {
     } catch (error) {
       // Show a default quote if update error
       this.render(this.DEFAULT_QUOTE, this.DEFAULT_AUTHOR);
-      console.log("error caought in update quote");
     } finally {
       this.updateInProgress = false;
     }
@@ -75,89 +71,72 @@ class QuotableCard extends HTMLElement {
       );
       // Render the response directly
       this.render(response.content, response.author);
-    } catch (error) {
-      console.error("Error fetching new quotes:", error);
-    }
+    } catch (error) {}
   }
   //Uodate card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
     if (this.renderCalled) {
       this.updateOverlay(quote, author);
-
       return;
     }
     this.innerHTML = `
-        <style>
-          ha-card {
-            position: relative;
-            overflow: hidden;
-            height: 200px;
-          }
-          .background-image {
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center center;
+    <style>
+      ha-card {
+        position: relative;
+        overflow: hidden;
+        height: 200px;
+      }
+      .background-div {
+        width: 100%;
+        height: 100%;
+      }
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      .quote {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 16px;
+      }
+      .author {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .buttons {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 8px;
+      }
+      .button {
+        cursor: pointer;
+      }
+    </style>
+    <ha-card>
+      <div class="background-div"></div>
+      <div class="overlay">
+        <div class="quote">${quote}</div>
+        <div class="author">- ${author}</div>
+      </div>
+      <div class="buttons">
+        <ha-icon class="button previous" icon="mdi:arrow-left"></ha-icon>
+        <ha-icon class="button next" icon="mdi:arrow-right"></ha-icon>
+        <ha-icon class="button refresh" icon="mdi:refresh"></ha-icon>
+      </div>
+    </ha-card>
+  `;
 
-          }
-          .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-          }
-          .quote {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 16px;
-          }
-          .author {
-            font-size: 18px;
-            font-weight: bold;
-          }
-
-          .buttons {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            display: flex;
-            gap: 8px;
-          }
-
-          .button {
-            cursor: pointer;
-            color: white;
-          }
-        </style>
-        <ha-card>
-          <img class="background-image" src="${
-            this.imageUrls[this.currentImageIndex]
-          }">
-          <div class="overlay">
-            <div class="quote">${quote}</div>
-            <div class="author">- ${author}</div>
-          </div>
-
-          <div class="buttons">
-
-            <ha-icon class="button previous" icon="mdi:arrow-left"></ha-icon>
-            <ha-icon class="button next" icon="mdi:arrow-right"></ha-icon>
-            <ha-icon class="button refresh" icon="mdi:refresh"></ha-icon>
-
-         </div>
-        </ha-card>
-      `;
-
-    this.content = this.querySelector(".background-image");
-
+    //Add event listeners for buttons
     this.prevButton = this.querySelector(".previous");
     this.nextButton = this.querySelector(".next");
     this.refreshButton = this.querySelector(".refresh");
@@ -166,7 +145,17 @@ class QuotableCard extends HTMLElement {
     this.nextButton.addEventListener("click", () => this.showNextQuote());
     this.refreshButton.addEventListener("click", () => this.refreshQuote());
 
+    //renderCalled flag to prevent double render
     this.renderCalled = true;
+
+    //Fetch colors from quotable states
+    const bgColor = this._attributes.styles.bg_color;
+    const textColor = this._attributes.styles.text_color;
+
+    //Update background, button and text colors
+    this.querySelector(".overlay").style.color = textColor;
+    this.querySelector(".buttons").style.color = textColor;
+    this.querySelector(".background-div").style.background = bgColor;
   }
 
   getCardSize() {
