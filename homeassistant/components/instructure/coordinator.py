@@ -38,16 +38,13 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = entry
         self.api = api
-        self.update_new_entities = None
-        self.remove_unavailable_entities = None
-        self.old_data = {}
+        self.update_entities = None
         self.selected_courses = entry.options["courses"]
 
     async def async_update_data(self):
         """Fetch data from API endpoint."""
         courses = self.selected_courses
         course_ids = courses.keys()
-
         try:
             async with async_timeout.timeout(10):
                 assignments = await self.api.async_get_upcoming_assignments(course_ids)
@@ -64,20 +61,8 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
                     QUICK_LINKS_KEY: quick_links,
                 }
 
-                if self.update_new_entities:
-                    for data_type in new_data:
-                        self.update_new_entities(
-                            data_type,
-                            new_data.get(data_type, {}),
-                            self.old_data.get(data_type, {}),
-                        )
-                    self.old_data = new_data
-                
-                if self.remove_unavailable_entities:
-                    all_new_id = []
-                    for data_type, data in new_data.items():
-                        all_new_id.extend(data.keys())
-                    self.remove_unavailable_entities(all_new_id)
+                if self.update_entities:
+                    self.update_entities(new_data)
 
                 return new_data
 

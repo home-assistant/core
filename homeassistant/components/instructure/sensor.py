@@ -246,6 +246,9 @@ class CanvasSensorEntity(SensorEntity):
 
 
 
+def get_sensor_entity_id(registry: er.EntityRegistry, id: str) -> str:
+    return registry.async_get_entity_id(domain="sensor", platform=DOMAIN, unique_id=id)
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -254,28 +257,9 @@ async def async_setup_entry(
     """Set up Canvas sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    def remove_unavailable_entities(all_new_unique_id: [str]):
-        all_new_entity_id = []
-        registry = er.async_get(hass)
-        for id in all_new_unique_id:
-            all_new_entity_id.append(registry.async_get_entity_id(domain="sensor", platform=DOMAIN, unique_id=id))
-
-        canvas_sensors = {entity_id: entry for entity_id, entry in registry.entities.items() if entry.platform == 'instructure' and entity_id.split(".")[0]=="sensor"}
-        for entity_id, _ in canvas_sensors.items():
-            if entity_id not in all_new_entity_id:
-                registry.async_remove(entity_id)
-
-    def update_new_entities(data_type: str, new_data: dict, curr_data: dict):
-        """Add or remove sensor entities based on new data"""
-        current_ids = set(curr_data.keys())
-        new_ids = set(new_data.keys())
-
-        to_add = new_ids - current_ids
-        #to_remove = current_ids - new_ids
-
+    def add_new_entities(data_type: str, entity_ids: [str]) -> None:
         new_entities = []
-
-        for entity_id in to_add:
+        for entity_id in entity_ids:
             description = SENSOR_DESCRIPTIONS[data_type]
             new_entity = CanvasSensorEntity(description, entity_id, coordinator)
             new_entities.append(new_entity)
@@ -284,8 +268,25 @@ async def async_setup_entry(
 
         if new_entities:
             async_add_entities(tuple(new_entities))
+
+    def update_entities(new_data: dict[str, Any]):
+        """Add or remove sensor entities based on new data"""
+        registry = er.async_get(hass)
+        existing_sensors = {entity_id: entry for entity_id, entry in registry.entities.items() if entry.platform == 'instructure' and entity_id.split(".")[0]=="sensor"}
+        existing_sensor_ids = set([entity_id for entity_id, _ in existing_sensors.items()])
+
+        all_new_entity_ids = []
+        
+        # Add entities
+        for data_type, entity_data in new_data.items():
+            all_new_entity_ids.extend([get_sensor_entity_id(registry, unique_id) for unique_id in entity_data.keys()])
+            add_new_entities(data_type, entity_data.keys())
+    
+        # Remove entities
+        to_remove = existing_sensor_ids - set(all_new_entity_ids)
+        for entity_id in to_remove:
+            registry.async_remove(entity_id)
         
 
-    coordinator.update_new_entities = update_new_entities
-    coordinator.remove_unavailable_entities = remove_unavailable_entities
+    coordinator.update_entities = update_entities
     await coordinator.async_refresh()
