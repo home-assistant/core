@@ -280,12 +280,12 @@
           "tpms_soft_warning_rr": false,
           "valet_mode": false,
           "valet_pin_needed": false,
-          "vehicle_name": "HomeAssistant",
+          "vehicle_name": "Test",
           "vehicle_self_test_progress": 0,
           "vehicle_self_test_requested": false,
           "webcam_available": true
         },
-        "display_name": "HomeAssistant"
+        "display_name": "Test"
       }
     }
   ]
