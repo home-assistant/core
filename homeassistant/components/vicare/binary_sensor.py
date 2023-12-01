@@ -108,32 +108,30 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entities(
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
-  
-    entities: list[ViCareBinarySensor]
-    for device_config, device in devices
-        if device_config.getModel() is "Heatbox1":
+
+    entities: list[ViCareBinarySensor] = []
+    for device_config, device in device_tuple:
+        if device_config.getModel() == "Heatbox1":
             continue
-    entities.extend(_build_entities_for_device(
-        device, device_config
-    ))
-    entities.extend(
-        _build_entities_for_component(
-            get_circuits(device), device_config, CIRCUIT_SENSORS
+        entities.extend(_build_entities_for_device(device, device_config))
+        entities.extend(
+            _build_entities_for_component(
+                get_circuits(device), device_config, CIRCUIT_SENSORS
+            )
         )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_burners(device), device_config, BURNER_SENSORS
+        entities.extend(
+            _build_entities_for_component(
+                get_burners(device), device_config, BURNER_SENSORS
+            )
         )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_compressors(device), device_config, COMPRESSOR_SENSORS
+        entities.extend(
+            _build_entities_for_component(
+                get_compressors(device), device_config, COMPRESSOR_SENSORS
+            )
         )
-    )
     return entities
 
 
@@ -179,7 +177,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare binary sensor devices."""
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DEVICE_CONFIG_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(

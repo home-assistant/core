@@ -61,20 +61,20 @@ HA_TO_VICARE_HVAC_DHW = {
 
 
 def _build_entities(
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareWater]:
     """Create ViCare domestic hot water entities for a device."""
-    
+
     return [
         ViCareWater(
-            api,
+            device,
             circuit,
             device_config,
             "domestic_hot_water",
         )
-        for circuit in get_circuits(api)
-        for device_config, api in devices
-        if device_config.getModel() is not "Heatbox1"
+        for device_config, device in device_tuple
+        if device_config.getModel() != "Heatbox1"
+        for circuit in get_circuits(device)
     ]
 
 
@@ -84,7 +84,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DEVICE_CONFIG_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(

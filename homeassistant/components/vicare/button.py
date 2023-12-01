@@ -48,20 +48,20 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 
 
 def _build_entities(
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareButton]:
     """Create ViCare button entities for a device."""
-  
+
     return [
         ViCareButton(
-            api,
+            device,
             device_config,
             description,
         )
+        for device_config, device in device_tuple
+        if device_config.getModel() != "Heatbox1"
         for description in BUTTON_DESCRIPTIONS
-        if is_supported(description.key, description, api)
-        for device_config, device in devices
-        if device_config.getModel() is not "Heatbox1"
+        if is_supported(description.key, description, device)
     ]
 
 
@@ -71,7 +71,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DEVICE_CONFIG_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(

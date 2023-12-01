@@ -81,21 +81,21 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
-  
+
     return [
         ViCareNumber(
             circuit,
             device_config,
             description,
         )
-        for circuit in get_circuits(api)
+        for device_config, device in device_tuple
+        if device_config.getModel() != "Heatbox1"
+        for circuit in get_circuits(device)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
         if is_supported(description.key, description, circuit)
-        for device_config, device in devices
-        if evice_config.getModel() is not "Heatbox1"
     ]
 
 
@@ -105,7 +105,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare number devices."""
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DEVICE_CONFIG_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(

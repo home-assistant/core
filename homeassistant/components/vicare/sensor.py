@@ -595,49 +595,14 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    vicare_api,
-    device_config: PyViCareDeviceConfig,
-    entity_description: ViCareSensorEntityDescription,
-):
-    """Create a ViCare sensor entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
-        return ViCareSensor(
-            vicare_api,
-            device_config,
-            entity_description,
-        )
-    return None
-
-
-async def _entities_from_descriptions(
-    hass: HomeAssistant,
-    entities: list[ViCareSensor],
-    sensor_descriptions: tuple[ViCareSensorEntityDescription, ...],
-    iterables: PyViCareHeatingDeviceComponent,
-    device_config: PyViCareDeviceConfig,
-) -> None:
-    """Create entities from descriptions and list of burners/circuits."""
-    for description in sensor_descriptions:
-        for current in iterables:
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                current,
-                device_config,
-                description,
-            )
-            if entity:
-                entities.append(entity)
-
-
 def _build_entities(
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareSensor]:
     """Create ViCare sensor entities for a device."""
-  
-    entities: list[ViCareSensor]
-    for device_config, device in devices
-        if device_config.getModel() is "Heatbox1":
+
+    entities: list[ViCareSensor] = []
+    for device_config, device in device_tuple:
+        if device_config.getModel() == "Heatbox1":
             continue
         entities.extend(_build_entities_for_device(device, device_config))
         entities.extend(
@@ -700,7 +665,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DEVICE_CONFIG_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
