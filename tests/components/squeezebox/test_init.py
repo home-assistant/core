@@ -1,6 +1,5 @@
 """Test initialization of squeezebox component."""
 
-from homeassistant.components.squeezebox import async_migrate_entry
 from homeassistant.components.squeezebox.const import CONF_HTTPS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
