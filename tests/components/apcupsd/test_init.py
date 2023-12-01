@@ -1,4 +1,5 @@
 """Test init of APCUPSd integration."""
+import asyncio
 from collections import OrderedDict
 from unittest.mock import patch
 
@@ -97,7 +98,11 @@ async def test_multiple_integrations(hass: HomeAssistant) -> None:
     assert state1.state != state2.state
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    (OSError(), asyncio.IncompleteReadError(partial=b"", expected=0)),
+)
+async def test_connection_error(hass: HomeAssistant, error: Exception) -> None:
     """Test connection error during integration setup."""
     entry = MockConfigEntry(
         version=1,
@@ -109,7 +114,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    with patch("aioapcaccess.request_status", side_effect=OSError()):
+    with patch("aioapcaccess.request_status", side_effect=error):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
