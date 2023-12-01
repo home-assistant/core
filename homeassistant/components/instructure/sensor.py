@@ -273,17 +273,17 @@ async def async_setup_entry(
         """Add or remove sensor entities based on new data"""
         registry = er.async_get(hass)
         existing_sensors = {entity_id: entry for entity_id, entry in registry.entities.items() if entry.platform == 'instructure' and entity_id.split(".")[0]=="sensor"}
-        existing_sensor_ids = set([entity_id for entity_id, _ in existing_sensors.items()])
+        existing_sensor_ids = {entity_id for entity_id, _ in existing_sensors.items()}
 
-        all_new_entity_ids = []
+        all_new_entity_ids = set()
         
         # Add entities
         for data_type, entity_data in new_data.items():
-            all_new_entity_ids.extend([get_sensor_entity_id(registry, unique_id) for unique_id in entity_data.keys()])
+            all_new_entity_ids.update([get_sensor_entity_id(registry, unique_id) for unique_id in entity_data.keys()])
             add_new_entities(data_type, entity_data.keys())
     
         # Remove entities
-        to_remove = existing_sensor_ids - set(all_new_entity_ids)
+        to_remove = existing_sensor_ids - all_new_entity_ids
         for entity_id in to_remove:
             registry.async_remove(entity_id)
         

@@ -39,10 +39,7 @@ class CanvasCalendarEntity(CalendarEntity):
             return None
 
         next_assignment = min(
-            (
-                item
-                for item in assignments
-            ),
+            assignments,
             key=lambda item: self.parse_date(item["due_at"]),
             default=None,
         )
