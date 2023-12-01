@@ -742,6 +742,7 @@ async def test_zeroconf_require_auth(hass: HomeAssistant, mock_block_device) -> 
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
+        (3, {"password": "test2 password"}),
     ],
 )
 async def test_reauth_successful(
@@ -780,6 +781,7 @@ async def test_reauth_successful(
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
+        (3, {"password": "test2 password"}),
     ],
 )
 async def test_reauth_unsuccessful(hass: HomeAssistant, gen, user_input) -> None:
