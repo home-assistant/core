@@ -20,9 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, TessieApi
+from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 PARALLEL_UPDATES = 0
@@ -31,7 +31,7 @@ PARALLEL_UPDATES = 0
 DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
     TessieApi.CHARGE_STATE: (
         SensorEntityDescription(
-            key="battery_level",
+            key="usable_battery_level",
             translation_key="battery_level",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=PERCENTAGE,
@@ -57,7 +57,7 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             key="speed",
             translation_key="speed",
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+            native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
             device_class=SensorDeviceClass.SPEED,
         ),
         SensorEntityDescription(
@@ -79,7 +79,6 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             translation_key="tpms_pressure_fl",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.BAR,
-            suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
         ),
         SensorEntityDescription(
@@ -137,7 +136,7 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     def __init__(
         self,
         api_key: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TessieDataUpdateCoordinator,
         vin: str,
         category: str,
         description: SensorEntityDescription,
