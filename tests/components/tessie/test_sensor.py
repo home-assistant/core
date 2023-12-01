@@ -1,4 +1,4 @@
-"""Tessie sensor platform tests."""
+"""Test the Tessie sensor platform."""
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
