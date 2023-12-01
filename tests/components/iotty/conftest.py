@@ -2,6 +2,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientSession
 from iottycloud.device import Device
 from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_ON
 import pytest
@@ -13,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker, mock_aiohttp_client
 
 CLIENT_ID = "client_id"
 CLIENT_SECRET = "client_secret"
@@ -25,12 +27,25 @@ test_devices = [
 
 
 @pytest.fixture
-async def oauth_impl(hass: HomeAssistant):
+async def local_oauth_impl(hass: HomeAssistant):
     """Local implementation."""
     assert await setup.async_setup_component(hass, "auth", {})
     return config_entry_oauth2_flow.LocalOAuth2Implementation(
-        hass, DOMAIN, "client_id", "client_secret", "authorize_url", "token_url"
+        hass, DOMAIN, "client_id", "client_secret", "authorize_url", "https://token.url"
     )
+
+
+@pytest.fixture
+def aiohttp_client_session() -> None:
+    """AIOHTTP client session."""
+    return ClientSession
+
+
+@pytest.fixture
+def mock_aioclient() -> Generator[AiohttpClientMocker, None, None]:
+    """Fixture to mock aioclient calls."""
+    with mock_aiohttp_client() as mock_session:
+        yield mock_session
 
 
 @pytest.fixture
@@ -41,6 +56,14 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             "auth_implementation": DOMAIN,
+            "token": {
+                "refresh_token": "REFRESH_TOKEN",
+                "access_token": "ACCESS_TOKEN_1",
+                "expires_in": 10,
+                "expires_at": 0,
+                "token_type": "bearer",
+                "random_other_data": "should_stay",
+            },
             CONF_HOST: "127.0.0.1",
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_PORT: 9123,
