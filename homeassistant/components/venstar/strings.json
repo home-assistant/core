@@ -9,6 +9,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "pin": "[%key:common::config_flow::data::pin%]",
           "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address."
         }
       }
     },

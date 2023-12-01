@@ -9,6 +9,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "device_class": "Device Type",
           "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address."
         }
       },
       "pair_tv": {
