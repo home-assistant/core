@@ -1766,9 +1766,20 @@
     },
     "flexit": {
       "name": "Flexit",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "integrations": {
+        "flexit": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Flexit"
+        },
+        "flexit_bacnet": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Flexit Nordic (BACnet)"
+        }
+      }
     },
     "flexom": {
       "name": "Bouygues Flexom",
@@ -2880,12 +2891,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "komfovent": {
-      "name": "Komfovent",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "konnected": {
       "name": "Konnected.io",
