@@ -16,8 +16,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("sensor")) == 10
 
-    assert hass.states.get("sensor.test_battery_level")
-
     assert hass.states.get("sensor.test_battery_level").state == str(
         STATES["charge_state"]["battery_level"]
     )
