@@ -3,7 +3,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from iottycloud.device import Device
-from iottycloud.verbs import LS_DEVICE_TYPE_UID
+from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_ON
 import pytest
 
 from homeassistant import setup
@@ -17,6 +17,11 @@ from tests.common import MockConfigEntry
 CLIENT_ID = "client_id"
 CLIENT_SECRET = "client_secret"
 REDIRECT_URI = "https://example.com/auth/external/callback"
+
+test_devices = [
+    Device("TestDevice0", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Device Name 0"),
+    Device("TestDevice1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Device Name 1"),
+]
 
 
 @pytest.fixture
@@ -65,11 +70,65 @@ def mock_iotty() -> Generator[None, MagicMock, None]:
 @pytest.fixture
 def mock_devices() -> Generator[None, MagicMock, None]:
     """Fixture for two LS Devices."""
-    return [
-        Device(
-            "TestDevice0", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Device Name 0"
-        ),
-        Device(
-            "TestDevice1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Device Name 1"
-        ),
-    ]
+    return test_devices
+
+
+@pytest.fixture
+def mock_store_entity() -> Generator[None, MagicMock, None]:
+    """To check if we correctly inject iottyCloud into device classes."""
+
+    with patch("homeassistant.components.iotty.api.IottyProxy.store_entity") as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_get_devices_nodevices() -> Generator[AsyncMock, None, None]:
+    """Mock for get_devices, returning two objects."""
+
+    with patch("iottycloud.cloudapi.CloudApi.get_devices") as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_get_devices_twodevices() -> Generator[AsyncMock, None, None]:
+    """Mock for get_devices, returning two objects."""
+
+    with patch(
+        "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_devices
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_get_status_empty() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch("iottycloud.cloudapi.CloudApi.get_status") as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_get_status_filled() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a get_status."""
+
+    retval = {RESULT: {STATUS: STATUS_ON}}
+    with patch(
+        "iottycloud.cloudapi.CloudApi.get_status", return_value=retval
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_update_status() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a update_status."""
+
+    with patch("iottycloud.device.Device.update_status") as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_schedule_update_ha_state() -> Generator[None, MagicMock, None]:
+    """Mock Hass update."""
+    with patch(
+        "homeassistant.helpers.entity.Entity.schedule_update_ha_state"
+    ) as mock_fn:
+        yield mock_fn
