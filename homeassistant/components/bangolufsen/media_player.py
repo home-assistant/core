@@ -1,10 +1,9 @@
 """Media player entity for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 import logging
-from multiprocessing.pool import ApplyResult
 from typing import Any, cast
 
 from mozart_api import __version__ as MOZART_API_VERSION
@@ -12,23 +11,17 @@ from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
     Art,
-    BeolinkLeader,
-    BeolinkListener,
     OverlayPlayRequest,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
     PlayQueueItem,
     PlayQueueItemType,
-    PlayQueueSettings,
-    ProductState,
-    RemoteMenuItem,
     RenderingState,
     SceneProperties,
     SoftwareUpdateState,
     SoftwareUpdateStatus,
     Source,
-    SourceArray,
     Uri,
     UserFlow,
     VolumeLevel,
@@ -36,6 +29,7 @@ from mozart_api.models import (
     VolumeSettings,
     VolumeState,
 )
+from mozart_api.mozart_client import get_highest_resolution_artwork
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -46,35 +40,32 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
-    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    ART_SIZE_ENUM,
     BANGOLUFSEN_MEDIA_TYPE,
     BANGOLUFSEN_STATES,
     CONF_BEOLINK_JID,
     CONF_DEFAULT_VOLUME,
     CONF_MAX_VOLUME,
-    CONF_VOLUME_STEP,
     DOMAIN,
-    ENTITY_ENUM,
     FALLBACK_SOURCES,
     HIDDEN_SOURCE_IDS,
-    REPEAT_ENUM,
     SOURCE_ENUM,
     VALID_MEDIA_TYPES,
     WEBSOCKET_NOTIFICATION,
 )
 from .entity import BangOlufsenEntity
+from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,19 +77,15 @@ BANGOLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY_MEDIA
-    | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.PLAY
-    | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.BROWSE_MEDIA
-    | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.TURN_OFF
 )
 
 
-PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(minutes=2)
 
 
@@ -108,9 +95,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
-    entity = hass.data[DOMAIN][config_entry.unique_id][ENTITY_ENUM.MEDIA_PLAYER]
     # Add MediaPlayer entity
-    async_add_entities(new_entities=[entity], update_before_add=True)
+    async_add_entities(
+        new_entities=[BangOlufsenMediaPlayer(config_entry)], update_before_add=True
+    )
 
 
 class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
@@ -128,9 +116,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._default_volume: int = self.entry.data[CONF_DEFAULT_VOLUME]
         self._max_volume: int = self.entry.data[CONF_MAX_VOLUME]
         self._model: str = self.entry.data[CONF_MODEL]
-        self._volume_step: int = self.entry.data[CONF_VOLUME_STEP]
 
-        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{self._host}/#/",
             identifiers={(DOMAIN, self._unique_id)},
@@ -139,19 +125,16 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             name=cast(str, self.name),
         )
         self._attr_name = self._name
-        self._attr_should_poll = True
         self._attr_unique_id = self._unique_id
+        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
-        self._beolink_listeners: list[BeolinkListener] = []
-        self._last_update: datetime = datetime(1970, 1, 1, 0, 0, 0, 0)
         self._media_image: Art = Art()
-        self._queue_settings: PlayQueueSettings = PlayQueueSettings()
-        self._remote_leader: BeolinkLeader | None = None
+        # self._queue_settings: PlayQueueSettings = PlayQueueSettings()
         self._software_status: SoftwareUpdateStatus = SoftwareUpdateStatus(
-            software_version="",
-            state=SoftwareUpdateState(seconds_remaining=0, value="idle"),
+            softwareVersion="",
+            state=SoftwareUpdateState(secondsRemaining=0, value="idle"),
         )
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
@@ -159,66 +142,72 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-
         await self._initialize()
 
-        await super().async_added_to_hass()
-        self._dispatchers.extend(
-            [
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
-                    self._update_playback_metadata,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_ERROR}",
-                    self._update_playback_error,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_PROGRESS}",
-                    self._update_playback_progress,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_STATE}",
-                    self._update_playback_state,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOURCE_CHANGE}",
-                    self._update_source_change,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.VOLUME}",
-                    self._update_volume,
-                ),
-                async_dispatcher_connect(
-                    self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
-                    self._update_sources,
-                ),
-            ]
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_ERROR}",
+                self._update_playback_error,
+            )
         )
 
-    async def async_update(self) -> None:
-        """Update polling information."""
-        if self._attr_available:
-            self._queue_settings = cast(
-                ApplyResult[PlayQueueSettings],
-                self._client.get_settings_queue(async_req=True, _request_timeout=5),
-            ).get()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
+                self._update_playback_metadata,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_PROGRESS}",
+                self._update_playback_progress,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_STATE}",
+                self._update_playback_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
+                self._update_sources,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOURCE_CHANGE}",
+                self._update_source_change,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.VOLUME}",
+                self._update_volume,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOFTWARE_UPDATE_STATE}",
+                self._update_device,
+            )
+        )
 
     async def _initialize(self) -> None:
         """Initialize connection dependent variables."""
 
         # Get software version.
-        self._software_status = cast(
-            ApplyResult[SoftwareUpdateStatus],
-            self._client.get_softwareupdate_status(async_req=True),
-        ).get()
+        self._software_status = await self._client.get_softwareupdate_status()
 
         _LOGGER.debug(
             "Connected to: %s %s running SW %s",
@@ -228,18 +217,15 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         )
 
         # Set the default and maximum volume of the product.
-        self._client.set_volume_settings(
+        await self._client.set_volume_settings(
             volume_settings=VolumeSettings(
                 default=VolumeLevel(level=self._default_volume),
                 maximum=VolumeLevel(level=self._max_volume),
-            ),
-            async_req=True,
+            )
         )
 
         # Get overall device state once. This is handled by WebSocket events the rest of the time.
-        product_state = cast(
-            ApplyResult[ProductState], self._client.get_product_state(async_req=True)
-        ).get()
+        product_state = await self._client.get_product_state()
 
         # Get volume information.
         if product_state.volume:
@@ -260,10 +246,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 if self._playback_state.value:
                     self._state = self._playback_state.value
 
-        self._last_update = utcnow()
+        self._attr_media_position_updated_at = utcnow()
 
         # Get the highest resolution available of the given images.
-        self._update_artwork()
+        self._media_image = get_highest_resolution_artwork(self._playback_metadata)
 
         # If the device has been updated with new sources, then the API will fail here.
         await self._update_sources()
@@ -277,10 +263,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Audio sources
         try:
             # Get all available sources.
-            sources = cast(
-                ApplyResult[SourceArray],
-                self._client.get_available_sources(target_remote=False, async_req=True),
-            ).get()
+            sources = await self._client.get_available_sources(target_remote=False)
 
         # Use a fallback list of sources
         except ValueError:
@@ -308,10 +291,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         }
 
         # Video sources from remote menu
-        menu_items = cast(
-            ApplyResult[dict[str, RemoteMenuItem]],
-            self._client.get_remote_menu(async_req=True),
-        ).get()
+        menu_items = await self._client.get_remote_menu()
 
         for key in menu_items:
             menu_item = menu_items[key]
@@ -337,40 +317,12 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         if self.hass.is_running:
             self.async_write_ha_state()
 
-    def _update_artwork(self) -> None:
-        """Find the highest resolution image."""
-        # Ensure that the metadata doesn't change mid processing.
-        metadata = self._playback_metadata
-
-        # Check if the metadata is not null and that there is art.
-        if (
-            isinstance(metadata, PlaybackContentMetadata)
-            and isinstance(metadata.art, list)
-            and len(metadata.art) > 0
-        ):
-            images = []
-            # Images either have a key for specifying resolution or a "size" for the image.
-            for image in metadata.art:
-                # Netradio.
-                if metadata.art[0].key is not None:
-                    images.append(int(image.key.split("x")[0]))
-                # Everything else.
-                elif metadata.art[0].size is not None:
-                    images.append(ART_SIZE_ENUM[image.size].value)
-
-            # Choose the largest image.
-            self._media_image = metadata.art[images.index(max(images))]
-
-        # Don't leave stale image metadata if there is no available artwork.
-        else:
-            self._media_image = Art()
-
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update _playback_metadata and related."""
         self._playback_metadata = data
 
         # Update current artwork.
-        self._update_artwork()
+        self._media_image = get_highest_resolution_artwork(self._playback_metadata)
 
         self.async_write_ha_state()
 
@@ -381,7 +333,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     async def _update_playback_progress(self, data: PlaybackProgress) -> None:
         """Update _playback_progress and last update."""
         self._playback_progress = data
-        self._last_update = utcnow()
+        self._attr_media_position_updated_at = utcnow()
 
         self.async_write_ha_state()
 
@@ -399,11 +351,34 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         """Update _source_change and related."""
         self._source_change = data
 
+        # Check if source is line-in or optical and progress should be updated
+        if self._source_change.id in (SOURCE_ENUM.lineIn, SOURCE_ENUM.spdif):
+            self._playback_progress = PlaybackProgress(progress=0)
+
     async def _update_volume(self, data: VolumeState) -> None:
         """Update _volume."""
         self._volume = data
 
         self.async_write_ha_state()
+
+    async def _update_device(self, data: SoftwareUpdateState) -> None:
+        """Update HA device SW version."""
+        # Get software version.
+        software_status = await self._client.get_softwareupdate_status()
+
+        # Update the HA device if the sw version does not match
+        if not isinstance(self._device, DeviceEntry):
+            self._device = get_device(self.hass, self._unique_id)
+
+        assert isinstance(self._device, DeviceEntry)
+
+        if software_status.software_version != self._device.sw_version:
+            device_registry = dr.async_get(self.hass)
+
+            device_registry.async_update_device(
+                device_id=self._device.id,
+                sw_version=software_status.software_version,
+            )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -440,15 +415,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     @property
     def media_position(self) -> int | None:
         """Return the current playback progress."""
-        # Don't show progress if the the device is a Beolink listener.
-        if self._remote_leader is None:
-            return self._playback_progress.progress
-        return None
-
-    @property
-    def media_position_updated_at(self) -> datetime:
-        """Return the last time that the playback position was updated."""
-        return self._last_update
+        return self._playback_progress.progress
 
     @property
     def media_image_url(self) -> str | None:
@@ -524,59 +491,19 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         return self._source_change.name
 
-    @property
-    def shuffle(self) -> bool | None:
-        """Return if queues should be shuffled."""
-        return self._queue_settings.shuffle
-
-    @property
-    def repeat(self) -> RepeatMode | None:
-        """Return current repeat setting for queues."""
-        if self._queue_settings.repeat:
-            return cast(RepeatMode, REPEAT_ENUM(self._queue_settings.repeat).name)
-        return None
-
     async def async_turn_off(self) -> None:
         """Set the device to "networkStandby"."""
-        self._client.post_standby(async_req=True)
-
-    async def async_volume_up(self) -> None:
-        """Volume up the on media player."""
-        if not self._volume.level or not self._volume.level.level:
-            _LOGGER.warning("Error setting volume")
-            return
-
-        new_volume = min(self._volume.level.level + self._volume_step, self._max_volume)
-        self._client.set_current_volume_level(
-            volume_level=VolumeLevel(level=new_volume),
-            async_req=True,
-        )
-
-    async def async_volume_down(self) -> None:
-        """Volume down the on media player."""
-        if not self._volume.level or not self._volume.level.level:
-            _LOGGER.warning("Error setting volume")
-            return
-
-        new_volume = max(self._volume.level.level - self._volume_step, 0)
-        self._client.set_current_volume_level(
-            volume_level=VolumeLevel(level=new_volume),
-            async_req=True,
-        )
+        await self._client.post_standby()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._client.set_current_volume_level(
-            volume_level=VolumeLevel(level=int(volume * 100)),
-            async_req=True,
+        await self._client.set_current_volume_level(
+            volume_level=VolumeLevel(level=int(volume * 100))
         )
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute media player."""
-        self._client.set_volume_mute(
-            volume_mute=VolumeMute(muted=mute),
-            async_req=True,
-        )
+        await self._client.set_volume_mute(volume_mute=VolumeMute(muted=mute))
 
     async def async_media_play_pause(self) -> None:
         """Toggle play/pause media player."""
@@ -587,28 +514,26 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_media_pause(self) -> None:
         """Pause media player."""
-        self._client.post_playback_command(command="pause", async_req=True)
+        await self._client.post_playback_command(command="pause")
 
     async def async_media_play(self) -> None:
         """Play media player."""
-        self._client.post_playback_command(command="play", async_req=True)
+        await self._client.post_playback_command(command="play")
 
     async def async_media_stop(self) -> None:
         """Pause media player."""
-        self._client.post_playback_command(command="stop", async_req=True)
+        await self._client.post_playback_command(command="stop")
 
     async def async_media_next_track(self) -> None:
         """Send the next track command."""
-        self._client.post_playback_command(command="skip", async_req=True)
+        await self._client.post_playback_command(command="skip")
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
         if self.source == SOURCE_ENUM.deezer:
-            self._client.seek_to_position(
-                position_ms=int(position * 1000), async_req=True
-            )
+            await self._client.seek_to_position(position_ms=int(position * 1000))
             # Try to prevent the playback progress from bouncing in the UI.
-            self._last_update = utcnow()
+            self._attr_media_position_updated_at = utcnow()
             self._playback_progress = PlaybackProgress(progress=int(position))
 
             self.async_write_ha_state()
@@ -617,28 +542,11 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
-        self._client.post_playback_command(command="prev", async_req=True)
+        await self._client.post_playback_command(command="prev")
 
     async def async_clear_playlist(self) -> None:
         """Clear the current playback queue."""
-        self._client.post_clear_queue(async_req=True)
-
-    async def async_set_shuffle(self, shuffle: bool) -> None:
-        """Set playback queues to shuffle."""
-        self._client.set_settings_queue(
-            play_queue_settings=PlayQueueSettings(shuffle=shuffle),
-            async_req=True,
-        )
-
-        self._queue_settings.shuffle = shuffle
-
-    async def async_set_repeat(self, repeat: RepeatMode) -> None:
-        """Set playback queues to repeat."""
-        self._client.set_settings_queue(
-            play_queue_settings=PlayQueueSettings(repeat=REPEAT_ENUM[repeat]),
-            async_req=True,
-        )
-        self._queue_settings.repeat = REPEAT_ENUM[repeat]
+        await self._client.post_clear_queue()
 
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
@@ -656,10 +564,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Check for source type
         if source in self._audio_sources.values():
             # Audio
-            self._client.set_active_source(source_id=key, async_req=True)
+            await self._client.set_active_source(source_id=key)
         else:
             # Video
-            self._client.post_remote_trigger(id=key, async_req=True)
+            await self._client.post_remote_trigger(id=key)
 
     async def async_play_media(
         self,
@@ -693,33 +601,31 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 media_id = media_id.replace(".m3u", "")
 
         if media_type in (MediaType.URL, MediaType.MUSIC):
-            self._client.post_uri_source(uri=Uri(location=media_id), async_req=True)
+            await self._client.post_uri_source(uri=Uri(location=media_id))
 
         # The "provider" media_type may not be suitable for overlay all the time.
         # Use it for now.
         elif media_type == BANGOLUFSEN_MEDIA_TYPE.TTS:
-            self._client.post_overlay_play(
+            await self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
                     uri=Uri(location=media_id),
-                ),
-                async_req=True,
+                )
             )
 
         elif media_type == BANGOLUFSEN_MEDIA_TYPE.RADIO:
-            self._client.run_provided_scene(
+            await self._client.run_provided_scene(
                 scene_properties=SceneProperties(
-                    action_list=[
+                    actionList=[
                         Action(
                             type="radio",
-                            radio_station_id=media_id,
+                            radioStationId=media_id,
                         )
                     ]
-                ),
-                async_req=True,
+                )
             )
 
         elif media_type == BANGOLUFSEN_MEDIA_TYPE.FAVOURITE:
-            self._client.activate_preset(id=int(media_id), async_req=True)
+            await self._client.activate_preset(id=int(media_id))
 
         elif media_type == BANGOLUFSEN_MEDIA_TYPE.DEEZER:
             try:
@@ -730,8 +636,8 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                         deezer_id = kwargs[ATTR_MEDIA_EXTRA]["id"]
 
                     # Play Deezer flow.
-                    self._client.start_deezer_flow(
-                        user_flow=UserFlow(user_id=deezer_id), async_req=True
+                    await self._client.start_deezer_flow(
+                        user_flow=UserFlow(userId=deezer_id)
                     )
 
                 # Play a Deezer playlist or album.
@@ -740,26 +646,24 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     if "start_from" in kwargs[ATTR_MEDIA_EXTRA]:
                         start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
 
-                    self._client.add_to_queue(
+                    await self._client.add_to_queue(
                         play_queue_item=PlayQueueItem(
                             provider=PlayQueueItemType(value="deezer"),
-                            start_now_from_position=start_from,
+                            startNowFromPosition=start_from,
                             type="playlist",
                             uri=media_id,
-                        ),
-                        async_req=True,
+                        )
                     )
 
                 # Play a Deezer track.
                 else:
-                    self._client.add_to_queue(
+                    await self._client.add_to_queue(
                         play_queue_item=PlayQueueItem(
                             provider=PlayQueueItemType(value="deezer"),
-                            start_now_from_position=0,
+                            startNowFromPosition=0,
                             type="track",
                             uri=media_id,
-                        ),
-                        async_req=True,
+                        )
                     )
 
             except ApiException as error:

@@ -1,6 +1,8 @@
 """Test the bangolufsen config_flow."""
 
 
+from unittest.mock import Mock
+
 from mozart_api.exceptions import ApiException, NotFoundException
 import pytest
 from urllib3.exceptions import MaxRetryError, NewConnectionError
@@ -14,7 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import MockMozartClient
 from .const import (
     TEST_DATA_CONFIRM,
-    TEST_DATA_OPTIONS,
     TEST_DATA_USER,
     TEST_DATA_USER_INVALID,
     TEST_DATA_ZEROCONF,
@@ -28,7 +29,7 @@ async def test_config_flow_max_retry_error(
     hass: HomeAssistant, mock_client: MockMozartClient
 ) -> None:
     """Test we handle not_mozart_device."""
-    mock_client.get_beolink_self.side_effect = MaxRetryError(pool=None, url=None)
+    mock_client.get_beolink_self.side_effect = MaxRetryError(pool=Mock(), url="")
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -64,9 +65,7 @@ async def test_config_flow_new_connection_error(
     hass: HomeAssistant, mock_client: MockMozartClient
 ) -> None:
     """Test we handle new_connection_error."""
-    mock_client.get_beolink_self.side_effect = NewConnectionError(
-        pool=None, message=None
-    )
+    mock_client.get_beolink_self.side_effect = NewConnectionError(Mock(), "")
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -184,26 +183,26 @@ async def test_config_flow_zeroconf_not_mozart_device(hass: HomeAssistant) -> No
     assert result_user["reason"] == "not_mozart_device"
 
 
-async def test_config_flow_options(hass: HomeAssistant, mock_config_entry) -> None:
-    """Test config flow options."""
+# async def test_config_flow_options(hass: HomeAssistant, mock_config_entry) -> None:
+#     """Test config flow options."""
 
-    mock_config_entry.add_to_hass(hass)
+#     mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+#     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    result_user = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
+#     result_user = await hass.config_entries.options.async_init(
+#         mock_config_entry.entry_id
+#     )
 
-    assert result_user["type"] == FlowResultType.FORM
-    assert result_user["step_id"] == "init"
+#     assert result_user["type"] == FlowResultType.FORM
+#     assert result_user["step_id"] == "init"
 
-    result_confirm = await hass.config_entries.options.async_configure(
-        flow_id=result_user["flow_id"],
-        user_input=TEST_DATA_OPTIONS,
-    )
+#     result_confirm = await hass.config_entries.options.async_configure(
+#         flow_id=result_user["flow_id"],
+#         user_input=TEST_DATA_OPTIONS,
+#     )
 
-    assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
-    new_data = TEST_DATA_CONFIRM
-    new_data.update(TEST_DATA_OPTIONS)
-    assert result_confirm["data"] == new_data
+#     assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
+#     new_data = TEST_DATA_CONFIRM
+#     new_data.update(TEST_DATA_OPTIONS)
+#     assert result_confirm["data"] == new_data

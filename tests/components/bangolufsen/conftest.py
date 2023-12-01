@@ -1,6 +1,6 @@
 """Test fixtures for bangolufsen."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from mozart_api.models import BeolinkPeer, VolumeLevel, VolumeSettings
 import pytest
@@ -34,11 +34,11 @@ class MockMozartClient:
     )
 
     # API endpoints
-    get_beolink_self = Mock()
-    get_beolink_self.return_value.get.return_value = get_beolink_self_result
+    get_beolink_self = AsyncMock()
+    get_beolink_self.return_value = get_beolink_self_result
 
-    get_volume_settings = Mock()
-    get_volume_settings.return_value.get.return_value = get_volume_settings_result
+    get_volume_settings = AsyncMock()
+    get_volume_settings.return_value = get_volume_settings_result
 
 
 @pytest.fixture

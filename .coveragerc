@@ -114,6 +114,7 @@ omit =
     homeassistant/components/bangolufsen/const.py
     homeassistant/components/bangolufsen/entity.py
     homeassistant/components/bangolufsen/media_player.py
+    homeassistant/components/bangolufsen/util.py
     homeassistant/components/bangolufsen/websocket.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py

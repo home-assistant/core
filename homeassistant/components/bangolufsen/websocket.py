@@ -5,8 +5,6 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from multiprocessing.pool import ApplyResult
-from typing import cast
 
 from mozart_api.models import (
     PlaybackContentMetadata,
@@ -14,7 +12,6 @@ from mozart_api.models import (
     PlaybackProgress,
     RenderingState,
     SoftwareUpdateState,
-    SoftwareUpdateStatus,
     Source,
     VolumeState,
     WebsocketNotificationTag,
@@ -22,7 +19,6 @@ from mozart_api.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -30,9 +26,9 @@ from .const import (
     BANGOLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     WEBSOCKET_NOTIFICATION,
-    BangOlufsenVariables,
-    get_device,
 )
+from .entity import BangOlufsenVariables
+from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +42,6 @@ class BangOlufsenWebsocket(BangOlufsenVariables):
         BangOlufsenVariables.__init__(self, entry)
 
         self.hass = hass
-        self._device: DeviceEntry | None = None
 
         # WebSocket callbacks
         self._client.get_on_connection(self.on_connection)
@@ -165,27 +160,12 @@ class BangOlufsenWebsocket(BangOlufsenVariables):
         )
 
     def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
-        """Check device sw version."""
-
-        # Get software version.
-        software_status = cast(
-            ApplyResult[SoftwareUpdateStatus],
-            self._client.get_softwareupdate_status(async_req=True),
-        ).get()
-
-        # Update the HA device if the sw version does not match
-        if not isinstance(self._device, DeviceEntry):
-            self._device = get_device(self.hass, self._unique_id)
-
-        assert isinstance(self._device, DeviceEntry)
-
-        if software_status.software_version != self._device.sw_version:
-            device_registry = dr.async_get(self.hass)
-
-            device_registry.async_update_device(
-                device_id=self._device.id,
-                sw_version=software_status.software_version,
-            )
+        """Send software_update_state dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOFTWARE_UPDATE_STATE}",
+            notification,
+        )
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""

@@ -1,6 +1,8 @@
 """Constants used for testing the bangolufsen integration."""
 
 
+from ipaddress import IPv4Address
+
 from homeassistant.components.bangolufsen.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ITEM_NUMBER,
@@ -9,10 +11,9 @@ from homeassistant.components.bangolufsen.const import (
     CONF_BEOLINK_JID,
     CONF_DEFAULT_VOLUME,
     CONF_MAX_VOLUME,
-    CONF_VOLUME_STEP,
 )
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL
 
 TEST_HOST = "192.168.0.1"
 TEST_HOST_INVALID = "192.168.0"
@@ -48,14 +49,12 @@ TEST_DATA_USER = {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL_BALANCE}
 TEST_DATA_USER_INVALID = {CONF_HOST: TEST_HOST_INVALID, CONF_MODEL: TEST_MODEL_BALANCE}
 
 TEST_DATA_NO_HOST = {
-    CONF_VOLUME_STEP: TEST_VOLUME_STEP,
     CONF_DEFAULT_VOLUME: TEST_DEFAULT_VOLUME,
     CONF_MAX_VOLUME: TEST_MAX_VOLUME,
 }
 
 TEST_DATA_CONFIRM = {
     CONF_HOST: TEST_HOST,
-    CONF_VOLUME_STEP: TEST_VOLUME_STEP,
     CONF_DEFAULT_VOLUME: TEST_DEFAULT_VOLUME,
     CONF_MAX_VOLUME: TEST_MAX_VOLUME,
     CONF_MODEL: TEST_MODEL_BALANCE,
@@ -63,8 +62,8 @@ TEST_DATA_CONFIRM = {
 }
 
 TEST_DATA_ZEROCONF = ZeroconfServiceInfo(
-    addresses=[TEST_HOST],
-    host=TEST_HOST,
+    ip_address=IPv4Address(TEST_HOST),
+    ip_addresses=[IPv4Address(TEST_HOST)],
     port=80,
     hostname=TEST_HOSTNAME_ZEROCONF,
     type=TEST_TYPE_ZEROCONF,
@@ -78,26 +77,11 @@ TEST_DATA_ZEROCONF = ZeroconfServiceInfo(
 )
 
 TEST_DATA_ZEROCONF_NOT_MOZART = ZeroconfServiceInfo(
-    addresses=[TEST_HOST],
-    host=TEST_HOST,
+    ip_address=IPv4Address(TEST_HOST),
+    ip_addresses=[IPv4Address(TEST_HOST)],
     port=80,
     hostname=TEST_HOSTNAME_ZEROCONF,
     type=TEST_TYPE_ZEROCONF,
     name=TEST_NAME_ZEROCONF,
     properties={ATTR_SERIAL_NUMBER: TEST_SERIAL_NUMBER},
 )
-
-TEST_DATA_OPTIONS = {
-    CONF_NAME: TEST_NAME_OPTIONS,
-    CONF_VOLUME_STEP: TEST_VOLUME_STEP_OPTIONS,
-    CONF_DEFAULT_VOLUME: TEST_DEFAULT_VOLUME_OPTIONS,
-    CONF_MAX_VOLUME: TEST_MAX_VOLUME_OPTIONS,
-}
-TEST_DATA_OPTIONS_FULL = {
-    CONF_HOST: TEST_HOST,
-    CONF_VOLUME_STEP: TEST_VOLUME_STEP_OPTIONS,
-    CONF_DEFAULT_VOLUME: TEST_DEFAULT_VOLUME_OPTIONS,
-    CONF_MAX_VOLUME: TEST_MAX_VOLUME_OPTIONS,
-    CONF_MODEL: TEST_MODEL_BALANCE,
-    CONF_BEOLINK_JID: TEST_JID_1,
-}

@@ -3,11 +3,9 @@ from __future__ import annotations
 
 import ipaddress
 import logging
-from multiprocessing.pool import ApplyResult
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 from mozart_api.exceptions import ApiException, NotFoundException
-from mozart_api.models import BeolinkPeer, VolumeSettings
 from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError, NewConnectionError
 import voluptuous as vol
@@ -28,11 +26,9 @@ from .const import (
     CONF_DEFAULT_VOLUME,
     CONF_MAX_VOLUME,
     CONF_SERIAL_NUMBER,
-    CONF_VOLUME_STEP,
     DEFAULT_DEFAULT_VOLUME,
     DEFAULT_MAX_VOLUME,
     DEFAULT_MODEL,
-    DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
 
@@ -40,40 +36,33 @@ from .const import (
 class UserInput(TypedDict, total=False):
     """TypedDict for user_input."""
 
-    name: str
-    volume_step: int
     default_volume: int
-    max_volume: int
     host: str
-    model: str
     jid: str
+    max_volume: int
+    model: str
+    name: str
 
 
 class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    _beolink_jid = ""
+    _client: MozartClient
+    _host = ""
+    _model = ""
+    _name = ""
+    _serial_number = ""
+
     def __init__(self) -> None:
         """Init the config flow."""
-        self._host: str = ""
-        self._name: str = ""
-        self._model: str = ""
-        self._serial_number: str = ""
-        self._beolink_jid: str = ""
-
-        self._client: MozartClient | None = None
 
     VERSION = 1
 
     async def _compile_data(self) -> UserInput:
         """Compile data for entry creation."""
-        if not self._client:
-            self._client = MozartClient(self._host, urllib3_logging_level=logging.ERROR)
-
         # Get current volume settings
-        volume_settings = cast(
-            ApplyResult[VolumeSettings],
-            self._client.get_volume_settings(async_req=True),
-        ).get()
+        volume_settings = await self._client.get_volume_settings()
 
         # Create a dict containing all necessary information for setup
         data = UserInput()
@@ -81,7 +70,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         data[CONF_HOST] = self._host
         data[CONF_MODEL] = self._model
         data[CONF_BEOLINK_JID] = self._beolink_jid
-        data[CONF_VOLUME_STEP] = DEFAULT_VOLUME_STEP
         data[CONF_DEFAULT_VOLUME] = (
             volume_settings.default.level
             if volume_settings.default and volume_settings.default.level
@@ -114,10 +102,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Try to get information from Beolink self method.
             try:
-                beolink_self = cast(
-                    ApplyResult[BeolinkPeer],
-                    self._client.get_beolink_self(async_req=True, _request_timeout=3),
-                ).get()
+                beolink_self = await self._client.get_beolink_self(_request_timeout=3)
 
             except (
                 ApiException,
@@ -173,7 +158,9 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         await self.async_set_unique_id(self._serial_number)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+        self._client = MozartClient(self._host, urllib3_logging_level=logging.ERROR)
 
         return await self.async_step_confirm()
 

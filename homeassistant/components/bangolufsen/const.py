@@ -2,37 +2,12 @@
 
 from __future__ import annotations
 
-from enum import Enum, StrEnum
-import logging
-from typing import Final, cast
+from enum import StrEnum
+from typing import Final
 
-from mozart_api.models import (
-    PlaybackContentMetadata,
-    PlaybackProgress,
-    RenderingState,
-    Source,
-    SourceArray,
-    SourceTypeEnum,
-    VolumeLevel,
-    VolumeMute,
-    VolumeState,
-)
-from mozart_api.mozart_client import MozartClient
+from mozart_api.models import Source, SourceArray, SourceTypeEnum
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
-
-
-class ART_SIZE_ENUM(Enum):
-    """Enum used for sorting images that have size defined by a string."""
-
-    small = 1
-    medium = 2
-    large = 3
 
 
 class SOURCE_ENUM(StrEnum):
@@ -58,14 +33,6 @@ class SOURCE_ENUM(StrEnum):
     tidalConnect = "Tidal Connect"  # noqa: N815
 
 
-class REPEAT_ENUM(StrEnum):
-    """Enum used for translating device repeat settings to Home Assistant settings."""
-
-    all = "all"
-    one = "track"
-    off = "none"
-
-
 BANGOLUFSEN_STATES: dict[str, MediaPlayerState] = {
     # Dict used for translating device states to Home Assistant states.
     "started": MediaPlayerState.PLAYING,
@@ -75,9 +42,8 @@ BANGOLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "stopped": MediaPlayerState.PAUSED,
     "ended": MediaPlayerState.PAUSED,
     "error": MediaPlayerState.IDLE,
-    # A devices initial state is "unknown" and should be treated as "idle"
+    # A device's initial state is "unknown" and should be treated as "idle"
     "unknown": MediaPlayerState.IDLE,
-    # Power states
 }
 
 
@@ -103,13 +69,6 @@ class MODEL_ENUM(StrEnum):
     BEOSOUND_EMERGE = "Beosound Emerge"
     BEOSOUND_LEVEL = "Beosound Level"
     BEOSOUND_THEATRE = "Beosound Theatre"
-
-
-class ENTITY_ENUM(StrEnum):
-    """Enum for accessing and storing the entities in hass."""
-
-    MEDIA_PLAYER = "media_player"
-    WEBSOCKET = "websocket"
 
 
 # Dispatcher events
@@ -148,7 +107,6 @@ VOLUME_STEP_RANGE: Final[range] = range(1, 20, 1)
 # Configuration.
 CONF_DEFAULT_VOLUME: Final = "default_volume"
 CONF_MAX_VOLUME: Final = "max_volume"
-CONF_VOLUME_STEP: Final = "volume_step"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
@@ -199,57 +157,57 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
     items=[
         Source(
             id="uriStreamer",
-            is_enabled=True,
-            is_playable=False,
+            isEnabled=True,
+            isPlayable=False,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
         ),
         Source(
             id="bluetooth",
-            is_enabled=True,
-            is_playable=False,
+            isEnabled=True,
+            isPlayable=False,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
         ),
         Source(
             id="spotify",
-            is_enabled=True,
-            is_playable=False,
+            isEnabled=True,
+            isPlayable=False,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
         ),
         Source(
             id="lineIn",
-            is_enabled=True,
-            is_playable=True,
+            isEnabled=True,
+            isPlayable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
         ),
         Source(
             id="spdif",
-            is_enabled=True,
-            is_playable=True,
+            isEnabled=True,
+            isPlayable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
         ),
         Source(
             id="netRadio",
-            is_enabled=True,
-            is_playable=True,
+            isEnabled=True,
+            isPlayable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
         ),
         Source(
             id="deezer",
-            is_enabled=True,
-            is_playable=True,
+            isEnabled=True,
+            isPlayable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
         ),
         Source(
             id="tidalConnect",
-            is_enabled=True,
-            is_playable=True,
+            isEnabled=True,
+            isPlayable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
         ),
@@ -265,44 +223,3 @@ CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
 # Misc.
 WEBSOCKET_CONNECTION_DELAY: Final[float] = 3.0
-
-
-def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None:
-    """Get the device."""
-    if not isinstance(hass, HomeAssistant):
-        return None
-
-    device_registry = dr.async_get(hass)
-    device = cast(DeviceEntry, device_registry.async_get_device({(DOMAIN, unique_id)}))
-    return device
-
-
-class BangOlufsenVariables:
-    """Shared variables for various classes."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the object."""
-
-        # get the input from the config entry.
-        self.entry: ConfigEntry = entry
-
-        # Set the configuration variables.
-        self._host: str = self.entry.data[CONF_HOST]
-        self._name: str = self.entry.title
-        self._unique_id: str = cast(str, self.entry.unique_id)
-
-        self._client: MozartClient = MozartClient(
-            host=self._host,
-            websocket_reconnect=True,
-            urllib3_logging_level=logging.ERROR,
-        )
-
-        # Objects that get directly updated by notifications.
-        self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
-        self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)
-        self._playback_source: Source = Source()
-        self._playback_state: RenderingState = RenderingState()
-        self._source_change: Source = Source()
-        self._volume: VolumeState = VolumeState(
-            level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
-        )
