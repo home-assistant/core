@@ -1,6 +1,8 @@
 """Unit tests for iottycloud API."""
 
 
+from unittest.mock import patch
+
 from aiohttp import ClientSession
 from iottycloud.verbs import LS_DEVICE_TYPE_UID
 import pytest
@@ -15,12 +17,6 @@ from .conftest import test_devices
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-@pytest.fixture
-def aiohttp_client_session() -> None:
-    """AIOHTTP client session."""
-    return ClientSession
 
 
 async def test_api_create_fail(
@@ -41,24 +37,57 @@ async def test_api_create_ok(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aiohttp_client_session: None,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
 ) -> None:
     """Test API creation."""
 
     mock_config_entry.add_to_hass(hass)
     assert mock_config_entry.data["auth_implementation"] is not None
 
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
 
     assert iotty is not None
+
+
+@patch(
+    "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.valid_token", False
+)
+async def test_api_getaccesstoken_tokennotvalid_reloadtoken(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_aioclient: None,
+    aiohttp_client_session: ClientSession,
+) -> None:
+    """Print a message if the token is not valid."""
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+    mock_aioclient.post(
+        "https://token.url", json={"access_token": "ACCESS_TOKEN_1", "expires_in": 100}
+    )
+
+    mock_aioclient.post("https://example.com", status=201)
+
+    mock_config_entry.add_to_hass(hass)
+    oauth2_session = config_entry_oauth2_flow.OAuth2Session(
+        hass, mock_config_entry, local_oauth_impl
+    )
+
+    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth2_session)
+
+    tok = await iotty.async_get_access_token()
+    assert tok is not None
 
 
 async def test_api_init_ok_nodevices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_get_devices_nodevices,
 ) -> None:
@@ -66,9 +95,11 @@ async def test_api_init_ok_nodevices(
 
     mock_config_entry.add_to_hass(hass)
 
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
 
     await iotty.init(mock_config_entry)
     await hass.async_block_till_done()
@@ -80,7 +111,7 @@ async def test_api_init_ok_nodevices(
 async def test_api_init_ok_twodevices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_get_devices_twodevices,
     mock_get_status_filled,
@@ -90,9 +121,11 @@ async def test_api_init_ok_twodevices(
 
     mock_config_entry.add_to_hass(hass)
 
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
 
     hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = iotty
 
@@ -109,15 +142,17 @@ async def test_api_init_ok_twodevices(
 def test_store_entity_duplicate_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_devices: list,
 ) -> None:
     """Store twice the same entity. Only one remains."""
     mock_config_entry.add_to_hass(hass)
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
     assert len(iotty._entities) == 0
 
     iotty.store_entity("TEST", mock_devices[0])
@@ -130,15 +165,17 @@ def test_store_entity_duplicate_id(
 def test_store_entity_ok(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_devices: list,
 ) -> None:
     """Store two entities."""
     mock_config_entry.add_to_hass(hass)
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
     assert len(iotty._entities) == 0
 
     iotty.store_entity("TEST", mock_devices[0])
@@ -151,7 +188,7 @@ def test_store_entity_ok(
 async def test_api_polling_nostatus(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_devices: list,
     mock_get_status_empty,
@@ -162,9 +199,11 @@ async def test_api_polling_nostatus(
 
     mock_config_entry.add_to_hass(hass)
 
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
     hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = iotty
 
     await iotty.init(mock_config_entry)
@@ -179,7 +218,7 @@ async def test_api_polling_nostatus(
 async def test_api_polling_withstatus_device_non_existant(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_get_devices_twodevices: list,
     mock_get_status_filled,
@@ -190,9 +229,11 @@ async def test_api_polling_withstatus_device_non_existant(
 
     mock_config_entry.add_to_hass(hass)
 
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
 
     await iotty.init(mock_config_entry)
     await hass.async_block_till_done()
@@ -206,7 +247,7 @@ async def test_api_polling_withstatus_device_non_existant(
 async def test_api_polling_withstatus(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    oauth_impl: ClientSession,
+    local_oauth_impl: ClientSession,
     aiohttp_client_session: None,
     mock_get_devices_twodevices,
     mock_get_status_filled,
@@ -217,9 +258,11 @@ async def test_api_polling_withstatus(
 
     mock_config_entry.add_to_hass(hass)
 
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, oauth_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
 
-    iotty = api.IottyProxy(hass, aiohttp_client_session, oauth_impl)
+    iotty = api.IottyProxy(hass, aiohttp_client_session, local_oauth_impl)
     hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = iotty
     await hass.async_block_till_done()
 
