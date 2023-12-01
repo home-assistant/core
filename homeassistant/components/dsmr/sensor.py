@@ -651,7 +651,7 @@ async def async_setup_entry(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
 
-            except (serial.serialutil.SerialException, OSError):
+            except (serial.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
