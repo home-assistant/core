@@ -46,6 +46,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="charger_power",
@@ -81,6 +82,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfLength.MILES,
             device_class=SensorDeviceClass.DISTANCE,
+            suggested_display_precision=1,
         ),
     ),
     TessieGroup.DRIVE_STATE: (
@@ -113,6 +115,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfLength.MILES,
             device_class=SensorDeviceClass.DISTANCE,
+            suggested_display_precision=0,
         ),
         SensorEntityDescription(
             key="tpms_pressure_fl",
@@ -121,6 +124,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="tpms_pressure_fr",
@@ -129,6 +133,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="tpms_pressure_rl",
@@ -137,6 +142,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="tpms_pressure_rr",
@@ -145,6 +151,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfPressure.BAR,
             suggested_unit_of_measurement=UnitOfPressure.PSI,
             device_class=SensorDeviceClass.PRESSURE,
+            suggested_display_precision=1,
         ),
     ),
     TessieGroup.CLIMATE_STATE: (
@@ -154,6 +161,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="outside_temp",
@@ -161,6 +169,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="driver_temp_setting",
@@ -168,6 +177,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
+            suggested_display_precision=1,
         ),
         SensorEntityDescription(
             key="passenger_temp_setting",
@@ -175,6 +185,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
+            suggested_display_precision=1,
         ),
     ),
 }
