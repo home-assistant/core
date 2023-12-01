@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfVolume
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -138,7 +144,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement="°F",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         suggested_display_precision=1,
         value_fn=lambda device: device.temperature,
     ),
@@ -146,7 +152,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         key=INLET_TDS,
         translation_key=INLET_TDS,
         icon=TDS_ICON,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.inlet_tds,
@@ -155,7 +161,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         key=OUTLET_TDS,
         translation_key=OUTLET_TDS,
         icon=TDS_ICON,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.outlet_tds,
@@ -206,10 +212,8 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     device_type: str = config_entry.data[CONF_DEVICE_TYPE]
-    entities: list[SensorEntity] = []
-
     if device_type == DEV_HUB:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -225,7 +229,7 @@ async def async_setup_entry(
             )
         )
     elif device_type == DEV_SOFTENER:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -237,7 +241,7 @@ async def async_setup_entry(
             )
         )
     elif device_type == DEV_FILTER:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -248,7 +252,7 @@ async def async_setup_entry(
             )
         )
     elif device_type == DEV_LEAK_DETECTOR:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -258,7 +262,7 @@ async def async_setup_entry(
             )
         )
     elif device_type == DEV_PROTECTION_VALVE:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -270,7 +274,7 @@ async def async_setup_entry(
             )
         )
     elif device_type == DEV_PUMP_CONTROLLER:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -281,7 +285,7 @@ async def async_setup_entry(
             )
         )
     elif device_type == DEV_RO_FILTER:
-        entities.extend(
+        async_add_entities(
             DROPSensor(coordinator, sensor)
             for sensor in SENSORS
             if sensor.key
@@ -293,8 +297,6 @@ async def async_setup_entry(
                 OUTLET_TDS,
             )
         )
-
-    async_add_entities(entities)
 
 
 class DROPSensor(DROPEntity, SensorEntity):
