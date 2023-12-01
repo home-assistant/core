@@ -21,14 +21,9 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
         """Init DROP entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.unique_id}_{entity_type}"
-        self._device: DROPDeviceDataUpdateCoordinator = coordinator
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.unique_id)},
-            manufacturer=self._device.manufacturer,
-            model=self._device.model,
-            name=self._device.device_name,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.unique_id)},
+            manufacturer=self.coordinator.manufacturer,
+            model=self.coordinator.model,
+            name=self.coordinator.device_name,
         )
