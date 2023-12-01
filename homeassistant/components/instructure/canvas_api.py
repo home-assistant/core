@@ -155,21 +155,26 @@ class CanvasAPI:
             "/conversations", {"per_page": "50"}
         )
         conversations = json.loads(response_unread.content.decode("utf-8"))
+        
         # get unread and read messages
-        show_read = 5
-        read_conversations = sorted(
-            [conv for conv in conversations if conv["workflow_state"] == "read"],
-            key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
-            reverse=True,
-        )
         unread_conversations = sorted(
             [conv for conv in conversations if conv["workflow_state"] == "unread"],
             key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
             reverse=True,
         )
-        # pick the latest 5 read messages
-        if len(read_conversations) >= show_read:
-            read_conversations = read_conversations[:show_read]
+        
+        read_conversations = []
+        if len(unread_conversations) < 5:
+            show_read = 5 - len(unread_conversations)
+            read_conversations = sorted(
+                [conv for conv in conversations if conv["workflow_state"] == "read"],
+                key=lambda x: datetime.strptime(x["last_message_at"], ISO_DATETIME_FORMAT),
+                reverse=True,
+            )
+            # pick the latest 5 read messages
+            if len(read_conversations) >= show_read:
+                read_conversations = read_conversations[:show_read]
+        
         merged_conversations = unread_conversations + read_conversations
         if len(merged_conversations) != 0:
             return {

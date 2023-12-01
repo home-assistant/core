@@ -57,7 +57,7 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=ASSIGNMENTS_KEY,
         icon="mdi:note-outline",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["name"] if data else "There is no upcoming assignment",
+        name_fn=lambda data: data["name"] if data else "There are no upcoming assignments",
         value_fn=lambda data: datetime_process(data["due_at"])
         if data
         else "",
@@ -74,7 +74,7 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=ANNOUNCEMENTS_KEY,
         icon="mdi:message-alert",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["title"] if data else "There is no announcement",
+        name_fn=lambda data: data["title"] if data else "There are no announcements",
         value_fn=lambda data: data["read_state"] if data else "",
         attr_fn=lambda data, courses: {
             #"Course": courses[data["context_code"].split("_")[1]],
@@ -90,7 +90,7 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=CONVERSATIONS_KEY,
         icon="mdi:email",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["subject"] if data else "There is no message",
+        name_fn=lambda data: data["subject"] if data else "There are no messages",
         value_fn=lambda data: data["workflow_state"]
         if data
         else "",
@@ -109,7 +109,7 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=GRADES_KEY,
         icon="mdi:star",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["assignment_id"] if data else "There is no graded assignment",
+        name_fn=lambda data: data["assignment_id"] if data else "There are no graded assignments",
         value_fn=lambda data: data["grade"] if data else "",
         attr_fn=lambda data, courses: {
             "Score": data["score"],
