@@ -21,7 +21,6 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_PROVINCE, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
@@ -53,7 +52,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_schema = vol.Schema(
             {
-                vol.Required(
+                vol.Optional(
                     CONF_COUNTRY, default=self.hass.config.country
                 ): CountrySelector(
                     CountrySelectorConfig(

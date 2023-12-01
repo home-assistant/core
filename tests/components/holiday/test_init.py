@@ -25,5 +25,5 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # See https://github.com/python/mypy/issues/9005
-    assert entry.state is ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
+    state: ConfigEntryState = entry.state
+    assert state == ConfigEntryState.NOT_LOADED

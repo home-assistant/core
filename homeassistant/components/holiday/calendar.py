@@ -23,31 +23,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Holiday Calendar config entry."""
     country: str = config_entry.data[CONF_COUNTRY]
-    province: str | None = config_entry.data.get(CONF_PROVINCE)
+    province: str | None = config_entry.data.get(CONF_PROVINCE)language = hass.config.language
 
-    obj_holidays = country_holidays(country, subdiv=province)
-    available_languages = [
-        lang.replace("en_US", "en") for lang in obj_holidays.supported_languages
-    ]
-
-    if hass.config.language in available_languages:
-        default_language = hass.config.language
-    else:
-        default_language = obj_holidays.default_language or "en_US"
-
-    if default_language == "en" and country != "CA":
-        default_language = "en_US"
-
-    obj_holidays.update(
-        dict(
-            country_holidays(
-                country,
-                subdiv=province,
-                language=default_language,
-                years=dt_util.now().year,
-            )
-        )
+    obj_holidays = country_holidays(
+        country,
+        subdiv=province,
+        years={dt_util.now().year, dt_util.now().year + 1},
+        language=language,
     )
+    if language == "en":
+        for lang in obj_holidays.supported_languages:
+            if lang.startswith("en"):
+                obj_holidays = country_holidays(
+                    country,
+                    subdiv=province,
+                    years={dt_util.now().year, dt_util.now().year + 1},
+                    language=lang,
+                )
+                language = lang
+                break
 
     async_add_entities(
         [
@@ -55,7 +49,7 @@ async def async_setup_entry(
                 config_entry.title,
                 country,
                 province,
-                default_language,
+                language,
                 obj_holidays,
                 config_entry.entry_id,
             )
@@ -75,7 +69,7 @@ class HolidayCalendarEntity(CalendarEntity):
         name: str,
         country: str,
         province: str | None,
-        default_language: str,
+        language: str,
         obj_holidays: HolidayBase,
         unique_id: str,
     ) -> None:
@@ -83,7 +77,7 @@ class HolidayCalendarEntity(CalendarEntity):
         self._country = country
         self._province = province
         self._location = name
-        self._default_language = default_language
+        self._language = language
         self._event: CalendarEvent | None = None
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
