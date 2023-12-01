@@ -63,6 +63,16 @@ async def temperature_sensor_node_fixture(
     )
 
 
+@pytest.fixture(name="eve_energy_plug_node")
+async def eve_energy_plug_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a Eve Energy Plug node."""
+    return await setup_integration_with_node_fixture(
+        hass, "eve-energy-plug", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
@@ -208,3 +218,49 @@ async def test_battery_sensor(
 
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_eve_energy_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    eve_energy_plug_node: MatterNode,
+) -> None:
+    """Test Energy sensors created from Eve Energy custom cluster."""
+    # power sensor
+    entity_id = "sensor.eve_energy_plug_power"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["device_class"] == "power"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Power"
+
+    # voltage sensor
+    entity_id = "sensor.eve_energy_plug_voltage"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "238.800003051758"
+    assert state.attributes["unit_of_measurement"] == "V"
+    assert state.attributes["device_class"] == "voltage"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Voltage"
+
+    # energy sensor
+    entity_id = "sensor.eve_energy_plug_energy"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.220000028610229"
+    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.attributes["device_class"] == "energy"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Energy"
+
+    # current sensor
+    entity_id = "sensor.eve_energy_plug_current"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["unit_of_measurement"] == "A"
+    assert state.attributes["device_class"] == "current"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Current"
