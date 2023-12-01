@@ -4,15 +4,13 @@
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS, TessieApi
+from .coordinator import TessieDataUpdateCoordinator
 
 
-class TessieEntity(CoordinatorEntity):
+class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     """Parent class for Tessie Entities."""
 
     _attr_has_entity_name = True
@@ -20,7 +18,7 @@ class TessieEntity(CoordinatorEntity):
     def __init__(
         self,
         api_key: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TessieDataUpdateCoordinator,
         vin: str,
         category: str,
         key: str,
