@@ -1,4 +1,4 @@
-"""Turn the entity on."""
+"""Implement a iotty Light Switch Device."""
 import logging
 from typing import Any
 
@@ -28,16 +28,23 @@ class IottyLightSwitch(SwitchEntity):
     _iotty_cloud: IottyProxy
     _iotty_device: LightSwitch
 
-    def __init__(self, iotty: IottyProxy, iotty_device: LightSwitch) -> None:
+    def __init__(self, iotty_cloud: IottyProxy, iotty_device: LightSwitch) -> None:
         """Initialize the LightSwitch device."""
+        super().__init__()
+
+        if iotty_cloud is None:
+            raise ValueError("iotty_cloud")
+
+        if iotty_device is None:
+            raise ValueError("iotty_device")
+
         _LOGGER.info(
             "Creating new SWITCH (%s) %s",
             iotty_device.device_type,
             iotty_device.device_id,
         )
 
-        super().__init__()
-        self._iotty_cloud = iotty
+        self._iotty_cloud = iotty_cloud
         self._iotty_device = iotty_device
 
     @property
@@ -83,13 +90,12 @@ async def async_setup_entry(
     """Activate the iotty LightSwitch component."""
     _LOGGER.info("Setup SWITCH entry id is %s", config_entry.entry_id)
 
-    tmp = hass.data[DOMAIN]
-    if tmp is None:
-        _LOGGER.error("Cannot retrieve iotty domain component")
+    hass_data = hass.data[DOMAIN]
 
-    iotty = tmp[config_entry.entry_id]
+    iotty = hass_data[config_entry.entry_id]
     if iotty is None:
         _LOGGER.error("Cannot retrieve iotty MW component")
+        raise ValueError("iotty")
 
     _ls_list = await iotty.devices(LS_DEVICE_TYPE_UID)
 
