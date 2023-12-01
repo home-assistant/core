@@ -127,7 +127,7 @@ async def async_setup_entry(
     password = config.get(CONF_PASSWORD)
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    https = config[CONF_HTTPS]
+    https = config.get(CONF_HTTPS, False)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(config_entry.entry_id, {})

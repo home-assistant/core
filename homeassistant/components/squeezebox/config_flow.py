@@ -64,7 +64,7 @@ def _base_schema(discovery_info=None):
 class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Squeezebox."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
