@@ -249,8 +249,8 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert zha_config_entry.data == {
         "device": {
             "path": "socket://core-silabs-multiprotocol:9999",
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
         },
         "radio_type": "ezsp",
     }

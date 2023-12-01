@@ -22,17 +22,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
 @dataclass(kw_only=True)
-class ReolinkLightEntityDescription(LightEntityDescription):
+class ReolinkLightEntityDescription(
+    LightEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes light entities."""
 
     get_brightness_fn: Callable[[Host, int], int | None] | None = None
     is_on_fn: Callable[[Host, int], bool]
     set_brightness_fn: Callable[[Host, int, int], Any] | None = None
-    supported_fn: Callable[[Host, int], bool] = lambda api, ch: True
     turn_on_off_fn: Callable[[Host, int, bool], Any]
 
 
@@ -41,7 +43,7 @@ LIGHT_ENTITIES = (
         key="floodlight",
         translation_key="floodlight",
         icon="mdi:spotlight-beam",
-        supported_fn=lambda api, ch: api.supported(ch, "floodLight"),
+        supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
@@ -52,7 +54,7 @@ LIGHT_ENTITIES = (
         translation_key="ir_lights",
         icon="mdi:led-off",
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda api, ch: api.supported(ch, "ir_lights"),
+        supported=lambda api, ch: api.supported(ch, "ir_lights"),
         is_on_fn=lambda api, ch: api.ir_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_ir_lights(ch, value),
     ),
@@ -61,7 +63,7 @@ LIGHT_ENTITIES = (
         translation_key="status_led",
         icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda api, ch: api.supported(ch, "power_led"),
+        supported=lambda api, ch: api.supported(ch, "power_led"),
         is_on_fn=lambda api, ch: api.status_led_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_status_led(ch, value),
     ),
@@ -80,7 +82,7 @@ async def async_setup_entry(
         ReolinkLightEntity(reolink_data, channel, entity_description)
         for entity_description in LIGHT_ENTITIES
         for channel in reolink_data.host.api.channels
-        if entity_description.supported_fn(reolink_data.host.api, channel)
+        if entity_description.supported(reolink_data.host.api, channel)
     )
 
 
@@ -96,12 +98,8 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         entity_description: ReolinkLightEntityDescription,
     ) -> None:
         """Initialize Reolink light entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
         if entity_description.set_brightness_fn is None:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
