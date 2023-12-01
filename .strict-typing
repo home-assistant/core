@@ -120,6 +120,7 @@ homeassistant.components.energy.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.faa_delays.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
@@ -127,6 +128,7 @@ homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*
 homeassistant.components.fitbit.*
+homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*
@@ -264,6 +266,7 @@ homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
+homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.radarr.*

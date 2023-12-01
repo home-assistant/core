@@ -1,11 +1,14 @@
 """Reolink parent entity class."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TypeVar
 
-from reolink_aio.api import DUAL_LENS_MODELS
+from reolink_aio.api import DUAL_LENS_MODELS, Host
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -17,8 +20,22 @@ from .const import DOMAIN
 _T = TypeVar("_T")
 
 
+@dataclass(kw_only=True)
+class ReolinkChannelEntityDescription(EntityDescription):
+    """A class that describes entities for a camera channel."""
+
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
+
+
+@dataclass(kw_only=True)
+class ReolinkHostEntityDescription(EntityDescription):
+    """A class that describes host entities."""
+
+    supported: Callable[[Host], bool] = lambda api: True
+
+
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
-    """Parent class fo Reolink entities."""
+    """Parent class for Reolink entities."""
 
     _attr_has_entity_name = True
 
@@ -59,13 +76,19 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
     basically a NVR with a single channel that has the camera connected to that channel.
     """
 
+    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription
+
     def __init__(self, reolink_data: ReolinkData) -> None:
         """Initialize ReolinkHostCoordinatorEntity."""
         super().__init__(reolink_data, reolink_data.device_coordinator)
 
+        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
+
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
+
+    entity_description: ReolinkChannelEntityDescription
 
     def __init__(
         self,
@@ -76,6 +99,9 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data)
 
         self._channel = channel
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
+        )
 
         dev_ch = channel
         if self._host.api.model in DUAL_LENS_MODELS:
