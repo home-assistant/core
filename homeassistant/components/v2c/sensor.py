@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -90,11 +89,10 @@ async def async_setup_entry(
     """Set up V2C sensor platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[Entity] = [
+    async_add_entities(
         V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
         for description in TRYDAN_SENSORS
-    ]
-    async_add_entities(entities)
+    )
 
 
 class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):

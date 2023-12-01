@@ -13,12 +13,13 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     ACK_ECHO,
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
     EMPTY_STATIONS_RESPONSE,
     HOST,
+    MAC_ADDRESS,
     PASSWORD,
     RAIN_DELAY_OFF,
     RAIN_SENSOR_OFF,
-    SERIAL_NUMBER,
     ZONE_3_ON_RESPONSE,
     ZONE_5_ON_RESPONSE,
     ZONE_OFF_RESPONSE,
@@ -109,7 +110,7 @@ async def test_zones(
 
     # Verify unique id for one of the switches
     entity_entry = entity_registry.async_get("switch.rain_bird_sprinkler_3")
-    assert entity_entry.unique_id == "1263613994342-3"
+    assert entity_entry.unique_id == "4c:a1:61:00:11:22-3"
 
 
 async def test_switch_on(
@@ -226,6 +227,7 @@ async def test_irrigation_service(
                     "1": "Garden Sprinkler",
                     "2": "Back Yard",
                 },
+                "mac": MAC_ADDRESS,
             }
         )
     ],
@@ -274,9 +276,9 @@ async def test_switch_error(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id"),
+    ("config_entry_data", "config_entry_unique_id", "setup_config_entry"),
     [
-        (None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None, None),
     ],
 )
 async def test_no_unique_id(
@@ -284,8 +286,15 @@ async def test_no_unique_id(
     aioclient_mock: AiohttpClientMocker,
     responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test an irrigation switch with no unique id."""
+    """Test an irrigation switch with no unique id due to migration failure."""
+
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
@@ -294,31 +303,3 @@ async def test_no_unique_id(
 
     entity_entry = entity_registry.async_get("switch.rain_bird_sprinkler_3")
     assert entity_entry is None
-
-
-@pytest.mark.parametrize(
-    ("config_entry_unique_id", "entity_unique_id"),
-    [
-        (SERIAL_NUMBER, "1263613994342-3"),
-        # Some existing config entries may have a "0" serial number but preserve
-        # their unique id
-        (0, "0-3"),
-    ],
-)
-async def test_has_unique_id(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    responses: list[AiohttpClientMockResponse],
-    entity_registry: er.EntityRegistry,
-    entity_unique_id: str,
-) -> None:
-    """Test an irrigation switch with no unique id."""
-
-    zone = hass.states.get("switch.rain_bird_sprinkler_3")
-    assert zone is not None
-    assert zone.attributes.get("friendly_name") == "Rain Bird Sprinkler 3"
-    assert zone.state == "off"
-
-    entity_entry = entity_registry.async_get("switch.rain_bird_sprinkler_3")
-    assert entity_entry
-    assert entity_entry.unique_id == entity_unique_id

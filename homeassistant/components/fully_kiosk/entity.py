@@ -1,7 +1,13 @@
 """Base entity for the Fully Kiosk Browser integration."""
 from __future__ import annotations
 
+import json
+
+from yarl import URL
+
+from homeassistant.components import mqtt
 from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -30,13 +36,20 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
     def __init__(self, coordinator: FullyKioskDataUpdateCoordinator) -> None:
         """Initialize the Fully Kiosk Browser entity."""
         super().__init__(coordinator=coordinator)
+
+        url = URL.build(
+            scheme="https" if coordinator.use_ssl else "http",
+            host=coordinator.data["ip4"],
+            port=2323,
+        )
+
         device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data["deviceID"])},
             name=coordinator.data["deviceName"],
             manufacturer=coordinator.data["deviceManufacturer"],
             model=coordinator.data["deviceModel"],
             sw_version=coordinator.data["appVersionName"],
-            configuration_url=f"http://{coordinator.data['ip4']}:2323",
+            configuration_url=str(url),
         )
         if "Mac" in coordinator.data and valid_global_mac_address(
             coordinator.data["Mac"]
@@ -45,3 +58,28 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
                 (CONNECTION_NETWORK_MAC, coordinator.data["Mac"])
             }
         self._attr_device_info = device_info
+
+    async def mqtt_subscribe(
+        self, event: str | None, event_callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE | None:
+        """Subscribe to MQTT for a given event."""
+        data = self.coordinator.data
+        if (
+            event is None
+            or not mqtt.mqtt_config_entry_enabled(self.hass)
+            or not data["settings"]["mqttEnabled"]
+        ):
+            return None
+
+        @callback
+        def message_callback(message: mqtt.ReceiveMessage) -> None:
+            payload = json.loads(message.payload)
+            event_callback(**payload)
+
+        topic_template = data["settings"]["mqttEventTopic"]
+        topic = (
+            topic_template.replace("$appId", "fully")
+            .replace("$event", event)
+            .replace("$deviceId", data["deviceID"])
+        )
+        return await mqtt.async_subscribe(self.hass, topic, message_callback)

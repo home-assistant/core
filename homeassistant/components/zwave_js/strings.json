@@ -385,6 +385,44 @@
           "description": "The Notification Event number as defined in the Z-Wave specs."
         }
       }
+    },
+    "set_lock_configuration": {
+      "name": "Set lock configuration",
+      "description": "Sets the configuration for a lock.",
+      "fields": {
+        "operation_type": {
+          "name": "Operation Type",
+          "description": "The operation type of the lock."
+        },
+        "lock_timeout": {
+          "name": "Lock timeout",
+          "description": "Seconds until lock mode times out. Should only be used if operation type is `timed`."
+        },
+        "outside_handles_can_open_door_configuration": {
+          "name": "Outside handles can open door configuration",
+          "description": "A list of four booleans which indicate which outside handles can open the door."
+        },
+        "inside_handles_can_open_door_configuration": {
+          "name": "Inside handles can open door configuration",
+          "description": "A list of four booleans which indicate which inside handles can open the door."
+        },
+        "auto_relock_time": {
+          "name": "Auto relock time",
+          "description": "Duration in seconds until lock returns to secure state. Only enforced when operation type is `constant`."
+        },
+        "hold_and_release_time": {
+          "name": "Hold and release time",
+          "description": "Duration in seconds the latch stays retracted."
+        },
+        "twist_assist": {
+          "name": "Twist assist",
+          "description": "Enable Twist Assist."
+        },
+        "block_to_block": {
+          "name": "Block to block",
+          "description": "Enable block-to-block functionality."
+        }
+      }
     }
   }
 }

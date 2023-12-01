@@ -10,6 +10,7 @@ from typing import Any, Generic, TypeVar, cast
 import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 from awesomeversion import AwesomeVersion
@@ -219,7 +220,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             # Shelly TRV sends information about changing the configuration for no
             # reason, reloading the config entry is not needed for it.
-            if self.model == "SHTRV-01":
+            if self.model == MODEL_VALVE:
                 self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
@@ -583,7 +584,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         ble_scanner_mode = self.entry.options.get(
             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
         )
-        if ble_scanner_mode == BLEScannerMode.DISABLED:
+        if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
             return
         if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
