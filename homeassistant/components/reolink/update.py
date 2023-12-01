@@ -1,6 +1,7 @@
 """Update entities for Reolink devices."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any, Literal
 
@@ -105,8 +106,12 @@ class ReolinkUpdateEntity(
         finally:
             self.async_write_ha_state()
             self._cancel_update = async_call_later(
-                self.hass, POLL_AFTER_INSTALL, self.async_update
+                self.hass, POLL_AFTER_INSTALL, self._async_update_future
             )
+
+    async def _async_update_future(self, now: datetime | None = None) -> None:
+        """Request update."""
+        await self.async_update()
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
