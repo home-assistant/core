@@ -12,7 +12,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Synology DSM device."
+          "host": "The hostname or IP address of your Synology nas."
         }
       },
       "2sa": {
