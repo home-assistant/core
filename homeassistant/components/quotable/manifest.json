@@ -5,5 +5,5 @@
   "dependencies": [],
   "documentation": "https://github.com/lukePeavey/quotable",
   "iot_class": "cloud_polling",
-  "requirements": []
+  "requirements": ["bleach==6.1.0"]
 }
