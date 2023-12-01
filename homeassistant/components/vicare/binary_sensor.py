@@ -108,12 +108,12 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entities(
-    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
 
     entities: list[ViCareBinarySensor] = []
-    for device_config, device in device_tuple:
+    for device_config, device in device_tuples:
         if device_config.getModel() == "Heatbox1":
             continue
         entities.extend(_build_entities_for_device(device, device_config))

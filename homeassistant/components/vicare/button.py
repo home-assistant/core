@@ -48,7 +48,7 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 
 
 def _build_entities(
-    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareButton]:
     """Create ViCare button entities for a device."""
 
@@ -58,7 +58,7 @@ def _build_entities(
             device_config,
             description,
         )
-        for device_config, device in device_tuple
+        for device_config, device in device_tuples
         if device_config.getModel() != "Heatbox1"
         for description in BUTTON_DESCRIPTIONS
         if is_supported(description.key, description, device)

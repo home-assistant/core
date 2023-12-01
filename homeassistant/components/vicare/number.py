@@ -81,7 +81,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
-    device_tuple: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
@@ -91,7 +91,7 @@ def _build_entities(
             device_config,
             description,
         )
-        for device_config, device in device_tuple
+        for device_config, device in device_tuples
         if device_config.getModel() != "Heatbox1"
         for circuit in get_circuits(device)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
