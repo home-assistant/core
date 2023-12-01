@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -71,6 +72,7 @@ class MatterEntity(Entity):
         )
         self._attr_available = self._endpoint.node.available
         self._attr_should_poll = entity_info.should_poll
+        self._extra_poll_timer: asyncio.TimerHandle | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -110,6 +112,9 @@ class MatterEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        if self._extra_poll_timer:
+            self._extra_poll_timer.cancel()
+            self._extra_poll_timer = None
         for unsub in self._unsubscribes:
             with suppress(ValueError):
                 # suppress ValueError to prevent race conditions
@@ -133,7 +138,11 @@ class MatterEntity(Entity):
         if self._attr_should_poll:
             # secondary attribute updated of a polled primary value
             # enforce poll of the primary value a few seconds later
-            self.hass.loop.call_later(2, self.async_schedule_update_ha_state, True)
+            if self._extra_poll_timer:
+                self._extra_poll_timer.cancel()
+            self._extra_poll_timer = self.hass.loop.call_later(
+                2, self.async_schedule_update_ha_state, True
+            )
             return
         self._update_from_device()
         self.async_write_ha_state()
