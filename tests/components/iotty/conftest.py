@@ -83,11 +83,19 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 def mock_iotty() -> Generator[None, MagicMock, None]:
-    """Return a mocked IottyProxy."""
+    """Mock IottyProxy."""
     with patch(
         "homeassistant.components.iotty.api.IottyProxy", autospec=True
     ) as iotty_mock:
         yield iotty_mock
+
+
+@pytest.fixture
+def mock_iotty_command_fn() -> Generator[AsyncMock, None, None]:
+    """Mock iottyProxy to simulate cmd issuing."""
+
+    with patch("homeassistant.components.iotty.api.IottyProxy.command") as mock_fn:
+        return mock_fn
 
 
 @pytest.fixture
