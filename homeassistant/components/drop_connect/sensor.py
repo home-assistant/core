@@ -304,13 +304,16 @@ class DROPSensor(DROPEntity, SensorEntity):
 
     entity_description: DROPSensorEntityDescription
 
-    def __init__(self, device, entity_description) -> None:
+    def __init__(
+        self,
+        coordinator: DROPDeviceDataUpdateCoordinator,
+        entity_description: DROPSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(entity_description.key, device)
+        super().__init__(entity_description.key, coordinator)
         self.entity_description = entity_description
-        self.device = device
 
     @property
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.device)
+        return self.entity_description.value_fn(self.coordinator)
