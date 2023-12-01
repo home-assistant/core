@@ -116,7 +116,7 @@ class SuezSensor(SensorEntity):
 
         except PySuezError as e:
             self._attr_available = False
-            _LOGGER.warning("Unable to fetch data (%s)", e)
+            _LOGGER.warning("Unable to fetch data: %s", e)
 
     def update(self) -> None:
         """Return the latest collected data from Suez."""
