@@ -132,8 +132,7 @@ class MatterEntity(Entity):
         self._attr_available = self._endpoint.node.available
         if self._attr_should_poll:
             # secondary attribute updated of a polled primary value
-            # enforce poll of the primary value
-            # debounce it a bit by calling it 2 seconds later
+            # enforce poll of the primary value a few seconds later
             self.hass.loop.call_later(2, self.async_schedule_update_ha_state, True)
             return
         self._update_from_device()
