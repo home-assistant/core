@@ -8,6 +8,7 @@ from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 TESSIE_SYNC_INTERVAL = 15
@@ -22,11 +23,10 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         api_key: str,
-        session: ClientSession,
     ) -> None:
         """Initialize Tessie Data Update Coordinator."""
         self.api_key = api_key
-        self.session = session
+        self.session: ClientSession = async_get_clientsession(hass)
 
         super().__init__(
             hass,
