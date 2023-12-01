@@ -51,7 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in (2, 3):
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     coordinator = get_entry_data(hass)[config_entry.entry_id].block

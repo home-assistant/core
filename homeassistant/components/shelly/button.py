@@ -126,7 +126,7 @@ async def async_setup_entry(
         return async_migrate_unique_ids(entity_entry, coordinator)
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in (2, 3):
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     else:
         coordinator = get_entry_data(hass)[config_entry.entry_id].block

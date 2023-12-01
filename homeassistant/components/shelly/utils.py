@@ -284,7 +284,7 @@ def get_info_gen(info: dict[str, Any]) -> int:
 
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
-    if get_info_gen(info) == 2:
+    if get_info_gen(info) in (2, 3):
         return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))

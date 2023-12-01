@@ -66,7 +66,9 @@ async def validate_input(
     """
     options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
 
-    if get_info_gen(info) == 2:
+    gen = get_info_gen(info)
+
+    if gen in (2, 3):
         ws_context = await get_ws_context(hass)
         rpc_device = await RpcDevice.create(
             async_get_clientsession(hass),
@@ -81,7 +83,7 @@ async def validate_input(
             "title": rpc_device.name,
             CONF_SLEEP_PERIOD: sleep_period,
             "model": rpc_device.shelly.get("model"),
-            "gen": 2,
+            "gen": gen,
         }
 
     # Gen1
@@ -96,7 +98,7 @@ async def validate_input(
         "title": block_device.name,
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
         "model": block_device.model,
-        "gen": 1,
+        "gen": gen,
     }
 
 
@@ -165,7 +167,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the credentials step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if get_info_gen(self.info) == 2:
+            if get_info_gen(self.info) in (2, 3):
                 user_input[CONF_USERNAME] = "admin"
             try:
                 device_info = await validate_input(
@@ -194,7 +196,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        if get_info_gen(self.info) == 2:
+        if get_info_gen(self.info) in (2, 3):
             schema = {
                 vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
             }
@@ -360,7 +362,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return (
-            config_entry.data.get("gen") == 2
+            config_entry.data.get("gen") in (2, 3)
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
             and config_entry.data.get("model") != MODEL_WALL_DISPLAY
         )

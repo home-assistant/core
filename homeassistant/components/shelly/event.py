@@ -80,7 +80,7 @@ async def async_setup_entry(
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
 
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in (2, 3):
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
         if TYPE_CHECKING:
             assert coordinator
