@@ -73,19 +73,13 @@ class SuezSensor(SensorEntity):
         self.client = client
         self._attr_extra_state_attributes = {}
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the day usage (the previous day) ."""
-        if self._attr_native_value is None or float(str(self._attr_native_value)) < 0:
-            return None
-        return float(str(self._attr_native_value))
-
     def _fetch_data(self):
         """Fetch latest data from Suez."""
         try:
             self.client.update()
             # _state holds the volume of consumed water during previous day
-            self._attr_native_value = self.client.state
+            if float(str(self.client.state)) >= 0:
+                self._attr_native_value = float(str(self.client.state))
             self._attr_available = True
             self._attr_attribution = self.client.attributes["attribution"]
 
