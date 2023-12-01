@@ -501,9 +501,11 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
-        key="active_program",
-        translation_key="active_program",
+        key="active_vicare_program",
+        translation_key="active_ViCare_program",
+        icon="mdi:clipboard-list-outline",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         options=[
             ViCareProgram.ACTIVE,
             ViCareProgram.COMFORT,
