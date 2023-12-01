@@ -48,9 +48,6 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_ACCESS_TOKEN])
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title="Tessie",
                     data=user_input,
