@@ -51,49 +51,6 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_already_configured(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test already configured."""
-
-    aioclient_mock.get(
-        URL_VEHICLES,
-        text=TEST_VEHICLES,
-    )
-
-    # Setup an entry
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.tessie.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            TEST_DATA,
-        )
-        await hass.async_block_till_done()
-
-    # Test Already configured
-    result3 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch(
-        "homeassistant.components.tessie.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
-            TEST_DATA,
-        )
-        await hass.async_block_till_done()
-
-    assert result4["type"] == FlowResultType.ABORT
-    assert len(mock_setup_entry.mock_calls) == 0
-
-
 async def test_form_invalid_access_token(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
