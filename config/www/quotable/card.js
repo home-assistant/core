@@ -154,7 +154,7 @@ class QuotableCard extends HTMLElement {
 
     //Update background, button and text colors
     this.querySelector(".overlay").style.color = textColor;
-    this.querySelector(".button").style.color = textColor;
+    this.querySelector(".buttons").style.color = textColor;
     this.querySelector(".background-div").style.background = bgColor;
   }
 
