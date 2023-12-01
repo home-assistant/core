@@ -67,6 +67,18 @@
   'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000'
 # ---
 # name: test_resolve.1
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=mp3'
+# ---
+# name: test_resolve.2
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=aac'
+# ---
+# name: test_resolve.3
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=vorbis'
+# ---
+# name: test_resolve.4
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=wma'
+# ---
+# name: test_resolve.5
   'http://localhost/Videos/MOVIE-UUID/stream?static=true,DeviceId=TEST-UUID,api_key=TEST-API-KEY'
 # ---
 # name: test_root
