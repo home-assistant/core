@@ -23,6 +23,12 @@ from tests.common import MockConfigEntry
 class MockMozartClient:
     """Class for mocking MozartClient objects and methods."""
 
+    async def __aenter__(self):
+        """Mock async context entry."""
+
+    async def __aexit__(self, exc_type, exc, tb):
+        """Mock async context exit."""
+
     # API call results
     get_beolink_self_result = BeolinkPeer(
         friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1

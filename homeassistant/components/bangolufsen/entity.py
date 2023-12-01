@@ -48,7 +48,7 @@ class BangOlufsenVariables:
 
         # Objects that get directly updated by notifications.
         self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
-        self._playback_progress: PlaybackProgress = PlaybackProgress(totalDuration=0)
+        self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)
         self._playback_source: Source = Source()
         self._playback_state: RenderingState = RenderingState()
         self._source_change: Source = Source()
@@ -77,3 +77,7 @@ class BangOlufsenEntity(Entity, BangOlufsenVariables):
         self._attr_available = connection_state
 
         self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close API client."""
+        await self._client.close()

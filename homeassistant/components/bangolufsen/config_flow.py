@@ -5,9 +5,8 @@ import ipaddress
 import logging
 from typing import Any, TypedDict
 
-from mozart_api.exceptions import ApiException, NotFoundException
+from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.mozart_client import MozartClient
-from urllib3.exceptions import MaxRetryError, NewConnectionError
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -62,7 +61,8 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _compile_data(self) -> UserInput:
         """Compile data for entry creation."""
         # Get current volume settings
-        volume_settings = await self._client.get_volume_settings()
+        async with self._client:
+            volume_settings = await self._client.get_volume_settings()
 
         # Create a dict containing all necessary information for setup
         data = UserInput()
@@ -94,7 +94,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             # Check if the IP address is a valid address.
             try:
                 ipaddress.ip_address(self._host)
-
             except ValueError:
                 return self.async_abort(reason="value_error")
 
@@ -102,20 +101,16 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Try to get information from Beolink self method.
             try:
-                beolink_self = await self._client.get_beolink_self(_request_timeout=3)
+                async with self._client:
+                    beolink_self = await self._client.get_beolink_self(
+                        _request_timeout=3
+                    )
 
-            except (
-                ApiException,
-                NewConnectionError,
-                MaxRetryError,
-                NotFoundException,
-            ) as error:
+            except (TimeoutError, ClientConnectorError) as error:
                 return self.async_abort(
                     reason={
-                        ApiException: "api_exception",
-                        NewConnectionError: "new_connection_error",
-                        MaxRetryError: "max_retry_error",
-                        NotFoundException: "not_found_exception",
+                        TimeoutError: "timeout_error",
+                        ClientConnectorError: "client_connector_error",
                     }[type(error)]
                 )
 

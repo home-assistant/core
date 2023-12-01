@@ -57,6 +57,7 @@ from .const import (
     CONF_BEOLINK_JID,
     CONF_DEFAULT_VOLUME,
     CONF_MAX_VOLUME,
+    CONNECTION_STATUS,
     DOMAIN,
     FALLBACK_SOURCES,
     HIDDEN_SOURCE_IDS,
@@ -131,10 +132,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
         self._media_image: Art = Art()
-        # self._queue_settings: PlayQueueSettings = PlayQueueSettings()
         self._software_status: SoftwareUpdateStatus = SoftwareUpdateStatus(
-            softwareVersion="",
-            state=SoftwareUpdateState(secondsRemaining=0, value="idle"),
+            software_version="",
+            state=SoftwareUpdateState(seconds_remaining=0, value="idle"),
         )
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
@@ -143,6 +143,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         await self._initialize()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -615,10 +623,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         elif media_type == BANGOLUFSEN_MEDIA_TYPE.RADIO:
             await self._client.run_provided_scene(
                 scene_properties=SceneProperties(
-                    actionList=[
+                    action_list=[
                         Action(
                             type="radio",
-                            radioStationId=media_id,
+                            radio_station_id=media_id,
                         )
                     ]
                 )
@@ -637,7 +645,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
                     # Play Deezer flow.
                     await self._client.start_deezer_flow(
-                        user_flow=UserFlow(userId=deezer_id)
+                        user_flow=UserFlow(user_id=deezer_id)
                     )
 
                 # Play a Deezer playlist or album.
@@ -649,7 +657,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     await self._client.add_to_queue(
                         play_queue_item=PlayQueueItem(
                             provider=PlayQueueItemType(value="deezer"),
-                            startNowFromPosition=start_from,
+                            start_now_from_position=start_from,
                             type="playlist",
                             uri=media_id,
                         )
@@ -660,7 +668,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     await self._client.add_to_queue(
                         play_queue_item=PlayQueueItem(
                             provider=PlayQueueItemType(value="deezer"),
-                            startNowFromPosition=0,
+                            start_now_from_position=0,
                             type="track",
                             uri=media_id,
                         )

@@ -4,17 +4,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from mozart_api.exceptions import ServiceException
+from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.mozart_client import MozartClient
-from urllib3.exceptions import MaxRetryError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN, WEBSOCKET_CONNECTION_DELAY
+from .const import DOMAIN
 from .websocket import BangOlufsenWebsocket
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -36,10 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Check connection and try to initialize it.
-    try:
-        await client.get_battery_state(_request_timeout=3)
-    except (MaxRetryError, ServiceException, Exception) as error:
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
+    async with client:
+        try:
+            await client.get_battery_state(_request_timeout=3)
+        except (TimeoutError, ClientConnectorError, Exception) as error:
+            raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
     websocket = BangOlufsenWebsocket(hass, entry)
 
@@ -47,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(websocket)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    async_call_later(hass, WEBSOCKET_CONNECTION_DELAY, websocket.connect_websocket)
+    websocket.connect_websocket()
+    # async_call_later(hass, WEBSOCKET_CONNECTION_DELAY, websocket.connect_websocket)
 
     return True
 
