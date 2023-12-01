@@ -16,7 +16,9 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, wyoming
-from homeassistant.components.wyoming.devices import SatelliteDevices
+from homeassistant.components.wyoming.data import WyomingService
+from homeassistant.components.wyoming.devices import SatelliteDevice, SatelliteDevices
+from homeassistant.components.wyoming.satellite import WyomingSatellite
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -302,3 +304,158 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         # Stop the satellite
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_satellite_disabled(hass: HomeAssistant) -> None:
+    """Test callback for a satellite that has been disabled."""
+    on_disabled_event = asyncio.Event()
+
+    def make_disabled_satellite(
+        hass: HomeAssistant, service: WyomingService, device: SatelliteDevice
+    ):
+        device.is_enabled = False
+        satellite = WyomingSatellite(hass, service, device)
+        return satellite
+
+    async def on_disabled(self):
+        on_disabled_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming._make_satellite", make_disabled_satellite
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_disabled",
+        on_disabled,
+    ):
+        await setup_config_entry(hass)
+        async with asyncio.timeout(1):
+            await on_disabled_event.wait()
+
+
+async def test_satellite_restart(hass: HomeAssistant) -> None:
+    """Test pipeline loop restart after unexpected error."""
+    on_restart_event = asyncio.Event()
+
+    async def on_restart(self):
+        self.stop()
+        on_restart_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite._run_once",
+        side_effect=RuntimeError(),
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_restart",
+        on_restart,
+    ):
+        await setup_config_entry(hass)
+        async with asyncio.timeout(1):
+            await on_restart_event.wait()
+
+
+async def test_satellite_reconnect(hass: HomeAssistant) -> None:
+    """Test satellite reconnect call after connection refused."""
+    on_reconnect_event = asyncio.Event()
+
+    async def on_reconnect(self):
+        self.stop()
+        on_reconnect_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient.connect",
+        side_effect=ConnectionRefusedError(),
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_reconnect",
+        on_reconnect,
+    ):
+        await setup_config_entry(hass)
+        async with asyncio.timeout(1):
+            await on_reconnect_event.wait()
+
+
+async def test_satellite_disconnect_before_pipeline(hass: HomeAssistant) -> None:
+    """Test satellite disconnecting before pipeline run."""
+    on_restart_event = asyncio.Event()
+
+    async def on_restart(self):
+        self.stop()
+        on_restart_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        MockAsyncTcpClient([]),  # no RunPipeline event
+    ), patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+    ) as mock_run_pipeline, patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_restart",
+        on_restart,
+    ):
+        await setup_config_entry(hass)
+        async with asyncio.timeout(1):
+            await on_restart_event.wait()
+
+        # Pipeline should never have run
+        mock_run_pipeline.assert_not_called()
+
+
+async def test_satellite_disconnect_during_pipeline(hass: HomeAssistant) -> None:
+    """Test satellite disconnecting during pipeline run."""
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE, end_stage=PipelineStage.TTS
+        ).event(),
+    ]  # no audio chunks after RunPipeline
+
+    on_restart_event = asyncio.Event()
+    on_stopped_event = asyncio.Event()
+
+    async def on_restart(self):
+        # Pretend sensor got stuck on
+        self.device.is_active = True
+        self.stop()
+        on_restart_event.set()
+
+    async def on_stopped(self):
+        on_stopped_event.set()
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        MockAsyncTcpClient(events),
+    ), patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+    ) as mock_run_pipeline, patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_restart",
+        on_restart,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_stopped",
+        on_stopped,
+    ):
+        entry = await setup_config_entry(hass)
+        satellite_devices: SatelliteDevices = hass.data[wyoming.DOMAIN][
+            entry.entry_id
+        ].satellite_devices
+        assert entry.entry_id in satellite_devices.devices
+        device = satellite_devices.devices[entry.entry_id]
+
+        async with asyncio.timeout(1):
+            await on_restart_event.wait()
+            await on_stopped_event.wait()
+
+        # Pipeline should have run once
+        mock_run_pipeline.assert_called_once()
+
+        # Sensor should have been turned off
+        assert not device.is_active

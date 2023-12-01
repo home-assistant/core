@@ -72,21 +72,19 @@ class WyomingSatellite:
         try:
             while self.is_running:
                 try:
+                    # Check if satellite has been disabled
                     if not self.is_enabled:
-                        await self._device_updated_event.wait()
+                        await self.on_disabled()
                         if not self.is_running:
                             # Satellite was stopped while waiting to be enabled
                             break
 
+                    # Connect and run pipeline loop
                     await self._run_once()
                 except asyncio.CancelledError:
                     raise
                 except Exception:  # pylint: disable=broad-exception-caught
-                    _LOGGER.exception(
-                        "Unexpected error running satellite. Restarting in %s second(s)",
-                        _RECONNECT_SECONDS,
-                    )
-                    await asyncio.sleep(_RESTART_SECONDS)
+                    await self.on_restart()
         finally:
             # Ensure sensor is off
             if self.device.is_active:
@@ -94,7 +92,7 @@ class WyomingSatellite:
 
             remove_listener()
 
-        _LOGGER.debug("Satellite task stopped")
+        await self.on_stopped()
 
     def stop(self) -> None:
         """Signal satellite task to stop running."""
@@ -102,6 +100,30 @@ class WyomingSatellite:
 
         # Unblock waiting for enabled
         self._device_updated_event.set()
+
+    async def on_restart(self) -> None:
+        """Block until pipeline loop will be restarted."""
+        _LOGGER.warning(
+            "Unexpected error running satellite. Restarting in %s second(s)",
+            _RECONNECT_SECONDS,
+        )
+        await asyncio.sleep(_RESTART_SECONDS)
+
+    async def on_reconnect(self) -> None:
+        """Block until a reconnection attempt should be made."""
+        _LOGGER.debug(
+            "Failed to connect to satellite. Reconnecting in %s second(s)",
+            _RECONNECT_SECONDS,
+        )
+        await asyncio.sleep(_RECONNECT_SECONDS)
+
+    async def on_disabled(self) -> None:
+        """Block until device may be enabled again."""
+        await self._device_updated_event.wait()
+
+    async def on_stopped(self) -> None:
+        """Run when run() has fully stopped."""
+        _LOGGER.debug("Satellite task stopped")
 
     # -------------------------------------------------------------------------
 
@@ -139,11 +161,7 @@ class WyomingSatellite:
                 await self._connect()
                 break
             except ConnectionError:
-                _LOGGER.debug(
-                    "Failed to connect to satellite. Reconnecting in %s second(s)",
-                    _RECONNECT_SECONDS,
-                )
-                await asyncio.sleep(_RECONNECT_SECONDS)
+                await self.on_reconnect()
 
         assert self._client is not None
         _LOGGER.debug("Connected to satellite")

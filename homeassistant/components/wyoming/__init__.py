@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
-from .devices import SatelliteDevices
+from .devices import SatelliteDevice, SatelliteDevices
 from .models import DomainDataItem
 from .satellite import WyomingSatellite
 
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             name=satellite_info.name,
             suggested_area=satellite_info.area,
         )
-        item.satellite = WyomingSatellite(hass, service, satellite_device)
+        item.satellite = _make_satellite(hass, service, satellite_device)
         entry.async_create_background_task(
             hass,
             item.satellite.run(),
@@ -61,6 +61,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(item.satellite.stop)
 
     return True
+
+
+def _make_satellite(
+    hass: HomeAssistant, service: WyomingService, satellite_device: SatelliteDevice
+) -> WyomingSatellite:
+    """Create WyomingSatellite from service/device.
+
+    Used to make testing more convenient.
+    """
+    return WyomingSatellite(hass, service, satellite_device)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
