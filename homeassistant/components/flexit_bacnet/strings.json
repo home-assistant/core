@@ -3,16 +3,13 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "device_id": "[%key:common::config_flow::data::device%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_input": "Failed to parse provided hostname",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

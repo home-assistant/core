@@ -553,8 +553,6 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        self._valid_preset_mode_or_raise(preset_mode)
-
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
         await self.async_publish(

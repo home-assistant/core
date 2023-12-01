@@ -1,7 +1,7 @@
 """Google Tasks todo platform."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
@@ -35,7 +36,29 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str]:
         result["title"] = item.summary
     if item.status is not None:
         result["status"] = TODO_STATUS_MAP_INV[item.status]
+    if (due := item.due) is not None:
+        # due API field is a timestamp string, but with only date resolution
+        result["due"] = dt_util.start_of_local_day(due).isoformat()
+    if (description := item.description) is not None:
+        result["notes"] = description
     return result
+
+
+def _convert_api_item(item: dict[str, str]) -> TodoItem:
+    """Convert tasks API items into a TodoItem."""
+    due: date | None = None
+    if (due_str := item.get("due")) is not None:
+        due = datetime.fromisoformat(due_str).date()
+    return TodoItem(
+        summary=item["title"],
+        uid=item["id"],
+        status=TODO_STATUS_MAP.get(
+            item.get("status", ""),
+            TodoItemStatus.NEEDS_ACTION,
+        ),
+        due=due,
+        description=item.get("notes"),
+    )
 
 
 async def async_setup_entry(
@@ -68,6 +91,8 @@ class GoogleTaskTodoListEntity(
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     def __init__(
@@ -88,16 +113,7 @@ class GoogleTaskTodoListEntity(
         """Get the current set of To-do items."""
         if self.coordinator.data is None:
             return None
-        return [
-            TodoItem(
-                summary=item["title"],
-                uid=item["id"],
-                status=TODO_STATUS_MAP.get(
-                    item.get("status"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
-                ),
-            )
-            for item in _order_tasks(self.coordinator.data)
-        ]
+        return [_convert_api_item(item) for item in _order_tasks(self.coordinator.data)]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""

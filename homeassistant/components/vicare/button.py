@@ -47,19 +47,22 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    vicare_api: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
-    entity_description: ViCareButtonEntityDescription,
-):
-    """Create a ViCare button entity."""
-    if is_supported(entity_description.key, entity_description, vicare_api):
-        return ViCareButton(
-            vicare_api,
+def _build_entities(
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+) -> list[ViCareButton]:
+    """Create ViCare button entities for a device."""
+  
+    return [
+        ViCareButton(
+            api,
             device_config,
-            entity_description,
+            description,
         )
-    return None
+        for description in BUTTON_DESCRIPTIONS
+        if is_supported(description.key, description, api)
+        for device_config, device in devices
+        if device_config.getModel() is not "Heatbox1"
+    ]
 
 
 async def async_setup_entry(
@@ -68,24 +71,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    entities: list[ViCareButton] = []
+    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
 
-    for device_config, api in hass.data[DOMAIN][config_entry.entry_id][
-        DEVICE_CONFIG_LIST
-    ]:
-        if device_config.getModel() == "Heatbox1":
-            continue
-        for description in BUTTON_DESCRIPTIONS:
-            entity = await hass.async_add_executor_job(
-                _build_entity,
-                api,
-                device_config,
-                description,
-            )
-            if entity is not None:
-                entities.append(entity)
-
-    async_add_entities(entities)
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
+            devices,
+        )
+    )
 
 
 class ViCareButton(ViCareEntity, ButtonEntity):
