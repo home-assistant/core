@@ -14,6 +14,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
 from bluetooth_adapters import DiscoveredDeviceAdvertisementData, adapter_human_name
+from bluetooth_data_tools import monotonic_time_coarse
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -25,7 +26,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import models
 from .const import (
