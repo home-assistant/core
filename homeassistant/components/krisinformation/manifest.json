@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/krisinformation",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": [],
+  "requirements": ["krisinformation==0.1.3"],
   "ssdp": [],
   "zeroconf": []
 }

@@ -1,6 +1,8 @@
 """Support for geolocation data from Krisinformation."""
 from datetime import timedelta
 
+from krisinformation import crisis_alerter as krisinformation
+
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
@@ -10,7 +12,6 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_COUNTY
-from .crisis_alerter import CrisisAlerter
 from .sensor import _LOGGER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
@@ -67,7 +68,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Demo geolocations."""
     manager = KrisInformationGeolocationManager(
-        hass, add_entities, CrisisAlerter(config.data.get(CONF_COUNTY))
+        hass, add_entities, krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY))
     )
 
     await hass.async_add_executor_job(manager.init_regular_updates)
@@ -80,7 +81,7 @@ class KrisInformationGeolocationManager:
         self,
         hass: HomeAssistant,
         add_entities: AddEntitiesCallback,
-        crisis_alerter: CrisisAlerter,
+        crisis_alerter: krisinformation.CrisisAlerter,
     ) -> None:
         """Initialise the demo geolocation event manager."""
         self._hass = hass

@@ -3,6 +3,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from krisinformation import crisis_alerter as krisinformation
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STARTED
@@ -11,10 +13,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from .const import CONF_COUNTY, DEFAULT_NAME
-from .crisis_alerter import CrisisAlerter, Error
 
 _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
 
 
 async def async_setup_entry(
@@ -27,7 +32,7 @@ async def async_setup_entry(
     county = config.data[CONF_COUNTY]
     language = hass.config.language
 
-    all_news = CrisisAlerter(county, language=language)
+    all_news = krisinformation.CrisisAlerter(county, language)
 
     sensor = CrisisAlerterSensorCounty(hass, config.entry_id, name, all_news)
 
@@ -45,7 +50,7 @@ class CrisisAlerterSensor(SensorEntity):
         hass: HomeAssistant,
         unique_id: str,
         name: str,
-        crisis_alerter: CrisisAlerter,
+        crisis_alerter: krisinformation.CrisisAlerter,
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = unique_id
@@ -93,7 +98,6 @@ class CrisisAlerterSensor(SensorEntity):
         """Get the latest alerts."""
         try:
             response = self._crisis_alerter.vmas(is_test=True)
-            _LOGGER.debug("wow 1")
             if len(response) > 0:
                 news = response[0]
                 self._state = news["PushMessage"]
@@ -104,7 +108,6 @@ class CrisisAlerterSensor(SensorEntity):
                 )
 
             else:
-                _LOGGER.debug("wow 2")
                 self._state = (
                     "Inga larm"
                     if self._crisis_alerter.language == "sv"
@@ -126,7 +129,7 @@ class CrisisAlerterSensorCounty(SensorEntity):
         hass: HomeAssistant,
         unique_id: str,
         name: str,
-        crisis_alerter: CrisisAlerter,
+        crisis_alerter: krisinformation.CrisisAlerter,
     ) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = unique_id
@@ -174,7 +177,7 @@ class CrisisAlerterSensorCounty(SensorEntity):
         """Get the latest alerts."""
         try:
             response = self._crisis_alerter.vmas(is_test=True)
-            location = self._crisis_alerter.get_location_user()
+            location = self._crisis_alerter.county
             if len(response) > 0:
                 news = response[0]
                 county = news["Area"][0]["Description"]

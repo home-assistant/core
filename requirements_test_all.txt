@@ -889,6 +889,9 @@ konnected==1.2.0
 # homeassistant.components.kraken
 krakenex==2.1.0
 
+# homeassistant.components.krisinformation
+krisinformation==0.1.3
+
 # homeassistant.components.lacrosse_view
 lacrosse-view==1.0.1
 
