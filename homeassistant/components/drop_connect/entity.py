@@ -20,9 +20,9 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
     ) -> None:
         """Init DROP entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}_{entity_type}"
+        self._attr_unique_id = f"{coordinator.device_id}_{entity_type}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.unique_id)},
+            identifiers={(DOMAIN, self.coordinator.device_id)},
             manufacturer=self.coordinator.manufacturer,
             model=self.coordinator.model,
             name=self.coordinator.device_name,

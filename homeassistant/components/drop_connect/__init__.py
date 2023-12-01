@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Thin wrapper used to pass MQTT messages to the data coordinator for this entry.
     async def message_received(msg):
         if config_entry.entry_id in hass.data[DOMAIN]:
-            await hass.data[DOMAIN][config_entry.entry_id].DROPMessageReceived(
+            await hass.data[DOMAIN][config_entry.entry_id].drop_message_received(
                 msg.topic, msg.payload, msg.qos, msg.retain
             )
 

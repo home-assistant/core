@@ -26,9 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """DROP device object."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the device."""
-        self.config_entry: ConfigEntry = config_entry
         self._model: str = f"{config_entry.data[CONF_DEVICE_DESC]} on hub {config_entry.data[CONF_HUB_ID]}"
         if config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
             self._model = f"Hub {config_entry.data[CONF_HUB_ID]}"
@@ -37,37 +38,37 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._device_information: dict[str, Any] = {}
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{config_entry.unique_id}")
 
-    async def DROPMessageReceived(
+    async def drop_message_received(
         self, topic: str, payload: str, qos: int, retain: bool
     ) -> None:
         """Process a received MQTT message."""
-        topicRoot = self.config_entry.data[CONF_DATA_TOPIC].removesuffix("/#")
+        topic_root = self.config_entry.data[CONF_DATA_TOPIC].removesuffix("/#")
         try:
-            jsonData = json_loads(payload)
-            if topic.startswith(topicRoot):
-                structureKey = topic.removeprefix(topicRoot).removeprefix("/")
+            json_data = json_loads(payload)
+            if topic.startswith(topic_root):
+                structure_key = topic.removeprefix(topic_root).removeprefix("/")
                 _LOGGER.debug(
                     "New data for %s/%s [%s]: %s",
                     self.config_entry.data[CONF_HUB_ID],
                     self.config_entry.data[CONF_DEVICE_ID],
-                    structureKey,
+                    structure_key,
                     payload,
                 )
 
                 # Create empty dictionary for this structure key if it does not already exist.
-                if structureKey not in self._device_information:
-                    self._device_information[structureKey] = {}
+                if structure_key not in self._device_information:
+                    self._device_information[structure_key] = {}
 
                 # Merge incoming data into the existing dictionary.
-                self._device_information[structureKey].update(jsonData)
+                self._device_information[structure_key].update(json_data)
                 self.async_set_updated_data(None)
         except JSON_DECODE_EXCEPTIONS:
             _LOGGER.error("Invalid JSON (%s): %s", topic, payload)
 
     # Device properties
     @property
-    def unique_id(self) -> str:
-        """Return device unique id."""
+    def device_id(self) -> str:
+        """Return the HA unique ID as the DROP device id."""
         return self.config_entry.unique_id or ""
 
     @property

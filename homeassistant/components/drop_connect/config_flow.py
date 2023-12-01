@@ -53,7 +53,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="invalid_discovery_info")
 
-        payloadData = {}
+        payload_data = {}
         try:
             json_dict = (
                 json_loads(discovery_info.payload)
@@ -63,7 +63,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if isinstance(json_dict, dict):
                 for k, v in json_dict.items():
                     if isinstance(k, str) and isinstance(v, str):
-                        payloadData[k] = v
+                        payload_data[k] = v
         except JSON_DECODE_EXCEPTIONS:
             _LOGGER.error(
                 "Invalid MQTT discovery payload on %s: %s",
@@ -73,11 +73,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_discovery_info")
 
         # Extract the DROP hub ID and DROP device ID from the MQTT topic.
-        topicElements = discovery_info.topic.split("/")
-        if not (topicElements[2].startswith("DROP-") and topicElements[3].isnumeric()):
+        topic_elements = discovery_info.topic.split("/")
+        if not (
+            topic_elements[2].startswith("DROP-") and topic_elements[3].isnumeric()
+        ):
             return self.async_abort(reason="invalid_discovery_info")
-        self.__hub_id = topicElements[2]
-        self.__device_id = topicElements[3]
+        self.__hub_id = topic_elements[2]
+        self.__device_id = topic_elements[3]
 
         await self.async_set_unique_id(f"{self.__hub_id}_{self.__device_id}")
         # Abort if this device has already been configured.
@@ -86,13 +88,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Discovery data must include the DROP device type and name.
         if (
-            KEY_DEVICE_TYPE in payloadData
-            and KEY_DEVICE_DESCRIPTION in payloadData
-            and KEY_DEVICE_NAME in payloadData
+            KEY_DEVICE_TYPE in payload_data
+            and KEY_DEVICE_DESCRIPTION in payload_data
+            and KEY_DEVICE_NAME in payload_data
         ):
-            self.__device_type = payloadData[KEY_DEVICE_TYPE]
-            self.__device_desc = payloadData[KEY_DEVICE_DESCRIPTION]
-            self.__name = payloadData[KEY_DEVICE_NAME]
+            self.__device_type = payload_data[KEY_DEVICE_TYPE]
+            self.__device_desc = payload_data[KEY_DEVICE_DESCRIPTION]
+            self.__name = payload_data[KEY_DEVICE_NAME]
         else:
             _LOGGER.error(
                 "Incomplete MQTT discovery payload on %s: %s",
@@ -119,7 +121,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm the setup."""
         if user_input is not None:
-            deviceData = {
+            device_data = {
                 CONF_COMMAND_TOPIC: self.__command_topic,
                 CONF_DATA_TOPIC: self.__data_topic,
                 CONF_DEVICE_DESC: self.__device_desc,
@@ -128,7 +130,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_TYPE: self.__device_type,
                 CONF_HUB_ID: self.__hub_id,
             }
-            return self.async_create_entry(title=self.__name, data=deviceData)
+            return self.async_create_entry(title=self.__name, data=device_data)
 
         return self.async_show_form(
             step_id="confirm",

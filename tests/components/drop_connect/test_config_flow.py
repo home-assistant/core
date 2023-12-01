@@ -11,7 +11,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
         topic="drop_connect/discovery/DROP-1_C0FFEE/255",
-        payload=('{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}'),
+        payload='{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}',
         qos=0,
         retain=False,
         subscribed_topic="drop_connect/discovery/#",
@@ -47,7 +47,7 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
         topic="drop_connect/discovery/DROP-1_C0FFEE/255",
-        payload=('{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}'),
+        payload='{"devDesc":"Hub","devType":"hub","name":"Hub DROP-1_C0FFEE"}',
         qos=0,
         retain=False,
         subscribed_topic="drop_connect/discovery/#",
@@ -86,7 +86,7 @@ async def test_mqtt_setup_incomplete_payload(
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
         topic="drop_connect/discovery/DROP-1_C0FFEE/255",
-        payload=('{"devDesc":"Hub"}'),
+        payload='{"devDesc":"Hub"}',
         qos=0,
         retain=False,
         subscribed_topic="drop_connect/discovery/#",
@@ -108,7 +108,7 @@ async def test_mqtt_setup_bad_json(
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
         topic="drop_connect/discovery/DROP-1_C0FFEE/255",
-        payload=("{BAD JSON}"),
+        payload="{BAD JSON}",
         qos=0,
         retain=False,
         subscribed_topic="drop_connect/discovery/#",
@@ -152,7 +152,7 @@ async def test_mqtt_setup_no_payload(
     """Test we can finish a config flow through MQTT with custom prefix."""
     discovery_info = MqttServiceInfo(
         topic="drop_connect/discovery/DROP-1_C0FFEE/255",
-        payload=(""),
+        payload="",
         qos=0,
         retain=False,
         subscribed_topic="drop_connect/discovery/#",

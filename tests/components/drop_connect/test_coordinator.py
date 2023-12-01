@@ -18,17 +18,17 @@ async def test_bad_json(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    currentFlowSensorName = "sensor.hub_drop_1_c0ffee_water_flow_rate"
-    currentFlowSensor = hass.states.get(currentFlowSensorName)
-    assert currentFlowSensor
-    assert currentFlowSensor.state == STATE_UNKNOWN
+    current_flow_sensor_name = "sensor.hub_drop_1_c0ffee_water_flow_rate"
+    current_flow_sensor = hass.states.get(current_flow_sensor_name)
+    assert current_flow_sensor
+    assert current_flow_sensor.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, "{BAD JSON}")
     await hass.async_block_till_done()
 
-    currentFlowSensor = hass.states.get(currentFlowSensorName)
-    assert currentFlowSensor
-    assert currentFlowSensor.state == STATE_UNKNOWN
+    current_flow_sensor = hass.states.get(current_flow_sensor_name)
+    assert current_flow_sensor
+    assert current_flow_sensor.state == STATE_UNKNOWN
 
 
 async def test_no_mqtt(hass: HomeAssistant, config_entry_hub) -> None:
@@ -37,6 +37,6 @@ async def test_no_mqtt(hass: HomeAssistant, config_entry_hub) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    protectModeSelectName = "select.hub_drop_1_c0ffee_protect_mode"
-    protectModeSelect = hass.states.get(protectModeSelectName)
-    assert protectModeSelect is None
+    protect_mode_select_name = "select.hub_drop_1_c0ffee_protect_mode"
+    protect_mode_select = hass.states.get(protect_mode_select_name)
+    assert protect_mode_select is None
