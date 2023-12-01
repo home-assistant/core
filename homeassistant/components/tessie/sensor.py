@@ -71,6 +71,8 @@ DESCRIPTIONS: dict[str, tuple[SensorEntityDescription, ...]] = {
             key="shift_state",
             translation_key="shift_state",
             icon="mdi:car-shift-pattern",
+            options=["P", "D", "R", "N"],
+            device_class=SensorDeviceClass.ENUM,
         ),
     ),
     TessieApi.VEHICLE_STATE: (
