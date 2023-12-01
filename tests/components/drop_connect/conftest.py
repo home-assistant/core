@@ -9,7 +9,6 @@ from homeassistant.components.drop_connect.const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_HUB_ID,
-    CONF_UNIQUE_ID,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -30,7 +29,6 @@ def config_entry_hub(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Hub DROP-1_C0FFEE",
             CONF_DEVICE_TYPE: "hub",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_255",
         },
         version=1,
     )
@@ -49,7 +47,6 @@ def config_entry_salt(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Salt Sensor",
             CONF_DEVICE_TYPE: "salt",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_8",
         },
         version=1,
     )
@@ -68,7 +65,6 @@ def config_entry_leak(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Leak Detector",
             CONF_DEVICE_TYPE: "leak",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_20",
         },
         version=1,
     )
@@ -87,7 +83,6 @@ def config_entry_softener(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Softener",
             CONF_DEVICE_TYPE: "soft",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_0",
         },
         version=1,
     )
@@ -106,7 +101,6 @@ def config_entry_filter(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Filter",
             CONF_DEVICE_TYPE: "filt",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_4",
         },
         version=1,
     )
@@ -125,7 +119,6 @@ def config_entry_protection_valve(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Protection Valve",
             CONF_DEVICE_TYPE: "pv",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_78",
         },
         version=1,
     )
@@ -144,7 +137,6 @@ def config_entry_pump_controller(hass: HomeAssistant):
             CONF_DEVICE_NAME: "Pump Controller",
             CONF_DEVICE_TYPE: "pc",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_83",
         },
         version=1,
     )
@@ -163,7 +155,6 @@ def config_entry_ro_filter(hass: HomeAssistant):
             CONF_DEVICE_NAME: "RO Filter",
             CONF_DEVICE_TYPE: "ro",
             CONF_HUB_ID: "DROP-1_C0FFEE",
-            CONF_UNIQUE_ID: "DROP-1_C0FFEE_95",
         },
         version=1,
     )

@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, CONF_UNIQUE_ID, DOMAIN
+from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Subscribe to the incoming data topic defined by the config flow using the wrapper defined above.
     _LOGGER.debug(
         "Entry %s (%s) subscribing to %s",
-        config_entry.data[CONF_UNIQUE_ID],
+        config_entry.unique_id,
         config_entry.data[CONF_DEVICE_TYPE],
         config_entry.data[CONF_DATA_TOPIC],
     )

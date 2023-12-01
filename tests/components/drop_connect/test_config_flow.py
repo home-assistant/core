@@ -40,7 +40,6 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
         "name": "Hub DROP-1_C0FFEE",
         "device_type": "hub",
         "drop_hub_id": "DROP-1_C0FFEE",
-        "unique_id": "DROP-1_C0FFEE_255",
     }
 
 

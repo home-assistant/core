@@ -17,7 +17,6 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_HUB_ID,
-    CONF_UNIQUE_ID,
     DISCOVERY_TOPIC,
     DOMAIN,
 )
@@ -43,7 +42,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     __device_type: str | None = None
     __hub_id: str | None = None
     __name: str = ""
-    __unique_id: str | None = None
 
     async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
         """Handle a flow initialized by MQTT discovery."""
@@ -81,14 +79,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.__hub_id = topicElements[2]
         self.__device_id = topicElements[3]
 
-        # Build the unique ID and register it.
-        self.__unique_id = f"{self.__hub_id}_{self.__device_id}"
-        await self.async_set_unique_id(self.__unique_id)
-
+        await self.async_set_unique_id(f"{self.__hub_id}_{self.__device_id}")
         # Abort if this device has already been configured.
-        already_configured = self._async_current_ids(False)
-        if self.__unique_id in already_configured:
-            _LOGGER.debug("Device %s already configured", self.__unique_id)
+        if self.unique_id in self._async_current_ids(False):
             return self.async_abort(reason="invalid_discovery_info")
 
         # Discovery data must include the DROP device type and name.
@@ -113,8 +106,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Define the data and command MQTT topics that will be used when this device is initialized.
-        self.__data_topic = f"drop_connect/{self.__hub_id}/data/{self.__device_id}/#"
-        self.__command_topic = f"drop_connect/{self.__hub_id}/cmd/{self.__device_id}"
+        self.__data_topic = f"{DOMAIN}/{self.__hub_id}/data/{self.__device_id}/#"
+        self.__command_topic = f"{DOMAIN}/{self.__hub_id}/cmd/{self.__device_id}"
 
         # Expose the device name to the 'Discovered' card
         self.context.update({"title_placeholders": {"name": self.__name}})
@@ -134,7 +127,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_NAME: self.__name,
                 CONF_DEVICE_TYPE: self.__device_type,
                 CONF_HUB_ID: self.__hub_id,
-                CONF_UNIQUE_ID: self.__unique_id,
             }
             return self.async_create_entry(title=self.__name, data=deviceData)
 

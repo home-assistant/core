@@ -8,7 +8,6 @@ CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_TYPE = "device_type"
 CONF_HUB_ID = "drop_hub_id"
 CONF_DEVICE_NAME = "name"
-CONF_UNIQUE_ID = "unique_id"
 
 # Values for DROP device types
 DEV_FILTER = "filt"
@@ -25,5 +24,3 @@ DISCOVERY_TOPIC = "drop_connect/discovery/#"
 DOMAIN = "drop_connect"
 
 KEY_STATUS = "stat"
-
-PROTECT_MODE_OPTIONS = ["AWAY", "HOME", "SCHEDULE"]
