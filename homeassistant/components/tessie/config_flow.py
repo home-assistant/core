@@ -33,7 +33,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
         """Get configuration from the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input and CONF_ACCESS_TOKEN in user_input:
             try:
                 await get_state_of_all_vehicles(
@@ -70,7 +70,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
         """Get update API Key from the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._reauth_entry
         if user_input and CONF_ACCESS_TOKEN in user_input:
             try:
