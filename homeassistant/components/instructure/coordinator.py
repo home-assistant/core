@@ -85,3 +85,4 @@ class CanvasUpdateCoordinator(DataUpdateCoordinator):
             print(f"An error occurred: {e}")
 
         return {}
+
