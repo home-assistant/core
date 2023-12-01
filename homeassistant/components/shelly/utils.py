@@ -38,6 +38,7 @@ from .const import (
     GEN1_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
+    RPC_GENERATIONS,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
@@ -284,7 +285,7 @@ def get_info_gen(info: dict[str, Any]) -> int:
 
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
-    if get_info_gen(info) in (2, 3):
+    if get_info_gen(info) in RPC_GENERATIONS:
         return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))

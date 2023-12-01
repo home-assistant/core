@@ -37,6 +37,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
+    RPC_GENERATIONS,
     RPC_THERMOSTAT_SETTINGS,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
@@ -51,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
-    if get_device_entry_gen(config_entry) in (2, 3):
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     coordinator = get_entry_data(hass)[config_entry.entry_id].block

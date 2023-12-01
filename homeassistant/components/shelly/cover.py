@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import RPC_GENERATIONS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
@@ -26,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up covers for device."""
-    if get_device_entry_gen(config_entry) in (2, 3):
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return async_setup_block_entry(hass, config_entry, async_add_entities)

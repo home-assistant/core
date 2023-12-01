@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon
@@ -68,7 +69,7 @@ async def validate_input(
 
     gen = get_info_gen(info)
 
-    if gen in (2, 3):
+    if gen in RPC_GENERATIONS:
         ws_context = await get_ws_context(hass)
         rpc_device = await RpcDevice.create(
             async_get_clientsession(hass),
@@ -167,7 +168,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the credentials step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if get_info_gen(self.info) in (2, 3):
+            if get_info_gen(self.info) in RPC_GENERATIONS:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 device_info = await validate_input(
@@ -196,7 +197,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        if get_info_gen(self.info) in (2, 3):
+        if get_info_gen(self.info) in RPC_GENERATIONS:
             schema = {
                 vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
             }
@@ -362,7 +363,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return (
-            config_entry.data.get("gen") in (2, 3)
+            config_entry.data.get("gen") in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
             and config_entry.data.get("model") != MODEL_WALL_DISPLAY
         )

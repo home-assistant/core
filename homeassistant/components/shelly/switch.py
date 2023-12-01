@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
+from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY, RPC_GENERATIONS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
-    if get_device_entry_gen(config_entry) in (2, 3):
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return async_setup_block_entry(hass, config_entry, async_add_entities)

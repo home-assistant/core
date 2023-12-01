@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, RPC_GENERATIONS
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -224,7 +224,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if get_device_entry_gen(config_entry) in (2, 3):
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,

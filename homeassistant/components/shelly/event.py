@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
+    RPC_GENERATIONS,
     RPC_INPUTS_EVENTS_TYPES,
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
@@ -80,7 +81,7 @@ async def async_setup_entry(
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
 
-    if get_device_entry_gen(config_entry) in (2, 3):
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
         if TYPE_CHECKING:
             assert coordinator
