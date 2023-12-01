@@ -13,7 +13,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,6 +22,8 @@ from .const import DOMAIN
 from .entity import ReolinkBaseCoordinatorEntity
 
 LOGGER = logging.getLogger(__name__)
+
+POLL_AFTER_INSTALL = 120
 
 
 async def async_setup_entry(
@@ -51,6 +53,7 @@ class ReolinkUpdateEntity(
         super().__init__(reolink_data, reolink_data.firmware_coordinator)
 
         self._attr_unique_id = f"{self._host.unique_id}"
+        self._cancel_update: CALLBACK_TYPE | None = None
 
     @property
     def installed_version(self) -> str | None:
@@ -100,3 +103,12 @@ class ReolinkUpdateEntity(
             ) from err
         finally:
             self.async_write_ha_state()
+            self._cancel_update = async_call_later(
+                self.hass, POLL_AFTER_INSTALL, self.async_update
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity removed."""
+        await super().async_will_remove_from_hass()
+        if self._cancel_update is not None:
+            self._cancel_update()
