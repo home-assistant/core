@@ -78,8 +78,8 @@ class SuezSensor(SensorEntity):
         try:
             self.client.update()
             # _state holds the volume of consumed water during previous day
-            if float(str(self.client.state)) >= 0:
-                self._attr_native_value = float(str(self.client.state))
+            if int(float(str(self.client.state))) >= 0:
+                self._attr_native_value = int(float(str(self.client.state)))
             self._attr_available = True
             self._attr_attribution = self.client.attributes["attribution"]
 
