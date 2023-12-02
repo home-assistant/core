@@ -127,7 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await validate_input(
+            validate_result = await validate_input(
                 self.hass,
                 {
                     CONF_USERNAME: username,
@@ -136,6 +136,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except RuntimeError:
             return self.async_abort(reason="import_failed")
+
+        home_id = None
+        if validate_result.get("unique_id"):
+            home_id = validate_result["unique_id"]
 
         if home_id is not None:
             await self.async_set_unique_id(home_id)
