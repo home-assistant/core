@@ -502,14 +502,6 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ViCareSensorEntityDescription(
-        key="eco_temperature",
-        translation_key="eco_temperature",
-        entity_category=EntityCategory.CONFIG,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram("eco"),
-    ),
 )
 
 BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
