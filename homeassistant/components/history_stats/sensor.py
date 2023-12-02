@@ -38,6 +38,7 @@ from .helpers import pretty_ratio
 CONF_START = "start"
 CONF_END = "end"
 CONF_DURATION = "duration"
+CONF_MIN_STATE_DURATION = "min_state_duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
 CONF_TYPE_TIME = "time"
@@ -46,6 +47,7 @@ CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
+DEFAULT_MIN_STATE_DURATION = datetime.timedelta(0)
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
@@ -71,6 +73,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_START): cv.template,
             vol.Optional(CONF_END): cv.template,
             vol.Optional(CONF_DURATION): cv.time_period,
+            vol.Optional(
+                CONF_MIN_STATE_DURATION, default=DEFAULT_MIN_STATE_DURATION
+            ): cv.time_period,
             vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -95,6 +100,7 @@ async def async_setup_platform(
     start: Template | None = config.get(CONF_START)
     end: Template | None = config.get(CONF_END)
     duration: datetime.timedelta | None = config.get(CONF_DURATION)
+    min_state_duration: datetime.timedelta = config[CONF_MIN_STATE_DURATION]
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
@@ -103,7 +109,9 @@ async def async_setup_platform(
         if template is not None:
             template.hass = hass
 
-    history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
+    history_stats = HistoryStats(
+        hass, entity_id, entity_states, start, end, duration, min_state_duration
+    )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
