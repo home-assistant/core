@@ -51,6 +51,14 @@ def set_time_zone(hass: HomeAssistant) -> None:
             ],
             "0",
         ),
+        (
+            [
+                make_api_task(
+                    id="12345", content="sub-task", is_completed=False, parent_id="1"
+                )
+            ],
+            "0",
+        ),
     ],
 )
 async def test_todo_item_state(
