@@ -2578,6 +2578,9 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.0
 
+# homeassistant.components.braviatv
+tenacity==8.2.3
+
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
