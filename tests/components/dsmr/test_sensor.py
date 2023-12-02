@@ -35,51 +35,6 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, patch
 
 
-@pytest.mark.parametrize("min_patch_interval", [10])
-@pytest.mark.parametrize(("time_between_update", "actual_update"), [(0, 10), (5, 10)])
-async def test_entry_options(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    dsmr_connection_fixture,
-    time_between_update: int,
-    actual_update,
-) -> None:
-    """Test invalid entry option correction."""
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "serial_id": "1234",
-        "serial_id_gas": "5678",
-    }
-    entry_options = {
-        "time_between_update": time_between_update,
-    }
-    mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
-    )
-
-    mock_entry.add_to_hass(hass)
-
-    update_finished = asyncio.Event()
-
-    async def test_options_update(
-        hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> None:
-        """Test if entry option was updated."""
-        update_finished.set()
-
-    unsub = mock_entry.add_update_listener(test_options_update)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await update_finished.wait()
-    unsub()
-    assert mock_entry.options["time_between_update"] == 10
-
-
 async def test_default_setup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
 ) -> None:

@@ -61,7 +61,6 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
-    MIN_TIME_BETWEEN_UPDATE,
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
@@ -515,17 +514,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
-    # Correct entries with an invalid time between update
-    update_interval: int | None
-    if (update_interval := entry.options.get(CONF_TIME_BETWEEN_UPDATE)) is not None:
-        if update_interval < MIN_TIME_BETWEEN_UPDATE:
-            new_options = dict(entry.options)
-            update_interval = new_options[
-                CONF_TIME_BETWEEN_UPDATE
-            ] = MIN_TIME_BETWEEN_UPDATE
-            hass.config_entries.async_update_entry(entry, options=new_options)
-    else:
-        update_interval = DEFAULT_TIME_BETWEEN_UPDATE
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities: list[DSMREntity] = []
     initialized: bool = False
@@ -566,7 +554,9 @@ async def async_setup_entry(
     add_entities_handler = async_dispatcher_connect(
         hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
     )
-    min_time_between_updates = timedelta(seconds=update_interval)
+    min_time_between_updates = timedelta(
+        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
 
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram: dict[str, DSMRObject] | None) -> None:

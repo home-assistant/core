@@ -34,7 +34,6 @@ from .const import (
     DSMR_PROTOCOL,
     DSMR_VERSIONS,
     LOGGER,
-    MIN_TIME_BETWEEN_UPDATE,
     RFXTRX_DSMR_PROTOCOL,
 )
 
@@ -328,7 +327,7 @@ class DSMROptionFlowHandler(config_entries.OptionsFlow):
                         default=self.entry.options.get(
                             CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=MIN_TIME_BETWEEN_UPDATE)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 }
             ),
         )
