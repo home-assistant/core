@@ -13,6 +13,7 @@ from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -148,7 +149,7 @@ def _build_entities(
         )
         for circuit in get_circuits(api)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, circuit)
+        if _is_supported(description.key, description, circuit)
     ]
 
 
@@ -168,6 +169,38 @@ async def async_setup_entry(
             device_config,
         )
     )
+
+
+def _is_supported(
+    name: str,
+    entity_description: ViCareNumberEntityDescription,
+    device: PyViCareDevice | PyViCareHeatingDeviceComponent,
+):
+    return is_supported(name, entity_description, device) and _is_supported_with_setter(
+        name, entity_description, device
+    )
+
+
+def _is_supported_with_setter(
+    name: str,
+    entity_description: ViCareNumberEntityDescription,
+    device: PyViCareDevice | PyViCareHeatingDeviceComponent,
+) -> bool:
+    """Check if the PyViCare device supports the requested sensor."""
+    if entity_description.value_setter:
+        try:
+            entity_description.value_setter(
+                device, entity_description.value_getter(device)
+            )
+            _LOGGER.debug("Found entity %s", name)
+            return True
+        except PyViCareNotSupportedFeatureError:
+            _LOGGER.debug("Feature not supported %s", name)
+        except PyViCareCommandError as error:
+            _LOGGER.debug("Command Error %s: %s", name, error)
+        except AttributeError as error:
+            _LOGGER.debug("Attribute Error %s: %s", name, error)
+    return False
 
 
 class ViCareNumber(ViCareEntity, NumberEntity):
