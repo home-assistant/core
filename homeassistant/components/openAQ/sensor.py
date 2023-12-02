@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, ICON, OPENAQ_PARAMETERS
 from .coordinator import OpenAQDataCoordinator
@@ -59,7 +60,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = coordinator.get_sensors()
     sensor_names = [sensor.parameter.name for sensor in sensors]
-    sensor_names.append("last_update")
+    sensor_names.append("last_update")  # Special case for last updated
     sensors_metrics = [OPENAQ_PARAMETERS[j] for j in sensor_names]
 
     entities = []
@@ -101,7 +102,7 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-class OpenAQSensor(SensorEntity):
+class OpenAQSensor(CoordinatorEntity[OpenAQDataCoordinator], SensorEntity):
     """OpenAQ sensor."""
 
     def __init__(
@@ -112,26 +113,23 @@ class OpenAQSensor(SensorEntity):
         coordinator: OpenAQDataCoordinator,
     ) -> None:
         """Init."""
+        super().__init__(coordinator)
         self.entity_description = description
         self.station_id = station_id
         self.metric = self.entity_description.metric
         self._hass = hass
-        self.coordinator = coordinator
         self._last_reset = homeassistant.util.dt.utc_from_timestamp(0)
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]
         )
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(  # Retrieve the device added in __init__.py
             identifiers={(DOMAIN, self.station_id)},
         )
         self._attr_icon = ICON
 
     @property
     def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
+        """Return True as entity has to be polled for state."""
         return True
 
     @property
@@ -149,8 +147,11 @@ class OpenAQSensor(SensorEntity):
         """Return the state of the sensor, rounding if a number."""
         name = self.entity_description.key
         if self.metric == SensorDeviceClass.TIMESTAMP:
+            if self.coordinator.data.get(name) is None:
+                return None
             return datetime.strptime(
-                self.coordinator.data.get(name), "%Y-%m-%dT%H:%M:%S%z"
+                self.coordinator.data.get(name),
+                "%Y-%m-%dT%H:%M:%S%z",  # The datetime from the response will be a string that needs to be converted
             )
 
         return self.coordinator.data.get(name)

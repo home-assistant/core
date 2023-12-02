@@ -34,14 +34,16 @@ class AQClient:
         """Get device by id."""
         response = self.client.locations.get(self.location_id)
 
-        if len(response.results) == 1:
+        if (
+            len(response.results) == 1
+        ):  # The response should only be 1 as we are only requesting data from one station
             return response.results[0]
         _LOGGER.debug("Locations API error: %s", response[1])
         return None
 
     def get_history(self):
         """Get the last 24 hours of metrices."""
-        response = self.client.measurements.list(
+        response = self.client.measurements.list(  # The response should return all data that the station has sent the last day
             locations_id=self.location_id,
             date_from=datetime.now() - timedelta(hours=24),
         )
@@ -55,6 +57,6 @@ class AQClient:
             page=1,
             limit=len(self.sensors),
             date_from=self.time,
-        )
-        self.time = datetime.now()
+        )  # Returns the latest response from last update
+        self.time = datetime.now()  # Start new timer
         return response
