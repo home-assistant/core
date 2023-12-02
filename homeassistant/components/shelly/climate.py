@@ -37,9 +37,12 @@ from .const import (
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
+    RPC_THERMOSTAT_SETTINGS,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
-from .coordinator import ShellyBlockCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .entity import ShellyRpcEntity
+from .utils import async_remove_shelly_entity, get_device_entry_gen, get_rpc_key_ids
 
 
 async def async_setup_entry(
@@ -48,6 +51,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
+    if get_device_entry_gen(config_entry) == 2:
+        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
     assert coordinator
     if coordinator.device.initialized:
@@ -103,6 +109,33 @@ def async_restore_climate_entities(
         LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(coordinator, None, None, entry)])
         break
+
+
+@callback
+def async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
+    climate_key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
+
+    climate_ids = []
+    for id_ in climate_key_ids:
+        climate_ids.append(id_)
+
+        if coordinator.device.shelly.get("relay_in_thermostat", False):
+            # Wall Display relay is used as the thermostat actuator,
+            # we need to remove a switch entity
+            unique_id = f"{coordinator.mac}-switch:{id_}"
+            async_remove_shelly_entity(hass, "switch", unique_id)
+
+    if not climate_ids:
+        return
+
+    async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
 
 
 @dataclass
@@ -381,3 +414,74 @@ class BlockSleepingClimate(
                 self.coordinator.entry.async_start_reauth(self.hass)
             else:
                 self.async_write_ha_state()
+
+
+class RpcClimate(ShellyRpcEntity, ClimateEntity):
+    """Entity that controls a thermostat on RPC based Shelly devices."""
+
+    _attr_hvac_modes = [HVACMode.OFF]
+    _attr_icon = "mdi:thermostat"
+    _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
+    _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize."""
+        super().__init__(coordinator, f"thermostat:{id_}")
+        self._id = id_
+        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
+            "type", "heating"
+        )
+        if self._thermostat_type == "cooling":
+            self._attr_hvac_modes.append(HVACMode.COOL)
+        else:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Set target temperature."""
+        return cast(float, self.status["target_C"])
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return current temperature."""
+        return cast(float, self.status["current_C"])
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """HVAC current mode."""
+        if not self.status["enable"]:
+            return HVACMode.OFF
+
+        return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """HVAC current action."""
+        if not self.status["output"]:
+            return HVACAction.IDLE
+
+        return (
+            HVACAction.COOLING
+            if self._thermostat_type == "cooling"
+            else HVACAction.HEATING
+        )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        await self.call_rpc(
+            "Thermostat.SetConfig",
+            {"config": {"id": self._id, "target_C": target_temp}},
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
+        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
+        await self.call_rpc(
+            "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
+        )

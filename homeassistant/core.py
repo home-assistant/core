@@ -80,7 +80,6 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location
 from .util.async_ import (
@@ -113,7 +112,6 @@ STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
-restore_original_aiohttp_cancel_behavior()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -874,8 +872,10 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during stage 3 shutdown", task
                 )
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Task %s error during stage 3 shutdown: %s", task, exc
+                )
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures

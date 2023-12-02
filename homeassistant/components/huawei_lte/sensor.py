@@ -8,8 +8,6 @@ from datetime import datetime, timedelta
 import logging
 import re
 
-from huawei_lte_api.enums.net import NetworkModeEnum
-
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -575,10 +573,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "State": HuaweiSensorEntityDescription(
                 key="State",
                 translation_key="operator_search_mode",
-                format_fn=lambda x: (
-                    {"0": "Auto", "1": "Manual"}.get(x),
-                    None,
-                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -588,19 +582,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
         descriptions={
             "NetworkMode": HuaweiSensorEntityDescription(
                 key="NetworkMode",
-                translation_key="preferred_mode",
-                format_fn=lambda x: (
-                    {
-                        NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
-                        NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",
-                        NetworkModeEnum.MODE_4G_2G_AUTO.value: "4G/2G",
-                        NetworkModeEnum.MODE_4G_ONLY.value: "4G",
-                        NetworkModeEnum.MODE_3G_2G_AUTO.value: "3G/2G",
-                        NetworkModeEnum.MODE_3G_ONLY.value: "3G",
-                        NetworkModeEnum.MODE_2G_ONLY.value: "2G",
-                    }.get(x),
-                    None,
-                ),
+                translation_key="preferred_network_mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -717,10 +699,6 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     _state: StateType = field(default=None, init=False)
     _unit: str | None = field(default=None, init=False)
     _last_reset: datetime | None = field(default=None, init=False)
-
-    def __post_init__(self) -> None:
-        """Initialize remaining attributes."""
-        self._attr_name = self.entity_description.name or self.item
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
