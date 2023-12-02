@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -100,3 +101,9 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return "System Monitor"
+
+    def async_create_entry(self, data: Mapping[str, Any], **kwargs: Any) -> FlowResult:
+        """Finish config flow and create a config entry."""
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+        return super().async_create_entry(data, **kwargs)

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "menu_options": {
+          "add_process": "Add sensor for process",
+          "remove_process": "Remove sensor for process"
+        }
+      },
+      "add_process": {
+        "data": {
+          "process": "Process"
+        },
+        "data_description": {
+          "process": "Binary, as example `octave-cli`"
+        }
+      },
+      "remove_process": {
+        "description": "Select the processes to be removed"
+      }
+    }
+  }
+}

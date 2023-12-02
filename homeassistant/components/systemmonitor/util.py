@@ -1,8 +1,11 @@
 """Utils for System Monitor."""
 
+import logging
 import os
 
 import psutil
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_all_disk_mounts() -> list[str]:
@@ -16,6 +19,7 @@ def get_all_disk_mounts() -> list[str]:
                 # partition or just hang.
                 continue
         disks.append(part.mountpoint)
+    _LOGGER.debug("Adding disks: %s", ", ".join(disks))
     return disks
 
 
@@ -24,4 +28,5 @@ def get_all_network_intefaces() -> list[str]:
     interfaces: list[str] = []
     for interface, _ in psutil.net_if_addrs().items():
         interfaces.append(interface)
+    _LOGGER.debug("Adding interfaces: %s", ", ".join(interfaces))
     return interfaces

@@ -394,6 +394,8 @@ async def async_setup_entry(
                         sensor_registry, sensor_description, entry.entry_id, argument
                     )
                 )
+            continue
+
         if _type in [
             "network_in",
             "network_out",
@@ -414,6 +416,7 @@ async def async_setup_entry(
                         sensor_registry, sensor_description, entry.entry_id, argument
                     )
                 )
+            continue
 
         # Verify if we can retrieve CPU / processor temperatures.
         # If not, do not create the entity and add a warning to the log
@@ -425,15 +428,22 @@ async def async_setup_entry(
             continue
 
         if _type == "process":
-            for _, argument in entry.options.get(SENSOR_DOMAIN, {}):
-                sensor_registry[(_type, argument)] = SensorData(
-                    argument, None, None, None, None
-                )
-                entities.append(
-                    SystemMonitorSensor(
-                        sensor_registry, sensor_description, entry.entry_id, argument
-                    )
-                )
+            entries: list[dict[str, str]] | None = entry.options.get(SENSOR_DOMAIN)
+            if entries:
+                for _entry in entries:
+                    for _, argument in _entry.items():
+                        sensor_registry[(_type, argument)] = SensorData(
+                            argument, None, None, None, None
+                        )
+                        entities.append(
+                            SystemMonitorSensor(
+                                sensor_registry,
+                                sensor_description,
+                                entry.entry_id,
+                                argument,
+                            )
+                        )
+            continue
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
         entities.append(
