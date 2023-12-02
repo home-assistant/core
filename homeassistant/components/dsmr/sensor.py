@@ -799,6 +799,10 @@ class DSMREntity(SensorEntity):
                 float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
             )
 
+        # Make sure we do not return a zero value for an energy sensor
+        if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
+            return None
+
         return value
 
     @staticmethod

@@ -10,6 +10,8 @@ from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
@@ -22,6 +24,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -308,7 +311,17 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     )
 
 
-async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+@pytest.mark.parametrize(
+    ("value", "state"),
+    [
+        (Decimal(745.690), "745.69"),
+        (Decimal(745.695), "745.695"),
+        (Decimal(0.000), STATE_UNKNOWN),
+    ],
+)
+async def test_v5_meter(
+    hass: HomeAssistant, dsmr_connection_fixture, value: Decimal, state: str
+) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -335,7 +348,7 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
             HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": value, "unit": "m3"},
             ],
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject(
@@ -371,7 +384,7 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
-    assert gas_consumption.state == "745.695"
+    assert gas_consumption.state == state
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS)

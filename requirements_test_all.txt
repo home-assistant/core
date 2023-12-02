@@ -476,7 +476,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.15.0
+bluetooth-data-tools==1.16.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -651,6 +651,9 @@ fivem-api==0.1.2
 # homeassistant.components.fjaraskupan
 fjaraskupan==2.2.0
 
+# homeassistant.components.flexit_bacnet
+flexit_bacnet==2.1.0
+
 # homeassistant.components.flipr
 flipr-api==1.5.0
 
@@ -801,7 +804,7 @@ hole==0.8.0
 holidays==0.36
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231129.1
+home-assistant-frontend==20231130.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.11.29
@@ -884,9 +887,6 @@ kegtron-ble==0.4.0
 
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
-
-# homeassistant.components.komfovent
-komfovent-api==0.0.3
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -973,7 +973,7 @@ micloud==0.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.11.6
+millheater==0.11.7
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1623,7 +1623,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.5.4
 
 # homeassistant.components.matter
-python-matter-server==4.0.2
+python-matter-server==5.0.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
