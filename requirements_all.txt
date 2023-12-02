@@ -1457,7 +1457,6 @@ pescea==1.0.12
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
-# homeassistant.components.unifi_direct
 pexpect==4.6.0
 
 # homeassistant.components.modem_callerid
@@ -2655,6 +2654,9 @@ ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.7
+
+# homeassistant.components.unifi_direct
+unifi_ap==0.0.1
 
 # homeassistant.components.unifiled
 unifiled==0.11
