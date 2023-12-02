@@ -270,6 +270,15 @@ def test_color_rgbw_to_rgb() -> None:
     assert color_util.color_rgbw_to_rgb(0, 0, 0, 127) == (127, 127, 127)
 
 
+def test_color_xy_to_temperature() -> None:
+    """Test color_xy_to_temperature."""
+    assert color_util.color_xy_to_temperature(0.5119, 0.4147) == 2136
+    assert color_util.color_xy_to_temperature(0.368, 0.3686) == 4302
+    assert color_util.color_xy_to_temperature(0.4448, 0.4066) == 2893
+    assert color_util.color_xy_to_temperature(0.1, 0.8) == 8645
+    assert color_util.color_xy_to_temperature(0.5, 0.4) == 2140
+
+
 def test_color_rgb_to_hex() -> None:
     """Test color_rgb_to_hex."""
     assert color_util.color_rgb_to_hex(255, 255, 255) == "ffffff"

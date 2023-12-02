@@ -2,9 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the Balboa Wi-Fi device",
+        "description": "Connect to the Balboa Wi-Fi device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Balboa Spa Wifi Device. For example, 192.168.1.58."
         }
       }
     },
