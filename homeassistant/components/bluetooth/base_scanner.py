@@ -32,6 +32,7 @@ from .const import (
 )
 from .models import HaBluetoothConnector
 
+SCANNER_WATCHDOG_INTERVAL_SECONDS: Final = SCANNER_WATCHDOG_INTERVAL.total_seconds()
 MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class BaseHaScanner:
         loop = self._loop
         assert loop is not None
         self._cancel_watchdog = loop.call_at(
-            loop.time() + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
+            loop.time() + SCANNER_WATCHDOG_INTERVAL_SECONDS,
             self._async_call_scanner_watchdog,
         )
 
@@ -146,7 +147,6 @@ class BaseHaScanner:
             self.scanning = False
             return
         self.scanning = not self._connecting
-        self._schedule_watchdog()
 
     @hass_callback
     def _unsetup(self) -> None:
