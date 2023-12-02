@@ -54,9 +54,9 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": []},
     ), patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup"
+        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
     ), patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates"
+        "homeassistant.components.hassio.HassIO.refresh_updates",
     ):
         hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))

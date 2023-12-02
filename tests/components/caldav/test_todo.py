@@ -12,11 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
-SUPPORTED_FEATURES = 7
+SUPPORTED_FEATURES = 119
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -38,6 +39,12 @@ SUMMARY:Cheese
 STATUS:NEEDS-ACTION
 END:VTODO
 END:VCALENDAR"""
+
+RESULT_ITEM = {
+    "uid": "2",
+    "summary": "Cheese",
+    "status": "needs_action",
+}
 
 TODO_COMPLETED = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -66,6 +73,12 @@ END:VCALENDAR"""
 def platforms() -> list[Platform]:
     """Fixture to set up config entry platforms."""
     return [Platform.TODO]
+
+
+@pytest.fixture(autouse=True)
+def set_tz(hass: HomeAssistant) -> None:
+    """Fixture to set timezone with fixed offset year round."""
+    hass.config.set_time_zone("America/Regina")
 
 
 @pytest.fixture(name="todos")
@@ -177,10 +190,49 @@ async def test_supported_components(
     assert (state is not None) == has_entity
 
 
+@pytest.mark.parametrize(
+    ("item_data", "expcted_save_args", "expected_item"),
+    [
+        (
+            {},
+            {"status": "NEEDS-ACTION", "summary": "Cheese"},
+            RESULT_ITEM,
+        ),
+        (
+            {"due_date": "2023-11-18"},
+            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": "20231118"},
+            {**RESULT_ITEM, "due": "2023-11-18"},
+        ),
+        (
+            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": "20231118T143000Z"},
+            {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
+        ),
+        (
+            {"description": "Make sure to get Swiss"},
+            {
+                "status": "NEEDS-ACTION",
+                "summary": "Cheese",
+                "description": "Make sure to get Swiss",
+            },
+            {**RESULT_ITEM, "description": "Make sure to get Swiss"},
+        ),
+    ],
+    ids=[
+        "summary",
+        "due_date",
+        "due_datetime",
+        "description",
+    ],
+)
 async def test_add_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    dav_client: Mock,
     calendar: Mock,
+    item_data: dict[str, Any],
+    expcted_save_args: dict[str, Any],
+    expected_item: dict[str, Any],
 ) -> None:
     """Test adding an item to the list."""
     calendar.search.return_value = []
@@ -190,22 +242,19 @@ async def test_add_item(
     assert state
     assert state.state == "0"
 
-    # Simulat return value for the state update after the service call
+    # Simulate return value for the state update after the service call
     calendar.search.return_value = [create_todo(calendar, "2", TODO_NEEDS_ACTION)]
 
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "Cheese"},
+        {"item": "Cheese", **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
 
     assert calendar.save_todo.call_args
-    assert calendar.save_todo.call_args.kwargs == {
-        "status": "NEEDS-ACTION",
-        "summary": "Cheese",
-    }
+    assert calendar.save_todo.call_args.kwargs == expcted_save_args
 
     # Verify state was updated
     state = hass.states.get(TEST_ENTITY)
@@ -234,20 +283,59 @@ async def test_add_item_failure(
 
 
 @pytest.mark.parametrize(
-    ("update_data", "expected_ics", "expected_state"),
+    ("update_data", "expected_ics", "expected_state", "expected_item"),
     [
         (
             {"rename": "Swiss Cheese"},
             ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
             "1",
+            {**RESULT_ITEM, "summary": "Swiss Cheese"},
         ),
-        ({"status": "needs_action"}, ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"], "1"),
-        ({"status": "completed"}, ["SUMMARY:Cheese", "STATUS:COMPLETED"], "0"),
+        (
+            {"status": "needs_action"},
+            ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"],
+            "1",
+            RESULT_ITEM,
+        ),
+        (
+            {"status": "completed"},
+            ["SUMMARY:Cheese", "STATUS:COMPLETED"],
+            "0",
+            {**RESULT_ITEM, "status": "completed"},
+        ),
         (
             {"rename": "Swiss Cheese", "status": "needs_action"},
             ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
             "1",
+            {**RESULT_ITEM, "summary": "Swiss Cheese"},
         ),
+        (
+            {"due_date": "2023-11-18"},
+            ["SUMMARY:Cheese", "DUE:20231118"],
+            "1",
+            {**RESULT_ITEM, "due": "2023-11-18"},
+        ),
+        (
+            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            ["SUMMARY:Cheese", "DUE:20231118T143000Z"],
+            "1",
+            {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
+        ),
+        (
+            {"description": "Make sure to get Swiss"},
+            ["SUMMARY:Cheese", "DESCRIPTION:Make sure to get Swiss"],
+            "1",
+            {**RESULT_ITEM, "description": "Make sure to get Swiss"},
+        ),
+    ],
+    ids=[
+        "rename",
+        "status_needs_action",
+        "status_completed",
+        "rename_status",
+        "due_date",
+        "due_datetime",
+        "description",
     ],
 )
 async def test_update_item(
@@ -258,8 +346,9 @@ async def test_update_item(
     update_data: dict[str, Any],
     expected_ics: list[str],
     expected_state: str,
+    expected_item: dict[str, Any],
 ) -> None:
-    """Test creating a an item on the list."""
+    """Test updating an item on the list."""
 
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
@@ -293,6 +382,16 @@ async def test_update_item(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        "get_items",
+        {},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {TEST_ENTITY: {"items": [expected_item]}}
 
 
 async def test_update_item_failure(
@@ -496,3 +595,71 @@ async def test_remove_item_not_found(
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
+
+
+async def test_subscribe(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscription to item updates."""
+
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    # Subscribe and get the initial list
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": TEST_ENTITY,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Cheese"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]
+
+    calendar.todo_by_uid = MagicMock(return_value=item)
+    dav_client.put.return_value.status = 204
+    # Reflect update for state refresh after update
+    calendar.search.return_value = [
+        Todo(
+            dav_client, None, TODO_NEEDS_ACTION.replace("Cheese", "Milk"), calendar, "2"
+        )
+    ]
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {
+            "item": "Cheese",
+            "rename": "Milk",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify update is published
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Milk"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]
