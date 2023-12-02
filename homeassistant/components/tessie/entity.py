@@ -17,7 +17,6 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
 
     def __init__(
         self,
-        api_key: str,
         coordinator: TessieDataUpdateCoordinator,
         vin: str,
         category: str,
@@ -25,7 +24,6 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
         super().__init__(coordinator)
-        self.api_key = api_key
         self.vin = vin
         self.category = category
         self.key = key

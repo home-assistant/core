@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -196,11 +195,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    api_key = entry.data[CONF_ACCESS_TOKEN]
 
     async_add_entities(
         [
-            TessieSensorEntity(api_key, coordinator, vin, category, description)
+            TessieSensorEntity(coordinator, vin, category, description)
             for vin, vehicle in coordinator.data.items()
             for category, descriptions in DESCRIPTIONS.items()
             if category in vehicle
@@ -217,14 +215,13 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        api_key: str,
         coordinator: TessieDataUpdateCoordinator,
         vin: str,
         category: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(api_key, coordinator, vin, category, description.key)
+        super().__init__(coordinator, vin, category, description.key)
         self.entity_description = description
 
     @property
