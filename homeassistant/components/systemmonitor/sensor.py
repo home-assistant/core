@@ -22,10 +22,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
@@ -340,40 +339,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the system monitor sensors."""
-    entities = []
-    sensor_registry: dict[tuple[str, str], SensorData] = {}
-
+    processes = []
     for resource in config[CONF_RESOURCES]:
-        type_ = resource[CONF_TYPE]
-        # Initialize the sensor argument if none was provided.
-        # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
-        if CONF_ARG not in resource:
-            argument = ""
-            if resource[CONF_TYPE].startswith("disk_"):
-                argument = "/"
-        else:
-            argument = resource[CONF_ARG]
+        if resource[CONF_TYPE] == "process":
+            processes.append(resource[CONF_ARG])
 
-        # Verify if we can retrieve CPU / processor temperatures.
-        # If not, do not create the entity and add a warning to the log
-        if (
-            type_ == "processor_temperature"
-            and await hass.async_add_executor_job(_read_cpu_temperature) is None
-        ):
-            _LOGGER.warning("Cannot read CPU / processor temperature information")
-            continue
-
-        sensor_registry[(type_, argument)] = SensorData(
-            argument, None, None, None, None
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={"processes": processes}
         )
-        entities.append(
-            SystemMonitorSensor(sensor_registry, SENSOR_TYPES[type_], argument)
-        )
-
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
-
-    async_add_entities(entities)
+    )
 
 
 async def async_setup_entry(

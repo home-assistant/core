@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -46,6 +47,19 @@ async def validate_sensor_setup(
     return {}
 
 
+async def validate_import_sensor_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate sensor input."""
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
+    import_processes: list[str] = user_input["processes"]
+    for process in import_processes:
+        sensors.append({CONF_PROCESS: process})
+    return {}
+
+
 async def validate_remove_sensor(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -76,6 +90,10 @@ SENSOR_SETUP = vol.Schema(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(schema=vol.Schema({})),
+    "import": SchemaFlowFormStep(
+        schema=vol.Schema({}),
+        validate_user_input=validate_import_sensor_setup,
+    ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowMenuStep(["add_process", "remove_process"]),
@@ -102,6 +120,7 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Return config entry title."""
         return "System Monitor"
 
+    @callback
     def async_create_entry(self, data: Mapping[str, Any], **kwargs: Any) -> FlowResult:
         """Finish config flow and create a config entry."""
         if self._async_current_entries():
