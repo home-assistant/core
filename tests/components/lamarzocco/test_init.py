@@ -5,7 +5,6 @@ from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -69,21 +68,3 @@ async def test_invalid_auth(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
-
-
-async def test_connection_closed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lamarzocco: MagicMock,
-) -> None:
-    """Test quitting the websocket connection."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    await coordinator.async_request_refresh()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    assert len(mock_lamarzocco.terminate_websocket.mock_calls) == 1

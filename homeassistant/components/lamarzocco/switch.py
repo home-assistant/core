@@ -11,78 +11,66 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, FRI, MON, SAT, SUN, THU, TUE, WED
+from .const import DOMAIN
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
 
-DOSE = "dose"
 ATTR_MAP_MAIN_GS3_AV = [
-    (DOSE, "k1"),
-    (DOSE, "k2"),
-    (DOSE, "k3"),
-    (DOSE, "k4"),
-    (DOSE, "k5"),
+    "dose_k1",
+    "dose_k2",
+    "dose_k3",
+    "dose_k4",
+    "dose_k5",
 ]
-
-ON = "on"
-OFF = "off"
-AUTO = "auto"
-TIME = "time"
 
 ATTR_MAP_AUTO_ON_OFF = [
-    (MON, AUTO),
-    (MON, ON, TIME),
-    (MON, OFF, TIME),
-    (TUE, AUTO),
-    (TUE, ON, TIME),
-    (TUE, OFF, TIME),
-    (WED, AUTO),
-    (WED, ON, TIME),
-    (WED, OFF, TIME),
-    (THU, AUTO),
-    (THU, ON, TIME),
-    (THU, OFF, TIME),
-    (FRI, AUTO),
-    (FRI, ON, TIME),
-    (FRI, OFF, TIME),
-    (SAT, AUTO),
-    (SAT, ON, TIME),
-    (SAT, OFF, TIME),
-    (SUN, AUTO),
-    (SUN, ON, TIME),
-    (SUN, OFF, TIME),
+    "mon_auto",
+    "mon_on_time",
+    "mon_off_time",
+    "tue_auto",
+    "tue_on_time",
+    "tue_off_time",
+    "wed_auto",
+    "wed_on_time",
+    "wed_off_time",
+    "thu_auto",
+    "thu_on_time",
+    "thu_off_time",
+    "fri_auto",
+    "fri_on_time",
+    "fri_off_time",
+    "sat_auto",
+    "sat_on_time",
+    "sat_off_time",
+    "sun_auto",
+    "sun_on_time",
+    "sun_off_time",
 ]
-
-TON = "ton"
-TOFF = "toff"
-PREBREWING = "prebrewing"
-PREINFUSION = "preinfusion"
 
 ATTR_MAP_PREBREW_GS3_AV = [
-    (PREBREWING, TON, "k1"),
-    (PREBREWING, TON, "k2"),
-    (PREBREWING, TON, "k3"),
-    (PREBREWING, TON, "k4"),
-    (PREBREWING, TOFF, "k1"),
-    (PREBREWING, TOFF, "k2"),
-    (PREBREWING, TOFF, "k3"),
-    (PREBREWING, TOFF, "k4"),
-]
-
-ATTR_MAP_PREINFUSION_GS3_AV = [
-    (PREINFUSION, "k1"),
-    (PREINFUSION, "k2"),
-    (PREINFUSION, "k3"),
-    (PREINFUSION, "k4"),
-]
-
-ATTR_MAP_PREINFUSION_LM = [
-    (PREINFUSION, "k1"),
+    "prebrewing_ton_k1",
+    "prebrewing_toff_k1",
+    "prebrewing_ton_k2",
+    "prebrewing_toff_k2",
+    "prebrewing_ton_k3",
+    "prebrewing_toff_k3",
+    "prebrewing_ton_k4",
+    "prebrewing_toff_k4",
 ]
 
 ATTR_MAP_PREBREW_LM = [
-    (PREBREWING, TON, "k1"),
-    (PREBREWING, TOFF, "k1"),
+    "prebrewing_ton_k1",
+    "prebrewing_toff_k1",
+]
+
+ATTR_MAP_PREINFUSION_LM = [
+    "preinfusion_k1",
+]
+ATTR_MAP_PREINFUSION_GS3_AV = [
+    "preinfusion_k1",
+    "preinfusion_k2",
+    "preinfusion_k3",
+    "preinfusion_k4",
 ]
 
 
@@ -90,7 +78,7 @@ ATTR_MAP_PREBREW_LM = [
 class LaMarzoccoSwitchEntityDescriptionMixin:
     """Description of an La Marzocco Switch."""
 
-    control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, None]]
+    control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, bool]]
     is_on_fn: Callable[[LaMarzoccoClient], bool]
 
 
@@ -192,12 +180,12 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.entity_description.control_fn(self._lm_client, True)
-        await self._update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.entity_description.control_fn(self._lm_client, False)
-        await self._update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:

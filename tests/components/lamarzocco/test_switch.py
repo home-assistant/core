@@ -47,8 +47,7 @@ async def test_main(
 
     # test extra attributes
     for key in ATTR_MAP_MAIN_GS3_AV:
-        joined_key = str.join("_", key)
-        assert state.attributes.get(joined_key) == 1023
+        assert state.attributes.get(key) == 1023
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -108,11 +107,10 @@ async def test_auto_on_off(
 
     # test extra attributes
     for key in ATTR_MAP_AUTO_ON_OFF:
-        joined_key = str.join("_", key)
-        if "auto" in joined_key:
-            assert state.attributes.get(joined_key) == "Disabled"
+        if "auto" in key:
+            assert state.attributes.get(key) == "Disabled"
         else:
-            assert state.attributes.get(joined_key) == "00:00"
+            assert state.attributes.get(key) == "00:00"
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -172,11 +170,10 @@ async def test_prebrew(
 
     # test extra attributes
     for key in ATTR_MAP_PREBREW_GS3_AV:
-        joined_key = str.join("_", key)
-        if "ton" in joined_key:
-            assert state.attributes.get(joined_key) == 3
+        if "ton" in key:
+            assert state.attributes.get(key) == 3
         else:
-            assert state.attributes.get(joined_key) == 5
+            assert state.attributes.get(key) == 5
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -236,8 +233,7 @@ async def test_preinfusion(
 
     # test extra attributes
     for key in ATTR_MAP_PREINFUSION_GS3_AV:
-        joined_key = str.join("_", key)
-        assert state.attributes.get(joined_key) == 4
+        assert state.attributes.get(key) == 4
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry

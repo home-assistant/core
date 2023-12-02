@@ -1,6 +1,5 @@
 """Base class for the La Marzocco entities."""
 
-import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -9,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, UPDATE_DELAY
+from .const import DOMAIN
 from .coordinator import LmApiCoordinator
 
 
@@ -57,24 +56,9 @@ class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
             """Convert boolean values to strings to improve display in Lovelace."""
             return str(value) if isinstance(value, bool) else value
 
-        def tuple_to_str(key: tuple[str, ...] | str) -> str:
-            """Convert tuple keys to strings."""
-            if isinstance(key, tuple):
-                joined_key = "_".join(key)
-                return joined_key
-            return key
-
         data = self._lm_client.current_status
-        attr = self.entity_description.extra_attributes.get(self._lm_client.model_name)
-        if attr is None:
+        keys = self.entity_description.extra_attributes.get(self._lm_client.model_name)
+        if keys is None:
             return {}
 
-        keys = [tuple_to_str(key) for key in attr]
         return {key: bool_to_str(data[key]) for key in keys if key in data}
-
-    async def _update_ha_state(self) -> None:
-        """Write the intermediate value returned from the action to HA state before actually refreshing."""
-        self.async_write_ha_state()
-        # wait for a bit before getting a new state, to let the machine settle in to any state changes
-        await asyncio.sleep(UPDATE_DELAY)
-        await self.coordinator.async_request_refresh()

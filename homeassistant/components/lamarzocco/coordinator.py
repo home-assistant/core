@@ -25,7 +25,7 @@ class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self._lm = LaMarzoccoClient(
             hass=hass,
-            entry_data=entry.data,
+            entry=entry,
             callback_websocket_notify=self.async_update_listeners,
         )
         self.data = self._lm

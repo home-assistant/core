@@ -45,7 +45,7 @@ async def get_machines(
     """Validate the user input allows us to connect."""
 
     try:
-        lm = LaMarzoccoClient(hass, data)
+        lm = LaMarzoccoClient()
         machines = await lm.get_all_machines(data)
 
     except AuthFail:
@@ -119,7 +119,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         # if host is set, check if we can connect to it
         if user_input.get(CONF_HOST):
-            lm = LaMarzoccoClient(self.hass, self._config)
+            lm = LaMarzoccoClient()
             if not await lm.check_local_connection(
                 credentials=self._config,
                 host=user_input[CONF_HOST],
