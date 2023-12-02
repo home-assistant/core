@@ -80,9 +80,6 @@
       },
       "comfort_temperature": {
         "name": "Comfort temperature"
-      },
-      "eco_temperature": {
-        "name": "Eco temperature"
       }
     },
     "sensor": {
@@ -280,6 +277,9 @@
       },
       "compressor_phase": {
         "name": "Compressor phase"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
       }
     },
     "water_heater": {
