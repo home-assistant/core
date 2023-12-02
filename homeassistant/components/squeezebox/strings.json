@@ -7,7 +7,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Squeezebox."
+          "host": "The hostname or IP address of your Logitech Media Server."
         }
       },
       "edit": {
