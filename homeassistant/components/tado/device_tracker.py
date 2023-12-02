@@ -42,7 +42,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         data={
             CONF_USERNAME: config["device_tracker"][CONF_USERNAME],
             CONF_PASSWORD: config["device_tracker"][CONF_PASSWORD],
-            CONF_HOME_ID: config["device_tracker"][CONF_HOME_ID],
+            CONF_HOME_ID: config["device_tracker"].get([CONF_HOME_ID]),
         },
     )
 
