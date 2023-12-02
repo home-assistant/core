@@ -30,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
@@ -495,6 +496,7 @@ class SystemMonitorSensor(SensorEntity):
     should_poll = False
     _attr_has_entity_name = True
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
