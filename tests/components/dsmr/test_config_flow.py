@@ -475,7 +475,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
     }
 
     entry = MockConfigEntry(

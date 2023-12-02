@@ -52,7 +52,6 @@ async def test_default_setup(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -190,7 +189,6 @@ async def test_setup_only_energy(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
     }
     entry_options = {
@@ -246,7 +244,6 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "4",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -335,7 +332,6 @@ async def test_v5_meter(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -411,7 +407,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5L",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -515,7 +510,6 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": None,
     }
@@ -717,7 +711,6 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": None,
     }
@@ -880,7 +873,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": None,
     }
@@ -992,7 +984,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1047,7 +1038,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5S",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -1122,7 +1112,6 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "Q3D",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -1196,7 +1185,6 @@ async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "dsmr_version": "2.2",
         "protocol": "dsmr_protocol",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1224,7 +1212,6 @@ async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -
         "dsmr_version": "2.2",
         "protocol": "rfxtrx_dsmr_protocol",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1242,6 +1229,7 @@ async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
+@patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_connection_errors_retry(
     hass: HomeAssistant, dsmr_connection_fixture
 ) -> None:
@@ -1252,7 +1240,6 @@ async def test_connection_errors_retry(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 0,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1281,6 +1268,7 @@ async def test_connection_errors_retry(
         assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
+@patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If transport disconnects, the connection should be retried."""
     from dsmr_parser.obis_references import (
@@ -1295,7 +1283,6 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 0,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1378,7 +1365,6 @@ async def test_gas_meter_providing_energy_reading(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
