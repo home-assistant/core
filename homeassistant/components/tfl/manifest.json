@@ -6,6 +6,7 @@
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/tfl",
   "homekit": {},
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": ["tflwrapper==1.1.8"],
   "ssdp": [],
