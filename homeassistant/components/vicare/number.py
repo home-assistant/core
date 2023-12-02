@@ -19,7 +19,11 @@ from PyViCare.PyViCareUtils import (
 )
 from requests.exceptions import ConnectionError as RequestConnectionError
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -50,6 +54,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         translation_key="heating_curve_shift",
         icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getHeatingCurveShift(),
         value_setter=lambda api, shift: (
@@ -81,8 +86,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="normal_temperature",
         translation_key="normal_temperature",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram("normal"),
         value_setter=lambda api, value: api.setProgramTemperature("normal", value),
@@ -93,8 +98,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="reduced_temperature",
         translation_key="reduced_temperature",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram("reduced"),
         value_setter=lambda api, value: api.setProgramTemperature("reduced", value),
@@ -105,8 +110,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="comfort_temperature",
         translation_key="comfort_temperature",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram("comfort"),
         value_setter=lambda api, value: api.setProgramTemperature("comfort", value),
@@ -117,8 +122,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="eco_temperature",
         translation_key="eco_temperature",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram("eco"),
         value_setter=lambda api, value: api.setProgramTemperature("eco", value),
