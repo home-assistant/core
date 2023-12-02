@@ -19,7 +19,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Obihai device."
+          "host": "[%key:component::obihai::config::step::user::data_description::host%]"
         }
       }
     },
