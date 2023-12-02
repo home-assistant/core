@@ -1,4 +1,4 @@
-"""The systemmonitor integration."""
+"""The System Monitor integration."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -8,7 +8,7 @@ PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up systemmonitor from a config entry."""
+    """Set up System Monitor from a config entry."""
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload systemmonitor config entry."""
+    """Unload System Monitor config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

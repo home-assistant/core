@@ -128,7 +128,7 @@ OPTIONS_FLOW = {
 }
 
 
-class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+class SystemMonitorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for System Monitor."""
 
     config_flow = CONFIG_FLOW
