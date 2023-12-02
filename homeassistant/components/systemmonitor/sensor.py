@@ -15,12 +15,14 @@ import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
@@ -45,6 +47,8 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+
+from .util import get_all_disk_mounts, get_all_network_intefaces
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -367,6 +371,67 @@ async def async_setup_platform(
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
 
+    async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up System Montor sensors based on a config entry."""
+    entities = []
+    sensor_registry: dict[tuple[str, str], SensorData] = {}
+    for _type, sensor_description in SENSOR_TYPES.items():
+        if _type.startswith("disk_"):
+            arguments = get_all_disk_mounts()
+            for argument in arguments:
+                sensor_registry[(_type, argument)] = SensorData(
+                    argument, None, None, None, None
+                )
+                entities.append(
+                    SystemMonitorSensor(sensor_registry, sensor_description, argument)
+                )
+        if _type in [
+            "network_in",
+            "network_out",
+            "throughput_network_in",
+            "throughput_network_out",
+            "packets_in",
+            "packets_out",
+            "ipv4_address",
+            "ipv6_address",
+        ]:
+            arguments = get_all_network_intefaces()
+            for argument in arguments:
+                sensor_registry[(_type, argument)] = SensorData(
+                    argument, None, None, None, None
+                )
+                entities.append(
+                    SystemMonitorSensor(sensor_registry, sensor_description, argument)
+                )
+
+        # Verify if we can retrieve CPU / processor temperatures.
+        # If not, do not create the entity and add a warning to the log
+        if (
+            _type == "processor_temperature"
+            and await hass.async_add_executor_job(_read_cpu_temperature) is None
+        ):
+            _LOGGER.warning("Cannot read CPU / processor temperature information")
+            continue
+
+        if _type == "process":
+            for _, argument in entry.options.get(SENSOR_DOMAIN, {}):
+                sensor_registry[(_type, argument)] = SensorData(
+                    argument, None, None, None, None
+                )
+                entities.append(
+                    SystemMonitorSensor(sensor_registry, sensor_description, argument)
+                )
+
+        sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
+        entities.append(SystemMonitorSensor(sensor_registry, sensor_description, ""))
+
+    scan_interval = DEFAULT_SCAN_INTERVAL
+    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
     async_add_entities(entities)
 
 
