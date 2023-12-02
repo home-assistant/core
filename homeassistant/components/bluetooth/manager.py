@@ -16,6 +16,7 @@ from bluetooth_adapters import (
     AdapterDetails,
     BluetoothAdapters,
 )
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -27,7 +28,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import (
     TRACKER_BUFFERING_WOBBLE_SECONDS,

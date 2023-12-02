@@ -456,12 +456,12 @@ def rename_old_gas_to_mbus(
                         device_id=mbus_device_id,
                     )
                 except ValueError:
-                    LOGGER.warning(
+                    LOGGER.debug(
                         "Skip migration of %s because it already exists",
                         entity.entity_id,
                     )
                 else:
-                    LOGGER.info(
+                    LOGGER.debug(
                         "Migrated entity %s from unique id %s to %s",
                         entity.entity_id,
                         entity.unique_id,
@@ -798,6 +798,10 @@ class DSMREntity(SensorEntity):
             value = round(
                 float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
             )
+
+        # Make sure we do not return a zero value for an energy sensor
+        if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
+            return None
 
         return value
 
