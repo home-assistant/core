@@ -1,0 +1,290 @@
+"""Test the Scrape config flow."""
+from __future__ import annotations
+
+from unittest.mock import AsyncMock
+
+from homeassistant import config_entries
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.components.systemmonitor.const import (
+    CONF_INDEX,
+    CONF_PROCESS,
+    DOMAIN,
+)
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.util import slugify
+
+from tests.common import MockConfigEntry
+
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["options"] == {}
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test import."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"processes": ["systemd", "octave-cli"]},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "sensor": [
+            {
+                CONF_PROCESS: "systemd",
+            },
+            {
+                CONF_PROCESS: "octave-cli",
+            },
+        ],
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue.issue_domain == DOMAIN
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "System Monitor",
+    }
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test abort when already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_USER,
+        options={},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test abort when already configured for import."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_USER,
+        options={
+            "sensor": [{CONF_PROCESS: "systemd"}],
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"processes": ["systemd", "octave-cli"]},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue.issue_domain == DOMAIN
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "System Monitor",
+    }
+
+
+async def test_add_and_remove_processes(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test abort when already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_USER,
+        options={},
+        entry_id="1",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_process"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "add_process"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROCESS: "systemd",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor": [
+            {
+                CONF_PROCESS: "systemd",
+            }
+        ],
+    }
+
+    # Add another
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_process"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "add_process"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROCESS: "octave-cli",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor": [
+            {
+                CONF_PROCESS: "systemd",
+            },
+            {
+                CONF_PROCESS: "octave-cli",
+            },
+        ],
+    }
+
+    entity_reg = er.async_get(hass)
+    entity_reg.async_get_or_create(
+        domain=Platform.SENSOR,
+        platform=DOMAIN,
+        unique_id=slugify("process_systemd"),
+        config_entry=config_entry,
+    )
+    entity_reg.async_get_or_create(
+        domain=Platform.SENSOR,
+        platform=DOMAIN,
+        unique_id=slugify("process_octave-cli"),
+        config_entry=config_entry,
+    )
+    assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is not None
+    assert entity_reg.async_get("sensor.systemmonitor_process_octave_cli") is not None
+
+    # Remove one
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "remove_process"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "remove_process"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INDEX: ["0"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor": [
+            {
+                CONF_PROCESS: "octave-cli",
+            },
+        ],
+    }
+
+    # Remove last
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "remove_process"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "remove_process"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INDEX: ["0"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor": [],
+    }
+
+    assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is None
+    assert entity_reg.async_get("sensor.systemmonitor_process_octave_cli") is None
