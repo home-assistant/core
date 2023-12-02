@@ -616,7 +616,7 @@ class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
 
     _unique_id_suffix = "window_open_feature"
     _attribute_name: str = "window_open_feature"
-    _attr_translation_key: str = "use_external_window_detection"
+    _attr_translation_key: str = "use_internal_window_detection"
     _attr_icon: str = "mdi:window-open"
 
 

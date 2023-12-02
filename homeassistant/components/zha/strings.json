@@ -1007,8 +1007,8 @@
       "external_window_sensor": {
         "name": "External Window Sensor"
       },
-      "use_external_window_detection": {
-        "name": "Use External Window Detection"
+      "use_internal_window_detection": {
+        "name": "Use Internal Window Detection"
       },
       "mounting_mode": {
         "name": "Mounting Mode"
