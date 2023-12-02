@@ -24,6 +24,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     ColorTempSelector,
+    ColorTempSelectorConfig,
+    ColorTempSelectorUnit,
     DurationSelector,
     EntitySelector,
     EntitySelectorConfig,
@@ -34,10 +36,6 @@ from homeassistant.helpers.selector import (
     TimeSelector,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
 from .const import (
     CONF_ADJUST_BRIGHTNESS,
@@ -144,25 +142,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class FluxOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle flux options."""
 
-    def convert_mired_to_kelvin(self, user_input):
-        """ColorTempSelector only supports mireds, convert between mireds and kelvin."""
-        user_input[CONF_START_CT] = color_temperature_mired_to_kelvin(
-            user_input[CONF_START_CT]
-        )
-        user_input[CONF_SUNSET_CT] = color_temperature_mired_to_kelvin(
-            user_input[CONF_SUNSET_CT]
-        )
-        user_input[CONF_STOP_CT] = color_temperature_mired_to_kelvin(
-            user_input[CONF_STOP_CT]
-        )
-
-        return user_input
-
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Configure the options."""
         if user_input is not None:
-            user_input = self.convert_mired_to_kelvin(user_input)
-
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         settings = self._config_entry.options
@@ -189,22 +171,22 @@ class FluxOptionsFlow(OptionsFlowWithConfigEntry):
                     # colors
                     vol.Optional(
                         CONF_START_CT,
-                        default=color_temperature_kelvin_to_mired(
-                            float(settings.get(CONF_START_CT))  # type: ignore[arg-type]
-                        ),
-                    ): ColorTempSelector(),
+                        default=settings.get(CONF_START_CT),
+                    ): ColorTempSelector(
+                        ColorTempSelectorConfig(unit=ColorTempSelectorUnit.KELVIN)
+                    ),
                     vol.Optional(
                         CONF_SUNSET_CT,
-                        default=color_temperature_kelvin_to_mired(
-                            float(settings.get(CONF_SUNSET_CT))  # type: ignore[arg-type]
-                        ),
-                    ): ColorTempSelector(),
+                        default=settings.get(CONF_SUNSET_CT),
+                    ): ColorTempSelector(
+                        ColorTempSelectorConfig(unit=ColorTempSelectorUnit.KELVIN)
+                    ),
                     vol.Optional(
                         CONF_STOP_CT,
-                        default=color_temperature_kelvin_to_mired(
-                            float(settings.get(CONF_STOP_CT))  # type: ignore[arg-type]
-                        ),
-                    ): ColorTempSelector(),
+                        default=settings.get(CONF_STOP_CT),
+                    ): ColorTempSelector(
+                        ColorTempSelectorConfig(unit=ColorTempSelectorUnit.KELVIN)
+                    ),
                     # adjust_brightness
                     vol.Optional(
                         CONF_ADJUST_BRIGHTNESS,
