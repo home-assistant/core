@@ -7,7 +7,10 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pybravia"],
-  "requirements": ["pybravia==0.3.3"],
+  "requirements": [
+    "pybravia==0.3.3",
+    "tenacity==8.2.3"
+  ],
   "ssdp": [
     {
       "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
