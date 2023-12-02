@@ -36,13 +36,14 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 
 async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     """Configure the Tado device scanner."""
+    device_config = config["device_tracker"]
     import_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_USERNAME: config["device_tracker"][CONF_USERNAME],
-            CONF_PASSWORD: config["device_tracker"][CONF_PASSWORD],
-            CONF_HOME_ID: config["device_tracker"].get([CONF_HOME_ID]),
+            CONF_USERNAME: device_config[CONF_USERNAME],
+            CONF_PASSWORD: device_config[CONF_PASSWORD],
+            CONF_HOME_ID: device_config.get(CONF_HOME_ID),
         },
     )
 
