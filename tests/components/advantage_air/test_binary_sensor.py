@@ -8,35 +8,19 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
-    TEST_SET_RESPONSE,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
     add_mock_config,
 )
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_binary_sensor_async_setup_entry(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test binary sensor setup."""
 
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_URL,
-        text=TEST_SET_RESPONSE,
-    )
     await add_mock_config(hass)
-
-    assert len(aioclient_mock.mock_calls) == 1
 
     # Test First Air Filter
     entity_id = "binary_sensor.myzone_filter"

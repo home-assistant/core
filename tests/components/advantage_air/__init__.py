@@ -1,12 +1,13 @@
 """Tests for the Advantage Air component."""
 
+from unittest.mock import patch, AsyncMock
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
-TEST_SYSTEM_DATA = load_fixture("advantage_air/getSystemData.json")
-TEST_SET_RESPONSE = load_fixture("advantage_air/setAircon.json")
+TEST_SYSTEM_DATA = load_json_object_fixture("advantage_air/getSystemData.json")
+TEST_SET_RESPONSE = load_json_object_fixture("advantage_air/setAircon.json")
 
 USER_INPUT = {
     CONF_IP_ADDRESS: "1.2.3.4",
@@ -33,7 +34,22 @@ async def add_mock_config(hass):
         unique_id="0123456",
         data=USER_INPUT,
     )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.advantage_air.advantage_air"
+    ) as mock_advantage_air:
+        mock_advantage_air.return_value.async_get = AsyncMock(
+            return_value=TEST_SYSTEM_DATA
+        )
+        mock_advantage_air.return_value.aircon.async_update.return_value = (
+            TEST_SET_RESPONSE
+        )
+        mock_advantage_air.return_value.things.async_update.return_value = (
+            TEST_SET_RESPONSE
+        )
+        mock_advantage_air.return_value.lights.async_update.return_value = (
+            TEST_SET_RESPONSE
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
     return entry

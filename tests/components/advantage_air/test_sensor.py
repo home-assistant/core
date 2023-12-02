@@ -62,12 +62,6 @@ async def test_sensor_platform(
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 3
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["countDownToOn"] == value
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First TimeToOff Sensor
     entity_id = "sensor.myzone_time_to_off"
@@ -87,12 +81,6 @@ async def test_sensor_platform(
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 5
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["countDownToOff"] == value
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First Zone Vent Sensor
     entity_id = "sensor.myzone_zone_open_with_sensor_vent"

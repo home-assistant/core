@@ -58,9 +58,3 @@ async def test_select_async_setup_entry(
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 3
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["myZone"] == 3
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"

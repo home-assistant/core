@@ -10,7 +10,7 @@ from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, USER_INPUT
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_form(hass: HomeAssistant) -> None:
     """Test that form shows up."""
 
     aioclient_mock.get(
@@ -52,9 +52,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     assert result4["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
 
     aioclient_mock.get(

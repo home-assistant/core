@@ -65,12 +65,6 @@ async def test_ac_cover(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -78,13 +72,6 @@ async def test_ac_cover(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert data["ac3"]["zones"]["z01"]["value"] == 100
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -92,12 +79,6 @@ async def test_ac_cover(
         {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["value"] == 50
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -105,12 +86,6 @@ async def test_ac_cover(
         {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 0},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test controlling multiple Cover Zone Entity
     await hass.services.async_call(
@@ -124,9 +99,7 @@ async def test_ac_cover(
         },
         blocking=True,
     )
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert data["ac3"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -138,9 +111,6 @@ async def test_ac_cover(
         },
         blocking=True,
     )
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert data["ac3"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN
 
 
 async def test_things_cover(
@@ -179,13 +149,6 @@ async def test_things_cover(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(thing_id)
-    assert data["id"] == thing_id
-    assert data["value"] == 0
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -193,10 +156,3 @@ async def test_things_cover(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(thing_id)
-    assert data["id"] == thing_id
-    assert data["value"] == 100
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"

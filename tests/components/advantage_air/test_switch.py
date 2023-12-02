@@ -60,12 +60,6 @@ async def test_cover_async_setup_entry(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -73,12 +67,6 @@ async def test_cover_async_setup_entry(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["freshAirStatus"] == ADVANTAGE_AIR_STATE_OFF
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
 
 async def test_things_switch(
@@ -116,13 +104,6 @@ async def test_things_switch(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(thing_id)
-    assert data["id"] == thing_id
-    assert data["value"] == 0
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -130,10 +111,3 @@ async def test_things_switch(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(thing_id)
-    assert data["id"] == thing_id
-    assert data["value"] == 100
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"

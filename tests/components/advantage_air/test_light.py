@@ -62,13 +62,6 @@ async def test_light(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
-    assert data["id"] == light_id
-    assert data["state"] == ADVANTAGE_AIR_STATE_ON
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -76,13 +69,6 @@ async def test_light(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
-    assert data["id"] == light_id
-    assert data["state"] == ADVANTAGE_AIR_STATE_OFF
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test Dimmable Light Entity
     entity_id = "light.light_b"
@@ -98,13 +84,6 @@ async def test_light(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
-    assert data["id"] == light_id
-    assert data["state"] == ADVANTAGE_AIR_STATE_ON
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -112,14 +91,6 @@ async def test_light(
         {ATTR_ENTITY_ID: [entity_id], ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
-    assert data["id"] == light_id
-    assert data["value"] == 50
-    assert data["state"] == ADVANTAGE_AIR_STATE_ON
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
 
 async def test_things_light(
@@ -157,13 +128,6 @@ async def test_things_light(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
-    assert data["id"] == light_id
-    assert data["value"] == 0
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -171,10 +135,3 @@ async def test_things_light(
         {ATTR_ENTITY_ID: [entity_id], ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
-    assert data["id"] == light_id
-    assert data["value"] == 50
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"

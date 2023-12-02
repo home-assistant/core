@@ -7,9 +7,7 @@ from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, add_mock_config
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_async_setup_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry and unload."""
 
     aioclient_mock.get(
@@ -25,9 +23,7 @@ async def test_async_setup_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_setup_entry_failure(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_async_setup_entry_failure(hass: HomeAssistant) -> None:
     """Test a unsuccessful setup entry."""
 
     aioclient_mock.get(
