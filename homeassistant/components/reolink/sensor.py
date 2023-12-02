@@ -52,6 +52,7 @@ class ReolinkHostSensorEntityDescription(
 SENSORS = (
     ReolinkSensorEntityDescription(
         key="ptz_pan_position",
+        cmd_key="GetPtzCurPos",
         translation_key="ptz_pan_position",
         icon="mdi:pan",
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,6 +65,7 @@ SENSORS = (
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
+        cmd_key="GetWifiSignal",
         translation_key="wifi_signal",
         icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
