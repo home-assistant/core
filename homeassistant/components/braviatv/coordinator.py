@@ -142,7 +142,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 except BraviaAuthError as err:
                     raise ConfigEntryAuthFailed from err
 
-            # Retry up to 3 times if request failed
+            # Retry up to 3 times in case request failed
             for attempt in Retrying(reraise=True, stop=stop_after_attempt(3)):
                 with attempt:
                     power_status = await self.client.get_power_status()
