@@ -37,9 +37,6 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "invert": False,
-                "max_samples": 2.0,
-                "min_gradient": 0.0,
-                "sample_duration": 0.0,
             },
         )
         await hass.async_block_till_done()
@@ -50,10 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["options"] == {
         "entity_id": "sensor.cpu_temp",
         "invert": False,
-        "max_samples": 2.0,
-        "min_gradient": 0.0,
         "name": "CPU Temperature rising",
-        "sample_duration": 0.0,
     }
 
 
@@ -71,3 +65,30 @@ async def test_options(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
+
+
+async def test_step_import(hass: HomeAssistant) -> None:
+    """Test for import step."""
+    with patch(
+        "homeassistant.components.trend.async_setup_entry", wraps=async_setup_entry
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "name": "test_trend_sensor",
+                "entity_id": "sensor.test_state",
+                "max_samples": 25,
+                "min_samples": 20,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test_trend_sensor"
+    assert result["options"] == {
+        "entity_id": "sensor.test_state",
+        "max_samples": 25,
+        "min_samples": 20,
+        "name": "test_trend_sensor",
+    }

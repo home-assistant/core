@@ -244,42 +244,6 @@ async def test_no_sensors_does_not_create(hass: HomeAssistant):
     assert hass.states.async_all("binary_sensor") == []
 
 
-async def test_reload(hass: HomeAssistant) -> None:
-    """Verify we can reload trend sensors."""
-    hass.states.async_set("sensor.test_state", 1234)
-
-    await setup.async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "trend",
-                "sensors": {"test_trend_sensor": {"entity_id": "sensor.test_state"}},
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-
-    assert hass.states.get("binary_sensor.test_trend_sensor")
-
-    yaml_path = get_fixture_path("configuration.yaml", "trend")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-
-    assert hass.states.get("binary_sensor.test_trend_sensor") is None
-    assert hass.states.get("binary_sensor.second_test_trend_sensor")
-
-
 @pytest.mark.parametrize(
     ("saved_state", "restored_state"),
     [("on", "on"), ("off", "off"), ("unknown", "unknown")],

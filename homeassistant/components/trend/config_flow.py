@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 from typing import Any, cast
 
+from data_entry_flow import FlowResult
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -19,14 +21,21 @@ from .const import (
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
+    CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
+    DEFAULT_MAX_SAMPLES,
+    DEFAULT_MIN_GRADIENT,
+    DEFAULT_MIN_SAMPLES,
+    DEFAULT_SAMPLE_DURATION,
     DOMAIN,
 )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(
+    full_options: bool, handler: SchemaCommonFlowHandler
+) -> vol.Schema:
     """Get options schema."""
-    return vol.Schema(
+    base_schema = vol.Schema(
         {
             vol.Optional(CONF_ATTRIBUTE): selector.AttributeSelector(
                 selector.AttributeSelectorConfig(
@@ -34,20 +43,42 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                 )
             ),
             vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
-            vol.Optional(CONF_MAX_SAMPLES, default=2): selector.NumberSelector(
+        }
+    )
+
+    if not full_options:
+        return base_schema
+
+    return base_schema.extend(
+        {
+            vol.Optional(
+                CONF_MAX_SAMPLES, default=DEFAULT_MAX_SAMPLES
+            ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0,
+                    min=2,
                     mode=selector.NumberSelectorMode.BOX,
                 ),
             ),
-            vol.Optional(CONF_MIN_GRADIENT, default=0.0): selector.NumberSelector(
+            vol.Optional(
+                CONF_MIN_SAMPLES, default=DEFAULT_MIN_SAMPLES
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=2,
+                    mode=selector.NumberSelectorMode.BOX,
+                ),
+            ),
+            vol.Optional(
+                CONF_MIN_GRADIENT, default=DEFAULT_MIN_GRADIENT
+            ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0,
                     step=0.1,
                     mode=selector.NumberSelectorMode.BOX,
                 ),
             ),
-            vol.Optional(CONF_SAMPLE_DURATION, default=0): selector.NumberSelector(
+            vol.Optional(
+                CONF_SAMPLE_DURATION, default=DEFAULT_SAMPLE_DURATION
+            ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0,
                     mode=selector.NumberSelectorMode.BOX,
@@ -73,12 +104,19 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = {
         "user": SchemaFlowFormStep(schema=CONFIG_SCHEMA, next_step="settings"),
-        "settings": SchemaFlowFormStep(get_options_schema),
+        "settings": SchemaFlowFormStep(partial(get_options_schema, False)),
     }
     options_flow = {
-        "init": SchemaFlowFormStep(get_options_schema),
+        "init": SchemaFlowFormStep(partial(get_options_schema, True)),
     }
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
+
+    async def async_step_import(self, import_config: Mapping[str, Any]) -> FlowResult:
+        """Import a sensor from YAML configuration."""
+        self._async_abort_entries_match({CONF_NAME: import_config[CONF_NAME]})
+        return self.async_create_entry(
+            data={**import_config},
+        )
