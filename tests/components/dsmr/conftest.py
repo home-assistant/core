@@ -1,5 +1,7 @@
 """Common test tools."""
 import asyncio
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
@@ -14,6 +16,31 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject
 import pytest
+
+from homeassistant.core import HomeAssistant
+
+
+@pytest.fixture
+async def min_patch_interval(hass: HomeAssistant) -> int:
+    """Set default minimal reconnect interval during tests."""
+    return 0
+
+
+@pytest.fixture(autouse=True)
+async def patch_min_time_between_interval(
+    hass: HomeAssistant, min_patch_interval: int
+) -> Generator[Any, None]:
+    """Mock minimal reconnect interval."""
+    with patch(
+        "homeassistant.components.dsmr.sensor.DEFAULT_TIME_BETWEEN_UPDATE",
+        0,
+    ), patch(
+        "homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 3
+    ), patch(
+        "homeassistant.components.dsmr.sensor.MIN_TIME_BETWEEN_UPDATE",
+        min_patch_interval,
+    ):
+        yield
 
 
 @pytest.fixture

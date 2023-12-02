@@ -48,7 +48,6 @@ from .const import (
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_PROTOCOL,
-    CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -62,6 +61,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
+    MIN_TIME_BETWEEN_UPDATE,
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
@@ -515,6 +515,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
+    # Correct entries with an invalid time between update
+    update_interval: int | None
+    if (update_interval := entry.options.get(CONF_TIME_BETWEEN_UPDATE)) is not None:
+        if update_interval < MIN_TIME_BETWEEN_UPDATE:
+            new_options = dict(entry.options)
+            update_interval = new_options[
+                CONF_TIME_BETWEEN_UPDATE
+            ] = MIN_TIME_BETWEEN_UPDATE
+            hass.config_entries.async_update_entry(entry, options=new_options)
+    else:
+        update_interval = DEFAULT_TIME_BETWEEN_UPDATE
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities: list[DSMREntity] = []
     initialized: bool = False
@@ -555,9 +566,7 @@ async def async_setup_entry(
     add_entities_handler = async_dispatcher_connect(
         hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
     )
-    min_time_between_updates = timedelta(
-        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
-    )
+    min_time_between_updates = timedelta(seconds=update_interval)
 
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram: dict[str, DSMRObject] | None) -> None:
@@ -647,9 +656,7 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
             except (serial.serialutil.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
@@ -663,9 +670,7 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
