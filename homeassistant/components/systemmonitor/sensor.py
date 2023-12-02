@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -48,6 +49,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
+from .const import DOMAIN
 from .util import get_all_disk_mounts, get_all_network_intefaces
 
 _LOGGER = logging.getLogger(__name__)
@@ -388,7 +390,9 @@ async def async_setup_entry(
                     argument, None, None, None, None
                 )
                 entities.append(
-                    SystemMonitorSensor(sensor_registry, sensor_description, argument)
+                    SystemMonitorSensor(
+                        sensor_registry, sensor_description, entry.entry_id, argument
+                    )
                 )
         if _type in [
             "network_in",
@@ -406,7 +410,9 @@ async def async_setup_entry(
                     argument, None, None, None, None
                 )
                 entities.append(
-                    SystemMonitorSensor(sensor_registry, sensor_description, argument)
+                    SystemMonitorSensor(
+                        sensor_registry, sensor_description, entry.entry_id, argument
+                    )
                 )
 
         # Verify if we can retrieve CPU / processor temperatures.
@@ -424,11 +430,15 @@ async def async_setup_entry(
                     argument, None, None, None, None
                 )
                 entities.append(
-                    SystemMonitorSensor(sensor_registry, sensor_description, argument)
+                    SystemMonitorSensor(
+                        sensor_registry, sensor_description, entry.entry_id, argument
+                    )
                 )
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
-        entities.append(SystemMonitorSensor(sensor_registry, sensor_description, ""))
+        entities.append(
+            SystemMonitorSensor(sensor_registry, sensor_description, entry.entry_id, "")
+        )
 
     scan_interval = DEFAULT_SCAN_INTERVAL
     await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
@@ -498,11 +508,13 @@ class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
     should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         sensor_registry: dict[tuple[str, str], SensorData],
         sensor_description: SysMonitorSensorEntityDescription,
+        entry_id: str,
         argument: str = "",
     ) -> None:
         """Initialize the sensor."""
@@ -511,6 +523,12 @@ class SystemMonitorSensor(SensorEntity):
         self._attr_unique_id: str = slugify(f"{sensor_description.key}_{argument}")
         self._sensor_registry = sensor_registry
         self._argument: str = argument
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="System Monitor",
+            name="System Monitor",
+        )
 
     @property
     def native_value(self) -> str | datetime | None:
