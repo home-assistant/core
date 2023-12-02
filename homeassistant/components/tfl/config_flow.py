@@ -95,10 +95,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     data: dict[str, Any] = {}
 
-    # def __init__(self) -> None:
-    #     """Initialise any data needed for the config flow."""
-    #     self.data = dict[str, Any]
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
