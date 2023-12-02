@@ -9,6 +9,8 @@ from homeassistant.components.suez_water.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 MOCK_DATA = {
     "username": "test-username",
     "password": "test-password",
@@ -73,6 +75,28 @@ async def test_form_invalid_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort when entry is already configured."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_DATA,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("exception", "error"), [(PySuezError, "cannot_connect"), (Exception, "unknown")]
 )
@@ -108,3 +132,58 @@ async def test_form_error(
     assert result["title"] == "test-username"
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"), [(PySuezError, "cannot_connect"), (Exception, "unknown")]
+)
+async def test_import_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, exception: Exception, reason: str
+) -> None:
+    """Test we handle errors while importing."""
+
+    with patch(
+        "homeassistant.components.suez_water.config_flow.SuezClient",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_DATA
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_importing_invalid_auth(hass: HomeAssistant) -> None:
+    """Test we handle invalid auth when importing."""
+
+    with patch(
+        "homeassistant.components.suez_water.config_flow.SuezClient.__init__",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.suez_water.config_flow.SuezClient.check_credentials",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_DATA
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_auth"
+
+
+async def test_import_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort import when entry is already configured."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_DATA
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
