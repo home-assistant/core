@@ -1230,6 +1230,7 @@ omit =
     homeassistant/components/stream/hls.py
     homeassistant/components/stream/worker.py
     homeassistant/components/streamlabswater/*
+    homeassistant/components/suez_water/__init__.py
     homeassistant/components/suez_water/sensor.py
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/supla/*

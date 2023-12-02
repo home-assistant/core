@@ -134,6 +134,20 @@ async def test_form_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test import flow."""
+    with patch("homeassistant.components.suez_water.config_flow.SuezClient"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_DATA
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == MOCK_DATA
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     ("exception", "reason"), [(PySuezError, "cannot_connect"), (Exception, "unknown")]
 )
