@@ -1642,7 +1642,7 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 def bitwise_xor(first_value, second_value):
-    """Perform a bitwise or operation."""
+    """Perform a bitwise xor operation."""
     return first_value ^ second_value
 
 
