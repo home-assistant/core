@@ -3,18 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bluetooth_adapters import DiscoveredDeviceAdvertisementData
-from bluetooth_data_tools import monotonic_time_coarse
-from habluetooth import (
-    SCANNER_WATCHDOG_INTERVAL,
-    BaseHaRemoteScanner,
-    BaseHaScanner,
-    HaBluetoothConnector,
-)
+from habluetooth import BaseHaRemoteScanner, BaseHaScanner, HaBluetoothConnector
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -26,9 +20,6 @@ from homeassistant.core import (
 )
 
 from . import models
-
-SCANNER_WATCHDOG_INTERVAL_SECONDS: Final = SCANNER_WATCHDOG_INTERVAL.total_seconds()
-MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
 @dataclass(slots=True)
