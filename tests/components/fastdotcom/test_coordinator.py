@@ -31,6 +31,7 @@ async def test_fastdotcom_data_update_coordinator(
 
     state = hass.states.get("sensor.fast_com_download")
     assert state is not None
+    assert state.state == "10"
 
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
