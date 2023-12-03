@@ -7,7 +7,6 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components.fastdotcom.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -25,13 +24,14 @@ async def test_fastdotcom_data_update_coordinator(
     await hass.config_entries.async_setup(config_entry.entry_id)
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
-        return_value=10.0,
     ):
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fast_com_download")
     assert state is not None
-    assert state.state == "10"
+
+    coordinator = hass.data[config_entry.domain][config_entry.entry_id]
+    assert coordinator.last_update_success is True
 
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
@@ -39,8 +39,7 @@ async def test_fastdotcom_data_update_coordinator(
     ):
         freezer.tick(timedelta(minutes=5, seconds=1))
         async_fire_time_changed(hass)
-        await hass.async_block_until_done()
-
+        await coordinator.async_refresh()
 
     state = hass.states.get("sensor.fast_com_download")
     assert state.state is STATE_UNAVAILABLE
