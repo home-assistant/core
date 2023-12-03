@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from bluetooth_adapters import BluetoothAdapters
 from bluetooth_auto_recovery import recover_adapter
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import callback
-from homeassistant.util.dt import monotonic_time_coarse
 
 from .models import BluetoothServiceInfoBleak
 from .storage import BluetoothStorage
