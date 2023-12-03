@@ -1,6 +1,7 @@
 """Types for the ViCare integration."""
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 
