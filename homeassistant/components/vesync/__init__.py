@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .common import async_process_devices
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
@@ -43,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("Unable to login to the VeSync server")
         return False
 
-    device_dict = await async_process_devices(hass, manager)
+    device_dict = await _async_process_devices(hass, manager)
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
@@ -82,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         lights = hass.data[DOMAIN][VS_LIGHTS]
         sensors = hass.data[DOMAIN][VS_SENSORS]
 
-        dev_dict = await async_process_devices(hass, manager)
+        dev_dict = await _async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
@@ -142,3 +141,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def _async_process_devices(hass, manager):
+    """Assign devices to proper component."""
+    devices = {}
+    devices[VS_SWITCHES] = []
+    devices[VS_FANS] = []
+    devices[VS_LIGHTS] = []
+    devices[VS_SENSORS] = []
+
+    await hass.async_add_executor_job(manager.update)
+
+    if manager.fans:
+        devices[VS_FANS].extend(manager.fans)
+        # Expose fan sensors separately
+        devices[VS_SENSORS].extend(manager.fans)
+        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+
+    if manager.bulbs:
+        devices[VS_LIGHTS].extend(manager.bulbs)
+        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
+
+    if manager.outlets:
+        devices[VS_SWITCHES].extend(manager.outlets)
+        # Expose outlets' voltage, power & energy usage as separate sensors
+        devices[VS_SENSORS].extend(manager.outlets)
+        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
+
+    if manager.switches:
+        for switch in manager.switches:
+            if not switch.is_dimmable():
+                devices[VS_SWITCHES].append(switch)
+            else:
+                devices[VS_LIGHTS].append(switch)
+        _LOGGER.info("%d VeSync switches found", len(manager.switches))
+
+    return devices

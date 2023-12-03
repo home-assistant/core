@@ -1,10 +1,11 @@
 """Tests for the init module."""
-from unittest.mock import Mock, patch
+import logging
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from pyvesync import VeSync
 
-from homeassistant.components.vesync import async_setup_entry
+from homeassistant.components.vesync import _async_process_devices, async_setup_entry
 from homeassistant.components.vesync.const import (
     DOMAIN,
     VS_FANS,
@@ -16,6 +17,8 @@ from homeassistant.components.vesync.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
+from .common import FAN_MODEL
 
 
 async def test_async_setup_entry__not_login(
@@ -32,7 +35,7 @@ async def test_async_setup_entry__not_login(
     ) as setups_mock, patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ) as setup_mock, patch(
-        "homeassistant.components.vesync.async_process_devices"
+        "homeassistant.components.vesync._async_process_devices"
     ) as process_mock:
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
@@ -98,3 +101,68 @@ async def test_async_setup_entry__loads_fans(
     assert hass.data[DOMAIN][VS_FANS] == [fan]
     assert not hass.data[DOMAIN][VS_LIGHTS]
     assert hass.data[DOMAIN][VS_SENSORS] == [fan]
+
+
+async def test_async_process_devices__no_devices(
+    hass: HomeAssistant, manager, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test when manager with no devices is processed."""
+    manager = MagicMock()
+    with patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_add_executor_job:
+        devices = await _async_process_devices(hass, manager)
+        assert mock_add_executor_job.call_count == 1
+        assert mock_add_executor_job.call_args[0][0] == manager.update
+
+    assert devices == {
+        "fans": [],
+        "lights": [],
+        "sensors": [],
+        "switches": [],
+    }
+    assert caplog.messages[0] == "0 VeSync fans found"
+    assert caplog.messages[1] == "0 VeSync lights found"
+    assert caplog.messages[2] == "0 VeSync outlets found"
+    assert caplog.messages[3] == "0 VeSync switches found"
+
+
+async def test_async_process_devices__devices(
+    hass: HomeAssistant, manager, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test when manager with devices is processed."""
+    caplog.set_level(logging.INFO)
+
+    fan = MagicMock()
+    fan.device_type = FAN_MODEL
+    manager.fans = [fan]
+
+    bulb = MagicMock()
+    manager.bulbs = [bulb]
+
+    outlet = MagicMock()
+    manager.outlets = [outlet]
+
+    switch = MagicMock()
+    switch.is_dimmable.return_value = False
+    light = MagicMock()
+    light.is_dimmable.return_value = True
+    manager.switches = [switch, light]
+
+    with patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_add_executor_job:
+        devices = await _async_process_devices(hass, manager)
+        assert mock_add_executor_job.call_count == 1
+        assert mock_add_executor_job.call_args[0][0] == manager.update
+
+    assert devices == {
+        "fans": [fan],
+        "lights": [bulb, light],
+        "sensors": [fan, outlet],
+        "switches": [outlet, switch],
+    }
+    assert caplog.messages[0] == "1 VeSync fans found"
+    assert caplog.messages[1] == "1 VeSync lights found"
+    assert caplog.messages[2] == "1 VeSync outlets found"
+    assert caplog.messages[3] == "2 VeSync switches found"

@@ -7,6 +7,8 @@ from homeassistant.components.vesync.const import DOMAIN
 
 from tests.common import load_fixture, load_json_object_fixture
 
+FAN_MODEL = "FAN_MODEL"
+
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
 ALL_DEVICE_NAMES: list[str] = [
     dev["deviceName"] for dev in ALL_DEVICES["result"]["list"]
