@@ -7,9 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import (
-    add_mock_config,
-)
+from . import add_mock_config, patch_get
 
 from tests.common import async_fire_time_changed
 
@@ -22,86 +20,87 @@ async def test_binary_sensor_async_setup_entry(
 
     await add_mock_config(hass)
 
-    # Test First Air Filter
-    entity_id = "binary_sensor.myzone_filter"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+    with patch_get():
+        # Test First Air Filter
+        entity_id = "binary_sensor.myzone_filter"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-filter"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-filter"
 
-    # Test Second Air Filter
-    entity_id = "binary_sensor.mytemp_filter"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+        # Test Second Air Filter
+        entity_id = "binary_sensor.mytemp_filter"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac2-filter"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac2-filter"
 
-    # Test First Motion Sensor
-    entity_id = "binary_sensor.myzone_zone_open_with_sensor_motion"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+        # Test First Motion Sensor
+        entity_id = "binary_sensor.myzone_zone_open_with_sensor_motion"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01-motion"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z01-motion"
 
-    # Test Second Motion Sensor
-    entity_id = "binary_sensor.myzone_zone_closed_with_sensor_motion"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+        # Test Second Motion Sensor
+        entity_id = "binary_sensor.myzone_zone_closed_with_sensor_motion"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z02-motion"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z02-motion"
 
-    # Test First MyZone Sensor (disabled by default)
-    entity_id = "binary_sensor.myzone_zone_open_with_sensor_myzone"
+        # Test First MyZone Sensor (disabled by default)
+        entity_id = "binary_sensor.myzone_zone_open_with_sensor_myzone"
 
-    assert not hass.states.get(entity_id)
+        assert not hass.states.get(entity_id)
 
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01-myzone"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z01-myzone"
 
-    # Test Second Motion Sensor (disabled by default)
-    entity_id = "binary_sensor.myzone_zone_closed_with_sensor_myzone"
+        # Test Second Motion Sensor (disabled by default)
+        entity_id = "binary_sensor.myzone_zone_closed_with_sensor_myzone"
 
-    assert not hass.states.get(entity_id)
+        assert not hass.states.get(entity_id)
 
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z02-myzone"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z02-myzone"

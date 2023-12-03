@@ -1,21 +1,8 @@
 """Test the Advantage Air Climate Platform."""
-from json import loads
 
-import pytest
-from unittest.mock import patch
 from advantage_air import ApiError
-from homeassistant.components.advantage_air.climate import (
-    ADVANTAGE_AIR_COOL_TARGET,
-    ADVANTAGE_AIR_HEAT_TARGET,
-    HASS_FAN_MODES,
-    HASS_HVAC_MODES,
-)
-from homeassistant.components.advantage_air.const import (
-    ADVANTAGE_AIR_STATE_CLOSE,
-    ADVANTAGE_AIR_STATE_OFF,
-    ADVANTAGE_AIR_STATE_ON,
-    ADVANTAGE_AIR_STATE_OPEN,
-)
+import pytest
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -38,13 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import (
-    TEST_SET_RESPONSE,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
+from . import add_mock_config, patch_update
 
 
 async def test_climate_myzone_main(
@@ -69,12 +50,7 @@ async def test_climate_myzone_main(
     assert entry
     assert entry.unique_id == "uniqueid-ac1"
 
-    with (
-        patch(
-            "homeassistant.components.advantage_air.advantage_air.async_set",
-            return_value=TEST_SET_RESPONSE,
-        ) as mock_set,
-    ):
+    with patch_update() as mock_update:
         # Test setting HVAC Mode
 
         await hass.services.async_call(
@@ -83,8 +59,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -92,8 +68,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         # Test Turning Off with HVAC Mode
         await hass.services.async_call(
@@ -102,8 +78,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -111,8 +87,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: FAN_LOW},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         # Test changing Temperature
         await hass.services.async_call(
@@ -121,8 +97,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         # Test Turning On
         await hass.services.async_call(
@@ -131,8 +107,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         # Test Turning Off
         await hass.services.async_call(
@@ -141,8 +117,8 @@ async def test_climate_myzone_main(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        mock_set.reset_mock()
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
 
 async def test_climate_myzone_zone(
@@ -166,12 +142,7 @@ async def test_climate_myzone_zone(
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01"
 
-    with (
-        patch(
-            "homeassistant.components.advantage_air.advantage_air.async_set",
-            return_value=TEST_SET_RESPONSE,
-        ) as mock_set,
-    ):
+    with patch_update() as mock_update:
         # Test Climate Zone On
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -179,6 +150,8 @@ async def test_climate_myzone_zone(
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
             blocking=True,
         )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         # Test Climate Zone Off
         await hass.services.async_call(
@@ -187,6 +160,8 @@ async def test_climate_myzone_zone(
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -194,6 +169,8 @@ async def test_climate_myzone_zone(
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
 
 async def test_climate_myauto_main(
@@ -215,12 +192,7 @@ async def test_climate_myauto_main(
     assert entry
     assert entry.unique_id == "uniqueid-ac3"
 
-    with (
-        patch(
-            "homeassistant.components.advantage_air.advantage_air.async_set",
-            return_value=TEST_SET_RESPONSE,
-        ) as mock_set,
-    ):
+    with patch_update() as mock_update:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -231,7 +203,7 @@ async def test_climate_myauto_main(
             },
             blocking=True,
         )
-        mock_set.assert_called_once()
+        mock_update.assert_called_once()
 
 
 async def test_climate_async_failed_update(hass: HomeAssistant) -> None:
@@ -241,11 +213,7 @@ async def test_climate_async_failed_update(hass: HomeAssistant) -> None:
 
     with (
         pytest.raises(HomeAssistantError),
-        patch(
-            "homeassistant.components.advantage_air.advantage_air.async_set",
-            return_value=TEST_SET_RESPONSE,
-            side_effect=ApiError,
-        ) as mock_set,
+        patch_update(side_effect=ApiError) as mock_update,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -253,4 +221,4 @@ async def test_climate_async_failed_update(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-        mock_set.assert_called_once()
+        mock_update.assert_called_once()

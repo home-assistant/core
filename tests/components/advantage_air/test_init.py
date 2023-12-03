@@ -2,18 +2,11 @@
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, add_mock_config
-
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import add_mock_config
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry and unload."""
-
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
 
     entry = await add_mock_config(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -26,10 +19,5 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_setup_entry_failure(hass: HomeAssistant) -> None:
     """Test a unsuccessful setup entry."""
 
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        exc=SyntaxError,
-    )
-
-    entry = await add_mock_config(hass)
+    entry = await add_mock_config(hass, get_side_effect=SyntaxError)
     assert entry.state is ConfigEntryState.SETUP_RETRY
