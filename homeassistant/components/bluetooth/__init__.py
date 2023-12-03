@@ -59,7 +59,11 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import BaseHaRemoteScanner, BaseHaScanner, BluetoothScannerDevice
+from .base_scanner import (
+    BaseHaScanner,
+    BluetoothScannerDevice,
+    HomeAssistantRemoteScanner,
+)
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -103,7 +107,7 @@ __all__ = [
     "async_scanner_count",
     "async_scanner_devices_by_address",
     "BaseHaScanner",
-    "BaseHaRemoteScanner",
+    "HomeAssistantRemoteScanner",
     "BluetoothCallbackMatcher",
     "BluetoothChange",
     "BluetoothServiceInfo",
