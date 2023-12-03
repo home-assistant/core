@@ -10,6 +10,8 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .coordinator import StreamlabsCoordinator
+
 DOMAIN = "streamlabswater"
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ SET_AWAY_MODE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the streamlabs water integration."""
 
     conf = config[DOMAIN]
@@ -48,7 +50,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     location_id = conf.get(CONF_LOCATION_ID)
 
     client = streamlabswater.StreamlabsClient(api_key)
-    locations = client.get_locations().get("locations")
+    response = await hass.async_add_executor_job(client.get_locations)
+    locations = response.get("locations")
 
     if locations is None:
         _LOGGER.error("Unable to retrieve locations. Verify API key")
@@ -70,11 +73,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     location_name = location["name"]
 
-    hass.data[DOMAIN] = {
-        "client": client,
-        "location_id": location_id,
-        "location_name": location_name,
-    }
+    coordinator = StreamlabsCoordinator(hass, client, location_id, location_name)
+
+    await coordinator.async_refresh()
+
+    hass.data[DOMAIN] = coordinator
 
     for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
