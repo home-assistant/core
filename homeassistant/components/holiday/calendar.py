@@ -98,12 +98,6 @@ class HolidayCalendarEntity(CalendarEntity):
                 next_holiday = (holiday_date, holiday_name)
                 break
 
-            for holiday_date, holiday_name in sorted(
-                self._obj_holidays.items(), key=lambda x: x[0]
-            ):
-                if holiday_date >= dt_util.now().date():
-                    next_holiday = (holiday_date, holiday_name)
-                    break
 
         if next_holiday is None:
             return None
