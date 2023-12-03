@@ -7,10 +7,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
-from .devices import SatelliteDevice, SatelliteDevices
+from .devices import SatelliteDevice
 from .models import DomainDataItem
 from .satellite import WyomingSatellite
 
@@ -33,25 +34,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if service is None:
         raise ConfigEntryNotReady("Unable to connect")
 
-    satellite_devices = SatelliteDevices(hass, entry)
-    satellite_devices.async_setup()
-
-    item = DomainDataItem(service=service, satellite_devices=satellite_devices)
+    item = DomainDataItem(service=service)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = item
 
     await hass.config_entries.async_forward_entry_setups(entry, service.platforms)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     if (satellite_info := service.info.satellite) is not None:
+        # Create satellite device, etc.
+        item.satellite = _make_satellite(hass, entry, service)
+
         # Set up satellite sensors, switches, etc.
         await hass.config_entries.async_forward_entry_setups(entry, SATELLITE_PLATFORMS)
 
-        # Run satellite connection in a separate task
-        satellite_device = satellite_devices.async_get_or_create(
-            name=satellite_info.name,
-            suggested_area=satellite_info.area,
-        )
-        item.satellite = _make_satellite(hass, service, satellite_device)
+        # Start satellite communication
         entry.async_create_background_task(
             hass,
             item.satellite.run(),
@@ -64,12 +60,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def _make_satellite(
-    hass: HomeAssistant, service: WyomingService, satellite_device: SatelliteDevice
+    hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
 ) -> WyomingSatellite:
-    """Create WyomingSatellite from service/device.
+    """Create Wyoming satellite/device from config entry and Wyoming service."""
+    satellite_info = service.info.satellite
+    assert satellite_info is not None
 
-    Used to make testing more convenient.
-    """
+    dev_reg = dr.async_get(hass)
+
+    # Use config entry id since only one satellite per entry is supported
+    satellite_id = config_entry.entry_id
+
+    device = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, satellite_id)},
+        name=satellite_info.name,
+        suggested_area=satellite_info.area,
+    )
+
+    satellite_device = SatelliteDevice(
+        satellite_id=satellite_id,
+        device_id=device.id,
+    )
+
     return WyomingSatellite(hass, service, satellite_device)
 
 

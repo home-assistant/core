@@ -7,12 +7,11 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
 
 if TYPE_CHECKING:
@@ -25,21 +24,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
-    domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    if not item.satellite:
+        return
 
-    @callback
-    def async_add_device(device: SatelliteDevice) -> None:
-        """Add device."""
-        async_add_entities([WyomingSatelliteEnabledSwitch(device)])
-
-    domain_data.satellite_devices.async_add_new_device_listener(async_add_device)
-
-    async_add_entities(
-        [
-            WyomingSatelliteEnabledSwitch(device)
-            for device in domain_data.satellite_devices
-        ]
-    )
+    async_add_entities([WyomingSatelliteEnabledSwitch(item.satellite.device)])
 
 
 class WyomingSatelliteEnabledSwitch(

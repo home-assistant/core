@@ -17,8 +17,8 @@ from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, wyoming
 from homeassistant.components.wyoming.data import WyomingService
-from homeassistant.components.wyoming.devices import SatelliteDevice, SatelliteDevices
-from homeassistant.components.wyoming.satellite import WyomingSatellite
+from homeassistant.components.wyoming.devices import SatelliteDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -167,11 +167,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         return_value=("wav", get_test_wav()),
     ):
         entry = await setup_config_entry(hass)
-        satellite_devices: SatelliteDevices = hass.data[wyoming.DOMAIN][
+        device: SatelliteDevice = hass.data[wyoming.DOMAIN][
             entry.entry_id
-        ].satellite_devices
-        assert entry.entry_id in satellite_devices.devices
-        device = satellite_devices.devices[entry.entry_id]
+        ].satellite.device
 
         async with asyncio.timeout(1):
             await mock_client.connect_event.wait()
@@ -310,11 +308,14 @@ async def test_satellite_disabled(hass: HomeAssistant) -> None:
     """Test callback for a satellite that has been disabled."""
     on_disabled_event = asyncio.Event()
 
+    original_make_satellite = wyoming._make_satellite
+
     def make_disabled_satellite(
-        hass: HomeAssistant, service: WyomingService, device: SatelliteDevice
+        hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
     ):
-        device.is_enabled = False
-        satellite = WyomingSatellite(hass, service, device)
+        satellite = original_make_satellite(hass, config_entry, service)
+        satellite.device.is_enabled = False
+
         return satellite
 
     async def on_disabled(self):
@@ -444,11 +445,9 @@ async def test_satellite_disconnect_during_pipeline(hass: HomeAssistant) -> None
         on_stopped,
     ):
         entry = await setup_config_entry(hass)
-        satellite_devices: SatelliteDevices = hass.data[wyoming.DOMAIN][
+        device: SatelliteDevice = hass.data[wyoming.DOMAIN][
             entry.entry_id
-        ].satellite_devices
-        assert entry.entry_id in satellite_devices.devices
-        device = satellite_devices.devices[entry.entry_id]
+        ].satellite.device
 
         async with asyncio.timeout(1):
             await on_restart_event.wait()

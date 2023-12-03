@@ -36,6 +36,9 @@
         "state": {
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
+      },
+      "noise_suppression": {
+        "name": "Noise suppression"
       }
     },
     "switch": {

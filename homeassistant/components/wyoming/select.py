@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -23,20 +23,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
-    domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    if not item.satellite:
+        return
 
-    @callback
-    def async_add_device(device: SatelliteDevice) -> None:
-        """Add device."""
-        async_add_entities([WyomingSatellitePipelineSelect(hass, device)])
-
-    domain_data.satellite_devices.async_add_new_device_listener(async_add_device)
-
-    entities: list[WyomingSatelliteEntity] = []
-    for device in domain_data.satellite_devices:
-        entities.append(WyomingSatellitePipelineSelect(hass, device))
-
-    async_add_entities(entities)
+    device = item.satellite.device
+    async_add_entities([WyomingSatellitePipelineSelect(hass, device)])
 
 
 class WyomingSatellitePipelineSelect(WyomingSatelliteEntity, AssistPipelineSelect):

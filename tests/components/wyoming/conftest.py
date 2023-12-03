@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import stt
 from homeassistant.components.wyoming import DOMAIN
-from homeassistant.components.wyoming.devices import SatelliteDevice, SatelliteDevices
+from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -150,21 +150,8 @@ async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntr
 
 
 @pytest.fixture
-async def satellite_devices(
-    hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
-) -> SatelliteDevices:
-    """Get satellite devices object from a configured instance."""
-    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite_devices
-
-
-@pytest.fixture
 async def satellite_device(
-    hass: HomeAssistant,
-    satellite_devices: SatelliteDevices,
-    satellite_config_entry: ConfigEntry,
+    hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
 ) -> SatelliteDevice:
     """Get a satellite device fixture."""
-    device = satellite_devices.async_get_or_create()
-    # to make sure all platforms are set up
-    await hass.async_block_till_done()
-    return device
+    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite.device

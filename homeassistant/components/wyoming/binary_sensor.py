@@ -26,21 +26,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities."""
-    domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    if not item.satellite:
+        return
 
-    @callback
-    def async_add_device(device: SatelliteDevice) -> None:
-        """Add device."""
-        async_add_entities([WyomingSatelliteAssistInProgress(device)])
-
-    domain_data.satellite_devices.async_add_new_device_listener(async_add_device)
-
-    async_add_entities(
-        [
-            WyomingSatelliteAssistInProgress(device)
-            for device in domain_data.satellite_devices
-        ]
-    )
+    async_add_entities([WyomingSatelliteAssistInProgress(item.satellite.device)])
 
 
 class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntity):

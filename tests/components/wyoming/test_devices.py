@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.assist_pipeline.select import OPTION_PREFERRED
 from homeassistant.components.wyoming import DOMAIN
-from homeassistant.components.wyoming.devices import SatelliteDevice, SatelliteDevices
+from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -12,12 +12,11 @@ from homeassistant.helpers import device_registry as dr
 
 async def test_device_registry_info(
     hass: HomeAssistant,
-    satellite_devices: SatelliteDevices,
+    satellite_device: SatelliteDevice,
     satellite_config_entry: ConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test info in device registry."""
-    satellite_device = satellite_devices.async_get_or_create()
 
     # Satellite uses config entry id since only one satellite per entry is
     # supported.
@@ -50,12 +49,10 @@ async def test_device_registry_info(
 
 async def test_remove_device_registry_entry(
     hass: HomeAssistant,
-    satellite_devices: SatelliteDevices,
     satellite_device: SatelliteDevice,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing a device registry entry."""
-    assert satellite_device.satellite_id in satellite_devices.devices
 
     # Check associated entities
     assist_in_progress_id = satellite_device.get_assist_in_progress_entity_id(hass)
@@ -79,4 +76,3 @@ async def test_remove_device_registry_entry(
     assert hass.states.get(assist_in_progress_id) is None
     assert hass.states.get(satellite_enabled_id) is None
     assert hass.states.get(pipeline_entity_id) is None
-    assert satellite_device.satellite_id not in satellite_devices.devices
