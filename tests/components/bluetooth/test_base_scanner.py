@@ -13,8 +13,8 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
     storage,
 )
 from homeassistant.components.bluetooth.advertisement_tracker import (
@@ -89,7 +89,7 @@ async def test_remote_scanner(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -173,7 +173,7 @@ async def test_remote_scanner_expires_connectable(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -248,7 +248,7 @@ async def test_remote_scanner_expires_non_connectable(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -346,7 +346,7 @@ async def test_base_scanner_connecting_behavior(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -418,7 +418,7 @@ async def test_restore_history_remote_adapter(
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = BaseHaRemoteScanner(
+    scanner = HomeAssistantRemoteScanner(
         hass,
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
@@ -434,7 +434,7 @@ async def test_restore_history_remote_adapter(
     cancel()
     unsetup()
 
-    scanner = BaseHaRemoteScanner(
+    scanner = HomeAssistantRemoteScanner(
         hass,
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
@@ -470,7 +470,7 @@ async def test_device_with_ten_minute_advertising_interval(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -592,7 +592,7 @@ async def test_scanner_stops_responding(
     """Test we mark a scanner are not scanning when it stops responding."""
     manager = _get_manager()
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         """A fake remote scanner."""
 
         def inject_advertisement(
