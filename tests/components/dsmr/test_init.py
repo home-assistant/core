@@ -98,7 +98,6 @@ async def test_migrate_unique_id(
         data={
             "port": "/dev/ttyUSB0",
             "dsmr_version": dsmr_version,
-            "precision": 4,
             "serial_id": "1234",
             "serial_id_gas": "5678",
         },
