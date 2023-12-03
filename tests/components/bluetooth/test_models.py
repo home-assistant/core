@@ -107,7 +107,6 @@ async def test_wrapped_bleak_client_local_adapter_only(
             return None
 
     scanner = FakeScanner(
-        hass,
         "00:00:00:00:00:01",
         "hci0",
     )
