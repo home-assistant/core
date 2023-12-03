@@ -19,6 +19,9 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+import os
+import os.path
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOMIZE_ENTITIES = "customize"
@@ -106,7 +109,13 @@ class MediaExtractor:
 
     def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
-        ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+        cookies_file = os.path.join(self.hass.config.config_dir, 'media_extractor_cookies.txt')
+        if os.path.isfile(cookies_file):
+            ydl = YoutubeDL({"quiet": True, "logger": _LOGGER, "cookiefile": cookies_file})
+            _LOGGER.info('>edia extractor loaded cookies file from:  ' + cookies_file)
+        else:
+            ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+            _LOGGER.info('Media extractor didn\'t find cookies file at: ' + cookies_file)
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
