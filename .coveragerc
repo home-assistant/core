@@ -751,6 +751,7 @@ omit =
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/api.py
+    homeassistant/components/lyric/binary_sensor.py
     homeassistant/components/lyric/climate.py
     homeassistant/components/lyric/sensor.py
     homeassistant/components/mailgun/notify.py

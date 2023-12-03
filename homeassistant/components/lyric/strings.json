@@ -41,6 +41,17 @@
       },
       "setpoint_status": {
         "name": "Setpoint status"
+      },
+      "avg_temperature": {
+        "name": "Average temperature"
+      },
+      "avg_humidity": {
+        "name": "Average humidity"
+      }
+    },
+    "binary_sensor": {
+      "overall_motion": {
+        "name": "Overall motion"
       }
     }
   },
