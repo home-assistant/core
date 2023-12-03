@@ -1,5 +1,6 @@
 """Coordinator for Streamlabs water integration."""
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from streamlabswater.streamlabswater import StreamlabsClient
@@ -29,7 +30,12 @@ class StreamlabsCoordinator(DataUpdateCoordinator[StreamlabsData]):
         location_name: str,
     ) -> None:
         """Coordinator for Streamlabs."""
-        super().__init__(hass, logging.getLogger(__name__), name="Streamlabs")
+        super().__init__(
+            hass,
+            logging.getLogger(__name__),
+            name="Streamlabs",
+            update_interval=timedelta(seconds=60),
+        )
         self.client = client
         self.location_id = location_id
         self.location_name = location_name
