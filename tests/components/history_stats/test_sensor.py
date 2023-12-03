@@ -867,6 +867,16 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
                         "duration": {"hours": 2},
                         "type": "ratio",
                     },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor5",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "duration": {"hours": 2},
+                        "min_state_duration": {"minutes": 5},
+                        "type": "time",
+                    },
                 ]
             },
         )
@@ -880,6 +890,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor2").state == "0.0"
     assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "0.0"
+    assert hass.states.get("sensor.sensor5").state == "0.0"
 
     one_hour_in = start_time + timedelta(minutes=60)
     with freeze_time(one_hour_in):
@@ -890,6 +901,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor2").state == "1.0"
     assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "50.0"
+    assert hass.states.get("sensor.sensor5").state == "1.0"
 
     turn_off_time = start_time + timedelta(minutes=90)
     with freeze_time(turn_off_time):
@@ -902,6 +914,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor2").state == "1.5"
     assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "75.0"
+    assert hass.states.get("sensor.sensor5").state == "1.5"
 
     turn_back_on_time = start_time + timedelta(minutes=105)
     with freeze_time(turn_back_on_time):
@@ -912,6 +925,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor2").state == "1.5"
     assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "75.0"
+    assert hass.states.get("sensor.sensor5").state == "1.5"
 
     with freeze_time(turn_back_on_time):
         hass.states.async_set("binary_sensor.state", "on")
@@ -921,6 +935,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor2").state == "1.5"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "75.0"
+    assert hass.states.get("sensor.sensor5").state == "1.5"
 
     end_time = start_time + timedelta(minutes=120)
     with freeze_time(end_time):
@@ -931,6 +946,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor2").state == "1.75"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "87.5"
+    assert hass.states.get("sensor.sensor5").state == "1.75"
 
 
 async def test_does_not_work_into_the_future(
