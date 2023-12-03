@@ -178,7 +178,8 @@ class MatterEntity(Entity):
             self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
         )
 
-    async def _do_extra_poll(self, called_at: datetime) -> None:
+    @callback
+    def _do_extra_poll(self, called_at: datetime) -> None:
         """Perform (extra) poll of primary value."""
         # scheduling the regulat update is enough to perform a poll/refresh
         self.async_schedule_update_ha_state(True)
