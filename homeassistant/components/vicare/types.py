@@ -9,7 +9,7 @@ from PyViCare.PyViCareDevice import Device as PyViCareDevice
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_getter: Callable[[PyViCareDevice], bool]
+    value_getter: Callable[[PyViCareDevice], Any]
 
 
 @dataclass()
