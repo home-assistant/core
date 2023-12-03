@@ -1525,6 +1525,29 @@ def test_bitwise_or(hass):
     )
     assert tpl.async_render() == 8 | 2
 
+def test_bitwise_xor(hass):
+    """Test bitwise_xor method."""
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_xor(8) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 8 | 8
+    tpl = template.Template(
+        """
+{{ 10 | bitwise_xor(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 10 | 2
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_xor(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 8 | 2
 
 def test_pack(hass, caplog):
     """Test struct pack method."""
