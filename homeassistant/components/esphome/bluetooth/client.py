@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from functools import partial
 import logging
 import sys
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar
 import uuid
 
 if sys.version_info < (3, 12):
@@ -60,7 +60,9 @@ CCCD_INDICATE_BYTES = b"\x02\x00"
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
-_WrapFuncType = TypeVar("_WrapFuncType", bound=Callable[..., Any])
+_ESPHomeClient = TypeVar("_ESPHomeClient", bound="ESPHomeClient")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
 def mac_to_int(address: str) -> int:
@@ -68,12 +70,14 @@ def mac_to_int(address: str) -> int:
     return int(address.replace(":", ""), 16)
 
 
-def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
+def api_error_as_bleak_error(
+    func: Callable[Concatenate[_ESPHomeClient, _P], Coroutine[Any, Any, _R]]
+) -> Callable[Concatenate[_ESPHomeClient, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
     async def _async_wrap_bluetooth_operation(
-        self: ESPHomeClient, *args: Any, **kwargs: Any
-    ) -> Any:
+        self: _ESPHomeClient, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R:
         # pylint: disable=protected-access
         try:
             return await func(self, *args, **kwargs)
@@ -107,7 +111,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
         except APIConnectionError as err:
             raise BleakError(str(err)) from err
 
-    return cast(_WrapFuncType, _async_wrap_bluetooth_operation)
+    return _async_wrap_bluetooth_operation
 
 
 @dataclass(slots=True)
