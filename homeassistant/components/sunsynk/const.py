@@ -2,8 +2,6 @@
 
 DOMAIN = "sunsynk"
 
-DATA_INVERTER_SN = "inverter_sn"
-
 BATTERY_POWER = "battery_power"
 BATTERY_SOC = "battery_soc"
 GRID_ENERGY_EXPORT_TODAY = "grid_energy_export_today"

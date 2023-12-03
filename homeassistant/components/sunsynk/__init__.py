@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_INVERTER_SN, DOMAIN, SUNSYNK_COORDINATOR
+from .const import DOMAIN, SUNSYNK_COORDINATOR
 from .coordinator import SunsynkCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -15,20 +15,17 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sunsynk from a config entry."""
-    inverter_sn = entry.data[DATA_INVERTER_SN]
-
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    inverter_sn = entry.data[DATA_INVERTER_SN]
 
     api = await SunsynkClient.create(username, password)
 
-    coordinator = SunsynkCoordinator(hass, api, inverter_sn)
+    coordinator = SunsynkCoordinator(hass, api)
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CONF_NAME: inverter_sn,
+        CONF_NAME: username,
         SUNSYNK_COORDINATOR: coordinator,
     }
 

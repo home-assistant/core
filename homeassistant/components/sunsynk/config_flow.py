@@ -12,9 +12,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
 
-from .const import DATA_INVERTER_SN, DOMAIN, STEP_INVERTER, STEP_USER
+from .const import DOMAIN, STEP_USER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class SunsynkHub:
 
     def __init__(self) -> None:
         """Initialise a config flow for Sunsynk."""
-        self.client = None
+        self.client: SunsynkClient | None = None
 
     async def authenticate(self, username: str, password: str) -> bool:
         """Test if we can authenticate with the host."""
@@ -98,55 +97,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return await self.async_step_inverter()
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data={
+                        CONF_USERNAME: self.username,
+                        CONF_PASSWORD: self.password,
+                    },
+                )
 
         return self.async_show_form(
             step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_inverter(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the inverter selection step."""
-        if user_input is None and self.hub is not None:
-            return self.async_show_form(
-                step_id=STEP_INVERTER, data_schema=await self._inverter_scheme()
-            )
-
-        assert user_input is not None
-
-        await self.async_set_unique_id(user_input[DATA_INVERTER_SN])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"Inverter {user_input[DATA_INVERTER_SN]}",
-            data={
-                CONF_USERNAME: self.username,
-                CONF_PASSWORD: self.password,
-                DATA_INVERTER_SN: user_input[DATA_INVERTER_SN],
-            },
-        )
-
-    def _inverter_already_exists(self, inverter_sn: str) -> bool:
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == inverter_sn:
-                return True
-        return False
-
-    async def _inverter_scheme(self):
-        inverters = await self.hub.get_inverters()
-        options = [
-            selector.SelectOptionDict(value=inverter.sn, label=inverter.sn)
-            for inverter in inverters
-        ]
-        return vol.Schema(
-            {
-                vol.Required(DATA_INVERTER_SN): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=options, mode=selector.SelectSelectorMode.DROPDOWN
-                    )
-                )
-            }
         )
 
 

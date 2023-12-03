@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     BATTERY_POWER,
     BATTERY_SOC,
-    DATA_INVERTER_SN,
     DOMAIN,
     GRID_ENERGY_EXPORT_TODAY,
     GRID_ENERGY_EXPORT_TOTAL,
@@ -117,18 +116,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a Sunsynk entry."""
-    inverter_sn = entry.data[DATA_INVERTER_SN]
 
     coordinator: SunsynkCoordinator = hass.data[DOMAIN][entry.entry_id][
         SUNSYNK_COORDINATOR
     ]
 
-    sensors = [
-        SunsynkSensor(coordinator, description, inverter_sn)
-        for description in SENSOR_TYPES
-    ]
+    inverters = await coordinator.api.get_inverters()
+    for inverter in inverters:
+        sensors = [
+            SunsynkSensor(coordinator, description, inverter.sn)
+            for description in SENSOR_TYPES
+        ]
 
-    async_add_entities(sensors)
+        async_add_entities(sensors)
 
 
 class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
@@ -160,4 +160,4 @@ class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
     @property
     def native_value(self) -> str | int | float | None:
         """Return the state."""
-        return self.coordinator.data[self.entity_description.key]
+        return self.coordinator.data[self.inverter_sn][self.entity_description.key]
