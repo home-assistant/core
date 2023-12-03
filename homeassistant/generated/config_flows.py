@@ -468,6 +468,7 @@ FLOWS = {
         "steamist",
         "stookalert",
         "stookwijzer",
+        "streamlabswater",
         "subaru",
         "sun",
         "surepetcare",
