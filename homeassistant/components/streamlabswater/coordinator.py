@@ -47,7 +47,6 @@ class StreamlabsCoordinator(DataUpdateCoordinator[dict[str, StreamlabsData]]):
         for location in locations:
             location_id = location["locationId"]
             water_usage = self.client.get_water_usage_summary(location_id)
-            location = self.client.get_location(location_id)
             res[location_id] = StreamlabsData(
                 is_away=location["homeAway"] == "away",
                 name=location["name"],
