@@ -318,14 +318,21 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        if device.changeableValues.mode == LYRIC_HVAC_MODE_HEAT_COOL:
+        if device.changeableValues.autoChangeoverActive:
+            if target_temp_low is None or target_temp_high is None:
+                raise HomeAssistantError(
+                    "Could not find target_temp_low and/or target_temp_high in"
+                    " arguments"
+                )
+
             # If the device supports "Auto" mode, don't pass the mode when setting the
             # temperature
-            if target_temp_low is None or target_temp_high is None:
-                raise HomeAssistantError(
-                    "Could not find target_temp_low and/or target_temp_high in"
-                    " arguments"
-                )
+            mode = (
+                None
+                if device.changeableValues.mode == LYRIC_HVAC_MODE_HEAT_COOL
+                else device.changeableValues.heatCoolMode
+            )
+
             _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
             try:
                 await self._update_thermostat(
@@ -333,26 +340,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     device,
                     coolSetpoint=target_temp_high,
                     heatSetpoint=target_temp_low,
-                )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
-            await self.coordinator.async_refresh()
-        elif device.changeableValues.autoChangeoverActive:
-            # If the device uses "autoChangeoverActive", pass the "heatCoolMode" as the
-            # mode
-            if target_temp_low is None or target_temp_high is None:
-                raise HomeAssistantError(
-                    "Could not find target_temp_low and/or target_temp_high in"
-                    " arguments"
-                )
-            _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
-            try:
-                await self._update_thermostat(
-                    self.location,
-                    device,
-                    coolSetpoint=target_temp_high,
-                    heatSetpoint=target_temp_low,
-                    mode=HVAC_MODES[device.changeableValues.heatCoolMode],
+                    mode=mode,
                 )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
