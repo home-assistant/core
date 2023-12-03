@@ -17,7 +17,7 @@ from pybravia import (
     BraviaNotFound,
     BraviaTurnedOff,
 )
-from tenacity import Retrying, stop_after_attempt
+from tenacity import AsyncRetrying, stop_after_attempt
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.const import CONF_PIN
@@ -143,7 +143,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     raise ConfigEntryAuthFailed from err
 
             # Retry up to 3 times in case request failed
-            for attempt in Retrying(reraise=True, stop=stop_after_attempt(3)):
+            async for attempt in AsyncRetrying(
+                reraise=True, stop=stop_after_attempt(3)
+            ):
                 with attempt:
                     power_status = await self.client.get_power_status()
 
