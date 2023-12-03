@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_holiday_calendar_entity(
@@ -200,3 +200,30 @@ async def test_no_language(
             ]
         }
     }
+
+
+async def test_no_next_event(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if there is no next event."""
+    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "DE"},
+        title="Germany",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Move time to out of reach
+    freezer.move_to(datetime(dt_util.now().year + 5, 1, 1, 12, tzinfo=dt_util.UTC))
+    async_fire_time_changed(hass)
+
+    state = hass.states.get("calendar.germany")
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes == {"friendly_name": "Germany"}

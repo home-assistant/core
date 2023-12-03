@@ -97,7 +97,6 @@ class HolidayCalendarEntity(CalendarEntity):
                 next_holiday = (holiday_date, holiday_name)
                 break
 
-
         if next_holiday is None:
             return None
 
