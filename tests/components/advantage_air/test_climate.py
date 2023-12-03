@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config, patch_update
+from . import add_mock_config, patch_get, patch_update
 
 
 async def test_climate_myzone_main(
@@ -34,23 +34,23 @@ async def test_climate_myzone_main(
 ) -> None:
     """Test climate platform main entity."""
 
-    await add_mock_config(hass)
+    with patch_get, patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    # Test MyZone main climate entity
-    entity_id = "climate.myzone"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == HVACMode.FAN_ONLY
-    assert state.attributes.get(ATTR_MIN_TEMP) == 16
-    assert state.attributes.get(ATTR_MAX_TEMP) == 32
-    assert state.attributes.get(ATTR_TEMPERATURE) == 24
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
+        # Test MyZone main climate entity
+        entity_id = "climate.myzone"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == HVACMode.FAN_ONLY
+        assert state.attributes.get(ATTR_MIN_TEMP) == 16
+        assert state.attributes.get(ATTR_MAX_TEMP) == 32
+        assert state.attributes.get(ATTR_TEMPERATURE) == 24
+        assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1"
 
-    with patch_update() as mock_update:
         # Test setting HVAC Mode
 
         await hass.services.async_call(
@@ -127,22 +127,22 @@ async def test_climate_myzone_zone(
 ) -> None:
     """Test climate platform myzone zone entity."""
 
-    await add_mock_config(hass)
+    with patch_get(), patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    # Test Climate Zone Entity
-    entity_id = "climate.myzone_zone_open_with_sensor"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes.get(ATTR_MIN_TEMP) == 16
-    assert state.attributes.get(ATTR_MAX_TEMP) == 32
-    assert state.attributes.get(ATTR_TEMPERATURE) == 24
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
+        # Test Climate Zone Entity
+        entity_id = "climate.myzone_zone_open_with_sensor"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.attributes.get(ATTR_MIN_TEMP) == 16
+        assert state.attributes.get(ATTR_MAX_TEMP) == 32
+        assert state.attributes.get(ATTR_TEMPERATURE) == 24
+        assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z01"
 
-    with patch_update() as mock_update:
         # Test Climate Zone On
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -179,42 +179,41 @@ async def test_climate_myauto_main(
 ) -> None:
     """Test climate platform zone entity."""
 
-    await add_mock_config(hass)
+    with patch_get(), patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    # Test MyAuto Climate Entity
-    entity_id = "climate.myauto"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24
+        # Test MyAuto Climate Entity
+        entity_id = "climate.myauto"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20
+        assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac3"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac3"
 
-    with patch_update() as mock_update:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: [entity_id],
-                ATTR_TARGET_TEMP_LOW: 21,
-                ATTR_TARGET_TEMP_HIGH: 23,
-            },
-            blocking=True,
-        )
-        mock_update.assert_called_once()
+        with patch_update() as mock_update:
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: [entity_id],
+                    ATTR_TARGET_TEMP_LOW: 21,
+                    ATTR_TARGET_TEMP_HIGH: 23,
+                },
+                blocking=True,
+            )
+            mock_update.assert_called_once()
 
 
 async def test_climate_async_failed_update(hass: HomeAssistant) -> None:
     """Test climate change failure."""
 
-    await add_mock_config(hass)
-
-    with (
-        pytest.raises(HomeAssistantError),
-        patch_update(side_effect=ApiError) as mock_update,
+    with patch_get(), patch_update(side_effect=ApiError) as mock_update, pytest.raises(
+        HomeAssistantError
     ):
+        await add_mock_config(hass)
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,

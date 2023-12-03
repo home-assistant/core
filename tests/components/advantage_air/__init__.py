@@ -27,23 +27,23 @@ TEST_SET_THING_URL = (
 )
 
 
-def patch_get(side_effect=None):
+def patch_get(return_value=TEST_SYSTEM_DATA, side_effect=None):
     """Patch the Advantage Air async_get method."""
     return patch(
         "homeassistant.components.advantage_air.advantage_air.async_get",
-        new=AsyncMock(return_value=TEST_SYSTEM_DATA, side_effect=side_effect),
+        new=AsyncMock(return_value=return_value, side_effect=side_effect),
     )
 
 
-def patch_update(side_effect=None):
+def patch_update(return_value=True, side_effect=None):
     """Patch the Advantage Air async_set method."""
     return patch(
         "homeassistant.components.advantage_air.advantage_air._endpoint.async_update",
-        new=AsyncMock(return_value=TEST_SET_RESPONSE, side_effect=side_effect),
+        new=AsyncMock(return_value=return_value, side_effect=side_effect),
     )
 
 
-async def add_mock_config(hass, get_side_effect=None):
+async def add_mock_config(hass):
     """Create a fake Advantage Air Config Entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -51,8 +51,8 @@ async def add_mock_config(hass, get_side_effect=None):
         unique_id="0123456",
         data=USER_INPUT,
     )
-    with patch_get(get_side_effect):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     return entry

@@ -2,13 +2,14 @@
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import add_mock_config
+from . import add_mock_config, patch_get
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry and unload."""
 
-    entry = await add_mock_config(hass)
+    with patch_get():
+        entry = await add_mock_config(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -19,5 +20,6 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_setup_entry_failure(hass: HomeAssistant) -> None:
     """Test a unsuccessful setup entry."""
 
-    entry = await add_mock_config(hass, get_side_effect=SyntaxError)
+    with patch_get(side_effect=SyntaxError):
+        entry = await add_mock_config(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY

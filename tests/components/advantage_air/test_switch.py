@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config, patch_update
+from . import add_mock_config, patch_get, patch_update
 
 
 async def test_cover_async_setup_entry(
@@ -17,20 +17,19 @@ async def test_cover_async_setup_entry(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch platform."""
+    with patch_get(), patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    await add_mock_config(hass)
+        # Test Switch Entity
+        entity_id = "switch.myzone_fresh_air"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OFF
 
-    # Test Switch Entity
-    entity_id = "switch.myzone_fresh_air"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-freshair"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-freshair"
-
-    with patch_update() as mock_update:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -54,21 +53,20 @@ async def test_things_switch(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test things switches."""
+    with patch_get(), patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    await add_mock_config(hass)
+        # Test Switch Entity
+        entity_id = "switch.relay"
+        thing_id = "205"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
 
-    # Test Switch Entity
-    entity_id = "switch.relay"
-    thing_id = "205"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == f"uniqueid-{thing_id}"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == f"uniqueid-{thing_id}"
-
-    with patch_update() as mock_update:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

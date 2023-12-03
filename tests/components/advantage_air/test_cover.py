@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config, patch_update
+from . import add_mock_config, patch_get, patch_update
 
 
 async def test_ac_cover(
@@ -21,21 +21,21 @@ async def test_ac_cover(
 ) -> None:
     """Test cover platform."""
 
-    await add_mock_config(hass)
+    with patch_get(), patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    # Test Cover Zone Entity
-    entity_id = "cover.myauto_zone_y"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OPEN
-    assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
-    assert state.attributes.get("current_position") == 100
+        # Test Cover Zone Entity
+        entity_id = "cover.myauto_zone_y"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OPEN
+        assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
+        assert state.attributes.get("current_position") == 100
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac3-z01"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac3-z01"
 
-    with patch_update() as mock_update:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -108,21 +108,21 @@ async def test_things_cover(
 ) -> None:
     """Test cover platform."""
 
-    await add_mock_config(hass)
+    with patch_get(), patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    # Test Blind 1 Entity
-    entity_id = "cover.blind_1"
-    thing_id = "200"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OPEN
-    assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
+        # Test Blind 1 Entity
+        entity_id = "cover.blind_1"
+        thing_id = "200"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OPEN
+        assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == f"uniqueid-{thing_id}"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == f"uniqueid-{thing_id}"
 
-    with patch_update() as mock_update:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,

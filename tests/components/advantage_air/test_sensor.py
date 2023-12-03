@@ -23,20 +23,21 @@ async def test_sensor_platform(
 ) -> None:
     """Test sensor platform."""
 
-    await add_mock_config(hass)
+    with patch_get() as mock_get, patch_update() as mock_update:
+        await add_mock_config(hass)
 
-    # Test First TimeToOn Sensor
-    entity_id = "sensor.myzone_time_to_on"
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 0
+        # Test First TimeToOn Sensor
+        entity_id = "sensor.myzone_time_to_on"
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 0
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-timetoOn"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-timetoOn"
 
-    value = 20
-    with patch_update() as mock_update:
+        value = 20
+
         await hass.services.async_call(
             ADVANTAGE_AIR_DOMAIN,
             ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
@@ -44,19 +45,19 @@ async def test_sensor_platform(
             blocking=True,
         )
         mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    # Test First TimeToOff Sensor
-    entity_id = "sensor.myzone_time_to_off"
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 10
+        # Test First TimeToOff Sensor
+        entity_id = "sensor.myzone_time_to_off"
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 10
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-timetoOff"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-timetoOff"
 
-    value = 0
-    with patch_update() as mock_update:
+        value = 0
         await hass.services.async_call(
             ADVANTAGE_AIR_DOMAIN,
             ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
@@ -64,53 +65,54 @@ async def test_sensor_platform(
             blocking=True,
         )
         mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    # Test First Zone Vent Sensor
-    entity_id = "sensor.myzone_zone_open_with_sensor_vent"
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 100
+        # Test First Zone Vent Sensor
+        entity_id = "sensor.myzone_zone_open_with_sensor_vent"
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 100
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01-vent"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z01-vent"
 
-    # Test Second Zone Vent Sensor
-    entity_id = "sensor.myzone_zone_closed_with_sensor_vent"
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 0
+        # Test Second Zone Vent Sensor
+        entity_id = "sensor.myzone_zone_closed_with_sensor_vent"
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 0
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z02-vent"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z02-vent"
 
-    # Test First Zone Signal Sensor
-    entity_id = "sensor.myzone_zone_open_with_sensor_signal"
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 40
+        # Test First Zone Signal Sensor
+        entity_id = "sensor.myzone_zone_open_with_sensor_signal"
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 40
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01-signal"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z01-signal"
 
-    # Test Second Zone Signal Sensor
-    entity_id = "sensor.myzone_zone_closed_with_sensor_signal"
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 10
+        # Test Second Zone Signal Sensor
+        entity_id = "sensor.myzone_zone_closed_with_sensor_signal"
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 10
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z02-signal"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
-    # Test First Zone Temp Sensor (disabled by default)
-    entity_id = "sensor.myzone_zone_open_with_sensor_temperature"
+        # Test First Zone Temp Sensor (disabled by default)
+        entity_id = "sensor.myzone_zone_open_with_sensor_temperature"
 
-    assert not hass.states.get(entity_id)
+        assert not hass.states.get(entity_id)
 
-    with patch_get() as mock_get:
+        mock_get.reset_mock()
         entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
         await hass.async_block_till_done()
 
@@ -121,10 +123,10 @@ async def test_sensor_platform(
         await hass.async_block_till_done()
         assert len(mock_get.mock_calls) == 2
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 25
+        state = hass.states.get(entity_id)
+        assert state
+        assert int(state.state) == 25
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-z01-temp"
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == "uniqueid-ac1-z01-temp"
