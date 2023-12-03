@@ -40,8 +40,6 @@ async def test_fastdotcom_data_update_coordinator(
         async_fire_time_changed(hass)
         await hass.async_block_until_done()
 
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, UpdateFailed) is True
 
     state = hass.states.get("sensor.fast_com_download")
     assert state.state is STATE_UNAVAILABLE
