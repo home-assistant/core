@@ -202,7 +202,7 @@ class HistoryStats:
                 history_state_duration = (
                     state_change_timestamp - last_state_change_timestamp
                 )
-                if history_state_duration >= min_state_timestamp:
+                if abs(history_state_duration) >= min_state_timestamp:
                     elapsed += history_state_duration
                 else:
                     match_count -= 1
@@ -216,7 +216,7 @@ class HistoryStats:
         if previous_state_matches:
             measure_end = min(end_timestamp, now_timestamp)
             last_state_duration = measure_end - last_state_change_timestamp
-            if last_state_duration >= min_state_timestamp:
+            if abs(last_state_duration) >= min_state_timestamp:
                 elapsed += last_state_duration
             else:
                 match_count -= 1
