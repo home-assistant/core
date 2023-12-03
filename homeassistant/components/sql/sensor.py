@@ -362,8 +362,7 @@ class SQLSensor(ManualTriggerSensorEntity):
                 self._query,
                 redact_credentials(str(err)),
             )
-            if "rollback()" in str(err):
-                sess.rollback()
+            sess.rollback()
             sess.close()
             return
 
