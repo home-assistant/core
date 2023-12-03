@@ -34,9 +34,7 @@ class SunsynkCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name="Sunsynk",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(minutes=2),
         )
         self.api = api

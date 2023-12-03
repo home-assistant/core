@@ -121,10 +121,9 @@ async def async_setup_entry(
         SUNSYNK_COORDINATOR
     ]
 
-    inverters = await coordinator.api.get_inverters()
-    for inverter in inverters:
+    for inverter_sn in coordinator.data:
         sensors = [
-            SunsynkSensor(coordinator, description, inverter.sn)
+            SunsynkSensor(coordinator, description, inverter_sn)
             for description in SENSOR_TYPES
         ]
 
@@ -147,11 +146,7 @@ class SunsynkSensor(CoordinatorEntity[SunsynkCoordinator], SensorEntity):
         self.entity_description = description
         self.inverter_sn = inverter_sn
         self._attr_unique_id = f"{self.inverter_sn}_{self.entity_description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.inverter_sn)},
             name=f"Inverter {self.inverter_sn}",
             manufacturer="Sunsynk",
