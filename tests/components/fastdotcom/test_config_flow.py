@@ -67,3 +67,5 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == "Fast.com"
+        assert result["data"] == {}
+        assert result["options"] == {}
