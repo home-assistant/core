@@ -23,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
+    BLOCK_GENERATIONS,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -334,7 +335,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        if self.entry.data.get("gen", 1) == 1:
+        if self.entry.data.get("gen", 1) in BLOCK_GENERATIONS:
             schema = {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,

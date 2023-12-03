@@ -215,4 +215,6 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_VALVE,
 )
 
+# These constants will be imported from aioshelly after the next release
+BLOCK_GENERATIONS = (1,)
 RPC_GENERATIONS = (2, 3)

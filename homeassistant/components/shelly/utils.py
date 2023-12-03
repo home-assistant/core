@@ -31,6 +31,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
+    BLOCK_GENERATIONS,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
@@ -421,4 +422,4 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
+    return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
