@@ -1574,14 +1574,14 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # Late imports to avoid loading bleak unless we need it
 
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.bluetooth import scanner as bluetooth_scanner
+    from habluetooth import scanner as bluetooth_scanner
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
     with patch(
-        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
+        "habluetooth.scanner.OriginalBleakScanner.start",
     ) as mock_bleak_scanner_start:
         yield mock_bleak_scanner_start
 

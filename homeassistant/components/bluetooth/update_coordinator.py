@@ -4,6 +4,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import logging
 
+from habluetooth import BluetoothScanningMode
+
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from .api import (
@@ -13,7 +15,7 @@ from .api import (
     async_track_unavailable,
 )
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
+from .models import BluetoothChange, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):

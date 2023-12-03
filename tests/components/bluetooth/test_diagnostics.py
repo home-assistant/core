@@ -39,7 +39,7 @@ async def test_diagnostics(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
+        "habluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
         {
             "44:44:33:11:23:45": (
                 generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
@@ -269,7 +269,7 @@ async def test_diagnostics_macos(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
+        "habluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
         {
             "44:44:33:11:23:45": (
                 generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
