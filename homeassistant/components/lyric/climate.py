@@ -330,7 +330,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             mode = (
                 None
                 if device.changeableValues.mode == LYRIC_HVAC_MODE_HEAT_COOL
-                else device.changeableValues.heatCoolMode
+                else HVAC_MODES[device.changeableValues.heatCoolMode]
             )
 
             _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
