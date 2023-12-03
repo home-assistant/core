@@ -1,10 +1,5 @@
 """Test the Advantage Air Cover Platform."""
-from json import loads
 
-from homeassistant.components.advantage_air.const import (
-    ADVANTAGE_AIR_STATE_CLOSE,
-    ADVANTAGE_AIR_STATE_OPEN,
-)
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -17,33 +12,14 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import (
-    TEST_SET_RESPONSE,
-    TEST_SET_THING_URL,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
-
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import add_mock_config, patch_update
 
 
 async def test_ac_cover(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cover platform."""
-
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_URL,
-        text=TEST_SET_RESPONSE,
-    )
 
     await add_mock_config(hass)
 
@@ -59,75 +35,78 @@ async def test_ac_cover(
     assert entry
     assert entry.unique_id == "uniqueid-ac3-z01"
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
-        blocking=True,
-    )
+    with patch_update() as mock_update:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
-        blocking=True,
-    )
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
-        blocking=True,
-    )
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
+            blocking=True,
+        )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 0},
-        blocking=True,
-    )
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 0},
+            blocking=True,
+        )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    # Test controlling multiple Cover Zone Entity
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {
-            ATTR_ENTITY_ID: [
-                "cover.myauto_zone_y",
-                "cover.myauto_zone_z",
-            ]
-        },
-        blocking=True,
-    )
+        # Test controlling multiple Cover Zone Entity
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {
+                ATTR_ENTITY_ID: [
+                    "cover.myauto_zone_y",
+                    "cover.myauto_zone_z",
+                ]
+            },
+            blocking=True,
+        )
+        assert len(mock_update.mock_calls) == 2
+        mock_update.reset_mock()
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {
-            ATTR_ENTITY_ID: [
-                "cover.myauto_zone_y",
-                "cover.myauto_zone_z",
-            ]
-        },
-        blocking=True,
-    )
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {
+                ATTR_ENTITY_ID: [
+                    "cover.myauto_zone_y",
+                    "cover.myauto_zone_z",
+                ]
+            },
+            blocking=True,
+        )
+
+        assert len(mock_update.mock_calls) == 2
 
 
 async def test_things_cover(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cover platform."""
-
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_THING_URL,
-        text=TEST_SET_RESPONSE,
-    )
 
     await add_mock_config(hass)
 
@@ -141,18 +120,22 @@ async def test_things_cover(
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "uniqueid-200"
+    assert entry.unique_id == f"uniqueid-{thing_id}"
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
-        blocking=True,
-    )
+    with patch_update() as mock_update:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_update.assert_called_once()
+        mock_update.reset_mock()
 
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
-        blocking=True,
-    )
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_update.assert_called_once()
