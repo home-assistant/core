@@ -5,12 +5,18 @@
         "title": "Pick Hue bridge",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Hue bridge."
         }
       },
       "manual": {
         "title": "Manual configure a Hue bridge",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Hue bridge."
         }
       },
       "link": {

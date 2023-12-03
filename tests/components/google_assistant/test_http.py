@@ -92,7 +92,7 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
     ) as mock_get_token, patch(
         "homeassistant.components.google_assistant.http._get_homegraph_jwt"
     ) as mock_get_jwt, patch(
-        "homeassistant.core.dt_util.utcnow"
+        "homeassistant.core.dt_util.utcnow",
     ) as mock_utcnow:
         mock_utcnow.return_value = base_time
         mock_get_jwt.return_value = jwt
