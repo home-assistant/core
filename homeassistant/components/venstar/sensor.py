@@ -155,9 +155,21 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_{self.entity_description.key}"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator, self.sensor_name)
+        try:
+            value = self.entity_description.value_fn(self.coordinator, self.sensor_name)
+            if self._attr_available and value is None:
+                raise ValueError
+            self._attr_available = True
+            return value
+        except (TypeError, ValueError):
+            if self._attr_available:
+                self.coordinator.logger.warning(
+                    "unable to set value for %s", self.sensor_name
+                )
+                self._attr_available = False
+            return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
