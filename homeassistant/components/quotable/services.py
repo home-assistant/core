@@ -5,6 +5,7 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
+import bleach
 
 from homeassistant.core import (
     HomeAssistant,
@@ -83,7 +84,10 @@ async def _fetch_all_tags_service(
     if response.status == HTTPStatus.OK:
         tags = await response.json()
         if tags:
-            tags = {tag.get("slug"): tag.get("name") for tag in tags}
+            tags = {
+                bleach.clean(tag.get("slug")): bleach.clean(tag.get("name"))
+                for tag in tags
+            }
             return tags
 
     return None
@@ -97,7 +101,8 @@ async def _fetch_all_authors_service(
         data = await response.json()
         if authorslist := data.get("results"):
             authorslist = {
-                author.get("slug"): author.get("name") for author in authorslist
+                bleach.clean(author.get("slug")): bleach.clean(author.get("name"))
+                for author in authorslist
             }
             return authorslist
 
@@ -121,7 +126,10 @@ async def _search_authors_service(
     if response.status == HTTPStatus.OK:
         data = await response.json()
         if authors := data.get("results"):
-            return {author.get("slug"): author.get("name") for author in authors}
+            return {
+                bleach.clean(author.get("slug")): bleach.clean(author.get("name"))
+                for author in authors
+            }
 
     return None
 
@@ -147,8 +155,8 @@ async def _fetch_a_quote_service(
         quotes = await response.json()
         if quotes:
             quote = {
-                "author": quotes[0].get("author"),
-                "content": quotes[0].get("content"),
+                "author": bleach.clean(quotes[0].get("author")),
+                "content": bleach.clean(quotes[0].get("content")),
             }
 
             hass.bus.fire(EVENT_NEW_QUOTE_FETCHED, quote)

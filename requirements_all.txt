@@ -529,6 +529,9 @@ bimmer-connected==0.14.2
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.quotable
+bleach==6.1.0
+
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
 
