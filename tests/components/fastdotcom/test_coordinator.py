@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_fastdotcom_data_update_coordinator(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test the reauth form."""
+    """Test the update coordinator."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="UNIQUE_TEST_ID",
