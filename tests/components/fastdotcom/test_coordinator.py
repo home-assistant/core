@@ -35,8 +35,6 @@ async def test_fastdotcom_data_update_coordinator(
     state = hass.states.get("sensor.fast_com_download")
     assert state is not None
 
-    freezer.tick(timedelta(minutes=5, seconds=1))
-    async_fire_time_changed(hass)
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
         side_effect=Exception("Test error"),
