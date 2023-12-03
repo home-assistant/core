@@ -36,7 +36,9 @@ async def test_fastdotcom_data_update_coordinator(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
         side_effect=Exception("Test error"),
     ):
-        await coordinator.async_refresh()
+        freezer.tick(timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_until_done()
 
     assert coordinator.last_update_success is False
     assert isinstance(coordinator.last_exception, UpdateFailed) is True
