@@ -602,6 +602,11 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ({"multiline": True}, (), ()),
         ({"multiline": False, "type": "email"}, (), ()),
         ({"prefix": "before", "suffix": "after"}, (), ()),
+        (
+            {"multiple": True},
+            (["abc123", "def456"],),
+            ("abc123", None, ["abc123", None]),
+        ),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -906,6 +911,16 @@ def test_rgb_color_selector_schema(
             {"min_mireds": 100, "max_mireds": 200},
             (100, 200),
             (99, 201),
+        ),
+        (
+            {"unit": "mired", "min": 100, "max": 200},
+            (100, 200),
+            (99, 201),
+        ),
+        (
+            {"unit": "kelvin", "min": 1000, "max": 2000},
+            (1000, 2000),
+            (999, 2001),
         ),
     ),
 )

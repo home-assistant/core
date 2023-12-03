@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import Device, get_devices
 from pymelcloud.atw_device import Zone
 import voluptuous as vol
@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -66,7 +66,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with MELClooud."""
     conf = entry.data
-    mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
+    try:
+        mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
+    except ClientResponseError as ex:
+        if isinstance(ex, ClientResponseError) and ex.code == 401:
+            raise ConfigEntryAuthFailed from ex
+        raise ConfigEntryNotReady from ex
+    except (asyncio.TimeoutError, ClientConnectionError) as ex:
+        raise ConfigEntryNotReady from ex
+
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -162,17 +170,13 @@ async def mel_devices_setup(
 ) -> dict[str, list[MelCloudDevice]]:
     """Query connected devices from MELCloud."""
     session = async_get_clientsession(hass)
-    try:
-        async with asyncio.timeout(10):
-            all_devices = await get_devices(
-                token,
-                session,
-                conf_update_interval=timedelta(minutes=5),
-                device_set_debounce=timedelta(seconds=1),
-            )
-    except (asyncio.TimeoutError, ClientConnectionError) as ex:
-        raise ConfigEntryNotReady() from ex
-
+    async with asyncio.timeout(10):
+        all_devices = await get_devices(
+            token,
+            session,
+            conf_update_interval=timedelta(minutes=5),
+            device_set_debounce=timedelta(seconds=1),
+        )
     wrapped_devices: dict[str, list[MelCloudDevice]] = {}
     for device_type, devices in all_devices.items():
         wrapped_devices[device_type] = [MelCloudDevice(device) for device in devices]

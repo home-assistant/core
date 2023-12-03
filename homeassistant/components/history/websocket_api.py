@@ -39,7 +39,7 @@ from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
-from .helpers import entities_may_have_state_changes_after
+from .helpers import entities_may_have_state_changes_after, has_recorder_run_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +142,8 @@ async def ws_get_history_during_period(
     no_attributes = msg["no_attributes"]
 
     if (
-        not include_start_time_state
+        (end_time and not has_recorder_run_after(hass, end_time))
+        or not include_start_time_state
         and entity_ids
         and not entities_may_have_state_changes_after(
             hass, entity_ids, start_time, no_attributes

@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 import os
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import quote, unquote
 
 import aiohttp
@@ -156,6 +157,9 @@ class HassIOView(HomeAssistantView):
                 # _stored_content_type is only computed once `content_type` is accessed
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
+                    if TYPE_CHECKING:
+                        # pylint: disable-next=protected-access
+                        assert isinstance(request._stored_content_type, str)
                     # pylint: disable-next=protected-access
                     headers[CONTENT_TYPE] = request._stored_content_type
 

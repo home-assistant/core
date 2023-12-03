@@ -76,6 +76,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             power_watts = self.client.measure(3, True)
             temperature_c = self.client.measure(21)
             energy_wh = self.client.cumulated_energy(5)
+            [alarm, *_] = self.client.alarms()
         except AuroraTimeoutError:
             self.available = False
             _LOGGER.debug("No response from inverter (could be dark)")
@@ -86,6 +87,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             data["instantaneouspower"] = round(power_watts, 1)
             data["temp"] = round(temperature_c, 1)
             data["totalenergy"] = round(energy_wh / 1000, 2)
+            data["alarm"] = alarm
             self.available = True
 
         finally:
