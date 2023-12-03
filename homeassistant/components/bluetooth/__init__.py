@@ -21,6 +21,7 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
+from habluetooth import HaBluetoothConnector
 from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
 from homeassistant.components import usb
@@ -77,12 +78,7 @@ from .const import (
 )
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import (
-    BluetoothCallback,
-    BluetoothChange,
-    BluetoothScanningMode,
-    HaBluetoothConnector,
-)
+from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
 from .scanner import MONOTONIC_TIME, HaScanner, ScannerStartError
 from .storage import BluetoothStorage
 
