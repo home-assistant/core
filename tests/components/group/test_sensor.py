@@ -286,7 +286,7 @@ async def test_sensor_ignore_non_numeric(
 async def test_sensor_non_numeric(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that non numeric values are caused a group to be unknown."""
+    """Test that non numeric values cause a group to be unknown."""
     config = {
         SENSOR_DOMAIN: {
             "platform": GROUP_DOMAIN,
