@@ -140,6 +140,7 @@ class HaScanner(BaseHaScanner):
         self._new_info_callback = new_info_callback
         self.scanning = False
         self.hass = hass
+        self._last_detection = 0.0
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
