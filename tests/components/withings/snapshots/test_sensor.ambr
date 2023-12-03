@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_all_entities[sensor.henk_active_calories_burnt_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Active calories burnt today',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'calories',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_active_calories_burnt_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '221.132',
+  })
+# ---
+# name: test_all_entities[sensor.henk_active_time_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Active time today',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_active_time_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1907',
+  })
+# ---
 # name: test_all_entities[sensor.henk_average_heart_rate]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -11,7 +42,7 @@
     'entity_id': 'sensor.henk_average_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '83',
+    'state': '103',
   })
 # ---
 # name: test_all_entities[sensor.henk_average_respiratory_rate]
@@ -69,7 +100,20 @@
     'entity_id': 'sensor.henk_breathing_disturbances_intensity',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '9',
+  })
+# ---
+# name: test_all_entities[sensor.henk_calories_burnt_last_workout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Calories burnt last workout',
+      'unit_of_measurement': 'calories',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_calories_burnt_last_workout',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
   })
 # ---
 # name: test_all_entities[sensor.henk_deep_sleep]
@@ -85,7 +129,7 @@
     'entity_id': 'sensor.henk_deep_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '26220',
+    'state': '5820',
   })
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure]
@@ -100,6 +144,70 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
+  })
+# ---
+# name: test_all_entities[sensor.henk_distance_travelled_last_workout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Distance travelled last workout',
+      'icon': 'mdi:map-marker-distance',
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_distance_travelled_last_workout',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '232',
+  })
+# ---
+# name: test_all_entities[sensor.henk_distance_travelled_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Distance travelled today',
+      'icon': 'mdi:map-marker-distance',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_distance_travelled_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1020.121',
+  })
+# ---
+# name: test_all_entities[sensor.henk_elevation_change_last_workout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Elevation change last workout',
+      'icon': 'mdi:stairs-up',
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_elevation_change_last_workout',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_all_entities[sensor.henk_elevation_change_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Elevation change today',
+      'icon': 'mdi:stairs-up',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_elevation_change_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[sensor.henk_extracellular_water]
@@ -207,6 +315,22 @@
     'state': '0.95',
   })
 # ---
+# name: test_all_entities[sensor.henk_intense_activity_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Intense activity today',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_intense_activity_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '420',
+  })
+# ---
 # name: test_all_entities[sensor.henk_intracellular_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -222,6 +346,97 @@
     'state': '100',
   })
 # ---
+# name: test_all_entities[sensor.henk_last_workout_duration]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Last workout duration',
+      'icon': 'mdi:timer',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_last_workout_duration',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255.0',
+  })
+# ---
+# name: test_all_entities[sensor.henk_last_workout_intensity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Last workout intensity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_last_workout_intensity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_all_entities[sensor.henk_last_workout_type]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'henk Last workout type',
+      'options': list([
+        'walk',
+        'run',
+        'hiking',
+        'skating',
+        'bmx',
+        'bicycling',
+        'swimming',
+        'surfing',
+        'kitesurfing',
+        'windsurfing',
+        'bodyboard',
+        'tennis',
+        'table_tennis',
+        'squash',
+        'badminton',
+        'lift_weights',
+        'calisthenics',
+        'elliptical',
+        'pilates',
+        'basket_ball',
+        'soccer',
+        'football',
+        'rugby',
+        'volley_ball',
+        'waterpolo',
+        'horse_riding',
+        'golf',
+        'yoga',
+        'dancing',
+        'boxing',
+        'fencing',
+        'wrestling',
+        'martial_arts',
+        'skiing',
+        'snowboarding',
+        'other',
+        'no_activity',
+        'rowing',
+        'zumba',
+        'baseball',
+        'handball',
+        'hockey',
+        'ice_hockey',
+        'climbing',
+        'ice_skating',
+        'multi_sport',
+        'indoor_walk',
+        'indoor_running',
+        'indoor_cycling',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_last_workout_type',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'walk',
+  })
+# ---
 # name: test_all_entities[sensor.henk_light_sleep]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -235,7 +450,7 @@
     'entity_id': 'sensor.henk_light_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '58440',
+    'state': '10440',
   })
 # ---
 # name: test_all_entities[sensor.henk_maximum_heart_rate]
@@ -250,7 +465,7 @@
     'entity_id': 'sensor.henk_maximum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '108',
+    'state': '120',
   })
 # ---
 # name: test_all_entities[sensor.henk_maximum_respiratory_rate]
@@ -279,7 +494,7 @@
     'entity_id': 'sensor.henk_minimum_heart_rate',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '58',
+    'state': '70',
   })
 # ---
 # name: test_all_entities[sensor.henk_minimum_respiratory_rate]
@@ -296,6 +511,22 @@
     'state': '10',
   })
 # ---
+# name: test_all_entities[sensor.henk_moderate_activity_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Moderate activity today',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_moderate_activity_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1487',
+  })
+# ---
 # name: test_all_entities[sensor.henk_muscle_mass]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -309,6 +540,21 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
+  })
+# ---
+# name: test_all_entities[sensor.henk_pause_during_last_workout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Pause during last workout',
+      'icon': 'mdi:timer-pause',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_pause_during_last_workout',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[sensor.henk_pulse_wave_velocity]
@@ -339,7 +585,7 @@
     'entity_id': 'sensor.henk_rem_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '17280',
+    'state': '2400',
   })
 # ---
 # name: test_all_entities[sensor.henk_skin_temperature]
@@ -385,7 +631,7 @@
     'entity_id': 'sensor.henk_sleep_score',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '90',
+    'state': '37',
   })
 # ---
 # name: test_all_entities[sensor.henk_snoring]
@@ -398,7 +644,7 @@
     'entity_id': 'sensor.henk_snoring',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '1044',
+    'state': '1080',
   })
 # ---
 # name: test_all_entities[sensor.henk_snoring_episode_count]
@@ -411,7 +657,23 @@
     'entity_id': 'sensor.henk_snoring_episode_count',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '18',
+  })
+# ---
+# name: test_all_entities[sensor.henk_soft_activity_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'henk Soft activity today',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_soft_activity_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1516',
   })
 # ---
 # name: test_all_entities[sensor.henk_spo2]
@@ -434,13 +696,29 @@
       'friendly_name': 'henk Step goal',
       'icon': 'mdi:shoe-print',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Steps',
+      'unit_of_measurement': 'steps',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_step_goal',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '10000',
+  })
+# ---
+# name: test_all_entities[sensor.henk_steps_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Steps today',
+      'icon': 'mdi:shoe-print',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'steps',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_steps_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1155',
   })
 # ---
 # name: test_all_entities[sensor.henk_systolic_blood_pressure]
@@ -485,7 +763,7 @@
     'entity_id': 'sensor.henk_time_to_sleep',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '780',
+    'state': '540',
   })
 # ---
 # name: test_all_entities[sensor.henk_time_to_wakeup]
@@ -501,7 +779,22 @@
     'entity_id': 'sensor.henk_time_to_wakeup',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '996',
+    'state': '1140',
+  })
+# ---
+# name: test_all_entities[sensor.henk_total_calories_burnt_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'henk Total calories burnt today',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'calories',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_total_calories_burnt_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2444.149',
   })
 # ---
 # name: test_all_entities[sensor.henk_vascular_age]
@@ -542,7 +835,7 @@
     'entity_id': 'sensor.henk_wakeup_count',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '8',
+    'state': '1',
   })
 # ---
 # name: test_all_entities[sensor.henk_wakeup_time]
@@ -558,7 +851,7 @@
     'entity_id': 'sensor.henk_wakeup_time',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '3468',
+    'state': '3060',
   })
 # ---
 # name: test_all_entities[sensor.henk_weight]

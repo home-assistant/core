@@ -7,9 +7,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Final
 
 from bleak import BaseBleakClient
+from bluetooth_data_tools import monotonic_time_coarse
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
-
-from homeassistant.util.dt import monotonic_time_coarse
 
 if TYPE_CHECKING:
     from .manager import BluetoothManager

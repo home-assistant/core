@@ -16,6 +16,7 @@ from bluetooth_adapters import (
     AdapterDetails,
     BluetoothAdapters,
 )
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -27,7 +28,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import (
     TRACKER_BUFFERING_WOBBLE_SECONDS,
@@ -109,6 +109,7 @@ class BluetoothManager:
         "_cancel_logging_listener",
         "_advertisement_tracker",
         "_fallback_intervals",
+        "_intervals",
         "_unavailable_callbacks",
         "_connectable_unavailable_callbacks",
         "_callback_index",
@@ -123,6 +124,7 @@ class BluetoothManager:
         "storage",
         "slot_manager",
         "_debug",
+        "shutdown",
     )
 
     def __init__(
@@ -140,7 +142,8 @@ class BluetoothManager:
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
-        self._fallback_intervals: dict[str, float] = {}
+        self._fallback_intervals = self._advertisement_tracker.fallback_intervals
+        self._intervals = self._advertisement_tracker.intervals
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -163,6 +166,7 @@ class BluetoothManager:
         self.storage = storage
         self.slot_manager = slot_manager
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
+        self.shutdown = False
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -257,6 +261,7 @@ class BluetoothManager:
     def async_stop(self, event: Event) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
+        self.shutdown = True
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
@@ -359,7 +364,7 @@ class BluetoothManager:
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
-                    self._fallback_intervals.pop(address, None)
+                    tracker.async_remove_fallback_interval(address)
                     tracker.async_remove_address(address)
                     self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
@@ -390,7 +395,7 @@ class BluetoothManager:
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
-            stale_seconds := self._advertisement_tracker.intervals.get(
+            stale_seconds := self._intervals.get(
                 new.address,
                 self._fallback_intervals.get(
                     new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -791,7 +796,7 @@ class BluetoothManager:
     @hass_callback
     def async_get_learned_advertising_interval(self, address: str) -> float | None:
         """Get the learned advertising interval for a MAC address."""
-        return self._advertisement_tracker.intervals.get(address)
+        return self._intervals.get(address)
 
     @hass_callback
     def async_get_fallback_availability_interval(self, address: str) -> float | None:
