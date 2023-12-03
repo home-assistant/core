@@ -34,7 +34,7 @@ async def test_climate_myzone_main(
 ) -> None:
     """Test climate platform main entity."""
 
-    with patch_get, patch_update() as mock_update:
+    with patch_get(), patch_update() as mock_update:
         await add_mock_config(hass)
 
         # Test MyZone main climate entity

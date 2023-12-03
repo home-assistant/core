@@ -1,4 +1,6 @@
 """Test the Advantage Air Initialization."""
+from advantage_air import ApiError
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -20,6 +22,6 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_setup_entry_failure(hass: HomeAssistant) -> None:
     """Test a unsuccessful setup entry."""
 
-    with patch_get(side_effect=SyntaxError):
+    with patch_get(side_effect=ApiError):
         entry = await add_mock_config(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
