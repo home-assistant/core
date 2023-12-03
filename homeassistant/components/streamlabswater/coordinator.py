@@ -1,12 +1,13 @@
 """Coordinator for Streamlabs water integration."""
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 
 from streamlabswater.streamlabswater import StreamlabsClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import LOGGER
 
 
 @dataclass(slots=True)
@@ -31,7 +32,7 @@ class StreamlabsCoordinator(DataUpdateCoordinator[dict[str, StreamlabsData]]):
         """Coordinator for Streamlabs."""
         super().__init__(
             hass,
-            logging.getLogger(__name__),
+            LOGGER,
             name="Streamlabs",
             update_interval=timedelta(seconds=60),
         )
