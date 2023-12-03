@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
@@ -41,6 +43,20 @@ def patch_update(return_value=True, side_effect=None):
         "homeassistant.components.advantage_air.advantage_air._endpoint.async_update",
         new=AsyncMock(return_value=return_value, side_effect=side_effect),
     )
+
+
+@pytest.fixture
+def mock_get():
+    """Fixture to patch the Advantage Air async_get method."""
+    with patch_get() as mock_get:
+        yield mock_get
+
+
+@pytest.fixture
+def mock_update():
+    """Fixture to patch the Advantage Air async_update method."""
+    with patch_update() as mock_update:
+        yield mock_update
 
 
 async def add_mock_config(hass):
