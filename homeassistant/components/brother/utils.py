@@ -1,14 +1,18 @@
 """Brother helpers functions."""
-import logging
+from __future__ import annotations
 
-import pysnmp.hlapi.asyncio as hlapi
-from pysnmp.hlapi.asyncio.cmdgen import lcd
+import logging
+import sys
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 
 from .const import DOMAIN, SNMP
+
+if sys.version_info < (3, 12):
+    import pysnmp.hlapi.asyncio as hlapi
+    from pysnmp.hlapi.asyncio.cmdgen import lcd
 
 _LOGGER = logging.getLogger(__name__)
 

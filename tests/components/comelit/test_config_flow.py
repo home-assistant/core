@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_USER_DATA
+from .const import FAKE_PIN, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +24,7 @@ async def test_user(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.comelit.async_setup_entry"
     ) as mock_setup_entry, patch(
-        "requests.get"
+        "requests.get",
     ) as mock_request_get:
         mock_request_get.return_value.status_code = 200
 
@@ -70,7 +70,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     ), patch(
         "aiocomelit.api.ComeliteSerialBridgeApi.logout",
     ), patch(
-        "homeassistant.components.comelit.async_setup_entry"
+        "homeassistant.components.comelit.async_setup_entry",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -108,7 +108,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_PIN: "other_fake_pin",
+                CONF_PIN: FAKE_PIN,
             },
         )
         await hass.async_block_till_done()
@@ -135,9 +135,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         "aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect
     ), patch(
         "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch(
-        "homeassistant.components.comelit.async_setup_entry"
-    ):
+    ), patch("homeassistant.components.comelit.async_setup_entry"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
@@ -150,7 +148,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_PIN: "other_fake_pin",
+                CONF_PIN: FAKE_PIN,
             },
         )
 

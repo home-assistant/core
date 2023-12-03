@@ -6,7 +6,14 @@ from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
-from aioshelly.const import MODEL_NAMES
+from aioshelly.const import (
+    MODEL_1L,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_EM3,
+    MODEL_I3,
+    MODEL_NAMES,
+)
 from aioshelly.rpc_device import RpcDevice, WsServer
 
 from homeassistant.components.http import HomeAssistantView
@@ -26,7 +33,10 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
+    DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -54,7 +64,11 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 
     if block.type == "input":
         # Shelly Dimmer/1L has two input channels and missing "num_inputs"
-        if device.settings["device"]["type"] in ["SHDM-1", "SHDM-2", "SHSW-L"]:
+        if device.settings["device"]["type"] in [
+            MODEL_DIMMER,
+            MODEL_DIMMER_2,
+            MODEL_1L,
+        ]:
             channels = 2
         else:
             channels = device.shelly.get("num_inputs")
@@ -103,7 +117,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     if channel_name:
         return channel_name
 
-    if device.settings["device"]["type"] == "SHEM-3":
+    if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
     else:
         base = ord("1")
@@ -133,7 +147,7 @@ def is_block_momentary_input(
         return False
 
     # Shelly 1L has two button settings in the first channel
-    if settings["device"]["type"] == "SHSW-L":
+    if settings["device"]["type"] == MODEL_1L:
         channel = int(block.channel or 0) + 1
         button_type = button[0].get("btn" + str(channel) + "_type")
     else:
@@ -177,7 +191,7 @@ def get_block_input_triggers(
 
     if device.settings["device"]["type"] in SHBTN_MODELS:
         trigger_types = SHBTN_INPUTS_EVENTS_TYPES
-    elif device.settings["device"]["type"] == "SHIX3-1":
+    elif device.settings["device"]["type"] == MODEL_I3:
         trigger_types = SHIX3_1_INPUTS_EVENTS_TYPES
     else:
         trigger_types = BASIC_INPUTS_EVENTS_TYPES
@@ -408,3 +422,11 @@ def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
     return mac.upper() if len(mac) == 12 else None
+
+
+def get_release_url(gen: int, model: str, beta: bool) -> str | None:
+    """Return release URL or None."""
+    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+        return None
+
+    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL

@@ -7,8 +7,8 @@ from bluetooth_adapters import DEFAULT_ADDRESS
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
 )
 from homeassistant.core import HomeAssistant
 
@@ -157,6 +157,7 @@ async def test_diagnostics(
                 },
                 "advertisement_tracker": {
                     "intervals": {},
+                    "fallback_intervals": {},
                     "sources": {},
                     "timings": {},
                 },
@@ -328,6 +329,7 @@ async def test_diagnostics_macos(
                 },
                 "advertisement_tracker": {
                     "intervals": {},
+                    "fallback_intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },
@@ -440,7 +442,7 @@ async def test_diagnostics_remote_adapter(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -520,6 +522,7 @@ async def test_diagnostics_remote_adapter(
                 },
                 "advertisement_tracker": {
                     "intervals": {},
+                    "fallback_intervals": {},
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },

@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import MODEL_BULB
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -254,7 +255,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        if self.coordinator.model == "SHBLB-1":
+        if self.coordinator.model == MODEL_BULB:
             return list(SHBLB_1_RGB_EFFECTS.values())
 
         return list(STANDARD_RGB_EFFECTS.values())
@@ -267,7 +268,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         else:
             effect_index = self.block.effect
 
-        if self.coordinator.model == "SHBLB-1":
+        if self.coordinator.model == MODEL_BULB:
             return SHBLB_1_RGB_EFFECTS[effect_index]
 
         return STANDARD_RGB_EFFECTS[effect_index]
@@ -326,7 +327,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP_KELVIN not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
-            if self.coordinator.model == "SHBLB-1":
+            if self.coordinator.model == MODEL_BULB:
                 effect_dict = SHBLB_1_RGB_EFFECTS
             else:
                 effect_dict = STANDARD_RGB_EFFECTS

@@ -73,6 +73,19 @@ class HVVDepartureSensor(SensorEntity):
         station_id = config_entry.data[CONF_STATION]["id"]
         station_type = config_entry.data[CONF_STATION]["type"]
         self._attr_unique_id = f"{config_entry.entry_id}-{station_id}-{station_type}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (
+                    DOMAIN,
+                    config_entry.entry_id,
+                    config_entry.data[CONF_STATION]["id"],
+                    config_entry.data[CONF_STATION]["type"],
+                )
+            },
+            manufacturer=MANUFACTURER,
+            name=config_entry.data[CONF_STATION]["name"],
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self, **kwargs: Any) -> None:
@@ -165,20 +178,3 @@ class HVVDepartureSensor(SensorEntity):
                 }
             )
         self._attr_extra_state_attributes[ATTR_NEXT] = departures
-
-    @property
-    def device_info(self):
-        """Return the device info for this sensor."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    self.config_entry.entry_id,
-                    self.config_entry.data[CONF_STATION]["id"],
-                    self.config_entry.data[CONF_STATION]["type"],
-                )
-            },
-            manufacturer=MANUFACTURER,
-            name=self.config_entry.data[CONF_STATION]["name"],
-        )
