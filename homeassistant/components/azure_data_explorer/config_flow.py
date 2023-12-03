@@ -88,7 +88,9 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     data=user_input,
-                    title=user_input[CONF_ADX_CLUSTER_INGEST_URI],
+                    title=user_input[CONF_ADX_CLUSTER_INGEST_URI].replace(
+                        "https://", ""
+                    ),
                     options=DEFAULT_OPTIONS,
                 )
         return self.async_show_form(

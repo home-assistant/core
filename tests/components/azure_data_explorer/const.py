@@ -12,7 +12,6 @@ from homeassistant.components.azure_data_explorer.const import (
 
 AZURE_DATA_EXPLORER_PATH = "homeassistant.components.azure_data_explorer"
 CLIENT_PATH = f"{AZURE_DATA_EXPLORER_PATH}.AzureDataExplorer"
-CONFIG_FLOW_PATH = f"{AZURE_DATA_EXPLORER_PATH}.config_flow"
 
 
 BASE_CONFIG = {

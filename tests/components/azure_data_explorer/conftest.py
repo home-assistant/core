@@ -93,7 +93,7 @@ async def mock_entry_with_one_event(hass, entry_managed):
 
 
 # Fixtures for config_flow tests
-@pytest.fixture(name="mock_setup_entry")
+@pytest.fixture
 def mock_setup_entry():
     """Mock the setup entry call, used for config flow tests."""
     with patch(
@@ -103,36 +103,31 @@ def mock_setup_entry():
 
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
-@pytest.fixture(
-    autouse=True,
-    name="mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data",
-)
+@pytest.fixture(autouse=True)
 def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data():
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
         return_value=True,
-    ) as managedStreamingIngestClient_ingest_from_stream:
-        yield managedStreamingIngestClient_ingest_from_stream
+    ) as ingest_from_stream:
+        yield ingest_from_stream
 
 
-@pytest.fixture(
-    autouse=True, name="mock_azure_data_explorer_QueuedIngestClient_ingest_data"
-)
+@pytest.fixture(autouse=True)
 def mock_azure_data_explorer_QueuedIngestClient_ingest_data():
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
         return_value=True,
-    ) as queuedIngestClient_ingest_from_stream:
-        yield queuedIngestClient_ingest_from_stream
+    ) as ingest_from_stream:
+        yield ingest_from_stream
 
 
-@pytest.fixture(autouse=True, name="mock_execute_query")
+@pytest.fixture(autouse=True)
 def mock_execute_query():
     """Mock KustoClient execute_query."""
     with patch(
         "azure.kusto.data.KustoClient.execute_query",
         return_value=True,
-    ) as kustoResponseDataSet:
-        yield kustoResponseDataSet
+    ) as execute_query:
+        yield execute_query
