@@ -16,5 +16,39 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "grid_power": {
+        "name": "Grid Power"
+      },
+      "battery_power": {
+        "name": "Battery Power"
+      },
+      "battery_soc": {
+        "name": "Battery Level"
+      },
+      "solar_power": {
+        "name": "Solar Power"
+      },
+      "solar_energy_today": {
+        "name": "Solar Energy Today"
+      },
+      "solar_energy_total": {
+        "name": "Solar Energy Total"
+      },
+      "grid_energy_import_today": {
+        "name": "Grid Import Today"
+      },
+      "grid_energy_import_total": {
+        "name": "Grid Import Total"
+      },
+      "grid_energy_export_today": {
+        "name": "Grid Export Today"
+      },
+      "grid_energy_export_total": {
+        "name": "Grid Export Total"
+      }
+    }
   }
 }

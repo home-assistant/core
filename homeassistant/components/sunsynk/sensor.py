@@ -32,35 +32,35 @@ from .coordinator import SunsynkCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        name="Grid Power",
+        translation_key=GRID_POWER,
         key=GRID_POWER,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Battery Power",
+        translation_key=BATTERY_POWER,
         key=BATTERY_POWER,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Battery Level",
+        translation_key=BATTERY_SOC,
         key=BATTERY_SOC,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
-        name="Solar Power",
+        translation_key=SOLAR_POWER,
         key=SOLAR_POWER,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Solar Energy Today",
+        translation_key=SOLAR_ENERGY_TODAY,
         key=SOLAR_ENERGY_TODAY,
         icon="mdi:solar-power",
         device_class=SensorDeviceClass.ENERGY,
@@ -68,7 +68,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        name="Solar Energy Total",
+        translation_key=SOLAR_ENERGY_TOTAL,
         key=SOLAR_ENERGY_TOTAL,
         icon="mdi:solar-power",
         device_class=SensorDeviceClass.ENERGY,
@@ -76,7 +76,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        name="Grid Import Today",
+        translation_key=GRID_ENERGY_IMPORT_TODAY,
         key=GRID_ENERGY_IMPORT_TODAY,
         icon="mdi:power-plug",
         device_class=SensorDeviceClass.ENERGY,
@@ -84,7 +84,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        name="Grid Import Total",
+        translation_key=GRID_ENERGY_IMPORT_TOTAL,
         key=GRID_ENERGY_IMPORT_TOTAL,
         icon="mdi:power-plug",
         device_class=SensorDeviceClass.ENERGY,
@@ -92,7 +92,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        name="Grid Export Today",
+        translation_key=GRID_ENERGY_EXPORT_TODAY,
         key=GRID_ENERGY_EXPORT_TODAY,
         icon="mdi:power-plug",
         device_class=SensorDeviceClass.ENERGY,
@@ -100,7 +100,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        name="Grid Export Total",
+        translation_key=GRID_ENERGY_EXPORT_TOTAL,
         key=GRID_ENERGY_EXPORT_TOTAL,
         icon="mdi:power-plug",
         device_class=SensorDeviceClass.ENERGY,
