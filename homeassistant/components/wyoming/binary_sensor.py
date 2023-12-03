@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import WyomingSatelliteEntity
-from .satellite import SatelliteDevice
 
 if TYPE_CHECKING:
     from .models import DomainDataItem
@@ -27,8 +26,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensor entities."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
-    if not item.satellite:
-        return
+
+    # Setup is only forwarded for satellites
+    assert item.satellite is not None
 
     async_add_entities([WyomingSatelliteAssistInProgress(item.satellite.device)])
 
@@ -46,10 +46,10 @@ class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntit
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        self.async_on_remove(self._device.async_listen_update(self._is_active_changed))
+        self._device.set_is_active_listener(self._is_active_changed)
 
     @callback
-    def _is_active_changed(self, device: SatelliteDevice) -> None:
+    def _is_active_changed(self) -> None:
         """Call when active state changed."""
         self._attr_is_on = self._device.is_active
         self.async_write_ha_state()

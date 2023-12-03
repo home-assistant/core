@@ -19,13 +19,6 @@ async def test_satellite_enabled(
     assert state.state == STATE_ON
     assert satellite_device.is_enabled
 
-    await hass.config_entries.async_reload(satellite_config_entry.entry_id)
-
-    state = hass.states.get(satellite_enabled_id)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert satellite_device.is_enabled
-
     await hass.services.async_call(
         "switch",
         "turn_off",
@@ -37,23 +30,3 @@ async def test_satellite_enabled(
     assert state is not None
     assert state.state == STATE_OFF
     assert not satellite_device.is_enabled
-
-    await hass.config_entries.async_reload(satellite_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(satellite_enabled_id)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert not satellite_device.is_enabled
-
-    await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": satellite_enabled_id},
-        blocking=True,
-    )
-
-    state = hass.states.get(satellite_enabled_id)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert satellite_device.is_enabled

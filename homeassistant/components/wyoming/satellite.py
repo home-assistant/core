@@ -56,24 +56,20 @@ class WyomingSatellite:
         self._is_pipeline_running = False
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
-        self._device_updated_event = asyncio.Event()
+        self._enabled_changed_event = asyncio.Event()
+
+        self.device.set_is_enabled_listener(self._enabled_changed)
+        self.device.set_pipeline_listener(self._pipeline_changed)
 
     async def run(self) -> None:
         """Run and maintain a connection to satellite."""
         _LOGGER.debug("Running satellite task")
-        self._pipeline_id = pipeline_select.get_chosen_pipeline(
-            self.hass,
-            DOMAIN,
-            self.device.satellite_id,
-        )
-        self.is_enabled = self.device.is_enabled
-        remove_listener = self.device.async_listen_update(self._device_updated)
 
         try:
             while self.is_running:
                 try:
                     # Check if satellite has been disabled
-                    if not self.is_enabled:
+                    if not self.device.is_enabled:
                         await self.on_disabled()
                         if not self.is_running:
                             # Satellite was stopped while waiting to be enabled
@@ -87,10 +83,7 @@ class WyomingSatellite:
                     await self.on_restart()
         finally:
             # Ensure sensor is off
-            if self.device.is_active:
-                self.device.set_is_active(False)
-
-            remove_listener()
+            self.device.set_is_active(False)
 
         await self.on_stopped()
 
@@ -99,7 +92,7 @@ class WyomingSatellite:
         self.is_running = False
 
         # Unblock waiting for enabled
-        self._device_updated_event.set()
+        self._enabled_changed_event.set()
 
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
@@ -119,7 +112,7 @@ class WyomingSatellite:
 
     async def on_disabled(self) -> None:
         """Block until device may be enabled again."""
-        await self._device_updated_event.wait()
+        await self._enabled_changed_event.wait()
 
     async def on_stopped(self) -> None:
         """Run when run() has fully stopped."""
@@ -127,34 +120,24 @@ class WyomingSatellite:
 
     # -------------------------------------------------------------------------
 
-    def _device_updated(self, device: SatelliteDevice) -> None:
-        """Reacts to updated device settings."""
-        pipeline_id = pipeline_select.get_chosen_pipeline(
-            self.hass,
-            DOMAIN,
-            self.device.satellite_id,
-        )
+    def _enabled_changed(self) -> None:
+        """Run when device enabled status changes."""
 
-        stop_pipeline = False
-        if self._pipeline_id != pipeline_id:
-            # Pipeline has changed
-            self._pipeline_id = pipeline_id
-            stop_pipeline = True
-
-        if self.is_enabled and (not self.device.is_enabled):
-            stop_pipeline = True
-
-        self.is_enabled = self.device.is_enabled
-        self._device_updated_event.set()
-        self._device_updated_event.clear()
-
-        if stop_pipeline:
+        if not self.device.is_enabled:
+            # Cancel any running pipeline
             self._audio_queue.put_nowait(None)
+
+        self._enabled_changed_event.set()
+
+    def _pipeline_changed(self) -> None:
+        """Run when device pipeline changes."""
+
+        # Cancel any running pipeline
+        self._audio_queue.put_nowait(None)
 
     async def _run_once(self) -> None:
         """Run pipelines until an error occurs."""
-        if self.device.is_active:
-            self.device.set_is_active(False)
+        self.device.set_is_active(False)
 
         while self.is_running and self.is_enabled:
             try:
@@ -167,7 +150,7 @@ class WyomingSatellite:
         _LOGGER.debug("Connected to satellite")
 
         if (not self.is_running) or (not self.is_enabled):
-            # Run was cancelled or satellite was disabled
+            # Run was cancelled or satellite was disabled during connection
             return
 
         # Tell satellite that we're ready
@@ -175,7 +158,7 @@ class WyomingSatellite:
 
         # Wait until we get RunPipeline event
         run_pipeline: RunPipeline | None = None
-        while True:
+        while self.is_running and self.is_enabled:
             run_event = await self._client.read_event()
             if run_event is None:
                 raise ConnectionResetError("Satellite disconnected")
@@ -189,8 +172,9 @@ class WyomingSatellite:
         assert run_pipeline is not None
         _LOGGER.debug("Received run information: %s", run_pipeline)
 
-        if not self.is_running:
-            # Run was cancelled
+        if (not self.is_running) or (not self.is_enabled):
+            # Run was cancelled or satellite was disabled while waiting for
+            # RunPipeline event.
             return
 
         start_stage = _STAGES.get(run_pipeline.start_stage)
@@ -205,7 +189,12 @@ class WyomingSatellite:
         # Each loop is a pipeline run
         while self.is_running and self.is_enabled:
             # Use select to get pipeline each time in case it's changed
-            pipeline = assist_pipeline.async_get_pipeline(self.hass, self._pipeline_id)
+            pipeline_id = pipeline_select.get_chosen_pipeline(
+                self.hass,
+                DOMAIN,
+                self.device.satellite_id,
+            )
+            pipeline = assist_pipeline.async_get_pipeline(self.hass, pipeline_id)
             assert pipeline is not None
 
             # We will push audio in through a queue
@@ -237,10 +226,11 @@ class WyomingSatellite:
                     start_stage=start_stage,
                     end_stage=end_stage,
                     tts_audio_output="wav",
-                    pipeline_id=self._pipeline_id,
+                    pipeline_id=pipeline_id,
                 )
             )
 
+            # Run until pipeline is complete or cancelled with an empty audio chunk
             while self._is_pipeline_running:
                 client_event = await self._client.read_event()
                 if client_event is None:
@@ -261,15 +251,14 @@ class WyomingSatellite:
         assert self._client is not None
 
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
+            # Pipeline run is complete
             self._is_pipeline_running = False
-            if self.device.is_active:
-                self.device.set_is_active(False)
+            self.device.set_is_active(False)
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
             self.hass.add_job(self._client.write_event(Detect().event()))
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_END:
             # Wake word detection
-            if not self.device.is_active:
-                self.device.set_is_active(True)
+            self.device.set_is_active(True)
 
             # Inform client of wake word detection
             if event.data and (wake_word_output := event.data.get("wake_word_output")):
@@ -280,8 +269,7 @@ class WyomingSatellite:
                 self.hass.add_job(self._client.write_event(detection.event()))
         elif event.type == assist_pipeline.PipelineEventType.STT_START:
             # Speech-to-text
-            if not self.device.is_active:
-                self.device.set_is_active(True)
+            self.device.set_is_active(True)
 
             if event.data:
                 self.hass.add_job(

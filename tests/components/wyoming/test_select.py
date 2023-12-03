@@ -49,9 +49,7 @@ async def test_pipeline_select(
     assert state.state == OPTION_PREFERRED
 
     # Change to second pipeline
-    with patch.object(
-        satellite_device, "async_pipeline_changed"
-    ) as mock_pipeline_changed:
+    with patch.object(satellite_device, "set_pipeline_name") as mock_pipeline_changed:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -64,11 +62,11 @@ async def test_pipeline_select(
         assert state.state == "Test 1"
 
         # async_pipeline_changed should have been called
-        mock_pipeline_changed.assert_called()
+        mock_pipeline_changed.assert_called_once_with("Test 1")
 
     # Change back and check update listener
-    update_listener = Mock()
-    satellite_device.async_listen_update(update_listener)
+    pipeline_listener = Mock()
+    satellite_device.set_pipeline_listener(pipeline_listener)
 
     await hass.services.async_call(
         "select",
@@ -81,5 +79,5 @@ async def test_pipeline_select(
     assert state is not None
     assert state.state == OPTION_PREFERRED
 
-    # update listener should have been called
-    update_listener.assert_called()
+    # listener should have been called
+    pipeline_listener.assert_called_once()

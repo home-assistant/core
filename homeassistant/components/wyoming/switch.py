@@ -25,8 +25,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up VoIP switch entities."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
-    if not item.satellite:
-        return
+
+    # Setup is only forwarded for satellites
+    assert item.satellite is not None
 
     async_add_entities([WyomingSatelliteEnabledSwitch(item.satellite.device)])
 
@@ -54,11 +55,11 @@ class WyomingSatelliteEnabledSwitch(
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         self._attr_is_on = True
-        self._device.set_is_enabled(True)
         self.async_write_ha_state()
+        self._device.set_is_enabled(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         self._attr_is_on = False
-        self._device.set_is_enabled(False)
         self.async_write_ha_state()
+        self._device.set_is_enabled(False)

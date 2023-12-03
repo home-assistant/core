@@ -24,11 +24,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up VoIP switch entities."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
-    if not item.satellite:
-        return
 
-    device = item.satellite.device
-    async_add_entities([WyomingSatellitePipelineSelect(hass, device)])
+    # Setup is only forwarded for satellites
+    assert item.satellite is not None
+
+    async_add_entities([WyomingSatellitePipelineSelect(hass, item.satellite.device)])
 
 
 class WyomingSatellitePipelineSelect(WyomingSatelliteEntity, AssistPipelineSelect):
@@ -44,4 +44,4 @@ class WyomingSatellitePipelineSelect(WyomingSatelliteEntity, AssistPipelineSelec
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await super().async_select_option(option)
-        self.device.async_pipeline_changed()
+        self.device.set_pipeline_name(option)

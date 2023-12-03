@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -18,37 +18,50 @@ class SatelliteDevice:
     device_id: str
     is_active: bool = False
     is_enabled: bool = True
-    update_listeners: list[Callable[[SatelliteDevice], None]] = field(
-        default_factory=list
-    )
+    pipeline_name: str | None = None
+
+    _is_active_listener: Callable[[], None] | None = None
+    _is_enabled_listener: Callable[[], None] | None = None
+    _pipeline_listener: Callable[[], None] | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:
         """Set active state."""
-        self.is_active = active
-        for listener in self.update_listeners:
-            listener(self)
+        if active != self.is_active:
+            self.is_active = active
+            if self._is_active_listener is not None:
+                self._is_active_listener()
 
     @callback
     def set_is_enabled(self, enabled: bool) -> None:
         """Set enabled state."""
-        self.is_enabled = enabled
-        for listener in self.update_listeners:
-            listener(self)
+        if enabled != self.is_enabled:
+            self.is_enabled = enabled
+            if self._is_enabled_listener is not None:
+                self._is_enabled_listener()
 
     @callback
-    def async_pipeline_changed(self) -> None:
+    def set_pipeline_name(self, pipeline_name: str) -> None:
         """Inform listeners that pipeline selection has changed."""
-        for listener in self.update_listeners:
-            listener(self)
+        if pipeline_name != self.pipeline_name:
+            self.pipeline_name = pipeline_name
+            if self._pipeline_listener is not None:
+                self._pipeline_listener()
 
     @callback
-    def async_listen_update(
-        self, listener: Callable[[SatelliteDevice], None]
-    ) -> Callable[[], None]:
-        """Listen for updates."""
-        self.update_listeners.append(listener)
-        return lambda: self.update_listeners.remove(listener)
+    def set_is_active_listener(self, is_active_listener: Callable[[], None]) -> None:
+        """Listen for updates to is_active."""
+        self._is_active_listener = is_active_listener
+
+    @callback
+    def set_is_enabled_listener(self, is_enabled_listener: Callable[[], None]) -> None:
+        """Listen for updates to is_enabled."""
+        self._is_enabled_listener = is_enabled_listener
+
+    @callback
+    def set_pipeline_listener(self, pipeline_listener: Callable[[], None]) -> None:
+        """Listen for updates to pipeline."""
+        self._pipeline_listener = pipeline_listener
 
     def get_assist_in_progress_entity_id(self, hass: HomeAssistant) -> str | None:
         """Return entity id for assist in progress binary sensor."""
