@@ -40,6 +40,10 @@ class MockViCareService:
         self._test_data = load_json_object_fixture(fixture)
         self.fetch_all_features = Mock(return_value=self._test_data)
 
+    def hasRoles(self, requested_roles) -> bool:
+        """Check if the device has a given role."""
+        return False
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
