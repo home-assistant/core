@@ -1,7 +1,13 @@
 """Tests for the OpenAI integration."""
 from unittest.mock import patch
 
-from openai import error
+from openai import ServiceUnavailableError
+from openai.types.chat.chat_completion import ChatCompletion, Choice
+from openai.types.chat.chat_completion_message import ChatCompletionMessage
+from openai.types.completion_usage import CompletionUsage
+from openai.types.images_response import ImagesResponse
+from openai.types.image import Image
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -94,17 +100,29 @@ async def test_default_prompt(
         suggested_area="Test Area 2",
     )
     with patch(
-        "openai.ChatCompletion.acreate",
-        return_value={
-            "choices": [
-                {
-                    "message": {
-                        "role": "assistant",
-                        "content": "Hello, how can I help you?",
-                    }
-                }
-            ]
-        },
+        "openai.resources.chat.completions.create",
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="Hello, how can I help you?",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-3.5-turbo-0613",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        ),
     ) as mock_create:
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
@@ -119,7 +137,7 @@ async def test_error_handling(
 ) -> None:
     """Test that the default prompt works."""
     with patch(
-        "openai.ChatCompletion.acreate", side_effect=error.ServiceUnavailableError
+        "openai.resources.chat.completions.create", side_effect=ServiceUnavailableError
     ):
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
@@ -140,8 +158,8 @@ async def test_template_error(
         },
     )
     with patch(
-        "openai.Engine.list",
-    ), patch("openai.ChatCompletion.acreate"):
+        "openai.resources.models.list",
+    ), patch("openai.resources.chat.completions.create"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
@@ -169,15 +187,40 @@ async def test_conversation_agent(
     [
         (
             {"prompt": "Picture of a dog"},
-            {"prompt": "Picture of a dog", "size": "512x512"},
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "standard",
+                "style": "vivid",
+            },
         ),
         (
-            {"prompt": "Picture of a dog", "size": "256"},
-            {"prompt": "Picture of a dog", "size": "256x256"},
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+            },
         ),
         (
-            {"prompt": "Picture of a dog", "size": "1024"},
-            {"prompt": "Picture of a dog", "size": "1024x1024"},
+            {
+                "prompt": "Picture of a dog",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+            },
         ),
     ],
 )
@@ -191,10 +234,22 @@ async def test_generate_image_service(
     """Test generate image service."""
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["api_key"] = mock_config_entry.data["api_key"]
+    expected_args["model"] = "dall-e-3"
+    expected_args["response_format"] = "url"
     expected_args["n"] = 1
 
     with patch(
-        "openai.Image.acreate", return_value={"data": [{"url": "A"}]}
+        "openai.resources.images.generate",
+        return_value=ImagesResponse(
+            created=1700000000,
+            data=[
+                Image(
+                    b64_json=None,
+                    revised_prompt="A clear and detailed picture of an ordinary canine",
+                    url="A",
+                )
+            ],
+        ),
     ) as mock_create:
         response = await hass.services.async_call(
             "openai_conversation",
@@ -204,7 +259,7 @@ async def test_generate_image_service(
             return_response=True,
         )
 
-    assert response == {"url": "A"}
+    assert response == {"url": "A", "revised_prompt": "A clear and detailed picture of an ordinary canine"}
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][2] == expected_args
 
@@ -216,7 +271,8 @@ async def test_generate_image_service_error(
 ) -> None:
     """Test generate image service handles errors."""
     with patch(
-        "openai.Image.acreate", side_effect=error.ServiceUnavailableError("Reason")
+        "openai.resources.images.generate",
+        side_effect=ServiceUnavailableError("Reason"),
     ), pytest.raises(HomeAssistantError, match="Error generating image: Reason"):
         await hass.services.async_call(
             "openai_conversation",

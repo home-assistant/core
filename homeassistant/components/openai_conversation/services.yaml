@@ -12,11 +12,29 @@ generate_image:
           multiline: true
     size:
       required: true
-      example: "512"
-      default: "512"
+      example: "1024x1024"
+      default: "1024x1024"
       selector:
         select:
           options:
-            - "256"
-            - "512"
-            - "1024"
+            - "1024x1024"
+            - "1024x1792"
+            - "1792x1024"
+    quality:
+      required: true
+      example: "standard"
+      default: "standard"
+      selector:
+        select:
+          options:
+            - "standard"
+            - "hd"
+    style:
+      required: true
+      example: "vivid"
+      default: "vivid"
+      selector:
+        select:
+          options:
+            - "vivid"
+            - "natural"

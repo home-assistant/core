@@ -1,7 +1,7 @@
 """Test the OpenAI Conversation config flow."""
 from unittest.mock import patch
 
-from openai.error import APIConnectionError, AuthenticationError, InvalidRequestError
+from openai import APIConnectionError, AuthenticationError, InvalidRequestError
 import pytest
 
 from homeassistant import config_entries
@@ -32,7 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.Engine.list",
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.list",
     ), patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
         return_value=True,
@@ -88,7 +88,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     )
 
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.Engine.list",
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.list",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

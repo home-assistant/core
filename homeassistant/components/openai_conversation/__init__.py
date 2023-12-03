@@ -6,7 +6,6 @@ import logging
 from typing import Literal
 
 import openai
-from openai import error
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -52,17 +51,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
+        client = hass.data[DOMAIN][call.data["config_entry"]]
         try:
-            response = await openai.Image.acreate(
-                api_key=hass.data[DOMAIN][call.data["config_entry"]],
+            response = await client.images.generate(
+                model="dall-e-3",
                 prompt=call.data["prompt"],
+                size=call.data["size"],
+                quality=call.data["quality"],
+                style=call.data["style"],
+                response_format="url",
                 n=1,
-                size=f'{call.data["size"]}x{call.data["size"]}',
             )
-        except error.OpenAIError as err:
+        except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
-        return response["data"][0]
+        return response.data[0].model_dump(exclude="b64_json")
 
     hass.services.async_register(
         DOMAIN,
@@ -76,7 +79,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required("prompt"): cv.string,
-                vol.Optional("size", default="512"): vol.In(("256", "512", "1024")),
+                vol.Optional("size", default="1024x1024"): vol.In(("1024x1024", "1024x1792", "1792x1024")),
+                vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
+                vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -86,21 +91,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
+    client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
     try:
         await hass.async_add_executor_job(
-            partial(
-                openai.Engine.list,
-                api_key=entry.data[CONF_API_KEY],
-                request_timeout=10,
-            )
+            client.with_options(timeout=10.0).models.list
         )
-    except error.AuthenticationError as err:
+    except openai.AuthenticationError as err:
         _LOGGER.error("Invalid API key: %s", err)
         return False
-    except error.OpenAIError as err:
+    except openai.OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data[CONF_API_KEY]
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
     conversation.async_set_agent(hass, entry, OpenAIAgent(hass, entry))
     return True
@@ -160,9 +162,10 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         _LOGGER.debug("Prompt for %s: %s", model, messages)
 
+        client = self.hass.data[DOMAIN][self.entry.entry_id]
+
         try:
-            result = await openai.ChatCompletion.acreate(
-                api_key=self.entry.data[CONF_API_KEY],
+            result = await client.chat.completions.create(
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens,
@@ -170,7 +173,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 temperature=temperature,
                 user=conversation_id,
             )
-        except error.OpenAIError as err:
+        except openai.OpenAIError as err:
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
@@ -181,7 +184,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             )
 
         _LOGGER.debug("Response %s", result)
-        response = result["choices"][0]["message"]
+        response = result.choices[0].message.model_dump(include=["role", "content"])
         messages.append(response)
         self.history[conversation_id] = messages
 
