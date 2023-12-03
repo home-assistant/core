@@ -880,7 +880,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
                     {
                         "platform": "history_stats",
                         "entity_id": "binary_sensor.state",
-                        "name": "sensor5",
+                        "name": "sensor6",
                         "state": "off",
                         "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
                         "duration": {"hours": 2},
