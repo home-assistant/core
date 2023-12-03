@@ -438,6 +438,9 @@ axis==48
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
 
+# homeassistant.components.holiday
+babel==2.13.1
+
 # homeassistant.components.homekit
 base36==0.1.1
 
@@ -476,7 +479,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.16.0
+bluetooth-data-tools==1.17.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -803,8 +806,9 @@ hlk-sw16==0.0.9
 # homeassistant.components.pi_hole
 hole==0.8.0
 
+# homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.36
+holidays==0.37
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231130.0
@@ -2111,7 +2115,7 @@ yt-dlp==2023.11.16
 zamg==0.3.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.127.0
+zeroconf==0.128.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

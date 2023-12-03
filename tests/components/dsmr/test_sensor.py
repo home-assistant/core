@@ -51,7 +51,6 @@ async def test_default_setup(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -188,7 +187,6 @@ async def test_setup_only_energy(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
         "serial_id": "1234",
     }
     entry_options = {
@@ -243,7 +241,6 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "4",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -331,7 +328,6 @@ async def test_v5_meter(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -406,7 +402,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5L",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -509,7 +504,6 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": None,
     }
@@ -710,7 +704,6 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": None,
     }
@@ -872,7 +865,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": None,
     }
@@ -983,7 +975,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1037,7 +1028,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5S",
-        "precision": 4,
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -1111,7 +1101,6 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "Q3D",
-        "precision": 4,
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -1151,7 +1140,7 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     await hass.async_block_till_done()
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
-    assert active_tariff.state == "54184.6316"
+    assert active_tariff.state == "54184.632"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
@@ -1164,7 +1153,7 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     )
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
-    assert active_tariff.state == "19981.1069"
+    assert active_tariff.state == "19981.107"
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -1184,7 +1173,6 @@ async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "1234",
         "dsmr_version": "2.2",
         "protocol": "dsmr_protocol",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1211,7 +1199,6 @@ async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -
         "port": "1234",
         "dsmr_version": "2.2",
         "protocol": "rfxtrx_dsmr_protocol",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1239,7 +1226,6 @@ async def test_connection_errors_retry(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1282,7 +1268,6 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -1364,7 +1349,6 @@ async def test_gas_meter_providing_energy_reading(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
-        "precision": 4,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
