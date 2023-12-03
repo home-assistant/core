@@ -317,6 +317,7 @@ homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
 homeassistant.components.stream.*
+homeassistant.components.streamlabswater.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
