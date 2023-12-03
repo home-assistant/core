@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime
 import logging
 import platform
 from typing import Any
@@ -19,7 +18,7 @@ from bleak_retry_connector import restore_discoveries
 from bluetooth_adapters import DEFAULT_ADDRESS
 from dbus_fast import InvalidMessageError
 
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.package import is_docker_env
 
@@ -133,12 +132,13 @@ class HaScanner(BaseHaScanner):
         """Init bluetooth discovery."""
         self.mac_address = address
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
-        super().__init__(hass, source, adapter)
+        super().__init__(source, adapter)
         self.connectable = True
         self.mode = mode
         self._start_stop_lock = asyncio.Lock()
         self._new_info_callback = new_info_callback
         self.scanning = False
+        self.hass = hass
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -153,11 +153,13 @@ class HaScanner(BaseHaScanner):
         return self.scanner.discovered_devices_and_advertisement_data
 
     @hass_callback
-    def async_setup(self) -> None:
+    def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
+        super().async_setup()
         self.scanner = create_bleak_scanner(
             self._async_detection_callback, self.mode, self.adapter
         )
+        return self._unsetup
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
@@ -314,7 +316,7 @@ class HaScanner(BaseHaScanner):
         await restore_discoveries(self.scanner, self.adapter)
 
     @hass_callback
-    def _async_scanner_watchdog(self, now: datetime) -> None:
+    def _async_scanner_watchdog(self) -> None:
         """Check if the scanner is running."""
         if not self._async_watchdog_triggered():
             return

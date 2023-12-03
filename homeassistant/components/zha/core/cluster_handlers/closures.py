@@ -1,6 +1,9 @@
 """Closures cluster handlers module for Zigbee Home Automation."""
-from typing import Any
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
+import zigpy.zcl
 from zigpy.zcl.clusters import closures
 
 from homeassistant.core import callback
@@ -8,6 +11,9 @@ from homeassistant.core import callback
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+
+if TYPE_CHECKING:
+    from ..endpoint import Endpoint
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(closures.DoorLock.cluster_id)
@@ -124,12 +130,28 @@ class WindowCoveringClient(ClientClusterHandler):
 class WindowCovering(ClusterHandler):
     """Window cluster handler."""
 
-    _value_attribute = 8
+    _value_attribute_lift = (
+        closures.WindowCovering.AttributeDefs.current_position_lift_percentage.id
+    )
+    _value_attribute_tilt = (
+        closures.WindowCovering.AttributeDefs.current_position_tilt_percentage.id
+    )
     REPORT_CONFIG = (
         AttrReportConfig(
             attr="current_position_lift_percentage", config=REPORT_CONFIG_IMMEDIATE
         ),
+        AttrReportConfig(
+            attr="current_position_tilt_percentage", config=REPORT_CONFIG_IMMEDIATE
+        ),
     )
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize WindowCovering cluster handler."""
+        super().__init__(cluster, endpoint)
+
+        if self.cluster.endpoint.model == "lumi.curtain.agl001":
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["window_covering_mode"] = True
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -140,8 +162,19 @@ class WindowCovering(ClusterHandler):
         if result is not None:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                8,
+                self._value_attribute_lift,
                 "current_position_lift_percentage",
+                result,
+            )
+        result = await self.get_attribute_value(
+            "current_position_tilt_percentage", from_cache=False
+        )
+        self.debug("read current tilt position: %s", result)
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                self._value_attribute_tilt,
+                "current_position_tilt_percentage",
                 result,
             )
 
@@ -152,7 +185,7 @@ class WindowCovering(ClusterHandler):
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        if attrid == self._value_attribute:
+        if attrid in (self._value_attribute_lift, self._value_attribute_tilt):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )

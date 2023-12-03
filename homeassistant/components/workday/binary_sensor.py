@@ -2,19 +2,25 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import Final
 
 from holidays import (
     HolidayBase,
     __version__ as python_holidays_version,
     country_holidays,
 )
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_LANGUAGE, CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -29,6 +35,9 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+SERVICE_CHECK_DATE: Final = "check_date"
+CHECK_DATE: Final = "check_date"
 
 
 def validate_dates(holiday_list: list[str]) -> list[str]:
@@ -63,17 +72,29 @@ async def async_setup_entry(
     province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
+    language: str | None = entry.options.get(CONF_LANGUAGE)
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
     if country:
-        cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
         obj_holidays: HolidayBase = country_holidays(
             country,
             subdiv=province,
             years=year,
-            language=cls.default_language,
+            language=language,
         )
+        if (
+            supported_languages := obj_holidays.supported_languages
+        ) and language == "en":
+            for lang in supported_languages:
+                if lang.startswith("en"):
+                    obj_holidays = country_holidays(
+                        country,
+                        subdiv=province,
+                        years=year,
+                        language=lang,
+                    )
+                LOGGER.debug("Changing language from %s to %s", language, lang)
     else:
         obj_holidays = HolidayBase()
 
@@ -109,6 +130,15 @@ async def async_setup_entry(
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
         LOGGER.debug("%s %s", _holiday_string, name)
 
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_CHECK_DATE,
+        {vol.Required(CHECK_DATE): cv.date},
+        "check_date",
+        None,
+        SupportsResponse.ONLY,
+    )
+
     async_add_entities(
         [
             IsWorkdaySensor(
@@ -129,6 +159,7 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,
@@ -191,3 +222,8 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         if self.is_exclude(day_of_week, adjusted_date):
             self._attr_is_on = False
+
+    async def check_date(self, check_date: date) -> ServiceResponse:
+        """Check if date is workday or not."""
+        holiday_date = check_date in self._obj_holidays
+        return {"workday": not holiday_date}

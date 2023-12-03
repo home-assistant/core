@@ -1,11 +1,10 @@
 """Component providing support for Reolink siren entities."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host
+from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -16,18 +15,19 @@ from homeassistant.components.siren import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
 @dataclass
-class ReolinkSirenEntityDescription(SirenEntityDescription):
+class ReolinkSirenEntityDescription(
+    SirenEntityDescription, ReolinkChannelEntityDescription
+):
     """A class that describes siren entities."""
-
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 SIREN_ENTITIES = (
@@ -74,20 +74,29 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         entity_description: ReolinkSirenEntityDescription,
     ) -> None:
         """Initialize Reolink siren entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
-            await self._host.api.set_volume(self._channel, int(volume * 100))
+            try:
+                await self._host.api.set_volume(self._channel, int(volume * 100))
+            except InvalidParameterError as err:
+                raise ServiceValidationError(err) from err
+            except ReolinkError as err:
+                raise HomeAssistantError(err) from err
         duration = kwargs.get(ATTR_DURATION)
-        await self._host.api.set_siren(self._channel, True, duration)
+        try:
+            await self._host.api.set_siren(self._channel, True, duration)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
-        await self._host.api.set_siren(self._channel, False, None)
+        try:
+            await self._host.api.set_siren(self._channel, False, None)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err

@@ -1,10 +1,12 @@
 """Tests the Home Assistant workday binary sensor."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
+from homeassistant.components.workday.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC
@@ -24,6 +26,7 @@ from . import (
     TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN,
     TEST_CONFIG_NO_COUNTRY,
     TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
+    TEST_CONFIG_NO_LANGUAGE_CONFIGURED,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
     TEST_CONFIG_REMOVE_HOLIDAY,
@@ -32,6 +35,8 @@ from . import (
     TEST_CONFIG_WITH_PROVINCE,
     TEST_CONFIG_WITH_STATE,
     TEST_CONFIG_YESTERDAY,
+    TEST_LANGUAGE_CHANGE,
+    TEST_LANGUAGE_NO_CHANGE,
     init_integration,
 )
 
@@ -49,6 +54,7 @@ from . import (
         (TEST_CONFIG_TOMORROW, "off"),
         (TEST_CONFIG_DAY_AFTER_TOMORROW, "off"),
         (TEST_CONFIG_YESTERDAY, "on"),
+        (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off"),
     ],
 )
 async def test_setup(
@@ -273,3 +279,57 @@ async def test_setup_date_range(
 
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state.state == "on"
+
+
+async def test_check_date_service(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test check date service with response data."""
+
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
+
+    hass.states.get("binary_sensor.workday_sensor")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 25),  # Christmas Day
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 23),  # Normal Friday
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": True}}
+
+
+async def test_language_difference_english_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling difference in English language naming."""
+    await init_integration(hass, TEST_LANGUAGE_CHANGE)
+    assert "Changing language from en to en_US" in caplog.text
+
+
+async def test_language_difference_no_change_other_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test skipping if no difference in language naming."""
+    await init_integration(hass, TEST_LANGUAGE_NO_CHANGE)
+    assert "Changing language from en to en_US" not in caplog.text

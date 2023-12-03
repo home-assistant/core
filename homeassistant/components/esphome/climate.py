@@ -164,11 +164,15 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         )
         self._attr_min_temp = static_info.visual_min_temperature
         self._attr_max_temp = static_info.visual_max_temperature
+        self._attr_min_humidity = round(static_info.visual_min_humidity)
+        self._attr_max_humidity = round(static_info.visual_max_humidity)
         features = ClimateEntityFeature(0)
         if self._static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if self._static_info.supports_target_humidity:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
         if self.fan_modes:
@@ -236,6 +240,14 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     @property
     @esphome_state_property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        if not self._static_info.supports_current_humidity:
+            return None
+        return round(self._state.current_humidity)
+
+    @property
+    @esphome_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
@@ -252,6 +264,12 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
 
+    @property
+    @esphome_state_property
+    def target_humidity(self) -> int:
+        """Return the humidity we try to reach."""
+        return round(self._state.target_humidity)
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
         data: dict[str, Any] = {"key": self._key}
@@ -266,6 +284,10 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
         await self._client.climate_command(**data)
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        await self._client.climate_command(key=self._key, target_humidity=humidity)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
