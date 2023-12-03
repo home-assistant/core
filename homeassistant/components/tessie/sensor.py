@@ -23,15 +23,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TessieGroup
+from .const import DOMAIN, TessieCategory
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 PARALLEL_UPDATES = 0
 
-
-DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
-    TessieGroup.CHARGE_STATE: (
+DESCRIPTIONS: dict[TessieCategory, tuple[SensorEntityDescription, ...]] = {
+    TessieCategory.CHARGE_STATE: (
         SensorEntityDescription(
             key="usable_battery_level",
             translation_key="battery_level",
@@ -84,7 +83,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             suggested_display_precision=1,
         ),
     ),
-    TessieGroup.DRIVE_STATE: (
+    TessieCategory.DRIVE_STATE: (
         SensorEntityDescription(
             key="speed",
             translation_key="speed",
@@ -107,7 +106,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENUM,
         ),
     ),
-    TessieGroup.VEHICLE_STATE: (
+    TessieCategory.VEHICLE_STATE: (
         SensorEntityDescription(
             key="odometer",
             translation_key="odometer",
@@ -153,7 +152,7 @@ DESCRIPTIONS: dict[TessieGroup, tuple[SensorEntityDescription, ...]] = {
             suggested_display_precision=1,
         ),
     ),
-    TessieGroup.CLIMATE_STATE: (
+    TessieCategory.CLIMATE_STATE: (
         SensorEntityDescription(
             key="inside_temp",
             translation_key="inside_temp",

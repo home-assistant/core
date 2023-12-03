@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODELS, TessieGroup
+from .const import DOMAIN, MODELS, TessieCategory, TessieKey
 from .coordinator import TessieDataUpdateCoordinator
 
 
@@ -29,13 +29,15 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         self.key = key
         self._attr_unique_id = f"{vin}:{category}:{key}"
         car_data = coordinator.data[vin]
-        car_type = car_data[TessieGroup.VEHICLE_CONFIG]["car_type"]
+        car_type = car_data[TessieCategory.VEHICLE_CONFIG]["car_type"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vin)},
-            manufacturer="Tessie",
+            manufacturer="Tesla",
             configuration_url="https://my.tessie.com/",
-            name=car_data[TessieGroup.DISPLAY_NAME],
+            name=car_data[TessieKey.DISPLAY_NAME],
             model=MODELS.get(car_type, car_type),
+            sw_version=car_data[TessieCategory.VEHICLE_STATE]["car_version"],
+            hw_version=car_data[TessieCategory.VEHICLE_CONFIG]["driver_assist"],
         )
 
     def get(self) -> Any:

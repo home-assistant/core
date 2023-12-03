@@ -13,8 +13,17 @@ MODELS = {
 }
 
 
-class TessieGroup(StrEnum):
-    """API response keys for Tessie."""
+class TessieKey(StrEnum):
+    """API response keys in the root."""
+
+    VIN = "vin"
+    STATE = "state"
+    DISPLAY_NAME = "display_name"
+    API_VERSION = "api_version"
+
+
+class TessieCategory(StrEnum):
+    """API response groups ."""
 
     CHARGE_STATE = "charge_state"
     CLIMATE_STATE = "climate_state"
@@ -22,8 +31,12 @@ class TessieGroup(StrEnum):
     GUI_SETTINGS = "gui_settings"
     VEHICLE_CONFIG = "vehicle_config"
     VEHICLE_STATE = "vehicle_state"
-    VEHICLE_STATE_MEDIA_INFO = "media_info"
-    VEHICLE_STATE_MEDIA_STATE = "media_state"
-    VEHICLE_STATE_SOFTWARE_UPDATE = "software_update"
-    VEHICLE_STATE_SPEED_LIMIT_MODE = "speed_limit_mode"
-    DISPLAY_NAME = "display_name"
+
+
+class TessieVehicleStateCategory(StrEnum):
+    """API response groups under vehicle_state."""
+
+    MEDIA_INFO = "media_info"
+    MEDIA_STATE = "media_state"
+    SOFTWARE_UPDATE = "software_update"
+    SPEED_LIMIT_MODE = "speed_limit_mode"
