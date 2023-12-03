@@ -530,6 +530,55 @@ TEST_DATA = [
             "next_state": "1.3",
         },
     ),
+    (  # Particulate matter -> pm2_5
+        {
+            "capabilities": {
+                "measured_value": {
+                    "max": 999,
+                    "min": 0,
+                    "quantity": "density",
+                    "substance": "PM2.5",
+                    "unit": "ug/m^3",
+                }
+            },
+            "config": {"on": True, "reachable": True},
+            "ep": 1,
+            "etag": "2a67a4b5cbcc20532c0ee75e2abac0c3",
+            "lastannounced": None,
+            "lastseen": "2023-10-29T12:59Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier table",
+            "name": "STARKVIND AirPurifier",
+            "productid": "E2006",
+            "state": {
+                "airquality": "excellent",
+                "lastupdated": "2023-10-29T12:59:27.976",
+                "measured_value": 1,
+                "pm2_5": 1,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAParticulateMatter",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-042a",
+        },
+        {
+            "entity_count": 1,
+            "device_count": 3,
+            "entity_id": "sensor.starkvind_airpurifier_pm25",
+            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-042a-particulate_matter_pm2_5",
+            "state": "1",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.PM25,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "STARKVIND AirPurifier PM25",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"measured_value": 2}},
+            "next_state": "2",
+        },
+    ),
     (  # Power sensor
         {
             "config": {

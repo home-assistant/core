@@ -25,16 +25,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
 @dataclass(kw_only=True)
-class ReolinkBinarySensorEntityDescription(BinarySensorEntityDescription):
+class ReolinkBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes binary sensor entities."""
 
     icon_off: str = "mdi:motion-sensor-off"
     icon: str = "mdi:motion-sensor"
-    supported: Callable[[Host, int], bool] = lambda host, ch: True
     value: Callable[[Host, int], bool]
 
 
@@ -71,7 +73,18 @@ BINARY_SENSORS = (
         icon="mdi:dog-side",
         icon_off="mdi:dog-side-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
-        supported=lambda api, ch: api.ai_supported(ch, PET_DETECTION_TYPE),
+        supported=lambda api, ch: (
+            api.ai_supported(ch, PET_DETECTION_TYPE)
+            and not api.supported(ch, "ai_animal")
+        ),
+    ),
+    ReolinkBinarySensorEntityDescription(
+        key=PET_DETECTION_TYPE,
+        translation_key="animal",
+        icon="mdi:paw",
+        icon_off="mdi:paw-off",
+        value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
+        supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",
@@ -117,8 +130,8 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         entity_description: ReolinkBinarySensorEntityDescription,
     ) -> None:
         """Initialize Reolink binary sensor."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
 
         if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
             if entity_description.translation_key is not None:
@@ -126,10 +139,6 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
             else:
                 key = entity_description.key
             self._attr_translation_key = f"{key}_lens_{self._channel}"
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
-        )
 
     @property
     def icon(self) -> str | None:

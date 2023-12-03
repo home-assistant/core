@@ -1,19 +1,19 @@
 """Base classes for HA Bluetooth scanners for bluetooth."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+import asyncio
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-import datetime
-from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, final
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
 from bluetooth_adapters import DiscoveredDeviceAdvertisementData, adapter_human_name
+from bluetooth_data_tools import monotonic_time_coarse
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -23,9 +23,6 @@ from homeassistant.core import (
     HomeAssistant,
     callback as hass_callback,
 )
-from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.dt as dt_util
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import models
 from .const import (
@@ -35,6 +32,7 @@ from .const import (
 )
 from .models import HaBluetoothConnector
 
+SCANNER_WATCHDOG_INTERVAL_SECONDS: Final = SCANNER_WATCHDOG_INTERVAL.total_seconds()
 MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,11 +46,10 @@ class BluetoothScannerDevice:
     advertisement: AdvertisementData
 
 
-class BaseHaScanner(ABC):
-    """Base class for Ha Scanners."""
+class BaseHaScanner:
+    """Base class for high availability BLE scanners."""
 
     __slots__ = (
-        "hass",
         "adapter",
         "connectable",
         "source",
@@ -63,17 +60,16 @@ class BaseHaScanner(ABC):
         "_last_detection",
         "_start_time",
         "_cancel_watchdog",
+        "_loop",
     )
 
     def __init__(
         self,
-        hass: HomeAssistant,
         source: str,
         adapter: str,
         connector: HaBluetoothConnector | None = None,
     ) -> None:
         """Initialize the scanner."""
-        self.hass = hass
         self.connectable = False
         self.source = source
         self.connector = connector
@@ -83,13 +79,20 @@ class BaseHaScanner(ABC):
         self.scanning = True
         self._last_detection = 0.0
         self._start_time = 0.0
-        self._cancel_watchdog: CALLBACK_TYPE | None = None
+        self._cancel_watchdog: asyncio.TimerHandle | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+
+    @hass_callback
+    def async_setup(self) -> CALLBACK_TYPE:
+        """Set up the scanner."""
+        self._loop = asyncio.get_running_loop()
+        return self._unsetup
 
     @hass_callback
     def _async_stop_scanner_watchdog(self) -> None:
         """Stop the scanner watchdog."""
         if self._cancel_watchdog:
-            self._cancel_watchdog()
+            self._cancel_watchdog.cancel()
             self._cancel_watchdog = None
 
     @hass_callback
@@ -97,12 +100,22 @@ class BaseHaScanner(ABC):
         """If something has restarted or updated, we need to restart the scanner."""
         self._start_time = self._last_detection = MONOTONIC_TIME()
         if not self._cancel_watchdog:
-            self._cancel_watchdog = async_track_time_interval(
-                self.hass,
-                self._async_scanner_watchdog,
-                SCANNER_WATCHDOG_INTERVAL,
-                name=f"{self.name} Bluetooth scanner watchdog",
-            )
+            self._schedule_watchdog()
+
+    def _schedule_watchdog(self) -> None:
+        """Schedule the watchdog."""
+        loop = self._loop
+        assert loop is not None
+        self._cancel_watchdog = loop.call_at(
+            loop.time() + SCANNER_WATCHDOG_INTERVAL_SECONDS,
+            self._async_call_scanner_watchdog,
+        )
+
+    @final
+    def _async_call_scanner_watchdog(self) -> None:
+        """Call the scanner watchdog and schedule the next one."""
+        self._async_scanner_watchdog()
+        self._schedule_watchdog()
 
     @hass_callback
     def _async_watchdog_triggered(self) -> bool:
@@ -116,7 +129,7 @@ class BaseHaScanner(ABC):
         return time_since_last_detection > SCANNER_WATCHDOG_TIMEOUT
 
     @hass_callback
-    def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
+    def _async_scanner_watchdog(self) -> None:
         """Check if the scanner is running.
 
         Override this method if you need to do something else when the watchdog
@@ -134,6 +147,10 @@ class BaseHaScanner(ABC):
             self.scanning = False
             return
         self.scanning = not self._connecting
+
+    @hass_callback
+    def _unsetup(self) -> None:
+        """Unset up the scanner."""
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
@@ -183,7 +200,7 @@ class BaseHaScanner(ABC):
 
 
 class BaseHaRemoteScanner(BaseHaScanner):
-    """Base class for a Home Assistant remote BLE scanner."""
+    """Base class for a high availability remote BLE scanner."""
 
     __slots__ = (
         "_new_info_callback",
@@ -191,12 +208,11 @@ class BaseHaRemoteScanner(BaseHaScanner):
         "_discovered_device_timestamps",
         "_details",
         "_expire_seconds",
-        "_storage",
+        "_cancel_track",
     )
 
     def __init__(
         self,
-        hass: HomeAssistant,
         scanner_id: str,
         name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
@@ -204,7 +220,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(hass, scanner_id, name, connector)
+        super().__init__(scanner_id, name, connector)
         self._new_info_callback = new_info_callback
         self._discovered_device_advertisement_datas: dict[
             str, tuple[BLEDevice, AdvertisementData]
@@ -215,55 +231,37 @@ class BaseHaRemoteScanner(BaseHaScanner):
         # Scanners only care about connectable devices. The manager
         # will handle taking care of availability for non-connectable devices
         self._expire_seconds = CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
-        assert models.MANAGER is not None
-        self._storage = models.MANAGER.storage
+        self._cancel_track: asyncio.TimerHandle | None = None
+
+    def _cancel_expire_devices(self) -> None:
+        """Cancel the expiration of old devices."""
+        if self._cancel_track:
+            self._cancel_track.cancel()
+            self._cancel_track = None
+
+    @hass_callback
+    def _unsetup(self) -> None:
+        """Unset up the scanner."""
+        self._async_stop_scanner_watchdog()
+        self._cancel_expire_devices()
 
     @hass_callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
-        if history := self._storage.async_get_advertisement_history(self.source):
-            self._discovered_device_advertisement_datas = (
-                history.discovered_device_advertisement_datas
-            )
-            self._discovered_device_timestamps = history.discovered_device_timestamps
-            # Expire anything that is too old
-            self._async_expire_devices(dt_util.utcnow())
-
-        cancel_track = async_track_time_interval(
-            self.hass,
-            self._async_expire_devices,
-            timedelta(seconds=30),
-            name=f"{self.name} Bluetooth scanner device expire",
-        )
-        cancel_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._async_save_history
-        )
+        super().async_setup()
+        self._schedule_expire_devices()
         self._async_setup_scanner_watchdog()
+        return self._unsetup
 
-        @hass_callback
-        def _cancel() -> None:
-            self._async_save_history()
-            self._async_stop_scanner_watchdog()
-            cancel_track()
-            cancel_stop()
-
-        return _cancel
-
-    @hass_callback
-    def _async_save_history(self, event: Event | None = None) -> None:
-        """Save the history."""
-        self._storage.async_set_advertisement_history(
-            self.source,
-            DiscoveredDeviceAdvertisementData(
-                self.connectable,
-                self._expire_seconds,
-                self._discovered_device_advertisement_datas,
-                self._discovered_device_timestamps,
-            ),
-        )
+    def _schedule_expire_devices(self) -> None:
+        """Schedule the expiration of old devices."""
+        loop = self._loop
+        assert loop is not None
+        self._cancel_expire_devices()
+        self._cancel_track = loop.call_at(loop.time() + 30, self._async_expire_devices)
 
     @hass_callback
-    def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
+    def _async_expire_devices(self) -> None:
         """Expire old devices."""
         now = MONOTONIC_TIME()
         expired = [
@@ -274,6 +272,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         for address in expired:
             del self._discovered_device_advertisement_datas[address]
             del self._discovered_device_timestamps[address]
+        self._schedule_expire_devices()
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -334,7 +333,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 local_name = prev_name
 
             if service_uuids and service_uuids != prev_service_uuids:
-                service_uuids = list(set(service_uuids + prev_service_uuids))
+                service_uuids = list({*service_uuids, *prev_service_uuids})
             elif not service_uuids:
                 service_uuids = prev_service_uuids
 
@@ -395,9 +394,6 @@ class BaseHaRemoteScanner(BaseHaScanner):
         """Return diagnostic information about the scanner."""
         now = MONOTONIC_TIME()
         return await super().async_diagnostics() | {
-            "storage": self._storage.async_get_advertisement_history_as_dict(
-                self.source
-            ),
             "connectable": self.connectable,
             "discovered_device_timestamps": self._discovered_device_timestamps,
             "time_since_last_device_detection": {
@@ -405,3 +401,79 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 for address, timestamp in self._discovered_device_timestamps.items()
             },
         }
+
+
+class HomeAssistantRemoteScanner(BaseHaRemoteScanner):
+    """Home Assistant remote BLE scanner.
+
+    This is the only object that should know about
+    the hass object.
+    """
+
+    __slots__ = (
+        "hass",
+        "_storage",
+        "_cancel_stop",
+    )
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        scanner_id: str,
+        name: str,
+        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
+        connector: HaBluetoothConnector | None,
+        connectable: bool,
+    ) -> None:
+        """Initialize the scanner."""
+        self.hass = hass
+        assert models.MANAGER is not None
+        self._storage = models.MANAGER.storage
+        self._cancel_stop: CALLBACK_TYPE | None = None
+        super().__init__(scanner_id, name, new_info_callback, connector, connectable)
+
+    @hass_callback
+    def async_setup(self) -> CALLBACK_TYPE:
+        """Set up the scanner."""
+        super().async_setup()
+        if history := self._storage.async_get_advertisement_history(self.source):
+            self._discovered_device_advertisement_datas = (
+                history.discovered_device_advertisement_datas
+            )
+            self._discovered_device_timestamps = history.discovered_device_timestamps
+            # Expire anything that is too old
+            self._async_expire_devices()
+
+        self._cancel_stop = self.hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, self._async_save_history
+        )
+        return self._unsetup
+
+    @hass_callback
+    def _unsetup(self) -> None:
+        super()._unsetup()
+        self._async_save_history()
+        if self._cancel_stop:
+            self._cancel_stop()
+            self._cancel_stop = None
+
+    @hass_callback
+    def _async_save_history(self, event: Event | None = None) -> None:
+        """Save the history."""
+        self._storage.async_set_advertisement_history(
+            self.source,
+            DiscoveredDeviceAdvertisementData(
+                self.connectable,
+                self._expire_seconds,
+                self._discovered_device_advertisement_datas,
+                self._discovered_device_timestamps,
+            ),
+        )
+
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the scanner."""
+        diag = await super().async_diagnostics()
+        diag["storage"] = self._storage.async_get_advertisement_history_as_dict(
+            self.source
+        )
+        return diag
