@@ -91,7 +91,6 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     SelectSelectorConfig(
                         options=SUPPORTED_COUNTRIES[self.data[CONF_COUNTRY]],
                         mode=SelectSelectorMode.DROPDOWN,
-                        translation_key=CONF_PROVINCE,
                     )
                 ),
             }
