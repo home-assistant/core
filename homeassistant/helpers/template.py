@@ -1641,6 +1641,10 @@ def bitwise_or(first_value, second_value):
     """Perform a bitwise or operation."""
     return first_value | second_value
 
+def bitwise_xor(first_value, second_value):
+    """Perform a bitwise or operation."""
+    return first_value ^ second_value
+
 
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
     """Pack an object into a bytes object."""
