@@ -264,9 +264,8 @@ def _attach_file(hass, atch_name, content_id=""):
             raise ServiceValidationError(
                 f"Cannot send email with attachment '{file_name} "
                 f"from directory '{file_path} which is not secure to load data from. "
-                "Only folders added to `allowlist_external_dirs` are accessible. See "
-                "https://www.home-assistant.io/docs/configuration/basic/ "
-                "for more information.",
+                "Only folders added to `allowlist_external_dirs` are accessible. "
+                f"See {url} for more information.",
                 translation_domain=DOMAIN,
                 translation_key="remote_path_not_allowed",
                 translation_placeholders={
