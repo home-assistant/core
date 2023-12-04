@@ -11,7 +11,27 @@ import re
 from typing import Any
 
 import evohomeasync
+from evohomeasync.schema import SZ_ID, SZ_SESSION_ID, SZ_TEMP
 import evohomeasync2
+from evohomeasync2.schema.const import (
+    SZ_ALLOWED_SYSTEM_MODES,
+    SZ_AUTO_WITH_RESET,
+    SZ_CAN_BE_TEMPORARY,
+    SZ_DAILY_SCHEDULES,
+    SZ_DHW_STATE,
+    SZ_HEAT_SETPOINT,
+    SZ_LOCATION_INFO,
+    SZ_SETPOINT_STATUS,
+    SZ_STATE_STATUS,
+    SZ_SWITCHPOINTS,
+    SZ_SYSTEM_MODE,
+    SZ_SYSTEM_MODE_STATUS,
+    SZ_TIME_OF_DAY,
+    SZ_TIME_UNTIL,
+    SZ_TIME_ZONE,
+    SZ_TIMING_MODE,
+    SZ_UNTIL,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -243,17 +263,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         _config: dict[str, Any] = {
-            "locationInfo": {"timeZone": None},
+            SZ_LOCATION_INFO: {SZ_TIME_ZONE: None},
             GWS: [{TCS: None}],
         }
-        _config["locationInfo"]["timeZone"] = loc_config["locationInfo"]["timeZone"]
+        _config[SZ_LOCATION_INFO][SZ_TIME_ZONE] = loc_config[SZ_LOCATION_INFO][
+            SZ_TIME_ZONE
+        ]
         _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
         _LOGGER.debug("Config = %s", _config)
 
     client_v1 = evohomeasync.EvohomeClient(
         client_v2.username,
         client_v2.password,
-        session_id=user_data.get("sessionId") if user_data else None,  # STORAGE_VER 1
+        session_id=user_data.get(SZ_SESSION_ID) if user_data else None,  # STORAGE_VER 1
         session=async_get_clientsession(hass),
     )
 
@@ -333,25 +355,25 @@ def setup_service_functions(hass: HomeAssistant, broker):
     hass.services.async_register(DOMAIN, SVC_REFRESH_SYSTEM, force_refresh)
 
     # Enumerate which operating modes are supported by this system
-    modes = broker.config["allowedSystemModes"]
+    modes = broker.config[SZ_ALLOWED_SYSTEM_MODES]
 
-    # Not all systems support "AutoWithReset": register this handler only if required
-    if [m["systemMode"] for m in modes if m["systemMode"] == "AutoWithReset"]:
+    # Not all systems support SZ_AUTO_WITH_RESET: register this handler only if required
+    if [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_SYSTEM_MODE] == SZ_AUTO_WITH_RESET]:
         hass.services.async_register(DOMAIN, SVC_RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
-    modes = [m for m in modes if m["systemMode"] != "AutoWithReset"]
+    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != SZ_AUTO_WITH_RESET]
 
     # Permanent-only modes will use this schema
-    perm_modes = [m["systemMode"] for m in modes if not m["canBeTemporary"]]
+    perm_modes = [m[SZ_SYSTEM_MODE] for m in modes if not m[SZ_CAN_BE_TEMPORARY]]
     if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
         schema = vol.Schema({vol.Required(ATTR_SYSTEM_MODE): vol.In(perm_modes)})
         system_mode_schemas.append(schema)
 
-    modes = [m for m in modes if m["canBeTemporary"]]
+    modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]
 
     # These modes are set for a number of hours (or indefinitely): use this schema
-    temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Duration"]
+    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == "Duration"]
     if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
         schema = vol.Schema(
             {
@@ -365,7 +387,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
         system_mode_schemas.append(schema)
 
     # These modes are set for a number of days (or indefinitely): use this schema
-    temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Period"]
+    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == "Period"]
     if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
         schema = vol.Schema(
             {
@@ -509,7 +531,7 @@ class EvoBroker:
                 )
                 self.client_v1 = None
             else:
-                self.temps = {str(i["id"]): i["temp"] for i in temps}
+                self.temps = {str(i[SZ_ID]): i[SZ_TEMP] for i in temps}
 
         finally:
             if self.client_v1 and session_id != self.client_v1.broker.session_id:
@@ -591,12 +613,12 @@ class EvoDevice(Entity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the evohome-specific state attributes."""
         status = self._device_state_attrs
-        if "systemModeStatus" in status:
-            convert_until(status["systemModeStatus"], "timeUntil")
-        if "setpointStatus" in status:
-            convert_until(status["setpointStatus"], "until")
-        if "stateStatus" in status:
-            convert_until(status["stateStatus"], "until")
+        if SZ_SYSTEM_MODE_STATUS in status:
+            convert_until(status[SZ_SYSTEM_MODE_STATUS], SZ_TIME_UNTIL)
+        if SZ_SETPOINT_STATUS in status:
+            convert_until(status[SZ_SETPOINT_STATUS], SZ_UNTIL)
+        if SZ_STATE_STATUS in status:
+            convert_until(status[SZ_STATE_STATUS], SZ_UNTIL)
 
         return {"status": convert_dict(status)}
 
@@ -636,7 +658,7 @@ class EvoChild(EvoDevice):
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
-        if not self._schedule or not self._schedule.get("DailySchedules"):
+        if not self._schedule or not self._schedule.get(SZ_DAILY_SCHEDULES):
             return {}  # no scheduled setpoints when {'DailySchedules': []}
 
         day_time = dt_util.now()
@@ -645,25 +667,25 @@ class EvoChild(EvoDevice):
 
         try:
             # Iterate today's switchpoints until past the current time of day...
-            day = self._schedule["DailySchedules"][day_of_week]
+            day = self._schedule[SZ_DAILY_SCHEDULES][day_of_week]
             sp_idx = -1  # last switchpoint of the day before
-            for i, tmp in enumerate(day["Switchpoints"]):
-                if time_of_day > tmp["TimeOfDay"]:
+            for i, tmp in enumerate(day[SZ_SWITCHPOINTS]):
+                if time_of_day > tmp[SZ_TIME_OF_DAY]:
                     sp_idx = i  # current setpoint
                 else:
                     break
 
             # Did the current SP start yesterday? Does the next start SP tomorrow?
             this_sp_day = -1 if sp_idx == -1 else 0
-            next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
+            next_sp_day = 1 if sp_idx + 1 == len(day[SZ_SWITCHPOINTS]) else 0
 
             for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
             ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
-                day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
-                switchpoint = day["Switchpoints"][idx]
+                day = self._schedule[SZ_DAILY_SCHEDULES][(day_of_week + offset) % 7]
+                switchpoint = day[SZ_SWITCHPOINTS][idx]
 
                 switchpoint_time_of_day = dt_util.parse_datetime(
                     f"{sp_date}T{switchpoint['TimeOfDay']}"
@@ -675,9 +697,9 @@ class EvoChild(EvoDevice):
 
                 self._setpoints[f"{key}_sp_from"] = dt_aware.isoformat()
                 try:
-                    self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
+                    self._setpoints[f"{key}_sp_temp"] = switchpoint[SZ_HEAT_SETPOINT]
                 except KeyError:
-                    self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
+                    self._setpoints[f"{key}_sp_state"] = switchpoint[SZ_DHW_STATE]
 
         except IndexError:
             self._setpoints = {}
