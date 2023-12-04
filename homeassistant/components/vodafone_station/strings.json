@@ -15,7 +15,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "The hostname or IP address of your Vodafone Station."
         }
       }
     },
