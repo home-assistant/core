@@ -26,7 +26,7 @@
   },
   "entity": {
     "sensor": {
-      "battery_level": {
+      "usable_battery_level": {
         "name": "Battery Level"
       },
       "charge_energy_added": {
@@ -38,7 +38,7 @@
       "charger_voltage": {
         "name": "Charger Voltage"
       },
-      "charger_current": {
+      "charger_actual_current": {
         "name": "Charger Current"
       },
       "charge_rate": {
