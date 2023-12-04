@@ -1768,6 +1768,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "component_import_err",
                     "test_domain",
+                    None,
                     {"test_domain": []},
                     "https://example.com",
                 )
@@ -1783,6 +1784,7 @@ async def test_component_config_exceptions(
                     HomeAssistantError("bla"),
                     "config_validation_err",
                     "test_domain",
+                    None,
                     {"test_domain": []},
                     "https://example.com",
                 )
@@ -1802,6 +1804,7 @@ async def test_component_config_exceptions(
                     vol.Invalid("bla", ["path"]),
                     "config_validation_err",
                     "test_domain",
+                    None,
                     {"test_domain": []},
                     "https://example.com",
                 )
@@ -1821,6 +1824,7 @@ async def test_component_config_exceptions(
                     vol.Invalid("bla", ["path"]),
                     "platform_config_validation_err",
                     "test_domain",
+                    None,
                     {"test_domain": []},
                     "https://alt.example.com",
                 )
@@ -1840,6 +1844,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "platform_component_load_err",
                     "test_domain",
+                    None,
                     {"test_domain": []},
                     "https://example.com",
                 )

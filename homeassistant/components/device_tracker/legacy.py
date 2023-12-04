@@ -1013,7 +1013,7 @@ async def async_load_config(
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
-            async_log_schema_error(exp, dev_id, devices, hass)
+            async_log_schema_error(exp, dev_id, None, devices, hass)
             async_notify_setup_error(hass, DOMAIN)
         else:
             result.append(Device(hass, **device))

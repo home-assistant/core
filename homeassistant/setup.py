@@ -263,7 +263,9 @@ async def _async_setup_component(
         if platform_exception.translation_key not in NOTIFY_FOR_TRANSLATION_KEYS:
             continue
         async_notify_setup_error(
-            hass, platform_exception.platform_name, platform_exception.integration_link
+            hass,
+            platform_exception.integration_domain,
+            platform_exception.integration_link,
         )
     if processed_config is None:
         log_error("Invalid config.")

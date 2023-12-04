@@ -83,7 +83,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                     hass, cfg[CONF_TRIGGER]
                 )
         except vol.Invalid as err:
-            async_log_schema_error(err, DOMAIN, cfg, hass)
+            async_log_schema_error(err, DOMAIN, None, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue
 
