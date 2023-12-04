@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -18,9 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -50,12 +51,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # If your PyPI package is not built with async, pass your methods
     # to the executor:
     # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
+    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    hub = PlaceholderHub(data[CONF_HOST])
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
         raise InvalidAuth
 
     # If you cannot connect:

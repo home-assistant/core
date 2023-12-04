@@ -12,9 +12,9 @@ import pytest
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
     async_get_advertisement_callback,
 )
 from homeassistant.components.bluetooth.usage import (
@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
-class FakeScanner(BaseHaRemoteScanner):
+class FakeScanner(HomeAssistantRemoteScanner):
     """Fake scanner."""
 
     def __init__(

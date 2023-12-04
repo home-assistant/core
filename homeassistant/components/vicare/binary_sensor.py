@@ -1,6 +1,7 @@
 """Viessmann ViCare sensor device."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -39,6 +40,8 @@ class ViCareBinarySensorEntityDescription(
     BinarySensorEntityDescription, ViCareRequiredKeysMixin
 ):
     """Describes ViCare binary sensor entity."""
+
+    value_getter: Callable[[PyViCareDevice], bool]
 
 
 CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (

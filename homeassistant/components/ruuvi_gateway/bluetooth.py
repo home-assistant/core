@@ -10,7 +10,7 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
+    HomeAssistantRemoteScanner,
     async_get_advertisement_callback,
     async_register_scanner,
 )
@@ -22,7 +22,7 @@ from .coordinator import RuuviGatewayUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class RuuviGatewayScanner(BaseHaRemoteScanner):
+class RuuviGatewayScanner(HomeAssistantRemoteScanner):
     """Scanner for Ruuvi Gateway."""
 
     def __init__(

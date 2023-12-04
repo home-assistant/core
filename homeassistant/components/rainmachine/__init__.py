@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial, wraps
@@ -326,10 +326,17 @@ async def async_setup_entry(  # noqa: C901
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    def call_with_controller(update_programs_and_zones: bool = True) -> Callable:
+    def call_with_controller(
+        update_programs_and_zones: bool = True,
+    ) -> Callable[
+        [Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]]],
+        Callable[[ServiceCall], Coroutine[Any, Any, None]],
+    ]:
         """Hydrate a service call with the appropriate controller."""
 
-        def decorator(func: Callable) -> Callable[..., Awaitable]:
+        def decorator(
+            func: Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]]
+        ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
             """Define the decorator."""
 
             @wraps(func)
