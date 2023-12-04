@@ -1,4 +1,5 @@
 """Test the Advantage Air Cover Platform."""
+import pytest
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -13,6 +14,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import add_mock_config, patch_get, patch_update
+
+
+@pytest.fixture
+def mock_get():
+    """Fixture to patch the Advantage Air async_get method."""
+    with patch_get() as mock_get:
+        yield mock_get
+
+
+@pytest.fixture
+def mock_update():
+    """Fixture to patch the Advantage Air async_get method."""
+    with patch_update() as mock_get:
+        yield mock_get
 
 
 async def test_ac_cover(
