@@ -1,5 +1,5 @@
 """Test Matter sensors."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
@@ -267,6 +267,11 @@ async def test_eve_energy_sensors(
 
     # test extra poll triggered when secondary value (switch state) changes
     set_node_attribute(eve_energy_plug_node, 1, 6, 0, True)
-    await trigger_subscription_callback(hass, matter_client)
-
-    # TODO: test here if the additional poll is actually performed
+    eve_energy_plug_node.update_attribute("1/319486977/319422474", 5.0)
+    with patch("homeassistant.components.matter.entity.EXTRA_POLL_DELAY", 0.0):
+        await trigger_subscription_callback(hass, matter_client)
+        await hass.async_block_till_done()
+        entity_id = "sensor.eve_energy_plug_power"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "5.0"
