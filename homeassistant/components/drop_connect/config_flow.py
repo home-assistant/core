@@ -15,6 +15,7 @@ from .const import (
     CONF_DEVICE_DESC,
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
+    CONF_DEVICE_OWNER_ID,
     CONF_DEVICE_TYPE,
     CONF_HUB_ID,
     DISCOVERY_TOPIC,
@@ -132,6 +133,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_NAME: self.__name,
                 CONF_DEVICE_TYPE: self.__device_type,
                 CONF_HUB_ID: self.__hub_id,
+                CONF_DEVICE_OWNER_ID: f"{self.__hub_id}_255",  # Hub has static device ID
             }
             return self.async_create_entry(title=self.__name, data=device_data)
 

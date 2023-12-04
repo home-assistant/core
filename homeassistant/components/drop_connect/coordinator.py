@@ -14,6 +14,7 @@ from .const import (
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
     CONF_DEVICE_ID,
+    CONF_DEVICE_OWNER_ID,
     CONF_DEVICE_TYPE,
     CONF_HUB_ID,
     DEV_HUB,
@@ -75,17 +76,11 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             manufacturer=self._manufacturer,
             model=self._model,
             name=self._device_name,
+            identifiers={(DOMAIN, self.config_entry.unique_id or "")},
         )
-        if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
+        if self.config_entry.data[CONF_DEVICE_TYPE] != DEV_HUB:
             device_info.update(
-                {"identifiers": {(DOMAIN, self.config_entry.data[CONF_HUB_ID])}}
-            )
-        else:
-            device_info.update(
-                {
-                    "identifiers": {(DOMAIN, self.config_entry.unique_id or "")},
-                    "via_device": (DOMAIN, self.config_entry.data[CONF_HUB_ID]),
-                }
+                {"via_device": (DOMAIN, self.config_entry.data[CONF_DEVICE_OWNER_ID])}
             )
         return device_info
 

@@ -8,6 +8,7 @@ CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_TYPE = "device_type"
 CONF_HUB_ID = "drop_hub_id"
 CONF_DEVICE_NAME = "name"
+CONF_DEVICE_OWNER_ID = "drop_device_owner_id"
 
 # Values for DROP device types
 DEV_FILTER = "filt"
