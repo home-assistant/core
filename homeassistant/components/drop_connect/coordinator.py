@@ -66,10 +66,6 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Invalid JSON (%s): %s", topic, payload)
 
     # Device properties
-    @property
-    def device_id(self) -> str:
-        """Return the HA unique ID as the DROP device id."""
-        return self.config_entry.unique_id or ""
 
     @property
     def device_name(self) -> str:
