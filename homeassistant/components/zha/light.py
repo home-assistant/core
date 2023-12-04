@@ -868,9 +868,7 @@ class Light(BaseLight, ZhaEntity):
         self.debug("polling current state")
 
         if self._on_off_cluster_handler:
-            state = await self._on_off_cluster_handler.get_attribute_value(
-                "on_off", from_cache=False
-            )
+            state = await self._on_off_cluster_handler.get_attribute_value("on_off")
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:
                 return
@@ -882,7 +880,7 @@ class Light(BaseLight, ZhaEntity):
 
         if self._level_cluster_handler:
             level = await self._level_cluster_handler.get_attribute_value(
-                "current_level", from_cache=False
+                "current_level"
             )
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:

@@ -358,7 +358,7 @@ class IASZoneClusterHandler(ClusterHandler):
 
     async def async_configure(self):
         """Configure IAS device."""
-        await self.get_attribute_value("zone_type", from_cache=False)
+        await self.get_attribute_value("zone_type")
         if self._endpoint.device.skip_configuration:
             self.debug("skipping IASZoneClusterHandler configuration")
             return

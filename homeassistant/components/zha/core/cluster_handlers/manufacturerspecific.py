@@ -382,7 +382,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        await self.get_attribute_value("fan_mode", from_cache=False)
+        await self.get_attribute_value("fan_mode")
 
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:

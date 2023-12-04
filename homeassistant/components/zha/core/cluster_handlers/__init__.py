@@ -452,11 +452,11 @@ class ClusterHandler(LogMixin):
 
         return self.cluster.attributes[attrid].name
 
-    async def get_attribute_value(self, attribute, from_cache=True):
+    async def get_attribute_value(self, attribute, from_cache=False):
         """Get the value for an attribute."""
         result = await self.get_attributes(
             attributes=[attribute],
-            allow_cache=from_cache,
+            from_cache=from_cache,
             only_cache=from_cache,
         )
 

@@ -369,7 +369,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         _LOGGER.debug("polling current state")
         if self._analog_output_cluster_handler:
             value = await self._analog_output_cluster_handler.get_attribute_value(
-                "present_value", from_cache=False
+                "present_value"
             )
             _LOGGER.debug("read value=%s", value)
 
@@ -442,7 +442,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         _LOGGER.debug("polling current state")
         if self._cluster_handler:
             value = await self._cluster_handler.get_attribute_value(
-                self._attribute_name, from_cache=False
+                self._attribute_name
             )
             _LOGGER.debug("read value=%s", value)
 
