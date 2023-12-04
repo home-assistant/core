@@ -65,7 +65,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
-    device_config_list = remove_unsupported_devices(vicare_api.devices)
+    device_config_list = get_supported_devices(vicare_api.devices)
     if number_of_devices := len(device_config_list) > 1:
         cache_duration = max(
             DEFAULT_CACHE_DURATION, DEFAULT_CACHE_DURATION * number_of_devices
@@ -76,7 +76,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             cache_duration,
         )
         vicare_api = vicare_login(hass, entry.data, cache_duration)
-        device_config_list = remove_unsupported_devices(vicare_api.devices)
+        device_config_list = get_supported_devices(vicare_api.devices)
 
     for device in device_config_list:
         _LOGGER.debug(
@@ -103,7 +103,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def remove_unsupported_devices(
+def get_supported_devices(
     devices: list[PyViCareDeviceConfig]
 ) -> list[PyViCareDeviceConfig]:
     """Remove unsupported devices from the list."""
