@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -57,9 +58,17 @@ async def async_setup_scanner(
         _LOGGER.debug(
             "Home Assistant successfully started, importing ping device tracker config entries now"
         )
-        devices = await hass.async_add_executor_job(
-            load_yaml_config_file, hass.config.path(YAML_DEVICES)
-        )
+
+        devices: dict[Any, Any] = {}
+        try:
+            devices = await hass.async_add_executor_job(
+                load_yaml_config_file, hass.config.path(YAML_DEVICES)
+            )
+        except FileNotFoundError:
+            _LOGGER.debug(
+                "No known_devices.yaml found, skip removal of devices from known_devices.yaml"
+            )
+
         for dev_name, dev_host in config[CONF_HOSTS].items():
             # remove device from known_devices.yaml and the state machine before importing it
             if (
