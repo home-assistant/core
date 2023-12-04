@@ -46,6 +46,7 @@ ACCESS_TOKEN_EXPIRES = "access_token_expires"
 REFRESH_TOKEN = "refresh_token"
 USER_DATA = "user_data"
 
+CONF_HIGH_PRECISION = "high_precision"
 CONF_LOCATION_IDX = "location_idx"
 
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
@@ -57,6 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_HIGH_PRECISION, default=True): cv.boolean,
                 vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
