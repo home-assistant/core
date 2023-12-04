@@ -117,8 +117,6 @@ def _build_entities(
 
     entities: list[ViCareBinarySensor] = []
     for device_config, device in device_tuples:
-        if device_config.getModel() == "Heatbox1":
-            continue
         entities.extend(_build_entities_for_device(device, device_config))
         entities.extend(
             _build_entities_for_component(

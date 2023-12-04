@@ -134,7 +134,6 @@ def _build_entities(
             description,
         )
         for device_config, device in device_tuples
-        if device_config.getModel() != "Heatbox1"
         for circuit in get_circuits(device)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
         if is_supported(description.key, description, circuit)

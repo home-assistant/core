@@ -59,7 +59,6 @@ def _build_entities(
             description,
         )
         for device_config, device in device_tuples
-        if device_config.getModel() != "Heatbox1"
         for description in BUTTON_DESCRIPTIONS
         if is_supported(description.key, description, device)
     ]

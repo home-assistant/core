@@ -8,6 +8,7 @@ import os
 from typing import Any
 
 from PyViCare.PyViCare import PyViCare
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -64,14 +65,8 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
-    number_of_devices = len(
-        [
-            device_config
-            for device_config in vicare_api.devices
-            if device_config.getModel() != "Heatbox1"
-        ]
-    )
-    if number_of_devices > 1:
+    device_config_list = remove_unsupported_devices(vicare_api.devices)
+    if number_of_devices := len(device_config_list) > 1:
         cache_duration = max(
             DEFAULT_CACHE_DURATION, DEFAULT_CACHE_DURATION * number_of_devices
         )
@@ -81,8 +76,8 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             cache_duration,
         )
         vicare_api = vicare_login(hass, entry.data, cache_duration)
+        device_config_list = remove_unsupported_devices(vicare_api.devices)
 
-    device_config_list = vicare_api.devices
     for device in device_config_list:
         _LOGGER.debug(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
@@ -106,3 +101,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+def remove_unsupported_devices(
+    devices: list[PyViCareDeviceConfig]
+) -> list[PyViCareDeviceConfig]:
+    """Remove unsupported devices from the list."""
+    return [
+        device_config
+        for device_config in devices
+        if device_config.getModel() != "Heatbox1"
+    ]
