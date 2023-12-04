@@ -1,6 +1,6 @@
 {
   "domain": "deako",
-  "name": "Deako Smart Lighting",
+  "name": "Deako",
   "codeowners": ["@sebirdman", "@balake", "@deakolights"],
   "config_flow": true,
   "dependencies": ["zeroconf"],

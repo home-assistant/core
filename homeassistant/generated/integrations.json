@@ -999,7 +999,7 @@
       "iot_class": "local_polling"
     },
     "deako": {
-      "name": "Deako Smart Lighting",
+      "name": "Deako",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
