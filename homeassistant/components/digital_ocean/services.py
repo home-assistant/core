@@ -5,11 +5,11 @@ import logging
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .constants import (
-    MIN_TIME_BETWEEN_DOMAIN_UPDATES,
     ATTR_DOMAIN_NAME,
     ATTR_RECORD_NAME,
     ATTR_RECORD_TYPE,
     ATTR_RECORD_VALUE,
+    MIN_TIME_BETWEEN_DOMAIN_UPDATES,
 )
 from .exceptions import DomainRecordAlreadySet, UpdateThrottled
 
@@ -34,8 +34,9 @@ def handle_update_domain_record(call: ServiceCall, hass: HomeAssistant) -> None:
             record_value=record_value,
             record_type=record_type,
         )
-        if updated is None:
-            # HA's builtin Throttled function returns None when the call is skipped
+        if updated is None:  # pragma: no cover
+            # HA's builtin Throttled decorator
+            # returns None when the call is throttle
             raise UpdateThrottled(
                 "Ignoring service call: You must wait at least"
                 f"{MIN_TIME_BETWEEN_DOMAIN_UPDATES} between service calls"

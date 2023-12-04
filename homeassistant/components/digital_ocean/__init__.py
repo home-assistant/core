@@ -117,7 +117,7 @@ class DigitalOcean:
                 record.save()
                 return True
         raise DomainRecordsNotFound(
-            f"Cold not find urecord {record_name} ({record_type}) "
+            f"Cold not find record {record_name} ({record_type}) "
             f"in domain {domain_name}"
         )
 

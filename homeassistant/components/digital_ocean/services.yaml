@@ -38,5 +38,4 @@ update_domain_record:
         select:
           options:
             - "A"
-            - "AAAA"
             - "CNAME"

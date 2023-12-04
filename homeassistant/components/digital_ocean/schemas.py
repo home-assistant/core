@@ -14,11 +14,10 @@ UPDATE_DOMAIN_RECORD_SCHEMA = vol.Schema(
         vol.Required(const.ATTR_RECORD_VALUE): vol.Any(
             cv.matches_regex(const.IPV4_REGEX),
             cv.matches_regex(const.DOMAIN_NAME_REGEX),
-            msg=f"value must be either an IPV4 address or another domain name"
+            msg="value must be either an IPV4 address or another domain name",
         ),
         vol.Required(const.ATTR_RECORD_TYPE): vol.In(
-            container=("A", "CNAME"),
-            msg="Invalid record type. Use either A or CNAME "
+            container=("A", "CNAME"), msg="Invalid record type. Use either A or CNAME "
         ),
     }
 )
