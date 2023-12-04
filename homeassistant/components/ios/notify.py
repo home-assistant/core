@@ -52,7 +52,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> iOSNotificationService | None:
     """Get the iOS notification service."""
-    if "notify.ios" not in hass.config.components:
+    if "ios.notify" not in hass.config.components:
         # Need this to enable requirements checking in the app.
         hass.config.components.add("ios.notify")
 
