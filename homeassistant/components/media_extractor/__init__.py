@@ -111,16 +111,15 @@ class MediaExtractor:
         cookies_file = os.path.join(
             self.hass.config.config_dir, "media_extractor_cookies.txt"
         )
+        ydl_params = {"quiet": True, "logger": _LOGGER}
         if os.path.isfile(cookies_file):
-            ydl = YoutubeDL(
-                {"quiet": True, "logger": _LOGGER, "cookiefile": cookies_file}
-            )
-            _LOGGER.info("Media extractor loaded cookies file from: %s", cookies_file)
+            ydl_params["cookiefile"] = cookies_file
+            _LOGGER.debug("Media extractor loaded cookies file from: %s", cookies_file)
         else:
-            ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Media extractor didn't find cookies file at: %s", cookies_file
             )
+        ydl = YoutubeDL(ydl_params)
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
