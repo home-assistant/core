@@ -59,7 +59,7 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         """Update HA Entity State."""
         if (state_val := state.get("state")) is None:
             return
-        if self.coordinator.paired_device is None:
+        if self.coordinator.paired_device is None or state_val == "error":
             self._attr_is_closed = None
             self.async_write_ha_state()
         elif state_val in ["open", "closed"]:
