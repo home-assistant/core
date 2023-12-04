@@ -13,13 +13,10 @@ from aiohttp.web_exceptions import HTTPNotFound
 
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.config import config_per_platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    discovery,
-)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

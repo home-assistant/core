@@ -6,6 +6,9 @@
         "title": "Configure Tesla Wall Connector",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tesla Wall Connector."
         }
       }
     },
