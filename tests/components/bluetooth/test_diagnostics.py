@@ -40,6 +40,7 @@ class FakeHaScanner(HaScanner):
         }
 
 
+@patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -54,7 +55,7 @@ async def test_diagnostics(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
 
-    with patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner), patch(
+    with patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
     ), patch(
@@ -96,25 +97,25 @@ async def test_diagnostics(
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
+                    "connection_slots": 1,
                     "hw_version": "usb:v1D6Bp0246d053F",
-                    "passive_scan": False,
-                    "sw_version": "homeassistant",
                     "manufacturer": "ACME",
+                    "passive_scan": False,
                     "product": "Bluetooth Adapter 5.0",
                     "product_id": "aa01",
+                    "sw_version": ANY,
                     "vendor_id": "cc01",
-                    "connection_slots": 1,
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
+                    "connection_slots": 2,
                     "hw_version": "usb:v1D6Bp0246d053F",
-                    "passive_scan": True,
-                    "sw_version": "homeassistant",
                     "manufacturer": "ACME",
+                    "passive_scan": True,
                     "product": "Bluetooth Adapter 5.0",
                     "product_id": "aa01",
+                    "sw_version": ANY,
                     "vendor_id": "cc01",
-                    "connection_slots": 2,
                 },
             },
             "dbus": {
@@ -134,70 +135,49 @@ async def test_diagnostics(
                 }
             },
             "manager": {
-                "slot_manager": {
-                    "adapter_slots": {"hci0": 5, "hci1": 2},
-                    "allocations_by_adapter": {"hci0": [], "hci1": []},
-                    "manager": False,
-                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
+                        "connection_slots": 1,
                         "hw_version": "usb:v1D6Bp0246d053F",
-                        "passive_scan": False,
-                        "sw_version": "homeassistant",
                         "manufacturer": "ACME",
+                        "passive_scan": False,
                         "product": "Bluetooth Adapter 5.0",
                         "product_id": "aa01",
+                        "sw_version": "homeassistant",
                         "vendor_id": "cc01",
-                        "connection_slots": 1,
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
+                        "connection_slots": 2,
                         "hw_version": "usb:v1D6Bp0246d053F",
-                        "passive_scan": True,
-                        "sw_version": "homeassistant",
                         "manufacturer": "ACME",
+                        "passive_scan": True,
                         "product": "Bluetooth Adapter 5.0",
                         "product_id": "aa01",
+                        "sw_version": "homeassistant",
                         "vendor_id": "cc01",
-                        "connection_slots": 2,
                     },
                 },
                 "advertisement_tracker": {
-                    "intervals": {},
                     "fallback_intervals": {},
+                    "intervals": {},
                     "sources": {},
                     "timings": {},
                 },
-                "connectable_history": [],
                 "all_history": [],
+                "connectable_history": [],
                 "scanners": [
                     {
                         "adapter": "hci0",
-                        "discovered_devices_and_advertisement_data": [
-                            {
-                                "address": "44:44:33:11:23:45",
-                                "advertisement_data": [
-                                    "x",
-                                    {},
-                                    {},
-                                    [],
-                                    -127,
-                                    -127,
-                                    [[]],
-                                ],
-                                "details": None,
-                                "name": "x",
-                                "rssi": -127,
-                            }
-                        ],
+                        "discovered_devices_and_advertisement_data": [],
                         "last_detection": ANY,
                         "monotonic_time": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
                         "scanning": True,
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
-                        "type": "FakeHaScanner",
+                        "type": "HaScanner",
                     },
                     {
                         "adapter": "hci0",
@@ -254,10 +234,16 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                     },
                 ],
+                "slot_manager": {
+                    "adapter_slots": {"hci0": 5, "hci1": 2},
+                    "allocations_by_adapter": {"hci0": [], "hci1": []},
+                    "manager": False,
+                },
             },
         }
 
 
+@patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
 async def test_diagnostics_macos(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -276,7 +262,7 @@ async def test_diagnostics_macos(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    with patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner), patch(
+    with patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Darwin",
     ), patch(
@@ -297,70 +283,36 @@ async def test_diagnostics_macos(
         inject_advertisement(hass, switchbot_device, switchbot_adv)
 
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
-
         assert diag == {
             "adapters": {
                 "Core Bluetooth": {
                     "address": "00:00:00:00:00:00",
-                    "passive_scan": False,
-                    "sw_version": ANY,
                     "manufacturer": "Apple",
+                    "passive_scan": False,
                     "product": "Unknown MacOS Model",
                     "product_id": "Unknown",
+                    "sw_version": ANY,
                     "vendor_id": "Unknown",
                 }
             },
             "manager": {
-                "slot_manager": {
-                    "adapter_slots": {"Core Bluetooth": 5},
-                    "allocations_by_adapter": {"Core Bluetooth": []},
-                    "manager": False,
-                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
-                        "passive_scan": False,
-                        "sw_version": ANY,
                         "manufacturer": "Apple",
+                        "passive_scan": False,
                         "product": "Unknown MacOS Model",
                         "product_id": "Unknown",
+                        "sw_version": ANY,
                         "vendor_id": "Unknown",
                     }
                 },
                 "advertisement_tracker": {
-                    "intervals": {},
                     "fallback_intervals": {},
+                    "intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },
-                "connectable_history": [
-                    {
-                        "address": "44:44:33:11:23:45",
-                        "advertisement": [
-                            "wohand",
-                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
-                            {},
-                            [],
-                            -127,
-                            -127,
-                            [[]],
-                        ],
-                        "device": {
-                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
-                        },
-                        "connectable": True,
-                        "manufacturer_data": {
-                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
-                        },
-                        "name": "wohand",
-                        "rssi": -127,
-                        "service_data": {},
-                        "service_uuids": [],
-                        "source": "local",
-                        "time": ANY,
-                    }
-                ],
                 "all_history": [
                     {
                         "address": "44:44:33:11:23:45",
@@ -373,11 +325,39 @@ async def test_diagnostics_macos(
                             -127,
                             [[]],
                         ],
+                        "connectable": True,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
                             "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
+                        "manufacturer_data": {
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
+                        },
+                        "name": "wohand",
+                        "rssi": -127,
+                        "service_data": {},
+                        "service_uuids": [],
+                        "source": "local",
+                        "time": ANY,
+                    }
+                ],
+                "connectable_history": [
+                    {
+                        "address": "44:44:33:11:23:45",
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
                         "connectable": True,
+                        "device": {
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
+                        },
                         "manufacturer_data": {
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
@@ -396,13 +376,8 @@ async def test_diagnostics_macos(
                             {
                                 "address": "44:44:33:11:23:45",
                                 "advertisement_data": [
-                                    "wohand",
-                                    {
-                                        "1": {
-                                            "__type": "<class 'bytes'>",
-                                            "repr": "b'\\x01'",
-                                        }
-                                    },
+                                    "x",
+                                    {},
                                     {},
                                     [],
                                     -127,
@@ -420,13 +395,19 @@ async def test_diagnostics_macos(
                         "scanning": True,
                         "source": "Core Bluetooth",
                         "start_time": ANY,
-                        "type": "HaScanner",
+                        "type": "FakeHaScanner",
                     }
                 ],
+                "slot_manager": {
+                    "adapter_slots": {"Core Bluetooth": 5},
+                    "allocations_by_adapter": {"Core Bluetooth": []},
+                    "manager": False,
+                },
             },
         }
 
 
+@patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
 async def test_diagnostics_remote_adapter(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -459,7 +440,7 @@ async def test_diagnostics_remote_adapter(
                 MONOTONIC_TIME(),
             )
 
-    with patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner), patch(
+    with patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
     ), patch(
@@ -497,17 +478,12 @@ async def test_diagnostics_remote_adapter(
                     "passive_scan": False,
                     "product": "Bluetooth Adapter 5.0",
                     "product_id": "aa01",
-                    "sw_version": "homeassistant",
+                    "sw_version": ANY,
                     "vendor_id": "cc01",
                 }
             },
             "dbus": {},
             "manager": {
-                "slot_manager": {
-                    "adapter_slots": {"hci0": 5},
-                    "allocations_by_adapter": {"hci0": []},
-                    "manager": False,
-                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -521,8 +497,8 @@ async def test_diagnostics_remote_adapter(
                     }
                 },
                 "advertisement_tracker": {
-                    "intervals": {},
                     "fallback_intervals": {},
+                    "intervals": {},
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },
@@ -592,11 +568,27 @@ async def test_diagnostics_remote_adapter(
                         "scanning": True,
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
-                        "type": "FakeHaScanner",
+                        "type": "HaScanner",
                     },
                     {
                         "adapter": "hci0",
-                        "discovered_devices_and_advertisement_data": [],
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "details": None,
+                                "name": "x",
+                                "rssi": -127,
+                            }
+                        ],
                         "last_detection": ANY,
                         "monotonic_time": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -608,7 +600,6 @@ async def test_diagnostics_remote_adapter(
                     {
                         "connectable": False,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
-                        "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {
                                 "address": "44:44:33:11:23:45",
@@ -639,11 +630,17 @@ async def test_diagnostics_remote_adapter(
                         "name": "esp32",
                         "scanning": True,
                         "source": "esp32",
-                        "storage": None,
-                        "type": "FakeScanner",
                         "start_time": ANY,
+                        "storage": None,
+                        "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
+                        "type": "FakeScanner",
                     },
                 ],
+                "slot_manager": {
+                    "adapter_slots": {"hci0": 5},
+                    "allocations_by_adapter": {"hci0": []},
+                    "manager": False,
+                },
             },
         }
 
