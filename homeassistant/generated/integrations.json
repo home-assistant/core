@@ -1941,6 +1941,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fujitsu_anywair": {
+      "name": "Fujitsu anywAIR",
+      "integration_type": "virtual",
+      "supported_by": "advantage_air"
+    },
     "fully_kiosk": {
       "name": "Fully Kiosk Browser",
       "integration_type": "hub",
