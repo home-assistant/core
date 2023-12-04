@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import StrEnum
@@ -48,6 +48,7 @@ from .const import (
     CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
+    CONF_PLATFORM,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -58,12 +59,7 @@ from .const import (
 from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
 from .exceptions import ConfigValidationError, HomeAssistantError
 from .generated.currencies import HISTORIC_CURRENCIES
-from .helpers import (
-    config_per_platform,
-    config_validation as cv,
-    extract_domain_configs,
-    issue_registry as ir,
-)
+from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
@@ -1220,6 +1216,41 @@ def async_handle_component_errors(
         translation_key=translation_key,
         translation_placeholders=placeholders,
     )
+
+
+def config_per_platform(
+    config: ConfigType, domain: str
+) -> Iterable[tuple[str | None, ConfigType]]:
+    """Break a component config into different platforms.
+
+    For example, will find 'switch', 'switch 2', 'switch 3', .. etc
+    Async friendly.
+    """
+    for config_key in extract_domain_configs(config, domain):
+        if not (platform_config := config[config_key]):
+            continue
+
+        if not isinstance(platform_config, list):
+            platform_config = [platform_config]
+
+        item: ConfigType
+        platform: str | None
+        for item in platform_config:
+            try:
+                platform = item.get(CONF_PLATFORM)
+            except AttributeError:
+                platform = None
+
+            yield platform, item
+
+
+def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
+    """Extract keys from config for given domain name.
+
+    Async friendly.
+    """
+    pattern = re.compile(rf"^{domain}(| .+)$")
+    return [key for key in config if pattern.match(key)]
 
 
 async def async_process_component_config(  # noqa: C901

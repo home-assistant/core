@@ -131,5 +131,5 @@ async def test_tag_id_exists(
     await client.send_json({"id": 2, "type": f"{DOMAIN}/create", "tag_id": "test tag"})
     response = await client.receive_json()
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert len(changes) == 0

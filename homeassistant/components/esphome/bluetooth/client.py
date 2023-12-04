@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from functools import partial
 import logging
 import sys
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar
 import uuid
 
 if sys.version_info < (3, 12):
@@ -60,7 +60,9 @@ CCCD_INDICATE_BYTES = b"\x02\x00"
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
-_WrapFuncType = TypeVar("_WrapFuncType", bound=Callable[..., Any])
+_ESPHomeClient = TypeVar("_ESPHomeClient", bound="ESPHomeClient")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
 def mac_to_int(address: str) -> int:
@@ -68,12 +70,14 @@ def mac_to_int(address: str) -> int:
     return int(address.replace(":", ""), 16)
 
 
-def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
+def api_error_as_bleak_error(
+    func: Callable[Concatenate[_ESPHomeClient, _P], Coroutine[Any, Any, _R]]
+) -> Callable[Concatenate[_ESPHomeClient, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
     async def _async_wrap_bluetooth_operation(
-        self: ESPHomeClient, *args: Any, **kwargs: Any
-    ) -> Any:
+        self: _ESPHomeClient, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R:
         # pylint: disable=protected-access
         try:
             return await func(self, *args, **kwargs)
@@ -107,7 +111,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
         except APIConnectionError as err:
             raise BleakError(str(err)) from err
 
-    return cast(_WrapFuncType, _async_wrap_bluetooth_operation)
+    return _async_wrap_bluetooth_operation
 
 
 @dataclass(slots=True)
@@ -171,23 +175,6 @@ class ESPHomeClient(BaseBleakClient):
         """Return the string representation of the client."""
         return f"ESPHomeClient ({self._description})"
 
-    def _unsubscribe_connection_state(self) -> None:
-        """Unsubscribe from connection state updates."""
-        if not self._cancel_connection_state:
-            return
-        try:
-            self._cancel_connection_state()
-        except (AssertionError, ValueError) as ex:
-            _LOGGER.debug(
-                (
-                    "%s: Failed to unsubscribe from connection state (likely"
-                    " connection dropped): %s"
-                ),
-                self._description,
-                ex,
-            )
-        self._cancel_connection_state = None
-
     def _async_disconnected_cleanup(self) -> None:
         """Clean up on disconnect."""
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
@@ -196,7 +183,9 @@ class ESPHomeClient(BaseBleakClient):
             notify_abort()
         self._notify_cancels.clear()
         self._disconnect_callbacks.discard(self._async_esp_disconnected)
-        self._unsubscribe_connection_state()
+        if self._cancel_connection_state:
+            self._cancel_connection_state()
+            self._cancel_connection_state = None
 
     def _async_ble_device_disconnected(self) -> None:
         """Handle the BLE device disconnecting from the ESP."""

@@ -17,7 +17,6 @@ from yarl import URL
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.aiohttp_compat import enable_compression
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
@@ -172,7 +171,7 @@ class HassIOIngress(HomeAssistantView):
             content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
             # Avoid parsing content_type in simple cases for better performance
             if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
-                content_type = (maybe_content_type.partition(";"))[0].strip()
+                content_type: str = (maybe_content_type.partition(";"))[0].strip()
             else:
                 content_type = result.content_type
             # Simple request
@@ -188,11 +187,12 @@ class HassIOIngress(HomeAssistantView):
                     status=result.status,
                     content_type=content_type,
                     body=body,
+                    zlib_executor_size=32768,
                 )
                 if content_length_int > MIN_COMPRESSED_SIZE and should_compress(
                     content_type or simple_response.content_type
                 ):
-                    enable_compression(simple_response)
+                    simple_response.enable_compression()
                 await simple_response.prepare(request)
                 return simple_response
 

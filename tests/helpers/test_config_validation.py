@@ -832,6 +832,7 @@ def test_selector_in_serializer() -> None:
         "selector": {
             "text": {
                 "multiline": False,
+                "multiple": False,
             }
         }
     }
