@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,7 +17,6 @@ from homeassistant.components.lock import (
     STATE_LOCKING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
-    LockEntity,
     LockEntityFeature,
 )
 from homeassistant.core import HomeAssistant
@@ -28,41 +26,6 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from tests.testing_config.custom_components.test.lock import MockLock
 
 TEST_ENTITY_ID = "lock.test_lock"
-
-
-class MockLockEntity(LockEntity):
-    """Mock lock to use in tests."""
-
-    def __init__(
-        self,
-        code_format: str | None = None,
-        lock_option_default_code: str = "",
-        supported_features: LockEntityFeature = LockEntityFeature(0),
-    ) -> None:
-        """Initialize mock lock entity."""
-        self._attr_supported_features = supported_features
-        self.calls_lock = MagicMock()
-        self.calls_unlock = MagicMock()
-        self.calls_open = MagicMock()
-        if code_format is not None:
-            self._attr_code_format = code_format
-        self._lock_option_default_code = lock_option_default_code
-
-    async def async_lock(self, **kwargs: Any) -> None:
-        """Lock the lock."""
-        self.calls_lock(kwargs)
-        self._attr_is_locking = False
-        self._attr_is_locked = True
-
-    async def async_unlock(self, **kwargs: Any) -> None:
-        """Unlock the lock."""
-        self.calls_unlock(kwargs)
-        self._attr_is_unlocking = False
-        self._attr_is_locked = False
-
-    async def async_open(self, **kwargs: Any) -> None:
-        """Open the door latch."""
-        self.calls_open(kwargs)
 
 
 async def help_test_async_lock_service(
@@ -76,43 +39,38 @@ async def help_test_async_lock_service(
     await hass.services.async_call(DOMAIN, service, data, blocking=True)
 
 
-async def test_lock_default(hass: HomeAssistant) -> None:
+async def test_lock_default(hass: HomeAssistant, mock_lock: MockLock) -> None:
     """Test lock entity with defaults."""
-    lock = MockLockEntity()
-    lock.hass = hass
 
-    assert lock.code_format is None
-    assert lock.state is None
+    assert mock_lock.code_format is None
+    assert mock_lock.state is None
 
 
-async def test_lock_states(hass: HomeAssistant) -> None:
+async def test_lock_states(hass: HomeAssistant, mock_lock: MockLock) -> None:
     """Test lock entity states."""
 
-    lock = MockLockEntity()
-    lock.hass = hass
+    assert mock_lock.state is None
 
-    assert lock.state is None
+    mock_lock._attr_is_locking = True
+    assert mock_lock.is_locking
+    assert mock_lock.state == STATE_LOCKING
 
-    lock._attr_is_locking = True
-    assert lock.is_locking
-    assert lock.state == STATE_LOCKING
+    await help_test_async_lock_service(hass, SERVICE_LOCK)
+    assert mock_lock.is_locked
+    assert mock_lock.state == STATE_LOCKED
 
-    await lock.async_handle_lock_service()
-    assert lock.is_locked
-    assert lock.state == STATE_LOCKED
+    mock_lock._attr_is_unlocking = True
+    assert mock_lock.is_unlocking
+    assert mock_lock.state == STATE_UNLOCKING
 
-    lock._attr_is_unlocking = True
-    assert lock.is_unlocking
-    assert lock.state == STATE_UNLOCKING
+    await help_test_async_lock_service(hass, SERVICE_UNLOCK)
+    assert not mock_lock.is_locked
+    assert mock_lock.state == STATE_UNLOCKED
 
-    await lock.async_handle_unlock_service()
-    assert not lock.is_locked
-    assert lock.state == STATE_UNLOCKED
-
-    lock._attr_is_jammed = True
-    assert lock.is_jammed
-    assert lock.state == STATE_JAMMED
-    assert not lock.is_locked
+    mock_lock._attr_is_jammed = True
+    assert mock_lock.is_jammed
+    assert mock_lock.state == STATE_JAMMED
+    assert not mock_lock.is_locked
 
 
 @pytest.mark.parametrize(
@@ -132,7 +90,7 @@ async def test_set_mock_lock_options(
     assert state.attributes["supported_features"] == LockEntityFeature.OPEN
 
 
-@pytest.mark.parametrize("default_code", ["1234"])
+@pytest.mark.parametrize(("default_code", "code_format"), [("1234", r"^\d{4}$")])
 async def test_default_code_option_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

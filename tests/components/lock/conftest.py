@@ -22,7 +22,7 @@ async def default_code() -> str | UndefinedType:
 @pytest.fixture
 async def code_format() -> str | None:
     """Return the default code for the test lock entity."""
-    return r"^\d{4}$"
+    return None
 
 
 @pytest.fixture(name="supported_features")

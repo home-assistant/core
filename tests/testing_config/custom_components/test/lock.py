@@ -64,14 +64,20 @@ class MockLock(MockEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Mock open lock."""
         self._handle("calls_open")(**kwargs)
+        self._attr_is_locking = False
+        self._attr_is_locked = True
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Mock lock lock."""
         self._handle("calls_lock")(**kwargs)
+        self._attr_is_locking = False
+        self._attr_is_locked = True
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Mock unlock lock."""
         self._handle("calls_unlock")(**kwargs)
+        self._attr_is_unlocking = False
+        self._attr_is_locked = False
 
     @property
     def calls_open(self) -> MagicMock:
