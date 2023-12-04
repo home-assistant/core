@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
@@ -16,9 +17,6 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     HomeAssistantRemoteScanner,
     storage,
-)
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    TRACKER_BUFFERING_WOBBLE_SECONDS,
 )
 from homeassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
