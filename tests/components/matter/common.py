@@ -73,7 +73,7 @@ async def trigger_subscription_callback(
     """Trigger a subscription callback."""
     # trigger callback on all subscribers
     for sub in client.subscribe_events.call_args_list:
-        callback = sub.kwargs.get("callback")
+        callback = sub.kwargs["callback"]
         event_filter = sub.kwargs.get("event_filter")
         if event_filter in (None, event):
             callback(event, data)
