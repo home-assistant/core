@@ -71,9 +71,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    devices: list[tuple[PyViCareDeviceConfig, PyViCareDevice]] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ][DEVICE_CONFIG_LIST]
+    devices = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
