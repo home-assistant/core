@@ -85,6 +85,7 @@ class SmhiWeatherLocations:
                 icon_url,
                 "mdi:cloud-outline",
                 "stationary",
+                "weather",
             )
             weather_location_entities.append(geolocation_event)
 

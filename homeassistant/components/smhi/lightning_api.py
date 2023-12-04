@@ -65,6 +65,10 @@ class SmhiLightning:
                 name, latitude, longitude, ICON_URL, ICON_URL, "stationary"
             )
 
-            lightning_impacts.append(lightning_impact)
+        lightning_impact = SmhiGeolocationEvent(
+            name, latitude, longitude, ICON_URL, ICON_URL, "stationary", "lightning"
+        )
+        
+        lightning_impacts.append(lightning_impact)
 
         return lightning_impacts

@@ -106,6 +106,7 @@ def create_smhi_geolocation_events(
             map_icon_url="https://opendata.smhi.se/apidocs/IBWwarnings/res/fire-outline-56x56@2x.png",
             card_icon="https://opendata.smhi.se/apidocs/IBWwarnings/res/fire-outline-56x56@2x.png",
             state=risk["combinedLevelInfo"],
+            tag="fire_risk",
         )
         events.append(event)
     return events

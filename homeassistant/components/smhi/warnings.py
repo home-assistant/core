@@ -12,7 +12,7 @@ class SmhiWarnings:
     async def get_warnings(self) -> list[SmhiGeolocationEvent]:
         """Get warning data from smhi api."""
         warnings_url = (
-            "https://opendata-download-warnings.smhi.se/ibww/api/version/1/warning.json"
+            "https://opendata-download-warnings.smhi.se/ibww/test/test_4.json"
         )
         smhi_downloader = SmhiDownloader()
         data = await smhi_downloader.download_json(warnings_url)
@@ -87,6 +87,7 @@ class SmhiWarnings:
                     icon_url,
                     "mdi:alert",
                     "stationary",
+                    "warnings",
                 )
             )
 
