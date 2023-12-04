@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.sveriges_radio_audio.config_flow import (
+from homeassistant.components.sveriges_radio.config_flow import (
     CannotConnect,
     InvalidAuth,
 )
-from homeassistant.components.sveriges_radio_audio.const import DOMAIN
+from homeassistant.components.sveriges_radio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

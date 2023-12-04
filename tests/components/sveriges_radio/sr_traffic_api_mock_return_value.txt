@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sr>
+    <copyright>Copyright Sveriges Radio 2012. All rights reserved.</copyright>
+    <pagination>
+        <page>1</page>
+        <size>10</size>
+        <totalhits>8</totalhits>
+        <totalpages>1</totalpages>
+    </pagination>
+    <messages>
+        <message id="686512" priority="2">
+            <createddate>2013-01-09T11:55:52.113</createddate>
+            <title>Tåg</title>
+            <exactlocation>Hela banan mellan Stockholm och Västerås</exactlocation>
+            <description>Stockholm-Västerås. Risk för förseningar. Reducerad spårkapacitet vid Bålsta.</description>
+            <latitude>59.4202424674578</latitude>
+            <longitude>17.854384905105359</longitude>
+            <category>1</category>
+            <subcategory>Tåg</subcategory>
+        </message>
+        ...
+    </messages>
+</sr>
