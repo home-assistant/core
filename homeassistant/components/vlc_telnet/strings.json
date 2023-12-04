@@ -16,7 +16,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "Hostname or IP address of your VLC media player."
         }
       },
       "hassio_confirm": {

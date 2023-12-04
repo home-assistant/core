@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the Venstar Thermostat",
+        "description": "Connect to the Venstar thermostat",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
@@ -11,7 +11,7 @@
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "Hostname or IP address of your Venstar thermostat."
         }
       }
     },

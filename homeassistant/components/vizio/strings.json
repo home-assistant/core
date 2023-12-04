@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "VIZIO SmartCast Device",
         "description": "An access token is only needed for TVs. If you are configuring a TV and do not have an access token yet, leave it blank to go through a pairing process.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -11,7 +10,7 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "Hostname or IP address of your VIZIO SmartCast device."
         }
       },
       "pair_tv": {
