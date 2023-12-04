@@ -1,0 +1,30 @@
+"""Weather locations test class."""
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.components.smhi.weather_locations import SmhiWeatherLocations
+from homeassistant.components.smhi.smhi_geolocation_event import SmhiGeolocationEvent
+
+
+@pytest.fixture
+def smhi_weather_locations():
+    """Fixture to create an instance of the SmhiWeatherLocations class.
+    Returns:
+        SmhiWeatherLocations: An instance of the SmhiWeatherLocations class.
+    """
+    return SmhiWeatherLocations()
+
+def test_get_cities():
+     """Test the get_cities function of SmhiWeatherLocations class."""
+
+def test_get_weather_data():
+     """Test the get_weather_data function of SmhiWeatherLocations class."""
+
+
+def test_get_weather_locations():
+     """Test the get_weather_locations function of SmhiWeatherLocations class."""
+
+
+def test_get_weather_condition_icon():
+    """Test the get_weather_condition_icon function of SmhiWeatherLocations class."""
