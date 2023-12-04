@@ -100,7 +100,6 @@ from .const import (  # noqa: F401
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
@@ -179,9 +178,10 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_OFFSET, default=0): number_validator,
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+        vol.Optional(
+            CONF_SWAP,
+        ): vol.In(
             [
-                CONF_SWAP_NONE,
                 CONF_SWAP_BYTE,
                 CONF_SWAP_WORD,
                 CONF_SWAP_WORD_BYTE,
