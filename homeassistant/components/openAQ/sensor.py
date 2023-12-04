@@ -60,7 +60,9 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = coordinator.get_sensors()
     sensor_names = [sensor.parameter.name for sensor in sensors]
-    sensor_names.append("last_update")  # Special case for last updated
+    sensor_names.append(
+        "last_update"
+    )  # Special case for last updated as it is not available in get_sensors() but in the sensor data instead
     sensors_metrics = [OPENAQ_PARAMETERS[j] for j in sensor_names]
 
     entities = []
@@ -122,8 +124,10 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataCoordinator], SensorEntity):
         self._attr_unique_id = ".".join(
             [DOMAIN, self.station_id, self.entity_description.key, SENSOR_DOMAIN]
         )
-        self._attr_device_info = DeviceInfo(  # Retrieve the device added in __init__.py
-            identifiers={(DOMAIN, self.station_id)},
+        self._attr_device_info = (
+            DeviceInfo(  # Retrieve the same device added in __init__.py
+                identifiers={(DOMAIN, self.station_id)},
+            )
         )
         self._attr_icon = ICON
 
@@ -147,8 +151,13 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataCoordinator], SensorEntity):
         """Return the state of the sensor, rounding if a number."""
         name = self.entity_description.key
         if self.metric == SensorDeviceClass.TIMESTAMP:
-            if self.coordinator.data.get(name) is None:
-                return None
+            if (
+                self.coordinator.data.get(name) is None
+            ):  # The datetime from the response key got updated so we check for both keys
+                return datetime.strptime(
+                    self.coordinator.data.get(self.entity_description.name.lower()),
+                    "%Y-%m-%dT%H:%M:%S%z",  # The datetime from the response will be a string that needs to be converted
+                )
             return datetime.strptime(
                 self.coordinator.data.get(name),
                 "%Y-%m-%dT%H:%M:%S%z",  # The datetime from the response will be a string that needs to be converted
