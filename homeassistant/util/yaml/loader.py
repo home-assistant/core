@@ -159,7 +159,7 @@ class SafeLineLoader(PythonSafeLoader):
 LoaderType = FastSafeLoader | PythonSafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
+def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
@@ -205,10 +205,7 @@ def _parse_yaml(
     """Load a YAML file."""
     # If configuration file is empty YAML returns None
     # We convert that to an empty dict
-    result = yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
-    if result is None:
-        return NodeDictClass()
-    return result
+    return yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
 
 
 @overload
@@ -257,7 +254,10 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """
     fname = os.path.join(os.path.dirname(loader.get_name()), node.value)
     try:
-        return _add_reference(load_yaml(fname, loader.secrets), loader, node)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            loaded_yaml = NodeDictClass()
+        return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
             f"{node.start_mark}: Unable to read file {fname}."
@@ -287,7 +287,10 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        mapping[filename] = load_yaml(fname, loader.secrets)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            continue
+        mapping[filename] = loaded_yaml
     return _add_reference(mapping, loader, node)
 
 
@@ -312,9 +315,10 @@ def _include_dir_list_yaml(
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
     return [
-        load_yaml(f, loader.secrets)
+        loaded_yaml
         for f in _find_files(loc, "*.yaml")
         if os.path.basename(f) != SECRET_YAML
+        and (loaded_yaml := load_yaml(f, loader.secrets)) is not None
     ]
 
 

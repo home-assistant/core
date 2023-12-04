@@ -55,26 +55,6 @@ def try_both_dumpers(request):
     importlib.reload(yaml_loader)
 
 
-@pytest.mark.parametrize(
-    ("yaml_content", "expected_output"),
-    [
-        ("", {}),
-        ("~", {}),
-        ("off", False),
-        ("False", False),
-        ("[]", []),
-    ],
-)
-def test_none_to_dict(try_both_loaders, yaml_content, expected_output) -> None:
-    """Test None is converted to an empty dict.
-
-    Also test other falsy values are not created to empty dict.
-    """
-    with io.StringIO(yaml_content) as file:
-        doc = yaml_loader.parse_yaml(file)
-    assert doc == expected_output
-
-
 def test_simple_list(try_both_loaders) -> None:
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
@@ -154,6 +134,7 @@ def test_include_yaml(
     [
         ({"/test/one.yaml": "one", "/test/two.yaml": "two"}, ["one", "two"]),
         ({"/test/one.yaml": "1", "/test/two.yaml": "2"}, [1, 2]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": None}, [1]),
     ],
 )
 def test_include_dir_list(
@@ -209,6 +190,10 @@ def test_include_dir_list_recursive(
         (
             {"/test/first.yaml": "1", "/test/second.yaml": "2"},
             {"first": 1, "second": 2},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": None},
+            {"first": 1},
         ),
     ],
 )
@@ -268,6 +253,10 @@ def test_include_dir_named_recursive(
         (
             {"/test/first.yaml": "- 1", "/test/second.yaml": "- 2\n- 3"},
             [1, 2, 3],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": None},
+            [1],
         ),
     ],
 )
@@ -330,6 +319,13 @@ def test_include_dir_merge_list_recursive(
                 "/test/second.yaml": "key2: 2\nkey3: 3",
             },
             {"key1": 1, "key2": 2, "key3": 3},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": None,
+            },
+            {"key1": 1},
         ),
     ],
 )

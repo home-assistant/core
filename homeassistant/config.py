@@ -464,6 +464,8 @@ def load_yaml_config_file(
     This method needs to run in an executor.
     """
     conf_dict = load_yaml(config_path, secrets)
+    if conf_dict is None:
+        conf_dict = {}
 
     if not isinstance(conf_dict, dict):
         msg = (
