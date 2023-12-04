@@ -569,6 +569,9 @@
       },
       "hand_open": {
         "name": "Opened by hand"
+      },
+      "window_detection": {
+        "name": "Window opened detection"
       }
     },
     "button": {

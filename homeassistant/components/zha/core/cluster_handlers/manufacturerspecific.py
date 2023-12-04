@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, XIAOMI_AQARA_VIBRATION_AQ1
+from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_TRV_ZONNSMART, XIAOMI_AQARA_VIBRATION_AQ1
 import zigpy.zcl
 from zigpy.zcl.clusters.closures import DoorLock
 
@@ -80,7 +80,7 @@ class TuyaClusterHandler(ClusterHandler):
                 "backlight_mode": True,
                 "power_on_state": True,
             }
-        if self.cluster.endpoint.manufacturer in ("_TZE200_hue3yfsn"):
+        if endpoint.device.quirk_id == TUYA_TRV_ZONNSMART:
             self.ZCL_INIT_ATTRS = {
                 "window_detection": True,
                 "online_set": True,
