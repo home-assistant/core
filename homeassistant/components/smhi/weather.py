@@ -106,25 +106,29 @@ async def input_select_changed(event: Any) -> None:
     if event.data.get("entity_id") == "input_boolean.display_lightning":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            additional_data_handler.set_state("lightning", new_state.state == "on")
+            await additional_data_handler.set_state(
+                "lightning", new_state.state == "on"
+            )
             update_map = update_map or new_state.state == "on"
 
     elif event.data.get("entity_id") == "input_boolean.display_fire_risk":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            additional_data_handler.set_state("fire_risk", new_state.state == "on")
+            await additional_data_handler.set_state(
+                "fire_risk", new_state.state == "on"
+            )
             update_map = update_map or new_state.state == "on"
 
     elif event.data.get("entity_id") == "input_boolean.display_weather":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            additional_data_handler.set_state("weather", new_state.state == "on")
+            await additional_data_handler.set_state("weather", new_state.state == "on")
             update_map = update_map or new_state.state == "on"
 
     elif event.data.get("entity_id") == "input_boolean.display_warnings":
         new_state = event.data.get("new_state")
         if new_state is not None:
-            additional_data_handler.set_state("warnings", new_state.state == "on")
+            await additional_data_handler.set_state("warnings", new_state.state == "on")
             update_map = update_map or new_state.state == "on"
 
     if update_map:
@@ -152,6 +156,8 @@ async def async_setup_entry(
 
     additional_data_handler = AdditionalDataHandler()
     additional_data_handler.init_add_entities_callback(async_add_entities)
+    additional_data_handler.init_add_hass_callback(hass)
+    await additional_data_handler.remove_old_entities()
 
     location = config_entry.data
     name = slugify(location[CONF_NAME])

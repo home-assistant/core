@@ -63,7 +63,7 @@ def parse_lightning_impacts(api_result: dict) -> list[SmhiGeolocationEvent]:
         )
 
         lightning_impact = SmhiGeolocationEvent(
-            name, latitude, longitude, ICON_URL, ICON_URL, "stationary"
+            name, latitude, longitude, ICON_URL, ICON_URL, "stationary", "lightning"
         )
 
         lightning_impacts.append(lightning_impact)
