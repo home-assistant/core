@@ -19,12 +19,7 @@ CONFIG_ENTITY_ID = "entity_id"
 CONFIG_ACTION_ENTITY = "action_entity"
 
 
-SCHEDULED_STATE = "scheduled"
-READY_STATE = "ready"
-ACTIVE_STATE = "active"
-COMPLETED_STATE = "completed"
-
-
+RASC_SCHEDULED = "scheduled"
 RASC_START = "start"
 RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
@@ -52,7 +47,7 @@ class ActionEntity:
         action: dict[str, Any],
         action_id: str,
         action_state: str | None,
-        routine_id: str,
+        routine_id: str | None,
         variables: dict[str, Any],
         context: Context | None,
     ) -> None:
@@ -62,12 +57,12 @@ class ActionEntity:
         self.action_id = action_id
 
         if action_state is None:
-            self.action_state = SCHEDULED_STATE
+            self.action_state = RASC_SCHEDULED
         else:
             self.action_state = action_state
 
-        self.parent: list[str] = []
-        self.children: list[str] = []
+        self.parents: list[ActionEntity] = []
+        self.children: list[ActionEntity] = []
         self.routine_id = routine_id
         self.variables = variables
         self.context = context
@@ -81,7 +76,6 @@ class ActionEntity:
             handler = f"_async_{action}_step"
             await getattr(self, handler)()
 
-            # self.hass.bus.async_fire(EVENT_ACTION_COMPLETED, {CONFIG_ACTION_ENTITY: self})
         except Exception:  # pylint: disable=broad-except
             return
             # print(ex)
@@ -162,3 +156,11 @@ class QueueEntity(MutableSequence[_VT]):
     def insert(self, __key: Any, __value: Any) -> None:
         """Insert key value pair."""
         self._queue_entities.insert(__key, __value)
+
+    def empty(self) -> bool:
+        """Return empty."""
+        return len(self._queue_entities) == 0
+
+    def append(self, __value: Any) -> None:
+        """Append new value."""
+        self._queue_entities.append(__value)

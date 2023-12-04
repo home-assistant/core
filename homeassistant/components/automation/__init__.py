@@ -12,7 +12,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.rascalscheduler import setup_rascal_scheduler_entity
+from homeassistant.components.rascalscheduler import (
+    dag_opeator,
+    rascal_scheduler,
+    setup_rascal_scheduler_entity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -656,15 +660,50 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # to recursively trigger themselves
             script_stack_cv.set([])
 
-            # routine_id, routine_entity = dag_opeator(
-            #     self.hass,
-            #     str(self._attr_unique_id),
-            #     self.action_script.sequence,
-            #     variables,
-            #     trigger_context,
-            # )
-            # for action in routine_entity.actions:
-            #     print("action_id: ", action.action_id, "actions: ", action.action)
+            routine_id, routine_entity = dag_opeator(
+                self.hass,
+                str(self._attr_unique_id),
+                self.action_script.sequence,
+                variables,
+                trigger_context,
+            )
+
+            # for item in routine_entity.actions.values():
+            #     if not item.parents and not item.children:
+            #         print(
+            #             "routine_id:", item.routine_id,
+            #             "action_id:", item.action_id,
+            #             "action:", item.action,
+            #             "parents:", item.parents[0].action_id,
+            #             "children:", item.children[0].action_id
+            #         )
+            #     elif not item.parents:
+            #         print(
+            #             "routine_id:", item.routine_id,
+            #             "action_id:", item.action_id,
+            #             "action:", item.action,
+            #             "parents:", item.parents,
+            #             "children:", item.children[0].action_id
+            #         )
+            #     elif not item.children:
+            #         print(
+            #             "routine_id:", item.routine_id,
+            #             "action_id:", item.action_id,
+            #             "action:", item.action,
+            #             "parents:", item.parents[0].action_id,
+            #             "children:", item.children
+            #         )
+            #     else:
+            #         print(
+            #             "routine_id:", item.routine_id,
+            #             "action_id:", item.action_id,
+            #             "action:", item.action,
+            #             "parents:", item.parents,
+            #             "children:", item.children
+            #         )
+
+            rascal = rascal_scheduler(self.hass)
+            rascal.start_routine(routine_entity)
 
             # try:
             #     with trace_path("action"):
