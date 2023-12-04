@@ -17,10 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -44,6 +41,7 @@ from .const import (
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
 )
+from .coordinator import PicnicUpdateCoordinator
 
 
 @dataclass
@@ -237,7 +235,7 @@ async def async_setup_entry(
     )
 
 
-class PicnicSensor(SensorEntity, CoordinatorEntity):
+class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
     _attr_has_entity_name = True
@@ -246,7 +244,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: PicnicUpdateCoordinator,
         config_entry: ConfigEntry,
         description: PicnicSensorEntityDescription,
     ) -> None:

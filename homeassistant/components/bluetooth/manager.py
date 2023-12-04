@@ -16,6 +16,7 @@ from bluetooth_adapters import (
     AdapterDetails,
     BluetoothAdapters,
 )
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -27,7 +28,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import (
     TRACKER_BUFFERING_WOBBLE_SECONDS,
@@ -124,6 +124,7 @@ class BluetoothManager:
         "storage",
         "slot_manager",
         "_debug",
+        "shutdown",
     )
 
     def __init__(
@@ -165,6 +166,7 @@ class BluetoothManager:
         self.storage = storage
         self.slot_manager = slot_manager
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
+        self.shutdown = False
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -259,6 +261,7 @@ class BluetoothManager:
     def async_stop(self, event: Event) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
+        self.shutdown = True
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None

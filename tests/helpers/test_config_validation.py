@@ -539,6 +539,13 @@ def test_string(hass: HomeAssistant) -> None:
     for value in (True, 1, "hello"):
         schema(value)
 
+    # Test subclasses of str are returned
+    class MyString(str):
+        pass
+
+    my_string = MyString("hello")
+    assert schema(my_string) is my_string
+
     # Test template support
     for text, native in (
         ("[1, 2]", [1, 2]),
@@ -832,6 +839,7 @@ def test_selector_in_serializer() -> None:
         "selector": {
             "text": {
                 "multiline": False,
+                "multiple": False,
             }
         }
     }

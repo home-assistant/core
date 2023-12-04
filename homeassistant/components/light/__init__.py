@@ -500,6 +500,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+            elif ColorMode.COLOR_TEMP in supported_color_modes:
+                xy_color = color_util.color_hs_to_xy(*hs_color)
+                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                    *xy_color
+                )
+                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
             assert (rgb_color := params.pop(ATTR_RGB_COLOR)) is not None
             if ColorMode.RGBW in supported_color_modes:
@@ -515,6 +523,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            elif ColorMode.COLOR_TEMP in supported_color_modes:
+                xy_color = color_util.color_RGB_to_xy(*rgb_color)
+                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                    *xy_color
+                )
+                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
         elif ATTR_XY_COLOR in params and ColorMode.XY not in supported_color_modes:
             xy_color = params.pop(ATTR_XY_COLOR)
             if ColorMode.HS in supported_color_modes:
@@ -529,6 +545,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
                 )
+            elif ColorMode.COLOR_TEMP in supported_color_modes:
+                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                    *xy_color
+                )
+                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
         elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
             rgbw_color = params.pop(ATTR_RGBW_COLOR)
             rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
@@ -542,6 +565,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            elif ColorMode.COLOR_TEMP in supported_color_modes:
+                xy_color = color_util.color_RGB_to_xy(*rgb_color)
+                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                    *xy_color
+                )
+                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
@@ -558,6 +589,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            elif ColorMode.COLOR_TEMP in supported_color_modes:
+                xy_color = color_util.color_RGB_to_xy(*rgb_color)
+                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                    *xy_color
+                )
+                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
 
         # If white is set to True, set it to the light's brightness
         # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an

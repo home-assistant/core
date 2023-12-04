@@ -23,6 +23,7 @@ except ImportError:
     )
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.deprecation import deprecated_class
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -136,6 +137,11 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
+@deprecated_class("FastSafeLoader", breaks_in_ha_version="2024.6")
+class SafeLoader(FastSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+
 class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
     """Python safe loader."""
 
@@ -143,6 +149,11 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         """Initialize a safe line loader."""
         super().__init__(stream)
         self.secrets = secrets
+
+
+@deprecated_class("PythonSafeLoader", breaks_in_ha_version="2024.6")
+class SafeLineLoader(PythonSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
 
 
 LoaderType = FastSafeLoader | PythonSafeLoader
@@ -238,7 +249,7 @@ def _add_reference(  # type: ignore[no-untyped-def]
 
 
 def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
-    """Load another YAML file and embeds it using the !include tag.
+    """Load another YAML file and embed it using the !include tag.
 
     Example:
         device_tracker: !include device_tracker.yaml
@@ -340,7 +351,12 @@ def _handle_mapping_tag(
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 

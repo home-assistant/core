@@ -60,6 +60,8 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
         )
 
+        self.update_cmd_list: list[str] = []
+
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
         self._onvif_long_poll_supported: bool = True
@@ -163,7 +165,7 @@ class ReolinkHost:
         if self._onvif_push_supported:
             try:
                 await self.subscribe()
-            except NotSupportedError:
+            except ReolinkError:
                 self._onvif_push_supported = False
                 self.unregister_webhook()
                 await self._api.unsubscribe()
@@ -311,7 +313,7 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        await self._api.get_states()
+        await self._api.get_states(cmd_list=self.update_cmd_list)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
@@ -661,3 +663,12 @@ class ReolinkHost:
 
         for channel in channels:
             async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
+
+    @property
+    def event_connection(self) -> str:
+        """Type of connection to receive events."""
+        if self._webhook_reachable:
+            return "ONVIF push"
+        if self._long_poll_received:
+            return "ONVIF long polling"
+        return "Fast polling"

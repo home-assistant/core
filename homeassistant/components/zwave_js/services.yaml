@@ -29,6 +29,65 @@ set_lock_usercode:
       selector:
         text:
 
+set_lock_configuration:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    operation_type:
+      required: true
+      example: timed
+      selector:
+        select:
+          options:
+            - constant
+            - timed
+    lock_timeout:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: sec
+    outside_handles_can_open_door_configuration:
+      required: false
+      example: [true, true, true, false]
+      selector:
+        object:
+    inside_handles_can_open_door_configuration:
+      required: false
+      example: [true, true, true, false]
+      selector:
+        object:
+    auto_relock_time:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: sec
+    hold_and_release_time:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: sec
+    twist_assist:
+      required: false
+      example: true
+      selector:
+        boolean:
+    block_to_block:
+      required: false
+      example: true
+      selector:
+        boolean:
+
 set_config_parameter:
   target:
     entity:

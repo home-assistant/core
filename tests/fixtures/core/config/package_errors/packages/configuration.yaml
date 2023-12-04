@@ -19,3 +19,6 @@ homeassistant:
     pack_4:
       adr_0007_3:
         host: blah.com
+    pack_5:
+      unknown_integration:
+        host: blah.com

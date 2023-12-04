@@ -31,8 +31,8 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_fire_time_changed,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -499,8 +499,8 @@ async def test_restore_entity_end_to_end(
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
     mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
 
-    mock_platform = MockPlatform(async_setup_platform=async_setup_platform)
-    mock_entity_platform(hass, f"{DOMAIN}.{PLATFORM}", mock_platform)
+    platform = MockPlatform(async_setup_platform=async_setup_platform)
+    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 

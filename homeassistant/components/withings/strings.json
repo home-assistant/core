@@ -158,8 +158,8 @@
       "activity_distance_today": {
         "name": "Distance travelled today"
       },
-      "activity_floors_climbed_today": {
-        "name": "Floors climbed today"
+      "activity_elevation_today": {
+        "name": "Elevation change today"
       },
       "activity_soft_duration_today": {
         "name": "Soft activity today"
@@ -239,8 +239,8 @@
       "workout_distance": {
         "name": "Distance travelled last workout"
       },
-      "workout_floors_climbed": {
-        "name": "Floors climbed last workout"
+      "workout_elevation": {
+        "name": "Elevation change last workout"
       },
       "workout_intensity": {
         "name": "Last workout intensity"

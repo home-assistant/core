@@ -32,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     "pybluez",
     "pycocotools",
     "pycups",
-    "python-eq3bt",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
@@ -150,7 +149,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.25.0
+protobuf==4.25.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -192,6 +191,7 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "no-commit-to-branch",
     "prettier",
     "python-typing-update",
+    "ruff-format",  # it's just ruff
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
@@ -394,7 +394,8 @@ def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
         for requirement, modules in reqs.items()
         if any(
             # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.") or
+            not mdl.startswith("homeassistant.components.")
+            or
             # Install tests for integrations that have tests
             has_tests(mdl)
             for mdl in modules

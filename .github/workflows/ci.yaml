@@ -36,8 +36,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 6
-  BLACK_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2023.12"
+  HA_SHORT_VERSION: "2024.1"
   DEFAULT_PYTHON: "3.11"
   ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
   # 10.3 is the oldest supported version
@@ -58,7 +57,6 @@ env:
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
-  BLACK_CACHE: /tmp/black-cache
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -261,8 +259,8 @@ jobs:
           . venv/bin/activate
           pre-commit install-hooks
 
-  lint-black:
-    name: Check black
+  lint-ruff-format:
+    name: Check ruff-format
     runs-on: ubuntu-22.04
     needs:
       - info
@@ -276,13 +274,6 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
-      - name: Generate partial black restore key
-        id: generate-black-key
-        run: |
-          black_version=$(cat requirements_test_pre_commit.txt | grep black | cut -d '=' -f 3)
-          echo "version=$black_version" >> $GITHUB_OUTPUT
-          echo "key=black-${{ env.BLACK_CACHE_VERSION }}-$black_version-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@v3.3.2
@@ -301,33 +292,12 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore black cache
-        uses: actions/cache@v3.3.2
-        with:
-          path: ${{ env.BLACK_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-black-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-black-${{
-            env.BLACK_CACHE_VERSION }}-${{ steps.generate-black-key.outputs.version }}-${{
-            env.HA_SHORT_VERSION }}-
-      - name: Run black (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        env:
-          BLACK_CACHE_DIR: ${{ env.BLACK_CACHE }}
+      - name: Run ruff-format
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
-      - name: Run black (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
+          pre-commit run --hook-stage manual ruff-format --all-files --show-diff-on-failure
         env:
-          BLACK_CACHE_DIR: ${{ env.BLACK_CACHE }}
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+          RUFF_OUTPUT_FORMAT: github
 
   lint-ruff:
     name: Check ruff
@@ -362,22 +332,12 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Register ruff problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/ruff.json"
-      - name: Run ruff (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
+      - name: Run ruff
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
-      - name: Run ruff (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
-
+        env:
+          RUFF_OUTPUT_FORMAT: github
   lint-other:
     name: Check other linters
     runs-on: ubuntu-22.04
@@ -787,7 +747,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
@@ -824,7 +784,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n auto \
@@ -945,7 +905,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
             -n 1 \
@@ -1069,7 +1029,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n 1 \
