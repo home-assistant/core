@@ -451,7 +451,7 @@ beautifulsoup4==4.12.2
 bellows==0.37.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.14.5
+bimmer-connected[china]==0.14.6
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
@@ -539,7 +539,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.14.0
+dbus-fast==2.20.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -783,7 +783,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.4.0
+habluetooth==0.5.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -811,7 +811,7 @@ hole==0.8.0
 holidays==0.37
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231130.0
+home-assistant-frontend==20231204.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.11.29
@@ -1096,7 +1096,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.39
+opower==0.0.40
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1799,7 +1799,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.4
+screenlogicpy==0.10.0
 
 # homeassistant.components.backup
 securetar==2023.3.0

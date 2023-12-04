@@ -19,7 +19,6 @@ from homeassistant.components.modbus.const import (
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VIRTUAL_COUNT,
@@ -125,7 +124,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT16,
-                    CONF_SWAP: CONF_SWAP_NONE,
                 }
             ]
         },
@@ -228,7 +226,6 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                         CONF_ADDRESS: 1234,
                         CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
-                        CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "invalid",
                     },
                 ]
@@ -555,7 +552,6 @@ async def test_config_wrong_struct_sensor(
         (
             {
                 CONF_DATA_TYPE: DataType.INT16,
-                CONF_SWAP: CONF_SWAP_NONE,
             },
             [0x0102],
             False,
@@ -1290,7 +1286,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
     [
         (
             {
-                CONF_SWAP: CONF_SWAP_NONE,
                 CONF_DATA_TYPE: DataType.UINT16,
             },
             [0x0102],
@@ -1306,7 +1301,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_SWAP: CONF_SWAP_NONE,
                 CONF_DATA_TYPE: DataType.UINT32,
             },
             [0x0102, 0x0304],
