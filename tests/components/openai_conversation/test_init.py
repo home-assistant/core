@@ -1,14 +1,15 @@
 """Tests for the OpenAI integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from openai import ServiceUnavailableError
+import pytest
+from httpx import Response
+from openai import RateLimitError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.completion_usage import CompletionUsage
-from openai.types.images_response import ImagesResponse
 from openai.types.image import Image
+from openai.types.images_response import ImagesResponse
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -100,7 +101,8 @@ async def test_default_prompt(
         suggested_area="Test Area 2",
     )
     with patch(
-        "openai.resources.chat.completions.create",
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
         return_value=ChatCompletion(
             id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
             choices=[
@@ -137,7 +139,10 @@ async def test_error_handling(
 ) -> None:
     """Test that the default prompt works."""
     with patch(
-        "openai.resources.chat.completions.create", side_effect=ServiceUnavailableError
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        side_effect=RateLimitError(
+            response=Response(status_code=None, request=""), body=None, message=None
+        ),
     ):
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
@@ -158,8 +163,8 @@ async def test_template_error(
         },
     )
     with patch(
-        "openai.resources.models.list",
-    ), patch("openai.resources.chat.completions.create"):
+        "openai.resources.models.AsyncModels.list",
+    ), patch("openai.resources.chat.completions.AsyncCompletions.create"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
@@ -233,13 +238,12 @@ async def test_generate_image_service(
 ) -> None:
     """Test generate image service."""
     service_data["config_entry"] = mock_config_entry.entry_id
-    expected_args["api_key"] = mock_config_entry.data["api_key"]
     expected_args["model"] = "dall-e-3"
     expected_args["response_format"] = "url"
     expected_args["n"] = 1
 
     with patch(
-        "openai.resources.images.generate",
+        "openai.resources.images.AsyncImages.generate",
         return_value=ImagesResponse(
             created=1700000000,
             data=[
@@ -259,7 +263,10 @@ async def test_generate_image_service(
             return_response=True,
         )
 
-    assert response == {"url": "A", "revised_prompt": "A clear and detailed picture of an ordinary canine"}
+    assert response == {
+        "url": "A",
+        "revised_prompt": "A clear and detailed picture of an ordinary canine",
+    }
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][2] == expected_args
 
@@ -271,8 +278,10 @@ async def test_generate_image_service_error(
 ) -> None:
     """Test generate image service handles errors."""
     with patch(
-        "openai.resources.images.generate",
-        side_effect=ServiceUnavailableError("Reason"),
+        "openai.resources.images.AsyncImages.generate",
+        side_effect=RateLimitError(
+            response=Response(status_code=None, request=""), body=None, message="Reason"
+        ),
     ), pytest.raises(HomeAssistantError, match="Error generating image: Reason"):
         await hass.services.async_call(
             "openai_conversation",

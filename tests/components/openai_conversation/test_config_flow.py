@@ -1,8 +1,9 @@
 """Test the OpenAI Conversation config flow."""
 from unittest.mock import patch
 
-from openai import APIConnectionError, AuthenticationError, InvalidRequestError
 import pytest
+from httpx import Response
+from openai import APIConnectionError, AuthenticationError, BadRequestError
 
 from homeassistant import config_entries
 from homeassistant.components.openai_conversation.const import (
@@ -32,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.list",
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
     ), patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
         return_value=True,
@@ -76,9 +77,19 @@ async def test_options(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(""), "cannot_connect"),
-        (AuthenticationError, "invalid_auth"),
-        (InvalidRequestError, "unknown"),
+        (APIConnectionError(request=None), "cannot_connect"),
+        (
+            AuthenticationError(
+                response=Response(status_code=None, request=""), body=None, message=None
+            ),
+            "invalid_auth",
+        ),
+        (
+            BadRequestError(
+                response=Response(status_code=None, request=""), body=None, message=None
+            ),
+            "unknown",
+        ),
     ],
 )
 async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
@@ -88,7 +99,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     )
 
     with patch(
-        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.list",
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

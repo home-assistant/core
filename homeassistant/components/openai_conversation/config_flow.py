@@ -1,7 +1,6 @@
 """Config flow for OpenAI Conversation integration."""
 from __future__ import annotations
 
-from functools import partial
 import logging
 import types
 from types import MappingProxyType
@@ -59,7 +58,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
-    await client.with_options(timeout=10.0).models.list()
+    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
