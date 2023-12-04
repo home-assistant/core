@@ -264,3 +264,9 @@ async def test_eve_energy_sensors(
     assert state.attributes["unit_of_measurement"] == "A"
     assert state.attributes["device_class"] == "current"
     assert state.attributes["friendly_name"] == "Eve Energy Plug Current"
+
+    # test extra poll triggered when secondary value (switch state) changes
+    set_node_attribute(eve_energy_plug_node, 1, 6, 0, True)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # TODO: test hare if the additional poll is actually performed
