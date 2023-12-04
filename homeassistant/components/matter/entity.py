@@ -129,8 +129,6 @@ class MatterEntity(Entity):
 
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
-        if not self.should_poll:
-            return
         # manually poll/refresh the primary value
         await self.matter_client.refresh_attribute(
             self._endpoint.node.node_id,
