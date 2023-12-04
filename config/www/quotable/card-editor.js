@@ -346,7 +346,7 @@ class QuotableCardEditor extends HTMLElement {
     };
 
     // Call quotable service to fetch new quote
-    const responseAuthor = await this._hass.callWS(fetchNew);
+    await this._hass.callWS(fetchNew);
   }
 }
 
