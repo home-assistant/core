@@ -100,7 +100,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Water volume estimation at 40 °C",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -110,7 +110,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_OUTLET_ENGINE,

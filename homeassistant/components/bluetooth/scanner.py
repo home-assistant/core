@@ -16,13 +16,14 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
 from bleak_retry_connector import restore_discoveries
 from bluetooth_adapters import DEFAULT_ADDRESS
+from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.package import is_docker_env
 
-from .base_scanner import MONOTONIC_TIME, BaseHaScanner
+from .base_scanner import BaseHaScanner
 from .const import (
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
@@ -139,6 +140,7 @@ class HaScanner(BaseHaScanner):
         self._new_info_callback = new_info_callback
         self.scanning = False
         self.hass = hass
+        self._last_detection = 0.0
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
