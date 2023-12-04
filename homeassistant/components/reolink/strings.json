@@ -10,6 +10,9 @@
           "use_https": "Enable HTTPS",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'."
         }
       },
       "reauth_confirm": {
@@ -61,6 +64,18 @@
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     }
   },
+  "services": {
+    "ptz_move": {
+      "name": "PTZ move",
+      "description": "Move the camera with a specific speed.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "PTZ move speed."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "face": {
@@ -74,6 +89,9 @@
       },
       "pet": {
         "name": "Pet"
+      },
+      "animal": {
+        "name": "Animal"
       },
       "visitor": {
         "name": "Visitor"
@@ -93,6 +111,9 @@
       "pet_lens_0": {
         "name": "Pet lens 0"
       },
+      "animal_lens_0": {
+        "name": "Animal lens 0"
+      },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
@@ -110,6 +131,9 @@
       },
       "pet_lens_1": {
         "name": "Pet lens 1"
+      },
+      "animal_lens_1": {
+        "name": "Animal lens 1"
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
@@ -145,6 +169,62 @@
       },
       "guard_set": {
         "name": "Guard set current position"
+      }
+    },
+    "camera": {
+      "sub": {
+        "name": "Fluent"
+      },
+      "main": {
+        "name": "Clear"
+      },
+      "snapshots_sub": {
+        "name": "Snapshots fluent"
+      },
+      "snapshots_main": {
+        "name": "Snapshots clear"
+      },
+      "ext": {
+        "name": "Balanced"
+      },
+      "sub_lens_0": {
+        "name": "Fluent lens 0"
+      },
+      "main_lens_0": {
+        "name": "Clear lens 0"
+      },
+      "snapshots_sub_lens_0": {
+        "name": "Snapshots fluent lens 0"
+      },
+      "snapshots_main_lens_0": {
+        "name": "Snapshots clear lens 0"
+      },
+      "ext_lens_0": {
+        "name": "Balanced lens 0"
+      },
+      "sub_lens_1": {
+        "name": "Fluent lens 1"
+      },
+      "main_lens_1": {
+        "name": "Clear lens 1"
+      },
+      "snapshots_sub_lens_1": {
+        "name": "Snapshots fluent lens 1"
+      },
+      "snapshots_main_lens_1": {
+        "name": "Snapshots clear lens 1"
+      },
+      "ext_lens_1": {
+        "name": "Balanced lens 1"
+      },
+      "autotrack_sub": {
+        "name": "Autotrack fluent"
+      },
+      "autotrack_snapshots_sub": {
+        "name": "Autotrack snapshots fluent"
+      },
+      "autotrack_snapshots_main": {
+        "name": "Autotrack snapshots clear"
       }
     },
     "light": {
@@ -189,6 +269,9 @@
       "ai_pet_sensititvity": {
         "name": "AI pet sensitivity"
       },
+      "ai_animal_sensititvity": {
+        "name": "AI animal sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -200,6 +283,9 @@
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
+      },
+      "ai_animal_delay": {
+        "name": "AI animal delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
@@ -215,6 +301,9 @@
       },
       "auto_track_stop_time": {
         "name": "Auto track stop time"
+      },
+      "day_night_switch_threshold": {
+        "name": "Day night switch threshold"
       }
     },
     "select": {
@@ -234,7 +323,7 @@
         "state": {
           "auto": "Auto",
           "color": "Color",
-          "blackwhite": "Black&White"
+          "blackwhite": "Black & white"
         }
       },
       "ptz_preset": {
@@ -309,6 +398,9 @@
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
+      },
+      "hdr": {
+        "name": "HDR"
       }
     }
   }

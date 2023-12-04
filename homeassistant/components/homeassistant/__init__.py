@@ -44,6 +44,7 @@ from .const import (
 from .exposed_entities import ExposedEntities
 
 ATTR_ENTRY_ID = "entry_id"
+ATTR_SAFE_MODE = "safe_mode"
 
 _LOGGER = logging.getLogger(__name__)
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
@@ -63,7 +64,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
 )
-
+SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
@@ -193,6 +194,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
+            if call.data[ATTR_SAFE_MODE]:
+                await conf_util.async_enable_safe_mode(hass)
             stop_handler = hass.data[DATA_STOP_HANDLER]
             await stop_handler(hass, True)
 
@@ -228,7 +231,11 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
+        hass,
+        ha.DOMAIN,
+        SERVICE_HOMEASSISTANT_RESTART,
+        async_handle_core_service,
+        SCHEMA_RESTART,
     )
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service

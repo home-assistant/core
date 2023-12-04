@@ -263,7 +263,7 @@ class UniFiController:
             if entry.domain == Platform.DEVICE_TRACKER:
                 macs.append(entry.unique_id.split("-", 1)[0])
 
-        for mac in self.option_block_clients + macs:
+        for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
                 self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
@@ -505,6 +505,14 @@ async def get_unifi_controller(
             "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
         )
         raise CannotConnect from err
+
+    except aiounifi.Forbidden as err:
+        LOGGER.warning(
+            "Access forbidden to UniFi Network at %s, check access rights: %s",
+            config[CONF_HOST],
+            err,
+        )
+        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(

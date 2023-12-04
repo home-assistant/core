@@ -7,8 +7,8 @@ from bluetooth_adapters import DEFAULT_ADDRESS
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
 )
 from homeassistant.core import HomeAssistant
 
@@ -442,7 +442,7 @@ async def test_diagnostics_remote_adapter(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:

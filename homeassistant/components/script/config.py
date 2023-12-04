@@ -13,7 +13,7 @@ from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
 )
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
-from homeassistant.config import config_without_domain
+from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_DEFAULT,
@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     async_validate_actions_config,

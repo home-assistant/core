@@ -305,7 +305,7 @@ async def async_initialize_triggers(
     variables: TemplateVarsType = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
-    triggers = []
+    triggers: list[Coroutine[Any, Any, CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
         if not conf.get(CONF_ENABLED, True):
@@ -338,8 +338,10 @@ async def async_initialize_triggers(
             log_cb(logging.ERROR, f"Got error '{result}' when setting up triggers for")
         elif isinstance(result, Exception):
             log_cb(logging.ERROR, "Error setting up trigger", exc_info=result)
+        elif isinstance(result, BaseException):
+            raise result from None
         elif result is None:
-            log_cb(
+            log_cb(  # type: ignore[unreachable]
                 logging.ERROR, "Unknown error while setting up trigger (empty result)"
             )
         else:

@@ -65,18 +65,30 @@ def construct_result_message(iden: int, payload: str) -> str:
     return f'{{"id":{iden},"type":"result","success":true,"result":{payload}}}'
 
 
-def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
+def error_message(
+    iden: int | None,
+    code: str,
+    message: str,
+    translation_key: str | None = None,
+    translation_domain: str | None = None,
+    translation_placeholders: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Return an error result message."""
+    error_payload: dict[str, Any] = {
+        "code": code,
+        "message": message,
+    }
+    # In case `translation_key` is `None` we do not set it, nor the
+    # `translation`_placeholders` and `translation_domain`.
+    if translation_key is not None:
+        error_payload["translation_key"] = translation_key
+        error_payload["translation_placeholders"] = translation_placeholders
+        error_payload["translation_domain"] = translation_domain
     return {
         "id": iden,
         **BASE_ERROR_MESSAGE,
-        "error": {"code": code, "message": message},
+        "error": error_payload,
     }
-
-
-def construct_event_message(iden: int, payload: str) -> str:
-    """Construct an event message JSON."""
-    return f'{{"id":{iden},"type":"event","event":{payload}}}'
 
 
 def event_message(iden: int, event: Any) -> dict[str, Any]:

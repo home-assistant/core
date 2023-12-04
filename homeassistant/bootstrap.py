@@ -41,6 +41,7 @@ from .setup import (
     DATA_SETUP,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
+    async_notify_setup_error,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
@@ -120,6 +121,7 @@ async def async_setup_hass(
         runtime_config.log_no_color,
     )
 
+    hass.config.safe_mode = runtime_config.safe_mode
     hass.config.skip_pip = runtime_config.skip_pip
     hass.config.skip_pip_packages = runtime_config.skip_pip_packages
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
@@ -197,6 +199,8 @@ async def async_setup_hass(
             {"recovery_mode": {}, "http": http_conf},
             hass,
         )
+    elif hass.config.safe_mode:
+        _LOGGER.info("Starting in safe mode")
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -289,7 +293,8 @@ async def async_from_config_dict(
     try:
         await conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
-        conf_util.async_log_exception(config_err, "homeassistant", core_config, hass)
+        conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
+        async_notify_setup_error(hass, core.DOMAIN)
         return None
     except HomeAssistantError:
         _LOGGER.error(
@@ -395,7 +400,7 @@ def async_enable_logging(
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
-        "Uncaught exception", exc_info=args  # type: ignore[arg-type]
+        "Uncaught exception", exc_info=args
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",

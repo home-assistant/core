@@ -4,15 +4,17 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd.const import DOMAIN
+from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import utcnow
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("status", (MOCK_STATUS, MOCK_MINIMAL_STATUS))
@@ -42,19 +44,19 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
         MOCK_STATUS,
     ),
 )
-async def test_device_entry(hass: HomeAssistant, status: OrderedDict) -> None:
+async def test_device_entry(
+    hass: HomeAssistant, status: OrderedDict, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful setup of device entries."""
     await async_init_integration(hass, status=status)
 
     # Verify device info is properly set up.
-    device_entries = dr.async_get(hass)
-
     if "SERIALNO" not in status:
-        assert len(device_entries.devices) == 0
+        assert len(device_registry.devices) == 0
         return
 
-    assert len(device_entries.devices) == 1
-    entry = device_entries.async_get_device({(DOMAIN, status["SERIALNO"])})
+    assert len(device_registry.devices) == 1
+    entry = device_registry.async_get_device({(DOMAIN, status["SERIALNO"])})
     assert entry is not None
     # Specify the mapping between field name and the expected fields in device entry.
     fields = {
@@ -67,11 +69,11 @@ async def test_device_entry(hass: HomeAssistant, status: OrderedDict) -> None:
     for field, entry_value in fields.items():
         if field in status:
             assert entry_value == status[field]
+        # Even if UPSNAME is not available, we must fall back to default "APC UPS".
         elif field == "UPSNAME":
-            # Even if UPSNAME is not available, we must fall back to default "APC UPS".
             assert entry_value == "APC UPS"
         else:
-            assert entry_value is None
+            assert not entry_value
 
     assert entry.manufacturer == "APC"
 
@@ -107,15 +109,16 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse", side_effect=OSError()), patch(
-        "apcaccess.status.get"
+    with (
+        patch("apcaccess.status.parse", side_effect=OSError()),
+        patch("apcaccess.status.get"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_remove(hass: HomeAssistant) -> None:
-    """Test successful unload of entry."""
+async def test_unload_remove_entry(hass: HomeAssistant) -> None:
+    """Test successful unload and removal of an entry."""
     # Load two integrations from two mock hosts.
     entries = (
         await async_init_integration(hass, host="test1", status=MOCK_STATUS),
@@ -142,3 +145,41 @@ async def test_unload_remove(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+async def test_availability(hass: HomeAssistant) -> None:
+    """Ensure that we mark the entity's availability properly when network is down / back up."""
+    await async_init_integration(hass)
+
+    state = hass.states.get("sensor.ups_load")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 14.0
+
+    with (
+        patch("apcaccess.status.parse") as mock_parse,
+        patch("apcaccess.status.get", return_value=b""),
+    ):
+        # Mock a network error and then trigger an auto-polling event.
+        mock_parse.side_effect = OSError()
+        future = utcnow() + UPDATE_INTERVAL
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        # Sensors should be marked as unavailable.
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+        # Reset the API to return a new status and update.
+        mock_parse.side_effect = None
+        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+        future = future + UPDATE_INTERVAL
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        # Sensors should be online now with the new value.
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert pytest.approx(float(state.state)) == 15.0

@@ -30,6 +30,13 @@ HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
 
+API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_doorbell",
+    "read_doorbell",
+    "read_mhs1",
+    "write_mhs1",
+]
+
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
@@ -82,12 +89,17 @@ ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
+ATTR_TARGET_TEMPERATURE = "target_temperature"
+ATTR_TIME_PERIOD = "time_period"
 
+SERVICE_CLEAR_TEMPERATURE_SETTING = "clear_temperature_setting"
 SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
+SERVICE_SET_TEMPERATURE_WITH_END_DATETIME = "set_temperature_with_end_datetime"
+SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD = "set_temperature_with_time_period"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"

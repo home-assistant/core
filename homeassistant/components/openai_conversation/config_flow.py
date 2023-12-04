@@ -59,7 +59,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
-    await client.with_options(timeout=10 * 1000).models.list()
+    await client.with_options(timeout=10.0).models.list()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -20,7 +20,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
+from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
 
 class SelectPlatform(MockPlatform):
@@ -47,7 +47,7 @@ class SelectPlatform(MockPlatform):
 @pytest.fixture
 async def init_select(hass: HomeAssistant, init_components) -> ConfigEntry:
     """Initialize select entity."""
-    mock_entity_platform(hass, "select.assist_pipeline", SelectPlatform())
+    mock_platform(hass, "assist_pipeline.select", SelectPlatform())
     config_entry = MockConfigEntry(domain="assist_pipeline")
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_forward_entry_setup(config_entry, "select")
@@ -102,10 +102,10 @@ async def test_select_entity_registering_device(
     hass: HomeAssistant,
     init_select: ConfigEntry,
     pipeline_data: PipelineData,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test entity registering as an assist device."""
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={("test", "test")})
+    device = device_registry.async_get_device(identifiers={("test", "test")})
     assert device is not None
 
     # Test device is registered

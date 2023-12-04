@@ -1,54 +1,84 @@
 {
-  "title": "To-do List",
+  "title": "To-do list",
   "entity_component": {
     "_": {
       "name": "[%key:component::todo::title%]"
     }
   },
   "services": {
-    "create_item": {
-      "name": "Create To-do List Item",
-      "description": "Add a new To-do List Item.",
+    "get_items": {
+      "name": "Get to-do list items",
+      "description": "Get items on a to-do list.",
       "fields": {
-        "summary": {
-          "name": "Summary",
-          "description": "The short summary that represents the To-do item."
-        },
         "status": {
           "name": "Status",
-          "description": "A status or confirmation of the To-do item."
+          "description": "Only return to-do items with the specified statuses. Returns not completed actions by default."
+        }
+      }
+    },
+    "add_item": {
+      "name": "Add to-do list item",
+      "description": "Add a new to-do list item.",
+      "fields": {
+        "item": {
+          "name": "Item name",
+          "description": "The name that represents the to-do item."
+        },
+        "due_date": {
+          "name": "Due date",
+          "description": "The date the to-do item is expected to be completed."
+        },
+        "due_datetime": {
+          "name": "Due date and time",
+          "description": "The date and time the to-do item is expected to be completed."
+        },
+        "description": {
+          "name": "Description",
+          "description": "A more complete description of the to-do item than provided by the item name."
         }
       }
     },
     "update_item": {
-      "name": "Update To-do List Item",
-      "description": "Update an existing To-do List Item based on either its Unique Id or Summary.",
+      "name": "Update to-do list item",
+      "description": "Update an existing to-do list item based on its name.",
       "fields": {
-        "uid": {
-          "name": "To-do Item Unique Id",
-          "description": "Unique Identifier for the To-do List Item."
+        "item": {
+          "name": "Item name",
+          "description": "The name for the to-do list item."
         },
-        "summary": {
-          "name": "Summary",
-          "description": "The short summary that represents the To-do item."
+        "rename": {
+          "name": "Rename item",
+          "description": "The new name of the to-do item"
         },
         "status": {
-          "name": "Status",
-          "description": "A status or confirmation of the To-do item."
+          "name": "Set status",
+          "description": "A status or confirmation of the to-do item."
+        },
+        "due_date": {
+          "name": "Due date",
+          "description": "The date the to-do item is expected to be completed."
+        },
+        "due_datetime": {
+          "name": "Due date and time",
+          "description": "The date and time the to-do item is expected to be completed."
+        },
+        "description": {
+          "name": "Description",
+          "description": "A more complete description of the to-do item than provided by the item name."
         }
       }
     },
-    "delete_item": {
-      "name": "Delete a To-do List Item",
-      "description": "Delete an existing To-do List Item either by its Unique Id or Summary.",
+    "remove_completed_items": {
+      "name": "Remove all completed to-do list items",
+      "description": "Remove all to-do list items that have been completed."
+    },
+    "remove_item": {
+      "name": "Remove a to-do list item",
+      "description": "Remove an existing to-do list item by its name.",
       "fields": {
-        "uid": {
-          "name": "To-do Item Unique Ids",
-          "description": "Unique Identifiers for the To-do List Items."
-        },
-        "summary": {
-          "name": "Summary",
-          "description": "The short summary that represents the To-do item."
+        "item": {
+          "name": "Item name",
+          "description": "The name for the to-do list items."
         }
       }
     }
@@ -56,7 +86,7 @@
   "selector": {
     "status": {
       "options": {
-        "needs_action": "Needs Action",
+        "needs_action": "Not completed",
         "completed": "Completed"
       }
     }

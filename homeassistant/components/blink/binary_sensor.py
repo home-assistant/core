@@ -32,9 +32,11 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Camera Armed sensor is depreciated covered by switch and will be removed in 2023.6.
     BinarySensorEntityDescription(
         key=TYPE_CAMERA_ARMED,
         translation_key="camera_armed",
+        entity_registry_enabled_default=False,
     ),
     BinarySensorEntityDescription(
         key=TYPE_MOTION_DETECTED,
@@ -47,6 +49,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the blink binary sensors."""
+
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
 
     entities = [
