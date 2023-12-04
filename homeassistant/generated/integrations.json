@@ -4976,6 +4976,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "scl": {
+      "name": "Seattle City Light (SCL)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "season": {
       "integration_type": "service",
       "config_flow": true,
