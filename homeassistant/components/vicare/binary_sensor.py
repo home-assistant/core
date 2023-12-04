@@ -161,7 +161,7 @@ def _build_entities_for_component(
     entity_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
 ) -> list[ViCareBinarySensor]:
     """Create component specific ViCare binary sensor entities."""
-    is_heating_circuit: bool = len(components) > 0 and isinstance(
+    is_heating_circuit: bool = bool(components) and isinstance(
         components[0], PyViCareHeatingCircuit
     )
     return [
