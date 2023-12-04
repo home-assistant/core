@@ -681,7 +681,7 @@ def _build_entities_for_component(
 ) -> list[ViCareSensor]:
     """Create component specific ViCare sensor entities."""
 
-    is_heating_circuit: bool = components and isinstance(
+    is_heating_circuit: bool = len(components) > 0 and isinstance(
         components[0], PyViCareHeatingCircuit
     )
     return [
