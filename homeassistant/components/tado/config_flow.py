@@ -137,7 +137,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except RuntimeError:
             return self.async_abort(reason="import_failed")
 
-        home_id = None
         if validate_result.get("unique_id"):
             home_id = validate_result["unique_id"]
 
