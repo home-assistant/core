@@ -115,22 +115,22 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             self.hass, DOMAIN, "Loqed", webhook_id, self._handle_webhook
         )
 
-        if cloud.async_active_subscription(self.hass):
-            webhook_url = await async_cloudhook_generate_url(self.hass, self._entry)
-        else:
-            webhook_url = webhook.async_generate_url(
-                self.hass, self._entry.data[CONF_WEBHOOK_ID]
-            )
-
-        _LOGGER.debug("Webhook URL: %s", webhook_url)
-
         webhooks = await self.lock.getWebhooks()
 
         webhook_index = next(
-            (x["id"] for x in webhooks if x["url"] == webhook_url), None
+            (x["id"] for x in webhooks if webhook_id in x["url"]), None
         )
 
         if not webhook_index:
+            if cloud.async_active_subscription(self.hass):
+                webhook_url = await async_cloudhook_generate_url(self.hass, self._entry)
+            else:
+                webhook_url = webhook.async_generate_url(
+                    self.hass, self._entry.data[CONF_WEBHOOK_ID]
+                )
+
+            _LOGGER.debug("Webhook URL: %s", webhook_url)
+
             await self.lock.registerWebhook(webhook_url)
             webhooks = await self.lock.getWebhooks()
             webhook_index = next(x["id"] for x in webhooks if x["url"] == webhook_url)
