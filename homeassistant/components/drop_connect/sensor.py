@@ -102,7 +102,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
         value_fn=lambda device: device.average_water_used,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     DROPSensorEntityDescription(
         key=CAPACITY_REMAINING,
@@ -111,7 +111,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
         value_fn=lambda device: device.capacity_remaining,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     DROPSensorEntityDescription(
         key=CURRENT_SYSTEM_PRESSURE,

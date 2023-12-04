@@ -81,9 +81,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.__hub_id = topic_elements[2]
         self.__device_id = topic_elements[3]
 
-        await self.async_set_unique_id(f"{self.__hub_id}_{self.__device_id}")
-        # Abort if this device has already been configured.
-        if self.unique_id in self._async_current_ids(False):
+        existing_entry = await self.async_set_unique_id(
+            f"{self.__hub_id}_{self.__device_id}"
+        )
+        if existing_entry is not None:
+            # Note: returning "invalid_discovery_info" here instead of "already_configured"
+            # allows discovery of additional device types.
             return self.async_abort(reason="invalid_discovery_info")
 
         # Discovery data must include the DROP device type and name.
