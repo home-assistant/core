@@ -260,6 +260,7 @@ def _attach_file(hass, atch_name, content_id=""):
             str(file_path)
         ):
             file_name = os.path.basename(atch_name)
+            url = "https://www.home-assistant.io/docs/configuration/basic/"
             raise ServiceValidationError(
                 f"Cannot send email with attachment '{file_name} "
                 f"from directory '{file_path} which is not secure to load data from. "
@@ -271,6 +272,7 @@ def _attach_file(hass, atch_name, content_id=""):
                 translation_placeholders={
                     "file_path": file_path,
                     "file_name": file_name,
+                    "url": url,
                 },
             )
         with open(atch_name, "rb") as attachment_file:

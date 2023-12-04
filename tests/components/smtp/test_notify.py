@@ -176,6 +176,7 @@ def test_sending_insecure_files_fails(
         str(exc.value.translation_placeholders["file_path"])
         == "tests/testing_config/notify"
     )
+    assert exc.value.translation_placeholders["url"]
     assert exc.value.translation_placeholders["file_name"] == "test.jpg"
 
 
