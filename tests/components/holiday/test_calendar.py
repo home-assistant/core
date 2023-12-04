@@ -7,7 +7,11 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
+from homeassistant.components.holiday.const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -227,3 +231,50 @@ async def test_no_next_event(
     assert state is not None
     assert state.state == "off"
     assert state.attributes == {"friendly_name": "Germany"}
+
+
+async def test_category(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if there is only one event next year in a category that only has one event."""
+    freezer.move_to(datetime(2023, 1, 19, 12, tzinfo=dt_util.UTC))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "TH"},
+        title="Thailand",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_CATEGORIES: ["armed_forces"]}
+    )
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.thailand",
+            "end_date_time": dt_util.now() + timedelta(days=365),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.thailand": {
+            "events": [
+                {
+                    "start": "2024-01-18",
+                    "end": "2024-01-19",
+                    "summary": "Royal Thai Armed Forces Day",
+                    "location": "Thailand",
+                }
+            ]
+        }
+    }

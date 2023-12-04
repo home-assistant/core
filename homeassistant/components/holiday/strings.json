@@ -15,5 +15,29 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure categories"
+      }
+    },
+    "abort": {
+      "no_options": "This calendar does not have categories."
+    }
+  },
+  "selector": {
+    "categories": {
+      "options": {
+        "armed_forces": "Armed forces",
+        "bank": "Bank",
+        "government": "Government",
+        "half_day": "Half day",
+        "optional": "Optional",
+        "public": "Public",
+        "school": "School",
+        "workday": "Workday"
+      }
+    }
   }
 }

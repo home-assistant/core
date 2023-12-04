@@ -3,8 +3,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.holiday.const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -126,3 +130,49 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     )
     assert result_de_step2["type"] == FlowResultType.ABORT
     assert result_de_step2["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow."""
+    data_at = {
+        CONF_COUNTRY: "AT",
+        CONF_PROVINCE: "1",
+    }
+    data_de = {
+        CONF_COUNTRY: "DE",
+        CONF_PROVINCE: "BW",
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data_at)
+
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CATEGORIES: ["bank"]},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert entry.options == {CONF_CATEGORIES: ["bank"]}
+
+    entry = MockConfigEntry(domain=DOMAIN, data=data_de)
+
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_options"
