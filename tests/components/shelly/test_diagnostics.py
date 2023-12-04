@@ -2,6 +2,7 @@
 from unittest.mock import ANY
 
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
+from aioshelly.const import MODEL_25
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.shelly.const import (
@@ -40,7 +41,7 @@ async def test_block_config_entry_diagnostics(
         "bluetooth": "not initialized",
         "device_info": {
             "name": "Test name",
-            "model": "SHSW-25",
+            "model": MODEL_25,
             "sw_version": "some fw string",
         },
         "device_settings": {"coiot": {"update_period": 15}},
@@ -136,7 +137,7 @@ async def test_rpc_config_entry_diagnostics(
         },
         "device_info": {
             "name": "Test name",
-            "model": "SHSW-25",
+            "model": MODEL_25,
             "sw_version": "some fw string",
         },
         "device_settings": {},

@@ -139,7 +139,7 @@ SUPPORTED_INTELLICHEM_SENSORS = [
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
-        key=VALUE.CALCIUM_HARNESS,
+        key=VALUE.CALCIUM_HARDNESS,
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,

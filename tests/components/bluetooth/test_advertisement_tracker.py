@@ -352,7 +352,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     )
     switchbot_device_went_unavailable = False
 
-    scanner = FakeScanner(hass, "new", "fake_adapter")
+    scanner = FakeScanner("new", "fake_adapter")
     cancel_scanner = async_register_scanner(hass, scanner, False)
 
     @callback

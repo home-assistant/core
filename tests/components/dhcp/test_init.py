@@ -151,8 +151,11 @@ async def _async_get_handle_dhcp_packet(hass, integration_matchers):
     with patch(
         "homeassistant.components.dhcp._verify_l2socket_setup",
     ), patch(
-        "scapy.arch.common.compile_filter"
-    ), patch("scapy.sendrecv.AsyncSniffer", _mock_sniffer):
+        "scapy.arch.common.compile_filter",
+    ), patch(
+        "scapy.sendrecv.AsyncSniffer",
+        _mock_sniffer,
+    ):
         await dhcp_watcher.async_start()
 
     return async_handle_dhcp_packet

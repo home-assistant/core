@@ -55,22 +55,20 @@
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
-      "mode": "heat_cool",
+      "mode": "cool",
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "Weekschema",
       "selected_schedule": "None",
       "sensors": {
-        "setpoint_high": 23.5,
-        "setpoint_low": 4.0,
+        "setpoint": 23.5,
         "temperature": 25.8
       },
       "thermostat": {
         "lower_bound": 1.0,
         "resolution": 0.01,
-        "setpoint_high": 23.5,
-        "setpoint_low": 4.0,
+        "setpoint": 23.5,
         "upper_bound": 35.0
       },
       "vendor": "Plugwise"
@@ -115,9 +113,8 @@
       "select_schedule": "Badkamer",
       "sensors": {
         "battery": 56,
-        "setpoint_high": 23.5,
-        "setpoint_low": 20.0,
-        "temperature": 239
+        "setpoint": 23.5,
+        "temperature": 23.9
       },
       "temperature_offset": {
         "lower_bound": -2.0,
@@ -128,8 +125,7 @@
       "thermostat": {
         "lower_bound": 0.0,
         "resolution": 0.01,
-        "setpoint_high": 25.0,
-        "setpoint_low": 19.0,
+        "setpoint": 25.0,
         "upper_bound": 99.9
       },
       "vendor": "Plugwise",

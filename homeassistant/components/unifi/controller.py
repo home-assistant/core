@@ -506,6 +506,14 @@ async def get_unifi_controller(
         )
         raise CannotConnect from err
 
+    except aiounifi.Forbidden as err:
+        LOGGER.warning(
+            "Access forbidden to UniFi Network at %s, check access rights: %s",
+            config[CONF_HOST],
+            err,
+        )
+        raise AuthenticationRequired from err
+
     except aiounifi.LoginRequired as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but login required: %s",
