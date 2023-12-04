@@ -31,7 +31,7 @@ class AcaiaEntity(CoordinatorEntity[AcaiaApiCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._scale: AcaiaClient = coordinator.acaia_client
+        self._scale: AcaiaClient = coordinator.data
         self._attr_unique_id = (
             f"{format_mac(self._scale.mac)}_{self.entity_description.key}"
         )

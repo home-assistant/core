@@ -1,28 +1,22 @@
 """Coordinator for Acaia integration."""
 from datetime import timedelta
 import logging
-from typing import Any
+
+from pyacaia_async.exceptions import AcaiaError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .acaiaclient import AcaiaClient
-from .const import CONF_IS_NEW_STYLE_SCALE
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AcaiaApiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AcaiaApiCoordinator(DataUpdateCoordinator[AcaiaClient]):
     """Class to handle fetching data from the La Marzocco API centrally."""
-
-    @property
-    def acaia_client(self) -> AcaiaClient:
-        """Return the acaia client."""
-        return self._acaia_client
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -32,23 +26,19 @@ class AcaiaApiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name="Acaia API coordinator",
             update_interval=SCAN_INTERVAL,
         )
-        name = config_entry.data[CONF_NAME]
-        mac = config_entry.data[CONF_MAC]
-        is_new_style_scale = config_entry.data.get(CONF_IS_NEW_STYLE_SCALE, True)
 
         self._acaia_client: AcaiaClient = AcaiaClient(
-            hass,
-            mac=mac,
-            name=name,
-            is_new_style_scale=is_new_style_scale,
+            hass=hass,
+            entry=config_entry,
             notify_callback=self.async_update_listeners,
         )
+        self.data = self._acaia_client
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> AcaiaClient:
         """Fetch data."""
         try:
-            await self.acaia_client.async_update()
-        except Exception as ex:
+            await self._acaia_client.async_update()
+        except (AcaiaError, TimeoutError) as ex:
             raise UpdateFailed("Error: %s" % ex) from ex
 
-        return self.acaia_client.data
+        return self._acaia_client
