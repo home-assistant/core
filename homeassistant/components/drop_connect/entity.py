@@ -9,7 +9,6 @@ from .coordinator import DROPDeviceDataUpdateCoordinator
 class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
     """Representation of a DROP device entity."""
 
-    _attr_force_update = False
     _attr_has_entity_name = True
     _attr_should_poll = False
 
