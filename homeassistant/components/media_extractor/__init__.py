@@ -115,7 +115,7 @@ class MediaExtractor:
             ydl = YoutubeDL(
                 {"quiet": True, "logger": _LOGGER, "cookiefile": cookies_file}
             )
-            _LOGGER.info(">edia extractor loaded cookies file from: %s", cookies_file)
+            _LOGGER.info("Media extractor loaded cookies file from: %s", cookies_file)
         else:
             ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
             _LOGGER.info(
