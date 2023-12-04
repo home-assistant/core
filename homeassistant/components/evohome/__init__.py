@@ -252,12 +252,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
         _LOGGER.debug("Config = %s", _config)
 
-    client_v1 = evohomeasync.EvohomeClient(
-        client_v2.username,
-        client_v2.password,
-        session_id=user_data.get("sessionId") if user_data else None,  # STORAGE_VER 1
-        session=async_get_clientsession(hass),
-    )
+    if config[DOMAIN][CONF_HIGH_PRECISION]:
+        client_v1 = evohomeasync.EvohomeClient(
+            client_v2.username,
+            client_v2.password,
+            session_id=user_data.get("sessionId")
+            if user_data
+            else None,  # STORAGE_VER 1
+            session=async_get_clientsession(hass),
+        )
+    else:
+        client_v1 = None
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["broker"] = broker = EvoBroker(
