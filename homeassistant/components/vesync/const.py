@@ -35,17 +35,8 @@ DEV_TYPE_TO_HA = {
     "ESWL01": "switch",
     "ESWL03": "switch",
     "ESO15-TB": "outlet",
-    "LV-PUR131S": "fan",
-    "Core200S": "fan",
-    "Core300S": "fan",
-    "Core400S": "fan",
-    "Core600S": "fan",
     "Vital200S": "fan",
     "Vital100S": "fan",
-    "ESD16": "walldimmer",
-    "ESWD16": "walldimmer",
-    "ESL100": "bulb-dimmable",
-    "ESL100CW": "bulb-tunable-white",
 }
 
 SKU_TO_BASE_DEVICE = {
