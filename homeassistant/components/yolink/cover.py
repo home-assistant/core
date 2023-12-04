@@ -61,9 +61,11 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
             return
         if self.coordinator.paired_device is None or state_val == "error":
             self._attr_is_closed = None
+            self._attr_available = False
             self.async_write_ha_state()
         elif state_val in ["open", "closed"]:
             self._attr_is_closed = state_val == "closed"
+            self._attr_available = True
             self.async_write_ha_state()
 
     async def toggle_garage_state(self) -> None:
