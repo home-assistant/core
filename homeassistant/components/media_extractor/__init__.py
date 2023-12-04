@@ -109,7 +109,7 @@ class MediaExtractor:
     def get_stream_selector(self) -> Callable[[str], str]:
         """Return format selector for the media URL."""
         cookies_file = os.path.join(
-            self.hass.config.config_dir, "media_extractor_cookies.txt"
+            self.hass.config.config_dir, "media_extractor", "cookies.txt"
         )
         ydl_params = {"quiet": True, "logger": _LOGGER}
         if os.path.isfile(cookies_file):

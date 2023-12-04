@@ -226,7 +226,11 @@ async def test_cookiefile_detection(
     await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
     await hass.async_block_till_done()
 
-    cookies_file = os.path.join(hass.config.config_dir, "media_extractor_cookies.txt")
+    cookies_dir = os.path.join(hass.config.config_dir, "media_extractor")
+    cookies_file = os.path.join(cookies_dir, "cookies.txt")
+
+    if not os.path.exists(cookies_dir):
+        os.makedirs(cookies_dir)
 
     f = open(cookies_file, "w+", encoding="utf-8")
     f.write(
