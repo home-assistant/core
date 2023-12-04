@@ -529,7 +529,7 @@ beautifulsoup4==4.12.2
 bellows==0.37.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.14.5
+bimmer-connected[china]==0.14.6
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -792,7 +792,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.4.9
+evohome-async==0.4.13
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -2411,7 +2411,7 @@ satel-integra==0.3.7
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.4
+screenlogicpy==0.10.0
 
 # homeassistant.components.scsgate
 scsgate==0.1.0

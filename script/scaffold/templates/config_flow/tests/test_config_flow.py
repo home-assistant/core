@@ -1,15 +1,12 @@
 """Test the NEW_NAME config flow."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -18,28 +15,28 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Name of the device"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -54,17 +51,17 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -77,14 +74,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
