@@ -3,6 +3,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
+from habluetooth import HaScanner
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -25,6 +26,20 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+class FakeHaScanner(HaScanner):
+    """Fake HaScanner."""
+
+    @property
+    def discovered_devices_and_advertisement_data(self):
+        """Return the discovered devices and advertisement data."""
+        return {
+            "44:44:33:11:23:45": (
+                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
+                generate_advertisement_data(local_name="x"),
+            )
+        }
+
+
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -38,15 +53,8 @@ async def test_diagnostics(
     # because we cannot import the scanner class directly without it throwing an
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
-    with patch(
-        "habluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
-        {
-            "44:44:33:11:23:45": (
-                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
-                generate_advertisement_data(local_name="x"),
-            )
-        },
-    ), patch(
+
+    with patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
     ), patch(
@@ -189,7 +197,7 @@ async def test_diagnostics(
                         "scanning": True,
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
-                        "type": "HaScanner",
+                        "type": "FakeHaScanner",
                     },
                     {
                         "adapter": "hci0",
@@ -216,7 +224,7 @@ async def test_diagnostics(
                         "scanning": True,
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
-                        "type": "HaScanner",
+                        "type": "FakeHaScanner",
                     },
                     {
                         "adapter": "hci1",
@@ -243,7 +251,7 @@ async def test_diagnostics(
                         "scanning": True,
                         "source": "00:00:00:00:00:02",
                         "start_time": ANY,
-                        "type": "HaScanner",
+                        "type": "FakeHaScanner",
                     },
                 ],
             },
@@ -268,15 +276,7 @@ async def test_diagnostics_macos(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    with patch(
-        "habluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
-        {
-            "44:44:33:11:23:45": (
-                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
-                switchbot_adv,
-            )
-        },
-    ), patch(
+    with patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Darwin",
     ), patch(
@@ -459,7 +459,7 @@ async def test_diagnostics_remote_adapter(
                 MONOTONIC_TIME(),
             )
 
-    with patch(
+    with patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
     ), patch(
@@ -592,7 +592,7 @@ async def test_diagnostics_remote_adapter(
                         "scanning": True,
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
-                        "type": "HaScanner",
+                        "type": "FakeHaScanner",
                     },
                     {
                         "adapter": "hci0",
@@ -603,7 +603,7 @@ async def test_diagnostics_remote_adapter(
                         "scanning": True,
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
-                        "type": "HaScanner",
+                        "type": "FakeHaScanner",
                     },
                     {
                         "connectable": False,
