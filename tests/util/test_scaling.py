@@ -144,10 +144,6 @@ async def test_scale_ranged_value_to_int_range_starting_high(
         scale_ranged_value_to_int_range(source_range, dest_range, input_val)
         == output_val
     )
-    assert (
-        scale_ranged_value_to_int_range(source_range, dest_range, input_val)
-        == output_val
-    )
 
 
 @pytest.mark.parametrize(
