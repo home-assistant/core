@@ -64,7 +64,7 @@ async def async_setup_entry(
         ),
     )
     selects.append(
-        HuaweiLteBaseSelect(
+        HuaweiLteSelectEntity(
             router,
             entity_description=desc,
             key=desc.key,
@@ -76,8 +76,8 @@ async def async_setup_entry(
 
 
 @dataclass
-class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
-    """Huawei LTE select base class."""
+class HuaweiLteSelectEntity(HuaweiLteBaseEntityWithDevice, SelectEntity):
+    """Huawei LTE select entity."""
 
     entity_description: HuaweiSelectEntityDescription
     key: str
