@@ -33,7 +33,7 @@ DESCRIPTIONS: dict[TessieCategory, tuple[SensorEntityDescription, ...]] = {
     TessieCategory.CHARGE_STATE: (
         SensorEntityDescription(
             key="usable_battery_level",
-            translation_key="battery_level",
+            translation_key="usable_battery_level",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
@@ -62,7 +62,7 @@ DESCRIPTIONS: dict[TessieCategory, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key="charger_actual_current",
-            translation_key="charger_current",
+            translation_key="charger_actual_current",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,

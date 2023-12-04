@@ -3,6 +3,8 @@
 
 from typing import Any
 
+from aiohttp import ClientSession
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,12 +26,16 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
         super().__init__(coordinator)
-        self.vin = vin
-        self.category = category
-        self.key = key
-        self._attr_unique_id = f"{vin}:{category}:{key}"
+        self.vin: str = vin
+        self.category: str = category
+        self.key: str = key
+        self.session: ClientSession = coordinator.session
+
         car_data = coordinator.data[vin]
         car_type = car_data[TessieCategory.VEHICLE_CONFIG]["car_type"]
+
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{vin}:{category}:{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vin)},
             manufacturer="Tesla",
@@ -42,4 +48,4 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
 
     def get(self) -> Any:
         """Return value from coordinator data."""
-        return self.coordinator.data[self.vin][self.category].get(self.key)
+        return self.coordinator.data[self.vin][self.category][self.key]
