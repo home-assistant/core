@@ -128,12 +128,12 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         Example: 'xyz-1' --> 'xyz-heating-1'.
         """
 
-        if entity_entry.platform == Platform.CLIMATE:
+        if entity_entry.domain == Platform.CLIMATE:
             new_unique_id = entity_entry.unique_id
             parts = new_unique_id.split("-")
             if len(parts) == 2:
                 new_unique_id = "-heating-".join(parts)
-                _LOGGER.debug(
+                _LOGGER.info(
                     "Migrating unique id of climate entity from %s to %s",
                     entity_entry.unique_id,
                     new_unique_id,
