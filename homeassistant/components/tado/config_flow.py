@@ -122,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
-                CONF_HOME_ID: home_id,
+                CONF_HOME_ID: imported_home_id,
             }
         )
 
