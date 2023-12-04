@@ -32,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -255,13 +256,23 @@ def _attach_file(hass, atch_name, content_id=""):
     """
     try:
         file_path = Path(atch_name).parent
-        if not hass.config.is_allowed_path(str(file_path)):
-            _LOGGER.warning(
-                "'%s' is not secure to load data from, ignoring attachment '%s'!",
-                file_path,
-                atch_name,
+        if os.path.exists(file_path) and not hass.config.is_allowed_path(
+            str(file_path)
+        ):
+            file_name = os.path.basename(atch_name)
+            raise ServiceValidationError(
+                f"Cannot send email with attachment '{file_name} "
+                f"from directory '{file_path} which is not secure to load data from. "
+                "Only folders added to `allowlist_external_dirs` are accessible. See "
+                "https://www.home-assistant.io/docs/configuration/basic/ "
+                "for more information.",
+                translation_domain=DOMAIN,
+                translation_key="remote_path_not_allowed",
+                translation_placeholders={
+                    "file_path": file_path,
+                    "file_name": file_name,
+                },
             )
-            return
         with open(atch_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
     except FileNotFoundError:
