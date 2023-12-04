@@ -920,8 +920,8 @@ build.json @home-assistant/supervisor
 /tests/components/openuv/ @bachya
 /homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
-/homeassistant/components/opnsense/ @mtreinish
-/tests/components/opnsense/ @mtreinish
+/homeassistant/components/opnsense/ @mtreinish @rtm516
+/tests/components/opnsense/ @mtreinish @rtm516
 /homeassistant/components/opower/ @tronikos
 /tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
