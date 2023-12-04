@@ -229,7 +229,12 @@ async def test_cookiefile_detection(
     cookies_file = os.path.join(hass.config.config_dir, "media_extractor_cookies.txt")
 
     f = open(cookies_file, "w+", encoding="utf-8")
-    f.write("this is a temp cookie file for test")
+    f.write(
+        """# Netscape HTTP Cookie File
+
+        .youtube.com TRUE / TRUE 1701708706 GPS 1
+        """
+    )
     f.close()
 
     await hass.services.async_call(
