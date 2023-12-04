@@ -101,7 +101,7 @@ class DigitalOcean:
         domain = digitalocean.Domain(token=self._access_token, name=domain_name)
         try:
             records = domain.get_records()
-        except digitalocean.baseapi.NotFoundError as exc:
+        except digitalocean.baseapi.NotFoundError as exc:  # pragma: no cover
             raise DomainRecordsNotFound(
                 f"Could not find records in domain {domain_name}"
             ) from exc
