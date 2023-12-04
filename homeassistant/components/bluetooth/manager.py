@@ -199,7 +199,6 @@ class BluetoothManager:
                 return adapter
         return None
 
-    @hass_callback
     def async_scanner_by_source(self, source: str) -> BaseHaScanner | None:
         """Return the scanner for a source."""
         return self._sources.get(source)
@@ -222,11 +221,6 @@ class BluetoothManager:
         self._adapters = self._bluetooth_adapters.adapters
         return self._find_adapter_by_address(address)
 
-    @hass_callback
-    def _async_logging_changed(self, event: Event) -> None:
-        """Handle logging change."""
-        self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
-
     async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         self._loop = asyncio.get_running_loop()
@@ -234,7 +228,6 @@ class BluetoothManager:
         install_multiple_bleak_catcher()
         self.async_setup_unavailable_tracking()
 
-    @hass_callback
     def async_stop(self) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
@@ -244,7 +237,6 @@ class BluetoothManager:
             self._cancel_unavailable_tracking = None
         uninstall_multiple_bleak_catcher()
 
-    @hass_callback
     def async_scanner_devices_by_address(
         self, address: str, connectable: bool
     ) -> list[BluetoothScannerDevice]:
@@ -265,7 +257,6 @@ class BluetoothManager:
             )
         ]
 
-    @hass_callback
     def _async_all_discovered_addresses(self, connectable: bool) -> Iterable[str]:
         """Return all of discovered addresses.
 
@@ -281,13 +272,11 @@ class BluetoothManager:
                 for scanner in self._non_connectable_scanners
             )
 
-    @hass_callback
     def async_discovered_devices(self, connectable: bool) -> list[BLEDevice]:
         """Return all of combined best path to discovered from all the scanners."""
         histories = self._connectable_history if connectable else self._all_history
         return [history.device for history in histories.values()]
 
-    @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
         """Set up the unavailable tracking."""
         self._schedule_unavailable_tracking()
@@ -301,7 +290,6 @@ class BluetoothManager:
             loop.time() + UNAVAILABLE_TRACK_SECONDS, self._async_check_unavailable
         )
 
-    @hass_callback
     def _async_check_unavailable(self) -> None:
         """Watch for unavailable devices and cleanup state history."""
         monotonic_now = MONOTONIC_TIME()
@@ -416,7 +404,6 @@ class BluetoothManager:
             return False
         return True
 
-    @hass_callback
     def scanner_adv_received(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new advertisement from any scanner.
 
@@ -564,7 +551,6 @@ class BluetoothManager:
         This method is intended to be overridden by subclasses.
         """
 
-    @hass_callback
     def _async_describe_source(self, service_info: BluetoothServiceInfoBleak) -> str:
         """Describe a source."""
         if scanner := self._sources.get(service_info.source):
@@ -575,7 +561,6 @@ class BluetoothManager:
             description += " [connectable]"
         return description
 
-    @hass_callback
     def async_track_unavailable(
         self,
         callback: Callable[[BluetoothServiceInfoBleak], None],
@@ -589,7 +574,6 @@ class BluetoothManager:
             unavailable_callbacks = self._unavailable_callbacks
         unavailable_callbacks.setdefault(address, []).append(callback)
 
-        @hass_callback
         def _async_remove_callback() -> None:
             unavailable_callbacks[address].remove(callback)
             if not unavailable_callbacks[address]:
@@ -597,7 +581,6 @@ class BluetoothManager:
 
         return _async_remove_callback
 
-    @hass_callback
     def async_ble_device_from_address(
         self, address: str, connectable: bool
     ) -> BLEDevice | None:
@@ -607,13 +590,11 @@ class BluetoothManager:
             return history.device
         return None
 
-    @hass_callback
     def async_address_present(self, address: str, connectable: bool) -> bool:
         """Return if the address is present."""
         histories = self._connectable_history if connectable else self._all_history
         return address in histories
 
-    @hass_callback
     def async_discovered_service_info(
         self, connectable: bool
     ) -> Iterable[BluetoothServiceInfoBleak]:
@@ -621,7 +602,6 @@ class BluetoothManager:
         histories = self._connectable_history if connectable else self._all_history
         return histories.values()
 
-    @hass_callback
     def async_last_service_info(
         self, address: str, connectable: bool
     ) -> BluetoothServiceInfoBleak | None:
@@ -656,7 +636,6 @@ class BluetoothManager:
             self.slot_manager.register_adapter(scanner.adapter, connection_slots)
         return _unregister_scanner
 
-    @hass_callback
     def async_register_bleak_callback(
         self, callback: AdvertisementDataCallback, filters: dict[str, set[str]]
     ) -> CALLBACK_TYPE:
@@ -664,7 +643,6 @@ class BluetoothManager:
         callback_entry = (callback, filters)
         self._bleak_callbacks.append(callback_entry)
 
-        @hass_callback
         def _remove_callback() -> None:
             self._bleak_callbacks.remove(callback_entry)
 
@@ -678,27 +656,22 @@ class BluetoothManager:
 
         return _remove_callback
 
-    @hass_callback
     def async_release_connection_slot(self, device: BLEDevice) -> None:
         """Release a connection slot."""
         self.slot_manager.release_slot(device)
 
-    @hass_callback
     def async_allocate_connection_slot(self, device: BLEDevice) -> bool:
         """Allocate a connection slot."""
         return self.slot_manager.allocate_slot(device)
 
-    @hass_callback
     def async_get_learned_advertising_interval(self, address: str) -> float | None:
         """Get the learned advertising interval for a MAC address."""
         return self._intervals.get(address)
 
-    @hass_callback
     def async_get_fallback_availability_interval(self, address: str) -> float | None:
         """Get the fallback availability timeout for a MAC address."""
         return self._fallback_intervals.get(address)
 
-    @hass_callback
     def async_set_fallback_availability_interval(
         self, address: str, interval: float
     ) -> None:
@@ -707,7 +680,7 @@ class BluetoothManager:
 
 
 class HomeAssistantBluetoothManager(BluetoothManager):
-    """Manage Bluetooth."""
+    """Manage Bluetooth for Home Assistant."""
 
     __slots__ = (
         "hass",
@@ -730,6 +703,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
         super().__init__(bluetooth_adapters, storage, slot_manager)
+
+    @hass_callback
+    def _async_logging_changed(self, event: Event) -> None:
+        """Handle logging change."""
+        self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
     def _async_trigger_matching_discovery(
         self, service_info: BluetoothServiceInfoBleak
@@ -806,7 +784,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             seen.add(address)
             self._async_trigger_matching_discovery(service_info)
 
-    @hass_callback
     def async_register_callback(
         self,
         callback: BluetoothCallback,
@@ -825,7 +802,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         connectable = callback_matcher[CONNECTABLE]
         self._callback_index.add_callback_matcher(callback_matcher)
 
-        @hass_callback
         def _async_remove_callback() -> None:
             self._callback_index.remove_callback_matcher(callback_matcher)
 
