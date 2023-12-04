@@ -16,13 +16,9 @@ from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
-from aiohttp.web_log import AccessLogger
 from aiohttp.web_protocol import RequestHandler
-from aiohttp.web_urldispatcher import (
-    AbstractResource,
-    UrlDispatcher,
-    UrlMappingMatchInfo,
-)
+from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
+from aiohttp_zlib_ng import enable_zlib_ng
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -173,6 +169,8 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
+    enable_zlib_ng()
+
     conf: ConfData | None = config.get(DOMAIN)
 
     if conf is None:
@@ -239,25 +237,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class HomeAssistantAccessLogger(AccessLogger):
-    """Access logger for Home Assistant that does not log when disabled."""
-
-    def log(
-        self, request: web.BaseRequest, response: web.StreamResponse, time: float
-    ) -> None:
-        """Log the request.
-
-        The default implementation logs the request to the logger
-        with the INFO level and than throws it away if the logger
-        is not enabled for the INFO level. This implementation
-        does not log the request if the logger is not enabled for
-        the INFO level.
-        """
-        if not self.logger.isEnabledFor(logging.INFO):
-            return
-        super().log(request, response, time)
-
-
 class HomeAssistantRequest(web.Request):
     """Home Assistant request object."""
 
@@ -318,7 +297,7 @@ class HomeAssistantHTTP:
         # By default aiohttp does a linear search for routing rules,
         # we have a lot of routes, so use a dict lookup with a fallback
         # to the linear search.
-        self.app._router = FastUrlDispatcher()
+        attach_fast_url_dispatcher(self.app, FastUrlDispatcher())
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -541,9 +520,7 @@ class HomeAssistantHTTP:
         # pylint: disable-next=protected-access
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
-        self.runner = web.AppRunner(
-            self.app, access_log_class=HomeAssistantAccessLogger
-        )
+        self.runner = web.AppRunner(self.app, handler_cancellation=True)
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(
@@ -584,40 +561,3 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-class FastUrlDispatcher(UrlDispatcher):
-    """UrlDispatcher that uses a dict lookup for resolving."""
-
-    def __init__(self) -> None:
-        """Initialize the dispatcher."""
-        super().__init__()
-        self._resource_index: dict[str, list[AbstractResource]] = {}
-
-    def register_resource(self, resource: AbstractResource) -> None:
-        """Register a resource."""
-        super().register_resource(resource)
-        canonical = resource.canonical
-        if "{" in canonical:  # strip at the first { to allow for variables
-            canonical = canonical.split("{")[0].rstrip("/")
-        # There may be multiple resources for a canonical path
-        # so we use a list to avoid falling back to a full linear search
-        self._resource_index.setdefault(canonical, []).append(resource)
-
-    async def resolve(self, request: web.Request) -> UrlMappingMatchInfo:
-        """Resolve a request."""
-        url_parts = request.rel_url.raw_parts
-        resource_index = self._resource_index
-
-        # Walk the url parts looking for candidates
-        for i in range(len(url_parts), 0, -1):
-            url_part = "/" + "/".join(url_parts[1:i])
-            if (resource_candidates := resource_index.get(url_part)) is not None:
-                for candidate in resource_candidates:
-                    if (
-                        match_dict := (await candidate.resolve(request))[0]
-                    ) is not None:
-                        return match_dict
-
-        # Finally, fallback to the linear search
-        return await super().resolve(request)

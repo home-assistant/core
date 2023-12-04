@@ -553,19 +553,19 @@ async def test_fan_set_all_one_shot(hass: HomeAssistant, hk_driver, events) -> N
     assert len(call_set_direction) == 2
 
 
-async def test_fan_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_fan_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fan",
         "generic",
         "1234",
         suggested_object_id="simple",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fan",
         "generic",
         "9012",

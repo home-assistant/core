@@ -1,25 +1,141 @@
 """Tests for the login flow."""
+from collections.abc import Callable
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
-from homeassistant.core import HomeAssistant
+import pytest
 
-from . import async_setup_auth
+from homeassistant.auth.models import User
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from . import BASE_CONFIG, async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from tests.typing import ClientSessionGenerator
 
+_TRUSTED_NETWORKS_CONFIG = {
+    "type": "trusted_networks",
+    "trusted_networks": ["192.168.0.1"],
+    "trusted_users": {
+        "192.168.0.1": [
+            "a1ab982744b64757bf80515589258924",
+            {"group": "system-group"},
+        ]
+    },
+}
 
+
+@pytest.mark.parametrize(
+    ("provider_configs", "ip", "expected"),
+    [
+        (
+            BASE_CONFIG,
+            None,
+            [{"name": "Example", "type": "insecure_example", "id": None}],
+        ),
+        (
+            [_TRUSTED_NETWORKS_CONFIG],
+            None,
+            [],
+        ),
+        (
+            [_TRUSTED_NETWORKS_CONFIG],
+            "192.168.0.1",
+            [{"name": "Trusted Networks", "type": "trusted_networks", "id": None}],
+        ),
+    ],
+)
 async def test_fetch_auth_providers(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    provider_configs: list[dict[str, Any]],
+    ip: str | None,
+    expected: list[dict[str, Any]],
 ) -> None:
     """Test fetching auth providers."""
-    client = await async_setup_auth(hass, aiohttp_client)
+    client = await async_setup_auth(
+        hass, aiohttp_client, provider_configs, custom_ip=ip
+    )
     resp = await client.get("/auth/providers")
     assert resp.status == HTTPStatus.OK
-    assert await resp.json() == [
-        {"name": "Example", "type": "insecure_example", "id": None}
-    ]
+    assert await resp.json() == expected
+
+
+async def _test_fetch_auth_providers_home_assistant(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ip: str,
+    additional_expected_fn: Callable[[User], dict[str, Any]],
+) -> None:
+    """Test fetching auth providers for homeassistant auth provider."""
+    client = await async_setup_auth(
+        hass, aiohttp_client, [{"type": "homeassistant"}], custom_ip=ip
+    )
+
+    provider = hass.auth.auth_providers[0]
+    credentials = await provider.async_get_or_create_credentials({"username": "hello"})
+    user = await hass.auth.async_get_or_create_user(credentials)
+
+    expected = {
+        "name": "Home Assistant Local",
+        "type": "homeassistant",
+        "id": None,
+        **additional_expected_fn(user),
+    }
+
+    resp = await client.get("/auth/providers")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == [expected]
+
+
+@pytest.mark.parametrize(
+    "ip",
+    [
+        "192.168.0.10",
+        "::ffff:192.168.0.10",
+        "1.2.3.4",
+        "2001:db8::1",
+    ],
+)
+async def test_fetch_auth_providers_home_assistant_person_not_loaded(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ip: str,
+) -> None:
+    """Test fetching auth providers for homeassistant auth provider, where person integration is not loaded."""
+    await _test_fetch_auth_providers_home_assistant(
+        hass, aiohttp_client, ip, lambda _: {}
+    )
+
+
+@pytest.mark.parametrize(
+    ("ip", "is_local"),
+    [
+        ("192.168.0.10", True),
+        ("::ffff:192.168.0.10", True),
+        ("1.2.3.4", False),
+        ("2001:db8::1", False),
+    ],
+)
+async def test_fetch_auth_providers_home_assistant_person_loaded(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ip: str,
+    is_local: bool,
+) -> None:
+    """Test fetching auth providers for homeassistant auth provider, where person integration is loaded."""
+    domain = "person"
+    config = {domain: {"id": "1234", "name": "test person"}}
+    assert await async_setup_component(hass, domain, config)
+
+    await _test_fetch_auth_providers_home_assistant(
+        hass,
+        aiohttp_client,
+        ip,
+        lambda user: {"users": {user.id: user.name}} if is_local else {},
+    )
 
 
 async def test_fetch_auth_providers_onboarding(

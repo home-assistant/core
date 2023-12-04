@@ -17,7 +17,10 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "already_configured": "Configuration updated for profile.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]"
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "Successfully authenticated with Withings."
@@ -155,8 +158,8 @@
       "activity_distance_today": {
         "name": "Distance travelled today"
       },
-      "activity_floors_climbed_today": {
-        "name": "Floors climbed today"
+      "activity_elevation_today": {
+        "name": "Elevation change today"
       },
       "activity_soft_duration_today": {
         "name": "Soft activity today"
@@ -236,8 +239,8 @@
       "workout_distance": {
         "name": "Distance travelled last workout"
       },
-      "workout_floors_climbed": {
-        "name": "Floors climbed last workout"
+      "workout_elevation": {
+        "name": "Elevation change last workout"
       },
       "workout_intensity": {
         "name": "Last workout intensity"

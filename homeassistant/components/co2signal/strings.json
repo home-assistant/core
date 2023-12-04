@@ -18,6 +18,11 @@
         "data": {
           "country_code": "Country code"
         }
+      },
+      "reauth": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::access_token%]"
+        }
       }
     },
     "error": {
@@ -28,7 +33,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "api_ratelimit": "[%key:component::co2signal::config::error::api_ratelimit%]"
+      "api_ratelimit": "[%key:component::co2signal::config::error::api_ratelimit%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {

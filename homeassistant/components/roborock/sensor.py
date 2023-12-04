@@ -11,6 +11,7 @@ from roborock.containers import (
     RoborockErrorCode,
     RoborockStateCode,
 )
+from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -48,6 +49,8 @@ class RoborockSensorDescription(
 ):
     """A class that describes Roborock sensors."""
 
+    protocol_listener: RoborockDataProtocol | None = None
+
 
 def _dock_error_value_fn(properties: DeviceProp) -> str | None:
     if (
@@ -67,6 +70,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key="main_brush_time_left",
         value_fn=lambda data: data.consumable.main_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
+        protocol_listener=RoborockDataProtocol.MAIN_BRUSH_WORK_TIME,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -76,6 +80,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key="side_brush_time_left",
         value_fn=lambda data: data.consumable.side_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
+        protocol_listener=RoborockDataProtocol.SIDE_BRUSH_WORK_TIME,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -85,6 +90,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key="filter_time_left",
         value_fn=lambda data: data.consumable.filter_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
+        protocol_listener=RoborockDataProtocol.FILTER_WORK_TIME,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -117,9 +123,10 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:information-outline",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
-        value_fn=lambda data: data.status.state.name,
+        value_fn=lambda data: data.status.state_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockStateCode.keys(),
+        protocol_listener=RoborockDataProtocol.STATE,
     ),
     RoborockSensorDescription(
         key="cleaning_area",
@@ -142,9 +149,10 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:alert-circle",
         translation_key="vacuum_error",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda data: data.status.error_code.name,
+        value_fn=lambda data: data.status.error_code_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockErrorCode.keys(),
+        protocol_listener=RoborockDataProtocol.ERROR_CODE,
     ),
     RoborockSensorDescription(
         key="battery",
@@ -152,12 +160,15 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        protocol_listener=RoborockDataProtocol.BATTERY,
     ),
     RoborockSensorDescription(
         key="last_clean_start",
         translation_key="last_clean_start",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.begin_datetime,
+        value_fn=lambda data: data.last_clean_record.begin_datetime
+        if data.last_clean_record is not None
+        else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -165,7 +176,9 @@ SENSOR_DESCRIPTIONS = [
         key="last_clean_end",
         translation_key="last_clean_end",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.end_datetime,
+        value_fn=lambda data: data.last_clean_record.end_datetime
+        if data.last_clean_record is not None
+        else None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -234,6 +247,8 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(unique_id, coordinator)
         self.entity_description = description
+        if (protocol := self.entity_description.protocol_listener) is not None:
+            self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
 
     @property
     def native_value(self) -> StateType | datetime.datetime:

@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
@@ -72,7 +71,10 @@ def tilt_shades(name: str):
     }
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -82,8 +84,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["cover.name_1"]
+    entity = entity_registry.entities["cover.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 

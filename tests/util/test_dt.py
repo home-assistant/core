@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-import time
 
 import pytest
 
@@ -737,8 +736,3 @@ def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_
         assert (next_target - prev_target).total_seconds() == 60
         assert next_target.second == 10
         prev_target = next_target
-
-
-def test_monotonic_time_coarse() -> None:
-    """Test monotonic time coarse."""
-    assert abs(time.monotonic() - dt_util.monotonic_time_coarse()) < 1
