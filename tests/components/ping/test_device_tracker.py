@@ -1,7 +1,11 @@
 """Test the binary sensor platform of ping."""
+from datetime import timedelta
+import os
+from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.device_tracker import legacy
 from homeassistant.components.ping.const import DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -9,6 +13,17 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="yaml_devices")
+def mock_yaml_devices(hass):
+    """Get a path for storing yaml devices."""
+    yaml_devices = hass.config.path(legacy.YAML_DEVICES)
+    if os.path.isfile(yaml_devices):
+        os.remove(yaml_devices)
+    yield yaml_devices
+    if os.path.isfile(yaml_devices):
+        os.remove(yaml_devices)
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -64,3 +79,39 @@ async def test_import_issue_creation(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert issue
+
+
+async def test_import_delete_known_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    yaml_devices,
+):
+    """Test if import deletes known devices."""
+
+    dev_id = "test"
+    device = legacy.Device(
+        hass,
+        timedelta(seconds=180),
+        True,
+        dev_id,
+        None,
+        "Test name",
+    )
+    await hass.async_add_executor_job(
+        legacy.update_config, yaml_devices, dev_id, device
+    )
+
+    with patch(
+        "homeassistant.components.ping.device_tracker.remove_device_from_config"
+    ) as remove_device_from_config:
+        await async_setup_component(
+            hass,
+            "device_tracker",
+            {"device_tracker": {"platform": "ping", "hosts": {"test": "10.10.10.10"}}},
+        )
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(remove_device_from_config.mock_calls) == 1
