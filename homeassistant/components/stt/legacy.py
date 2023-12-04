@@ -6,8 +6,9 @@ from collections.abc import AsyncIterable, Coroutine
 import logging
 from typing import Any
 
+from homeassistant.config import config_per_platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_prepare_setup_platform
 
