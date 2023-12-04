@@ -7,6 +7,8 @@ from functools import cache
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
 
+from habluetooth import BluetoothScanningMode
+
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -33,11 +35,7 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .models import (
-        BluetoothChange,
-        BluetoothScanningMode,
-        BluetoothServiceInfoBleak,
-    )
+    from .models import BluetoothChange, BluetoothServiceInfoBleak
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1
