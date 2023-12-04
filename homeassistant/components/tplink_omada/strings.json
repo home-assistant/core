@@ -9,9 +9,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "URL of the management interface of your TP-Link Omada controller."
         },
-        "title": "TP-Link Omada Controller",
         "description": "Enter the connection details for the Omada controller. Cloud controllers aren't supported."
       },
       "site": {

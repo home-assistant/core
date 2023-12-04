@@ -9,7 +9,7 @@
           "security_code": "Security Code"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "Hostname or IP address of your Trådfri gateway."
         }
       }
     },

@@ -8,7 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Hostname or IP address."
+          "host": "Hostname or IP address of your TP-Link device."
         }
       },
       "pick_device": {
