@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components.ping.const import DOMAIN
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -54,6 +55,9 @@ async def test_import_issue_creation(
         "device_tracker",
         {"device_tracker": {"platform": "ping", "hosts": {"test": "10.10.10.10"}}},
     )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(
