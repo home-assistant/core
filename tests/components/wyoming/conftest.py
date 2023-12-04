@@ -5,12 +5,21 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components import stt
+from homeassistant.components.wyoming import DOMAIN
+from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from . import STT_INFO, TTS_INFO, WAKE_WORD_INFO
+from . import SATELLITE_INFO, STT_INFO, TTS_INFO, WAKE_WORD_INFO
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+async def init_components(hass: HomeAssistant):
+    """Set up required components."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
@@ -110,3 +119,39 @@ def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
         sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
         channel=stt.AudioChannels.CHANNEL_MONO,
     )
+
+
+@pytest.fixture
+def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Satellite",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntry):
+    """Initialize Wyoming satellite."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+    ) as _run_mock:
+        # _run_mock: satellite task does not actually run
+        await hass.config_entries.async_setup(satellite_config_entry.entry_id)
+
+
+@pytest.fixture
+async def satellite_device(
+    hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
+) -> SatelliteDevice:
+    """Get a satellite device fixture."""
+    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite.device
