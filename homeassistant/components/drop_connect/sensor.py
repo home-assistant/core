@@ -93,6 +93,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=lambda device: device.water_used_today,
+        state_class=SensorStateClass.TOTAL,
     ),
     DROPSensorEntityDescription(
         key=AVERAGE_WATER_USED,
@@ -101,6 +102,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
         value_fn=lambda device: device.average_water_used,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=CAPACITY_REMAINING,
@@ -109,6 +111,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
         value_fn=lambda device: device.capacity_remaining,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=CURRENT_SYSTEM_PRESSURE,
@@ -117,6 +120,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=1,
         value_fn=lambda device: device.current_system_pressure,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=HIGH_SYSTEM_PRESSURE,
@@ -125,6 +129,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=0,
         value_fn=lambda device: device.high_system_pressure,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=LOW_SYSTEM_PRESSURE,
@@ -133,6 +138,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=0,
         value_fn=lambda device: device.low_system_pressure,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=BATTERY,
@@ -140,6 +146,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
         value_fn=lambda device: device.battery,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=TEMPERATURE,
@@ -147,6 +154,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         suggested_display_precision=1,
         value_fn=lambda device: device.temperature,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
         key=INLET_TDS,
