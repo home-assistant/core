@@ -97,7 +97,7 @@ def get_deprecated(
 
 
 def deprecated_class(
-    replacement: str,
+    replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark class as deprecated and provide a replacement class to be used instead.
 
@@ -111,7 +111,9 @@ def deprecated_class(
         @functools.wraps(cls)
         def deprecated_cls(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap for the original class."""
-            _print_deprecation_warning(cls, replacement, "class", "instantiated")
+            _print_deprecation_warning(
+                cls, replacement, "class", "instantiated", breaks_in_ha_version
+            )
             return cls(*args, **kwargs)
 
         return deprecated_cls
@@ -120,7 +122,7 @@ def deprecated_class(
 
 
 def deprecated_function(
-    replacement: str,
+    replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark function as deprecated and provide a replacement to be used instead.
 
@@ -134,7 +136,9 @@ def deprecated_function(
         @functools.wraps(func)
         def deprecated_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap for the original function."""
-            _print_deprecation_warning(func, replacement, "function", "called")
+            _print_deprecation_warning(
+                func, replacement, "function", "called", breaks_in_ha_version
+            )
             return func(*args, **kwargs)
 
         return deprecated_func
@@ -147,15 +151,21 @@ def _print_deprecation_warning(
     replacement: str,
     description: str,
     verb: str,
+    breaks_in_ha_version: str | None,
 ) -> None:
     logger = logging.getLogger(obj.__module__)
+    if breaks_in_ha_version:
+        breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
+    else:
+        breaks_in = ""
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         logger.warning(
-            "%s is a deprecated %s. Use %s instead",
+            "%s is a deprecated %s%s. Use %s instead",
             obj.__name__,
             description,
+            breaks_in,
             replacement,
         )
     else:
@@ -170,22 +180,24 @@ def _print_deprecation_warning(
             )
             logger.warning(
                 (
-                    "%s was %s from %s, this is a deprecated %s. Use %s instead,"
+                    "%s was %s from %s, this is a deprecated %s%s. Use %s instead,"
                     " please %s"
                 ),
                 obj.__name__,
                 verb,
                 integration_frame.integration,
                 description,
+                breaks_in,
                 replacement,
                 report_issue,
             )
         else:
             logger.warning(
-                "%s was %s from %s, this is a deprecated %s. Use %s instead",
+                "%s was %s from %s, this is a deprecated %s%s. Use %s instead",
                 obj.__name__,
                 verb,
                 integration_frame.integration,
                 description,
+                breaks_in,
                 replacement,
             )
