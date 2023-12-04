@@ -46,9 +46,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PRECISION,
     CONF_PROTOCOL,
-    CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -647,11 +645,9 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except (serial.serialutil.SerialException, OSError):
+            except (serial.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
@@ -663,9 +659,7 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
@@ -795,9 +789,11 @@ class DSMREntity(SensorEntity):
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
-            value = round(
-                float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
-            )
+            value = round(float(value), DEFAULT_PRECISION)
+
+        # Make sure we do not return a zero value for an energy sensor
+        if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
+            return None
 
         return value
 

@@ -128,6 +128,7 @@ homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*
 homeassistant.components.fitbit.*
+homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*
@@ -151,6 +152,7 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
+homeassistant.components.holiday.*
 homeassistant.components.homeassistant.exposed_entities
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
@@ -315,6 +317,7 @@ homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
 homeassistant.components.stream.*
+homeassistant.components.streamlabswater.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*

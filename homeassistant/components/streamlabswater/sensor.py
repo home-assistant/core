@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from streamlabswater.streamlabswater import StreamlabsClient
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -48,7 +50,7 @@ def setup_platform(
 class StreamlabsUsageData:
     """Track and query usage data."""
 
-    def __init__(self, location_id, client):
+    def __init__(self, location_id: str, client: StreamlabsClient) -> None:
         """Initialize the usage data."""
         self._location_id = location_id
         self._client = client
@@ -57,22 +59,22 @@ class StreamlabsUsageData:
         self._this_year = None
 
     @Throttle(MIN_TIME_BETWEEN_USAGE_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Query and store usage data."""
         water_usage = self._client.get_water_usage_summary(self._location_id)
         self._today = round(water_usage["today"], 1)
         self._this_month = round(water_usage["thisMonth"], 1)
         self._this_year = round(water_usage["thisYear"], 1)
 
-    def get_daily_usage(self):
+    def get_daily_usage(self) -> float | None:
         """Return the day's usage."""
         return self._today
 
-    def get_monthly_usage(self):
+    def get_monthly_usage(self) -> float | None:
         """Return the month's usage."""
         return self._this_month
 
-    def get_yearly_usage(self):
+    def get_yearly_usage(self) -> float | None:
         """Return the year's usage."""
         return self._this_year
 
@@ -83,7 +85,9 @@ class StreamLabsDailyUsage(SensorEntity):
     _attr_device_class = SensorDeviceClass.WATER
     _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
 
-    def __init__(self, location_name, streamlabs_usage_data):
+    def __init__(
+        self, location_name: str, streamlabs_usage_data: StreamlabsUsageData
+    ) -> None:
         """Initialize the daily water usage device."""
         self._location_name = location_name
         self._streamlabs_usage_data = streamlabs_usage_data
@@ -95,7 +99,7 @@ class StreamLabsDailyUsage(SensorEntity):
         return f"{self._location_name} {NAME_DAILY_USAGE}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current daily usage."""
         return self._streamlabs_usage_data.get_daily_usage()
 
@@ -113,7 +117,7 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
         return f"{self._location_name} {NAME_MONTHLY_USAGE}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current monthly usage."""
         return self._streamlabs_usage_data.get_monthly_usage()
 
@@ -127,6 +131,6 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
         return f"{self._location_name} {NAME_YEARLY_USAGE}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current yearly usage."""
         return self._streamlabs_usage_data.get_yearly_usage()
