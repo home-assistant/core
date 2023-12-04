@@ -575,7 +575,7 @@ class AqaraThermostatChildLock(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="tuya_manufacturer",
-    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+    quirk_ids={"tuya.trv_zonnsmart"},
 )
 class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""
@@ -588,7 +588,7 @@ class ZonnSmartChildLockSwitch(ZHASwitchConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="tuya_manufacturer",
-    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+    quirk_ids={"tuya.trv_zonnsmart"},
 )
 class TuyaTRVBoostSwitch(ZHASwitchConfigurationEntity):
     """Representation of a boost configuration entity."""

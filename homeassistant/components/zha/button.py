@@ -209,7 +209,7 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton):
 
 @MULTI_MATCH(
     cluster_handler_names="tuya_manufacturer",
-    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+    quirk_ids={"tuya.trv_zonnsmart"},
 )
 class ZonnSmartOnlineButton(ZHAAttributeButton):
     """Define a button to force the TRV to send all its attribute values to ZHA."""

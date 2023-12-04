@@ -997,7 +997,7 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="tuya_manufacturer",
-    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+    quirk_ids={"tuya.trv_zonnsmart"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZonnSmartTemperatureCalibration(ZHANumberConfigurationEntity):
@@ -1016,7 +1016,7 @@ class ZonnSmartTemperatureCalibration(ZHANumberConfigurationEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="tuya_manufacturer",
-    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+    quirk_ids={"tuya.trv_zonnsmart"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZonnSmartWindowOpenTemperature(ZHANumberConfigurationEntity):

@@ -609,7 +609,7 @@ async def zigpy_device_tuya_trv(hass, zigpy_device_mock, zha_device_joined):
         },
         manufacturer="_TZE200_hue3yfsn",
         quirk=TRVBoostQuirk,
-        quirk_class="zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG",
+        quirk_id="tuya.trv_zonnsmart",
     )
 
     zha_device = await zha_device_joined(zigpy_device)
