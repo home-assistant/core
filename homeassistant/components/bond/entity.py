@@ -17,7 +17,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -68,6 +68,9 @@ class BondEntity(Entity):
         self._attr_assumed_state = self._hub.is_bridge and not self._device.trust_state
         self._apply_state()
         self._bpup_polling_fallback: CALLBACK_TYPE | None = None
+        self._async_update_if_bpup_not_alive_job = HassJob(
+            self._async_update_if_bpup_not_alive
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -185,7 +188,7 @@ class BondEntity(Entity):
         self._bpup_polling_fallback = async_call_later(
             self.hass,
             _BPUP_ALIVE_SCAN_INTERVAL if alive else _FALLBACK_SCAN_INTERVAL,
-            self._async_update_if_bpup_not_alive,
+            self._async_update_if_bpup_not_alive_job,
         )
 
     async def async_will_remove_from_hass(self) -> None:

@@ -1,8 +1,34 @@
 {
-  "services": {
-    "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads ping sensors from the YAML-configuration."
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Ping",
+        "description": "Ping allows you to check the availability of a host.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "count": "Ping count"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device you want to ping."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_ip_address": "Invalid IP address."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "count": "[%key:component::ping::config::step::user::data::count%]"
+        }
+      }
+    },
+    "abort": {
+      "invalid_ip_address": "[%key:component::ping::config::abort::invalid_ip_address%]"
     }
   }
 }

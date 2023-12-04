@@ -4,6 +4,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
+from operator import attrgetter
 from typing import TYPE_CHECKING, TypeVar
 
 import attr
@@ -111,6 +112,8 @@ CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[
 ] = DictRegistry()
 ZIGBEE_CLUSTER_HANDLER_REGISTRY: DictRegistry[type[ClusterHandler]] = DictRegistry()
 
+WEIGHT_ATTR = attrgetter("weight")
+
 
 def set_or_callable(value) -> frozenset[str] | Callable:
     """Convert single str or None to a set. Pass through callables and sets."""
@@ -144,7 +147,7 @@ class MatchRule:
     aux_cluster_handlers: frozenset[str] | Callable = attr.ib(
         factory=_get_empty_frozenset, converter=set_or_callable
     )
-    quirk_classes: frozenset[str] | Callable = attr.ib(
+    quirk_ids: frozenset[str] | Callable = attr.ib(
         factory=_get_empty_frozenset, converter=set_or_callable
     )
 
@@ -162,10 +165,8 @@ class MatchRule:
         multiple cluster handlers a better priority over rules matching a single cluster handler.
         """
         weight = 0
-        if self.quirk_classes:
-            weight += 501 - (
-                1 if callable(self.quirk_classes) else len(self.quirk_classes)
-            )
+        if self.quirk_ids:
+            weight += 501 - (1 if callable(self.quirk_ids) else len(self.quirk_ids))
 
         if self.models:
             weight += 401 - (1 if callable(self.models) else len(self.models))
@@ -201,19 +202,31 @@ class MatchRule:
         return claimed
 
     def strict_matched(
-        self, manufacturer: str, model: str, cluster_handlers: list, quirk_class: str
+        self,
+        manufacturer: str,
+        model: str,
+        cluster_handlers: list,
+        quirk_id: str | None,
     ) -> bool:
         """Return True if this device matches the criteria."""
-        return all(self._matched(manufacturer, model, cluster_handlers, quirk_class))
+        return all(self._matched(manufacturer, model, cluster_handlers, quirk_id))
 
     def loose_matched(
-        self, manufacturer: str, model: str, cluster_handlers: list, quirk_class: str
+        self,
+        manufacturer: str,
+        model: str,
+        cluster_handlers: list,
+        quirk_id: str | None,
     ) -> bool:
         """Return True if this device matches the criteria."""
-        return any(self._matched(manufacturer, model, cluster_handlers, quirk_class))
+        return any(self._matched(manufacturer, model, cluster_handlers, quirk_id))
 
     def _matched(
-        self, manufacturer: str, model: str, cluster_handlers: list, quirk_class: str
+        self,
+        manufacturer: str,
+        model: str,
+        cluster_handlers: list,
+        quirk_id: str | None,
     ) -> list:
         """Return a list of field matches."""
         if not any(attr.asdict(self).values()):
@@ -240,14 +253,11 @@ class MatchRule:
             else:
                 matches.append(model in self.models)
 
-        if self.quirk_classes:
-            if callable(self.quirk_classes):
-                matches.append(self.quirk_classes(quirk_class))
+        if self.quirk_ids and quirk_id:
+            if callable(self.quirk_ids):
+                matches.append(self.quirk_ids(quirk_id))
             else:
-                matches.append(
-                    quirk_class.split(".")[-2:]
-                    in [x.split(".")[-2:] for x in self.quirk_classes]
-                )
+                matches.append(quirk_id in self.quirk_ids)
 
         return matches
 
@@ -266,15 +276,15 @@ class ZHAEntityRegistry:
     def __init__(self) -> None:
         """Initialize Registry instance."""
         self._strict_registry: dict[
-            str, dict[MatchRule, type[ZhaEntity]]
+            Platform, dict[MatchRule, type[ZhaEntity]]
         ] = collections.defaultdict(dict)
         self._multi_entity_registry: dict[
-            str, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
+            Platform, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._config_diagnostic_entity_registry: dict[
-            str, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
+            Platform, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
@@ -285,17 +295,17 @@ class ZHAEntityRegistry:
 
     def get_entity(
         self,
-        component: str,
+        component: Platform,
         manufacturer: str,
         model: str,
         cluster_handlers: list[ClusterHandler],
-        quirk_class: str,
+        quirk_id: str | None,
         default: type[ZhaEntity] | None = None,
     ) -> tuple[type[ZhaEntity] | None, list[ClusterHandler]]:
         """Match a ZHA ClusterHandler to a ZHA Entity class."""
         matches = self._strict_registry[component]
-        for match in sorted(matches, key=lambda x: x.weight, reverse=True):
-            if match.strict_matched(manufacturer, model, cluster_handlers, quirk_class):
+        for match in sorted(matches, key=WEIGHT_ATTR, reverse=True):
+            if match.strict_matched(manufacturer, model, cluster_handlers, quirk_id):
                 claimed = match.claim_cluster_handlers(cluster_handlers)
                 return self._strict_registry[component][match], claimed
 
@@ -306,19 +316,21 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         cluster_handlers: list[ClusterHandler],
-        quirk_class: str,
-    ) -> tuple[dict[str, list[EntityClassAndClusterHandlers]], list[ClusterHandler]]:
+        quirk_id: str | None,
+    ) -> tuple[
+        dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
+    ]:
         """Match ZHA cluster handlers to potentially multiple ZHA Entity classes."""
         result: dict[
-            str, list[EntityClassAndClusterHandlers]
+            Platform, list[EntityClassAndClusterHandlers]
         ] = collections.defaultdict(list)
         all_claimed: set[ClusterHandler] = set()
         for component, stop_match_groups in self._multi_entity_registry.items():
             for stop_match_grp, matches in stop_match_groups.items():
-                sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
+                sorted_matches = sorted(matches, key=WEIGHT_ATTR, reverse=True)
                 for match in sorted_matches:
                     if match.strict_matched(
-                        manufacturer, model, cluster_handlers, quirk_class
+                        manufacturer, model, cluster_handlers, quirk_id
                     ):
                         claimed = match.claim_cluster_handlers(cluster_handlers)
                         for ent_class in stop_match_groups[stop_match_grp][match]:
@@ -337,11 +349,13 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         cluster_handlers: list[ClusterHandler],
-        quirk_class: str,
-    ) -> tuple[dict[str, list[EntityClassAndClusterHandlers]], list[ClusterHandler]]:
+        quirk_id: str | None,
+    ) -> tuple[
+        dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
+    ]:
         """Match ZHA cluster handlers to potentially multiple ZHA Entity classes."""
         result: dict[
-            str, list[EntityClassAndClusterHandlers]
+            Platform, list[EntityClassAndClusterHandlers]
         ] = collections.defaultdict(list)
         all_claimed: set[ClusterHandler] = set()
         for (
@@ -349,10 +363,10 @@ class ZHAEntityRegistry:
             stop_match_groups,
         ) in self._config_diagnostic_entity_registry.items():
             for stop_match_grp, matches in stop_match_groups.items():
-                sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
+                sorted_matches = sorted(matches, key=WEIGHT_ATTR, reverse=True)
                 for match in sorted_matches:
                     if match.strict_matched(
-                        manufacturer, model, cluster_handlers, quirk_class
+                        manufacturer, model, cluster_handlers, quirk_id
                     ):
                         claimed = match.claim_cluster_handlers(cluster_handlers)
                         for ent_class in stop_match_groups[stop_match_grp][match]:
@@ -372,13 +386,13 @@ class ZHAEntityRegistry:
 
     def strict_match(
         self,
-        component: str,
+        component: Platform,
         cluster_handler_names: set[str] | str | None = None,
         generic_ids: set[str] | str | None = None,
         manufacturers: Callable | set[str] | str | None = None,
         models: Callable | set[str] | str | None = None,
         aux_cluster_handlers: Callable | set[str] | str | None = None,
-        quirk_classes: set[str] | str | None = None,
+        quirk_ids: set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a strict match rule."""
 
@@ -388,7 +402,7 @@ class ZHAEntityRegistry:
             manufacturers,
             models,
             aux_cluster_handlers,
-            quirk_classes,
+            quirk_ids,
         )
 
         def decorator(zha_ent: _ZhaEntityT) -> _ZhaEntityT:
@@ -403,14 +417,14 @@ class ZHAEntityRegistry:
 
     def multipass_match(
         self,
-        component: str,
+        component: Platform,
         cluster_handler_names: set[str] | str | None = None,
         generic_ids: set[str] | str | None = None,
         manufacturers: Callable | set[str] | str | None = None,
         models: Callable | set[str] | str | None = None,
         aux_cluster_handlers: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
-        quirk_classes: set[str] | str | None = None,
+        quirk_ids: set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
@@ -420,7 +434,7 @@ class ZHAEntityRegistry:
             manufacturers,
             models,
             aux_cluster_handlers,
-            quirk_classes,
+            quirk_ids,
         )
 
         def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
@@ -438,14 +452,14 @@ class ZHAEntityRegistry:
 
     def config_diagnostic_match(
         self,
-        component: str,
+        component: Platform,
         cluster_handler_names: set[str] | str | None = None,
         generic_ids: set[str] | str | None = None,
         manufacturers: Callable | set[str] | str | None = None,
         models: Callable | set[str] | str | None = None,
         aux_cluster_handlers: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
-        quirk_classes: set[str] | str | None = None,
+        quirk_ids: set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
@@ -455,7 +469,7 @@ class ZHAEntityRegistry:
             manufacturers,
             models,
             aux_cluster_handlers,
-            quirk_classes,
+            quirk_ids,
         )
 
         def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
@@ -472,7 +486,7 @@ class ZHAEntityRegistry:
         return decorator
 
     def group_match(
-        self, component: str
+        self, component: Platform
     ) -> Callable[[_ZhaGroupEntityT], _ZhaGroupEntityT]:
         """Decorate a group match rule."""
 

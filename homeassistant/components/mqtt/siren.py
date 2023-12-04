@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
 import logging
 from typing import Any, cast
 
@@ -32,7 +31,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -49,7 +48,12 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+    write_state_on_attr_change,
+)
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -57,7 +61,6 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -118,21 +121,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT siren through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttSiren,
+        siren.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, siren.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT siren."""
-    async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 
 
 class MqttSiren(MqttEntity, SirenEntity):
@@ -150,17 +147,6 @@ class MqttSiren(MqttEntity, SirenEntity):
     _state_on: str
     _state_off: str
     _optimistic: bool
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the MQTT siren."""
-        self._extra_attributes: dict[str, Any] = {}
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -194,6 +180,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
+        self._attr_assumed_state = bool(self._optimistic)
         self._attr_is_on = False if self._optimistic else None
 
         command_template: Template | None = config.get(CONF_COMMAND_TEMPLATE)
@@ -222,6 +209,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, {"_attr_is_on", "_extra_attributes"})
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
@@ -277,8 +265,10 @@ class MqttSiren(MqttEntity, SirenEntity):
                         invalid_siren_parameters,
                     )
                     return
+                # To be able to track changes to self._extra_attributes we assign
+                # a fresh copy to make the original tracked reference immutable.
+                self._extra_attributes = dict(self._extra_attributes)
                 self._update(process_turn_on_params(self, params))
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -300,11 +290,6 @@ class MqttSiren(MqttEntity, SirenEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -383,6 +368,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
             if self._attr_supported_features & support and attribute in data:
-                self._extra_attributes[attribute] = data[
-                    attribute  # type: ignore[literal-required]
-                ]
+                data_attr = data[attribute]  # type: ignore[literal-required]
+                if self._extra_attributes.get(attribute) == data_attr:
+                    continue
+                self._extra_attributes[attribute] = data_attr

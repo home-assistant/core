@@ -21,7 +21,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-SwitchFeature = clusters.Switch.Bitmaps.SwitchFeature
+SwitchFeature = clusters.Switch.Bitmaps.Feature
 
 EVENT_TYPES_MAP = {
     # mapping from raw event id's to translation keys
@@ -65,7 +65,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         if feature_map & SwitchFeature.kMomentarySwitchRelease:
             event_types.append("short_release")
         if feature_map & SwitchFeature.kMomentarySwitchLongPress:
-            event_types.append("long_press_ongoing")
+            event_types.append("long_press")
             event_types.append("long_release")
         if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
             event_types.append("multi_press_ongoing")
@@ -104,9 +104,11 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call when Node attribute(s) changed."""
 
     @callback
-    def _on_matter_node_event(
-        self, event: EventType, data: MatterNodeEvent
-    ) -> None:  # noqa: F821
+    def _on_matter_node_event(  # noqa: F821
+        self,
+        event: EventType,
+        data: MatterNodeEvent,
+    ) -> None:
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return

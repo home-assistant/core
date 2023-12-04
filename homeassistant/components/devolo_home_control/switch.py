@@ -46,7 +46,7 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
-        """Initialize an devolo Switch."""
+        """Initialize a devolo Switch."""
         super().__init__(
             homecontrol=homecontrol,
             device_instance=device_instance,

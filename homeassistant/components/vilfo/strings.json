@@ -16,5 +16,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "load": {
+        "name": "Load"
+      },
+      "boot_time": {
+        "name": "Boot time"
+      }
+    }
   }
 }

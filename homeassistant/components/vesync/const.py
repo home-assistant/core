@@ -18,9 +18,21 @@ DEV_TYPE_TO_HA = {
     "ESWL01": "switch",
     "ESWL03": "switch",
     "ESO15-TB": "outlet",
+    "LV-PUR131S": "fan",
+    "Core200S": "fan",
+    "Core300S": "fan",
+    "Core400S": "fan",
+    "Core600S": "fan",
+    "Vital200S": "fan",
+    "Vital100S": "fan",
+    "ESD16": "walldimmer",
+    "ESWD16": "walldimmer",
+    "ESL100": "bulb-dimmable",
+    "ESL100CW": "bulb-tunable-white",
 }
 
 SKU_TO_BASE_DEVICE = {
+    # Air Purifiers
     "LV-PUR131S": "LV-PUR131S",
     "LV-RH131S": "LV-PUR131S",  # Alt ID Model LV-PUR131S
     "Core200S": "Core200S",
@@ -35,5 +47,13 @@ SKU_TO_BASE_DEVICE = {
     "Core600S": "Core600S",
     "LAP-C601S-WUS": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WUSR": "Core600S",  # Alt ID Model Core600S
-    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S
+    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S,
+    "Vital200S": "Vital200S",
+    "LAP-V201S-AASR": "Vital200S",  # Alt ID Model Vital200S
+    "LAP-V201S-WJP": "Vital200S",  # Alt ID Model Vital200S
+    "LAP-V201S-WEU": "Vital200S",  # Alt ID Model Vital200S
+    "LAP-V201S-WUS": "Vital200S",  # Alt ID Model Vital200S
+    "LAP-V201-AUSR": "Vital200S",  # Alt ID Model Vital200S
+    "Vital100S": "Vital100S",
+    "LAP-V102S-WUS": "Vital100S",  # Alt ID Model Vital100S,
 }

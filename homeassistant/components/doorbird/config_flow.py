@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from ipaddress import ip_address
 import logging
 from typing import Any
 
@@ -15,7 +14,6 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util.network import is_ipv4_address, is_link_local
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_door_station_info
@@ -106,16 +104,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Prepare configuration for a discovered doorbird device."""
         macaddress = discovery_info.properties["macaddress"]
-        host = discovery_info.host
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
-        if is_link_local(ip_address(host)):
+        if discovery_info.ip_address.is_link_local:
             return self.async_abort(reason="link_local_address")
-        if not is_ipv4_address(host):
+        if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="not_ipv4_address")
 
         await self.async_set_unique_id(macaddress)
+        host = discovery_info.host
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._async_abort_entries_match({CONF_HOST: host})

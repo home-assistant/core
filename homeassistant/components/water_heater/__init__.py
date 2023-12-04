@@ -164,6 +164,10 @@ class WaterHeaterEntityEntityDescription(EntityDescription):
 class WaterHeaterEntity(Entity):
     """Base class for water heater entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
+    )
+
     entity_description: WaterHeaterEntityEntityDescription
     _attr_current_operation: str | None = None
     _attr_current_temperature: float | None = None

@@ -8,6 +8,14 @@
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Melcloud integration needs to re-authenticate your connection details",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -16,6 +24,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed."
     }
   },
@@ -49,6 +58,28 @@
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The MELCloud YAML configuration import failed",
       "description": "Configuring MELCloud using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the MELCloud YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "daily_energy": {
+        "name": "Daily energy consumed"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "tank_temperature": {
+        "name": "Tank temperature"
+      },
+      "flow_temperature": {
+        "name": "Flow temperature"
+      },
+      "return_temperature": {
+        "name": "Flow return temperature"
+      }
     }
   }
 }

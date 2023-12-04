@@ -12,7 +12,7 @@ from homeassistant.components.twinkly.const import (
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 
-from . import TEST_MODEL, ClientMock
+from . import TEST_MODEL, TEST_NAME, ClientMock
 
 from tests.common import MockConfigEntry
 
@@ -60,11 +60,11 @@ async def test_success_flow(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == client.id
+    assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: "dummy",
         CONF_ID: client.id,
-        CONF_NAME: client.id,
+        CONF_NAME: TEST_NAME,
         CONF_MODEL: TEST_MODEL,
     }
 
@@ -113,11 +113,11 @@ async def test_dhcp_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == "create_entry"
-    assert result["title"] == client.id
+    assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_ID: client.id,
-        CONF_NAME: client.id,
+        CONF_NAME: TEST_NAME,
         CONF_MODEL: TEST_MODEL,
     }
 
@@ -131,7 +131,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "1.2.3.4",
             CONF_ID: client.id,
-            CONF_NAME: client.id,
+            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
         unique_id=client.id,

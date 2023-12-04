@@ -134,9 +134,26 @@ class ActiveConnection:
         self.send_message(messages.event_message(msg_id, event))
 
     @callback
-    def send_error(self, msg_id: int, code: str, message: str) -> None:
-        """Send a error message."""
-        self.send_message(messages.error_message(msg_id, code, message))
+    def send_error(
+        self,
+        msg_id: int,
+        code: str,
+        message: str,
+        translation_key: str | None = None,
+        translation_domain: str | None = None,
+        translation_placeholders: dict[str, Any] | None = None,
+    ) -> None:
+        """Send an error message."""
+        self.send_message(
+            messages.error_message(
+                msg_id,
+                code,
+                message,
+                translation_key=translation_key,
+                translation_domain=translation_domain,
+                translation_placeholders=translation_placeholders,
+            )
+        )
 
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
@@ -238,7 +255,10 @@ class ActiveConnection:
         log_handler = self.logger.error
 
         code = const.ERR_UNKNOWN_ERROR
-        err_message = None
+        err_message: str | None = None
+        translation_domain: str | None = None
+        translation_key: str | None = None
+        translation_placeholders: dict[str, Any] | None = None
 
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
@@ -251,6 +271,10 @@ class ActiveConnection:
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):
             err_message = str(err)
+            code = const.ERR_HOME_ASSISTANT_ERROR
+            translation_domain = err.translation_domain
+            translation_key = err.translation_key
+            translation_placeholders = err.translation_placeholders
 
         # This if-check matches all other errors but also matches errors which
         # result in an empty message. In that case we will also log the stack
@@ -259,7 +283,16 @@ class ActiveConnection:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        self.send_message(messages.error_message(msg["id"], code, err_message))
+        self.send_message(
+            messages.error_message(
+                msg["id"],
+                code,
+                err_message,
+                translation_domain=translation_domain,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+        )
 
         if code:
             err_message += f" ({code})"

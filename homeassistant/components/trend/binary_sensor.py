@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Mapping
 import logging
 import math
+from typing import Any
 
 import numpy as np
 import voluptuous as vol
@@ -12,6 +14,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -22,6 +25,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SENSORS,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -34,6 +38,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.dt import utcnow
 
@@ -47,23 +52,39 @@ from .const import (
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
+    CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
-        vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
-        vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
-        vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
-    }
+
+def _validate_min_max(data: dict[str, Any]) -> dict[str, Any]:
+    if (
+        CONF_MIN_SAMPLES in data
+        and CONF_MAX_SAMPLES in data
+        and data[CONF_MAX_SAMPLES] < data[CONF_MIN_SAMPLES]
+    ):
+        raise vol.Invalid("min_samples must be smaller than or equal to max_samples")
+    return data
+
+
+SENSOR_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ATTRIBUTE): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_INVERT, default=False): cv.boolean,
+            vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
+            vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
+            vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
+            vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+        }
+    ),
+    _validate_min_max,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -91,6 +112,7 @@ async def async_setup_platform(
         max_samples = device_config[CONF_MAX_SAMPLES]
         min_gradient = device_config[CONF_MIN_GRADIENT]
         sample_duration = device_config[CONF_SAMPLE_DURATION]
+        min_samples = device_config[CONF_MIN_SAMPLES]
 
         sensors.append(
             SensorTrend(
@@ -104,8 +126,10 @@ async def async_setup_platform(
                 max_samples,
                 min_gradient,
                 sample_duration,
+                min_samples,
             )
         )
+
     if not sensors:
         _LOGGER.error("No sensors added")
         return
@@ -113,59 +137,51 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class SensorTrend(BinarySensorEntity):
+class SensorTrend(BinarySensorEntity, RestoreEntity):
     """Representation of a trend Sensor."""
 
     _attr_should_poll = False
+    _gradient = 0.0
+    _state: bool | None = None
 
     def __init__(
         self,
-        hass,
-        device_id,
-        friendly_name,
-        entity_id,
-        attribute,
-        device_class,
-        invert,
-        max_samples,
-        min_gradient,
-        sample_duration,
-    ):
+        hass: HomeAssistant,
+        device_id: str,
+        friendly_name: str,
+        entity_id: str,
+        attribute: str,
+        device_class: BinarySensorDeviceClass,
+        invert: bool,
+        max_samples: int,
+        min_gradient: float,
+        sample_duration: int,
+        min_samples: int,
+    ) -> None:
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
-        self._name = friendly_name
+        self._attr_name = friendly_name
+        self._attr_device_class = device_class
         self._entity_id = entity_id
         self._attribute = attribute
-        self._device_class = device_class
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
-        self._gradient = None
-        self._state = None
-        self.samples = deque(maxlen=max_samples)
+        self._min_samples = min_samples
+        self.samples: deque = deque(maxlen=max_samples)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
 
     @property
-    def device_class(self):
-        """Return the sensor class of the sensor."""
-        return self._device_class
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_FRIENDLY_NAME: self._name,
+            ATTR_FRIENDLY_NAME: self._attr_name,
             ATTR_GRADIENT: self._gradient,
             ATTR_INVERT: self._invert,
             ATTR_MIN_GRADIENT: self._min_gradient,
@@ -201,6 +217,12 @@ class SensorTrend(BinarySensorEntity):
             )
         )
 
+        if not (state := await self.async_get_last_state()):
+            return
+        if state.state == STATE_UNKNOWN:
+            return
+        self._state = state.state == STATE_ON
+
     async def async_update(self) -> None:
         """Get the latest data and update the states."""
         # Remove outdated samples
@@ -209,7 +231,7 @@ class SensorTrend(BinarySensorEntity):
             while self.samples and self.samples[0][0] < cutoff:
                 self.samples.popleft()
 
-        if len(self.samples) < 2:
+        if len(self.samples) < self._min_samples:
             return
 
         # Calculate gradient of linear trend
@@ -224,7 +246,7 @@ class SensorTrend(BinarySensorEntity):
         if self._invert:
             self._state = not self._state
 
-    def _calculate_gradient(self):
+    def _calculate_gradient(self) -> None:
         """Compute the linear trend gradient of the current samples.
 
         This need run inside executor.
