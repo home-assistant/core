@@ -73,10 +73,8 @@ async def trigger_subscription_callback(
     """Trigger a subscription callback."""
     # trigger callback on all subscribers
     for sub in client.subscribe_events.call_args_list:
-        callback = sub.args[0] if len(sub.args) > 0 else sub.kwargs.get("callback")
-        event_filter = (
-            sub.args[1] if len(sub.args) > 1 else sub.kwargs.get("event_filter")
-        )
+        callback = sub.kwargs.get("callback")
+        event_filter = sub.kwargs.get("event_filter")
         if event_filter in (None, event):
             callback(event, data)
     await hass.async_block_till_done()
