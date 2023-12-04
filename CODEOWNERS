@@ -259,6 +259,8 @@ build.json @home-assistant/supervisor
 /tests/components/denonavr/ @ol-iver @starkillerOG
 /homeassistant/components/derivative/ @afaucogney
 /tests/components/derivative/ @afaucogney
+/homeassistant/components/devialet/ @fwestenberg
+/tests/components/devialet/ @fwestenberg
 /homeassistant/components/device_automation/ @home-assistant/core
 /tests/components/device_automation/ @home-assistant/core
 /homeassistant/components/device_tracker/ @home-assistant/core
@@ -350,12 +352,10 @@ build.json @home-assistant/supervisor
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
-/homeassistant/components/envisalink/ @ufodone
 /homeassistant/components/ephember/ @ttroy50
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
-/homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
@@ -395,6 +395,8 @@ build.json @home-assistant/supervisor
 /tests/components/fivem/ @Sander0542
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
+/homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
+/tests/components/flexit_bacnet/ @lellky @piotrbulinski
 /homeassistant/components/flick_electric/ @ZephireNZ
 /tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico
@@ -520,6 +522,8 @@ build.json @home-assistant/supervisor
 /tests/components/hive/ @Rendili @KJonline
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
+/homeassistant/components/holiday/ @jrieger
+/tests/components/holiday/ @jrieger
 /homeassistant/components/home_connect/ @DavidMStraub
 /tests/components/home_connect/ @DavidMStraub
 /homeassistant/components/home_plus_control/ @chemaaa
@@ -663,8 +667,6 @@ build.json @home-assistant/supervisor
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
 /tests/components/kodi/ @OnFreund
-/homeassistant/components/komfovent/ @ProstoSanja
-/tests/components/komfovent/ @ProstoSanja
 /homeassistant/components/konnected/ @heythisisnate
 /tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm
@@ -930,6 +932,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
+/homeassistant/components/ourgroceries/ @OnFreund
+/tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /homeassistant/components/ovo_energy/ @timmo001
@@ -1396,8 +1400,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
-/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
-/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
+/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW

@@ -1,9 +1,10 @@
 """The tests for the Home Assistant API component."""
+import asyncio
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
-from aiohttp import web
+from aiohttp import ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
@@ -352,26 +353,41 @@ async def test_api_call_service_with_data(
     assert state["attributes"] == {"data": 1}
 
 
-async def test_api_call_service_timeout(
+async def test_api_call_service_client_closed(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
-    """Test if the API does not fail on long running services."""
+    """Test that services keep running if client is closed."""
     test_value = []
 
     fut = hass.loop.create_future()
+    service_call_started = asyncio.Event()
 
     async def listener(service_call):
         """Wait and return after mock_api_client.post finishes."""
+        service_call_started.set()
         value = await fut
         test_value.append(value)
 
     hass.services.async_register("test_domain", "test_service", listener)
 
-    with patch("homeassistant.components.api.SERVICE_WAIT_TIMEOUT", 0):
-        await mock_api_client.post("/api/services/test_domain/test_service")
-        assert len(test_value) == 0
-        fut.set_result(1)
-        await hass.async_block_till_done()
+    api_task = hass.async_create_task(
+        mock_api_client.post("/api/services/test_domain/test_service")
+    )
+
+    await service_call_started.wait()
+
+    assert len(test_value) == 0
+
+    await mock_api_client.close()
+
+    assert len(test_value) == 0
+    assert api_task.done()
+
+    with pytest.raises(ServerDisconnectedError):
+        await api_task
+
+    fut.set_result(1)
+    await hass.async_block_till_done()
 
     assert len(test_value) == 1
     assert test_value[0] == 1

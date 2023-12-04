@@ -1,4 +1,5 @@
 """The tests for the notify smtp platform."""
+from pathlib import Path
 import re
 from unittest.mock import patch
 
@@ -132,13 +133,42 @@ EMAIL_DATA = [
     ],
 )
 def test_send_message(
-    message_data, data, content_type, hass: HomeAssistant, message
+    hass: HomeAssistant, message_data, data, content_type, message
 ) -> None:
     """Verify if we can send messages of all types correctly."""
     sample_email = "<mock@mock>"
+    message.hass = hass
+    hass.config.allowlist_external_dirs.add(Path("tests/testing_config").resolve())
     with patch("email.utils.make_msgid", return_value=sample_email):
         result, _ = message.send_message(message_data, data=data)
         assert content_type in result
+
+
+@pytest.mark.parametrize(
+    ("message_data", "data", "content_type"),
+    [
+        (
+            "Test msg",
+            {"images": ["tests/testing_config/notify/test.jpg"]},
+            "Content-Type: multipart/mixed",
+        ),
+    ],
+)
+def test_sending_insecure_files_fails(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    message_data,
+    data,
+    content_type,
+    message,
+) -> None:
+    """Verify if we cannot send messages with insecure attachments."""
+    sample_email = "<mock@mock>"
+    message.hass = hass
+    with patch("email.utils.make_msgid", return_value=sample_email):
+        result, _ = message.send_message(message_data, data=data)
+        assert content_type in result
+    assert "test.jpg' is not secure to load data from, ignoring attachment"
 
 
 def test_send_text_message(hass: HomeAssistant, message) -> None:
