@@ -30,7 +30,6 @@ from .const import (
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VIRTUAL_COUNT,
@@ -115,8 +114,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     count = config.get(CONF_COUNT, None)
     structure = config.get(CONF_STRUCTURE, None)
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
-    swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
+    swap_type = config.get(CONF_SWAP)
     for entry in (
         (count, validator.count, CONF_COUNT),
         (structure, validator.structure, CONF_STRUCTURE),
@@ -136,9 +135,8 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             )
             raise vol.Invalid(error)
 
-    if swap_type != CONF_SWAP_NONE:
+    if swap_type:
         swap_type_validator = {
-            CONF_SWAP_NONE: validator.swap_byte,
             CONF_SWAP_BYTE: validator.swap_byte,
             CONF_SWAP_WORD: validator.swap_word,
             CONF_SWAP_WORD_BYTE: validator.swap_word,
