@@ -10,7 +10,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, MODEL_DIMMER, MODEL_SMART
+from .const import DOMAIN
+
+# Model names
+MODEL_SMART = "smart"
+MODEL_DIMMER = "dimmer"
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -41,17 +45,14 @@ class DeakoLightEntity(LightEntity):
     _attr_supported_color_modes: set[ColorMode]
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_is_on = False
+    _attr_available = True
 
     def __init__(self, client: Deako, uuid: str) -> None:
         """Save connection reference."""
         self.client = client
         self._attr_unique_id = uuid
-        self._attr_available = True
-
-        # https://developers.home-assistant.io/docs/core/entity/#has_entity_name-true-mandatory-for-new-integrations
-        # since light entity is the main feature of deako devices
-        self._attr_name = None
 
         state = self.get_state()
         dimmable = state.get("dim") is not None

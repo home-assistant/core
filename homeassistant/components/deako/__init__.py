@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await connection.find_devices()
     except FindDevicesTimeout as exc:
-        _LOGGER.warning("No devices expected")
+        _LOGGER.warning("Expected more devices than received from bridge device")
         await connection.disconnect()
         raise ConfigEntryNotReady(exc) from exc
 
