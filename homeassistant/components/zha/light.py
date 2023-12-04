@@ -875,11 +875,10 @@ class Light(BaseLight, ZhaEntity):
             if self.is_transitioning:
                 return
 
-            if state is not None:
-                self._attr_state = state
-                if state:  # reset "off with transition" flag if the light is on
-                    self._off_with_transition = False
-                    self._off_brightness = None
+            self._attr_state = state
+            if state:  # reset "off with transition" flag if the light is on
+                self._off_with_transition = False
+                self._off_brightness = None
 
         if self._level_cluster_handler:
             level = await self._level_cluster_handler.get_attribute_value(
@@ -888,8 +887,7 @@ class Light(BaseLight, ZhaEntity):
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:
                 return
-            if level is not None:
-                self._attr_brightness = level
+            self._attr_brightness = level
 
         if self._color_cluster_handler:
             attributes = [

@@ -42,7 +42,7 @@ from ..const import (
     ZHA_CLUSTER_HANDLER_MSG_DATA,
     ZHA_CLUSTER_HANDLER_READS_PER_REQ,
 )
-from ..helpers import LogMixin, retryable_req, safe_read
+from ..helpers import LogMixin
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -362,7 +362,6 @@ class ClusterHandler(LogMixin):
             self.debug("skipping cluster handler configuration")
         self._status = ClusterHandlerStatus.CONFIGURED
 
-    @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize cluster handler."""
         if not from_cache and self._endpoint.device.skip_configuration:
@@ -377,17 +376,15 @@ class ClusterHandler(LogMixin):
 
         if cached:
             self.debug("initializing cached cluster handler attributes: %s", cached)
-            await self._get_attributes(
-                True, cached, from_cache=True, only_cache=from_cache
-            )
+            await self.get_attributes(cached, from_cache=True, only_cache=from_cache)
         if uncached:
             self.debug(
                 "initializing uncached cluster handler attributes: %s - from cache[%s]",
                 uncached,
                 from_cache,
             )
-            await self._get_attributes(
-                True, uncached, from_cache=from_cache, only_cache=from_cache
+            await self.get_attributes(
+                uncached, from_cache=from_cache, only_cache=from_cache
             )
 
         ch_specific_init = getattr(
@@ -457,22 +454,16 @@ class ClusterHandler(LogMixin):
 
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
-        manufacturer = None
-        manufacturer_code = self._endpoint.device.manufacturer_code
-        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
-            manufacturer = manufacturer_code
-        result = await safe_read(
-            self._cluster,
-            [attribute],
+        result = await self.get_attributes(
+            attributes=[attribute],
             allow_cache=from_cache,
             only_cache=from_cache,
-            manufacturer=manufacturer,
         )
-        return result.get(attribute)
 
-    async def _get_attributes(
+        return result[attribute]
+
+    async def get_attributes(
         self,
-        raise_exceptions: bool,
         attributes: list[str],
         from_cache: bool = True,
         only_cache: bool = True,
@@ -488,7 +479,7 @@ class ClusterHandler(LogMixin):
         while chunk:
             try:
                 self.debug("Reading attributes in chunks: %s", chunk)
-                read, _ = await self.cluster.read_attributes(
+                read, _ = await self.read_attributes(
                     chunk,
                     allow_cache=from_cache,
                     only_cache=only_cache,
@@ -502,13 +493,10 @@ class ClusterHandler(LogMixin):
                     self.cluster.ep_attribute,
                     str(ex),
                 )
-                if raise_exceptions:
-                    raise
+                raise
             chunk = rest[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
             rest = rest[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
         return result
-
-    get_attributes = functools.partialmethod(_get_attributes, False)
 
     async def write_attributes_safe(
         self, attributes: dict[str, Any], manufacturer: int | None = None

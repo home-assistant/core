@@ -28,10 +28,9 @@ class DoorLockClusterHandler(ClusterHandler):
     async def async_update(self):
         """Retrieve latest state."""
         result = await self.get_attribute_value("lock_state", from_cache=True)
-        if result is not None:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "lock_state", result
-            )
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "lock_state", result
+        )
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -155,28 +154,27 @@ class WindowCovering(ClusterHandler):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await self.get_attribute_value(
+        lift_result = await self.get_attribute_value(
             "current_position_lift_percentage", from_cache=False
         )
-        self.debug("read current position: %s", result)
-        if result is not None:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                self._value_attribute_lift,
-                "current_position_lift_percentage",
-                result,
-            )
-        result = await self.get_attribute_value(
+        self.debug("read current position: %s", lift_result)
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+            self._value_attribute_lift,
+            "current_position_lift_percentage",
+            lift_result,
+        )
+
+        tilt_result = await self.get_attribute_value(
             "current_position_tilt_percentage", from_cache=False
         )
-        self.debug("read current tilt position: %s", result)
-        if result is not None:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                self._value_attribute_tilt,
-                "current_position_tilt_percentage",
-                result,
-            )
+        self.debug("read current tilt position: %s", tilt_result)
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+            self._value_attribute_tilt,
+            "current_position_tilt_percentage",
+            tilt_result,
+        )
 
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:

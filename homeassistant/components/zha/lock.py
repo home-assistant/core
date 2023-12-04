@@ -163,8 +163,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
             state = await self._doorlock_cluster_handler.get_attribute_value(
                 "lock_state", from_cache=from_cache
             )
-            if state is not None:
-                self._state = VALUE_TO_STATE.get(state, self._state)
+            self._state = VALUE_TO_STATE.get(state, self._state)
 
     async def refresh(self, time):
         """Call async_get_state at an interval."""

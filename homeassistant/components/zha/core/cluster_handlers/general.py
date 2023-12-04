@@ -1,7 +1,6 @@
 """General cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
@@ -525,13 +524,13 @@ class PowerConfigurationClusterHandler(ClusterHandler):
         ),
     )
 
-    def async_initialize_cluster_handler_specific(self, from_cache: bool) -> Coroutine:
+    async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> Any:
         """Initialize cluster handler specific attrs."""
         attributes = [
             "battery_size",
             "battery_quantity",
         ]
-        return self.get_attributes(
+        return await self.get_attributes(
             attributes, from_cache=from_cache, only_cache=from_cache
         )
 

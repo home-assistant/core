@@ -261,10 +261,7 @@ class ThermostatClusterHandler(ClusterHandler):
 
     async def get_occupancy(self) -> bool | None:
         """Get unreportable occupancy attribute."""
-        res, fail = await self.read_attributes(["occupancy"])
-        self.debug("read 'occupancy' attr, success: %s, fail: %s", res, fail)
-        if "occupancy" not in res:
-            return None
+        await self.get_attribute_value("occupancy")
         return bool(self.occupancy)
 
 
