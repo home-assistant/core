@@ -14,10 +14,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from . import async_wemo_dispatcher_connect
 from .const import SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
