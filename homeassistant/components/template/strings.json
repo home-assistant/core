@@ -5,7 +5,9 @@
         "data": {
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "icon": "[%key:component::template::config::step::sensor::data::icon%]",
+          "availability": "[%key:component::template::config::step::sensor::data::availability%]"
         },
         "title": "Template binary sensor"
       },
@@ -15,6 +17,8 @@
           "name": "[%key:common::config_flow::data::name%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state": "State template",
+          "icon": "Icon template",
+          "availability": "Availability template",
           "unit_of_measurement": "Unit of measurement"
         },
         "title": "Template sensor"
@@ -33,7 +37,9 @@
     "step": {
       "binary_sensor": {
         "data": {
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "icon": "[%key:component::template::config::step::sensor::data::icon%]",
+          "availability": "[%key:component::template::config::step::sensor::data::availability%]"
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"
       },
@@ -42,6 +48,8 @@
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "icon": "Icon template",
+          "availability": "Availability template",
           "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
         "title": "[%key:component::template::config::step::sensor::title%]"
