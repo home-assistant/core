@@ -1,4 +1,5 @@
 """Test Matter sensors."""
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
@@ -13,6 +14,8 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="flow_sensor_node")
@@ -255,6 +258,7 @@ async def test_eve_energy_sensors(
     assert state.attributes["unit_of_measurement"] == "kWh"
     assert state.attributes["device_class"] == "energy"
     assert state.attributes["friendly_name"] == "Eve Energy Plug Energy"
+    assert state.attributes["state_class"] == "total_increasing"
 
     # current sensor
     entity_id = "sensor.eve_energy_plug_current"
@@ -264,6 +268,15 @@ async def test_eve_energy_sensors(
     assert state.attributes["unit_of_measurement"] == "A"
     assert state.attributes["device_class"] == "current"
     assert state.attributes["friendly_name"] == "Eve Energy Plug Current"
+
+    # test if the sensor gets polled on interval
+    eve_energy_plug_node.update_attribute("1/319486977/319422472", 237.0)
+    async_fire_time_changed(hass, datetime.now(UTC) + timedelta(seconds=31))
+    await hass.async_block_till_done()
+    entity_id = "sensor.eve_energy_plug_voltage"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "237.0"
 
     # test extra poll triggered when secondary value (switch state) changes
     set_node_attribute(eve_energy_plug_node, 1, 6, 0, True)
