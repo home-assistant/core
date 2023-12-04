@@ -64,7 +64,13 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
-    number_of_devices = len(vicare_api.devices)
+    number_of_devices = len(
+        [
+            device_config
+            for device_config in vicare_api.devices
+            if device_config.getModel() != "Heatbox1"
+        ]
+    )
     if number_of_devices > 1:
         cache_duration = max(
             DEFAULT_CACHE_DURATION, DEFAULT_CACHE_DURATION * number_of_devices
