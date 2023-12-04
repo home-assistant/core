@@ -1040,7 +1040,7 @@ def remove_device_from_config(hass: HomeAssistant, device_id: str) -> None:
     """Remove device from YAML configuration file."""
     path = hass.config.path(YAML_DEVICES)
     devices = load_yaml_config_file(path)
-    devices.pop(device_id, None)
+    devices.pop(device_id)
     dumped = dump(devices)
 
     with open(path, "r+", encoding="utf8") as out:
