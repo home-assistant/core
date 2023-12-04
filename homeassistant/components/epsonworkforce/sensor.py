@@ -11,12 +11,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_VERIFY_SSL, CONF_PROTOCOL, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    PROTOCOL_HTTP,
+    PROTOCOL_HTTPS,
+)
+
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -64,6 +70,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
             cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]
         ),
+        vol.Optional(CONF_PROTOCOL, default=PROTOCOL_HTTP): vol.Any(
+            PROTOCOL_HTTP, PROTOCOL_HTTPS
+        ),
+        vol.Optional(CONF_VERIFY_SSL, default=False): vol.Any(
+            False, True
+        ),
     }
 )
 SCAN_INTERVAL = timedelta(minutes=60)
@@ -77,8 +89,10 @@ def setup_platform(
 ) -> None:
     """Set up the cartridge sensor."""
     host = config.get(CONF_HOST)
+    protocol = config.get(CONF_PROTOCOL)
+    verify_ssl = config.get(CONF_VERIFY_SSL)
 
-    api = EpsonPrinterAPI(host)
+    api = EpsonPrinterAPI(host, protocol, verify_ssl)
     if not api.available:
         raise PlatformNotReady()
 
