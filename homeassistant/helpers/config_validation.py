@@ -99,6 +99,7 @@ from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 
@@ -581,7 +582,11 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # noqa: E721
+    if (
+        type(value) is str  # noqa: E721
+        or type(value) is NodeStrClass  # noqa: E721
+        or isinstance(value, str)
+    ):
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
