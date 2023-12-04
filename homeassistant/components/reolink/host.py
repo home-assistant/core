@@ -165,7 +165,7 @@ class ReolinkHost:
         if self._onvif_push_supported:
             try:
                 await self.subscribe()
-            except NotSupportedError:
+            except ReolinkError:
                 self._onvif_push_supported = False
                 self.unregister_webhook()
                 await self._api.unsubscribe()
