@@ -968,9 +968,7 @@ async def merge_packages_config(
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            # If component name is given with a trailing description, remove it
-            # when looking for component
-            domain = comp_name.partition(" ")[0]
+            domain = domain_from_config_key(comp_name)
 
             try:
                 integration = await async_get_integration_with_requirements(
@@ -1249,7 +1247,24 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 
     Async friendly.
     """
-    return [key for key in config if key.partition(" ")[0] == domain]
+    return [key for key in config if domain_from_config_key(key) == domain]
+
+
+def domain_from_config_key(key: str) -> str:
+    """Return domain from a configuration key with optional label.
+
+    A domain is separated from a label by one or more spaces, empty labels are not
+    allowed.
+
+    Examples:
+    'hue' returns 'hue'
+    'hue 1' returns 'hue'
+    'hue  1' returns 'hue'
+    'hue ' returns 'hue '
+    'hue  ' returns 'hue  '
+    """
+    parts = key.partition(" ")
+    return parts[0] if parts[2].strip(" ") else key
 
 
 async def async_process_component_config(  # noqa: C901
