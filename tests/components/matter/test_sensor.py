@@ -269,4 +269,4 @@ async def test_eve_energy_sensors(
     set_node_attribute(eve_energy_plug_node, 1, 6, 0, True)
     await trigger_subscription_callback(hass, matter_client)
 
-    # TODO: test hare if the additional poll is actually performed
+    # TODO: test here if the additional poll is actually performed
