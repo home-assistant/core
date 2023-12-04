@@ -1,4 +1,6 @@
 """Entities for the ViCare integration."""
+from typing import Final
+
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
@@ -9,7 +11,10 @@ from PyViCare.PyViCareHeatingDevice import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DEVELOPER_PORTAL, DOMAIN, MANUFACTURER
+from .const import DOMAIN
+
+MANUFACTURER: Final = "Viessmann"
+DEVELOPER_PORTAL: Final = "https://app.developer.viessmann.com/"
 
 
 class ViCareEntity(Entity):
