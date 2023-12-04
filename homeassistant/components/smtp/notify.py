@@ -259,16 +259,18 @@ def _attach_file(hass, atch_name, content_id=""):
         if os.path.exists(file_path) and not hass.config.is_allowed_path(
             str(file_path)
         ):
+            allow_list = "allowlist_external_dirs"
             file_name = os.path.basename(atch_name)
             url = "https://www.home-assistant.io/docs/configuration/basic/"
             raise ServiceValidationError(
                 f"Cannot send email with attachment '{file_name} "
                 f"from directory '{file_path} which is not secure to load data from. "
-                "Only folders added to `allowlist_external_dirs` are accessible. "
+                f"Only folders added to `{allow_list}` are accessible. "
                 f"See {url} for more information.",
                 translation_domain=DOMAIN,
                 translation_key="remote_path_not_allowed",
                 translation_placeholders={
+                    "allow_list": allow_list,
                     "file_path": file_path,
                     "file_name": file_name,
                     "url": url,
