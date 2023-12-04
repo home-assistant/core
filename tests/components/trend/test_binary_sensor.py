@@ -513,6 +513,6 @@ async def test_invalid_min_sample(
     record = caplog.records[0]
     assert record.levelname == "ERROR"
     assert (
-        "Invalid config for 'binary_sensor' from integration 'trend': min_samples must "
-        "be smaller than or equal to max_samples" in record.message
+        "Invalid config for 'binary_sensor.trend': min_samples must be smaller than or equal to max_samples"
+        in record.message
     )

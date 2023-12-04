@@ -141,8 +141,7 @@ class ConfigExceptionInfo:
 
     exception: Exception
     translation_key: ConfigErrorTranslationKey
-    integration_domain: str
-    platform_domain: str | None
+    platform_name: str
     config: ConfigType
     integration_link: str | None
 
@@ -539,38 +538,30 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 @callback
 def async_log_schema_error(
     exc: vol.Invalid,
-    integration_domain: str,
-    platform_domain: str | None,
+    domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
     """Log a schema validation error."""
-    message = format_schema_error(
-        hass, exc, integration_domain, platform_domain, config, link
-    )
+    message = format_schema_error(hass, exc, domain, config, link)
     _LOGGER.error(message)
 
 
 @callback
 def async_log_config_validator_error(
     exc: vol.Invalid | HomeAssistantError,
-    integration_domain: str,
-    platform_domain: str | None,
+    domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
     """Log an error from a custom config validator."""
     if isinstance(exc, vol.Invalid):
-        async_log_schema_error(
-            exc, integration_domain, platform_domain, config, hass, link
-        )
+        async_log_schema_error(exc, domain, config, hass, link)
         return
 
-    message = format_homeassistant_error(
-        hass, exc, integration_domain, platform_domain, config, link
-    )
+    message = format_homeassistant_error(hass, exc, domain, config, link)
     _LOGGER.error(message, exc_info=exc)
 
 
@@ -653,8 +644,7 @@ def _relpath(hass: HomeAssistant, path: str) -> str:
 def stringify_invalid(
     hass: HomeAssistant,
     exc: vol.Invalid,
-    integration_domain: str,
-    platform_domain: str | None,
+    domain: str,
     config: dict,
     link: str | None,
     max_sub_error_length: int,
@@ -669,14 +659,8 @@ def stringify_invalid(
     - Give a more user friendly output for unknown options
     - Give a more user friendly output for missing options
     """
-    if platform_domain:
-        message_prefix = (
-            f"Invalid config for '{platform_domain}' from integration "
-            f"'{integration_domain}'"
-        )
-    else:
-        message_prefix = f"Invalid config for '{integration_domain}'"
-    if integration_domain != CONF_CORE and link:
+    message_prefix = f"Invalid config for '{domain}'"
+    if domain != CONF_CORE and link:
         message_suffix = f", please check the docs at {link}"
     else:
         message_suffix = ""
@@ -685,8 +669,8 @@ def stringify_invalid(
     path = "->".join(str(m) for m in exc.path)
     if exc.error_message == "extra keys not allowed":
         return (
-            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for "
-            f"'{integration_domain}', check: {path}{message_suffix}"
+            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
+            f"check: {path}{message_suffix}"
         )
     if exc.error_message == "required key not provided":
         return (
@@ -713,8 +697,7 @@ def stringify_invalid(
 def humanize_error(
     hass: HomeAssistant,
     validation_error: vol.Invalid,
-    integration_domain: str,
-    platform_domain: str | None,
+    domain: str,
     config: dict,
     link: str | None,
     max_sub_error_length: int = MAX_VALIDATION_ERROR_ITEM_LENGTH,
@@ -728,25 +711,13 @@ def humanize_error(
         return "\n".join(
             sorted(
                 humanize_error(
-                    hass,
-                    sub_error,
-                    integration_domain,
-                    platform_domain,
-                    config,
-                    link,
-                    max_sub_error_length,
+                    hass, sub_error, domain, config, link, max_sub_error_length
                 )
                 for sub_error in validation_error.errors
             )
         )
     return stringify_invalid(
-        hass,
-        validation_error,
-        integration_domain,
-        platform_domain,
-        config,
-        link,
-        max_sub_error_length,
+        hass, validation_error, domain, config, link, max_sub_error_length
     )
 
 
@@ -754,25 +725,18 @@ def humanize_error(
 def format_homeassistant_error(
     hass: HomeAssistant,
     exc: HomeAssistantError,
-    integration_domain: str,
-    platform_domain: str | None,
+    domain: str,
     config: dict,
     link: str | None = None,
 ) -> str:
     """Format HomeAssistantError thrown by a custom config validator."""
-    if platform_domain:
-        message_prefix = (
-            f"Invalid config for '{platform_domain}' from integration "
-            f"'{integration_domain}'"
-        )
-    else:
-        message_prefix = f"Invalid config for '{integration_domain}'"
+    message_prefix = f"Invalid config for '{domain}'"
     # HomeAssistantError raised by custom config validator has no path to the
     # offending configuration key, use the domain key as path instead.
-    if annotation := find_annotation(config, [integration_domain]):
+    if annotation := find_annotation(config, [domain]):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     message = f"{message_prefix}: {str(exc) or repr(exc)}"
-    if integration_domain != CONF_CORE and link:
+    if domain != CONF_CORE and link:
         message += f", please check the docs at {link}"
 
     return message
@@ -782,13 +746,12 @@ def format_homeassistant_error(
 def format_schema_error(
     hass: HomeAssistant,
     exc: vol.Invalid,
-    integration_domain: str,
-    platform_domain: str | None,
+    domain: str,
     config: dict,
     link: str | None = None,
 ) -> str:
     """Format configuration validation error."""
-    return humanize_error(hass, exc, integration_domain, platform_domain, config, link)
+    return humanize_error(hass, exc, domain, config, link)
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:
@@ -1101,8 +1064,7 @@ def _get_log_message_and_stack_print_pref(
 ) -> tuple[str | None, bool, dict[str, str]]:
     """Get message to log and print stack trace preference."""
     exception = platform_exception.exception
-    integration_domain = platform_exception.integration_domain
-    platform_domain = platform_exception.platform_domain
+    platform_name = platform_exception.platform_name
     platform_config = platform_exception.config
     link = platform_exception.integration_link
 
@@ -1126,8 +1088,8 @@ def _get_log_message_and_stack_print_pref(
             True,
         ),
         ConfigErrorTranslationKey.PLATFORM_VALIDATOR_UNKNOWN_ERR: (
-            f"Unknown error validating {integration_domain} platform config with "
-            f"{domain} component platform schema",
+            f"Unknown error validating {platform_name} platform config with {domain} "
+            "component platform schema",
             True,
         ),
         ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR: (
@@ -1139,7 +1101,7 @@ def _get_log_message_and_stack_print_pref(
             True,
         ),
         ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR: (
-            f"Unknown error validating config for {integration_domain} platform "
+            f"Unknown error validating config for {platform_name} platform "
             f"for {domain} component with PLATFORM_SCHEMA",
             True,
         ),
@@ -1153,12 +1115,7 @@ def _get_log_message_and_stack_print_pref(
         show_stack_trace = False
         if isinstance(exception, vol.Invalid):
             log_message = format_schema_error(
-                hass,
-                exception,
-                integration_domain,
-                platform_domain,
-                platform_config,
-                link,
+                hass, exception, platform_name, platform_config, link
             )
             if annotation := find_annotation(platform_config, exception.path):
                 placeholders["config_file"], line = annotation
@@ -1167,14 +1124,9 @@ def _get_log_message_and_stack_print_pref(
             if TYPE_CHECKING:
                 assert isinstance(exception, HomeAssistantError)
             log_message = format_homeassistant_error(
-                hass,
-                exception,
-                integration_domain,
-                platform_domain,
-                platform_config,
-                link,
+                hass, exception, platform_name, platform_config, link
             )
-            if annotation := find_annotation(platform_config, [integration_domain]):
+            if annotation := find_annotation(platform_config, [platform_name]):
                 placeholders["config_file"], line = annotation
                 placeholders["line"] = str(line)
             show_stack_trace = True
@@ -1323,7 +1275,6 @@ async def async_process_component_config(  # noqa: C901
             exc,
             ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR,
             domain,
-            None,
             config,
             integration_docs,
         )
@@ -1343,7 +1294,6 @@ async def async_process_component_config(  # noqa: C901
                 err,
                 ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR,
                 domain,
-                None,
                 config,
                 integration_docs,
             )
@@ -1362,7 +1312,6 @@ async def async_process_component_config(  # noqa: C901
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATION_ERR,
                 domain,
-                None,
                 config,
                 integration_docs,
             )
@@ -1373,7 +1322,6 @@ async def async_process_component_config(  # noqa: C901
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR,
                 domain,
-                None,
                 config,
                 integration_docs,
             )
@@ -1389,7 +1337,6 @@ async def async_process_component_config(  # noqa: C901
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATION_ERR,
                 domain,
-                None,
                 config,
                 integration_docs,
             )
@@ -1400,7 +1347,6 @@ async def async_process_component_config(  # noqa: C901
                 exc,
                 ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR,
                 domain,
-                None,
                 config,
                 integration_docs,
             )
@@ -1417,6 +1363,7 @@ async def async_process_component_config(  # noqa: C901
     platforms: list[ConfigType] = []
     for p_name, p_config in config_per_platform(config, domain):
         # Validate component specific platform schema
+        platform_name = f"{p_name}.{domain}"
         try:
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as exc:
@@ -1424,7 +1371,6 @@ async def async_process_component_config(  # noqa: C901
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,
                 domain,
-                None,
                 p_config,
                 integration_docs,
             )
@@ -1435,7 +1381,6 @@ async def async_process_component_config(  # noqa: C901
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
                 str(p_name),
-                None,
                 config,
                 integration_docs,
             )
@@ -1455,8 +1400,7 @@ async def async_process_component_config(  # noqa: C901
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_ERR,
-                p_name,
-                domain,
+                platform_name,
                 p_config,
                 integration_docs,
             )
@@ -1469,8 +1413,7 @@ async def async_process_component_config(  # noqa: C901
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_COMPONENT_LOAD_EXC,
-                p_name,
-                domain,
+                platform_name,
                 p_config,
                 integration_docs,
             )
@@ -1485,8 +1428,7 @@ async def async_process_component_config(  # noqa: C901
                 exc_info = ConfigExceptionInfo(
                     exc,
                     ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,
-                    p_name,
-                    domain,
+                    platform_name,
                     p_config,
                     p_integration.documentation,
                 )
@@ -1497,7 +1439,6 @@ async def async_process_component_config(  # noqa: C901
                     exc,
                     ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
                     p_name,
-                    domain,
                     p_config,
                     p_integration.documentation,
                 )

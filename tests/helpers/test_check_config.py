@@ -227,12 +227,7 @@ async def test_platform_not_found(hass: HomeAssistant) -> None:
         assert res["light"] == []
 
         warning = CheckConfigError(
-            (
-                "Platform error 'light' from integration 'beer' - "
-                "Integration 'beer' not found."
-            ),
-            None,
-            None,
+            "Platform error light.beer - Integration 'beer' not found.", None, None
         )
         _assert_warnings_errors(res, [warning], [])
 
@@ -366,7 +361,7 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
 
         assert res.keys() == {"homeassistant", "light"}
         warning = CheckConfigError(
-            "Platform error 'light' from integration 'demo' - blablabla",
+            "Platform error light.demo - blablabla",
             None,
             None,
         )

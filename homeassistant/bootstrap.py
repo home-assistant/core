@@ -293,9 +293,7 @@ async def async_from_config_dict(
     try:
         await conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
-        conf_util.async_log_schema_error(
-            config_err, core.DOMAIN, None, core_config, hass
-        )
+        conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
         async_notify_setup_error(hass, core.DOMAIN)
         return None
     except HomeAssistantError:
