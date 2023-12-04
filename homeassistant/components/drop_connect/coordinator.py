@@ -72,9 +72,9 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def device_info(self) -> DeviceInfo:
         """Return a device description."""
         device_info = DeviceInfo(
-            manufacturer=self.manufacturer,
-            model=self.model,
-            name=self.device_name,
+            manufacturer=self._manufacturer,
+            model=self._model,
+            name=self._device_name,
         )
         if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
             device_info.update(
@@ -88,21 +88,6 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 }
             )
         return device_info
-
-    @property
-    def device_name(self) -> str:
-        """Return device name."""
-        return self._device_name
-
-    @property
-    def manufacturer(self) -> str:
-        """Return manufacturer for device."""
-        return self._manufacturer
-
-    @property
-    def model(self) -> str:
-        """Return model for device."""
-        return self._model
 
     # API endpoints
     @property
