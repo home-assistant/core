@@ -868,7 +868,7 @@ class Light(BaseLight, ZhaEntity):
         self.debug("polling current state")
 
         if self._on_off_cluster_handler:
-            state = await self._on_off_cluster_handler.get_attribute_value("on_off")
+            state = await self._on_off_cluster_handler.read_attribute("on_off")
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:
                 return
@@ -879,9 +879,7 @@ class Light(BaseLight, ZhaEntity):
                 self._off_brightness = None
 
         if self._level_cluster_handler:
-            level = await self._level_cluster_handler.get_attribute_value(
-                "current_level"
-            )
+            level = await self._level_cluster_handler.read_attribute("current_level")
             # check if transition started whilst waiting for polled state
             if self.is_transitioning:
                 return
@@ -911,9 +909,7 @@ class Light(BaseLight, ZhaEntity):
             if self._color_cluster_handler.color_loop_supported:
                 attributes.append("color_loop_active")
 
-            results = await self._color_cluster_handler.get_attributes(
-                attributes, from_cache=False, only_cache=False
-            )
+            results = await self._color_cluster_handler.read_attributes(attributes)
 
             # although rare, a transition might have been started while we were waiting
             # for the polled attributes, so abort if we are transitioning,

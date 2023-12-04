@@ -376,14 +376,14 @@ class ClusterHandler(LogMixin):
 
         if cached:
             self.debug("initializing cached cluster handler attributes: %s", cached)
-            await self.get_attributes(cached, from_cache=True, only_cache=from_cache)
+            await self.read_attributes(cached, from_cache=True, only_cache=from_cache)
         if uncached:
             self.debug(
                 "initializing uncached cluster handler attributes: %s - from cache[%s]",
                 uncached,
                 from_cache,
             )
-            await self.get_attributes(
+            await self.read_attributes(
                 uncached, from_cache=from_cache, only_cache=from_cache
             )
 
@@ -452,9 +452,9 @@ class ClusterHandler(LogMixin):
 
         return self.cluster.attributes[attrid].name
 
-    async def get_attribute_value(self, attribute, from_cache=False):
+    async def read_attribute(self, attribute, from_cache=False):
         """Get the value for an attribute."""
-        result = await self.get_attributes(
+        result = await self.read_attributes(
             attributes=[attribute],
             from_cache=from_cache,
             only_cache=from_cache,
@@ -462,24 +462,25 @@ class ClusterHandler(LogMixin):
 
         return result[attribute]
 
-    async def get_attributes(
+    async def read_attributes(
         self,
         attributes: list[str],
-        from_cache: bool = True,
-        only_cache: bool = True,
+        from_cache: bool = False,
+        only_cache: bool = False,
     ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
+
         manufacturer = None
         manufacturer_code = self._endpoint.device.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
         chunk = attributes[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
         rest = attributes[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
-        result = {}
+        result: dict[str | int, Any] = {}
         while chunk:
             try:
                 self.debug("Reading attributes in chunks: %s", chunk)
-                read, _ = await self.read_attributes(
+                read, _ = await retry_request(self._cluster.read_attributes)(
                     chunk,
                     allow_cache=from_cache,
                     only_cache=only_cache,
@@ -531,11 +532,7 @@ class ClusterHandler(LogMixin):
             and callable(getattr(self._cluster, name))
             and name not in UNPROXIED_CLUSTER_METHODS
         ):
-            command = getattr(self._cluster, name)
-            wrapped_command = retry_request(command)
-            wrapped_command.__name__ = name
-
-            return wrapped_command
+            return retry_request(getattr(self._cluster, name))
         return self.__getattribute__(name)
 
 

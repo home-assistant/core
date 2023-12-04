@@ -55,7 +55,7 @@ class FanClusterHandler(ClusterHandler):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        await self.get_attribute_value("fan_mode")
+        await self.read_attribute("fan_mode")
 
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
@@ -261,7 +261,7 @@ class ThermostatClusterHandler(ClusterHandler):
 
     async def get_occupancy(self) -> bool | None:
         """Get unreportable occupancy attribute."""
-        await self.get_attribute_value("occupancy")
+        await self.read_attribute("occupancy")
         return bool(self.occupancy)
 
 

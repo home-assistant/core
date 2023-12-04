@@ -428,7 +428,7 @@ class OnOffClusterHandler(ClusterHandler):
             return
         from_cache = not self._endpoint.device.is_mains_powered
         self.debug("attempting to update onoff state - from cache: %s", from_cache)
-        await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        await self.read_attribute(self.ON_OFF, from_cache=from_cache)
         await super().async_update()
 
 
@@ -530,7 +530,7 @@ class PowerConfigurationClusterHandler(ClusterHandler):
             "battery_size",
             "battery_quantity",
         ]
-        return await self.get_attributes(
+        return await self.read_attributes(
             attributes, from_cache=from_cache, only_cache=from_cache
         )
 

@@ -471,7 +471,7 @@ class ZHADevice(LogMixin):
             self.debug("does not have a mandatory basic cluster")
             self.update_available(False)
             return
-        await self.basic_ch.get_attribute_value(ATTR_MANUFACTURER)
+        await self.basic_ch.read_attribute(ATTR_MANUFACTURER)
         self._checkins_missed_count = 0
 
     def update_available(self, available: bool) -> None:
