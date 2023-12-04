@@ -34,7 +34,7 @@ LOGGER = logging.getLogger(__name__)
 # For example update the energy consumption meter when a relay is toggled
 # of an energy metering powerplug. The below constant defined the delay after
 # which we poll the primary value (debounced).
-EXTRA_POLL_DELAY = 2.0
+EXTRA_POLL_DELAY = 3.0
 
 
 @dataclass
