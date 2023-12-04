@@ -1,8 +1,19 @@
 """Tests for fan platforms."""
 import pytest
 
-from homeassistant.components.fan import FanEntity
+from homeassistant.components.fan import (
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DOMAIN,
+    SERVICE_SET_PRESET_MODE,
+    FanEntity,
+    NotValidPresetModeError,
+)
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from tests.testing_config.custom_components.test.fan import MockFan
 
 
 class BaseFan(FanEntity):
@@ -82,3 +93,55 @@ def test_fanentity_attributes(attribute_name, attribute_value) -> None:
     fan = BaseFan()
     setattr(fan, f"_attr_{attribute_name}", attribute_value)
     assert getattr(fan, attribute_name) == attribute_value
+
+
+async def test_preset_mode_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test preset mode validation."""
+
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.fan")
+    platform.init(empty=False)
+
+    assert await async_setup_component(hass, "fan", {"fan": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    test_fan: MockFan = platform.ENTITIES["support_preset_mode"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.support_fan_with_preset_mode_support")
+    assert state.attributes.get(ATTR_PRESET_MODES) == ["auto", "eco"]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            "entity_id": "fan.support_fan_with_preset_mode_support",
+            "preset_mode": "eco",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("fan.support_fan_with_preset_mode_support")
+    assert state.attributes.get(ATTR_PRESET_MODE) == "eco"
+
+    with pytest.raises(NotValidPresetModeError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                "entity_id": "fan.support_fan_with_preset_mode_support",
+                "preset_mode": "invalid",
+            },
+            blocking=True,
+        )
+        assert exc.value.translation_key == "not_valid_preset_mode"
+
+    with pytest.raises(NotValidPresetModeError) as exc:
+        await test_fan._valid_preset_mode_or_raise("invalid")
+    assert exc.value.translation_key == "not_valid_preset_mode"

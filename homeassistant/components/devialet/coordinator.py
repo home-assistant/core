@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-class DevialetCoordinator(DataUpdateCoordinator):
+class DevialetCoordinator(DataUpdateCoordinator[None]):
     """Devialet update coordinator."""
 
     def __init__(self, hass: HomeAssistant, client: DevialetApi) -> None:
@@ -27,6 +27,6 @@ class DevialetCoordinator(DataUpdateCoordinator):
         )
         self.client = client
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update()
