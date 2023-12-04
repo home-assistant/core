@@ -1096,7 +1096,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.39
+opower==0.0.40
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
