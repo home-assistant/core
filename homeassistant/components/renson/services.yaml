@@ -59,25 +59,6 @@ set_breeze:
       selector:
         boolean:
 
-set_day_night_time:
-  target:
-    entity:
-      integration: renson
-      domain: fan
-  fields:
-    day:
-      required: true
-      default: "7:00:00"
-      example: "7:00:00"
-      selector:
-        time:
-    night:
-      required: true
-      default: "22:00:00"
-      example: "22:00:00"
-      selector:
-        time:
-
 set_pollution_settings:
   target:
     entity:

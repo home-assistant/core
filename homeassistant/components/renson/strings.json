@@ -214,24 +214,6 @@
         }
       }
     },
-    "set_day_night_time": {
-      "name": "Set day and night time",
-      "description": "Set the day and night time of the system",
-      "fields": {
-        "day": {
-          "name": "Start day",
-          "description": "Start time of the day"
-        },
-        "night": {
-          "name": "Start night",
-          "description": "Start time of the night"
-        },
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name of entity that will be setting day and night settings. Platform dependent."
-        }
-      }
-    },
     "set_pollution_settings": {
       "name": "Set pollution settings",
       "description": "Set all the pollution settings of the ventilation system",

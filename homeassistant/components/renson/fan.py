@@ -51,12 +51,6 @@ SET_TIMER_LEVEL_SCHEMA = {
     vol.Required("minutes"): cv.positive_int,
 }
 
-SET_DAY_NIGHT_TIME_SCHEMA = {
-    vol.Required("day"): cv.time,
-    vol.Required("night"): cv.time,
-}
-
-
 SET_BREEZE_SCHEMA = {
     vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
     vol.Required("temperature"): cv.positive_int,
@@ -106,9 +100,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "set_breeze", SET_BREEZE_SCHEMA, "set_breeze"
     )
-    platform.async_register_entity_service(
-        "set_day_night_time", SET_DAY_NIGHT_TIME_SCHEMA, "set_day_night_time"
-    )
+
     platform.async_register_entity_service(
         "set_pollution_settings",
         SET_POLLUTION_SETTINGS_SCHEMA,
@@ -188,11 +180,6 @@ class RensonFan(RensonEntity, FanEntity):
         await self.hass.async_add_executor_job(
             self.api.set_breeze, level, temperature, activate
         )
-
-    async def set_day_night_time(self, day: str, night: str) -> None:
-        """Configure day night times."""
-
-        await self.hass.async_add_executor_job(self.api.set_time, day, night)
 
     async def set_pollution_settings(
         self,
