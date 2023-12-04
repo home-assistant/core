@@ -95,7 +95,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Wyoming."""
     item: DomainDataItem = hass.data[DOMAIN][entry.entry_id]
 
-    platforms = item.service.platforms
+    platforms = list(item.service.platforms)
     if item.satellite is not None:
         platforms += SATELLITE_PLATFORMS
 
