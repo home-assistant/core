@@ -20,8 +20,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     DEFAULT_VERIFY_SSL,
-    VERIFY_SSL_TRUE,
-    VERIFY_SSL_FALSE,
     PROTOCOL_HTTP,
     PROTOCOL_HTTPS,
 )
@@ -76,9 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PROTOCOL, default=PROTOCOL_HTTP): vol.Any(
             PROTOCOL_HTTP, PROTOCOL_HTTPS
         ),
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
-            VERIFY_SSL_FALSE, VERIFY_SSL_TRUE
-        ),
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 SCAN_INTERVAL = timedelta(minutes=60)
