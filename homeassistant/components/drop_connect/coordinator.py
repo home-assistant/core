@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -66,6 +67,27 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Invalid JSON (%s): %s", topic, payload)
 
     # Device properties
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description."""
+        device_info = DeviceInfo(
+            manufacturer=self.manufacturer,
+            model=self.model,
+            name=self.device_name,
+        )
+        if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
+            device_info.update(
+                {"identifiers": {(DOMAIN, self.config_entry.data[CONF_HUB_ID])}}
+            )
+        else:
+            device_info.update(
+                {
+                    "identifiers": {(DOMAIN, self.config_entry.unique_id or "")},
+                    "via_device": (DOMAIN, self.config_entry.data[CONF_HUB_ID]),
+                }
+            )
+        return device_info
 
     @property
     def device_name(self) -> str:
