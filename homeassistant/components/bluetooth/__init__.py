@@ -21,6 +21,7 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
+from habluetooth import HaBluetoothConnector
 from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
 from homeassistant.components import usb
@@ -59,7 +60,11 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import BaseHaRemoteScanner, BaseHaScanner, BluetoothScannerDevice
+from .base_scanner import (
+    BaseHaScanner,
+    BluetoothScannerDevice,
+    HomeAssistantRemoteScanner,
+)
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -73,12 +78,7 @@ from .const import (
 )
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import (
-    BluetoothCallback,
-    BluetoothChange,
-    BluetoothScanningMode,
-    HaBluetoothConnector,
-)
+from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
 from .scanner import MONOTONIC_TIME, HaScanner, ScannerStartError
 from .storage import BluetoothStorage
 
@@ -103,7 +103,7 @@ __all__ = [
     "async_scanner_count",
     "async_scanner_devices_by_address",
     "BaseHaScanner",
-    "BaseHaRemoteScanner",
+    "HomeAssistantRemoteScanner",
     "BluetoothCallbackMatcher",
     "BluetoothChange",
     "BluetoothServiceInfo",

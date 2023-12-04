@@ -13,8 +13,8 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
     storage,
 )
 from homeassistant.components.bluetooth.advertisement_tracker import (
@@ -89,7 +89,7 @@ async def test_remote_scanner(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -173,7 +173,7 @@ async def test_remote_scanner_expires_connectable(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -215,7 +215,7 @@ async def test_remote_scanner_expires_connectable(
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=expire_monotonic,
     ):
         async_fire_time_changed(hass, expire_utc)
@@ -248,7 +248,7 @@ async def test_remote_scanner_expires_non_connectable(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -298,7 +298,7 @@ async def test_remote_scanner_expires_non_connectable(
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=expire_monotonic,
     ):
         async_fire_time_changed(hass, expire_utc)
@@ -314,7 +314,7 @@ async def test_remote_scanner_expires_non_connectable(
         seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=expire_monotonic,
     ):
         async_fire_time_changed(hass, expire_utc)
@@ -346,7 +346,7 @@ async def test_base_scanner_connecting_behavior(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -418,7 +418,7 @@ async def test_restore_history_remote_adapter(
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = BaseHaRemoteScanner(
+    scanner = HomeAssistantRemoteScanner(
         hass,
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
@@ -434,7 +434,7 @@ async def test_restore_history_remote_adapter(
     cancel()
     unsetup()
 
-    scanner = BaseHaRemoteScanner(
+    scanner = HomeAssistantRemoteScanner(
         hass,
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
@@ -470,7 +470,7 @@ async def test_device_with_ten_minute_advertising_interval(
         rssi=-100,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -515,7 +515,7 @@ async def test_device_with_ten_minute_advertising_interval(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=new_time,
     ):
         scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
@@ -528,7 +528,7 @@ async def test_device_with_ten_minute_advertising_interval(
     for _ in range(1, 20):
         new_time += advertising_interval
         with patch(
-            "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+            "habluetooth.base_scanner.MONOTONIC_TIME",
             return_value=new_time,
         ):
             scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
@@ -562,7 +562,7 @@ async def test_device_with_ten_minute_advertising_interval(
         "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=missed_advertisement_future_time,
     ), patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=missed_advertisement_future_time,
     ):
         # Fire once for the scanner to expire the device
@@ -592,7 +592,7 @@ async def test_scanner_stops_responding(
     """Test we mark a scanner are not scanning when it stops responding."""
     manager = _get_manager()
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         """A fake remote scanner."""
 
         def inject_advertisement(
@@ -629,7 +629,7 @@ async def test_scanner_stops_responding(
     )
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=failure_reached_time,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -653,7 +653,7 @@ async def test_scanner_stops_responding(
     failure_reached_time += 1
 
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "habluetooth.base_scanner.MONOTONIC_TIME",
         return_value=failure_reached_time,
     ):
         scanner.inject_advertisement(bparasite_device, bparasite_device_adv)

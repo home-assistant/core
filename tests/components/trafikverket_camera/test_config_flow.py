@@ -14,7 +14,7 @@ from pytrafikverket.trafikverket_camera import CameraInfo
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import CONF_LOCATION, DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -47,10 +47,10 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test location"
+    assert result2["title"] == "Test Camera"
     assert result2["data"] == {
         "api_key": "1234567890",
-        "location": "Test location",
+        "id": "1234",
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert result2["result"].unique_id == "trafikverket_camera-1234"
@@ -87,7 +87,7 @@ async def test_form_no_location_data(
     assert result2["title"] == "Test Camera"
     assert result2["data"] == {
         "api_key": "1234567890",
-        "location": "Test Camera",
+        "id": "1234",
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert result2["result"].unique_id == "trafikverket_camera-1234"
@@ -150,10 +150,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_API_KEY: "1234567890",
-            CONF_LOCATION: "Test location",
+            CONF_ID: "1234",
         },
         unique_id="1234",
-        version=2,
+        version=3,
     )
     entry.add_to_hass(hass)
 
@@ -186,7 +186,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "api_key": "1234567891",
-        "location": "Test location",
+        "id": "1234",
     }
 
 
@@ -223,10 +223,10 @@ async def test_reauth_flow_error(
         domain=DOMAIN,
         data={
             CONF_API_KEY: "1234567890",
-            CONF_LOCATION: "Test location",
+            CONF_ID: "1234",
         },
         unique_id="1234",
-        version=2,
+        version=3,
     )
     entry.add_to_hass(hass)
     await hass.async_block_till_done()
@@ -271,5 +271,5 @@ async def test_reauth_flow_error(
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "api_key": "1234567891",
-        "location": "Test location",
+        "id": "1234",
     }
