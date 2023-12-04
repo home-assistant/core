@@ -21,8 +21,7 @@ def mock_get():
 
 
 async def test_update_platform(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get
 ) -> None:
     """Test update platform."""
 
