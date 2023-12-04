@@ -42,6 +42,9 @@
   },
   "entity": {
     "sensor": {
+      "timestamp": {
+        "name": "Timestamp"
+      },
       "current_electricity_delivery": {
         "name": "Power production"
       },
