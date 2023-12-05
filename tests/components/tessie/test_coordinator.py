@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 from .common import (
     ERROR_AUTH,
     ERROR_CONNECTION,
+    ERROR_TIMEOUT,
     ERROR_UNKNOWN,
     TEST_VEHICLE_STATE_ASLEEP,
     TEST_VEHICLE_STATE_ONLINE,
@@ -44,6 +45,15 @@ async def test_coordinator(hass: HomeAssistant) -> None:
     ) as mock_get_state:
         await coordinator.async_refresh()
         assert coordinator.last_update_success is False
+        mock_get_state.assert_called_once()
+
+    with patch(
+        "homeassistant.components.tessie.coordinator.get_state",
+        side_effect=ERROR_TIMEOUT,
+    ) as mock_get_state:
+        await coordinator.async_refresh()
+        assert coordinator.last_update_success is True
+        assert coordinator.data["state"] == TessieStatus.OFFLINE
         mock_get_state.assert_called_once()
 
     with patch(

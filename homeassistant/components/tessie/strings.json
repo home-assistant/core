@@ -26,61 +26,64 @@
   },
   "entity": {
     "sensor": {
-      "usable_battery_level": {
+      "state": {
+        "name": "Status"
+      },
+      "charge_state-usable_battery_level": {
         "name": "Battery Level"
       },
-      "charge_energy_added": {
+      "charge_state-charge_energy_added": {
         "name": "Charge Energy Added"
       },
-      "charger_power": {
+      "charge_state-charger_power": {
         "name": "Charger Power"
       },
-      "charger_voltage": {
+      "charge_state-charger_voltage": {
         "name": "Charger Voltage"
       },
-      "charger_actual_current": {
+      "charge_state-charger_actual_current": {
         "name": "Charger Current"
       },
-      "charge_rate": {
+      "charge_state-charge_rate": {
         "name": "Charge Rate"
       },
-      "battery_range": {
+      "charge_state-battery_range": {
         "name": "Battery Range"
       },
-      "speed": {
+      "drive_state-speed": {
         "name": "Speed"
       },
-      "power": {
+      "drive_state-power": {
         "name": "Power"
       },
-      "shift_state": {
+      "drive_state-shift_state": {
         "name": "Shift State"
       },
-      "odometer": {
+      "vehicle_state-odometer": {
         "name": "Odometer"
       },
-      "tpms_pressure_fl": {
+      "vehicle_state-tpms_pressure_fl": {
         "name": "Tyre Pressure Front Left"
       },
-      "tpms_pressure_fr": {
+      "vehicle_state-tpms_pressure_fr": {
         "name": "Tyre Pressure Front Right"
       },
-      "tpms_pressure_rl": {
+      "vehicle_state-tpms_pressure_rl": {
         "name": "Tyre Pressure Rear Left"
       },
-      "tpms_pressure_rr": {
+      "vehicle_state-tpms_pressure_rr": {
         "name": "Tyre Pressure Rear Right"
       },
-      "inside_temp": {
+      "climate_state-inside_temp": {
         "name": "Inside Temperature"
       },
-      "outside_temp": {
+      "climate_state-outside_temp": {
         "name": "Outside Temperature"
       },
-      "driver_temp_setting": {
+      "climate_state-driver_temp_setting": {
         "name": "Driver Temperature Setting"
       },
-      "passenger_temp_setting": {
+      "climate_state-passenger_temp_setting": {
         "name": "Passenger Temperature Setting"
       }
     }
