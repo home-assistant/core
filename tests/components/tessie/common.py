@@ -39,7 +39,7 @@ async def setup_platform(hass: HomeAssistant, side_effect=None):
     mock_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tessie.coordinator.get_state_of_all_vehicles",
+        "homeassistant.components.tessie.get_state_of_all_vehicles",
         return_value=TEST_STATE_OF_ALL_VEHICLES,
         side_effect=side_effect,
     ):
