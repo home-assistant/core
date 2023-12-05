@@ -13,6 +13,13 @@ MODELS = {
 }
 
 
+class TessieStatus(StrEnum):
+    """Tessie status."""
+
+    ASLEEP = "asleep"
+    ONLINE = "online"
+
+
 class TessieKey(StrEnum):
     """API response keys in the root."""
 
