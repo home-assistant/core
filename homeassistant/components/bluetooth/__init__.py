@@ -26,6 +26,7 @@ from habluetooth import (
     HaBluetoothConnector,
     HaScanner,
     ScannerStartError,
+    set_manager,
 )
 from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
@@ -146,6 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager = HomeAssistantBluetoothManager(
         hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
+    set_manager(manager)
     await manager.async_setup()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, lambda event: manager.async_stop()
