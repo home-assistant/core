@@ -848,7 +848,7 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
-        # stage 1
+        # Stage 1 - Run shutdown jobs
         try:
             async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
                 tasks: list[asyncio.Future[Any]] = []
@@ -866,7 +866,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks(1)
 
-        # stage 2
+        # Stage 2 - Stop integrations
 
         # Keep holding the reference to the tasks but do not allow them
         # to block shutdown. Only tasks created after this point will
@@ -897,7 +897,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks(2)
 
-        # stage 3
+        # Stage 3 - Final write
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
@@ -910,7 +910,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks(3)
 
-        # stage 4
+        # Stage 4 - Close
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
