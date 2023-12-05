@@ -265,7 +265,7 @@ class ModbusHub:
                 hass,
                 DOMAIN,
                 "deprecated_retries",
-                breaks_in_ha_version="2024.5.0",
+                breaks_in_ha_version="2024.7.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_retries",
@@ -276,7 +276,7 @@ class ModbusHub:
                 },
             )
             _LOGGER.warning(
-                "`retries`: is deprecated and will be removed in version 2024.5"
+                "`retries`: is deprecated and will be removed in version 2024.7"
             )
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
             async_create_issue(
