@@ -80,7 +80,6 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="timestamp",
-        translation_key="timestamp",
         obis_reference=obis_references.P1_MESSAGE_TIMESTAMP,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
