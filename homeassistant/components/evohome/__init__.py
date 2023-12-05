@@ -353,7 +353,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
     # Enumerate which operating modes are supported by this system
     modes = broker.config[SZ_ALLOWED_SYSTEM_MODES]
 
-    # Not all systems support SZ_AUTO_WITH_RESET: register this handler only if required
+    # Not all systems support "AutoWithReset": register this handler only if required
     if [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_SYSTEM_MODE] == SZ_AUTO_WITH_RESET]:
         hass.services.async_register(DOMAIN, SVC_RESET_SYSTEM, set_system_mode)
 
