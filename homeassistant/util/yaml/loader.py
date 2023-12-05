@@ -137,7 +137,7 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
-@deprecated_class("FastSafeLoader", breaks_in_ha_version="2024.6")
+@deprecated_class("FastSafeLoader")
 class SafeLoader(FastSafeLoader):
     """Provided for backwards compatibility. Logs when instantiated."""
 
@@ -151,7 +151,7 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
-@deprecated_class("PythonSafeLoader", breaks_in_ha_version="2024.6")
+@deprecated_class("PythonSafeLoader")
 class SafeLineLoader(PythonSafeLoader):
     """Provided for backwards compatibility. Logs when instantiated."""
 

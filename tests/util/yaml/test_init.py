@@ -637,7 +637,7 @@ async def test_deprecated_loaders(
         loader_class()
     assert (
         f"{loader_class.__name__} was instantiated from hue, this is a deprecated "
-        f"class which will be removed in HA Core 2024.6. Use {new_class} instead"
+        f"class. Use {new_class} instead"
     ) in caplog.text
 
 
