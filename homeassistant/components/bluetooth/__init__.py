@@ -22,6 +22,8 @@ from bluetooth_adapters import (
     get_adapters,
 )
 from habluetooth import (
+    BaseHaScanner,
+    BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBluetoothConnector,
     HaScanner,
@@ -66,11 +68,7 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import (
-    BaseHaScanner,
-    BluetoothScannerDevice,
-    HomeAssistantRemoteScanner,
-)
+from .base_scanner import HomeAssistantRemoteScanner
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,

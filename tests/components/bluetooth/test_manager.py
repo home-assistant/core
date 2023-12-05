@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+from habluetooth.manager import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
@@ -30,9 +31,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
-)
-from homeassistant.components.bluetooth.manager import (
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component

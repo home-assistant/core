@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
+from habluetooth import BaseHaScanner, BluetoothManager
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
@@ -19,8 +20,6 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     models,
 )
-from homeassistant.components.bluetooth.base_scanner import BaseHaScanner
-from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

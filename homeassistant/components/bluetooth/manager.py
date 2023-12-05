@@ -8,8 +8,7 @@ from typing import Final
 
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import BluetoothAdapters
-from bluetooth_data_tools import monotonic_time_coarse
-from habluetooth import BluetoothManager
+from habluetooth import BluetoothManager, manager
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -35,7 +34,7 @@ from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBlea
 from .storage import BluetoothStorage
 from .util import async_load_history_from_system
 
-MONOTONIC_TIME: Final = monotonic_time_coarse
+MONOTONIC_TIME: Final = manager.MONOTONIC_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
