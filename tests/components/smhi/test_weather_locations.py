@@ -1,5 +1,7 @@
 """Weather locations test class."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.smhi.weather_locations import SmhiWeatherLocations
@@ -40,8 +42,17 @@ def test_get_cities(smhi_weather_locations):
     assert len(cities) > 0  # Check that cities are not empty
 
 
-def test_get_weather_data():
+async def test_get_weather_data(smhi_weather_locations, fake_weather_locations_data):
     """Test the get_weather_data function of SmhiWeatherLocations class."""
+    with patch(
+        "homeassistant.components.smhi.downloader.SmhiDownloader.download_json",
+        return_value=fake_weather_locations_data,
+    ):
+        data = await smhi_weather_locations.get_weather_data(10, 10)
+        assert len(data.get("timeSeries")) > 0  # Check that data is not empty
+        assert (
+            len(data.get("timeSeries")[0]) > 0
+        )  # Check that parameters in data is not empty
 
 
 def test_get_weather_locations():
