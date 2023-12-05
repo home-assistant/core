@@ -40,7 +40,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data using Tessie API."""
         try:
             vehicles = await get_state_of_all_vehicles(
-                session=self.session, api_key=self.api_key, only_active=False
+                session=self.session, api_key=self.api_key, only_active=True
             )
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
