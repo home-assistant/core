@@ -17,16 +17,12 @@ from evohomeasync2.schema.const import (
     SZ_ALLOWED_SYSTEM_MODES,
     SZ_AUTO_WITH_RESET,
     SZ_CAN_BE_TEMPORARY,
-    SZ_DAILY_SCHEDULES,
-    SZ_DHW_STATE,
     SZ_HEAT_SETPOINT,
     SZ_LOCATION_INFO,
     SZ_SETPOINT_STATUS,
     SZ_STATE_STATUS,
-    SZ_SWITCHPOINTS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
-    SZ_TIME_OF_DAY,
     SZ_TIME_UNTIL,
     SZ_TIME_ZONE,
     SZ_TIMING_MODE,
@@ -44,7 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.config_validation as cv  # noqa: E402
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -658,7 +654,7 @@ class EvoChild(EvoDevice):
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
-        if not self._schedule or not self._schedule.get(SZ_DAILY_SCHEDULES):
+        if not self._schedule or not self._schedule.get("DailySchedules"):
             return {}  # no scheduled setpoints when {'DailySchedules': []}
 
         day_time = dt_util.now()
@@ -667,25 +663,25 @@ class EvoChild(EvoDevice):
 
         try:
             # Iterate today's switchpoints until past the current time of day...
-            day = self._schedule[SZ_DAILY_SCHEDULES][day_of_week]
+            day = self._schedule["DailySchedules"][day_of_week]
             sp_idx = -1  # last switchpoint of the day before
-            for i, tmp in enumerate(day[SZ_SWITCHPOINTS]):
-                if time_of_day > tmp[SZ_TIME_OF_DAY]:
+            for i, tmp in enumerate(day["Switchpoints"]):
+                if time_of_day > tmp["TimeOfDay"]:
                     sp_idx = i  # current setpoint
                 else:
                     break
 
             # Did the current SP start yesterday? Does the next start SP tomorrow?
             this_sp_day = -1 if sp_idx == -1 else 0
-            next_sp_day = 1 if sp_idx + 1 == len(day[SZ_SWITCHPOINTS]) else 0
+            next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
             for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
             ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
-                day = self._schedule[SZ_DAILY_SCHEDULES][(day_of_week + offset) % 7]
-                switchpoint = day[SZ_SWITCHPOINTS][idx]
+                day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
+                switchpoint = day["Switchpoints"][idx]
 
                 switchpoint_time_of_day = dt_util.parse_datetime(
                     f"{sp_date}T{switchpoint['TimeOfDay']}"
@@ -696,10 +692,10 @@ class EvoChild(EvoDevice):
                 )
 
                 self._setpoints[f"{key}_sp_from"] = dt_aware.isoformat()
-                try:
+                try:  # heatSetpoint is the only pascalCase string
                     self._setpoints[f"{key}_sp_temp"] = switchpoint[SZ_HEAT_SETPOINT]
                 except KeyError:
-                    self._setpoints[f"{key}_sp_state"] = switchpoint[SZ_DHW_STATE]
+                    self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
 
         except IndexError:
             self._setpoints = {}
