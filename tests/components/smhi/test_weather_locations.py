@@ -25,7 +25,7 @@ def fake_weather_locations_data():
         "timeSeries": [
             {
                 "parameters": [
-                    {"name": "t", "values": [3.7]},
+                    {"name": "t", "values": [5]},
                     {"name": "Wsymb2", "values": [1]},
                 ]
                 # ... more weather data ...
@@ -48,11 +48,24 @@ async def test_get_weather_data(smhi_weather_locations, fake_weather_locations_d
         "homeassistant.components.smhi.downloader.SmhiDownloader.download_json",
         return_value=fake_weather_locations_data,
     ):
-        data = await smhi_weather_locations.get_weather_data(10, 10)
+        data = await smhi_weather_locations.get_weather_data(1, 1)
         assert len(data.get("timeSeries")) > 0  # Check that data is not empty
         assert (
             len(data.get("timeSeries")[0]) > 0
         )  # Check that parameters in data is not empty
+
+
+def test_get_parameter_value(smhi_weather_locations, fake_weather_locations_data):
+    """Test the get_parameter_value function of SmhiWeatherLocations class."""
+    temperatrure_value = smhi_weather_locations.get_parameter_value(
+        fake_weather_locations_data.get("timeSeries")[0], "t"
+    )
+    weather_condition_value = smhi_weather_locations.get_parameter_value(
+        fake_weather_locations_data.get("timeSeries")[0], "Wsymb2"
+    )
+
+    assert temperatrure_value == 5  # Check that temperature value is correct
+    assert weather_condition_value == 1  # Check that weather condition value is correct
 
 
 async def test_get_weather_locations(
