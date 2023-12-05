@@ -51,11 +51,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
         client = hass.data[DOMAIN][call.data["config_entry"]]
+
+        if call.data["size"] in ("256", "512", "1024"):
+            _LOGGER.warning(
+                "You are using the deprecated size format, which will be removed in the future. Interpreting as '1024x1024'"
+            )
+            size = "1024x1024"
+        else:
+            size = call.data["size"]
+
         try:
             response = await client.images.generate(
                 model="dall-e-3",
                 prompt=call.data["prompt"],
-                size=call.data["size"],
+                size=size,
                 quality=call.data["quality"],
                 style=call.data["style"],
                 response_format="url",
@@ -78,7 +87,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required("prompt"): cv.string,
-                vol.Optional("size", default="1024x1024"): vol.In(("1024x1024", "1024x1792", "1792x1024")),
+                vol.Optional("size", default="1024x1024"): vol.In(
+                    ("1024x1024", "1024x1792", "1792x1024", "256", "512", "1024")
+                ),
                 vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
                 vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
             }
@@ -92,9 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
     try:
-        await hass.async_add_executor_job(
-            client.with_options(timeout=10.0).models.list
-        )
+        await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
     except openai.AuthenticationError as err:
         _LOGGER.error("Invalid API key: %s", err)
         return False
