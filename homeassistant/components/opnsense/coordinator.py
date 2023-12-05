@@ -49,6 +49,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
     hass: HomeAssistant
     entry: ConfigEntry
 
+    name: str
     url: str
     api_key: str
     api_secret: str
@@ -60,6 +61,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
         self.hass = hass
         self.entry = entry
 
+        self.name = entry.options[CONF_NAME]
         self.url = entry.options[CONF_URL]
         self.api_key = entry.options[CONF_API_KEY]
         self.api_secret = entry.options[CONF_API_SECRET]
@@ -71,7 +73,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
         super().__init__(
             hass,
             _LOGGER,
-            name=f"OPNSense {entry.options[CONF_NAME]}",
+            name=f"OPNSense {self.name}",
             update_interval=timedelta(
                 minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
             ),

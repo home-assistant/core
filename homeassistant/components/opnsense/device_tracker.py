@@ -95,13 +95,3 @@ class OPNSenseScannerEntity(
     def source_type(self) -> SourceType:
         """Return the source type which is router."""
         return SourceType.ROUTER
-
-    # TODO Move this to allow users to add them manually? like Unifi or asuswrt
-    # @property
-    # def device_info(self) -> DeviceInfo:
-    #     """Return the device info."""
-    #     return DeviceInfo(
-    #         connections={(CONNECTION_NETWORK_MAC, self._mac)},
-    #         default_manufacturer=self.coordinator.data[self._mac].manufacturer,
-    #         default_name=self._name,
-    #     )

@@ -5,7 +5,6 @@
     },
     "step": {
       "user": {
-        "title": "OPNSense",
         "description": "Set required parameter to connect to your router",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
