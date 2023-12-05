@@ -55,7 +55,7 @@ async def __get_prices(
     previous_incl_vat = coordinator.energyzero.incl_vat
 
     try:
-        coordinator.energyzero.incl_vat = str(call.data[ATTR_INCL_VAT]).lower()
+        coordinator.energyzero.incl_vat = bool(call.data[ATTR_INCL_VAT])
         start = __get_date(call.data.get(ATTR_START))
         end = __get_date(call.data.get(ATTR_END))
 
