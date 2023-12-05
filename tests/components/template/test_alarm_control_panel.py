@@ -204,7 +204,7 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
             {
                 "alarm_control_panel": {"platform": "template"},
             },
-            "required key not provided 'panels'",
+            "required key 'panels' not provided",
         ),
         (
             {

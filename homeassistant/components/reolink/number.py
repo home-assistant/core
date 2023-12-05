@@ -22,24 +22,16 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
 
-@dataclass
-class ReolinkNumberEntityDescriptionMixin:
-    """Mixin values for Reolink number entities."""
-
-    value: Callable[[Host, int], float | None]
-    method: Callable[[Host, int, float], Any]
-
-
-@dataclass
-class ReolinkNumberEntityDescription(
-    NumberEntityDescription, ReolinkNumberEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkNumberEntityDescription(NumberEntityDescription):
     """A class that describes number entities."""
 
+    get_max_value: Callable[[Host, int], float] | None = None
+    get_min_value: Callable[[Host, int], float] | None = None
+    method: Callable[[Host, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
     supported: Callable[[Host, int], bool] = lambda api, ch: True
-    get_min_value: Callable[[Host, int], float] | None = None
-    get_max_value: Callable[[Host, int], float] | None = None
+    value: Callable[[Host, int], float | None]
 
 
 NUMBER_ENTITIES = (
@@ -305,6 +297,19 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "auto_track_stop_time"),
         value=lambda api, ch: api.auto_track_stop_time(ch),
         method=lambda api, ch, value: api.set_auto_tracking(ch, stop_time=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="day_night_switch_threshold",
+        translation_key="day_night_switch_threshold",
+        icon="mdi:theme-light-dark",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "dayNightThreshold"),
+        value=lambda api, ch: api.daynight_threshold(ch),
+        method=lambda api, ch, value: api.set_daynight_threshold(ch, int(value)),
     ),
 )
 

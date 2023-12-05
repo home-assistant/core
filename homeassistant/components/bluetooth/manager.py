@@ -124,6 +124,7 @@ class BluetoothManager:
         "storage",
         "slot_manager",
         "_debug",
+        "shutdown",
     )
 
     def __init__(
@@ -165,6 +166,7 @@ class BluetoothManager:
         self.storage = storage
         self.slot_manager = slot_manager
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
+        self.shutdown = False
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -259,6 +261,7 @@ class BluetoothManager:
     def async_stop(self, event: Event) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
+        self.shutdown = True
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None

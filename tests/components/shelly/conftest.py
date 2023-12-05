@@ -281,6 +281,7 @@ async def mock_block_device():
             firmware_version="some fw string",
             initialized=True,
             model="SHSW-1",
+            gen=1,
         )
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device

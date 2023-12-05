@@ -34,7 +34,7 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_mqtt_message,
-    mock_entity_platform,
+    mock_platform,
 )
 from tests.typing import (
     MqttMockHAClientGenerator,
@@ -1499,7 +1499,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 ) -> None:
     """Check MQTT integration discovery subscribe and unsubscribe."""
     mqtt_mock = await mqtt_mock_entry()
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True
@@ -1552,7 +1552,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 ) -> None:
     """Check MQTT integration discovery unsubscribe once."""
     mqtt_mock = await mqtt_mock_entry()
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
     mqtt_mock().connected = True

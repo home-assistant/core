@@ -1339,18 +1339,6 @@ def mock_integration(
     return integration
 
 
-def mock_entity_platform(
-    hass: HomeAssistant, platform_path: str, module: MockPlatform | None
-) -> None:
-    """Mock a entity platform.
-
-    platform_path is in form light.hue. Will create platform
-    hue.light.
-    """
-    domain, platform_name = platform_path.split(".")
-    mock_platform(hass, f"{platform_name}.{domain}", module)
-
-
 def mock_platform(
     hass: HomeAssistant, platform_path: str, module: Mock | MockPlatform | None = None
 ) -> None:

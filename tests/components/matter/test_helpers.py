@@ -37,10 +37,10 @@ async def test_get_device_id(
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_node_from_device_entry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test get_node_from_device_entry."""
-    device_registry = dr.async_get(hass)
     other_domain = "other_domain"
     other_config_entry = MockConfigEntry(domain=other_domain)
     other_config_entry.add_to_hass(hass)

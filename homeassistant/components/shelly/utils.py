@@ -26,7 +26,10 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
+    DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -408,3 +411,11 @@ def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
     return mac.upper() if len(mac) == 12 else None
+
+
+def get_release_url(gen: int, model: str, beta: bool) -> str | None:
+    """Return release URL or None."""
+    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+        return None
+
+    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL

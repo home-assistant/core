@@ -248,8 +248,8 @@ async def async_check_config_schema(
                 except vol.Invalid as ex:
                     integration = await async_get_integration(hass, DOMAIN)
                     # pylint: disable-next=protected-access
-                    message, _ = conf_util._format_config_error(
-                        ex, domain, config, integration.documentation
+                    message = conf_util.format_schema_error(
+                        hass, ex, domain, config, integration.documentation
                     )
                     raise ServiceValidationError(
                         message,

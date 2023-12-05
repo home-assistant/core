@@ -1492,7 +1492,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45852_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1547,7 +1547,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45856_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1602,7 +1602,7 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
+                DEV_SIG_ENT_MAP_CLASS: "ForceOnLight",
                 DEV_SIG_ENT_MAP_ID: "light.jasco_products_45857_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {

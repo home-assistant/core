@@ -43,7 +43,7 @@ from tests.common import (
     MockEntityPlatform,
     MockPlatform,
     async_fire_time_changed,
-    mock_entity_platform,
+    mock_platform,
     mock_registry,
 )
 
@@ -195,7 +195,7 @@ async def test_set_scan_interval_via_platform(
     platform = MockPlatform(platform_setup)
     platform.SCAN_INTERVAL = timedelta(seconds=30)
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -230,7 +230,7 @@ async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -264,7 +264,7 @@ async def test_platform_error_slow_setup(
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
-        mock_entity_platform(hass, "test_domain.test_platform", platform)
+        mock_platform(hass, "test_platform.test_domain", platform)
         await component.async_setup({DOMAIN: {"platform": "test_platform"}})
         await hass.async_block_till_done()
         assert len(called) == 1
@@ -298,7 +298,7 @@ async def test_parallel_updates_async_platform(hass: HomeAssistant) -> None:
     """Test async platform does not have parallel_updates limit by default."""
     platform = MockPlatform()
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -328,7 +328,7 @@ async def test_parallel_updates_async_platform_with_constant(
     platform = MockPlatform()
     platform.PARALLEL_UPDATES = 2
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -355,7 +355,7 @@ async def test_parallel_updates_sync_platform(hass: HomeAssistant) -> None:
     """Test sync platform parallel_updates default set to 1."""
     platform = MockPlatform()
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -381,7 +381,7 @@ async def test_parallel_updates_no_update_method(hass: HomeAssistant) -> None:
     """Test platform parallel_updates default set to 0."""
     platform = MockPlatform()
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -403,7 +403,7 @@ async def test_parallel_updates_sync_platform_with_constant(
     platform = MockPlatform()
     platform.PARALLEL_UPDATES = 2
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -431,7 +431,7 @@ async def test_parallel_updates_async_platform_updates_in_parallel(
     """Test an async platform is updated in parallel."""
     platform = MockPlatform()
 
-    mock_entity_platform(hass, "test_domain.async_platform", platform)
+    mock_platform(hass, "async_platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -479,7 +479,7 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
     """Test a sync platform is updated in sequence."""
     platform = MockPlatform()
 
-    mock_entity_platform(hass, "test_domain.platform", platform)
+    mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -1660,16 +1660,16 @@ async def test_setup_entry_with_entities_that_block_forever(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
-    mock_entity_platform = MockEntityPlatform(
+    platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
 
     with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
         entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
     ):
-        assert await mock_entity_platform.async_setup_entry(config_entry)
+        assert await platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
-    full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
+    full_name = f"{platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0
     assert len(entity_registry.entities) == 1

@@ -170,8 +170,8 @@ build.json @home-assistant/supervisor
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
 /tests/components/braviatv/ @bieniu @Drafteed
-/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
-/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
+/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
@@ -307,8 +307,8 @@ build.json @home-assistant/supervisor
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
-/homeassistant/components/ecobee/ @marthoc @marcolivierarsenault
-/tests/components/ecobee/ @marthoc @marcolivierarsenault
+/homeassistant/components/ecobee/ @marcolivierarsenault
+/tests/components/ecobee/ @marcolivierarsenault
 /homeassistant/components/ecoforest/ @pjanuario
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
@@ -345,8 +345,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/enigma2/ @fbradyirl
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
-/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek
-/tests/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek
+/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
+/tests/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
@@ -492,8 +492,6 @@ build.json @home-assistant/supervisor
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
 /tests/components/group/ @home-assistant/core
-/homeassistant/components/growatt_server/ @muppet3000
-/tests/components/growatt_server/ @muppet3000
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @ASMfreaK @leikoilja
@@ -981,6 +979,8 @@ build.json @home-assistant/supervisor
 /tests/components/prometheus/ @knyar
 /homeassistant/components/prosegur/ @dgomes
 /tests/components/prosegur/ @dgomes
+/homeassistant/components/proximity/ @mib1185
+/tests/components/proximity/ @mib1185
 /homeassistant/components/proxmoxve/ @jhollowe @Corbeno
 /homeassistant/components/prusalink/ @balloob
 /tests/components/prusalink/ @balloob
@@ -1321,8 +1321,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey
-/tests/components/tplink/ @rytilahti @thegardenmonkey
+/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
+/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco
 /homeassistant/components/tplink_omada/ @MarkGodwin
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus

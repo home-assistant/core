@@ -144,6 +144,7 @@ omit =
     homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/braviatv/remote.py
+    homeassistant/components/broadlink/climate.py
     homeassistant/components/broadlink/light.py
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/switch.py
@@ -217,9 +218,6 @@ omit =
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
-    homeassistant/components/discovergy/__init__.py
-    homeassistant/components/discovergy/sensor.py
-    homeassistant/components/discovergy/coordinator.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/data.py
@@ -429,9 +427,7 @@ omit =
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/camera.py
-    homeassistant/components/freebox/device_tracker.py
     homeassistant/components/freebox/home_base.py
-    homeassistant/components/freebox/router.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/device_tracker.py
@@ -951,8 +947,6 @@ omit =
     homeassistant/components/pilight/light.py
     homeassistant/components/pilight/switch.py
     homeassistant/components/ping/__init__.py
-    homeassistant/components/ping/binary_sensor.py
-    homeassistant/components/ping/device_tracker.py
     homeassistant/components/ping/helpers.py
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/plaato/__init__.py

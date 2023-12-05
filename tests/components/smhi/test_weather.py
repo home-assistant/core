@@ -20,7 +20,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -443,11 +444,19 @@ async def test_forecast_services_lack_of_data(
     assert forecast1 is None
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     api_response: str,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test forecast service."""
     uri = APIURL_TEMPLATE.format(
@@ -463,7 +472,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": ENTITY_ID, "type": "daily"},
         blocking=True,
         return_response=True,

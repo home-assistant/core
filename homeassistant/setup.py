@@ -157,7 +157,7 @@ async def _async_process_dependencies(
 
     if failed:
         _LOGGER.error(
-            "Unable to set up dependencies of %s. Setup failed for dependencies: %s",
+            "Unable to set up dependencies of '%s'. Setup failed for dependencies: %s",
             integration.domain,
             ", ".join(failed),
         )
@@ -183,7 +183,7 @@ async def _async_setup_component(
             custom = "" if integration.is_built_in else "custom integration "
             link = integration.documentation
         _LOGGER.error(
-            "Setup failed for %s%s: %s", custom, domain, msg, exc_info=exc_info
+            "Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info
         )
         async_notify_setup_error(hass, domain, link)
 
@@ -234,8 +234,8 @@ async def _async_setup_component(
     ):
         _LOGGER.error(
             (
-                "The %s integration does not support YAML setup, please remove it from "
-                "your configuration"
+                "The '%s' integration does not support YAML setup, please remove it "
+                "from your configuration"
             ),
             domain,
         )
@@ -289,7 +289,7 @@ async def _async_setup_component(
         except asyncio.TimeoutError:
             _LOGGER.error(
                 (
-                    "Setup of %s is taking longer than %s seconds."
+                    "Setup of '%s' is taking longer than %s seconds."
                     " Startup will proceed without waiting any longer"
                 ),
                 domain,
@@ -356,7 +356,9 @@ async def async_prepare_setup_platform(
     def log_error(msg: str) -> None:
         """Log helper."""
 
-        _LOGGER.error("Unable to prepare setup for platform %s: %s", platform_path, msg)
+        _LOGGER.error(
+            "Unable to prepare setup for platform '%s': %s", platform_path, msg
+        )
         async_notify_setup_error(hass, platform_path)
 
     try:

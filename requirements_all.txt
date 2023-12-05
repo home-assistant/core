@@ -10,7 +10,7 @@ AEMET-OpenData==0.4.6
 AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.17
+AIOSomecomfort==0.0.22
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -121,10 +121,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.0.3
 
 # homeassistant.components.python_script
-RestrictedPython==6.2;python_version<'3.12'
-
-# homeassistant.components.python_script
-RestrictedPython==7.0a1.dev0;python_version>='3.12'
+RestrictedPython==7.0
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -239,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==18.4.0
+aioesphomeapi==18.5.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -576,7 +573,7 @@ bluetooth-data-tools==1.14.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.57
+boschshcpy==0.2.75
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -988,7 +985,7 @@ hass-nabucasa==0.74.0
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==1.5.0
+hassil==1.5.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1015,13 +1012,13 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.35
+holidays==0.36
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231030.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.11.13
+home-assistant-intents==2023.11.17
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1064,7 +1061,7 @@ ical==6.1.0
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.3
+idasen-ha==2.4
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1262,7 +1259,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.0
 
 # homeassistant.components.mopeka
-mopeka-iot-ble==0.4.1
+mopeka-iot-ble==0.5.0
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.18
@@ -1610,6 +1607,9 @@ pyairnow==1.2.1
 # homeassistant.components.airvisual_pro
 pyairvisual==2023.08.1
 
+# homeassistant.components.asuswrt
+pyasuswrt==0.1.20
+
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
@@ -1710,7 +1710,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.2
+pyenphase==1.14.3
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1788,7 +1788,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.1
+pyinsteon==1.5.2
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2146,7 +2146,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==3.1.0
+python-homewizard-energy==4.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2237,7 +2237,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.8
+pytrafikverket==0.3.9.1
 
 # homeassistant.components.v2c
 pytrydan==0.4.0
@@ -2339,7 +2339,7 @@ renault-api==0.2.0
 renson-endura-delta==1.6.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.15
+reolink-aio==0.8.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2550,7 +2550,7 @@ switchbot-api==1.2.1
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.9.5
+systembridgeconnector==3.10.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
@@ -2637,7 +2637,7 @@ ttls==1.5.1
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.0.0
+twentemilieu==2.0.1
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2673,6 +2673,9 @@ url-normalize==1.4.3
 
 # homeassistant.components.uvc
 uvcclient==0.11.0
+
+# homeassistant.components.roborock
+vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
 vallox-websocket-api==4.0.2
@@ -2808,7 +2811,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.126.0
+zeroconf==0.127.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

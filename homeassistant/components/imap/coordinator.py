@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 import email
 from email.header import decode_header, make_header
+from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
 from typing import Any
@@ -96,8 +97,9 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
 class ImapMessage:
     """Class to parse an RFC822 email message."""
 
-    def __init__(self, raw_message: bytes) -> None:
+    def __init__(self, raw_message: bytes, charset: str = "utf-8") -> None:
         """Initialize IMAP message."""
+        self._charset = charset
         self.email_message = email.message_from_bytes(raw_message)
 
     @property
@@ -157,18 +159,30 @@ class ImapMessage:
         message_html: str | None = None
         message_untyped_text: str | None = None
 
+        def _decode_payload(part: Message) -> str:
+            """Try to decode text payloads.
+
+            Common text encodings are quoted-printable or base64.
+            Falls back to the raw content part if decoding fails.
+            """
+            try:
+                return str(part.get_payload(decode=True).decode(self._charset))
+            except Exception:  # pylint: disable=broad-except
+                return str(part.get_payload())
+
+        part: Message
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text = part.get_payload()
+                    message_text = _decode_payload(part)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html = part.get_payload()
+                    message_html = _decode_payload(part)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
             ):
-                message_untyped_text = part.get_payload()
+                message_untyped_text = str(part.get_payload())
 
         if message_text is not None:
             return message_text
@@ -223,7 +237,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         """Send a event for the last message if the last message was changed."""
         response = await self.imap_client.fetch(last_message_uid, "BODY.PEEK[]")
         if response.result == "OK":
-            message = ImapMessage(response.lines[1])
+            message = ImapMessage(
+                response.lines[1], charset=self.config_entry.data[CONF_CHARSET]
+            )
             # Set `initial` to `False` if the last message is triggered again
             initial: bool = True
             if (message_id := message.message_id) == self._last_message_id:

@@ -215,6 +215,9 @@
       },
       "auto_track_stop_time": {
         "name": "Auto track stop time"
+      },
+      "day_night_switch_threshold": {
+        "name": "Day night switch threshold"
       }
     },
     "select": {
@@ -234,7 +237,7 @@
         "state": {
           "auto": "Auto",
           "color": "Color",
-          "blackwhite": "Black&White"
+          "blackwhite": "Black & white"
         }
       },
       "ptz_preset": {

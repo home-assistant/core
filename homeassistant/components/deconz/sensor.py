@@ -91,22 +91,16 @@ T = TypeVar(
 )
 
 
-@dataclass
-class DeconzSensorDescriptionMixin(Generic[T]):
-    """Required values when describing secondary sensor attributes."""
-
-    supported_fn: Callable[[T], bool]
-    update_key: str
-    value_fn: Callable[[T], datetime | StateType]
-
-
-@dataclass
-class DeconzSensorDescription(SensorEntityDescription, DeconzSensorDescriptionMixin[T]):
+@dataclass(kw_only=True)
+class DeconzSensorDescription(Generic[T], SensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
+    supported_fn: Callable[[T], bool]
+    update_key: str
+    value_fn: Callable[[T], datetime | StateType]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (

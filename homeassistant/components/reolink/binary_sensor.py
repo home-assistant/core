@@ -28,22 +28,14 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
 
-@dataclass
-class ReolinkBinarySensorEntityDescriptionMixin:
-    """Mixin values for Reolink binary sensor entities."""
-
-    value: Callable[[Host, int], bool]
-
-
-@dataclass
-class ReolinkBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ReolinkBinarySensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes binary sensor entities."""
 
-    icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
+    icon: str = "mdi:motion-sensor"
     supported: Callable[[Host, int], bool] = lambda host, ch: True
+    value: Callable[[Host, int], bool]
 
 
 BINARY_SENSORS = (

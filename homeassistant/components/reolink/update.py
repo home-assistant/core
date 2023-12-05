@@ -98,3 +98,5 @@ class ReolinkUpdateEntity(
             raise HomeAssistantError(
                 f"Error trying to update Reolink firmware: {err}"
             ) from err
+        finally:
+            self.async_write_ha_state()

@@ -21,8 +21,8 @@ from tests.common import (
     MockModule,
     MockPlatform,
     get_fixture_path,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,8 +42,8 @@ async def test_reload_platform(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
     mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
 
-    mock_platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_entity_platform(hass, f"{DOMAIN}.{PLATFORM}", mock_platform)
+    platform = MockPlatform(async_setup_platform=setup_platform)
+    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -82,8 +82,8 @@ async def test_setup_reload_service(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
     mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
 
-    mock_platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_entity_platform(hass, f"{DOMAIN}.{PLATFORM}", mock_platform)
+    platform = MockPlatform(async_setup_platform=setup_platform)
+    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -123,8 +123,8 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
     mock_integration(hass, MockModule(DOMAIN, setup=component_setup))
     mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
 
-    mock_platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_entity_platform(hass, f"{DOMAIN}.{PLATFORM}", mock_platform)
+    platform = MockPlatform(async_setup_platform=setup_platform)
+    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -173,8 +173,8 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
 
     mock_integration(hass, MockModule(PLATFORM, dependencies=[DOMAIN]))
 
-    mock_platform = MockPlatform(async_setup_platform=setup_platform)
-    mock_entity_platform(hass, f"{DOMAIN}.{PLATFORM}", mock_platform)
+    platform = MockPlatform(async_setup_platform=setup_platform)
+    mock_platform(hass, f"{PLATFORM}.{DOMAIN}", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 

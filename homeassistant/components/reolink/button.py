@@ -22,36 +22,22 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
-@dataclass
-class ReolinkButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities for a camera channel."""
-
-    method: Callable[[Host, int], Any]
-
-
-@dataclass
+@dataclass(kw_only=True)
 class ReolinkButtonEntityDescription(
-    ButtonEntityDescription, ReolinkButtonEntityDescriptionMixin
+    ButtonEntityDescription,
 ):
     """A class that describes button entities for a camera channel."""
 
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     enabled_default: Callable[[Host, int], bool] | None = None
+    method: Callable[[Host, int], Any]
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-@dataclass
-class ReolinkHostButtonEntityDescriptionMixin:
-    """Mixin values for Reolink button entities for the host."""
-
-    method: Callable[[Host], Any]
-
-
-@dataclass
-class ReolinkHostButtonEntityDescription(
-    ButtonEntityDescription, ReolinkHostButtonEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class ReolinkHostButtonEntityDescription(ButtonEntityDescription):
     """A class that describes button entities for the host."""
 
+    method: Callable[[Host], Any]
     supported: Callable[[Host], bool] = lambda api: True
 
 

@@ -87,5 +87,6 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
+                sw_version=self._host.api.camera_sw_version(dev_ch),
                 configuration_url=self._conf_url,
             )

@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
-from homeassistant.config import async_log_exception, load_yaml_config_file
+from homeassistant.config import async_log_schema_error, load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
@@ -1006,7 +1006,7 @@ async def async_load_config(
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
-            async_log_exception(exp, dev_id, devices, hass)
+            async_log_schema_error(exp, dev_id, devices, hass)
         else:
             result.append(Device(hass, **device))
     return result
