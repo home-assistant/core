@@ -394,6 +394,7 @@
     ]),
     'friendly_name': 'test',
     'humidity': 100,
+    'precipitation': 0.0,
     'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     'pressure': 992.0,
     'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
