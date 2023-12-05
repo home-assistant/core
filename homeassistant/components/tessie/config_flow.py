@@ -39,6 +39,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await get_state_of_all_vehicles(
                     session=async_get_clientsession(self.hass),
                     api_key=user_input[CONF_ACCESS_TOKEN],
+                    only_active=True,
                 )
             except ClientResponseError as e:
                 if e.status == HTTPStatus.UNAUTHORIZED:
