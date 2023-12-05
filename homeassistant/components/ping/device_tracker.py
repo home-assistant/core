@@ -113,7 +113,7 @@ async def async_setup_scanner(
     # delay the import until after Home Assistant has started and everything has been initialized,
     # as the legacy device tracker entities will be restored after the legacy device tracker platforms
     # have been set up, so we can only remove the entities from the state machine then
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _run_import)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _run_import)
 
     return True
 
