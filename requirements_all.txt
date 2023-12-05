@@ -374,7 +374,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==66
+aiounifi==67
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -437,7 +437,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.0.4
+apple_weatherkit==1.1.1
 
 # homeassistant.components.apprise
 apprise==1.6.0
@@ -759,7 +759,7 @@ emulated-roku==0.2.1
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==1.0.0
+energyzero==2.0.0
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -984,7 +984,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.5.1
+habluetooth==0.6.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -1024,7 +1024,7 @@ hole==0.8.0
 holidays==0.37
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231204.0
+home-assistant-frontend==20231205.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.11.29
@@ -2345,7 +2345,7 @@ regenmaschine==2023.06.0
 renault-api==0.2.0
 
 # homeassistant.components.renson
-renson-endura-delta==1.6.0
+renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
 reolink-aio==0.8.1
