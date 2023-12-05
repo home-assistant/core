@@ -119,32 +119,52 @@ def test_deprecated_class(mock_get_logger) -> None:
     assert len(mock_logger.warning.mock_calls) == 1
 
 
-def test_deprecated_function(caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.parametrize(
+    ("breaks_in_ha_version", "extra_msg"),
+    [
+        (None, ""),
+        ("2099.1", " which will be removed in HA Core 2099.1"),
+    ],
+)
+def test_deprecated_function(
+    caplog: pytest.LogCaptureFixture,
+    breaks_in_ha_version: str | None,
+    extra_msg: str,
+) -> None:
     """Test deprecated_function decorator.
 
     This tests the behavior when the calling integration is not known.
     """
 
-    @deprecated_function("new_function")
+    @deprecated_function("new_function", breaks_in_ha_version=breaks_in_ha_version)
     def mock_deprecated_function():
         pass
 
     mock_deprecated_function()
     assert (
-        "mock_deprecated_function is a deprecated function. Use new_function instead"
-        in caplog.text
-    )
+        f"mock_deprecated_function is a deprecated function{extra_msg}. "
+        "Use new_function instead"
+    ) in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("breaks_in_ha_version", "extra_msg"),
+    [
+        (None, ""),
+        ("2099.1", " which will be removed in HA Core 2099.1"),
+    ],
+)
 def test_deprecated_function_called_from_built_in_integration(
     caplog: pytest.LogCaptureFixture,
+    breaks_in_ha_version: str | None,
+    extra_msg: str,
 ) -> None:
     """Test deprecated_function decorator.
 
     This tests the behavior when the calling integration is built-in.
     """
 
-    @deprecated_function("new_function")
+    @deprecated_function("new_function", breaks_in_ha_version=breaks_in_ha_version)
     def mock_deprecated_function():
         pass
 
@@ -170,14 +190,24 @@ def test_deprecated_function_called_from_built_in_integration(
     ):
         mock_deprecated_function()
     assert (
-        "mock_deprecated_function was called from hue, this is a deprecated function. "
-        "Use new_function instead" in caplog.text
-    )
+        "mock_deprecated_function was called from hue, "
+        f"this is a deprecated function{extra_msg}. "
+        "Use new_function instead"
+    ) in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("breaks_in_ha_version", "extra_msg"),
+    [
+        (None, ""),
+        ("2099.1", " which will be removed in HA Core 2099.1"),
+    ],
+)
 def test_deprecated_function_called_from_custom_integration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    breaks_in_ha_version: str | None,
+    extra_msg: str,
 ) -> None:
     """Test deprecated_function decorator.
 
@@ -186,7 +216,7 @@ def test_deprecated_function_called_from_custom_integration(
 
     mock_integration(hass, MockModule("hue"), built_in=False)
 
-    @deprecated_function("new_function")
+    @deprecated_function("new_function", breaks_in_ha_version=breaks_in_ha_version)
     def mock_deprecated_function():
         pass
 
@@ -212,7 +242,8 @@ def test_deprecated_function_called_from_custom_integration(
     ):
         mock_deprecated_function()
     assert (
-        "mock_deprecated_function was called from hue, this is a deprecated function. "
-        "Use new_function instead, please report it to the author of the 'hue' custom "
-        "integration" in caplog.text
-    )
+        "mock_deprecated_function was called from hue, "
+        f"this is a deprecated function{extra_msg}. "
+        "Use new_function instead, please report it to the author of the "
+        "'hue' custom integration"
+    ) in caplog.text
