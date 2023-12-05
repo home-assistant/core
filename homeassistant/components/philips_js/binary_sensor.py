@@ -66,6 +66,8 @@ async def async_setup_entry(
 
 def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
+    if api.recordings_list is None:
+        return False
     for rec in api.recordings_list["recordings"]:
         if rec.get(entry) == value:
             return True

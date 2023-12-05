@@ -8,7 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Shelly device to control."
+          "host": "The hostname or IP address of the Shelly device to connect to."
         }
       },
       "credentials": {

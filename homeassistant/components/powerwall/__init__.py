@@ -122,9 +122,9 @@ class PowerwallDataManager:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
     http_session = requests.Session()
-    ip_address = entry.data[CONF_IP_ADDRESS]
+    ip_address: str = entry.data[CONF_IP_ADDRESS]
 
-    password = entry.data.get(CONF_PASSWORD)
+    password: str | None = entry.data.get(CONF_PASSWORD)
     power_wall = Powerwall(ip_address, http_session=http_session)
     try:
         base_info = await hass.async_add_executor_job(
@@ -184,7 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def _login_and_fetch_base_info(
-    power_wall: Powerwall, host: str, password: str
+    power_wall: Powerwall, host: str, password: str | None
 ) -> PowerwallBaseInfo:
     """Login to the powerwall and fetch the base info."""
     if password is not None:

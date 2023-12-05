@@ -1024,39 +1024,38 @@ class PipelineRun:
             )
         )
 
-        try:
-            # Synthesize audio and get URL
-            tts_media_id = tts_generate_media_source_id(
-                self.hass,
-                tts_input,
-                engine=self.tts_engine,
-                language=self.pipeline.tts_language,
-                options=self.tts_options,
-            )
-            tts_media = await media_source.async_resolve_media(
-                self.hass,
-                tts_media_id,
-                None,
-            )
-        except Exception as src_error:
-            _LOGGER.exception("Unexpected error during text-to-speech")
-            raise TextToSpeechError(
-                code="tts-failed",
-                message="Unexpected error during text-to-speech",
-            ) from src_error
+        if tts_input := tts_input.strip():
+            try:
+                # Synthesize audio and get URL
+                tts_media_id = tts_generate_media_source_id(
+                    self.hass,
+                    tts_input,
+                    engine=self.tts_engine,
+                    language=self.pipeline.tts_language,
+                    options=self.tts_options,
+                )
+                tts_media = await media_source.async_resolve_media(
+                    self.hass,
+                    tts_media_id,
+                    None,
+                )
+            except Exception as src_error:
+                _LOGGER.exception("Unexpected error during text-to-speech")
+                raise TextToSpeechError(
+                    code="tts-failed",
+                    message="Unexpected error during text-to-speech",
+                ) from src_error
 
-        _LOGGER.debug("TTS result %s", tts_media)
+            _LOGGER.debug("TTS result %s", tts_media)
+            tts_output = {
+                "media_id": tts_media_id,
+                **asdict(tts_media),
+            }
+        else:
+            tts_output = {}
 
         self.process_event(
-            PipelineEvent(
-                PipelineEventType.TTS_END,
-                {
-                    "tts_output": {
-                        "media_id": tts_media_id,
-                        **asdict(tts_media),
-                    }
-                },
-            )
+            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
         )
 
         return tts_media.url

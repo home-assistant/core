@@ -64,13 +64,13 @@ def _build_entities(
     api: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareWater]:
-    """Create ViCare water entities for a device."""
+    """Create ViCare domestic hot water entities for a device."""
     return [
         ViCareWater(
             api,
             circuit,
             device_config,
-            "water",
+            "domestic_hot_water",
         )
         for circuit in get_circuits(api)
     ]
@@ -81,7 +81,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the ViCare climate platform."""
+    """Set up the ViCare water heater platform."""
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
 
