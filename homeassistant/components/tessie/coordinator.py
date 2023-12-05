@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import TessieStatus
 
-TESSIE_SYNC_INTERVAL = 15
+TESSIE_SYNC_INTERVAL = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,8 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         self.api_key: str = api_key
         self.vin: str = vin
         self.session: ClientSession = async_get_clientsession(hass)
-        self.data = data
+        self.data = self.flattern(data)
+        print(self.data)
 
     async def async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
@@ -52,13 +53,28 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
                 use_cache=False,
             )
         except ClientResponseError as e:
+            if e.status == HTTPStatus.REQUEST_TIMEOUT:
+                self.data["state"] = "offline"
+                return self.data
             if e.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from e
             raise e
 
         if vehicle["state"] == TessieStatus.ONLINE:
-            return vehicle
+            print(self.flattern(vehicle))
+            return self.flattern(vehicle)
 
         # Use existing data but update state
         self.data["state"] = vehicle["state"]
         return self.data
+
+    def flattern(self, data: dict[str, Any], parent: list[str] = []) -> dict[str, Any]:
+        """Flattern the data structure."""
+        result = {}
+        for key, value in data.items():
+            newkey = parent + [key]
+            if isinstance(value, dict):
+                result.update(self.flattern(value, newkey))
+            else:
+                result[".".join(newkey)] = value
+        return result
