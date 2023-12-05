@@ -48,7 +48,7 @@ class SmhiLightning:
         # Fetch the data using the SmhiDownloader class
         smhi_downloader = SmhiDownloader()
         # Date is currently set to static value to showcase functionality
-        data = await smhi_downloader.download_json(APIURL_TEMPLATE.format(2023, 8, 25))
+        data = await smhi_downloader.download_json(APIURL_TEMPLATE.format(2023, 6, 25))
         if isinstance(data, dict):
             return self.parse_lightning_impacts(data)
         return []
@@ -58,6 +58,13 @@ class SmhiLightning:
 
         # Empty array where the lightning entities will be stored
         lightning_impacts: list[SmhiGeolocationEvent] = []
+
+        # Values of previous impact in loop, used to check for duplicates
+        prev_hour = 0
+        prev_min = 0
+        prev_sec = 0
+        prev_lat = 0.0
+        prev_lon = 0.0
 
         # Loop through all parameters returned by the API
         for impact in api_result["values"]:
@@ -71,6 +78,23 @@ class SmhiLightning:
             peak_current = int(
                 impact["peakCurrent"]
             )  # Peak current of impact, including polarity
+
+            # If impact is a duplicate measure, continue to next iteration of loop
+            if (
+                hour == prev_hour
+                and minute == prev_min
+                and second == prev_sec
+                and abs(latitude - prev_lat) < 0.3
+                and abs(longitude - prev_lon) < 0.3
+            ):
+                continue
+
+            # Update prev values
+            prev_hour = hour
+            prev_min = minute
+            prev_sec = second
+            prev_lat = latitude
+            prev_lon = longitude
 
             # Name of entity
             name = (
