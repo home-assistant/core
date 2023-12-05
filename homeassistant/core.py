@@ -861,10 +861,10 @@ class HomeAssistant:
                     asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for stopping stage to complete, the shutdown will"
+                "Timed out waiting for shutdown jobs to complete, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(1)
+            self._async_log_running_tasks("run shutdown jobs")
 
         # Stage 2 - Stop integrations
 
@@ -895,7 +895,7 @@ class HomeAssistant:
                 "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(2)
+            self._async_log_running_tasks("stop integrations")
 
         # Stage 3 - Final write
         self.state = CoreState.final_write
@@ -908,7 +908,7 @@ class HomeAssistant:
                 "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(3)
+            self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
         self.state = CoreState.not_running
@@ -960,7 +960,7 @@ class HomeAssistant:
                 "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(4)
+            self._async_log_running_tasks("close")
 
         self.state = CoreState.stopped
 
@@ -980,10 +980,10 @@ class HomeAssistant:
             ):
                 handle.cancel()
 
-    def _async_log_running_tasks(self, stage: int) -> None:
+    def _async_log_running_tasks(self, stage: str) -> None:
         """Log all running tasks."""
         for task in self._tasks:
-            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
+            _LOGGER.warning("Shutdown stage '%s': still running: %s", stage, task)
 
 
 class Context:
