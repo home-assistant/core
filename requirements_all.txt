@@ -777,7 +777,7 @@ ephem==4.1.5
 epson-projector==0.5.1
 
 # homeassistant.components.epsonworkforce
-epsonprinter==0.0.9
+epsonprinter-api==1.0.1
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
