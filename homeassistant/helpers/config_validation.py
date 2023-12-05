@@ -350,7 +350,7 @@ comp_entity_ids_or_uuids = vol.Any(
 )
 
 
-def domain_key(config_key: str) -> str:
+def domain_key(config_key: Any) -> str:
     """Validate a top level configuration key."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.config import domain_from_config_key
