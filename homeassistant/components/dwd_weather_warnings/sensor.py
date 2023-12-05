@@ -33,6 +33,7 @@ from .const import (
     ATTR_LAST_UPDATE,
     ATTR_REGION_ID,
     ATTR_REGION_NAME,
+    ATTR_TYPE,
     ATTR_WARNING_COUNT,
     CURRENT_WARNING_SENSOR,
     DEFAULT_NAME,
@@ -116,8 +117,10 @@ class DwdWeatherWarningsSensor(
 
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
             searched_warnings = self.api.current_warnings
+            data[ATTR_TYPE] = "current"
         else:
             searched_warnings = self.api.expected_warnings
+            data[ATTR_TYPE] = "advance"
 
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 

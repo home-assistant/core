@@ -19,6 +19,7 @@ ATTR_REGION_NAME: Final = "region_name"
 ATTR_REGION_ID: Final = "region_id"
 ATTR_LAST_UPDATE: Final = "last_update"
 ATTR_WARNING_COUNT: Final = "warning_count"
+ATTR_TYPE: Final = "type"
 
 API_ATTR_WARNING_NAME: Final = "event"
 API_ATTR_WARNING_TYPE: Final = "event_code"
