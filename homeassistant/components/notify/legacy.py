@@ -126,7 +126,7 @@ def async_setup_legacy(
             hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
                 notify_service
             )
-            hass.config.components.add(f"{DOMAIN}.{integration_name}")
+            hass.config.components.add(f"{integration_name}.{DOMAIN}")
 
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None
