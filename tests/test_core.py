@@ -2593,3 +2593,30 @@ def test_hassjob_passing_job_type():
         HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
         == ha.HassJobType.Callback
     )
+
+
+async def test_shutdown_job(hass: HomeAssistant) -> None:
+    """Test async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    hass.async_add_shutdown_job(job)
+    await hass.async_stop()
+    assert evt.is_set()
+
+
+async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
+    """Test cancelling a job added to async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    cancel = hass.async_add_shutdown_job(job)
+    cancel()
+    await hass.async_stop()
+    assert not evt.is_set()
