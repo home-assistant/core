@@ -6,6 +6,7 @@ import pytest
 from homeassistant.components.advantage_air.climate import (
     ADVANTAGE_AIR_COOL_TARGET,
     ADVANTAGE_AIR_HEAT_TARGET,
+    ADVANTAGE_AIR_MYFAN,
     HASS_HVAC_MODES,
 )
 from homeassistant.components.advantage_air.const import (
@@ -23,6 +24,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_AUTO,
     FAN_LOW,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -245,6 +247,20 @@ async def test_climate_async_setup_entry(
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
     assert data["ac3"]["info"][ADVANTAGE_AIR_HEAT_TARGET] == 21
     assert data["ac3"]["info"][ADVANTAGE_AIR_COOL_TARGET] == 23
+
+    # Test AutoFanMode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: FAN_AUTO},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[-2][0] == "GET"
+    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac3"]["info"]["fan"] == ADVANTAGE_AIR_MYFAN
+    assert aioclient_mock.mock_calls[-1][0] == "GET"
+    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
 
 async def test_climate_async_failed_update(
