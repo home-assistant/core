@@ -1,6 +1,4 @@
 """Test the binary sensor platform of ping."""
-from datetime import timedelta
-import os
 from unittest.mock import patch
 
 import pytest
@@ -11,19 +9,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import dump
 
-from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="yaml_devices")
-def mock_yaml_devices(hass):
-    """Get a path for storing yaml devices."""
-    yaml_devices = hass.config.path(legacy.YAML_DEVICES)
-    if os.path.isfile(yaml_devices):
-        os.remove(yaml_devices)
-    yield yaml_devices
-    if os.path.isfile(yaml_devices):
-        os.remove(yaml_devices)
+from tests.common import MockConfigEntry, patch_yaml_files
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -84,24 +72,20 @@ async def test_import_issue_creation(
 async def test_import_delete_known_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    yaml_devices,
 ):
     """Test if import deletes known devices."""
+    yaml_devices = {
+        "test": {
+            "hide_if_away": True,
+            "mac": "00:11:22:33:44:55",
+            "name": "Test name",
+            "picture": "/local/test.png",
+            "track": True,
+        },
+    }
+    files = {legacy.YAML_DEVICES: dump(yaml_devices)}
 
-    dev_id = "test"
-    device = legacy.Device(
-        hass,
-        timedelta(seconds=180),
-        True,
-        dev_id,
-        None,
-        "Test name",
-    )
-    await hass.async_add_executor_job(
-        legacy.update_config, yaml_devices, dev_id, device
-    )
-
-    with patch(
+    with patch_yaml_files(files, True), patch(
         "homeassistant.components.ping.device_tracker.remove_device_from_config"
     ) as remove_device_from_config:
         await async_setup_component(

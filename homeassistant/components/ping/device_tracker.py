@@ -25,6 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -59,30 +60,26 @@ async def async_setup_scanner(
             "Home Assistant successfully started, importing ping device tracker config entries now"
         )
 
-        devices: dict[Any, Any] = {}
+        devices: dict[str, dict[str, Any]] = {}
         try:
             devices = await hass.async_add_executor_job(
                 load_yaml_config_file, hass.config.path(YAML_DEVICES)
             )
-        except FileNotFoundError:
+        except (FileNotFoundError, HomeAssistantError):
             _LOGGER.debug(
-                "No known_devices.yaml found, skip removal of devices from known_devices.yaml"
+                "No valid known_devices.yaml found, "
+                "skip removal of devices from known_devices.yaml"
             )
 
         for dev_name, dev_host in config[CONF_HOSTS].items():
-            # remove device from known_devices.yaml and the state machine before importing it
-            if (
-                not hass.states.async_available(f"device_tracker.{dev_name}")
-                and dev_name in devices
-            ):
+            if dev_name in devices:
                 await hass.async_add_executor_job(
                     remove_device_from_config, hass, dev_name
                 )
+                _LOGGER.debug("Removed device %s from known_devices.yaml", dev_name)
+
+            if not hass.states.async_available(f"device_tracker.{dev_name}"):
                 hass.states.async_remove(f"device_tracker.{dev_name}")
-                _LOGGER.debug(
-                    "Removed device_tracker.%s from known_devices.yaml and state machine",
-                    dev_name,
-                )
 
             # run import after everything has been cleaned up
             hass.async_create_task(
@@ -113,8 +110,9 @@ async def async_setup_scanner(
                 },
             )
 
-    # delay the import after Home Assistant has started and everything has been initialized
-    # this way we can remove the restored device_tracker entities from known_devices.yaml
+    # delay the import until after Home Assistant has started and everything has been initialized,
+    # as the legacy device tracker entities will be restored after the legacy device tracker platforms
+    # have been set up, so we can only remove the entities from the state machine then
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _run_import)
 
     return True
