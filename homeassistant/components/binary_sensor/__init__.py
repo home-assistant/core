@@ -3,15 +3,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Literal, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -189,6 +190,14 @@ class BinarySensorEntity(Entity):
     _attr_device_class: BinarySensorDeviceClass | None
     _attr_is_on: bool | None = None
     _attr_state: None = None
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the binary sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+            )
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.

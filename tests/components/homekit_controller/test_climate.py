@@ -691,6 +691,9 @@ def create_heater_cooler_service(accessory):
     char = service.add_char(CharacteristicsTypes.SWING_MODE)
     char.value = 0
 
+    char = service.add_char(CharacteristicsTypes.ROTATION_SPEED)
+    char.value = 100
+
 
 # Test heater-cooler devices
 def create_heater_cooler_service_min_max(accessory):
@@ -867,6 +870,103 @@ async def test_heater_cooler_change_thermostat_temperature(
     )
 
 
+async def test_heater_cooler_change_fan_speed(hass: HomeAssistant, utcnow) -> None:
+    """Test that we can change the target fan speed."""
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "low"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 33,
+        },
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "medium"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 66,
+        },
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "high"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 100,
+        },
+    )
+
+
+async def test_heater_cooler_read_fan_speed(hass: HomeAssistant, utcnow) -> None:
+    """Test that we can read the state of a HomeKit thermostat accessory."""
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    # Simulate that fan speed is off
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 0,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "off"
+
+    # Simulate that fan speed is low
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 33,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "low"
+
+    # Simulate that fan speed is medium
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 66,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "medium"
+
+    # Simulate that fan speed is high
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 100,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "high"
+
+
 async def test_heater_cooler_read_thermostat_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit thermostat accessory."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
@@ -1012,9 +1112,10 @@ async def test_heater_cooler_turn_off(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["hvac_action"] == "off"
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a switch unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     climate_entry = entity_registry.async_get_or_create(
         "climate",

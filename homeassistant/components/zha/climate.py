@@ -45,13 +45,13 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_FAN,
     CLUSTER_HANDLER_THERMOSTAT,
-    DATA_ZHA,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
     PRESET_TEMP_MANUAL,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -115,7 +115,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.CLIMATE]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.CLIMATE]
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
@@ -139,7 +140,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_name: str = "Thermostat"
+    _attr_translation_key: str = "thermostat"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
@@ -366,10 +367,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
         )
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
         if (
-            record.attr_name in (ATTR_OCCP_COOL_SETPT, ATTR_OCCP_HEAT_SETPT)
+            attr_name in (ATTR_OCCP_COOL_SETPT, ATTR_OCCP_HEAT_SETPT)
             and self.preset_mode == PRESET_AWAY
         ):
             # occupancy attribute is an unreportable attribute, but if we get
@@ -378,7 +379,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             if await self._thrm.get_occupancy() is True:
                 self._preset = PRESET_NONE
 
-        self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
+        self.debug("Attribute '%s' = %s update", attr_name, value)
         self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -416,15 +417,12 @@ class Thermostat(ZhaEntity, ClimateEntity):
         if self.preset_mode not in (
             preset_mode,
             PRESET_NONE,
-        ) and not await self.async_preset_handler(self.preset_mode, enable=False):
-            self.debug("Couldn't turn off '%s' preset", self.preset_mode)
-            return
-
-        if preset_mode != PRESET_NONE and not await self.async_preset_handler(
-            preset_mode, enable=True
         ):
-            self.debug("Couldn't turn on '%s' preset", preset_mode)
-            return
+            await self.async_preset_handler(self.preset_mode, enable=False)
+
+        if preset_mode != PRESET_NONE:
+            await self.async_preset_handler(preset_mode, enable=True)
+
         self._preset = preset_mode
         self.async_write_ha_state()
 
@@ -438,30 +436,29 @@ class Thermostat(ZhaEntity, ClimateEntity):
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
 
-        thrm = self._thrm
+        is_away = self.preset_mode == PRESET_AWAY
+
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            success = True
             if low_temp is not None:
-                low_temp = int(low_temp * ZCL_TEMP)
-                success = success and await thrm.async_set_heating_setpoint(
-                    low_temp, self.preset_mode == PRESET_AWAY
+                await self._thrm.async_set_heating_setpoint(
+                    temperature=int(low_temp * ZCL_TEMP),
+                    is_away=is_away,
                 )
-                self.debug("Setting heating %s setpoint: %s", low_temp, success)
             if high_temp is not None:
-                high_temp = int(high_temp * ZCL_TEMP)
-                success = success and await thrm.async_set_cooling_setpoint(
-                    high_temp, self.preset_mode == PRESET_AWAY
+                await self._thrm.async_set_cooling_setpoint(
+                    temperature=int(high_temp * ZCL_TEMP),
+                    is_away=is_away,
                 )
-                self.debug("Setting cooling %s setpoint: %s", low_temp, success)
         elif temp is not None:
-            temp = int(temp * ZCL_TEMP)
             if self.hvac_mode == HVACMode.COOL:
-                success = await thrm.async_set_cooling_setpoint(
-                    temp, self.preset_mode == PRESET_AWAY
+                await self._thrm.async_set_cooling_setpoint(
+                    temperature=int(temp * ZCL_TEMP),
+                    is_away=is_away,
                 )
             elif self.hvac_mode == HVACMode.HEAT:
-                success = await thrm.async_set_heating_setpoint(
-                    temp, self.preset_mode == PRESET_AWAY
+                await self._thrm.async_set_heating_setpoint(
+                    temperature=int(temp * ZCL_TEMP),
+                    is_away=is_away,
                 )
             else:
                 self.debug("Not setting temperature for '%s' mode", self.hvac_mode)
@@ -470,14 +467,13 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("incorrect %s setting for '%s' mode", kwargs, self.hvac_mode)
             return
 
-        if success:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
-    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode via handler."""
 
         handler = getattr(self, f"async_preset_handler_{preset}")
-        return await handler(enable)
+        await handler(enable)
 
 
 @MULTI_MATCH(
@@ -529,7 +525,7 @@ class SinopeTechnologiesThermostat(Thermostat):
 
         self.debug("Updating time: %s", secs_2k)
         self._manufacturer_ch.cluster.create_catching_task(
-            self._manufacturer_ch.cluster.write_attributes(
+            self._manufacturer_ch.write_attributes_safe(
                 {"secs_since_2k": secs_2k}, manufacturer=self.manufacturer
             )
         )
@@ -544,15 +540,12 @@ class SinopeTechnologiesThermostat(Thermostat):
         )
         self._async_update_time()
 
-    async def async_preset_handler_away(self, is_away: bool = False) -> bool:
+    async def async_preset_handler_away(self, is_away: bool = False) -> None:
         """Set occupancy."""
         mfg_code = self._zha_device.manufacturer_code
-        res = await self._thrm.write_attributes(
+        await self._thrm.write_attributes_safe(
             {"set_occupancy": 0 if is_away else 1}, manufacturer=mfg_code
         )
-
-        self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
-        return res
 
 
 @MULTI_MATCH(
@@ -616,58 +609,56 @@ class MoesThermostat(Thermostat):
         """Return only the heat mode, because the device can't be turned off."""
         return [HVACMode.HEAT]
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
-        if record.attr_name == "operation_preset":
-            if record.value == 0:
+        if attr_name == "operation_preset":
+            if value == 0:
                 self._preset = PRESET_AWAY
-            if record.value == 1:
+            if value == 1:
                 self._preset = PRESET_SCHEDULE
-            if record.value == 2:
+            if value == 2:
                 self._preset = PRESET_NONE
-            if record.value == 3:
+            if value == 3:
                 self._preset = PRESET_COMFORT
-            if record.value == 4:
+            if value == 4:
                 self._preset = PRESET_ECO
-            if record.value == 5:
+            if value == 5:
                 self._preset = PRESET_BOOST
-            if record.value == 6:
+            if value == 6:
                 self._preset = PRESET_COMPLEX
-        await super().async_attribute_updated(record)
+        await super().async_attribute_updated(attr_id, attr_name, value)
 
-    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode."""
         mfg_code = self._zha_device.manufacturer_code
         if not enable:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 2}, manufacturer=mfg_code
             )
         if preset == PRESET_AWAY:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 0}, manufacturer=mfg_code
             )
         if preset == PRESET_SCHEDULE:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 1}, manufacturer=mfg_code
             )
         if preset == PRESET_COMFORT:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 3}, manufacturer=mfg_code
             )
         if preset == PRESET_ECO:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 4}, manufacturer=mfg_code
             )
         if preset == PRESET_BOOST:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 5}, manufacturer=mfg_code
             )
         if preset == PRESET_COMPLEX:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 6}, manufacturer=mfg_code
             )
-
-        return False
 
 
 @STRICT_MATCH(
@@ -697,52 +688,50 @@ class BecaThermostat(Thermostat):
         """Return only the heat mode, because the device can't be turned off."""
         return [HVACMode.HEAT]
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
-        if record.attr_name == "operation_preset":
-            if record.value == 0:
+        if attr_name == "operation_preset":
+            if value == 0:
                 self._preset = PRESET_AWAY
-            if record.value == 1:
+            if value == 1:
                 self._preset = PRESET_SCHEDULE
-            if record.value == 2:
+            if value == 2:
                 self._preset = PRESET_NONE
-            if record.value == 4:
+            if value == 4:
                 self._preset = PRESET_ECO
-            if record.value == 5:
+            if value == 5:
                 self._preset = PRESET_BOOST
-            if record.value == 7:
+            if value == 7:
                 self._preset = PRESET_TEMP_MANUAL
-        await super().async_attribute_updated(record)
+        await super().async_attribute_updated(attr_id, attr_name, value)
 
-    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode."""
         mfg_code = self._zha_device.manufacturer_code
         if not enable:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 2}, manufacturer=mfg_code
             )
         if preset == PRESET_AWAY:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 0}, manufacturer=mfg_code
             )
         if preset == PRESET_SCHEDULE:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 1}, manufacturer=mfg_code
             )
         if preset == PRESET_ECO:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 4}, manufacturer=mfg_code
             )
         if preset == PRESET_BOOST:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 5}, manufacturer=mfg_code
             )
         if preset == PRESET_TEMP_MANUAL:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 7}, manufacturer=mfg_code
             )
-
-        return False
 
 
 @MULTI_MATCH(
@@ -794,38 +783,37 @@ class ZONNSMARTThermostat(Thermostat):
         ]
         self._supported_flags |= ClimateEntityFeature.PRESET_MODE
 
-    async def async_attribute_updated(self, record):
+    async def async_attribute_updated(self, attr_id, attr_name, value):
         """Handle attribute update from device."""
-        if record.attr_name == "operation_preset":
-            if record.value == 0:
+        if attr_name == "operation_preset":
+            if value == 0:
                 self._preset = PRESET_SCHEDULE
-            if record.value == 1:
+            if value == 1:
                 self._preset = PRESET_NONE
-            if record.value == 2:
+            if value == 2:
                 self._preset = self.PRESET_HOLIDAY
-            if record.value == 3:
+            if value == 3:
                 self._preset = self.PRESET_HOLIDAY
-            if record.value == 4:
+            if value == 4:
                 self._preset = self.PRESET_FROST
-        await super().async_attribute_updated(record)
+        await super().async_attribute_updated(attr_id, attr_name, value)
 
-    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> None:
         """Set the preset mode."""
         mfg_code = self._zha_device.manufacturer_code
         if not enable:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 1}, manufacturer=mfg_code
             )
         if preset == PRESET_SCHEDULE:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 0}, manufacturer=mfg_code
             )
         if preset == self.PRESET_HOLIDAY:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 3}, manufacturer=mfg_code
             )
         if preset == self.PRESET_FROST:
-            return await self._thrm.write_attributes(
+            return await self._thrm.write_attributes_safe(
                 {"operation_preset": 4}, manufacturer=mfg_code
             )
-        return False

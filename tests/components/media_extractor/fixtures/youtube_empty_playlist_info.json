@@ -1,0 +1,49 @@
+{
+  "id": "PLZ4DbyIWUwCq4V8bIEa8jm2ozHZVuREJO",
+  "title": "Very important videos",
+  "availability": "public",
+  "channel_follower_count": null,
+  "description": "Not original",
+  "tags": [],
+  "thumbnails": [
+    {
+      "url": "https://i.ytimg.com/vi/q6EoRBvdVPQ/hqdefault.jpg?sqp=-oaymwEwCKgBEF5IWvKriqkDIwgBFQAAiEIYAfABAfgB3gOAAugCigIMCAAQARg8IGUoPzAP&rs=AOn4CLDBCH5IQ0obogxXhAzIH8pE0d7r1Q",
+      "height": 94,
+      "width": 168
+    },
+    {
+      "url": "https://i.ytimg.com/vi/q6EoRBvdVPQ/hqdefault.jpg?sqp=-oaymwEwCMQBEG5IWvKriqkDIwgBFQAAiEIYAfABAfgB3gOAAugCigIMCAAQARg8IGUoPzAP&rs=AOn4CLAybhgn-CoPMjBE-0VfBDqvy0jyOQ",
+      "height": 110,
+      "width": 196
+    },
+    {
+      "url": "https://i.ytimg.com/vi/q6EoRBvdVPQ/hqdefault.jpg?sqp=-oaymwExCPYBEIoBSFryq4qpAyMIARUAAIhCGAHwAQH4Ad4DgALoAooCDAgAEAEYPCBlKD8wDw==&rs=AOn4CLDutIdjr5zTE9G78eWf83-mGXYnUA",
+      "height": 138,
+      "width": 246
+    },
+    {
+      "url": "https://i.ytimg.com/vi/q6EoRBvdVPQ/hqdefault.jpg?sqp=-oaymwExCNACELwBSFryq4qpAyMIARUAAIhCGAHwAQH4Ad4DgALoAooCDAgAEAEYPCBlKD8wDw==&rs=AOn4CLD2884fHuvAv8ysHA48LD3uArB6bA",
+      "height": 188,
+      "width": 336
+    }
+  ],
+  "modified_date": "20230813",
+  "view_count": 5680730,
+  "playlist_count": 5,
+  "channel": "Armand314",
+  "channel_id": "UChOLuQpsxxmJiJUeSU2tSTw",
+  "uploader_id": "@Armand314",
+  "uploader": "Armand314",
+  "channel_url": "https://www.youtube.com/channel/UChOLuQpsxxmJiJUeSU2tSTw",
+  "uploader_url": "https://www.youtube.com/@Armand314",
+  "_type": "playlist",
+  "entries": [],
+  "extractor_key": "YoutubeTab",
+  "extractor": "youtube:tab",
+  "webpage_url": "https://www.youtube.com/playlist?list=PLZ4DbyIWUwCq4V8bIEa8jm2ozHZVuREJO",
+  "original_url": "https://www.youtube.com/playlist?list=PLZ4DbyIWUwCq4V8bIEa8jm2ozHZVuREJO",
+  "webpage_url_basename": "playlist",
+  "webpage_url_domain": "youtube.com",
+  "heatmap": [],
+  "automatic_captions": {}
+}

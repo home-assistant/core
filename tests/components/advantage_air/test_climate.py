@@ -48,7 +48,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_climate_async_setup_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test climate platform."""
 
@@ -62,8 +64,6 @@ async def test_climate_async_setup_entry(
     )
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     # Test MyZone Climate Entity
     entity_id = "climate.myzone"
     state = hass.states.get(entity_id)
@@ -72,9 +72,9 @@ async def test_climate_async_setup_entry(
     assert state.attributes.get(ATTR_MIN_TEMP) == 16
     assert state.attributes.get(ATTR_MAX_TEMP) == 32
     assert state.attributes.get(ATTR_TEMPERATURE) == 24
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1"
 
@@ -172,7 +172,7 @@ async def test_climate_async_setup_entry(
     assert state.attributes.get(ATTR_TEMPERATURE) == 24
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01"
 
@@ -226,7 +226,7 @@ async def test_climate_async_setup_entry(
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac3"
 

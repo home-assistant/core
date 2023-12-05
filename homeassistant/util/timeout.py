@@ -8,9 +8,7 @@ from __future__ import annotations
 import asyncio
 import enum
 from types import TracebackType
-from typing import Any
-
-from typing_extensions import Self
+from typing import Any, Self
 
 from .async_ import run_callback_threadsafe
 
@@ -51,7 +49,7 @@ class _GlobalFreezeContext:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(  # pylint: disable=useless-return
+    def __exit__(
         self,
         exc_type: type[BaseException],
         exc_val: BaseException,
@@ -119,7 +117,7 @@ class _ZoneFreezeContext:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(  # pylint: disable=useless-return
+    def __exit__(
         self,
         exc_type: type[BaseException],
         exc_val: BaseException,
@@ -232,7 +230,7 @@ class _GlobalTaskContext:
         """Cancel own task."""
         if self._task.done():
             return
-        self._task.cancel()
+        self._task.cancel("Global task timeout")
 
     def pause(self) -> None:
         """Pause timers while it freeze."""
@@ -330,7 +328,7 @@ class _ZoneTaskContext:
         # Timeout
         if self._task.done():
             return
-        self._task.cancel()
+        self._task.cancel("Zone timeout")
 
     def pause(self) -> None:
         """Pause timers while it freeze."""

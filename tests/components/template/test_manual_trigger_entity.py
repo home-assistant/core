@@ -2,7 +2,7 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
-from homeassistant.helpers.template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 
 
 async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:

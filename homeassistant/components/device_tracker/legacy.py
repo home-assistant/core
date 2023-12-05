@@ -12,8 +12,13 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
-from homeassistant.config import async_log_exception, load_yaml_config_file
+from homeassistant.config import (
+    async_log_schema_error,
+    config_per_platform,
+    load_yaml_config_file,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
@@ -32,7 +37,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    config_per_platform,
     config_validation as cv,
     discovery,
     entity_registry as er,
@@ -43,7 +47,11 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
+from homeassistant.setup import (
+    async_notify_setup_error,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import dump
 
@@ -262,7 +270,7 @@ class DeviceTrackerPlatform:
     platform: ModuleType = attr.ib()
     config: dict = attr.ib()
 
-    @property
+    @cached_property
     def type(self) -> str | None:
         """Return platform type."""
         methods, platform_type = self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY
@@ -1005,7 +1013,8 @@ async def async_load_config(
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
-            async_log_exception(exp, dev_id, devices, hass)
+            async_log_schema_error(exp, dev_id, devices, hass)
+            async_notify_setup_error(hass, DOMAIN)
         else:
             result.append(Device(hass, **device))
     return result

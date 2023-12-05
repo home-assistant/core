@@ -1,7 +1,7 @@
 """The tests for the Group Light platform."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
-import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -49,7 +49,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_capture_events, get_fixture_path
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test light group default state."""
     hass.states.async_set("light.kitchen", "on")
     await async_setup_component(
@@ -80,7 +82,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("light.bedroom_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
@@ -1643,7 +1644,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TOGGLE,

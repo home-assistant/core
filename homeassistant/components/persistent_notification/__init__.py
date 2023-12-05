@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import datetime
+from enum import StrEnum
 import logging
 from typing import Any, Final, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, singleton
@@ -28,10 +28,6 @@ ATTR_MESSAGE: Final = "message"
 ATTR_NOTIFICATION_ID: Final = "notification_id"
 ATTR_TITLE: Final = "title"
 ATTR_STATUS: Final = "status"
-
-
-# Remove EVENT_PERSISTENT_NOTIFICATIONS_UPDATED in Home Assistant 2023.9
-EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
 
 
 class Notification(TypedDict):

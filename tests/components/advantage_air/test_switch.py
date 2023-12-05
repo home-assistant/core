@@ -28,7 +28,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_cover_async_setup_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch platform."""
 
@@ -51,7 +53,7 @@ async def test_cover_async_setup_entry(
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-freshair"
 
@@ -119,7 +121,9 @@ async def test_cover_async_setup_entry(
 
 
 async def test_things_switch(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test things switches."""
 
@@ -134,8 +138,6 @@ async def test_things_switch(
 
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     # Test Switch Entity
     entity_id = "switch.relay"
     thing_id = "205"
@@ -143,7 +145,7 @@ async def test_things_switch(
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-205"
 

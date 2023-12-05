@@ -6,6 +6,9 @@
         "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your LIFX device."
         }
       },
       "pick_device": {
@@ -101,7 +104,7 @@
         },
         "color_name": {
           "name": "Color name",
-          "description": "A human readable color name."
+          "description": "A human-readable color name."
         },
         "rgb_color": {
           "name": "RGB color",

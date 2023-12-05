@@ -162,13 +162,18 @@ class HassIOIngress(HomeAssistantView):
             headers=source_header,
             params=request.query,
             allow_redirects=False,
-            data=request.content,
+            data=request.content if request.method != "GET" else None,
             timeout=ClientTimeout(total=None),
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
             content_length_int = 0
             content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            # Avoid parsing content_type in simple cases for better performance
+            if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
+                content_type: str = (maybe_content_type.partition(";"))[0].strip()
+            else:
+                content_type = result.content_type
             # Simple request
             if result.status in (204, 304) or (
                 content_length is not UNDEFINED
@@ -180,11 +185,12 @@ class HassIOIngress(HomeAssistantView):
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,
-                    content_type=result.content_type,
+                    content_type=content_type,
                     body=body,
+                    zlib_executor_size=32768,
                 )
                 if content_length_int > MIN_COMPRESSED_SIZE and should_compress(
-                    simple_response.content_type
+                    content_type or simple_response.content_type
                 ):
                     simple_response.enable_compression()
                 await simple_response.prepare(request)
@@ -198,7 +204,10 @@ class HassIOIngress(HomeAssistantView):
                 if should_compress(response.content_type):
                     response.enable_compression()
                 await response.prepare(request)
-                async for data in result.content.iter_chunked(8192):
+                # In testing iter_chunked, iter_any, and iter_chunks:
+                # iter_chunks was the best performing option since
+                # it does not have to do as much re-assembly
+                async for data, _ in result.content.iter_chunks():
                     await response.write(data)
 
             except (

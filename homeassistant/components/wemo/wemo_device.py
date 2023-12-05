@@ -24,9 +24,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_UPNP,
+    DeviceInfo,
     async_get as async_get_device_registry,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -35,7 +35,7 @@ from .models import async_wemo_data
 _LOGGER = logging.getLogger(__name__)
 
 # Literal values must match options.error keys from strings.json.
-ErrorStringKey = Literal["long_press_requires_subscription"]
+ErrorStringKey = Literal["long_press_requires_subscription"]  # noqa: F821
 # Literal values must match options.step.init.data keys from strings.json.
 OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
 

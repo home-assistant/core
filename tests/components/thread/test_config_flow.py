@@ -1,4 +1,5 @@
 """Test the Thread config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant.components import thread, zeroconf
@@ -6,10 +7,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 TEST_ZEROCONF_RECORD = zeroconf.ZeroconfServiceInfo(
-    host="127.0.0.1",
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     hostname="HomeAssistant OpenThreadBorderRouter #0BBF",
     name="HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
-    addresses=["127.0.0.1"],
     port=8080,
     properties={
         "rv": "1",

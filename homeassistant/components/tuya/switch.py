@@ -105,11 +105,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="plug",
         ),
     ),
-    # Cirquit Breaker
+    # Circuit Breaker
     "dlq": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            translation_key="asd",
+            translation_key="child_lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -428,6 +428,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="mute_voice",
             icon="mdi:account-voice",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Smart Water Timer
+    "sfkzq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+            icon="mdi:sprinkler-variant",
         ),
     ),
     # Siren Alarm

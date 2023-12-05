@@ -455,11 +455,12 @@ async def test_dehumidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -
     assert state.attributes["current_humidity"] == 51
 
 
-async def test_migrate_entity_ids(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_entity_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test that we can migrate humidifier entity ids."""
     aid = get_next_aid()
 
-    entity_registry = er.async_get(hass)
     humidifier_entry = entity_registry.async_get_or_create(
         "humidifier",
         "homekit_controller",

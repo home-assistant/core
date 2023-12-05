@@ -1,7 +1,9 @@
 """Discovergy sensor entity."""
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 
-from pydiscovergy.models import Meter
+from pydiscovergy.models import Meter, Reading
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,34 +13,37 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DiscovergyData, DiscovergyUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER
 
-PARALLEL_UPDATES = 1
+
+def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
+    """Get a value from a Reading and divide with scale it."""
+    if (value := reading.values.get(key)) is not None:
+        return value / scale
+    return None
 
 
-@dataclass
-class DiscovergyMixin:
-    """Mixin for alternative keys."""
+@dataclass(kw_only=True)
+class DiscovergySensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Discovergy sensor entity."""
 
+    value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
+        default=_get_and_scale
+    )
     alternative_keys: list[str] = field(default_factory=lambda: [])
     scale: int = field(default_factory=lambda: 1000)
-
-
-@dataclass
-class DiscovergySensorEntityDescription(DiscovergyMixin, SensorEntityDescription):
-    """Define Sensor entity description class."""
 
 
 GAS_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
@@ -101,6 +106,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage1"],
     ),
     DiscovergySensorEntityDescription(
         key="phase2Voltage",
@@ -110,6 +116,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage2"],
     ),
     DiscovergySensorEntityDescription(
         key="phase3Voltage",
@@ -119,6 +126,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        alternative_keys=["voltage3"],
     ),
     # energy sensors
     DiscovergySensorEntityDescription(
@@ -141,41 +149,47 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
 )
 
+ADDITIONAL_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
+    DiscovergySensorEntityDescription(
+        key="last_transmitted",
+        translation_key="last_transmitted",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda reading, key, scale: reading.time_with_timezone,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Discovergy sensors."""
     data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
-    meters: list[Meter] = data.meters  # always returns a list
 
     entities: list[DiscovergySensor] = []
-    for meter in meters:
-        meter_id = meter.get_meter_id()
+    for meter in data.meters:
+        sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
+        coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
 
-        sensors = None
+        # select sensor descriptions based on meter type and combine with additional sensors
         if meter.measurement_type == "ELECTRICITY":
-            sensors = ELECTRICITY_SENSORS
+            sensors = ELECTRICITY_SENSORS + ADDITIONAL_SENSORS
         elif meter.measurement_type == "GAS":
-            sensors = GAS_SENSORS
+            sensors = GAS_SENSORS + ADDITIONAL_SENSORS
 
-        if sensors is not None:
-            for description in sensors:
-                # check if this meter has this data, then add this sensor
-                for key in {description.key, *description.alternative_keys}:
-                    coordinator: DiscovergyUpdateCoordinator = data.coordinators[
-                        meter_id
-                    ]
-                    if key in coordinator.data.values:
-                        entities.append(
-                            DiscovergySensor(key, description, meter, coordinator)
-                        )
+        entities.extend(
+            DiscovergySensor(value_key, description, meter, coordinator)
+            for description in sensors
+            for value_key in {description.key, *description.alternative_keys}
+            if description.value_fn(coordinator.data, value_key, description.scale)
+        )
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEntity):
-    """Represents a discovergy smart meter sensor."""
+    """Represents a Discovergy smart meter sensor."""
 
     entity_description: DiscovergySensorEntityDescription
     data_key: str
@@ -196,15 +210,16 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         self.entity_description = description
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter.get_meter_id())},
+            identifiers={(DOMAIN, meter.meter_id)},
             name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
-            model=f"{meter.type} {meter.full_serial_number}",
+            model=meter.type,
             manufacturer=MANUFACTURER,
+            serial_number=meter.full_serial_number,
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | float | None:
         """Return the sensor state."""
-        return float(
-            self.coordinator.data.values[self.data_key] / self.entity_description.scale
+        return self.entity_description.value_fn(
+            self.coordinator.data, self.data_key, self.entity_description.scale
         )

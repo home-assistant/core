@@ -1,11 +1,13 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -33,21 +35,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the GDACS Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
-    sensor = GdacsSensor(entry.entry_id, entry.unique_id, entry.title, manager)
+    sensor = GdacsSensor(entry, manager)
     async_add_entities([sensor])
-    _LOGGER.debug("Sensor setup done")
 
 
 class GdacsSensor(SensorEntity):
     """Status sensor for the GDACS integration."""
 
     _attr_should_poll = False
+    _attr_icon = DEFAULT_ICON
+    _attr_native_unit_of_measurement = DEFAULT_UNIT_OF_MEASUREMENT
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, config_entry_id, config_unique_id, config_title, manager):
+    def __init__(self, config_entry: ConfigEntry, manager) -> None:
         """Initialize entity."""
-        self._config_entry_id = config_entry_id
-        self._config_unique_id = config_unique_id
-        self._config_title = config_title
+        assert config_entry.unique_id
+        self._config_entry_id = config_entry.entry_id
+        self._attr_unique_id = config_entry.unique_id
         self._manager = manager
         self._status = None
         self._last_update = None
@@ -57,7 +62,12 @@ class GdacsSensor(SensorEntity):
         self._created = None
         self._updated = None
         self._removed = None
-        self._remove_signal_status = None
+        self._remove_signal_status: Callable[[], None] | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="GDACS",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -111,26 +121,6 @@ class GdacsSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._total
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID containing latitude/longitude."""
-        return self._config_unique_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return f"GDACS ({self._config_title})"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEFAULT_ICON
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
 
     @property
     def extra_state_attributes(self):

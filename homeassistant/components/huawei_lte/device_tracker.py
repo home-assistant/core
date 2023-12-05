@@ -90,8 +90,8 @@ async def async_setup_entry(
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
-    router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
-    router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
+    router.subscriptions[KEY_LAN_HOST_INFO].append(_DEVICE_SCAN)
+    router.subscriptions[KEY_WLAN_HOST_LIST].append(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(unique_id: str) -> None:
         """Add new entities if the update signal comes from our router."""

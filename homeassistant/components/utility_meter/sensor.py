@@ -5,10 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any
+from typing import Any, Self
 
 from croniter import croniter
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.components.sensor.recorder import _suggest_report_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -27,22 +27,23 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfEnergy,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -452,7 +453,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @callback
-    def async_reading(self, event: Event):
+    def async_reading(self, event: EventType[EventStateChangedData]) -> None:
         """Handle the sensor state changes."""
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
@@ -463,8 +464,10 @@ class UtilityMeterSensor(RestoreSensor):
 
         self._attr_available = True
 
-        old_state: State | None = event.data.get("old_state")
-        new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        if new_state is None:
+            return
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
@@ -482,6 +485,12 @@ class UtilityMeterSensor(RestoreSensor):
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                if self._unit_of_measurement is None:
+                    _LOGGER.warning(
+                        "Source sensor %s has no unit of measurement. Please %s",
+                        self._sensor_source_id,
+                        _suggest_report_issue(self.hass, self._sensor_source_id),
+                    )
 
         if (
             adjustment := self.calculate_adjustment(old_state, new_state)
@@ -489,18 +498,19 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
     @callback
-    def async_tariff_change(self, event):
+    def async_tariff_change(self, event: EventType[EventStateChangedData]) -> None:
         """Handle tariff changes."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
 
         self._change_status(new_state.state)
 
-    def _change_status(self, tariff):
+    def _change_status(self, tariff: str) -> None:
         if self._tariff == tariff:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
@@ -524,16 +534,25 @@ class UtilityMeterSensor(RestoreSensor):
 
         self.async_write_ha_state()
 
-    async def _async_reset_meter(self, event):
-        """Determine cycle - Helper function for larger than daily cycles."""
+    async def _program_reset(self):
+        """Program the reset of the utility meter."""
         if self._cron_pattern is not None:
+            tz = dt_util.get_time_zone(self.hass.config.time_zone)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
                     self._async_reset_meter,
-                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+                    croniter(self._cron_pattern, dt_util.now(tz)).get_next(
+                        datetime
+                    ),  # we need timezone for DST purposes (see issue #102984)
                 )
             )
+
+    async def _async_reset_meter(self, event):
+        """Reset the utility meter status."""
+
+        await self._program_reset()
+
         await self.async_reset_meter(self._tariff_entity)
 
     async def async_reset_meter(self, entity_id):
@@ -556,14 +575,7 @@ class UtilityMeterSensor(RestoreSensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._cron_pattern is not None:
-            self.async_on_remove(
-                async_track_point_in_time(
-                    self.hass,
-                    self._async_reset_meter,
-                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
-                )
-            )
+        await self._program_reset()
 
         self.async_on_remove(
             async_dispatcher_connect(

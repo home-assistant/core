@@ -60,6 +60,9 @@
       },
       "phase_3_power": {
         "name": "Phase 3 power"
+      },
+      "last_transmitted": {
+        "name": "Last transmitted"
       }
     }
   }

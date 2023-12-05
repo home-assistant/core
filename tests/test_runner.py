@@ -1,8 +1,10 @@
 """Test the runner."""
 import asyncio
+from collections.abc import Iterator
 import threading
 from unittest.mock import patch
 
+import packaging.tags
 import py
 import pytest
 
@@ -73,7 +75,7 @@ def test_run_executor_shutdown_throws(
         "homeassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
         side_effect=RuntimeError,
     ) as mock_shutdown, patch(
-        "homeassistant.core.HomeAssistant.async_run"
+        "homeassistant.core.HomeAssistant.async_run",
     ) as mock_run:
         runner.run(default_config)
 
@@ -147,19 +149,22 @@ async def test_unhandled_exception_traceback(
 
 
 def test__enable_posix_spawn() -> None:
-    """Test that we can enable posix_spawn on Alpine."""
+    """Test that we can enable posix_spawn on musllinux."""
 
-    def _mock_alpine_exists(path):
-        return path == "/etc/alpine-release"
+    def _mock_sys_tags_any() -> Iterator[packaging.tags.Tag]:
+        yield from packaging.tags.parse_tag("py3-none-any")
 
-    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
-        runner.os.path, "exists", _mock_alpine_exists
+    def _mock_sys_tags_musl() -> Iterator[packaging.tags.Tag]:
+        yield from packaging.tags.parse_tag("cp311-cp311-musllinux_1_1_x86_64")
+
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch(
+        "homeassistant.runner.packaging.tags.sys_tags", side_effect=_mock_sys_tags_musl
     ):
         runner._enable_posix_spawn()
         assert runner.subprocess._USE_POSIX_SPAWN is True
 
-    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
-        runner.os.path, "exists", return_value=False
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch(
+        "homeassistant.runner.packaging.tags.sys_tags", side_effect=_mock_sys_tags_any
     ):
         runner._enable_posix_spawn()
         assert runner.subprocess._USE_POSIX_SPAWN is False

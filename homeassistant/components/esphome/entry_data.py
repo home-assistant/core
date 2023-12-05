@@ -29,17 +29,22 @@ from aioesphomeapi import (
     SensorInfo,
     SensorState,
     SwitchInfo,
+    TextInfo,
     TextSensorInfo,
     UserService,
+    build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
+from .bluetooth.device import ESPHomeBluetoothDevice
+from .const import DOMAIN
 from .dashboard import async_get_dashboard
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
@@ -64,6 +69,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     SelectInfo: Platform.SELECT,
     SensorInfo: Platform.SENSOR,
     SwitchInfo: Platform.SWITCH,
+    TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
 }
 
@@ -80,11 +86,12 @@ class ESPHomeStorage(Store[StoreData]):
     """ESPHome Storage."""
 
 
-@dataclass
+@dataclass(slots=True)
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
     entry_id: str
+    title: str
     client: APIClient
     store: ESPHomeStorage
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
@@ -97,9 +104,10 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
-    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    disconnect_callbacks: set[Callable[[], None]] = field(default_factory=set)
     state_subscriptions: dict[
         tuple[type[EntityState], int], Callable[[], None]
     ] = field(default_factory=dict)
@@ -107,11 +115,6 @@ class RuntimeEntryData:
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
-    ble_connections_free: int = 0
-    ble_connections_limit: int = 0
-    _ble_connection_free_futures: list[asyncio.Future[int]] = field(
-        default_factory=list
-    )
     assist_pipeline_update_callbacks: list[Callable[[], None]] = field(
         default_factory=list
     )
@@ -130,14 +133,16 @@ class RuntimeEntryData:
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self.device_info.name if self.device_info else self.entry_id
+        device_info = self.device_info
+        return (device_info and device_info.name) or self.title
 
     @property
     def friendly_name(self) -> str:
         """Return the friendly name of the device."""
-        if self.device_info and self.device_info.friendly_name:
-            return self.device_info.friendly_name
-        return self.name
+        device_info = self.device_info
+        return (device_info and device_info.friendly_name) or self.name.title().replace(
+            "_", " "
+        )
 
     @property
     def signal_device_updated(self) -> str:
@@ -197,37 +202,6 @@ class RuntimeEntryData:
         return _unsub
 
     @callback
-    def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
-        """Update the BLE connection limits."""
-        _LOGGER.debug(
-            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
-            self.name,
-            self.device_info.mac_address if self.device_info else "unknown",
-            limit - free,
-            free,
-            limit,
-        )
-        self.ble_connections_free = free
-        self.ble_connections_limit = limit
-        if not free:
-            return
-        for fut in self._ble_connection_free_futures:
-            # If wait_for_ble_connections_free gets cancelled, it will
-            # leave a future in the list. We need to check if it's done
-            # before setting the result.
-            if not fut.done():
-                fut.set_result(free)
-        self._ble_connection_free_futures.clear()
-
-    async def wait_for_ble_connections_free(self) -> int:
-        """Wait until there are free BLE connections."""
-        if self.ble_connections_free > 0:
-            return self.ble_connections_free
-        fut: asyncio.Future[int] = asyncio.Future()
-        self._ble_connection_free_futures.append(fut)
-        return await fut
-
-    @callback
     def async_set_assist_pipeline_state(self, state: bool) -> None:
         """Set the assist pipeline state."""
         self.assist_pipeline_state = state
@@ -275,24 +249,34 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo]
+        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
         needed_platforms = set()
-
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
-        if self.device_info is not None and self.device_info.voice_assistant_version:
+        if self.device_info and self.device_info.voice_assistant_version:
             needed_platforms.add(Platform.BINARY_SENSOR)
             needed_platforms.add(Platform.SELECT)
 
+        ent_reg = er.async_get(hass)
+        registry_get_entity = ent_reg.async_get_entity_id
         for info in infos:
-            for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
-                if isinstance(info, info_type):
-                    needed_platforms.add(platform)
-                    break
+            platform = INFO_TYPE_TO_PLATFORM[type(info)]
+            needed_platforms.add(platform)
+            # If the unique id is in the old format, migrate it
+            # except if they downgraded and upgraded, there might be a duplicate
+            # so we want to keep the one that was already there.
+            if (
+                (old_unique_id := info.unique_id)
+                and (old_entry := registry_get_entity(platform, DOMAIN, old_unique_id))
+                and (new_unique_id := build_unique_id(mac, info)) != old_unique_id
+                and not registry_get_entity(platform, DOMAIN, new_unique_id)
+            ):
+                ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
+
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Make a dict of the EntityInfo by type and send
@@ -342,25 +326,13 @@ class RuntimeEntryData:
             and subscription_key not in stale_state
             and state_type is not CameraState
             and not (
-                state_type is SensorState  # pylint: disable=unidiomatic-typecheck
+                state_type is SensorState  # noqa: E721
                 and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
-            _LOGGER.debug(
-                "%s: ignoring duplicate update with key %s: %s",
-                self.name,
-                key,
-                state,
-            )
             return
-        _LOGGER.debug(
-            "%s: dispatching update with key %s: %s",
-            self.name,
-            key,
-            state,
-        )
         stale_state.discard(subscription_key)
         current_state_by_type[key] = state
         if subscription := self.state_subscriptions.get(subscription_key):
@@ -401,8 +373,8 @@ class RuntimeEntryData:
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
-        if self.device_info is None:
-            raise ValueError("device_info is not set yet")
+        if TYPE_CHECKING:
+            assert self.device_info is not None
         store_data: StoreData = {
             "device_info": self.device_info.to_dict(),
             "services": [],
@@ -411,9 +383,10 @@ class RuntimeEntryData:
         for info_type, infos in self.info.items():
             comp_type = INFO_TO_COMPONENT_TYPE[info_type]
             store_data[comp_type] = [info.to_dict() for info in infos.values()]  # type: ignore[literal-required]
-        for service in self.services.values():
-            store_data["services"].append(service.to_dict())
 
+        store_data["services"] = [
+            service.to_dict() for service in self.services.values()
+        ]
         if store_data == self._storage_contents:
             return
 
@@ -439,3 +412,19 @@ class RuntimeEntryData:
         if self.original_options == entry.options:
             return
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+    @callback
+    def async_on_disconnect(self) -> None:
+        """Call when the entry has been disconnected.
+
+        Safe to call multiple times.
+        """
+        self.available = False
+        # Make a copy since calling the disconnect callbacks
+        # may also try to discard/remove themselves.
+        for disconnect_cb in self.disconnect_callbacks.copy():
+            disconnect_cb()
+        # Make sure to clear the set to give up the reference
+        # to it and make sure all the callbacks can be GC'd.
+        self.disconnect_callbacks.clear()
+        self.disconnect_callbacks = set()

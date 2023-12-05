@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hassil.recognize import PUNCTUATION
+from hassil.recognize import PUNCTUATION, RecognizeResult
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
@@ -26,11 +26,23 @@ def has_no_punctuation(value: list[str]) -> list[str]:
     return value
 
 
+def has_one_non_empty_item(value: list[str]) -> list[str]:
+    """Validate result has at least one item."""
+    if len(value) < 1:
+        raise vol.Invalid("at least one sentence is required")
+
+    for sentence in value:
+        if not sentence:
+            raise vol.Invalid(f"sentence too short: '{sentence}'")
+
+    return value
+
+
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_no_punctuation
+            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
         ),
     }
 )
@@ -49,12 +61,29 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    async def call_action(sentence: str) -> str | None:
+    async def call_action(sentence: str, result: RecognizeResult) -> str | None:
         """Call action with right context."""
+
+        # Add slot values as extra trigger data
+        details = {
+            entity_name: {
+                "name": entity_name,
+                "text": entity.text.strip(),  # remove whitespace
+                "value": entity.value.strip()
+                if isinstance(entity.value, str)
+                else entity.value,
+            }
+            for entity_name, entity in result.entities.items()
+        }
+
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
+            "details": details,
+            "slots": {  # direct access to values
+                entity_name: entity["value"] for entity_name, entity in details.items()
+            },
         }
 
         # Wait for the automation to complete

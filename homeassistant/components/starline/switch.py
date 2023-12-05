@@ -77,6 +77,8 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
 
     entity_description: StarlineSwitchEntityDescription
 
+    _attr_assumed_state = True
+
     def __init__(
         self,
         account: StarlineAccount,
@@ -107,11 +109,6 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
             if self.is_on
             else self.entity_description.icon_off
         )
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the entity."""
-        return True
 
     @property
     def is_on(self):

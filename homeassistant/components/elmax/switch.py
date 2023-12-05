@@ -68,7 +68,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
         return self.coordinator.get_actuator_state(self._device.endpoint_id).opened
 
     async def _wait_for_state_change(self) -> bool:
-        """Refresh data and wait until the state state changes."""
+        """Refresh data and wait until the state changes."""
         old_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
 
         # Wait a bit at first to let Elmax cloud assimilate the new state.

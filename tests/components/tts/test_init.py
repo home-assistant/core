@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import tts
+from homeassistant.components import ffmpeg, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -15,7 +15,6 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.components.media_source import Unresolvable
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -33,6 +32,7 @@ from .common import (
     get_media_source_url,
     mock_config_entry_setup,
     mock_setup,
+    retrieve_media,
 )
 
 from tests.common import async_mock_service, mock_restore_cache
@@ -75,7 +75,9 @@ async def test_default_entity_attributes() -> None:
 
 
 async def test_config_entry_unload(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Test we can unload config entry."""
     entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
@@ -104,7 +106,12 @@ async def test_config_entry_unload(
         )
         assert len(calls) == 1
 
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        assert (
+            await retrieve_media(
+                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+            )
+            == HTTPStatus.OK
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -1159,6 +1166,7 @@ class MockEntityEmpty(MockTTSEntity):
 )
 async def test_service_get_tts_error(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1173,8 +1181,10 @@ async def test_service_get_tts_error(
         blocking=True,
     )
     assert len(calls) == 1
-    with pytest.raises(Unresolvable):
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
 
 
 async def test_load_cache_legacy_retrieve_without_mem_cache(
@@ -1454,7 +1464,11 @@ async def test_legacy_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "test", "en_US", None, None
+        hass,
+        "test message",
+        "test",
+        "en_US",
+        cache=None,
     )
 
     task = hass.async_create_task(
@@ -1508,16 +1522,6 @@ async def test_fetching_in_async(
     class EntityWithAsyncFetching(MockTTSEntity):
         """Entity that supports audio output option."""
 
-        @property
-        def supported_options(self) -> list[str]:
-            """Return list of supported options like voice, emotions."""
-            return [tts.ATTR_AUDIO_OUTPUT]
-
-        @property
-        def default_options(self) -> dict[str, str]:
-            """Return a dict including the default options."""
-            return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
-
         async def async_get_tts_audio(
             self, message: str, language: str, options: dict[str, Any]
         ) -> tts.TtsAudioType:
@@ -1527,7 +1531,11 @@ async def test_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "tts.test", "en_US", None, None
+        hass,
+        "test message",
+        "tts.test",
+        "en_US",
+        cache=None,
     )
 
     task = hass.async_create_task(
@@ -1751,3 +1759,12 @@ async def test_ws_list_voices(
             {"voice_id": "fran_drescher", "name": "Fran Drescher"},
         ]
     }
+
+
+async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
+    """Test that ffmpeg failing during audio conversion will raise an error."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    with pytest.raises(RuntimeError):
+        # Simulate a bad WAV file
+        await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")

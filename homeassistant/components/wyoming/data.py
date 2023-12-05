@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import asyncio
 
-import async_timeout
 from wyoming.client import AsyncTcpClient
-from wyoming.info import Describe, Info
+from wyoming.info import Describe, Info, Satellite
 
 from homeassistant.const import Platform
 
@@ -29,7 +28,46 @@ class WyomingService:
             platforms.append(Platform.STT)
         if any(tts.installed for tts in info.tts):
             platforms.append(Platform.TTS)
+        if any(wake.installed for wake in info.wake):
+            platforms.append(Platform.WAKE_WORD)
         self.platforms = platforms
+
+    def has_services(self) -> bool:
+        """Return True if services are installed that Home Assistant can use."""
+        return (
+            any(asr for asr in self.info.asr if asr.installed)
+            or any(tts for tts in self.info.tts if tts.installed)
+            or any(wake for wake in self.info.wake if wake.installed)
+            or ((self.info.satellite is not None) and self.info.satellite.installed)
+        )
+
+    def get_name(self) -> str | None:
+        """Return name of first installed usable service."""
+        # ASR = automated speech recognition (speech-to-text)
+        asr_installed = [asr for asr in self.info.asr if asr.installed]
+        if asr_installed:
+            return asr_installed[0].name
+
+        # TTS = text-to-speech
+        tts_installed = [tts for tts in self.info.tts if tts.installed]
+        if tts_installed:
+            return tts_installed[0].name
+
+        # wake-word-detection
+        wake_installed = [wake for wake in self.info.wake if wake.installed]
+        if wake_installed:
+            return wake_installed[0].name
+
+        # satellite
+        satellite_installed: Satellite | None = None
+
+        if (self.info.satellite is not None) and self.info.satellite.installed:
+            satellite_installed = self.info.satellite
+
+        if satellite_installed:
+            return satellite_installed.name
+
+        return None
 
     @classmethod
     async def create(cls, host: str, port: int) -> WyomingService | None:
@@ -53,9 +91,7 @@ async def load_wyoming_info(
 
     for _ in range(retries + 1):
         try:
-            async with AsyncTcpClient(host, port) as client, async_timeout.timeout(
-                timeout
-            ):
+            async with AsyncTcpClient(host, port) as client, asyncio.timeout(timeout):
                 # Describe -> Info
                 await client.write_event(Describe().event())
                 while True:

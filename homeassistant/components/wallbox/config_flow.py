@@ -11,8 +11,8 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from . import InvalidAuth, WallboxCoordinator
 from .const import CONF_STATION, DOMAIN
+from .coordinator import InvalidAuth, WallboxCoordinator
 
 COMPONENT_DOMAIN = DOMAIN
 

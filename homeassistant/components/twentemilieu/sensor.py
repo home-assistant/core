@@ -21,18 +21,11 @@ from .const import DOMAIN
 from .entity import TwenteMilieuEntity
 
 
-@dataclass
-class TwenteMilieuSensorDescriptionMixin:
-    """Define an entity description mixin."""
+@dataclass(kw_only=True)
+class TwenteMilieuSensorDescription(SensorEntityDescription):
+    """Describe an Twente Milieu sensor."""
 
     waste_type: WasteType
-
-
-@dataclass
-class TwenteMilieuSensorDescription(
-    SensorEntityDescription, TwenteMilieuSensorDescriptionMixin
-):
-    """Describe an Ambient PWS binary sensor."""
 
 
 SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (

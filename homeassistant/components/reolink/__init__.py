@@ -8,13 +8,15 @@ from datetime import timedelta
 import logging
 from typing import Literal
 
-import async_timeout
+from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
+from reolink_aio.software_version import NewSoftwareVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -45,7 +47,9 @@ class ReolinkData:
 
     host: ReolinkHost
     device_coordinator: DataUpdateCoordinator[None]
-    firmware_coordinator: DataUpdateCoordinator[str | Literal[False]]
+    firmware_coordinator: DataUpdateCoordinator[
+        str | Literal[False] | NewSoftwareVersion
+    ]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -77,26 +81,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
-        async with async_timeout.timeout(host.api.timeout):
+        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 await host.update_states()
             except ReolinkError as err:
-                raise UpdateFailed(
-                    f"Error updating Reolink {host.api.nvr_name}"
-                ) from err
+                raise UpdateFailed(str(err)) from err
 
-        async with async_timeout.timeout(host.api.timeout):
+        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
-    async def async_check_firmware_update() -> str | Literal[False]:
+    async def async_check_firmware_update() -> (
+        str | Literal[False] | NewSoftwareVersion
+    ):
         """Check for firmware updates."""
         if not host.api.supported(None, "update"):
             return False
 
-        async with async_timeout.timeout(host.api.timeout):
+        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 return await host.api.check_new_firmware()
             except (ReolinkError, asyncio.exceptions.CancelledError) as err:
+                task = asyncio.current_task()
+                if task is not None:
+                    task.uncancel()
                 if starting:
                     _LOGGER.debug(
                         "Error checking Reolink firmware update at startup "
@@ -142,6 +149,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         firmware_coordinator=firmware_coordinator,
     )
 
+    cleanup_disconnected_cams(hass, config_entry.entry_id, host)
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(
@@ -152,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update the configuration of the host entity."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -169,3 +178,51 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+def cleanup_disconnected_cams(
+    hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
+) -> None:
+    """Clean-up disconnected camera channels."""
+    if not host.api.is_nvr:
+        return
+
+    device_reg = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
+    for device in devices:
+        device_id = [
+            dev_id[1].split("_ch")
+            for dev_id in device.identifiers
+            if dev_id[0] == DOMAIN
+        ][0]
+
+        if len(device_id) < 2:
+            # Do not consider the NVR itself
+            continue
+
+        ch = int(device_id[1])
+        ch_model = host.api.camera_model(ch)
+        remove = False
+        if ch not in host.api.channels:
+            remove = True
+            _LOGGER.debug(
+                "Removing Reolink device %s, "
+                "since no camera is connected to NVR channel %s anymore",
+                device.name,
+                ch,
+            )
+        if ch_model not in [device.model, "Unknown"]:
+            remove = True
+            _LOGGER.debug(
+                "Removing Reolink device %s, "
+                "since the camera model connected to channel %s changed from %s to %s",
+                device.name,
+                ch,
+                device.model,
+                ch_model,
+            )
+        if not remove:
+            continue
+
+        # clean device registry and associated entities
+        device_reg.async_remove_device(device.id)

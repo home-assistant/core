@@ -119,7 +119,6 @@ def _default_recorder(hass):
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
         exclude_event_types=set(),
-        exclude_attributes_by_domain={},
     )
 
 
@@ -594,7 +593,6 @@ def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) ->
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=invalid-name
 def test_saving_state_include_domains(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
@@ -955,7 +953,6 @@ async def test_defaults_set(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    # pylint: disable=unsubscriptable-object
     assert recorder_config["auto_purge"]
     assert recorder_config["auto_repack"]
     assert recorder_config["purge_keep_days"] == 10
@@ -2224,7 +2221,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             return "mysql"
 
         @classmethod
-        def dbapi(cls):
+        def import_dbapi(cls):
             ...
 
         def engine_created(*args):
@@ -2266,17 +2263,14 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     assert connect_params[0]["charset"] == "utf8mb4"
 
 
-@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    core_state: CoreState,
 ) -> None:
-    """Test that an integration's recorder platform can exclude attributes."""
-    hass.state = core_state
+    """Test that an entity can exclude attributes from being recorded."""
     state = "restoring_from_db"
-    attributes = {"test_attr": 5, "excluded": 10}
+    attributes = {"test_attr": 5, "excluded_component": 10, "excluded_integration": 20}
     mock_platform(
         hass,
         "fake_integration.recorder",
@@ -2286,10 +2280,17 @@ async def test_excluding_attributes_by_integration(
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
     await hass.async_block_till_done()
 
+    class EntityWithExcludedAttributes(MockEntity):
+        _entity_component_unrecorded_attributes = frozenset({"excluded_component"})
+        _unrecorded_attributes = frozenset({"excluded_integration"})
+
     entity_id = "test.fake_integration_recorder"
-    platform = MockEntityPlatform(hass, platform_name="fake_integration")
-    entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
-    await platform.async_add_entities([entity_platform])
+    entity_platform = MockEntityPlatform(hass, platform_name="fake_integration")
+    entity = EntityWithExcludedAttributes(
+        entity_id=entity_id,
+        extra_state_attributes=attributes,
+    )
+    await entity_platform.async_add_entities([entity])
     await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)

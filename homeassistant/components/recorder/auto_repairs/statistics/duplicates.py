@@ -37,8 +37,6 @@ def _find_duplicates(
             literal_column("1").label("is_duplicate"),
         )
         .group_by(table.metadata_id, table.start)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -195,8 +193,6 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
             literal_column("1").label("is_duplicate"),
         )
         .group_by(StatisticsMeta.statistic_id)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )

@@ -3,12 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime
 import logging
 import platform
 from typing import Any
 
-import async_timeout
 import bleak
 from bleak import BleakError
 from bleak.assigned_numbers import AdvertisementDataType
@@ -18,13 +16,14 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
 from bleak_retry_connector import restore_discoveries
 from bluetooth_adapters import DEFAULT_ADDRESS
+from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from dbus_fast import InvalidMessageError
 
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.package import is_docker_env
 
-from .base_scanner import MONOTONIC_TIME, BaseHaScanner
+from .base_scanner import BaseHaScanner
 from .const import (
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
@@ -134,12 +133,14 @@ class HaScanner(BaseHaScanner):
         """Init bluetooth discovery."""
         self.mac_address = address
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
-        super().__init__(hass, source, adapter)
+        super().__init__(source, adapter)
         self.connectable = True
         self.mode = mode
         self._start_stop_lock = asyncio.Lock()
         self._new_info_callback = new_info_callback
         self.scanning = False
+        self.hass = hass
+        self._last_detection = 0.0
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -154,11 +155,13 @@ class HaScanner(BaseHaScanner):
         return self.scanner.discovered_devices_and_advertisement_data
 
     @hass_callback
-    def async_setup(self) -> None:
+    def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
+        super().async_setup()
         self.scanner = create_bleak_scanner(
             self._async_detection_callback, self.mode, self.adapter
         )
+        return self._unsetup
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
@@ -220,7 +223,7 @@ class HaScanner(BaseHaScanner):
                 START_ATTEMPTS,
             )
             try:
-                async with async_timeout.timeout(START_TIMEOUT):
+                async with asyncio.timeout(START_TIMEOUT):
                     await self.scanner.start()  # type: ignore[no-untyped-call]
             except InvalidMessageError as ex:
                 _LOGGER.debug(
@@ -315,7 +318,7 @@ class HaScanner(BaseHaScanner):
         await restore_discoveries(self.scanner, self.adapter)
 
     @hass_callback
-    def _async_scanner_watchdog(self, now: datetime) -> None:
+    def _async_scanner_watchdog(self) -> None:
         """Check if the scanner is running."""
         if not self._async_watchdog_triggered():
             return
@@ -330,6 +333,9 @@ class HaScanner(BaseHaScanner):
             self.name,
             SCANNER_WATCHDOG_TIMEOUT,
         )
+        # Immediately mark the scanner as not scanning
+        # since the restart task will have to wait for the lock
+        self.scanning = False
         self.hass.async_create_task(self._async_restart_scanner())
 
     async def _async_restart_scanner(self) -> None:
@@ -350,11 +356,10 @@ class HaScanner(BaseHaScanner):
             try:
                 await self._async_start()
             except ScannerStartError as ex:
-                _LOGGER.error(
+                _LOGGER.exception(
                     "%s: Failed to restart Bluetooth scanner: %s",
                     self.name,
                     ex,
-                    exc_info=True,
                 )
 
     async def _async_reset_adapter(self) -> None:

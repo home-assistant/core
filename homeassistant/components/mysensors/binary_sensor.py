@@ -95,7 +95,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity):
+class MySensorsBinarySensor(mysensors.device.MySensorsChildEntity, BinarySensorEntity):
     """Representation of a MySensors binary sensor child node."""
 
     entity_description: MySensorsBinarySensorDescription

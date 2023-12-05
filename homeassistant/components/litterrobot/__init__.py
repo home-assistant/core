@@ -6,6 +6,7 @@ from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Ro
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .hub import LitterRobotHub
@@ -58,3 +59,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        for robot in hub.account.robots
+        if robot.serial == identifier[1]
+    )

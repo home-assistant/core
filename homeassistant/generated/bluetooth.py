@@ -9,6 +9,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
+        "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e1c08-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba",
     },
     {
         "connectable": False,
@@ -198,6 +214,15 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 76,
     },
     {
+        "domain": "idasen_desk",
+        "service_uuid": "99fa0001-338a-1024-8a49-009c0215f78a",
+    },
+    {
+        "domain": "improv_ble",
+        "service_data_uuid": "00004677-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "00467768-6228-2272-4663-277478268000",
+    },
+    {
         "connectable": False,
         "domain": "inkbird",
         "local_name": "sps",
@@ -283,6 +308,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "led_ble",
         "local_name": "AP-*",
+    },
+    {
+        "domain": "medcom_ble",
+        "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
     },
     {
         "domain": "melnor",
@@ -508,6 +537,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "xiaomi_ble",
         "service_data_uuid": "0000181b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181d-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,

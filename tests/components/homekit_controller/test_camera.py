@@ -16,9 +16,10 @@ def create_camera(accessory):
     accessory.add_service(ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT)
 
 
-async def test_migrate_unique_ids(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test migrating entity unique ids."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     camera = entity_registry.async_get_or_create(
         "camera",

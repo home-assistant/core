@@ -25,10 +25,7 @@ from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture
@@ -147,6 +144,7 @@ async def test_if_notification_notification_fires(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 113,
             "args": {
                 "type": 6,
@@ -160,15 +158,13 @@ async def test_if_notification_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.notification.notification - device - zwave_js_notification - {}".format(
-        CommandClass.NOTIFICATION
+    assert (
+        calls[0].data["some"]
+        == f"event.notification.notification - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.notification.notification2 - device - zwave_js_notification - {}".format(
-        CommandClass.NOTIFICATION
+    assert (
+        calls[1].data["some"]
+        == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
 
 
@@ -276,6 +272,7 @@ async def test_if_entry_control_notification_fires(
             "source": "node",
             "event": "notification",
             "nodeId": node.node_id,
+            "endpointIndex": 0,
             "ccId": 111,
             "args": {
                 "eventType": 5,
@@ -289,15 +286,13 @@ async def test_if_entry_control_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.notification.notification - device - zwave_js_notification - {}".format(
-        CommandClass.ENTRY_CONTROL
+    assert (
+        calls[0].data["some"]
+        == f"event.notification.notification - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.notification.notification2 - device - zwave_js_notification - {}".format(
-        CommandClass.ENTRY_CONTROL
+    assert (
+        calls[1].data["some"]
+        == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
 
 
@@ -345,7 +340,7 @@ async def test_get_node_status_triggers(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device.id, ent_reg, dev_reg
     )
-    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    entity = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -354,7 +349,7 @@ async def test_get_node_status_triggers(
         "domain": DOMAIN,
         "type": "state.node_status",
         "device_id": device.id,
-        "entity_id": entity_id,
+        "entity_id": entity.id,
         "metadata": {"secondary": True},
     }
     triggers = await async_get_device_automations(
@@ -371,6 +366,85 @@ async def test_if_node_status_change_fires(
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
+    ent_reg = async_get_ent_reg(hass)
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, ent_reg, dev_reg
+    )
+    entity = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                # from
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "entity_id": entity.id,
+                        "type": "state.node_status",
+                        "from": "alive",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "state.node_status - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.from_state.state }}"
+                            )
+                        },
+                    },
+                },
+                # no from or to
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "entity_id": entity.id,
+                        "type": "state.node_status",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "state.node_status2 - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.from_state.state }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Test status change
+    event = Event(
+        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].data["some"] == "state.node_status - device - alive"
+    assert calls[1].data["some"] == "state.node_status2 - device - alive"
+
+
+async def test_if_node_status_change_fires_legacy(
+    hass: HomeAssistant, client, lock_schlage_be469, integration, calls
+) -> None:
+    """Test for node_status trigger firing."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     ent_reg = async_get_ent_reg(hass)
@@ -627,15 +701,13 @@ async def test_if_basic_value_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.value_notification.basic - device - zwave_js_value_notification - {}".format(
-        CommandClass.BASIC
+    assert (
+        calls[0].data["some"]
+        == f"event.value_notification.basic - device - zwave_js_value_notification - {CommandClass.BASIC}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.value_notification.basic2 - device - zwave_js_value_notification - {}".format(
-        CommandClass.BASIC
+    assert (
+        calls[1].data["some"]
+        == f"event.value_notification.basic2 - device - zwave_js_value_notification - {CommandClass.BASIC}"
     )
 
 
@@ -810,15 +882,13 @@ async def test_if_central_scene_value_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.value_notification.central_scene - device - zwave_js_value_notification - {}".format(
-        CommandClass.CENTRAL_SCENE
+    assert (
+        calls[0].data["some"]
+        == f"event.value_notification.central_scene - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.value_notification.central_scene2 - device - zwave_js_value_notification - {}".format(
-        CommandClass.CENTRAL_SCENE
+    assert (
+        calls[1].data["some"]
+        == f"event.value_notification.central_scene2 - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
     )
 
 
@@ -986,15 +1056,13 @@ async def test_if_scene_activation_value_notification_fires(
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data[
-        "some"
-    ] == "event.value_notification.scene_activation - device - zwave_js_value_notification - {}".format(
-        CommandClass.SCENE_ACTIVATION
+    assert (
+        calls[0].data["some"]
+        == f"event.value_notification.scene_activation - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
     )
-    assert calls[1].data[
-        "some"
-    ] == "event.value_notification.scene_activation2 - device - zwave_js_value_notification - {}".format(
-        CommandClass.SCENE_ACTIVATION
+    assert (
+        calls[1].data["some"]
+        == f"event.value_notification.scene_activation2 - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
     )
 
 

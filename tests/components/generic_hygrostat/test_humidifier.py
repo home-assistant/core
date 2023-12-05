@@ -31,6 +31,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -167,6 +168,33 @@ async def test_humidifier_switch(
 
     assert hass.states.get(humidifier_switch).state == STATE_ON
     assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
+
+
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+) -> None:
+    """Test setting a unique ID."""
+    unique_id = "some_unique_id"
+    _setup_sensor(hass, 18)
+    await _setup_switch(hass, True)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "unique_id": unique_id,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(ENTITY)
+    assert entry
+    assert entry.unique_id == unique_id
 
 
 def _setup_sensor(hass, humidity):
@@ -869,9 +897,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(
     hass: HomeAssistant, setup_comp_4
 ) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
@@ -905,9 +931,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(
     hass: HomeAssistant, setup_comp_4
 ) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
@@ -1031,9 +1055,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     hass: HomeAssistant, setup_comp_6
 ) -> None:
     """Test if humidity change turn humidifier on after min cycle."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
@@ -1053,9 +1075,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     hass: HomeAssistant, setup_comp_6
 ) -> None:
     """Test if humidity change turn humidifier off after min cycle."""
-    fake_changed = datetime.datetime(
-        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)

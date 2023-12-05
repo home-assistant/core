@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Unable to discover Tempest WeatherFlow devices. Click submit to try again.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tempest WeatherFlow device."
+        }
+      }
+    },
+    "error": {
+      "address_in_use": "Unable to open local UDP port 50222.",
+      "cannot_connect": "UDP discovery error."
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_density": {
+        "name": "Air density"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "lightning_average_distance": {
+        "name": "Lightning average distance"
+      },
+      "lightning_count": {
+        "name": "Lightning count"
+      },
+      "precipitation_type": {
+        "name": "Precipitation type",
+        "state": {
+          "none": "None",
+          "rain": "Rain",
+          "hail": "Hail",
+          "rain_hail": "Rain and hail"
+        }
+      },
+      "station_pressure": {
+        "name": "Air pressure"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "vapor_pressure": {
+        "name": "Vapor pressure"
+      },
+      "wet_bulb_temperature": {
+        "name": "Wet bulb temperature"
+      },
+      "wind_speed_average": {
+        "name": "Wind speed average"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_average": {
+        "name": "Wind direction average"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_lull": {
+        "name": "Wind lull"
+      }
+    }
+  }
+}

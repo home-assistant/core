@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -57,8 +58,15 @@ class RenaultHub:
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-        device_registry = dr.async_get(self._hass)
         if vehicles.vehicleLinks:
+            if any(
+                vehicle_link.vehicleDetails is None
+                for vehicle_link in vehicles.vehicleLinks
+            ):
+                raise ConfigEntryNotReady(
+                    "Failed to retrieve vehicle details from Renault servers"
+                )
+            device_registry = dr.async_get(self._hass)
             await asyncio.gather(
                 *(
                     self.async_initialise_vehicle(

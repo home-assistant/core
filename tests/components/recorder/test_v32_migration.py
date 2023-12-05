@@ -1,5 +1,4 @@
 """The tests for recorder platform migrating data from v30."""
-# pylint: disable=invalid-name
 import asyncio
 from datetime import timedelta
 import importlib
@@ -99,13 +98,9 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
         core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(
-        core, "EventData", old_db_schema.EventData
-    ), patch.object(
+    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
         core, "States", old_db_schema.States
-    ), patch.object(
-        core, "Events", old_db_schema.Events
-    ), patch(
+    ), patch.object(core, "Events", old_db_schema.Events), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
@@ -270,13 +265,9 @@ async def test_migrate_can_resume_entity_id_post_migration(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
         core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(
-        core, "EventData", old_db_schema.EventData
-    ), patch.object(
+    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
         core, "States", old_db_schema.States
-    ), patch.object(
-        core, "Events", old_db_schema.Events
-    ), patch(
+    ), patch.object(core, "Events", old_db_schema.Events), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_events_context_ids",

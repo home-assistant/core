@@ -49,6 +49,18 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION,
+        name="Duration",
+        icon="mdi:timer",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY,
+        name="Sensitivity",
+        icon="mdi:knob",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 

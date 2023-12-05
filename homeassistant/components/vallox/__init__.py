@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -135,7 +135,7 @@ class ValloxState:
     @property
     def sw_version(self) -> str:
         """Return the SW version."""
-        return cast(str, _api_get_sw_version(self.metric_cache))
+        return _api_get_sw_version(self.metric_cache)
 
     @property
     def uuid(self) -> UUID | None:

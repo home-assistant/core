@@ -14,8 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,18 +24,11 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONF_LICENSE_PLATE, DOMAIN
 
 
-@dataclass
-class RDWSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class RDWSensorEntityDescription(SensorEntityDescription):
+    """Describes RDW sensor entity."""
 
     value_fn: Callable[[Vehicle], date | str | float | None]
-
-
-@dataclass
-class RDWSensorEntityDescription(
-    SensorEntityDescription, RDWSensorEntityDescriptionMixin
-):
-    """Describes RDW sensor entity."""
 
 
 SENSORS: tuple[RDWSensorEntityDescription, ...] = (
