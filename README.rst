@@ -1,5 +1,3 @@
-Repository for the Home Asssisant Core of GM4
-
 Home Assistant SMHI Integration Project - Group Milestone 4
 =======================================
 
@@ -8,7 +6,7 @@ Overview
 
 This project integrates Swedish Meteorological and Hydrological Institute (SMHI) weather data into Home Assistant, providing users with comprehensive weather information across Sweden.
 
-Group Memembers
+Group Members
 --------
 | faeazehmhmdi - Faezeh Mohammadi
 | FN890 - Filip Nordquist
