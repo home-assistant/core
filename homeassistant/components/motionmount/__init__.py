@@ -22,8 +22,6 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Vogel's MotionMount from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     host = entry.data[CONF_HOST]
 
     # Create API instance
@@ -52,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Store an API object for your platforms to access
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
