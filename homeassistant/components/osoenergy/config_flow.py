@@ -59,7 +59,7 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def get_user_email(self, subscription_key: str) -> str | None:
-        """Return true if credentials is valid."""
+        """Return the user email for the provided subscription key."""
         try:
             websession = aiohttp_client.async_get_clientsession(self.hass)
             client = OSOEnergy(subscription_key, websession)

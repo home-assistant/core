@@ -25,55 +25,5 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "entity": {
-    "water_heater": {
-      "saga_heater": {
-        "state_attributes": {
-          "heater_state": {
-            "name": "Heater state",
-            "state": {
-              "on": "[%key:common::state::on%]",
-              "off": "[%key:common::state::off%]"
-            }
-          },
-          "heater_mode": {
-            "name": "Heater mode",
-            "state": {
-              "auto": "Auto",
-              "manual": "Manual",
-              "off": "Off",
-              "legionella": "Legionella",
-              "power_save": "Power Save",
-              "extra_energy": "Extra Energy",
-              "voltage": "Voltage",
-              "ffr": "FFR"
-            }
-          },
-          "optimization_mode": {
-            "name": "Optimization mode",
-            "state": {
-              "off": "Off",
-              "oso": "OSO",
-              "grid_company": "Grid Company",
-              "smart_company": "Smart Company",
-              "advanced": "Advanced"
-            }
-          },
-          "profile": {
-            "name": "Profile"
-          },
-          "v40_min": {
-            "name": "Mixed water at 40°C"
-          },
-          "v40_level_min": {
-            "name": "Minimum level of mixed water at 40°C"
-          },
-          "v40_level_max": {
-            "name": "Maximum level of mixed Water at 40°C"
-          }
-        }
-      }
-    }
   }
 }

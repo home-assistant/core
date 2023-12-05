@@ -1,8 +1,13 @@
 """Support for the OSO Energy devices and services."""
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
 from apyosoenergyapi import OSOEnergy
+from apyosoenergyapi.helper.const import (
+    OSOEnergyBinarySensorData,
+    OSOEnergySensorData,
+    OSOEnergyWaterHeaterData,
+)
 from apyosoenergyapi.helper.osoenergy_exceptions import OSOEnergyReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +18,10 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+_T = TypeVar(
+    "_T", OSOEnergyBinarySensorData, OSOEnergySensorData, OSOEnergyWaterHeaterData
+)
 
 PLATFORMS = [
     Platform.WATER_HEATER,
@@ -60,13 +69,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OSOEnergyEntity(Entity):
+class OSOEnergyEntity(Entity, Generic[_T]):
     """Initiate OSO Energy Base Class."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, osoenergy, osoenergy_device) -> None:
+    def __init__(self, osoenergy: OSOEnergy, osoenergy_device: _T) -> None:
         """Initialize the instance."""
         self.osoenergy = osoenergy
         self.device = osoenergy_device
-        self._attr_unique_id = osoenergy_device["device_id"]
+        self._attr_unique_id = osoenergy_device.device_id

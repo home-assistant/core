@@ -1,57 +1,37 @@
 """Support for OSO Energy water heaters."""
-from collections.abc import Mapping
 from typing import Any
 
+from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
+
 from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_HIGH_DEMAND,
+    STATE_OFF,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 
 from . import OSOEnergyEntity
 from .const import DOMAIN
 
-EXTRA_HEATER_ATTR: dict[str, dict[str, Any]] = {
-    "heater_state": {
-        "ha_name": "heater_state",
-        "value_mapping": {
-            "on": STATE_ON,
-            "off": STATE_OFF,
-        },
+CURRENT_OPERATION_MAP: dict[str, Any] = {
+    "default": {
+        "off": STATE_OFF,
+        "powersave": STATE_OFF,
+        "extraenergy": STATE_HIGH_DEMAND,
     },
-    "heater_mode": {
-        "ha_name": "heater_mode",
-        "value_mapping": {
-            "auto": "auto",
-            "manual": "manual",
-            "off": STATE_OFF,
-            "legionella": "legionella",
-            "powersave": "power_save",
-            "extraenergy": "extra_energy",
-            "voltage": "voltage",
-            "ffr": "ffr",
-        },
+    "oso": {
+        "auto": STATE_ECO,
+        "off": STATE_OFF,
+        "powersave": STATE_OFF,
+        "extraenergy": STATE_HIGH_DEMAND,
     },
-    "optimization_mode": {
-        "ha_name": "optimization_mode",
-        "value_mapping": {
-            "off": STATE_OFF,
-            "oso": "oso",
-            "gridcompany": "grid_company",
-            "smartcompany": "smart_company",
-            "advanced": "advanced",
-        },
-    },
-    "profile": {"ha_name": "profile", "is_profile": True},
-    "volume": {"ha_name": "volume"},
-    "v40_min": {"ha_name": "v40_min"},
-    "v40_level_min": {"ha_name": "v40_level_min"},
-    "v40_level_max": {"ha_name": "v40_level_max"},
 }
 HEATER_MIN_TEMP = 10
 HEATER_MAX_TEMP = 80
@@ -71,107 +51,75 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-def _get_local_hour(utc_hour: int):
-    """Get the local hour."""
-    now = dt_util.utcnow()
-    now_local = dt_util.now()
-    utc_time = now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
-    local_hour = dt_util.as_local(utc_time)
-    local_hour = local_hour.replace(
-        year=now_local.year, month=now_local.month, day=now_local.day
-    )
-    return local_hour
-
-
-def _convert_profile_to_local(values):
-    """Convert UTC profile to local."""
-    profile = [None] * 24
-    for hour in range(24):
-        local_hour = _get_local_hour(hour)
-        local_hour_string = local_hour.strftime("%Y-%m-%dT%H:%M:%S%z")
-        profile[local_hour.hour] = {local_hour_string: values[hour]}
-
-    return profile
-
-
-class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
+class OSOEnergyWaterHeater(
+    OSOEnergyEntity[OSOEnergyWaterHeaterData], WaterHeaterEntity
+):
     """OSO Energy Water Heater Device."""
 
     _attr_name = None
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_translation_key = "saga_heater"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
+            identifiers={(DOMAIN, self.device.device_id)},
             manufacturer=MANUFACTURER,
-            model=self.device["device_type"],
-            name=self.device["device_name"],
+            model=self.device.device_type,
+            name=self.device.device_name,
         )
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.device.get("attributes", {}).get("available", False)
+        return self.device.available
 
     @property
     def current_operation(self) -> str:
         """Return current operation."""
-        return self.device["status"]["current_operation"]
+        status = self.device.current_operation
+        if status == "off":
+            return STATE_OFF
+
+        optimization_mode = self.device.optimization_mode.lower()
+        heater_mode = self.device.heater_mode.lower()
+        if optimization_mode in CURRENT_OPERATION_MAP:
+            return CURRENT_OPERATION_MAP[optimization_mode].get(
+                heater_mode, STATE_ELECTRIC
+            )
+
+        return CURRENT_OPERATION_MAP["default"].get(heater_mode, STATE_ELECTRIC)
 
     @property
     def current_temperature(self) -> float:
         """Return the current temperature of the heater."""
-        return self.device.get("attributes", {}).get("current_temperature", 0)
+        return self.device.current_temperature
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self.device.get("attributes", {}).get("target_temperature", 0)
+        return self.device.target_temperature
 
     @property
     def target_temperature_high(self) -> float:
         """Return the temperature we try to reach."""
-        return self.device.get("attributes", {}).get("target_temperature_high", 0)
+        return self.device.target_temperature_high
 
     @property
     def target_temperature_low(self) -> float:
         """Return the temperature we try to reach."""
-        return self.device.get("attributes", {}).get("target_temperature_low", 0)
+        return self.device.target_temperature_low
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self.device.get("attributes", {}).get("min_temperature", HEATER_MIN_TEMP)
+        return self.device.min_temperature
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.device.get("attributes", {}).get("max_temperature", HEATER_MAX_TEMP)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the state attributes."""
-        attr: dict[str, Any] = {}
-
-        for attribute, attribute_config in EXTRA_HEATER_ATTR.items():
-            value = self.device.get("attributes", {}).get(attribute)
-            final = value
-
-            value_mappings = attribute_config.get("value_mapping")
-            is_profile = attribute_config.get("is_profile")
-            if is_profile:
-                final = _convert_profile_to_local(value)
-            elif value_mappings:
-                value_key = f"{value}".lower()
-                final = value_mappings.get(value_key, final)
-
-            attr.update({str(attribute_config.get("ha_name")): final})
-
-        return attr
+        return self.device.max_temperature
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
