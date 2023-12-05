@@ -10,6 +10,8 @@ class QuotableCard extends HTMLElement {
     this.quotes = [];
     this.quoteIndex = 0;
     this._attributes = {};
+    this._bgColor = "";
+    this._textColor = "";
   }
 
   set hass(hass) {
@@ -149,8 +151,8 @@ class QuotableCard extends HTMLElement {
     this.renderCalled = true;
 
     //Fetch colors from quotable states
-    const bgColor = this._attributes.styles.bg_color;
-    const textColor = this._attributes.styles.text_color;
+    this._bgColor = this._attributes.styles.bg_color;
+    this._textColor = this._attributes.styles.text_color;
 
     //Update background, button and text colors
     this.querySelector(".overlay").style.color = textColor;
@@ -199,6 +201,14 @@ class QuotableCard extends HTMLElement {
 
     quoteElement.textContent = quote;
     authorElement.textContent = `- ${author}`;
+
+    //Fetch colors from quotable states
+    this._bgColor = this._attributes.styles.bg_color;
+    this._textColor = this._attributes.styles.text_color;
+
+    this.querySelector(".overlay").style.color = this._textColor;
+    this.querySelector(".buttons").style.color = this._textColor;
+    this.querySelector(".background-div").style.background = this._bgColor;
   }
 }
 customElements.define("quotable-card", QuotableCard);
