@@ -15,19 +15,29 @@ if [ ! -f "$SETTINGS_FILE" ]; then
 fi
 
 mkdir -p config
+echo "### Before Virtual Env"
+echo "######## Sleeping with 10 seconds time out ..." && sleep 10
+
 
 if [ ! -n "$DEVCONTAINER" ] && [ ! -n "$VIRTUAL_ENV" ];then
+  echo "### Virtual Env"
   python3 -m venv venv
   source venv/bin/activate
 fi
+echo "######## Sleeping AFTER 10 seconds time out ..." && sleep 10
 
 script/bootstrap
 
+# git config --global --add safe.directory /workspaces/core
 pre-commit install
 python3 -m pip install -e . --config-settings editable_mode=compat --constraint homeassistant/package_constraints.txt
 python3 -m script.translations develop --all
 
+echo "######## SLEEPING BEFORE HASS ..." && sleep 10
 hass --script ensure_config -c config
+
+echo "######## SLEEPING AFTER HASS ..." && sleep 10
+
 
 if ! grep -R "logger" config/configuration.yaml >> /dev/null;then
 echo "
@@ -35,5 +45,10 @@ logger:
   default: info
   logs:
     homeassistant.components.cloud: debug
+    homeassistant.components.shelly: debug
+    homeassistant.components.shelly_button_manager: debug
 " >> config/configuration.yaml
 fi
+
+echo "FINISHED!!!!"
+echo "######## SLEEPING FINISHED ..." && sleep 10

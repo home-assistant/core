@@ -6802,6 +6802,12 @@
       "integration_type": "helper",
       "config_flow": false
     },
+    "shelly_button_manager": {
+      "name": "Shelly Button Manager",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "switch_as_x": {
       "integration_type": "helper",
       "config_flow": true,

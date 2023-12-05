@@ -10,6 +10,7 @@ FLOWS = {
         "integration",
         "min_max",
         "random",
+        "shelly_button_manager",
         "switch_as_x",
         "template",
         "threshold",

@@ -48,6 +48,7 @@ RUN pip3 install -r requirements.txt
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
 RUN pip3 install -r requirements_test.txt
 RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
+RUN git config --global --add safe.directory /workspaces/core
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

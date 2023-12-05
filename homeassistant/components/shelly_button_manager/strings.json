@@ -1,0 +1,26 @@
+{
+  "services": {
+    "change_buttons_state": {
+      "name": "Change Buttons State",
+      "description": "Change Shelly Buttons State (*please choose only devices - not entities*)",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Shelly devices to make changes."
+        },
+        "set_state": {
+          "name": "Target State",
+          "description": " Set the new state of the switch:\t\t \r\n\n *Toggle switch* - Act as a flip switch with one state for ON and one state for OFF \r\n\n *Edge switch* - Changes state on every change of the switch state \r\n\n *Momentary switch* - Every push, toggles the state ON -> OFF or OFF -> ON \r\n\n *Detached switch* - Input is separated/not changing state of the output/relay\r\n\n."
+        },
+        "all_devices": {
+          "name": "All Devices",
+          "description": "This setting overrides the selected targets and changes the state for all Shelly device buttons."
+        }
+      }
+    },
+    "reload": {
+      "name": "Reload",
+      "description": "Reload the Component by loading again all Shelly devices."
+    }
+  }
+}

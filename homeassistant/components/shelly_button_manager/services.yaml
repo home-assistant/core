@@ -1,0 +1,24 @@
+reload:
+
+change_buttons_state:
+  target:
+    device:
+      integration: shelly
+  fields:
+    set_state:
+      required: true
+      example: "Toggle"
+      default: "Toggle"
+      selector:
+        select:
+          options:
+            - "Toggle"
+            - "Edge"
+            - "Momentary"
+            - "Detached"
+    all_devices:
+      required: true
+      example: "false"
+      default: false
+      selector:
+        boolean:
