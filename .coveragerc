@@ -1416,6 +1416,8 @@ omit =
     homeassistant/components/ukraine_alarm/__init__.py
     homeassistant/components/ukraine_alarm/binary_sensor.py
     homeassistant/components/unifiled/*
+    homeassistant/components/unifi_direct/__init__.py
+    homeassistant/components/unifi_direct/device_tracker.py
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/light.py
     homeassistant/components/upc_connect/*
