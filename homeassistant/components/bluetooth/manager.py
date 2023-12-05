@@ -62,9 +62,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
         super().__init__(bluetooth_adapters, slot_manager)
+        self._async_logging_changed()
 
     @hass_callback
-    def _async_logging_changed(self, event: Event) -> None:
+    def _async_logging_changed(self, event: Event | None = None) -> None:
         """Handle logging change."""
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
