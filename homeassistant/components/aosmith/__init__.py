@@ -1,6 +1,8 @@
 """The A. O. Smith integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from py_aosmith import AOSmithAPIClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,9 +11,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
-from .coordinator import AOSmithCoordinator, AOSmithData
+from .coordinator import AOSmithCoordinator
 
 PLATFORMS: list[Platform] = [Platform.WATER_HEATER]
+
+
+@dataclass
+class AOSmithData:
+    """Data for the A. O. Smith integration."""
+
+    coordinator: AOSmithCoordinator
+    client: AOSmithAPIClient
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

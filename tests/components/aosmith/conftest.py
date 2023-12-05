@@ -6,10 +6,16 @@ from py_aosmith import AOSmithAPIClient
 import pytest
 
 from homeassistant.components.aosmith.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, load_json_array_fixture
+
+FIXTURE_USER_INPUT = {
+    CONF_EMAIL: "testemail@example.com",
+    CONF_PASSWORD: "test-password",
+}
 
 
 @pytest.fixture
@@ -17,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={"email": "email", "password": "password"},
+        data=FIXTURE_USER_INPUT,
         unique_id="unique_id",
     )
 

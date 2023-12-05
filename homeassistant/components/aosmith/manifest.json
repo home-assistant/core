@@ -3,12 +3,8 @@
   "name": "A. O. Smith",
   "codeowners": ["@bdr99"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/aosmith",
-  "homekit": {},
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["py-aosmith==1.0.0"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["py-aosmith==1.0.0"]
 }

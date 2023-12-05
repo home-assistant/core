@@ -80,9 +80,9 @@ async def test_update(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert mock_client.get_devices.call_count == 2
+    assert mock_client.get_devices.call_count == 1
 
     async_fire_time_changed(hass, dt_util.utcnow() + time_to_wait)
     await hass.async_block_till_done()
 
-    assert mock_client.get_devices.call_count == 2 + expected_call_count
+    assert mock_client.get_devices.call_count == 1 + expected_call_count

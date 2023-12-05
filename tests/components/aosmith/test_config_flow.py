@@ -6,17 +6,14 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.aosmith.const import DOMAIN
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+from tests.components.aosmith.conftest import FIXTURE_USER_INPUT
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
-FIXTURE_USER_INPUT = {
-    "email": "testemail@example.com",
-    "password": "test-password",
-}
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -86,7 +83,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=FIXTURE_USER_INPUT["email"],
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
         data=FIXTURE_USER_INPUT,
     )
     mock_config.add_to_hass(hass)

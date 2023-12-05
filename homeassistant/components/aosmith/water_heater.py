@@ -15,6 +15,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AOSmithData
 from .const import (
     AOSMITH_MODE_ELECTRIC,
     AOSMITH_MODE_HEAT_PUMP,
@@ -22,7 +23,7 @@ from .const import (
     AOSMITH_MODE_VACATION,
     DOMAIN,
 )
-from .coordinator import AOSmithCoordinator, AOSmithData
+from .coordinator import AOSmithCoordinator
 from .entity import AOSmithEntity
 
 MODE_HA_TO_AOSMITH = {
@@ -55,11 +56,8 @@ async def async_setup_entry(
 
     entities = []
 
-    devices = await data.client.get_devices()
-    for device in devices:
-        entities.append(
-            AOSmithWaterHeaterEntity(data.coordinator, device.get("junctionId"))
-        )
+    for junction_id in data.coordinator.data:
+        entities.append(AOSmithWaterHeaterEntity(data.coordinator, junction_id))
 
     async_add_entities(entities)
 
@@ -83,12 +81,10 @@ class AOSmithWaterHeaterEntity(AOSmithEntity, WaterHeaterEntity):
         for mode_dict in self.device_data.get("modes", []):
             mode_name = mode_dict.get("mode")
             ha_mode = MODE_AOSMITH_TO_HA.get(mode_name)
-            if ha_mode is not None:
-                op_modes.append(ha_mode)
 
-        # Filter out STATE_OFF since it is handled by away mode
-        if STATE_OFF in op_modes:
-            op_modes.remove(STATE_OFF)
+            # Filtering out STATE_OFF since it is handled by away mode
+            if ha_mode is not None and ha_mode != STATE_OFF:
+                op_modes.append(ha_mode)
 
         return op_modes
 

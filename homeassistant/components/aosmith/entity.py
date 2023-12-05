@@ -32,14 +32,7 @@ class AOSmithEntity(CoordinatorEntity[AOSmithCoordinator]):
     @property
     def device(self):
         """Shortcut to get the device status from the coordinator data."""
-        devices = self.coordinator.data
-        device = next(
-            filter(
-                lambda device: device.get("junctionId") == self.junction_id, devices
-            ),
-            None,
-        )
-        return device
+        return self.coordinator.data.get(self.junction_id)
 
     @property
     def device_data(self):
@@ -55,4 +48,4 @@ class AOSmithEntity(CoordinatorEntity[AOSmithCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.device_data.get("isOnline") is True
+        return super().available and self.device_data.get("isOnline") is True

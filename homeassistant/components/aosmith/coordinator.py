@@ -1,8 +1,8 @@
 """The data update coordinator for the A. O. Smith integration."""
 
 from asyncio import timeout
-from dataclasses import dataclass
 import logging
+from typing import Any
 
 from py_aosmith import (
     AOSmithAPIClient,
@@ -19,7 +19,7 @@ from .const import DOMAIN, FAST_INTERVAL, REGULAR_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class AOSmithCoordinator(DataUpdateCoordinator):
+class AOSmithCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Custom data update coordinator for A. O. Smith integration."""
 
     def __init__(self, hass: HomeAssistant, client: AOSmithAPIClient) -> None:
@@ -46,16 +46,8 @@ class AOSmithCoordinator(DataUpdateCoordinator):
                 else:
                     self.update_interval = REGULAR_INTERVAL
 
-                return devices
+                return {device.get("junctionId"): device for device in devices}
         except AOSmithInvalidCredentialsException as err:
             raise ConfigEntryAuthFailed from err
         except AOSmithUnknownException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-
-@dataclass
-class AOSmithData:
-    """Data for the A. O. Smith integration."""
-
-    coordinator: AOSmithCoordinator
-    client: AOSmithAPIClient
