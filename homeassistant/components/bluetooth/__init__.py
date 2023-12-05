@@ -21,7 +21,12 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
-from habluetooth import HaBluetoothConnector
+from habluetooth import (
+    BluetoothScanningMode,
+    HaBluetoothConnector,
+    HaScanner,
+    ScannerStartError,
+)
 from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
 from homeassistant.components import usb
@@ -76,10 +81,9 @@ from .const import (
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )
-from .manager import BluetoothManager
+from .manager import MONOTONIC_TIME, BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
-from .scanner import MONOTONIC_TIME, HaScanner, ScannerStartError
+from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
 
 if TYPE_CHECKING:
@@ -281,7 +285,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     new_info_callback = async_get_advertisement_callback(hass)
     manager: BluetoothManager = hass.data[DATA_MANAGER]
-    scanner = HaScanner(hass, mode, adapter, address, new_info_callback)
+    scanner = HaScanner(mode, adapter, address, new_info_callback)
     try:
         scanner.async_setup()
     except RuntimeError as err:
