@@ -12,6 +12,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import TessieStatus
+
 TESSIE_SYNC_INTERVAL = 15
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +56,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
                 raise ConfigEntryAuthFailed from e
             raise e
 
-        if vehicle["state"] == "online":
+        if vehicle["state"] == TessieStatus.ONLINE:
             return vehicle
 
         # Use existing data but update state
