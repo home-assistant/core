@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 if TYPE_CHECKING:
-    from .manager import BluetoothManager
+    from .manager import HomeAssistantBluetoothManager
 
 
-MANAGER: BluetoothManager | None = None
+MANAGER: HomeAssistantBluetoothManager | None = None
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")

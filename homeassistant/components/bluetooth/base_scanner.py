@@ -16,10 +16,10 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 
-from .const import DATA_MANAGER
+from . import models
 
 if TYPE_CHECKING:
-    from .manager import HomeAssistantBluetoothManager
+    pass
 
 
 class HomeAssistantRemoteScanner(BaseHaRemoteScanner):
@@ -46,7 +46,9 @@ class HomeAssistantRemoteScanner(BaseHaRemoteScanner):
     ) -> None:
         """Initialize the scanner."""
         self.hass = hass
-        manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
+        manager = models.MANAGER
+        if TYPE_CHECKING:
+            assert manager is not None
         self._storage = manager.storage
         self._cancel_stop: CALLBACK_TYPE | None = None
         super().__init__(scanner_id, name, new_info_callback, connector, connectable)
