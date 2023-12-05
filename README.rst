@@ -60,12 +60,23 @@ Usage
 Accessing SMHI Integration Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. **Edit Dashboard**:
+1. **Add the SMHI integration**
+
+   * Navigate to ``Settings``.
+   * Choose ``Add integration``.
+   * Search for smhi and add it.
+
+2. **Edit Dashboard**:
 
    * Navigate to your Home Assistant dashboard.
    * Click on ``Edit Dashboard``.
 
-2. **Add Entities Card**:
+3. **Show perticipation amount**:
+
+   * Click ``Edit`` on the smhi card.
+   * Select ``Secondary info attribute`` and add ``Perticipation`` then save.
+
+4. **Add Entities Card**:
 
    * Choose ``Add Card`` and select the ``Entities Card``.
    * Add the following entities:
@@ -77,7 +88,7 @@ Accessing SMHI Integration Features
 
    These entities control what information is displayed on the map.
 
-3. **Add Picture Card for Radar Map**:
+5. **Add Picture Card for Radar Map**:
 
    * Add a ``Picture Card`` to your dashboard.
    * Include the ``SMHI Radar Map`` entity.
