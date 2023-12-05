@@ -18,9 +18,6 @@ from homeassistant.core import (
 
 from . import models
 
-if TYPE_CHECKING:
-    pass
-
 
 class HomeAssistantRemoteScanner(BaseHaRemoteScanner):
     """Home Assistant remote BLE scanner.
