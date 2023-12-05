@@ -11,7 +11,7 @@ generate_image:
         text:
           multiline: true
     size:
-      required: true
+      required: false
       example: "1024x1024"
       default: "1024x1024"
       selector:
@@ -21,7 +21,7 @@ generate_image:
             - "1024x1792"
             - "1792x1024"
     quality:
-      required: true
+      required: false
       example: "standard"
       default: "standard"
       selector:
@@ -30,7 +30,7 @@ generate_image:
             - "standard"
             - "hd"
     style:
-      required: true
+      required: false
       example: "vivid"
       default: "vivid"
       selector:

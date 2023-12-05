@@ -21,7 +21,13 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
-from homeassistant.helpers import config_validation as cv, intent, selector, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    intent,
+    issue_registry as ir,
+    selector,
+    template,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ulid
 
@@ -53,8 +59,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         client = hass.data[DOMAIN][call.data["config_entry"]]
 
         if call.data["size"] in ("256", "512", "1024"):
-            _LOGGER.warning(
-                "You are using the deprecated size format, which will be removed in the future. Interpreting as '1024x1024'"
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "image_size_deprecated_format",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                is_persistent=True,
+                learn_more_url="https://platform.openai.com/docs/api-reference/images/create",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="image_size_deprecated_format",
             )
             size = "1024x1024"
         else:
