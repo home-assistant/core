@@ -167,7 +167,7 @@ class Store(Generic[_T]):
                     # We can't recover from this, so we'll log an error, rename the file and
                     # return None so that we can start with a clean slate which will
                     # allow startup to continue so they can restore from a backup.
-                    isotime = dt_util.utcnow().isoformat()
+                    isotime = dt_util.utcnow().isoformat().replace(":", "-")
                     corrupt_postfix = f".corrupt.{isotime}"
                     corrupt_path = f"{self.path}{corrupt_postfix}"
                     await self.hass.async_add_executor_job(
