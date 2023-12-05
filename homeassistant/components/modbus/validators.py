@@ -26,13 +26,16 @@ from homeassistant.const import (
 from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
+    CONF_HVAC_MODE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     DEFAULT_HUB,
@@ -265,12 +268,31 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
                 inx = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
                 addr += "_" + str(inx)
-                if addr in addresses:
-                    err = (
-                        f"Modbus {component}/{name} address {addr} is duplicate, second"
-                        " entry not loaded!"
-                    )
-                    _LOGGER.warning(err)
+                entry_addrs: set[str] = set()
+                entry_addrs.add(addr)
+
+                if CONF_TARGET_TEMP in entry:
+                    a = str(entry[CONF_TARGET_TEMP])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
+                if CONF_HVAC_MODE_REGISTER in entry:
+                    a = str(entry[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
+                if CONF_FAN_MODE_REGISTER in entry:
+                    a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
+
+                dup_addrs = entry_addrs.intersection(addresses)
+
+                if len(dup_addrs) > 0:
+                    for addr in dup_addrs:
+                        err = (
+                            f"Modbus {component}/{name} address {addr} is duplicate, second"
+                            " entry not loaded!"
+                        )
+                        _LOGGER.warning(err)
                     errors.append(index)
                 elif name in names:
                     err = (
@@ -281,7 +303,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     errors.append(index)
                 else:
                     names.add(name)
-                    addresses.add(addr)
+                    addresses.update(entry_addrs)
 
             for i in reversed(errors):
                 del config[hub_index][conf_key][i]
@@ -300,11 +322,11 @@ def duplicate_modbus_validator(config: list) -> list:
         else:
             host = f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
         if host in hosts:
-            err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
+            err = f"Modbus {name} contains duplicate host/port {host}, not loaded!"
             _LOGGER.warning(err)
             errors.append(index)
         elif name in names:
-            err = f"Modbus {name}  is duplicate, second entry not loaded!"
+            err = f"Modbus {name} is duplicate, second entry not loaded!"
             _LOGGER.warning(err)
             errors.append(index)
         else:

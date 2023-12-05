@@ -186,8 +186,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ):
                 if fan_mode_kw in mode_value_config:
                     value = mode_value_config[fan_mode_kw]
-                    if value in self._fan_mode_mapping_from_modbus:
-                        raise ValueError(f"{value} is a duplicate for {fan_mode_kw}")
                     self._fan_mode_mapping_from_modbus[value] = fan_mode
                     self._fan_mode_mapping_to_modbus[fan_mode] = value
                     self._attr_fan_modes.append(fan_mode)

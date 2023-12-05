@@ -40,13 +40,19 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
+    CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_HIGH,
     CONF_FAN_MODE_OFF,
     CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
@@ -428,12 +434,134 @@ async def test_duplicate_fan_mode_validator(do_config) -> None:
                 ],
             }
         ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+            }
+        ],
     ],
 )
 async def test_duplicate_entity_validator(do_config) -> None:
     """Test duplicate entity validator."""
     duplicate_entity_validator(do_config)
-    assert len(do_config[0][CONF_SENSORS]) == 1
+    if CONF_SENSORS in do_config[0]:
+        assert len(do_config[0][CONF_SENSORS]) == 1
+    elif CONF_CLIMATES in do_config[0]:
+        assert len(do_config[0][CONF_CLIMATES]) == 1
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+            }
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 118,
+                        CONF_SLAVE: 0,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 119,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                            },
+                        },
+                    },
+                ],
+            }
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 118,
+                        CONF_SLAVE: 0,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_duplicate_entity_validator_with_climate(do_config) -> None:
+    """Test duplicate entity validator."""
+    duplicate_entity_validator(do_config)
+    assert len(do_config[0][CONF_CLIMATES]) == 1
 
 
 @pytest.mark.parametrize(
