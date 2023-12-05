@@ -29,16 +29,15 @@ from .entity import TessieEntity
 
 PARALLEL_UPDATES = 0
 
-DESCRIPTIONS: dict[TessieCategory, tuple[SensorEntityDescription, ...]] = {
-    TessieCategory.CHARGE_STATE: (
+DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         SensorEntityDescription(
-            key="usable_battery_level",
+            key="charge_state.usable_battery_level",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
         ),
         SensorEntityDescription(
-            key="charge_energy_added",
+            key="charge_state.charge_energy_added",
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
