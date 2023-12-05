@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import (
+    CoreState,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -397,6 +398,32 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 2
+
+
+async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, test timeouts at each step."""
+
+    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+        await hass.async_stop()
+
+    assert hass.state == CoreState.stopped
+
+
+async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+    """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
+
+    task = asyncio.Future()
+    hass._tasks.add(task)
+
+    def fail_the_task(_):
+        task.set_exception(Exception("test_exception"))
+
+    with patch.object(task, "cancel", side_effect=fail_the_task) as patched_call:
+        await hass.async_stop()
+        assert patched_call.called
+
+    assert "test_exception" in caplog.text
+    assert hass.state == ha.CoreState.stopped
 
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
@@ -2566,3 +2593,30 @@ def test_hassjob_passing_job_type():
         HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
         == ha.HassJobType.Callback
     )
+
+
+async def test_shutdown_job(hass: HomeAssistant) -> None:
+    """Test async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    hass.async_add_shutdown_job(job)
+    await hass.async_stop()
+    assert evt.is_set()
+
+
+async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
+    """Test cancelling a job added to async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    cancel = hass.async_add_shutdown_job(job)
+    cancel()
+    await hass.async_stop()
+    assert not evt.is_set()
