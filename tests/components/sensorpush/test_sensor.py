@@ -56,7 +56,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
         return_value=monotonic_now,
     ), patch_all_discovered_devices([]):
         async_fire_time_changed(

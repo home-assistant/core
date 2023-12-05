@@ -35,6 +35,7 @@ from . import (
     _get_manager,
     generate_advertisement_data,
     generate_ble_device,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed, load_fixture
@@ -212,10 +213,7 @@ async def test_remote_scanner_expires_connectable(
     expire_utc = dt_util.utcnow() + timedelta(
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=expire_monotonic,
-    ):
+    with patch_bluetooth_time(expire_monotonic):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
@@ -295,10 +293,7 @@ async def test_remote_scanner_expires_non_connectable(
     expire_utc = dt_util.utcnow() + timedelta(
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=expire_monotonic,
-    ):
+    with patch_bluetooth_time(expire_monotonic):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
@@ -311,10 +306,7 @@ async def test_remote_scanner_expires_non_connectable(
     expire_utc = dt_util.utcnow() + timedelta(
         seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=expire_monotonic,
-    ):
+    with patch_bluetooth_time(expire_monotonic):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
@@ -512,10 +504,7 @@ async def test_device_with_ten_minute_advertising_interval(
         connectable=False,
     )
 
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=new_time,
-    ):
+    with patch_bluetooth_time(new_time):
         scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
 
     original_device = scanner.discovered_devices_and_advertisement_data[
@@ -525,10 +514,7 @@ async def test_device_with_ten_minute_advertising_interval(
 
     for _ in range(1, 20):
         new_time += advertising_interval
-        with patch(
-            "habluetooth.base_scanner.MONOTONIC_TIME",
-            return_value=new_time,
-        ):
+        with patch_bluetooth_time(new_time):
             scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
 
     # Make sure the BLEDevice object gets updated
@@ -543,10 +529,7 @@ async def test_device_with_ten_minute_advertising_interval(
         bluetooth.async_address_present(hass, bparasite_device.address, False) is True
     )
     assert bparasite_device_went_unavailable is False
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=new_time,
-    ):
+    with patch_bluetooth_time(new_time):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=future_time))
         await hass.async_block_till_done()
 
@@ -556,13 +539,7 @@ async def test_device_with_ten_minute_advertising_interval(
         future_time + advertising_interval + TRACKER_BUFFERING_WOBBLE_SECONDS + 1
     )
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=missed_advertisement_future_time,
-    ), patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=missed_advertisement_future_time,
-    ):
+    with patch_bluetooth_time(missed_advertisement_future_time):
         # Fire once for the scanner to expire the device
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -626,10 +603,7 @@ async def test_scanner_stops_responding(
         + SCANNER_WATCHDOG_INTERVAL.total_seconds()
     )
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=failure_reached_time,
-    ):
+    with patch_bluetooth_time(failure_reached_time):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
 
@@ -650,10 +624,7 @@ async def test_scanner_stops_responding(
 
     failure_reached_time += 1
 
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=failure_reached_time,
-    ):
+    with patch_bluetooth_time(failure_reached_time):
         scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
 
     # As soon as we get a detection, we know the scanner is working again

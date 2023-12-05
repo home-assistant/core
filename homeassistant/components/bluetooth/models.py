@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
-from bluetooth_data_tools import monotonic_time_coarse
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 if TYPE_CHECKING:
@@ -13,8 +12,6 @@ if TYPE_CHECKING:
 
 
 MANAGER: BluetoothManager | None = None
-
-MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")

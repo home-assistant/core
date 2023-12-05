@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import itertools
 import logging
-from typing import Final
 
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import BluetoothAdapters
-from habluetooth import BluetoothManager, manager
+from habluetooth import BluetoothManager
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -33,8 +32,6 @@ from .match import (
 from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
 from .storage import BluetoothStorage
 from .util import async_load_history_from_system
-
-MONOTONIC_TIME: Final = manager.MONOTONIC_TIME
 
 _LOGGER = logging.getLogger(__name__)
 

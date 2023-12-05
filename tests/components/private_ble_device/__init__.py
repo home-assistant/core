@@ -71,7 +71,7 @@ async def async_inject_broadcast(
 async def async_move_time_forwards(hass: HomeAssistant, offset: float):
     """Mock time advancing from now to now+offset."""
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
         return_value=time.monotonic() + offset,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=offset))

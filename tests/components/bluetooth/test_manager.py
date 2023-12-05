@@ -46,6 +46,7 @@ from . import (
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed, load_fixture
@@ -960,9 +961,8 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         return_value=[{"flow_id": "mock_flow_id"}],
     ) as mock_async_progress_by_init_data_type, patch.object(
         hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort, patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    ) as mock_async_abort, patch_bluetooth_time(
+        monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1103,9 +1103,8 @@ async def test_set_fallback_interval_small(
     )
 
     monotonic_now = start_monotonic_time + 2
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1168,9 +1167,8 @@ async def test_set_fallback_interval_big(
     # Check that device hasn't expired after a day
 
     monotonic_now = start_monotonic_time + 86400
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1182,9 +1180,8 @@ async def test_set_fallback_interval_big(
     # Try again after it has expired
 
     monotonic_now = start_monotonic_time + 604800
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)

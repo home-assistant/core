@@ -693,7 +693,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
         return_value=monotonic_now,
     ), patch_all_discovered_devices([]):
         async_fire_time_changed(
@@ -740,7 +740,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
         return_value=monotonic_now,
     ), patch_all_discovered_devices([]):
         async_fire_time_changed(
@@ -789,7 +789,7 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
         return_value=monotonic_now,
     ), patch_all_discovered_devices([]):
         async_fire_time_changed(

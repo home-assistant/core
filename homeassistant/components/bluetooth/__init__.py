@@ -21,6 +21,7 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
+from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -80,7 +81,7 @@ from .const import (
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )
-from .manager import MONOTONIC_TIME, HomeAssistantBluetoothManager
+from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
