@@ -483,6 +483,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
 
         if (
             state is None
+            or state.value is None
             or self.state_class != SensorStateClass.MEASUREMENT
             and not state.value
         ):
