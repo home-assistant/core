@@ -242,10 +242,6 @@
           "name": "CO2 hysteresis",
           "description": "Sets the CO2 pollution threshold hysteresis level in ppm"
         },
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name of entity that will set the pollution settings. Platform dependent."
-        }
       }
     }
   }
