@@ -27,10 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class HuaweiSelectEntityDescription(SelectEntityDescription):
-    """Class describing Huawei LTE select entities."""
+class HuaweiSelectEntityMixin:
+    """Mixin for Huawei LTE select entities, to ensure required fields are set."""
 
-    setter_fn: Callable[[str], None] = lambda x: None
+    setter_fn: Callable[[str], None]
+
+
+@dataclass
+class HuaweiSelectEntityDescription(SelectEntityDescription, HuaweiSelectEntityMixin):
+    """Class describing Huawei LTE select entities."""
 
 
 async def async_setup_entry(
