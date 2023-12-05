@@ -174,16 +174,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinators = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            TessieSensorEntity(coordinator, vin, category, description)
-            for vin, vehicle in coordinator.data.items()
+            TessieSensorEntity(coordinator, category, description)
+            for coordinator in coordinators
             for category, descriptions in DESCRIPTIONS.items()
-            if category in vehicle
+            if category in coordinator.data
             for description in descriptions
-            if description.key in vehicle[category]
+            if description.key in coordinator.data[category]
         ]
     )
 
@@ -196,12 +196,11 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     def __init__(
         self,
         coordinator: TessieDataUpdateCoordinator,
-        vin: str,
         category: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, vin, category, description.key)
+        super().__init__(coordinator, category, description.key)
         self.entity_description = description
 
     @property
