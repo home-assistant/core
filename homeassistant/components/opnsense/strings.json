@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "user": {
+        "title": "OPNSense",
+        "description": "Set required parameter to connect to your router",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_secret": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "tracker_interfaces": "Interfaces to use for tracking devices"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Minutes between scans",
+          "timeout": "API Timeout (seconds)",
+          "tracker_interfaces": "Interfaces to use for tracking devices"
+        }
+      }
+    }
+  }
+}
