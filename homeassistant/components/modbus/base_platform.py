@@ -85,11 +85,11 @@ class BasePlatform(Entity):
             async_create_issue(
                 hass,
                 MODBUS_DOMAIN,
-                "deprecated_lazy_error_count",
+                "removed_lazy_error_count",
                 breaks_in_ha_version="2024.7.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
-                translation_key="deprecated_lazy_error_count",
+                translation_key="removed_lazy_error_count",
                 translation_placeholders={
                     "config_key": "lazy_error_count",
                     "integration": MODBUS_DOMAIN,
