@@ -31,6 +31,7 @@ from homeassistant.requirements import (
 )
 import homeassistant.util.yaml.loader as yaml_loader
 
+from . import config_validation as cv
 from .typing import ConfigType
 
 
@@ -175,7 +176,7 @@ async def async_check_ha_config_file(  # noqa: C901
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = {key.partition(" ")[0] for key in config}
+    components = {cv.domain_key(key) for key in config}
 
     frontend_dependencies: set[str] = set()
     if "frontend" in components or "default_config" in components:
