@@ -79,7 +79,7 @@ class BasePlatform(Entity):
 
         if CONF_LAZY_ERROR in entry:
             _LOGGER.warning(
-                "`lazy_error_count`: is deprecated and will be removed in version 2024.5"
+                "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
             )
 
         self._hub = hub
