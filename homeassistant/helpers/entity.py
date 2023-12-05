@@ -863,26 +863,24 @@ class Entity(ABC):
                 or original_device_class != entry.original_device_class
                 or supported_features != entry.supported_features
             ):
-                time_now = hass.loop.time()
-                capabilities_updated_at = self.__capabilities_updated_at
-                capabilities_updated_at.append(time_now)
-                while time_now - capabilities_updated_at[0] > 3600:
-                    capabilities_updated_at.popleft()
-                if (
-                    not self.__capabilities_updated_at_reported
-                    and len(capabilities_updated_at) >= CAPABILITIES_UPDATE_LIMIT
-                ):
-                    self.__capabilities_updated_at_reported = True
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        (
-                            "Entity %s (%s) is updating its capabilities too often. "
-                            "Please %s"
-                        ),
-                        entity_id,
-                        type(self),
-                        report_issue,
-                    )
+                if not self.__capabilities_updated_at_reported:
+                    time_now = hass.loop.time()
+                    capabilities_updated_at = self.__capabilities_updated_at
+                    capabilities_updated_at.append(time_now)
+                    while time_now - capabilities_updated_at[0] > 3600:
+                        capabilities_updated_at.popleft()
+                    if len(capabilities_updated_at) >= CAPABILITIES_UPDATE_LIMIT:
+                        self.__capabilities_updated_at_reported = True
+                        report_issue = self._suggest_report_issue()
+                        _LOGGER.warning(
+                            (
+                                "Entity %s (%s) is updating its capabilities too often,"
+                                " please %s"
+                            ),
+                            entity_id,
+                            type(self),
+                            report_issue,
+                        )
                 entity_registry = er.async_get(self.hass)
                 self.registry_entry = entity_registry.async_update_entity(
                     self.entity_id,
