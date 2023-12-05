@@ -77,7 +77,7 @@ class OPNSenseScannerEntity(
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self.name
+        return self._name
 
     @property
     def _name(self) -> str:

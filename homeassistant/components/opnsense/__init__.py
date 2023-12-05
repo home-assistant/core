@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DEFAULT_NAME, DOMAIN
 from .coordinator import OPNSenseUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-    conf[CONF_NAME] = "OPNSense"
+    conf[CONF_NAME] = DEFAULT_NAME
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
@@ -90,12 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = OPNSenseUpdateCoordinator(
         hass=hass,
-        name=entry.options[CONF_NAME],
-        url=entry.options[CONF_URL],
-        api_key=entry.options[CONF_API_KEY],
-        api_secret=entry.options[CONF_API_SECRET],
-        verify_ssl=entry.options[CONF_VERIFY_SSL],
-        tracker_interfaces=entry.options[CONF_TRACKER_INTERFACE],
+        entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
 

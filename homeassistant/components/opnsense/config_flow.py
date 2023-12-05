@@ -4,16 +4,31 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN
+from .const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACE,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 
 class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -30,7 +45,7 @@ class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(CONF_NAME, default="OPNSense"): str,
+                        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                         vol.Required(CONF_URL): str,
                         vol.Required(CONF_API_KEY): str,
                         vol.Required(CONF_API_SECRET): str,
@@ -87,6 +102,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
+                    ): cv.positive_int,
+                    vol.Required(
+                        CONF_TIMEOUT,
+                        default=self.config_entry.options.get(
+                            CONF_TIMEOUT, DEFAULT_TIMEOUT
+                        ),
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_TRACKER_INTERFACE,
                         default=self.config_entry.options.get(CONF_TRACKER_INTERFACE),

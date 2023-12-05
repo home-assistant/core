@@ -8,8 +8,24 @@ import logging
 from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACE,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +47,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
     netinsight_client: diagnostics.NetworkInsightClient
 
     hass: HomeAssistant
+    entry: ConfigEntry
 
     url: str
     api_key: str
@@ -38,55 +55,49 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
     verify_ssl: bool
     tracker_interfaces: list
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        url: str,
-        api_key: str,
-        api_secret: str,
-        verify_ssl: bool,
-        tracker_interfaces: list,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the OPNSense coordinator."""
         self.hass = hass
+        self.entry = entry
 
-        self.url = url
-        self.api_key = api_key
-        self.api_secret = api_secret
-        self.verify_ssl = verify_ssl
-        self.tracker_interfaces = tracker_interfaces
+        self.url = entry.options[CONF_URL]
+        self.api_key = entry.options[CONF_API_KEY]
+        self.api_secret = entry.options[CONF_API_SECRET]
+        self.verify_ssl = entry.options[CONF_VERIFY_SSL]
+        self.tracker_interfaces = entry.options[CONF_TRACKER_INTERFACE]
 
         self.setup = False
 
         super().__init__(
             hass,
             _LOGGER,
-            name=f"OPNSense {name}",
-            update_interval=timedelta(minutes=5),  # TODO Make configurable
+            name=f"OPNSense {entry.options[CONF_NAME]}",
+            update_interval=timedelta(
+                minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            ),
         )
 
-    def _setup_clients(self, api_key, api_secret, url, verify_ssl, tracker_interfaces):
+    def _setup_clients(self):
         self.interfaces_client = diagnostics.InterfaceClient(
-            api_key,
-            api_secret,
-            url,
-            verify_ssl,
-            timeout=20,  # TODO Make configurable
+            self.api_key,
+            self.api_secret,
+            self.url,
+            self.verify_ssl,
+            timeout=self.entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
-        if tracker_interfaces:
+        if len(self.tracker_interfaces) >= 1:
             self.netinsight_client = diagnostics.NetworkInsightClient(
-                api_key,
-                api_secret,
-                url,
-                verify_ssl,
-                timeout=20,  # TODO Make configurable
+                self.api_key,
+                self.api_secret,
+                self.url,
+                self.verify_ssl,
+                timeout=self.entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             )
 
             # Verify that specified tracker interfaces are valid
             interfaces = list(self.netinsight_client.get_interfaces().values())
-            for interface in tracker_interfaces:
+            for interface in self.tracker_interfaces:
                 if interface not in interfaces:
                     _LOGGER.error(
                         "Specified OPNsense tracker interface %s is not found",
@@ -98,13 +109,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
 
     def _update_data(self) -> dict[str, OPNSenseResult]:
         if not self.setup:
-            self._setup_clients(
-                self.api_key,
-                self.api_secret,
-                self.url,
-                self.verify_ssl,
-                self.tracker_interfaces,
-            )
+            self._setup_clients()
 
         try:
             devices = self.interfaces_client.get_arp()
