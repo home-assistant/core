@@ -185,7 +185,7 @@
         "minutes": {
           "name": "Time",
           "description": "Time of the timer (0 will disable the timer)"
-        },
+        }
       }
     },
     "set_breeze": {
@@ -203,7 +203,7 @@
         "activate": {
           "name": "Activate",
           "description": "Activate or disable the breeze feature"
-        },
+        }
       }
     },
     "set_pollution_settings": {
@@ -237,7 +237,7 @@
         "co2_hysteresis": {
           "name": "CO2 hysteresis",
           "description": "Sets the CO2 pollution threshold hysteresis level in ppm"
-        },
+        }
       }
     }
   }
