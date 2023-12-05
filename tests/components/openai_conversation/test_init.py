@@ -140,6 +140,7 @@ async def test_error_handling(
     """Test that the default prompt works."""
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
         side_effect=RateLimitError(
             response=Response(status_code=None, request=""), body=None, message=None
         ),
@@ -164,7 +165,10 @@ async def test_template_error(
     )
     with patch(
         "openai.resources.models.AsyncModels.list",
-    ), patch("openai.resources.chat.completions.AsyncCompletions.create"):
+    ), patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
