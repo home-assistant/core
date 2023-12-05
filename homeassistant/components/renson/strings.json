@@ -204,10 +204,6 @@
           "name": "Activate",
           "description": "Activate or disable the breeze feature"
         },
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name of entity that will set the breeze settings. Platform dependent."
-        }
       }
     },
     "set_pollution_settings": {
