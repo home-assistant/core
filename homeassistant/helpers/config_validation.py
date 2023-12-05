@@ -350,6 +350,21 @@ comp_entity_ids_or_uuids = vol.Any(
 )
 
 
+def domain_key(config_key: str) -> str:
+    """Validate a top level configuration key."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.config import domain_from_config_key
+
+    if not isinstance(config_key, str):
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    domain = domain_from_config_key(config_key)
+    if not domain or domain.strip(" ") != domain:
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    return domain
+
+
 def entity_domain(domain: str | list[str]) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
     ent_domain = entities_domain(domain)

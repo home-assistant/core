@@ -449,6 +449,19 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
             base_exc.problem_mark.name = _relpath(hass, base_exc.problem_mark.name)
         raise
 
+    invalid_domains = []
+    for key in config:
+        try:
+            cv.domain_key(key)
+        except vol.Invalid as exc:
+            suffix = ""
+            if annotation := find_annotation(config, exc.path):
+                suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
+            _LOGGER.error("Invalid domain '%s'%s", key, suffix)
+            invalid_domains.append(key)
+    for invalid_domain in invalid_domains:
+        config.pop(invalid_domain)
+
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
@@ -968,7 +981,13 @@ async def merge_packages_config(
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            domain = domain_from_config_key(comp_name)
+            try:
+                domain = cv.domain_key(comp_name)
+            except vol.Invalid:
+                _log_pkg_error(
+                    hass, pack_name, comp_name, config, f"Invalid domain '{comp_name}'"
+                )
+                continue
 
             try:
                 integration = await async_get_integration_with_requirements(
