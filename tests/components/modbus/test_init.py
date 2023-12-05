@@ -63,6 +63,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
@@ -545,8 +546,44 @@ async def test_duplicate_entity_validator(do_config) -> None:
                         CONF_NAME: TEST_ENTITY_NAME + " 2",
                         CONF_ADDRESS: 118,
                         CONF_SLAVE: 0,
+                        CONF_TARGET_TEMP: 99,
                         CONF_FAN_MODE_REGISTER: {
                             CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                ],
+            }
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_ON: 0,
+                                CONF_FAN_MODE_HIGH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 118,
+                        CONF_SLAVE: 0,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 121,
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 0,
                                 CONF_FAN_MODE_HIGH: 1,
