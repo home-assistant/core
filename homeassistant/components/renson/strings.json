@@ -186,10 +186,6 @@
           "name": "Time",
           "description": "Time of the timer (0 will disable the timer)"
         },
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name of entity that timer will be set on. Platform dependent."
-        }
       }
     },
     "set_breeze": {
