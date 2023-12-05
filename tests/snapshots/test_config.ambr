@@ -321,6 +321,9 @@
 # ---
 # name: test_component_config_validation_error_with_docs[basic]
   list([
+    "Invalid domain 'iot_domain ' at configuration.yaml, line 61",
+    "Invalid domain '' at configuration.yaml, line 62",
+    "Invalid domain '5' at configuration.yaml, line 1",
     "Invalid config for 'iot_domain' at configuration.yaml, line 6: required key 'platform' not provided, please check the docs at https://www.home-assistant.io/integrations/iot_domain",
     "Invalid config for 'iot_domain.non_adr_0007' at configuration.yaml, line 9: expected str for dictionary value 'option1', got 123, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007",
     "Invalid config for 'iot_domain.non_adr_0007' at configuration.yaml, line 12: 'no_such_option' is an invalid option for 'iot_domain.non_adr_0007', check: no_such_option, please check the docs at https://www.home-assistant.io/integrations/non_adr_0007",
