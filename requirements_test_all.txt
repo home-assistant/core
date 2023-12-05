@@ -39,7 +39,7 @@ HATasmota==0.7.3
 Pillow==10.1.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.4
+PlexAPI==4.15.6
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -438,6 +438,9 @@ axis==48
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
 
+# homeassistant.components.holiday
+babel==2.13.1
+
 # homeassistant.components.homekit
 base36==0.1.1
 
@@ -448,7 +451,7 @@ beautifulsoup4==4.12.2
 bellows==0.37.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.14.5
+bimmer-connected[china]==0.14.6
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
@@ -476,7 +479,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.16.0
+bluetooth-data-tools==1.17.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -536,7 +539,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.14.0
+dbus-fast==2.20.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -779,6 +782,9 @@ ha-philipsjs==3.1.1
 # homeassistant.components.habitica
 habitipy==0.2.0
 
+# homeassistant.components.bluetooth
+habluetooth==0.5.1
+
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
 
@@ -800,11 +806,12 @@ hlk-sw16==0.0.9
 # homeassistant.components.pi_hole
 hole==0.8.0
 
+# homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.36
+holidays==0.37
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231130.0
+home-assistant-frontend==20231204.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.11.29
@@ -1089,7 +1096,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.39
+opower==0.0.40
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1792,7 +1799,7 @@ samsungtvws[async,encrypted]==2.6.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.9.4
+screenlogicpy==0.10.0
 
 # homeassistant.components.backup
 securetar==2023.3.0
@@ -2057,7 +2064,7 @@ wled==0.17.0
 wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
-wyoming==1.2.0
+wyoming==1.3.0
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
@@ -2108,7 +2115,7 @@ yt-dlp==2023.11.16
 zamg==0.3.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.127.0
+zeroconf==0.128.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

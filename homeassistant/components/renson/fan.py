@@ -13,10 +13,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from .const import DOMAIN
 from .coordinator import RensonCoordinator

@@ -85,6 +85,9 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
             for task in self.coordinator.data:
                 if task.project_id != self._project_id:
                     continue
+                if task.parent_id is not None:
+                    # Filter out sub-tasks until they are supported by the UI.
+                    continue
                 if task.is_completed:
                     status = TodoItemStatus.COMPLETED
                 else:
