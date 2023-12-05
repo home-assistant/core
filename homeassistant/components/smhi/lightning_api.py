@@ -13,16 +13,31 @@ class SmhiLightning:
 
     async def get_lightning_impacts(self) -> list[SmhiGeolocationEvent]:
         """Return the most recent day of available lightning impacts."""
-        months_with_31_days = [1, 3, 5, 7, 8, 10, 12]
+        months_with_31_days = [
+            1,
+            3,
+            5,
+            7,
+            8,
+            10,
+            12,
+        ]  # Months that has 31 days in total
+
+        # Today´s date
         today = date.today()
         year = today.year
         month = today.month
+
+        # Most recent data available is yesterday, so take one day of from today
         yesterday = today.day - 1
+
+        # Checks in case yesterday was another month or year than today
         if yesterday == 0:
             month = month - 1
             if month == 0:
                 month = 12
                 year = year - 1
+            # Set yesterday value correctly according to what month it was
             if month in months_with_31_days:
                 yesterday = 31
             elif month == 2:
@@ -30,8 +45,10 @@ class SmhiLightning:
             else:
                 yesterday = 30
 
+        # Fetch the data using the SmhiDownloader class
         smhi_downloader = SmhiDownloader()
-        data = await smhi_downloader.download_json(APIURL_TEMPLATE.format(2023, 8, 25))
+        # Date is currently set to static value to showcase functionality
+        data = await smhi_downloader.download_json(APIURL_TEMPLATE.format(2023, 6, 25))
         if isinstance(data, dict):
             return self.parse_lightning_impacts(data)
         return []
@@ -39,16 +56,47 @@ class SmhiLightning:
     def parse_lightning_impacts(self, api_result: dict) -> list[SmhiGeolocationEvent]:
         """Convert results from API to a List of LightningImpacts."""
 
+        # Empty array where the lightning entities will be stored
         lightning_impacts: list[SmhiGeolocationEvent] = []
 
-        for impact in api_result["values"]:
-            hour = int(impact["hours"])
-            minute = int(impact["minutes"])
-            second = int(impact["seconds"])
-            latitude = float(impact["lat"])
-            longitude = float(impact["lon"])
-            peak_current = int(impact["peakCurrent"])
+        # Values of previous impact in loop, used to check for duplicates
+        prev_hour = 0
+        prev_min = 0
+        prev_sec = 0
+        prev_lat = 0.0
+        prev_lon = 0.0
 
+        # Loop through all parameters returned by the API
+        for impact in api_result["values"]:
+            hour = int(
+                impact["hours"]
+            )  # Time of impact in hours in 24-hour digital clock
+            minute = int(impact["minutes"])  # Time of impact in minutes
+            second = int(impact["seconds"])  # Time of impact in seconds
+            latitude = float(impact["lat"])  # Latitude coordinate of impact
+            longitude = float(impact["lon"])  # Longitude coordinate of impact
+            peak_current = int(
+                impact["peakCurrent"]
+            )  # Peak current of impact, including polarity
+
+            # If impact is a duplicate measure, continue to next iteration of loop
+            if (
+                hour == prev_hour
+                and minute == prev_min
+                and second == prev_sec
+                and abs(latitude - prev_lat) < 0.3
+                and abs(longitude - prev_lon) < 0.3
+            ):
+                continue
+
+            # Update prev values
+            prev_hour = hour
+            prev_min = minute
+            prev_sec = second
+            prev_lat = latitude
+            prev_lon = longitude
+
+            # Name of entity
             name = (
                 "Impact at: "
                 + str(hour)
@@ -61,14 +109,13 @@ class SmhiLightning:
                 + " kiloamperes"
             )
 
+            # Create SmhiGeoLocationEvent of impact
             lightning_impact = SmhiGeolocationEvent(
-                name, latitude, longitude, ICON_URL, ICON_URL, "stationary"
+                name, latitude, longitude, ICON_URL, ICON_URL, "stationary", "lightning"
             )
 
-        lightning_impact = SmhiGeolocationEvent(
-            name, latitude, longitude, ICON_URL, ICON_URL, "stationary", "lightning"
-        )
-        
-        lightning_impacts.append(lightning_impact)
+            # Add entity to list of entities
+            lightning_impacts.append(lightning_impact)
 
+        # Return list of entities
         return lightning_impacts
