@@ -397,7 +397,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_stop) == 1
     assert len(test_close) == 1
     assert len(test_final_write) == 1
-    assert len(test_all) == 3
+    assert len(test_all) == 2
 
 
 async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
@@ -433,20 +433,20 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
     test_all = async_capture_events(hass, MATCH_ALL)
 
-    event_call_counters = [0, 0, 0, 0]
+    event_call_counters = [0, 0, 0]
     expected_exit_code = 101
 
     async def async_on_stop(event) -> None:
         if hass.exit_code == expected_exit_code:
-            event_call_counters[1] += 1
+            event_call_counters[0] += 1
 
     async def async_on_final_write(event) -> None:
         if hass.exit_code == expected_exit_code:
-            event_call_counters[2] += 1
+            event_call_counters[1] += 1
 
     async def async_on_close(event) -> None:
         if hass.exit_code == expected_exit_code:
-            event_call_counters[3] += 1
+            event_call_counters[2] += 1
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, async_on_final_write)
@@ -457,13 +457,12 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     assert len(test_stop) == 1
     assert len(test_close) == 1
     assert len(test_final_write) == 1
-    assert len(test_all) == 3
+    assert len(test_all) == 2
 
     assert (
         event_call_counters[0] == 1
         and event_call_counters[1] == 1
         and event_call_counters[2] == 1
-        and event_call_counters[3] == 1
     )
 
 
