@@ -276,13 +276,17 @@ async def async_check_ha_config_file(  # noqa: C901
                 # show errors for a missing integration in recovery mode or safe mode to
                 # not confuse the user.
                 if not hass.config.recovery_mode and not hass.config.safe_mode:
-                    result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
+                    result.add_warning(
+                        f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                    )
                 continue
             except (
                 RequirementsNotFound,
                 ImportError,
             ) as ex:
-                result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
+                result.add_warning(
+                    f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                )
                 continue
 
             # Validate platform specific schema
