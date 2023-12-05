@@ -24,7 +24,15 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add radar image entity from smhi api."""
+    """Set up an SMHI radar image entity in Home Assistant.
+
+    Args:
+        hass: HomeAssistant instance.
+        config_entry: Configuration entry for this entity.
+        async_add_entities: Callback to add entities to Home Assistant.
+
+    This function creates a RadarImage entity based on the provided configuration entry and adds it to Home Assistant.
+    """
     location = config_entry.data
     name = slugify(location[CONF_NAME])
 
@@ -35,10 +43,19 @@ async def async_setup_entry(
 
 
 class RadarImage(ImageEntity):
-    """Representation of an image entity to display radar images."""
+    """Represents an image entity to display radar images from SMHI.
+
+    This entity fetches and combines radar imagery and map data to provide a visual representation of weather radar data.
+    """
 
     async def async_image(self) -> bytes | None:
-        """Fetch and return bytes of SMHI radar image and corresponding map combined."""
+        """Fetch and return the combined image of SMHI radar data and a map.
+
+        Returns:
+            Bytes of the combined radar and map image or None if an error occurs.
+
+        This method fetches the latest radar image from SMHI API, combines it with a map background, and returns the resulting image as bytes. In case of errors, it logs the issue and returns None.
+        """
         try:
             current_date = datetime.datetime.now().strftime("%Y/%m/%d")
             url = f"https://opendata-download-radar.smhi.se/api/version/latest/area/sweden/product/comp/{current_date}?timeZone=Europe/Stockholm"
