@@ -1,6 +1,8 @@
 """Fetching fire risk data."""
 
-from typing import Any
+from typing import Any, Optional
+
+import aiohttp
 
 from ..downloader import SmhiDownloader
 from ..smhi_geolocation_event import SmhiGeolocationEvent
@@ -34,8 +36,10 @@ def get_api_url_from_coordinates(lat: float, lon: float) -> str:
     return f"https://opendata-download-metfcst.smhi.se/api/category/fwif1g/version/1/daily/geotype/point/lon/{lon}/lat/{lat}/data.json"
 
 
-async def fetch_fire_risk_data() -> list[dict[str, Any]]:
-    """Fetch fire risk data using SmhiDownloader."""
+async def fetch_fire_risk_data(
+    session: Optional[aiohttp.ClientSession] = None,
+) -> list[dict[str, Any]]:
+    """Fetch fire risk data using the provided aiohttp session or create a new one if not provided."""
     fire_risk_data: list[dict[str, Any]] = []
     downloader = SmhiDownloader()
 
@@ -43,7 +47,12 @@ async def fetch_fire_risk_data() -> list[dict[str, Any]]:
         url = get_api_url_from_coordinates(
             lat=city_coordinates["lat"], lon=city_coordinates["lon"]
         )
-        data = await downloader.download_json(url)
+        if session:
+            # If a session is provided, use it
+            data = await downloader.fetch(session, url)
+        else:
+            # If no session is provided, use the downloader's own session creation method
+            data = await downloader.download_json(url)
         if data:
             fire_risk_data.append(data)
 
