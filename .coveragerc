@@ -894,12 +894,14 @@ omit =
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather_update_coordinator.py
-    homeassistant/components/opnsense/__init__.py
     homeassistant/components/opower/__init__.py
     homeassistant/components/opower/coordinator.py
     homeassistant/components/opower/sensor.py
-    homeassistant/components/opnsense/device_tracker.py
     homeassistant/components/opple/light.py
+    homeassistant/components/opnsense/__init__.py
+    homeassistant/components/opnsense/const.py
+    homeassistant/components/opnsense/coordinator.py
+    homeassistant/components/opnsense/device_tracker.py
     homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
