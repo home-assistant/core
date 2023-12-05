@@ -853,6 +853,50 @@ class Entity(ABC):
         state, capabilities, attr = self._async_generate_attributes()
         end = timer()
 
+        if end - start > 0.4 and not self._slow_reported:
+            self._slow_reported = True
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                "Updating state for %s (%s) took %.3f seconds. Please %s",
+                entity_id,
+                type(self),
+                end - start,
+                report_issue,
+            )
+
+        # Overwrite properties that have been set in the config file.
+        # Note: This needs to be fixed
+        if customize := hass.data.get(DATA_CUSTOMIZE):
+            attr.update(customize.get(entity_id))
+
+        if (
+            self._context_set is not None
+            and hass.loop.time() - self._context_set
+            > self.context_recent_time.total_seconds()
+        ):
+            self._context = None
+            self._context_set = None
+
+        state_updated = False
+        try:
+            state_updated = hass.states.async_set(
+                entity_id,
+                state,
+                attr,
+                self.force_update,
+                self._context,
+                self._state_info,
+            )
+        except InvalidStateError:
+            _LOGGER.exception(
+                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
+            )
+            hass.states.async_set(
+                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
+            )
+        if not state_updated:
+            return
+
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
@@ -888,46 +932,6 @@ class Entity(ABC):
                     original_device_class=original_device_class,
                     supported_features=supported_features,
                 )
-
-        if end - start > 0.4 and not self._slow_reported:
-            self._slow_reported = True
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                "Updating state for %s (%s) took %.3f seconds. Please %s",
-                entity_id,
-                type(self),
-                end - start,
-                report_issue,
-            )
-
-        # Overwrite properties that have been set in the config file.
-        if customize := hass.data.get(DATA_CUSTOMIZE):
-            attr.update(customize.get(entity_id))
-
-        if (
-            self._context_set is not None
-            and hass.loop.time() - self._context_set
-            > self.context_recent_time.total_seconds()
-        ):
-            self._context = None
-            self._context_set = None
-
-        try:
-            hass.states.async_set(
-                entity_id,
-                state,
-                attr,
-                self.force_update,
-                self._context,
-                self._state_info,
-            )
-        except InvalidStateError:
-            _LOGGER.exception(
-                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
-            )
-            hass.states.async_set(
-                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
-            )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
