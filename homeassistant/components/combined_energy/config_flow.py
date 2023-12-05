@@ -68,9 +68,7 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(str(installation_id))
             self._abort_if_unique_id_configured()
 
-            if await self._check_installation(
-                username, password, installation_id
-            ):
+            if await self._check_installation(username, password, installation_id):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data={
