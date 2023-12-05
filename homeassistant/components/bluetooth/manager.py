@@ -17,6 +17,7 @@ from bluetooth_adapters import (
     BluetoothAdapters,
 )
 from bluetooth_data_tools import monotonic_time_coarse
+from habluetooth import TRACKER_BUFFERING_WOBBLE_SECONDS, AdvertisementTracker
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -29,10 +30,6 @@ from homeassistant.core import (
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
-from .advertisement_tracker import (
-    TRACKER_BUFFERING_WOBBLE_SECONDS,
-    AdvertisementTracker,
-)
 from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
