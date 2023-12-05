@@ -59,9 +59,7 @@ class UnifiDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         client_info = self.clients.get(device)
         if client_info:
-            return str(
-                client_info.get("hostname") or client_info.get("mac").replace(":", "_")
-            )
+            return client_info.get("hostname")
         return None
 
     def _update_clients(self):
