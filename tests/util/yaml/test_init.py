@@ -590,7 +590,7 @@ async def test_loading_actual_file_with_syntax_error(
 def mock_integration_frame() -> Generator[Mock, None, None]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
-        filename="/home/paulus/.homeassistant/custom_components/hue/light.py",
+        filename="/home/paulus/homeassistant/components/hue/light.py",
         lineno="23",
         line="self.light.is_on",
     )
@@ -614,12 +614,12 @@ def mock_integration_frame() -> Generator[Mock, None, None]:
 
 
 @pytest.mark.parametrize(
-    ("loader_class", "new_class"),
+    ("loader_class", "message"),
     [
-        (yaml.loader.SafeLoader, "FastSafeLoader"),
+        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
         (
             yaml.loader.SafeLineLoader,
-            "PythonSafeLoader",
+            "'SafeLineLoader' instead of 'PythonSafeLoader'",
         ),
     ],
 )
@@ -628,17 +628,14 @@ async def test_deprecated_loaders(
     mock_integration_frame: Mock,
     caplog: pytest.LogCaptureFixture,
     loader_class,
-    new_class: str,
+    message: str,
 ) -> None:
     """Test instantiating the deprecated yaml loaders logs a warning."""
     with pytest.raises(TypeError), patch(
         "homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()
     ):
         loader_class()
-    assert (
-        f"{loader_class.__name__} was instantiated from hue, this is a deprecated "
-        f"class which will be removed in HA Core 2024.6. Use {new_class} instead"
-    ) in caplog.text
+    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
 
 
 def test_string_annotated(try_both_loaders) -> None:
