@@ -24,7 +24,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.eps.config_flow.EPS.get_status",

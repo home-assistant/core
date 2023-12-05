@@ -16,17 +16,15 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import EPSDataUpdateCoordinator
-from .const import DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
+from .coordinator import EPSDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a EPS alarm control panel based on a config entry."""
-    coordinator: EPSDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator: EPSDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([EPSPanel(coordinator)], False)
 
 
@@ -57,27 +55,24 @@ class EPSPanel(CoordinatorEntity[EPSDataUpdateCoordinator], AlarmControlPanelEnt
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        ok = self.coordinator.eps_api.disarm(silent=True)
         # The update takes roughly 5s to be applied, so we manually update it here.
         # In case it fails server side, it will be anyway updated at next scan
-        if ok:
+        if self.coordinator.eps_api.disarm(silent=True):
             self.coordinator.state = STATE_ALARM_DISARMED
             self.schedule_update_ha_state()
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        ok = self.coordinator.eps_api.arm_night(silent=True)
         # The update takes roughly 5s to be applied, so we manually update it here.
         # In case it fails server side, it will be anyway updated at next scan
-        if ok:
+        if self.coordinator.eps_api.arm_night(silent=True):
             self.coordinator.state = STATE_ALARM_ARMED_NIGHT
             self.schedule_update_ha_state()
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        ok = self.coordinator.eps_api.arm_away(silent=False)
         # The update takes roughly 5s to be applied, so we manually update it here.
         # In case it fails server side, it will be anyway updated at next scan
-        if ok:
+        if self.coordinator.eps_api.arm_away(silent=False):
             self.coordinator.state = STATE_ALARM_ARMED_AWAY
             self.schedule_update_ha_state()

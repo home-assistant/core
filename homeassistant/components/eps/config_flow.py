@@ -36,24 +36,22 @@ class EPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         site = None
 
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        if user_input is not None:
+            token = user_input[CONF_TOKEN]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
 
-        token = user_input[CONF_TOKEN]
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
+            try:
+                # If we are able to get the site address, we are able to establish
+                # a connection to the device.
+                site = await _get_device_site(self.hass, token, username, password)
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
-        try:
-            # If we are able to get the site address, we are able to establish
-            # a connection to the device.
-            site = await _get_device_site(self.hass, token, username, password)
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-
-        if errors:
+        if errors or (user_input is None):
             return self.async_show_form(
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
