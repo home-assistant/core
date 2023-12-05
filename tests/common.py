@@ -297,6 +297,7 @@ def async_mock_service(
     schema: vol.Schema | None = None,
     response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
+    raise_exception: Exception | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -305,6 +306,8 @@ def async_mock_service(
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        if raise_exception is not None:
+            raise raise_exception
         return response
 
     if supports_response is None:

@@ -1,5 +1,4 @@
 """The tests for the Modbus climate component."""
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -42,7 +41,6 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
-    CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
@@ -60,7 +58,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 
@@ -97,7 +95,6 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
                     CONF_DATA_TYPE: DataType.INT32,
-                    CONF_LAZY_ERROR: 10,
                 }
             ],
         },
@@ -793,46 +790,6 @@ async def test_restore_state_climate(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
     assert state.attributes[ATTR_TEMPERATURE] == 37
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_CLIMATES: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_TARGET_TEMP: 117,
-                    CONF_ADDRESS: 117,
-                    CONF_SLAVE: 10,
-                    CONF_LAZY_ERROR: 1,
-                }
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
-    [
-        (
-            [0x8000],
-            True,
-            "17",
-            STATE_UNAVAILABLE,
-        ),
-    ],
-)
-async def test_lazy_error_climate(
-    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
-) -> None:
-    """Run test for sensor."""
-    hass.states.async_set(ENTITY_ID, 17)
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(

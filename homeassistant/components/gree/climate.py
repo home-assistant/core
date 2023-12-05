@@ -47,7 +47,6 @@ from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
-    DISPATCHERS,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
@@ -88,7 +87,7 @@ SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
@@ -101,7 +100,7 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    hass.data[DOMAIN][DISPATCHERS].append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
 

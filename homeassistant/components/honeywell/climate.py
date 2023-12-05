@@ -8,7 +8,7 @@ from typing import Any
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
     AuthError,
-    ConnectionError as asc_ConnectionError,
+    ConnectionError as AscConnectionError,
     SomeComfortError,
     UnauthorizedError,
     UnexpectedResponse,
@@ -523,7 +523,7 @@ class HoneywellUSThermostat(ClimateEntity):
             await _login()
             return
 
-        except (asc_ConnectionError, ClientConnectionError, asyncio.TimeoutError):
+        except (AscConnectionError, ClientConnectionError, asyncio.TimeoutError):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
             return

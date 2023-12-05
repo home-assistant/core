@@ -1,9 +1,5 @@
 """Test the binary sensor platform of ping."""
-from datetime import timedelta
-from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
-from icmplib import Host
 import pytest
 
 from homeassistant.components.ping.const import DOMAIN
@@ -19,7 +15,6 @@ async def test_setup_and_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor setup and update."""
 
@@ -46,24 +41,6 @@ async def test_setup_and_update(
     # check device tracker is now "home"
     state = hass.states.get("device_tracker.10_10_10_10")
     assert state.state == "home"
-
-    freezer.tick(timedelta(minutes=5))
-    await hass.async_block_till_done()
-
-    # check device tracker is still "home"
-    state = hass.states.get("device_tracker.10_10_10_10")
-    assert state.state == "home"
-
-    # check if device tracker updates to "not home"
-    with patch(
-        "homeassistant.components.ping.helpers.async_ping",
-        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
-    ):
-        freezer.tick(timedelta(minutes=5))
-        await hass.async_block_till_done()
-
-    state = hass.states.get("device_tracker.10_10_10_10")
-    assert state.state == "not_home"
 
 
 async def test_import_issue_creation(

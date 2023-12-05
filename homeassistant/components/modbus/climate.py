@@ -89,7 +89,7 @@ async def async_setup_platform(
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        entities.append(ModbusThermostat(hub, entity))
+        entities.append(ModbusThermostat(hass, hub, entity))
 
     async_add_entities(entities)
 
@@ -101,11 +101,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         hub: ModbusHub,
         config: dict[str, Any],
     ) -> None:
         """Initialize the modbus thermostat."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._target_temperature_write_registers = config[
             CONF_TARGET_TEMP_WRITE_REGISTERS
@@ -373,14 +374,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._slave, register, self._count, register_type
         )
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return -1
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             return -1
-
-        self._lazy_errors = self._lazy_error_count
 
         if raw:
             # Return the raw value read from the register, do not change
