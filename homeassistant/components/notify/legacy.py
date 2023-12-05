@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform, async_start_setup
 from homeassistant.util import slugify
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
     ATTR_DATA,
@@ -280,8 +280,8 @@ class BaseNotificationService:
         # Load service descriptions from notify/services.yaml
         integration = await async_get_integration(hass, DOMAIN)
         services_yaml = integration.file_path / "services.yaml"
-        self.services_dict = cast(
-            dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
+        self.services_dict = await hass.async_add_executor_job(
+            load_yaml_dict, str(services_yaml)
         )
 
     async def async_register_services(self) -> None:

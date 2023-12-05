@@ -705,3 +705,20 @@ def test_string_used_as_vol_schema(try_both_loaders) -> None:
     schema({"key_1": "value_1", "key_2": "value_2"})
     with pytest.raises(vol.Invalid):
         schema({"key_1": "value_2", "key_2": "value_1"})
+
+
+@pytest.mark.parametrize(
+    ("hass_config_yaml", "expected_data"), [("", {}), ("bla:", {"bla": None})]
+)
+def test_load_yaml_dict(
+    try_both_loaders, mock_hass_config_yaml: None, expected_data: Any
+) -> None:
+    """Test item without a key."""
+    assert yaml.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
+
+
+@pytest.mark.parametrize("hass_config_yaml", ["abc", "123", "[]"])
+def test_load_yaml_dict_fail(try_both_loaders, mock_hass_config_yaml: None) -> None:
+    """Test item without a key."""
+    with pytest.raises(yaml_loader.YamlTypeError):
+        yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)

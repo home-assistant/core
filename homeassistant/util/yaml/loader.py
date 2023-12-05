@@ -36,6 +36,10 @@ _DictT = TypeVar("_DictT", bound=dict)
 _LOGGER = logging.getLogger(__name__)
 
 
+class YamlTypeError(HomeAssistantError):
+    """Raised by load_yaml_dict if top level data is not a dict."""
+
+
 class Secrets:
     """Store secrets while loading YAML."""
 
@@ -169,6 +173,20 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
         raise HomeAssistantError(exc) from exc
 
 
+def load_yaml_dict(fname: str, secrets: Secrets | None = None) -> dict:
+    """Load a YAML file and ensure the top level is a dict.
+
+    Raise if the top level is not a dict.
+    Return an empty dict if the file is empty.
+    """
+    loaded_yaml = load_yaml(fname, secrets)
+    if loaded_yaml is None:
+        loaded_yaml = {}
+    if not isinstance(loaded_yaml, dict):
+        raise YamlTypeError(f"YAML file {fname} does not contain a dict")
+    return loaded_yaml
+
+
 def parse_yaml(
     content: str | TextIO | StringIO, secrets: Secrets | None = None
 ) -> JSON_TYPE:
@@ -203,8 +221,6 @@ def _parse_yaml(
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
     """Load a YAML file."""
-    # If configuration file is empty YAML returns None
-    # We convert that to an empty dict
     return yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
 
 
