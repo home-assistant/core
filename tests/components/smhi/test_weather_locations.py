@@ -15,8 +15,11 @@ def smhi_weather_locations():
     return SmhiWeatherLocations()
 
 
-def test_get_cities():
+def test_get_cities(smhi_weather_locations):
     """Test the get_cities function of SmhiWeatherLocations class."""
+    cities = smhi_weather_locations.get_cities()
+    assert isinstance(cities, list)  # Check that cities are correct type
+    assert len(cities) > 0  # Check that cities are not empty
 
 
 def test_get_weather_data():
