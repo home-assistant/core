@@ -49,6 +49,7 @@ async def test_get_weather_data(smhi_weather_locations, fake_weather_locations_d
         return_value=fake_weather_locations_data,
     ):
         data = await smhi_weather_locations.get_weather_data(1, 1)
+        assert isinstance(data, dict)  # Check that data is correct type
         assert len(data.get("timeSeries")) > 0  # Check that data is not empty
         assert (
             len(data.get("timeSeries")[0]) > 0
@@ -83,5 +84,20 @@ async def test_get_weather_locations(
         assert len(weather_locations) > 0  # Check that weather_locations are not empty
 
 
-def test_get_weather_condition_icon():
+def test_get_weather_condition_icon(smhi_weather_locations):
     """Test the get_weather_condition_icon function of SmhiWeatherLocations class."""
+
+    # Check for some of the icon indexes
+    assert smhi_weather_locations.get_weather_condition_icon(1) == "SUN"
+    assert smhi_weather_locations.get_weather_condition_icon(3) == "SUN"
+    assert smhi_weather_locations.get_weather_condition_icon(4) == "CLOUD"
+    assert smhi_weather_locations.get_weather_condition_icon(7) == "CLOUD"
+    assert smhi_weather_locations.get_weather_condition_icon(8) == "RAIN"
+    assert smhi_weather_locations.get_weather_condition_icon(18) == "RAIN"
+    assert smhi_weather_locations.get_weather_condition_icon(21) == "RAIN"
+    assert smhi_weather_locations.get_weather_condition_icon(12) == "SNOWFLAKE"
+    assert smhi_weather_locations.get_weather_condition_icon(15) == "SNOWFLAKE"
+    assert smhi_weather_locations.get_weather_condition_icon(23) == "SNOWFLAKE"
+    assert smhi_weather_locations.get_weather_condition_icon(27) == "SNOWFLAKE"
+    assert smhi_weather_locations.get_weather_condition_icon(-1) == "NULL"
+    assert smhi_weather_locations.get_weather_condition_icon(28) == "NULL"
