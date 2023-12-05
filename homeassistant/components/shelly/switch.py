@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -65,7 +66,7 @@ def async_setup_block_entry(
     assert coordinator
 
     # Add Shelly Gas Valve as a switch
-    if coordinator.model == "SHGS-1":
+    if coordinator.model == MODEL_GAS:
         async_setup_block_attribute_entities(
             hass,
             async_add_entities,
@@ -77,7 +78,7 @@ def async_setup_block_entry(
 
     # In roller mode the relay blocks exist but do not contain required info
     if (
-        coordinator.model in ["SHSW-21", "SHSW-25"]
+        coordinator.model in [MODEL_2, MODEL_25]
         and coordinator.device.settings["mode"] != "relay"
     ):
         return
@@ -117,8 +118,9 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
-            if coordinator.device.shelly["relay_operational"]:
-                # Wall Display in relay mode, we need to remove a climate entity
+            if not coordinator.device.shelly.get("relay_in_thermostat", False):
+                # Wall Display relay is not used as the thermostat actuator,
+                # we need to remove a climate entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
                 async_remove_shelly_entity(hass, "climate", unique_id)
             else:

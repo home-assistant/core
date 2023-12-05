@@ -9,12 +9,12 @@ import re
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
-from zigpy.exceptions import NetworkSettingsInconsistent
+from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -29,6 +29,7 @@ from .core.const import (
     CONF_CUSTOM_QUIRKS_PATH,
     CONF_DEVICE_CONFIG,
     CONF_ENABLE_QUIRKS,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     CONF_ZIGPY,
@@ -36,6 +37,8 @@ from .core.const import (
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
+    STARTUP_FAILURE_DELAY_S,
+    STARTUP_RETRIES,
     RadioType,
 )
 from .core.device import get_device_automation_triggers
@@ -158,42 +161,67 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
 
-    zha_gateway = ZHAGateway(hass, zha_data.yaml_config, config_entry)
+    # Retry setup a few times before giving up to deal with missing serial ports in VMs
+    for attempt in range(STARTUP_RETRIES):
+        try:
+            zha_gateway = await ZHAGateway.async_from_config(
+                hass=hass,
+                config=zha_data.yaml_config,
+                config_entry=config_entry,
+            )
+            break
+        except NetworkSettingsInconsistent as exc:
+            await warn_on_inconsistent_network_settings(
+                hass,
+                config_entry=config_entry,
+                old_state=exc.old_state,
+                new_state=exc.new_state,
+            )
+            raise ConfigEntryError(
+                "Network settings do not match most recent backup"
+            ) from exc
+        except TransientConnectionError as exc:
+            raise ConfigEntryNotReady from exc
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.debug(
+                "Couldn't start coordinator (attempt %s of %s)",
+                attempt + 1,
+                STARTUP_RETRIES,
+                exc_info=exc,
+            )
 
-    try:
-        await zha_gateway.async_initialize()
-    except NetworkSettingsInconsistent as exc:
-        await warn_on_inconsistent_network_settings(
-            hass,
-            config_entry=config_entry,
-            old_state=exc.old_state,
-            new_state=exc.new_state,
-        )
-        raise HomeAssistantError(
-            "Network settings do not match most recent backup"
-        ) from exc
-    except Exception:
-        if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
-            try:
-                await warn_on_wrong_silabs_firmware(
-                    hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-                )
-            except AlreadyRunningEZSP as exc:
-                # If connecting fails but we somehow probe EZSP (e.g. stuck in the
-                # bootloader), reconnect, it should work
-                raise ConfigEntryNotReady from exc
+            if attempt < STARTUP_RETRIES - 1:
+                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
+                continue
 
-        raise
+            if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
+                try:
+                    # Ignore all exceptions during probing, they shouldn't halt setup
+                    await warn_on_wrong_silabs_firmware(
+                        hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+                    )
+                except AlreadyRunningEZSP as ezsp_exc:
+                    raise ConfigEntryNotReady from ezsp_exc
+
+            raise
 
     repairs.async_delete_blocking_issues(hass)
 
+    manufacturer = zha_gateway.state.node_info.manufacturer
+    model = zha_gateway.state.node_info.model
+
+    if manufacturer is None and model is None:
+        manufacturer = "Unknown"
+        model = "Unknown"
+
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.coordinator_ieee))},
-        identifiers={(DOMAIN, str(zha_gateway.coordinator_ieee))},
+        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
         name="Zigbee Coordinator",
-        manufacturer="ZHA",
-        model=zha_gateway.radio_description,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=zha_gateway.state.node_info.version,
     )
 
     websocket_api.async_load_api(hass)
@@ -265,6 +293,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             data[CONF_RADIO_TYPE] = "znp"
 
         config_entry.version = 3
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    if config_entry.version == 3:
+        data = {**config_entry.data}
+
+        if not data[CONF_DEVICE].get(CONF_BAUDRATE):
+            data[CONF_DEVICE][CONF_BAUDRATE] = {
+                "deconz": 38400,
+                "xbee": 57600,
+                "ezsp": 57600,
+                "znp": 115200,
+                "zigate": 115200,
+            }[data[CONF_RADIO_TYPE]]
+
+        if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
+            data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
+
+        config_entry.version = 4
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)

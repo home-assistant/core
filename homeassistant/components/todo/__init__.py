@@ -1,9 +1,10 @@
 """The todo integration."""
 
+from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -11,7 +12,13 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    ServiceCall,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -21,14 +28,81 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, TodoItemStatus, TodoListEntityFeature
+from .const import (
+    ATTR_DESCRIPTION,
+    ATTR_DUE,
+    ATTR_DUE_DATE,
+    ATTR_DUE_DATETIME,
+    DOMAIN,
+    TodoItemStatus,
+    TodoListEntityFeature,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
+
+@dataclasses.dataclass
+class TodoItemFieldDescription:
+    """A description of To-do item fields and validation requirements."""
+
+    service_field: str
+    """Field name for service calls."""
+
+    todo_item_field: str
+    """Field name for TodoItem."""
+
+    validation: Callable[[Any], Any]
+    """Voluptuous validation function."""
+
+    required_feature: TodoListEntityFeature
+    """Entity feature that enables this field."""
+
+
+TODO_ITEM_FIELDS = [
+    TodoItemFieldDescription(
+        service_field=ATTR_DUE_DATE,
+        validation=cv.date,
+        todo_item_field=ATTR_DUE,
+        required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_DUE_DATETIME,
+        validation=vol.All(cv.datetime, dt_util.as_local),
+        todo_item_field=ATTR_DUE,
+        required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_DESCRIPTION,
+        validation=cv.string,
+        todo_item_field=ATTR_DESCRIPTION,
+        required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+]
+
+TODO_ITEM_FIELD_SCHEMA = {
+    vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
+}
+TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
+
+
+def _validate_supported_features(
+    supported_features: int | None, call_data: dict[str, Any]
+) -> None:
+    """Validate service call fields against entity supported features."""
+    for desc in TODO_ITEM_FIELDS:
+        if desc.service_field not in call_data:
+            continue
+        if not supported_features or not supported_features & desc.required_feature:
+            raise ValueError(
+                f"Entity does not support setting field '{desc.service_field}'"
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -39,14 +113,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     frontend.async_register_built_in_panel(hass, "todo", "todo", "mdi:clipboard-list")
 
+    websocket_api.async_register_command(hass, websocket_handle_subscribe_todo_items)
     websocket_api.async_register_command(hass, websocket_handle_todo_item_list)
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
         "add_item",
-        {
-            vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
-        },
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
+                    **TODO_ITEM_FIELD_SCHEMA,
+                }
+            ),
+            *TODO_ITEM_FIELD_VALIDATIONS,
+        ),
         _async_add_todo_item,
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
@@ -60,9 +141,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional("status"): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
+                    **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
-            cv.has_at_least_one_key("rename", "status"),
+            *TODO_ITEM_FIELD_VALIDATIONS,
+            cv.has_at_least_one_key(
+                "rename", "status", *[desc.service_field for desc in TODO_ITEM_FIELDS]
+            ),
         ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
@@ -126,11 +211,26 @@ class TodoItem:
     status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""
 
+    due: datetime.date | datetime.datetime | None = None
+    """The date and time that a to-do is expected to be completed.
+
+    This field may be a date or datetime depending whether the entity feature
+    DUE_DATE or DUE_DATETIME are set.
+    """
+
+    description: str | None = None
+    """A more complete description of than that provided by the summary.
+
+    This field may be set when TodoListEntityFeature.DESCRIPTION is supported by
+    the entity.
+    """
+
 
 class TodoListEntity(Entity):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
+    _update_listeners: list[Callable[[list[JsonValueType] | None], None]] | None = None
 
     @property
     def state(self) -> int | None:
@@ -168,6 +268,102 @@ class TodoListEntity(Entity):
         """
         raise NotImplementedError()
 
+    @final
+    @callback
+    def async_subscribe_updates(
+        self,
+        listener: Callable[[list[JsonValueType] | None], None],
+    ) -> CALLBACK_TYPE:
+        """Subscribe to To-do list item updates.
+
+        Called by websocket API.
+        """
+        if self._update_listeners is None:
+            self._update_listeners = []
+        self._update_listeners.append(listener)
+
+        @callback
+        def unsubscribe() -> None:
+            if self._update_listeners:
+                self._update_listeners.remove(listener)
+
+        return unsubscribe
+
+    @final
+    @callback
+    def async_update_listeners(self) -> None:
+        """Push updated To-do items to all listeners."""
+        if not self._update_listeners:
+            return
+
+        todo_items: list[JsonValueType] = [
+            dataclasses.asdict(item) for item in self.todo_items or ()
+        ]
+        for listener in self._update_listeners:
+            listener(todo_items)
+
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Notify to-do item subscribers."""
+        super()._async_write_ha_state()
+        self.async_update_listeners()
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "todo/item/subscribe",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+    }
+)
+@websocket_api.async_response
+async def websocket_handle_subscribe_todo_items(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to To-do list item updates."""
+    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
+    entity_id: str = msg["entity_id"]
+
+    if not (entity := component.get_entity(entity_id)):
+        connection.send_error(
+            msg["id"],
+            "invalid_entity_id",
+            f"To-do list entity not found: {entity_id}",
+        )
+        return
+
+    @callback
+    def todo_item_listener(todo_items: list[JsonValueType] | None) -> None:
+        """Push updated To-do list items to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                {
+                    "items": todo_items,
+                },
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(
+        todo_item_listener
+    )
+    connection.send_result(msg["id"])
+
+    # Push an initial forecast update
+    entity.async_update_listeners()
+
+
+def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    result: dict[str, str] = {}
+    for name, value in obj:
+        if value is None:
+            continue
+        if isinstance(value, (datetime.date, datetime.datetime)):
+            result[name] = value.isoformat()
+        else:
+            result[name] = str(value)
+    return result
+
 
 @websocket_api.websocket_command(
     {
@@ -192,7 +388,13 @@ async def websocket_handle_todo_item_list(
     items: list[TodoItem] = entity.todo_items or []
     connection.send_message(
         websocket_api.result_message(
-            msg["id"], {"items": [dataclasses.asdict(item) for item in items]}
+            msg["id"],
+            {
+                "items": [
+                    dataclasses.asdict(item, dict_factory=_api_items_factory)
+                    for item in items
+                ]
+            },
         )
     )
 
@@ -249,8 +451,17 @@ def _find_by_uid_or_summary(
 
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
+    _validate_supported_features(entity.supported_features, call.data)
     await entity.async_create_todo_item(
-        item=TodoItem(summary=call.data["item"], status=TodoItemStatus.NEEDS_ACTION)
+        item=TodoItem(
+            summary=call.data["item"],
+            status=TodoItemStatus.NEEDS_ACTION,
+            **{
+                desc.todo_item_field: call.data[desc.service_field]
+                for desc in TODO_ITEM_FIELDS
+                if desc.service_field in call.data
+            },
+        )
     )
 
 
@@ -261,11 +472,20 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     if not found:
         raise ValueError(f"Unable to find To-do item '{item}'")
 
-    update_item = TodoItem(
-        uid=found.uid, summary=call.data.get("rename"), status=call.data.get("status")
-    )
+    _validate_supported_features(entity.supported_features, call.data)
 
-    await entity.async_update_todo_item(item=update_item)
+    await entity.async_update_todo_item(
+        item=TodoItem(
+            uid=found.uid,
+            summary=call.data.get("rename"),
+            status=call.data.get("status"),
+            **{
+                desc.todo_item_field: call.data[desc.service_field]
+                for desc in TODO_ITEM_FIELDS
+                if desc.service_field in call.data
+            },
+        )
+    )
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -285,7 +505,7 @@ async def _async_get_todo_items(
     """Return items in the To-do list."""
     return {
         "items": [
-            dataclasses.asdict(item)
+            dataclasses.asdict(item, dict_factory=_api_items_factory)
             for item in entity.todo_items or ()
             if not (statuses := call.data.get("status")) or item.status in statuses
         ]

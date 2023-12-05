@@ -416,9 +416,7 @@ automation:
       service_to_call: test.automation
 input_datetime:
 """,
-        hass.config.path(
-            "blueprints/automation/test_event_service.yaml"
-        ): """
+        hass.config.path("blueprints/automation/test_event_service.yaml"): """
 blueprint:
   name: "Call service based on event"
   domain: automation

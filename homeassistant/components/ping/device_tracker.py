@@ -8,26 +8,21 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     AsyncSeeCallback,
+    ScannerEntity,
     SourceType,
 )
-from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_HOSTS,
-    CONF_NAME,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
+from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PingDomainData
 from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DOMAIN
-from .entity import BasePingEntity
+from .coordinator import PingUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,8 +84,27 @@ async def async_setup_entry(
     async_add_entities([PingDeviceTracker(entry, data.coordinators[entry.entry_id])])
 
 
-class PingDeviceTracker(BasePingEntity, BaseTrackerEntity):
+class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
     """Representation of a Ping device tracker."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
+    ) -> None:
+        """Initialize the Ping device tracker."""
+        super().__init__(coordinator)
+
+        self._attr_name = config_entry.title
+        self.config_entry = config_entry
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.coordinator.data.ip_address
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.config_entry.entry_id
 
     @property
     def source_type(self) -> SourceType:
@@ -98,11 +112,9 @@ class PingDeviceTracker(BasePingEntity, BaseTrackerEntity):
         return SourceType.ROUTER
 
     @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self.coordinator.data.is_alive:
-            return STATE_HOME
-        return STATE_NOT_HOME
+    def is_connected(self) -> bool:
+        """Return true if ping returns is_alive."""
+        return self.coordinator.data.is_alive
 
     @property
     def entity_registry_enabled_default(self) -> bool:

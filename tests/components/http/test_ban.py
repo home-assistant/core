@@ -24,9 +24,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from . import mock_real_ip
-
 from tests.common import async_get_persistent_notifications
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
