@@ -21,7 +21,7 @@ async def default_code() -> str | UndefinedType:
 
 @pytest.fixture
 async def code_format() -> str | None:
-    """Return the default code for the test lock entity."""
+    """Return the code format for the test lock entity."""
     return None
 
 
@@ -31,7 +31,7 @@ async def lock_supported_features() -> LockEntityFeature:
     return LockEntityFeature.OPEN
 
 
-@pytest.fixture(name="mock_lock")
+@pytest.fixture(name="mock_lock_entity")
 async def setup_lock_platform_test_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
