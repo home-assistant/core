@@ -233,6 +233,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="WLAN clients",
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
+        state_class=SensorStateClass.MEASUREMENT,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
