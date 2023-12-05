@@ -287,7 +287,7 @@ class DeviceTrackerPlatform:
     ) -> None:
         """Set up a legacy platform."""
         assert self.type == PLATFORM_TYPE_LEGACY
-        full_name = f"{DOMAIN}.{self.name}"
+        full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
             try:
