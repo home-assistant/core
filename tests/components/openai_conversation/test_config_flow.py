@@ -1,9 +1,9 @@
 """Test the OpenAI Conversation config flow."""
 from unittest.mock import patch
 
-import pytest
 from httpx import Response
 from openai import APIConnectionError, AuthenticationError, BadRequestError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.openai_conversation.const import (

@@ -1,7 +1,6 @@
 """Tests for the OpenAI integration."""
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from httpx import Response
 from openai import RateLimitError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
@@ -9,7 +8,7 @@ from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.completion_usage import CompletionUsage
 from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
-
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
