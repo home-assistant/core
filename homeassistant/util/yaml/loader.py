@@ -1,7 +1,7 @@
 """Custom loader."""
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import suppress
 import fnmatch
 from io import StringIO, TextIOWrapper
@@ -23,7 +23,7 @@ except ImportError:
     )
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.deprecation import deprecated_class
+from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -137,9 +137,35 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
-@deprecated_class("FastSafeLoader")
 class SafeLoader(FastSafeLoader):
     """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
 
 
 class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
@@ -151,9 +177,35 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
-@deprecated_class("PythonSafeLoader")
 class SafeLineLoader(PythonSafeLoader):
     """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
 
 
 LoaderType = FastSafeLoader | PythonSafeLoader
