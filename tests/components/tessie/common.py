@@ -14,17 +14,20 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
-1ed = load_json_object_fixture("asleep.json", DOMAIN)
+TEST_VEHICLE_STATE_ASLEEP = load_json_object_fixture("asleep.json", DOMAIN)
 
 TEST_CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
-URL_VEHICLES = "https://api.tessie.com/vehicles"
+TESSIE_URL = "https://api.tessie.com/"
 
 TEST_REQUEST_INFO = RequestInfo(
-    url=URL_VEHICLES, method="GET", headers={}, real_url=URL_VEHICLES
+    url=TESSIE_URL, method="GET", headers={}, real_url=TESSIE_URL
 )
 
 ERROR_AUTH = ClientResponseError(
     request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.UNAUTHORIZED
+)
+ERROR_TIMEOUT = ClientResponseError(
+    request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.REQUEST_TIMEOUT
 )
 ERROR_UNKNOWN = ClientResponseError(
     request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.BAD_REQUEST
