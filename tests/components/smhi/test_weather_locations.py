@@ -15,6 +15,24 @@ def smhi_weather_locations():
     return SmhiWeatherLocations()
 
 
+@pytest.fixture
+def fake_weather_locations_data():
+    """Mock weather data."""
+    return {
+        # ... other values not used by SmhiWeatherLocations ...
+        "timeSeries": [
+            {
+                "parameters": [
+                    {"name": "t", "values": [3.7]},
+                    {"name": "Wsymb2", "values": [1]},
+                ]
+                # ... more weather data ...
+            }
+        ]
+        # ... other values not used by SmhiWeatherLocations ...
+    }
+
+
 def test_get_cities(smhi_weather_locations):
     """Test the get_cities function of SmhiWeatherLocations class."""
     cities = smhi_weather_locations.get_cities()
