@@ -64,7 +64,6 @@ from .const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_STOPPING,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -850,7 +849,6 @@ class HomeAssistant:
                 )
 
         # stage 1
-        self.bus.async_fire(EVENT_HOMEASSISTANT_STOPPING)
         try:
             async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
                 tasks: list[asyncio.Future[Any]] = []
