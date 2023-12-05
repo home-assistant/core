@@ -759,7 +759,7 @@ emulated-roku==0.2.1
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==1.0.0
+energyzero==2.0.0
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -1024,7 +1024,7 @@ hole==0.8.0
 holidays==0.37
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231204.0
+home-assistant-frontend==20231205.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.11.29

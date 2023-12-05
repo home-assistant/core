@@ -66,7 +66,7 @@ from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
-from .util.yaml import SECRET_YAML, Secrets, load_yaml
+from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -476,15 +476,15 @@ def load_yaml_config_file(
 
     This method needs to run in an executor.
     """
-    conf_dict = load_yaml(config_path, secrets)
-
-    if not isinstance(conf_dict, dict):
+    try:
+        conf_dict = load_yaml_dict(config_path, secrets)
+    except YamlTypeError as exc:
         msg = (
             f"The configuration file {os.path.basename(config_path)} "
             "does not contain a dictionary"
         )
         _LOGGER.error(msg)
-        raise HomeAssistantError(msg)
+        raise HomeAssistantError(msg) from exc
 
     # Convert values to dictionaries if they are None
     for key, value in conf_dict.items():
