@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
+    CONF_AUDIO_CODEC,
     DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
@@ -44,7 +45,6 @@ from .const import (
     MEDIA_TYPE_NONE,
     MEDIA_TYPE_VIDEO,
     PLAYABLE_ITEM_TYPES,
-    SUPPORTED_AUDIO_CODECS,
     SUPPORTED_COLLECTION_TYPES,
 )
 from .models import JellyfinData
@@ -534,13 +534,9 @@ class JellyfinSource(MediaSource):
         item_id = media_item[ITEM_KEY_ID]
 
         if media_type == MEDIA_TYPE_AUDIO:
-            if self.entry.options.get("audio_codec") in SUPPORTED_AUDIO_CODECS:
-                return str(
-                    self.api.audio_url(
-                        item_id, audio_codec=self.entry.options.get("audio_codec")
-                    )
-                )
-            return str(self.api.audio_url(item_id))
+            if audio_codec := self.entry.options.get(CONF_AUDIO_CODEC):
+                return self.api.audio_url(item_id, audio_codec=audio_codec)  # type: ignore[no-any-return]
+            return self.api.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
             return self.api.video_url(item_id)  # type: ignore[no-any-return]
 

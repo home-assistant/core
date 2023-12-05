@@ -13,6 +13,7 @@ COLLECTION_TYPE_MOVIES: Final = "movies"
 COLLECTION_TYPE_MUSIC: Final = "music"
 COLLECTION_TYPE_TVSHOWS: Final = "tvshows"
 
+CONF_AUDIO_CODEC: Final = "audio_codec"
 CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
 
 DEFAULT_NAME: Final = "Jellyfin"

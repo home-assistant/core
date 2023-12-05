@@ -35,11 +35,7 @@ REAUTH_DATA_SCHEMA = vol.Schema(
 
 
 OPTIONAL_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional("audio_codec", default="None"): vol.In(
-            ["None", *SUPPORTED_AUDIO_CODECS]
-        )
-    }
+    {vol.Optional("audio_codec"): vol.In(SUPPORTED_AUDIO_CODECS)}
 )
 
 

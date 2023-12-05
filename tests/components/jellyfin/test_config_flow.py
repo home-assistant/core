@@ -5,7 +5,11 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.jellyfin.const import CONF_CLIENT_DEVICE_ID, DOMAIN
+from homeassistant.components.jellyfin.const import (
+    CONF_AUDIO_CODEC,
+    CONF_CLIENT_DEVICE_ID,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -457,43 +461,43 @@ async def test_options_flow(
         result["flow_id"], user_input={}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options["audio_codec"] == "None"
+    assert config_entry.options.get(CONF_AUDIO_CODEC, None) is None
 
     # Manual aac
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"audio_codec": "aac"}
+        result["flow_id"], user_input={CONF_AUDIO_CODEC: "aac"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options["audio_codec"] == "aac"
+    assert config_entry.options[CONF_AUDIO_CODEC] == "aac"
 
     # Manual mp3
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"audio_codec": "mp3"}
+        result["flow_id"], user_input={CONF_AUDIO_CODEC: "mp3"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options["audio_codec"] == "mp3"
+    assert config_entry.options[CONF_AUDIO_CODEC] == "mp3"
 
     # Manual vorbis
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"audio_codec": "vorbis"}
+        result["flow_id"], user_input={CONF_AUDIO_CODEC: "vorbis"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options["audio_codec"] == "vorbis"
+    assert config_entry.options[CONF_AUDIO_CODEC] == "vorbis"
 
     # Manual wma
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"audio_codec": "wma"}
+        result["flow_id"], user_input={CONF_AUDIO_CODEC: "wma"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options["audio_codec"] == "wma"
+    assert config_entry.options[CONF_AUDIO_CODEC] == "wma"
 
     # Bad
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     with pytest.raises(MultipleInvalid):
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={"audio_codec": "ogg"}
+            result["flow_id"], user_input={CONF_AUDIO_CODEC: "ogg"}
         )
