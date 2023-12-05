@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from bluetooth_adapters import DiscoveredDeviceAdvertisementData
-from habluetooth import BaseHaRemoteScanner, BaseHaScanner, HaBluetoothConnector
+from habluetooth import BaseHaRemoteScanner, HaBluetoothConnector
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -19,16 +16,10 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 
-from . import models
+from .const import DATA_MANAGER
 
-
-@dataclass(slots=True)
-class BluetoothScannerDevice:
-    """Data for a bluetooth device from a given scanner."""
-
-    scanner: BaseHaScanner
-    ble_device: BLEDevice
-    advertisement: AdvertisementData
+if TYPE_CHECKING:
+    from .manager import HomeAssistantBluetoothManager
 
 
 class HomeAssistantRemoteScanner(BaseHaRemoteScanner):
@@ -55,8 +46,8 @@ class HomeAssistantRemoteScanner(BaseHaRemoteScanner):
     ) -> None:
         """Initialize the scanner."""
         self.hass = hass
-        assert models.MANAGER is not None
-        self._storage = models.MANAGER.storage
+        manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
+        self._storage = manager.storage
         self._cancel_stop: CALLBACK_TYPE | None = None
         super().__init__(scanner_id, name, new_info_callback, connector, connectable)
 
