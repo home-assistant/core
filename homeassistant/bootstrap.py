@@ -27,6 +27,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    config_validation as cv,
     device_registry,
     entity,
     entity_registry,
@@ -474,9 +475,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
     domains = {
-        domain
-        for key in config
-        if (domain := conf_util.domain_from_config_key(key)) != core.DOMAIN
+        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
     }
 
     # Add config entry domains

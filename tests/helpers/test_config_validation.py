@@ -1634,5 +1634,9 @@ def test_domain() -> None:
         cv.domain_key("")
     with pytest.raises(vol.Invalid):
         cv.domain_key("hue ")
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("hue  ")
     assert cv.domain_key("hue") == "hue"
-    assert cv.domain_key("hue 123") == "hue"
+    assert cv.domain_key("hue1") == "hue1"
+    assert cv.domain_key("hue 1") == "hue"
+    assert cv.domain_key("hue  1") == "hue"

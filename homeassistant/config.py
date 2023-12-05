@@ -1266,24 +1266,13 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 
     Async friendly.
     """
-    return [key for key in config if domain_from_config_key(key) == domain]
-
-
-def domain_from_config_key(key: str) -> str:
-    """Return domain from a configuration key with optional label.
-
-    A domain is separated from a label by one or more spaces, empty labels are not
-    allowed.
-
-    Examples:
-    'hue' returns 'hue'
-    'hue 1' returns 'hue'
-    'hue  1' returns 'hue'
-    'hue ' returns 'hue '
-    'hue  ' returns 'hue  '
-    """
-    parts = key.partition(" ")
-    return parts[0] if parts[2].strip(" ") else key
+    domain_configs = []
+    for key in config:
+        with suppress(vol.Invalid):
+            if cv.domain_key(key) != domain:
+                continue
+            domain_configs.append(key)
+    return domain_configs
 
 
 async def async_process_component_config(  # noqa: C901

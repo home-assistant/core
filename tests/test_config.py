@@ -2043,7 +2043,7 @@ async def test_component_config_validation_error(
 
     for domain_with_label in config:
         integration = await async_get_integration(
-            hass, config_util.domain_from_config_key(domain_with_label)
+            hass, cv.domain_key(domain_with_label)
         )
         await config_util.async_process_component_and_handle_errors(
             hass,
@@ -2088,7 +2088,7 @@ async def test_component_config_validation_error_with_docs(
 
     for domain_with_label in config:
         integration = await async_get_integration(
-            hass, config_util.domain_from_config_key(domain_with_label)
+            hass, cv.domain_key(domain_with_label)
         )
         await config_util.async_process_component_and_handle_errors(
             hass,
@@ -2240,14 +2240,3 @@ def test_config_per_platform() -> None:
         (None, 1),
         ("hello 2", config["zone Hallo"][1]),
     ] == list(config_util.config_per_platform(config, "zone"))
-
-
-def test_domain_from_config_key() -> None:
-    """Test domain_from_config_key."""
-
-    assert config_util.domain_from_config_key("hue") == "hue"
-    assert config_util.domain_from_config_key("hue1") == "hue1"
-    assert config_util.domain_from_config_key("hue 1") == "hue"
-    assert config_util.domain_from_config_key("hue  1") == "hue"
-    assert config_util.domain_from_config_key("hue ") == "hue "
-    assert config_util.domain_from_config_key("hue  ") == "hue  "
