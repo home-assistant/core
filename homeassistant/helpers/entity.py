@@ -856,11 +856,11 @@ class Entity(ABC):
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
-            device_class: str | None = attr.get(ATTR_DEVICE_CLASS)
+            original_device_class: str | None = self.device_class
             supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
             if (
                 capabilities != entry.capabilities
-                or device_class != entry.original_device_class
+                or original_device_class != entry.original_device_class
                 or supported_features != entry.supported_features
             ):
                 time_now = hass.loop.time()
@@ -887,7 +887,7 @@ class Entity(ABC):
                 self.registry_entry = entity_registry.async_update_entity(
                     self.entity_id,
                     capabilities=capabilities,
-                    original_device_class=device_class,
+                    original_device_class=original_device_class,
                     supported_features=supported_features,
                 )
 
