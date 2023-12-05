@@ -1,1 +1,1 @@
-"""Tests for OpenERZ component."""
+"""Tests for openAQ component."""
