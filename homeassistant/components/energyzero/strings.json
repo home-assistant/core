@@ -9,6 +9,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "exceptions": {
+    "invalid_date": {
+      "message": "Invalid date provided. Got {date}"
+    }
+  },
   "entity": {
     "sensor": {
       "current_hour_price": {

@@ -13,12 +13,11 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END,
-    ATTR_INCL_VAT,
     ATTR_START,
     DOMAIN,
     ENERGY_SERVICE_NAME,
@@ -39,7 +38,13 @@ def __get_date(date_input: str | None) -> date | datetime:
     if value := dt_util.parse_datetime(date_input):
         return value
 
-    raise ValueError(f"Invalid date: {date_input}")
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_date",
+        translation_placeholders={
+            "date": date_input,
+        },
+    )
 
 
 def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
@@ -52,31 +57,23 @@ async def __get_prices(
     call: ServiceCall,
     price_type: PriceType,
 ) -> ServiceResponse:
-    previous_incl_vat = coordinator.energyzero.incl_vat
+    start = __get_date(call.data.get(ATTR_START))
+    end = __get_date(call.data.get(ATTR_END))
 
-    try:
-        coordinator.energyzero.incl_vat = bool(call.data[ATTR_INCL_VAT])
-        start = __get_date(call.data.get(ATTR_START))
-        end = __get_date(call.data.get(ATTR_END))
+    data: Electricity | Gas
 
-        data: Electricity | Gas
-
-        if price_type == PriceType.GAS:
-            data = await coordinator.energyzero.gas_prices(
-                start_date=start,
-                end_date=end,
-            )
-        else:
-            data = await coordinator.energyzero.energy_prices(
-                start_date=start,
-                end_date=end,
-            )
-
-        coordinator.energyzero.incl_vat = previous_incl_vat
-    except Exception as error:
-        coordinator.energyzero.incl_vat = previous_incl_vat
-
-        raise error
+    if price_type == PriceType.GAS:
+        data = await coordinator.energyzero.gas_prices(
+            start_date=start,
+            end_date=end,
+            # TODO add include_vat = VatOption.INCLUDE https://github.com/klaasnicolaas/python-energyzero/pull/270
+        )
+    else:
+        data = await coordinator.energyzero.energy_prices(
+            start_date=start,
+            end_date=end,
+            #  ODO add include_vat = VatOption.INCLUDE https://github.com/klaasnicolaas/python-energyzero/pull/270
+        )
 
     return __serialize_prices(data)
 
