@@ -64,7 +64,7 @@ async def async_get_service(
         _LOGGER.warning(
             "Kodi host name should no longer contain http:// See updated "
             "definitions here: "
-            "https://www.home-assistant.io/integrations/media_player.kodi/"
+            "https://www.home-assistant.io/integrations/kodi/"
         )
 
     http_protocol = "https" if encryption else "http"

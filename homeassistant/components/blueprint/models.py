@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import logging
 import pathlib
 import shutil
@@ -189,12 +189,14 @@ class DomainBlueprints:
         domain: str,
         logger: logging.Logger,
         blueprint_in_use: Callable[[HomeAssistant, str], bool],
+        reload_blueprint_consumers: Callable[[HomeAssistant, str], Awaitable[None]],
     ) -> None:
         """Initialize a domain blueprints instance."""
         self.hass = hass
         self.domain = domain
         self.logger = logger
         self._blueprint_in_use = blueprint_in_use
+        self._reload_blueprint_consumers = reload_blueprint_consumers
         self._blueprints: dict[str, Blueprint | None] = {}
         self._load_lock = asyncio.Lock()
 
@@ -283,7 +285,7 @@ class DomainBlueprints:
                 blueprint = await self.hass.async_add_executor_job(
                     self._load_blueprint, blueprint_path
                 )
-            except Exception:
+            except FailedToLoad:
                 self._blueprints[blueprint_path] = None
                 raise
 
@@ -315,30 +317,40 @@ class DomainBlueprints:
         await self.hass.async_add_executor_job(path.unlink)
         self._blueprints[blueprint_path] = None
 
-    def _create_file(self, blueprint: Blueprint, blueprint_path: str) -> None:
-        """Create blueprint file."""
+    def _create_file(
+        self, blueprint: Blueprint, blueprint_path: str, allow_override: bool
+    ) -> bool:
+        """Create blueprint file.
+
+        Returns true if the action overrides an existing blueprint.
+        """
 
         path = pathlib.Path(
             self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
         )
-        if path.exists():
+        exists = path.exists()
+
+        if not allow_override and exists:
             raise FileAlreadyExists(self.domain, blueprint_path)
 
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(blueprint.yaml(), encoding="utf-8")
+        return exists
 
     async def async_add_blueprint(
-        self, blueprint: Blueprint, blueprint_path: str
-    ) -> None:
+        self, blueprint: Blueprint, blueprint_path: str, allow_override=False
+    ) -> bool:
         """Add a blueprint."""
-        if not blueprint_path.endswith(".yaml"):
-            blueprint_path = f"{blueprint_path}.yaml"
-
-        await self.hass.async_add_executor_job(
-            self._create_file, blueprint, blueprint_path
+        overrides_existing = await self.hass.async_add_executor_job(
+            self._create_file, blueprint, blueprint_path, allow_override
         )
 
         self._blueprints[blueprint_path] = blueprint
+
+        if overrides_existing:
+            await self._reload_blueprint_consumers(self.hass, blueprint_path)
+
+        return overrides_existing
 
     async def async_populate(self) -> None:
         """Create folder if it doesn't exist and populate with examples."""

@@ -1266,7 +1266,9 @@ async def _test_self_reset(
     state = hass.states.get("sensor.energy_bill")
     if expect_reset:
         assert state.attributes.get("last_period") == "2"
-        assert state.attributes.get("last_reset") == now.isoformat()
+        assert (
+            state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
+        )  # last_reset is kept in UTC
         assert state.state == "3"
     else:
         assert state.attributes.get("last_period") == "0"
@@ -1345,6 +1347,16 @@ async def test_self_reset_hourly(hass: HomeAssistant) -> None:
     """Test hourly reset of meter."""
     await _test_self_reset(
         hass, gen_config("hourly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
+async def test_self_reset_hourly_dst(hass: HomeAssistant) -> None:
+    """Test hourly reset of meter in DST change conditions."""
+
+    hass.config.time_zone = "Europe/Lisbon"
+    dt_util.set_default_time_zone(dt_util.get_time_zone(hass.config.time_zone))
+    await _test_self_reset(
+        hass, gen_config("hourly"), "2023-10-29T01:59:00.000000+00:00"
     )
 
 

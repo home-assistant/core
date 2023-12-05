@@ -6,10 +6,11 @@ from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, Protocol, cast
 
+from homeassistant.config import config_per_platform
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import discovery
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -125,7 +126,7 @@ def async_setup_legacy(
             hass.data[NOTIFY_SERVICES].setdefault(integration_name, []).append(
                 notify_service
             )
-            hass.config.components.add(f"{DOMAIN}.{integration_name}")
+            hass.config.components.add(f"{integration_name}.{DOMAIN}")
 
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None

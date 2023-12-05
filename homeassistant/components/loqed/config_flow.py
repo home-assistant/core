@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import webhook
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_NAME, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already exists
         await self.async_set_unique_id(lock_data["bridge_mac_wifi"])
-        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self._abort_if_unique_id_configured({"bridge_ip": host})
 
         return await self.async_step_user()
 

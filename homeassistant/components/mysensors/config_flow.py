@@ -131,6 +131,12 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Create a config entry from frontend user input."""
+        return await self.async_step_select_gateway_type()
+
+    async def async_step_select_gateway_type(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Show the select gateway type menu."""
         return self.async_show_menu(
             step_id="select_gateway_type",
             menu_options=["gw_serial", "gw_tcp", "gw_mqtt"],

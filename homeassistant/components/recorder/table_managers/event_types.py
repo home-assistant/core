@@ -9,7 +9,6 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
-from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
 from ..tasks import RefreshEventTypesTask
@@ -78,7 +77,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
             return results
 
         with session.no_autoflush:
-            for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
+            for missing_chunk in chunked(missing, self.recorder.max_bind_vars):
                 for event_type_id, event_type in execute_stmt_lambda_element(
                     session, find_event_type_ids(missing_chunk), orm_rows=False
                 ):

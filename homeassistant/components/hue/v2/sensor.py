@@ -20,6 +20,7 @@ from aiohue.v2.models.zigbee_connectivity import ZigbeeConnectivity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -93,9 +94,13 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description = SensorEntityDescription(
+        key="temperature_sensor",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        has_entity_name=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
 
     @property
     def native_value(self) -> float:
@@ -106,9 +111,13 @@ class HueTemperatureSensor(HueSensorBase):
 class HueLightLevelSensor(HueSensorBase):
     """Representation of a Hue LightLevel (illuminance) sensor."""
 
-    _attr_native_unit_of_measurement = LIGHT_LUX
-    _attr_device_class = SensorDeviceClass.ILLUMINANCE
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description = SensorEntityDescription(
+        key="lightlevel_sensor",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        has_entity_name=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
 
     @property
     def native_value(self) -> int:
@@ -130,10 +139,14 @@ class HueLightLevelSensor(HueSensorBase):
 class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
 
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description = SensorEntityDescription(
+        key="battery_sensor",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        has_entity_name=True,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
 
     @property
     def native_value(self) -> int:
@@ -151,16 +164,20 @@ class HueBatterySensor(HueSensorBase):
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "zigbee_connectivity"
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [
-        "connected",
-        "disconnected",
-        "connectivity_issue",
-        "unidirectional_incoming",
-    ]
-    _attr_entity_registry_enabled_default = False
+    entity_description = SensorEntityDescription(
+        key="zigbee_connectivity_sensor",
+        device_class=SensorDeviceClass.ENUM,
+        has_entity_name=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="zigbee_connectivity",
+        options=[
+            "connected",
+            "disconnected",
+            "connectivity_issue",
+            "unidirectional_incoming",
+        ],
+        entity_registry_enabled_default=False,
+    )
 
     @property
     def native_value(self) -> str:

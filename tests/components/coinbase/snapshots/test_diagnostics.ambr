@@ -7,13 +7,11 @@
           'amount': '**REDACTED**',
           'currency': 'BTC',
         }),
-        'currency': 'BTC',
+        'currency': dict({
+          'code': 'BTC',
+        }),
         'id': '**REDACTED**',
         'name': 'BTC Wallet',
-        'native_balance': dict({
-          'amount': '**REDACTED**',
-          'currency': 'USD',
-        }),
         'type': 'wallet',
       }),
       dict({
@@ -21,13 +19,11 @@
           'amount': '**REDACTED**',
           'currency': 'BTC',
         }),
-        'currency': 'BTC',
+        'currency': dict({
+          'code': 'BTC',
+        }),
         'id': '**REDACTED**',
         'name': 'BTC Vault',
-        'native_balance': dict({
-          'amount': '**REDACTED**',
-          'currency': 'USD',
-        }),
         'type': 'vault',
       }),
       dict({
@@ -35,13 +31,11 @@
           'amount': '**REDACTED**',
           'currency': 'USD',
         }),
-        'currency': 'USD',
+        'currency': dict({
+          'code': 'USD',
+        }),
         'id': '**REDACTED**',
         'name': 'USD Wallet',
-        'native_balance': dict({
-          'amount': '**REDACTED**',
-          'currency': 'USD',
-        }),
         'type': 'fiat',
       }),
     ]),

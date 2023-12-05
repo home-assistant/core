@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 import homeassistant.util.dt as dt_util
 
 from . import MULTI_SENSOR_TOKEN, mock_responses, setup_platform
@@ -27,13 +26,14 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensor_readings(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test for successfully setting up the Efergy platform."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
     entry = await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
-    ent_reg: EntityRegistry = er.async_get(hass)
 
     state = hass.states.get("sensor.efergy_power_usage")
     assert state.state == "1580"
@@ -85,9 +85,9 @@ async def test_sensor_readings(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    entity = ent_reg.async_get("sensor.efergy_power_usage_728386")
+    entity = entity_registry.async_get("sensor.efergy_power_usage_728386")
     assert entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    ent_reg.async_update_entity(entity.entity_id, **{"disabled_by": None})
+    entity_registry.async_update_entity(entity.entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.efergy_power_usage_728386")

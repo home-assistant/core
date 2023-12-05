@@ -1,10 +1,11 @@
 """Test the frame helper."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
 
 
@@ -41,7 +42,28 @@ async def test_extract_frame_integration(
     """Test extracting the current frame from integration context."""
     integration_frame = frame.get_integration_frame()
     assert integration_frame == frame.IntegrationFrame(
-        False, "homeassistant/components/hue/light.py", mock_integration_frame, "hue"
+        custom_integration=False,
+        frame=mock_integration_frame,
+        integration="hue",
+        module=None,
+        relative_filename="homeassistant/components/hue/light.py",
+    )
+
+
+async def test_extract_frame_resolve_module(
+    hass: HomeAssistant, enable_custom_integrations
+) -> None:
+    """Test extracting the current frame from integration context."""
+    from custom_components.test_integration_frame import call_get_integration_frame
+
+    integration_frame = call_get_integration_frame()
+
+    assert integration_frame == frame.IntegrationFrame(
+        custom_integration=True,
+        frame=ANY,
+        integration="test_integration_frame",
+        module="custom_components.test_integration_frame",
+        relative_filename="custom_components/test_integration_frame/__init__.py",
     )
 
 
@@ -80,7 +102,11 @@ async def test_extract_frame_integration_with_excluded_integration(
         )
 
     assert integration_frame == frame.IntegrationFrame(
-        False, "homeassistant/components/mdns/light.py", correct_frame, "mdns"
+        custom_integration=False,
+        frame=correct_frame,
+        integration="mdns",
+        module=None,
+        relative_filename="homeassistant/components/mdns/light.py",
     )
 
 
@@ -106,7 +132,7 @@ async def test_extract_frame_no_integration(caplog: pytest.LogCaptureFixture) ->
 
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_prevent_flooding(
-    caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
 ) -> None:
     """Test to ensure a report is only written once to the log."""
 
@@ -116,9 +142,10 @@ async def test_prevent_flooding(
     filename = "homeassistant/components/hue/light.py"
 
     expected_message = (
-        f"Detected integration that {what}. Please report issue for {integration} using"
-        f" this method at {filename}, line "
-        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}"
+        f"Detected that integration '{integration}' {what} at {filename}, line "
+        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}, "
+        f"please create a bug report at https://github.com/home-assistant/core/issues?"
+        f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
     frame.report(what, error_if_core=False)

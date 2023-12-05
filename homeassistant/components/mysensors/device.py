@@ -8,7 +8,7 @@ from typing import Any
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -212,6 +212,8 @@ class MySensorsChildEntity(MySensorNodeEntity):
 
         attr[ATTR_CHILD_ID] = self.child_id
         attr[ATTR_DESCRIPTION] = self._child.description
+        # We should deprecate the battery level attribute in the future.
+        attr[ATTR_BATTERY_LEVEL] = self._node.battery_level
 
         set_req = self.gateway.const.SetReq
         for value_type, value in self._values.items():

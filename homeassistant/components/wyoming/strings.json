@@ -9,6 +9,10 @@
       },
       "hassio_confirm": {
         "description": "Do you want to configure Home Assistant to connect to the Wyoming service provided by the add-on: {addon}?"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to configure Home Assistant to connect to the Wyoming service {name}?",
+        "title": "Discovered Wyoming service"
       }
     },
     "error": {
@@ -16,7 +20,31 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "no_services": "No services found at endpoint"
+      "no_services": "No services found at endpoint",
+      "no_port": "No port for endpoint"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "assist_in_progress": {
+        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
+      "noise_suppression": {
+        "name": "Noise suppression"
+      }
+    },
+    "switch": {
+      "satellite_enabled": {
+        "name": "Satellite enabled"
+      }
     }
   }
 }

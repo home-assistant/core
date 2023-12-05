@@ -10,6 +10,7 @@ from typing import Any, Generic, TypeVar, cast
 import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 from awesomeversion import AwesomeVersion
@@ -58,7 +59,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import device_update_info, get_rpc_device_wakeup_period
+from .utils import get_rpc_device_wakeup_period, update_device_fw_info
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -219,7 +220,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             # Shelly TRV sends information about changing the configuration for no
             # reason, reloading the config entry is not needed for it.
-            if self.model == "SHTRV-01":
+            if self.model == MODEL_VALVE:
                 self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
@@ -374,16 +375,13 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
                 return
-            old_firmware = self.device.firmware_version
             await self.device.update_shelly()
-            if self.device.firmware_version == old_firmware:
-                return
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
 
 
 class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
@@ -531,7 +529,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
         try:
             await self.device.initialize()
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
@@ -586,7 +584,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         ble_scanner_mode = self.entry.options.get(
             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
         )
-        if ble_scanner_mode == BLEScannerMode.DISABLED:
+        if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
             return
         if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
@@ -617,6 +615,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
+            if self.sleep_period:
+                update_device_fw_info(self.hass, self.device, self.entry)
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 

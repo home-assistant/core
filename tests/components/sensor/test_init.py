@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -166,7 +167,7 @@ async def test_deprecated_last_reset(
         f"with state_class {state_class} has set last_reset. Setting last_reset for "
         "entities with state_class other than 'total' is not supported. Please update "
         "your configuration if state_class is manually configured, otherwise report it "
-        "to the custom integration author"
+        "to the author of the 'test' custom integration"
     ) in caplog.text
 
     state = hass.states.get("sensor.test")
@@ -2496,3 +2497,25 @@ def test_device_class_units_state_classes(hass: HomeAssistant) -> None:
     ) - NON_NUMERIC_DEVICE_CLASSES - {SensorDeviceClass.MONETARY}
     # DEVICE_CLASS_STATE_CLASSES should include all device classes
     assert set(DEVICE_CLASS_STATE_CLASSES) == set(SensorDeviceClass)
+
+
+async def test_entity_category_config_raises_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error is raised when entity category is set to config."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", entity_category=EntityCategory.CONFIG
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Entity sensor.test cannot be added as the entity category is set to config"
+        in caplog.text
+    )
+
+    assert not hass.states.get("sensor.test")

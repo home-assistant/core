@@ -100,7 +100,6 @@ from .const import (  # noqa: F401
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
@@ -162,11 +161,9 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
             [
-                DataType.INT8,
                 DataType.INT16,
                 DataType.INT32,
                 DataType.INT64,
-                DataType.UINT8,
                 DataType.UINT16,
                 DataType.UINT32,
                 DataType.UINT64,
@@ -181,9 +178,10 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_OFFSET, default=0): number_validator,
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+        vol.Optional(
+            CONF_SWAP,
+        ): vol.In(
             [
-                CONF_SWAP_NONE,
                 CONF_SWAP_BYTE,
                 CONF_SWAP_WORD,
                 CONF_SWAP_WORD_BYTE,
@@ -232,8 +230,8 @@ CLIMATE_SCHEMA = vol.All(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
-            vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
+            vol.Optional(CONF_MAX_TEMP, default=35): number_validator,
+            vol.Optional(CONF_MIN_TEMP, default=5): number_validator,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,

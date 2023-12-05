@@ -30,7 +30,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_ac_cover(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cover platform."""
 
@@ -45,8 +47,6 @@ async def test_ac_cover(
 
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     # Test Cover Zone Entity
     entity_id = "cover.myauto_zone_y"
     state = hass.states.get(entity_id)
@@ -55,7 +55,7 @@ async def test_ac_cover(
     assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
     assert state.attributes.get("current_position") == 100
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac3-z01"
 
@@ -144,7 +144,9 @@ async def test_ac_cover(
 
 
 async def test_things_cover(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cover platform."""
 
@@ -159,8 +161,6 @@ async def test_things_cover(
 
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     # Test Blind 1 Entity
     entity_id = "cover.blind_1"
     thing_id = "200"
@@ -169,7 +169,7 @@ async def test_things_cover(
     assert state.state == STATE_OPEN
     assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-200"
 
