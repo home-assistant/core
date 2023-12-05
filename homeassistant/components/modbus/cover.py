@@ -51,7 +51,7 @@ async def async_setup_platform(
     covers = []
     for cover in discovery_info[CONF_COVERS]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        covers.append(ModbusCover(hub, cover))
+        covers.append(ModbusCover(hass, hub, cover))
 
     async_add_entities(covers)
 
@@ -63,11 +63,12 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         hub: ModbusHub,
         config: dict[str, Any],
     ) -> None:
         """Initialize the modbus cover."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._state_closed = config[CONF_STATE_CLOSED]
         self._state_closing = config[CONF_STATE_CLOSING]
         self._state_open = config[CONF_STATE_OPEN]

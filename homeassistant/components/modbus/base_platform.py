@@ -24,10 +24,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -61,6 +62,7 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
+    MODBUS_DOMAIN,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
@@ -74,10 +76,30 @@ _LOGGER = logging.getLogger(__name__)
 class BasePlatform(Entity):
     """Base for readonly platforms."""
 
-    def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
+    ) -> None:
         """Initialize the Modbus binary sensor."""
 
         if CONF_LAZY_ERROR in entry:
+            async_create_issue(
+                hass,
+                MODBUS_DOMAIN,
+                "deprecated_lazy_error_count",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_lazy_error_count",
+                translation_placeholders={
+                    "config_key": "lazy_error_count",
+                    "integration": MODBUS_DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
+            )
+            _LOGGER.warning(
+                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
+            )
+
             _LOGGER.warning(
                 "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
             )
@@ -157,9 +179,9 @@ class BasePlatform(Entity):
 class BaseStructPlatform(BasePlatform, RestoreEntity):
     """Base class representing a sensor/climate."""
 
-    def __init__(self, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
@@ -251,10 +273,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
         config[CONF_INPUT_TYPE] = ""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._attr_is_on = False
         convert = {
             CALL_TYPE_REGISTER_HOLDING: (
