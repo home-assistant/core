@@ -23,7 +23,7 @@ except ImportError:
     )
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.deprecation import deprecated_class
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -137,16 +137,9 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
+@deprecated_class("FastSafeLoader", breaks_in_ha_version="2024.6")
 class SafeLoader(FastSafeLoader):
     """Provided for backwards compatibility. Logs when instantiated."""
-
-    def __init__(*args: Any, **kwargs: Any) -> None:
-        """Log a warning and call super."""
-        report(
-            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
-            "which will stop working in HA Core 2024.6,"
-        )
-        FastSafeLoader.__init__(*args, **kwargs)
 
 
 class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
@@ -158,16 +151,9 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
+@deprecated_class("PythonSafeLoader", breaks_in_ha_version="2024.6")
 class SafeLineLoader(PythonSafeLoader):
     """Provided for backwards compatibility. Logs when instantiated."""
-
-    def __init__(*args: Any, **kwargs: Any) -> None:
-        """Log a warning and call super."""
-        report(
-            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
-            "which will stop working in HA Core 2024.6,"
-        )
-        PythonSafeLoader.__init__(*args, **kwargs)
 
 
 LoaderType = FastSafeLoader | PythonSafeLoader

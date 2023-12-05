@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import WyomingService, load_wyoming_info
 from .error import WyomingError
+from .models import DomainDataItem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +26,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming wake-word-detection."""
-    service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingWakeWordProvider(hass, config_entry, service),
+            WyomingWakeWordProvider(hass, config_entry, item.service),
         ]
     )
 
