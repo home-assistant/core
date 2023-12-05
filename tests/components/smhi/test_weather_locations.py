@@ -55,8 +55,19 @@ async def test_get_weather_data(smhi_weather_locations, fake_weather_locations_d
         )  # Check that parameters in data is not empty
 
 
-def test_get_weather_locations():
+async def test_get_weather_locations(
+    smhi_weather_locations, fake_weather_locations_data
+):
     """Test the get_weather_locations function of SmhiWeatherLocations class."""
+    with patch(
+        "homeassistant.components.smhi.downloader.SmhiDownloader.download_json",
+        return_value=fake_weather_locations_data,
+    ):
+        weather_locations = await smhi_weather_locations.get_weather_locations()
+        assert isinstance(
+            weather_locations, list
+        )  # Check that weather_locations are correct type
+        assert len(weather_locations) > 0  # Check that weather_locations are not empty
 
 
 def test_get_weather_condition_icon():
