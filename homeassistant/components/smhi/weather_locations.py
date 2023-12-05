@@ -59,17 +59,13 @@ class SmhiWeatherLocations:
             timeseries_data = city_weather_data.get("timeSeries")[0]
 
             # TEMPERATURE
-            temperature_data = timeseries_data.get("parameters")
-            for data in temperature_data:
-                if data["name"] == "t":
-                    temperature_text = (
-                        str(data["values"][0]) + " " + self.celsius_symbol
-                    )
-                    break
+            temperature = self.get_parameter_value(timeseries_data, "t")
+            temperature_text = str(temperature) + " " + self.celsius_symbol
 
             # WEATHER CONDITION
-            weather_condtion_data = timeseries_data.get("parameters")[18]
-            weather_condition_index = weather_condtion_data["values"][0]
+            weather_condition_index = self.get_parameter_value(
+                timeseries_data, "Wsymb2"
+            )
             condition_icon = self.get_weather_condition_icon(weather_condition_index)
             icon_url = weather_icons[condition_icon]
             condition_name = weather_conditions[str(weather_condition_index)]
@@ -90,6 +86,15 @@ class SmhiWeatherLocations:
             weather_location_entities.append(geolocation_event)
 
         return weather_location_entities
+
+    def get_parameter_value(self, timeseries_data: Any, parameter_name: str) -> int:
+        """Get the value from a parameter in the timeSeries data."""
+        parameters = timeseries_data.get("parameters")
+        for data in parameters:
+            if data["name"] == parameter_name:
+                return int(data["values"][0])
+
+        raise ValueError("Value not found in the data.")
 
     def get_weather_condition_icon(self, weather_condition_index: int) -> str:
         """Get the weather condition icon."""
