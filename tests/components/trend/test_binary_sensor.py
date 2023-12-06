@@ -16,7 +16,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, get_fixture_path, mock_restore_cache
 
 
-async def setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
+async def _setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
     """Set up the trend component."""
     assert await async_setup_component(
         hass,
