@@ -27,7 +27,12 @@
   "entity": {
     "sensor": {
       "state": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "online": "Online",
+          "asleep": "Asleep",
+          "offline": "Offline"
+        }
       },
       "charge_state-usable_battery_level": {
         "name": "Battery Level"
@@ -57,7 +62,13 @@
         "name": "Power"
       },
       "drive_state-shift_state": {
-        "name": "Shift State"
+        "name": "Shift State",
+        "state": {
+          "p": "Park",
+          "d": "Drive",
+          "r": "Reverse",
+          "n": "Neutral"
+        }
       },
       "vehicle_state-odometer": {
         "name": "Odometer"
