@@ -200,10 +200,17 @@ class CanvasAPI:
                         submission["graded_at"], ISO_DATETIME_FORMAT
                     )
                     past_one_month = datetime.utcnow() - timedelta(days=30)
+                    # get assignment name
+                    response = await self.async_make_get_request(
+                        f"/courses/{course_id}/assignments/{submission['assignment_id']}",
+                        {}
+                    )
+                    assignment_info = json.loads(response.content.decode("utf-8"))
+                    assignment_name = assignment_info.get("name", "Unnamed Assignment")
                     if graded_at >= past_one_month:
                         submission_details = {
-                            "subject_name": course_name,
-                            "assignment_name": submission.get("assignment_name", ""),
+                            "course_name": course_name,
+                            "assignment_name": assignment_name,
                             "score": submission.get("score", "Not Graded"),
                         }
                         submissions[
