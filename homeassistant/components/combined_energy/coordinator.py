@@ -47,12 +47,11 @@ class _CombinedEnergyCoordinator(DataUpdateCoordinator[_T]):
     async def _async_update_data(self) -> _T:
         """Update data with error handling."""
         try:
-            self.data = await self._update_data()
+            return await self._update_data()
         except CombinedEnergyAuthError as ex:
             raise ConfigEntryAuthFailed from ex
         except CombinedEnergyError as ex:
             raise UpdateFailed("Error updating Combined Energy") from ex
-        return self.data
 
 
 class CombinedEnergyLogSessionCoordinator(_CombinedEnergyCoordinator[None]):
