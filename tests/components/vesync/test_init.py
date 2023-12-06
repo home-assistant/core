@@ -1,11 +1,18 @@
 """Tests for the init module."""
 import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 from pytest_unordered import unordered
+from pytest_unordered import unordered
 from pyvesync import VeSync
 
+from homeassistant.components.vesync import (
+    _async_new_device_discovery,
+    _async_process_devices,
+    async_setup_entry,
+)
 from homeassistant.components.vesync import (
     _async_new_device_discovery,
     _async_process_devices,
