@@ -6,12 +6,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from setup import async_setup_component
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, get_fixture_path, mock_restore_cache
 
