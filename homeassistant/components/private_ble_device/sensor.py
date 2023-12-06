@@ -84,7 +84,7 @@ SENSOR_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=(
-            lambda hass, service_info: round(
+            lambda hass, service_info: (
                 bluetooth.async_get_learned_advertising_interval(
                     hass, service_info.address
                 )
