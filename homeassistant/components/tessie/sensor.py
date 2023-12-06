@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieStatus
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
@@ -32,7 +32,7 @@ PARALLEL_UPDATES = 0
 DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="state",
-        options=["online", "offline", "asleep"],
+        options=[status.value for status in TessieStatus],
         device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
