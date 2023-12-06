@@ -465,12 +465,12 @@ class ControllerEvents:
                 # Remove trailing comma if it's there
                 if identifier[-1] == ",":
                     identifier = identifier[:-1]
-                notification_msg = f"{notification_msg} {identifier}"
+                notification_msg = f"{notification_msg} {identifier}."
             else:
-                notification_msg = f"{notification_msg}"
+                notification_msg = f"{notification_msg}."
             async_create(
                 self.hass,
-                f"{notification_msg}, reloading integration.",
+                notification_msg,
                 "Device Was Factory Reset!",
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
