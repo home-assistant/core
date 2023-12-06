@@ -3,34 +3,53 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, Optional
 
-from kasa import SmartDevice, SmartDeviceException
+from kasa import (
+    AuthenticationException,
+    Credentials,
+    DeviceType,
+    SmartDevice,
+    SmartDeviceException,
+)
+from kasa.connectionparams import ConnectionParameters
 from kasa.discover import Discover
 
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import (
+    CONF_CONNECTION_PARAMS,
+    CONF_DEVICE_TYPE,
+    DOMAIN,
+    PLATFORMS,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+)
 from .coordinator import TPLinkDataUpdateCoordinator
 
-DISCOVERY_INTERVAL = timedelta(minutes=15)
+# DISCOVERY_INTERVAL = timedelta(minutes=15)
+DISCOVERY_INTERVAL = timedelta(seconds=30)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -55,8 +74,12 @@ def async_trigger_discovery(
 
 async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Discover TPLink devices on configured network interfaces."""
+    credentials = await get_stored_credentials(hass)
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
-    tasks = [Discover.discover(target=str(address)) for address in broadcast_addresses]
+    tasks = [
+        Discover.discover(target=str(address), credentials=credentials)
+        for address in broadcast_addresses
+    ]
     discovered_devices: dict[str, SmartDevice] = {}
     for device_list in await asyncio.gather(*tasks):
         for device in device_list.values():
@@ -87,7 +110,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     host = entry.data[CONF_HOST]
     try:
-        device: SmartDevice = await Discover.discover_single(host, timeout=10)
+        credentials = await get_stored_credentials(hass)
+        device_type = DeviceType.Unknown
+        connection_params = None
+
+        if device_type_str := entry.data.get(CONF_DEVICE_TYPE):
+            device_type = DeviceType.from_value(device_type_str)
+        if connection_params_dict := entry.data.get(CONF_CONNECTION_PARAMS):
+            connection_params = ConnectionParameters.from_dict(connection_params_dict)
+
+        device: SmartDevice = await SmartDevice.connect(
+            host,
+            timeout=10,
+            credentials=credentials,
+            device_type=device_type,
+            connection_params=connection_params,
+            try_discovery_on_error=True,
+        )
+        # Save the device class name and connection_params if they are not already saved
+        # so that we can pass them to connect which avoids an update cycle
+        if device_type_str != device.device_type.value:
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_DEVICE_TYPE: device.device_type.value}
+            )
+        if connection_params_dict and connection_params != device.connection_parameters:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_CONNECTION_PARAMS: device.connection_parameters.to_dict(),
+                },
+            )
+    except AuthenticationException as ex:
+        raise ConfigEntryAuthFailed from ex
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
@@ -126,3 +181,29 @@ def legacy_device_id(device: SmartDevice) -> str:
     if "_" not in device_id:
         return device_id
     return device_id.split("_")[1]
+
+
+def _get_store(hass: HomeAssistant) -> Store[dict[str, dict[str, str]]]:
+    return Store[dict[str, dict[str, str]]](hass, STORAGE_VERSION, STORAGE_KEY)
+
+
+async def get_stored_credentials(hass: HomeAssistant) -> Optional[Credentials]:
+    """Retrieve the credentials from the Store."""
+    storage_data = await _get_store(hass).async_load()
+    if storage_data and (auth := storage_data[CONF_AUTHENTICATION]):
+        return Credentials(auth[CONF_USERNAME], auth[CONF_PASSWORD])
+
+    return None
+
+
+async def set_stored_credentials(
+    hass: HomeAssistant, username: str, password: str
+) -> None:
+    """Save the credentials to the Store."""
+    storage_data = {
+        CONF_AUTHENTICATION: {
+            CONF_USERNAME: username,
+            CONF_PASSWORD: password,
+        }
+    }
+    await _get_store(hass).async_save(storage_data)
