@@ -592,7 +592,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==1.0.0
+easyenergy==2.0.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
