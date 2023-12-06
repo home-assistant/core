@@ -50,7 +50,7 @@ async def test_basic_trend(
     expected_state: str,
 ):
     """Test trend with a basic setup."""
-    await setup_component(
+    await _setup_component(
         hass,
         {
             "entity_id": "sensor.test_state",
@@ -95,7 +95,7 @@ async def test_using_trendline(
     expected_states: list[str],
 ):
     """Test uptrend using multiple samples and trendline calculation."""
-    await setup_component(
+    await _setup_component(
         hass,
         {
             "entity_id": "sensor.test_state",
@@ -131,7 +131,7 @@ async def test_attribute_trend(
     expected_state: str,
 ):
     """Test attribute uptrend."""
-    await setup_component(
+    await _setup_component(
         hass,
         {
             "entity_id": "sensor.test_state",
@@ -149,7 +149,7 @@ async def test_attribute_trend(
 
 async def test_max_samples(hass: HomeAssistant):
     """Test that sample count is limited correctly."""
-    await setup_component(
+    await _setup_component(
         hass,
         {
             "entity_id": "sensor.test_state",
@@ -169,7 +169,7 @@ async def test_max_samples(hass: HomeAssistant):
 
 async def test_non_numeric(hass: HomeAssistant):
     """Test for non-numeric sensor."""
-    await setup_component(hass, {"entity_id": "sensor.test_state"})
+    await _setup_component(hass, {"entity_id": "sensor.test_state"})
 
     hass.states.async_set("sensor.test_state", "Non")
     await hass.async_block_till_done()
@@ -182,7 +182,7 @@ async def test_non_numeric(hass: HomeAssistant):
 
 async def test_missing_attribute(hass: HomeAssistant):
     """Test for missing attribute."""
-    await setup_component(
+    await _setup_component(
         hass,
         {
             "entity_id": "sensor.test_state",
@@ -293,7 +293,7 @@ async def test_restore_state(
     """Test we restore the trend state."""
     mock_restore_cache(hass, (State("binary_sensor.test_trend_sensor", saved_state),))
 
-    await setup_component(
+    await _setup_component(
         hass,
         {
             "entity_id": "sensor.test_state",
@@ -332,7 +332,7 @@ async def test_invalid_min_sample(
 ) -> None:
     """Test if error is logged when min_sample is larger than max_samples."""
     with caplog.at_level(logging.ERROR):
-        await setup_component(
+        await _setup_component(
             hass,
             {
                 "entity_id": "sensor.test_state",
