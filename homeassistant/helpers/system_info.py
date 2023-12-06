@@ -1,12 +1,14 @@
 """Helper to gather system info."""
 from __future__ import annotations
 
+import datetime
 from functools import cache
 from getpass import getuser
 import logging
 import os
 import platform
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
@@ -45,6 +47,18 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         "os_name": platform.system(),
         "os_version": platform.release(),
     }
+
+    ### Determine the timezone set in Home Assistant
+    time_zone_str = str(hass.config.time_zone)
+
+    ### Determine if DST is active using zoneinfo
+    tz = ZoneInfo(time_zone_str)
+    now = datetime.datetime.now(tz)
+    is_dst = now.dst() != datetime.timedelta(0)
+
+    ### Update the info object to include DST information
+    info_object["timezone"] = time_zone_str
+    info_object["is_dst"] = is_dst
 
     try:
         info_object["user"] = cached_get_user()
