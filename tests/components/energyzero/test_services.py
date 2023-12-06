@@ -9,6 +9,7 @@ from homeassistant.components.energyzero.const import (
     GAS_SERVICE_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 pytestmark = [pytest.mark.freeze_time("2022-12-07 15:00:00")]
 
@@ -52,5 +53,5 @@ async def test_service(
             return_response=True,
         )
         assert response == snapshot
-    except ValueError as e:
+    except ServiceValidationError as e:
         assert e == snapshot

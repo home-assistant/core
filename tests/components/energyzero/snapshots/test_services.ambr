@@ -240,22 +240,22 @@
   })
 # ---
 # name: test_service[end0-start1-incl_vat0-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end0-start1-incl_vat0-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end0-start1-incl_vat1-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end0-start1-incl_vat1-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end0-start1-incl_vat2-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end0-start1-incl_vat2-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end0-start2-incl_vat0-get_energy_prices]
   dict({
@@ -498,58 +498,58 @@
   })
 # ---
 # name: test_service[end1-start0-incl_vat0-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start0-incl_vat0-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start0-incl_vat1-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start0-incl_vat1-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start0-incl_vat2-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start0-incl_vat2-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start1-incl_vat0-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start1-incl_vat0-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start1-incl_vat1-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start1-incl_vat1-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start1-incl_vat2-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start1-incl_vat2-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start2-incl_vat0-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start2-incl_vat0-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start2-incl_vat1-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start2-incl_vat1-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start2-incl_vat2-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end1-start2-incl_vat2-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start0-incl_vat0-get_energy_prices]
   dict({
@@ -792,22 +792,22 @@
   })
 # ---
 # name: test_service[end2-start1-incl_vat0-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start1-incl_vat0-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start1-incl_vat1-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start1-incl_vat1-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start1-incl_vat2-get_energy_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start1-incl_vat2-get_gas_prices]
-  ValueError('Invalid date: incorrect date')
+  ServiceValidationError()
 # ---
 # name: test_service[end2-start2-incl_vat0-get_energy_prices]
   dict({
