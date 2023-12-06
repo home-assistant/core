@@ -614,20 +614,6 @@ class BaseLight(LogMixin, light.LightEntity):
         self._transitioning_individual = False
         self._async_unsub_transition_listener()
         self.async_write_ha_state()
-        if isinstance(self, LightGroup):
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED,
-                {"entity_ids": self._entity_ids},
-            )
-            if self._debounced_member_refresh is not None:
-                self.debug("transition complete - refreshing group member states")
-                assert self.platform.config_entry
-                self.platform.config_entry.async_create_background_task(
-                    self.hass,
-                    self._debounced_member_refresh.async_call(),
-                    "zha.light-refresh-debounced-member",
-                )
 
 
 @STRICT_MATCH(
@@ -1342,3 +1328,22 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             {"entity_ids": self._entity_ids},
             update_params,
         )
+
+    @callback
+    def async_transition_complete(self, _=None) -> None:
+        """Set _transitioning_individual to False and write HA state."""
+        super().async_transition_complete()
+
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED,
+            {"entity_ids": self._entity_ids},
+        )
+        if self._debounced_member_refresh is not None:
+            self.debug("transition complete - refreshing group member states")
+            assert self.platform.config_entry
+            self.platform.config_entry.async_create_background_task(
+                self.hass,
+                self._debounced_member_refresh.async_call(),
+                "zha.light-refresh-debounced-member",
+            )
