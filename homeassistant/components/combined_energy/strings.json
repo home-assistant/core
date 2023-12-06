@@ -24,103 +24,103 @@
   "entity": {
     "sensor": {
       "energy_consumed": {
-        "name": "Energy Consumption"
+        "name": "Energy consumption"
       },
       "power_consumption": {
-        "name": "Power Consumption"
+        "name": "Power consumption"
       },
       "energy_consumed_solar": {
-        "name": "Energy Consumption Solar"
+        "name": "Energy consumption solar"
       },
       "power_consumption_solar": {
-        "name": "Power Consumption Solar"
+        "name": "Power consumption solar"
       },
       "energy_consumed_battery": {
-        "name": "Energy Consumption Battery"
+        "name": "Energy consumption battery"
       },
       "power_consumption_battery": {
-        "name": "Power Consumption Battery"
+        "name": "Power consumption battery"
       },
       "energy_consumed_grid": {
-        "name": "Energy Consumption Grid"
+        "name": "Energy consumption grid"
       },
       "power_consumption_grid": {
-        "name": "Power Consumption Grid"
+        "name": "Power consumption grid"
       },
       "solar_pv_energy_supplied": {
-        "name": "Energy Supplied"
+        "name": "Energy supplied"
       },
       "solar_pv_power_supply": {
-        "name": "Power Supplied"
+        "name": "Power supplied"
       },
       "water_heater_available_energy": {
-        "name": "Hot Water Available"
+        "name": "Hot water available"
       },
       "water_heater_max_energy": {
-        "name": "Hot Water Max"
+        "name": "Hot water max"
       },
       "water_heater_output_temp": {
         "name": "Output temperature"
       },
       "water_heater_temp_sensor1": {
-        "name": "Water Temp 1"
+        "name": "Water temp 1"
       },
       "water_heater_temp_sensor2": {
-        "name": "Water Temp 2"
+        "name": "Water temp 2"
       },
       "water_heater_temp_sensor3": {
-        "name": "Water Temp 3"
+        "name": "Water temp 3"
       },
       "water_heater_temp_sensor4": {
-        "name": "Water Temp 4"
+        "name": "Water temp 4"
       },
       "water_heater_temp_sensor5": {
-        "name": "Water Temp 5"
+        "name": "Water temp 5"
       },
       "water_heater_temp_sensor6": {
-        "name": "Water Temp 6"
+        "name": "Water temp 6"
       },
       "grid_meter_energy_supplied": {
-        "name": "Energy Import"
+        "name": "Energy import"
       },
       "grid_meter_power_supply": {
-        "name": "Power Import"
+        "name": "Power import"
       },
       "grid_meter_energy_consumed": {
-        "name": "Energy Export"
+        "name": "Energy export"
       },
       "grid_meter_power_consumption": {
-        "name": "Power Export"
+        "name": "Power export"
       },
       "grid_meter_energy_consumed_solar": {
-        "name": "Energy Export Solar"
+        "name": "Energy export solar"
       },
       "grid_meter_power_consumption_solar": {
-        "name": "Power Export Solar"
+        "name": "Power export solar"
       },
       "grid_meter_energy_consumed_battery": {
-        "name": "Energy Export Battery"
+        "name": "Energy export battery"
       },
       "grid_meter_power_consumption_battery": {
-        "name": "Power Export Battery"
+        "name": "Power export battery"
       },
       "grid_meter_power_factor_a": {
-        "name": "Power Factor A"
+        "name": "Power factor a"
       },
       "grid_meter_power_factor_b": {
-        "name": "Power Factor B"
+        "name": "Power factor b"
       },
       "grid_meter_power_factor_c": {
-        "name": "Power Factor C"
+        "name": "Power factor c"
       },
       "grid_meter_voltage_a": {
-        "name": "Voltage A"
+        "name": "Voltage a"
       },
       "grid_meter_voltage_b": {
-        "name": "Voltage B"
+        "name": "Voltage b"
       },
       "grid_meter_voltage_c": {
-        "name": "Voltage C"
+        "name": "Voltage c"
       }
     }
   }
