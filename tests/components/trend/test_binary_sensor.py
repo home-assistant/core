@@ -11,7 +11,7 @@ from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
-from .conftest import ComponentSetup
+from .conftest import setup_component
 
 from tests.common import assert_setup_component, get_fixture_path, mock_restore_cache
 
@@ -28,17 +28,17 @@ from tests.common import assert_setup_component, get_fixture_path, mock_restore_
 )
 async def test_basic_trend(
     hass: HomeAssistant,
-    setup_component: ComponentSetup,
     states: list[str],
     inverted: bool,
     expected_state: str,
 ):
     """Test trend with a basic setup."""
     await setup_component(
+        hass,
         {
             "entity_id": "sensor.test_state",
             "invert": inverted,
-        }
+        },
     )
 
     for state in states:
@@ -73,13 +73,13 @@ async def test_basic_trend(
 async def test_using_trendline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    setup_component: ComponentSetup,
     state_series: list[list[str]],
     inverted: bool,
     expected_states: list[str],
 ):
     """Test uptrend using multiple samples and trendline calculation."""
     await setup_component(
+        hass,
         {
             "entity_id": "sensor.test_state",
             "sample_duration": 10000,
@@ -87,7 +87,7 @@ async def test_using_trendline(
             "max_samples": 25,
             "min_samples": 5,
             "invert": inverted,
-        }
+        },
     )
 
     for idx, states in enumerate(state_series):
@@ -110,16 +110,16 @@ async def test_using_trendline(
 )
 async def test_attribute_trend(
     hass: HomeAssistant,
-    setup_component: ComponentSetup,
     attr_values: list[str],
     expected_state: str,
 ):
     """Test attribute uptrend."""
     await setup_component(
+        hass,
         {
             "entity_id": "sensor.test_state",
             "attribute": "attr",
-        }
+        },
     )
 
     for attr in attr_values:
@@ -130,14 +130,15 @@ async def test_attribute_trend(
     assert sensor_state.state == expected_state
 
 
-async def test_max_samples(hass: HomeAssistant, setup_component: ComponentSetup):
+async def test_max_samples(hass: HomeAssistant):
     """Test that sample count is limited correctly."""
     await setup_component(
+        hass,
         {
             "entity_id": "sensor.test_state",
             "max_samples": 3,
             "min_gradient": -1,
-        }
+        },
     )
 
     for val in [0, 1, 2, 3, 2, 1]:
@@ -149,9 +150,9 @@ async def test_max_samples(hass: HomeAssistant, setup_component: ComponentSetup)
     assert state.attributes["sample_count"] == 3
 
 
-async def test_non_numeric(hass: HomeAssistant, setup_component: ComponentSetup):
+async def test_non_numeric(hass: HomeAssistant):
     """Test for non-numeric sensor."""
-    await setup_component({"entity_id": "sensor.test_state"})
+    await setup_component(hass, {"entity_id": "sensor.test_state"})
 
     hass.states.async_set("sensor.test_state", "Non")
     await hass.async_block_till_done()
@@ -162,13 +163,14 @@ async def test_non_numeric(hass: HomeAssistant, setup_component: ComponentSetup)
     assert state.state == STATE_UNKNOWN
 
 
-async def test_missing_attribute(hass: HomeAssistant, setup_component: ComponentSetup):
+async def test_missing_attribute(hass: HomeAssistant):
     """Test for missing attribute."""
     await setup_component(
+        hass,
         {
             "entity_id": "sensor.test_state",
             "attribute": "missing",
-        }
+        },
     )
 
     hass.states.async_set("sensor.test_state", "State", {"attr": "2"})
@@ -268,7 +270,6 @@ async def test_reload(hass: HomeAssistant) -> None:
 async def test_restore_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    setup_component: ComponentSetup,
     saved_state: str,
     restored_state: str,
 ) -> None:
@@ -276,13 +277,14 @@ async def test_restore_state(
     mock_restore_cache(hass, (State("binary_sensor.test_trend_sensor", saved_state),))
 
     await setup_component(
+        hass,
         {
             "entity_id": "sensor.test_state",
             "sample_duration": 10000,
             "min_gradient": 1,
             "max_samples": 25,
             "min_samples": 5,
-        }
+        },
     )
 
     # restored sensor should match saved one
@@ -310,16 +312,16 @@ async def test_restore_state(
 async def test_invalid_min_sample(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_component: ComponentSetup,
 ) -> None:
     """Test if error is logged when min_sample is larger than max_samples."""
     with caplog.at_level(logging.ERROR):
         await setup_component(
+            hass,
             {
                 "entity_id": "sensor.test_state",
                 "max_samples": 25,
                 "min_samples": 30,
-            }
+            },
         )
 
     record = caplog.records[0]
