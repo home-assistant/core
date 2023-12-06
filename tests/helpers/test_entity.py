@@ -1797,6 +1797,24 @@ async def test_update_capabilities(
     assert entry.original_device_class is None
     assert entry.supported_features == 0
 
+    # Device class can be overridden by user, make sure that does not break the
+    # automatic updating.
+    entity_registry.async_update_entity(entity.entity_id, device_class="set_by_user")
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities is None
+    assert entry.original_device_class is None
+    assert entry.supported_features == 0
+
+    # This will not trigger a state change because the device class is shadowed
+    # by the entity registry
+    entity._values["device_class"] = "some_class"
+    entity.async_write_ha_state()
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry.capabilities is None
+    assert entry.original_device_class == "some_class"
+    assert entry.supported_features == 0
+
 
 async def test_update_capabilities_no_unique_id(
     hass: HomeAssistant,
