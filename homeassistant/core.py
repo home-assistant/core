@@ -1752,7 +1752,7 @@ class StateMachine:
         force_update: bool = False,
         context: Context | None = None,
         state_info: StateInfo | None = None,
-    ) -> bool:
+    ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -1775,7 +1775,7 @@ class StateMachine:
             last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
-            return False
+            return
 
         if context is None:
             # It is much faster to convert a timestamp to a utc datetime object
@@ -1815,7 +1815,6 @@ class StateMachine:
             context,
             time_fired=now,
         )
-        return True
 
 
 class SupportsResponse(enum.StrEnum):
