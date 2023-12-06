@@ -10,7 +10,6 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
     """Representation of a DROP device entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self, entity_type: str, coordinator: DROPDeviceDataUpdateCoordinator
