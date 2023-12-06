@@ -783,12 +783,13 @@ class Entity(ABC):
     @callback
     def _async_generate_attributes(
         self,
-    ) -> tuple[str, Mapping[str, Any] | None, dict[str, Any]]:
+    ) -> tuple[str, Mapping[str, Any] | None, Mapping[str, Any], dict[str, Any]]:
         """Calculate state string and attribute mapping."""
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
         attr = dict(capability_attr) if capability_attr else {}
+        shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
@@ -805,26 +806,30 @@ class Entity(ABC):
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
+        shadowed_attr[ATTR_DEVICE_CLASS] = self.device_class
         if (
-            device_class := (entry and entry.device_class) or self.device_class
+            device_class := (entry and entry.device_class)
+            or shadowed_attr[ATTR_DEVICE_CLASS]
         ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        if (icon := (entry and entry.icon) or self.icon) is not None:
+        shadowed_attr[ATTR_ICON] = self.icon
+        if (icon := (entry and entry.icon) or shadowed_attr[ATTR_ICON]) is not None:
             attr[ATTR_ICON] = icon
 
+        shadowed_attr[ATTR_FRIENDLY_NAME] = self._friendly_name_internal()
         if (
-            name := (entry and entry.name) or self._friendly_name_internal()
+            name := (entry and entry.name) or shadowed_attr[ATTR_FRIENDLY_NAME]
         ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, capability_attr, attr)
+        return (state, capability_attr, shadowed_attr, attr)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -850,13 +855,13 @@ class Entity(ABC):
             return
 
         start = timer()
-        state, capabilities, attr = self._async_generate_attributes()
+        state, capabilities, shadowed_attr, attr = self._async_generate_attributes()
         end = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
-            original_device_class: str | None = self.device_class
+            original_device_class: str | None = shadowed_attr[ATTR_DEVICE_CLASS]
             supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
             if (
                 capabilities != entry.capabilities

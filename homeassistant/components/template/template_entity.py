@@ -430,7 +430,7 @@ class TemplateEntity(Entity):
             return
 
         try:
-            state, _, attrs = self._async_generate_attributes()
+            state, _, _, attrs = self._async_generate_attributes()
             validate_state(state)
         except Exception as err:  # pylint: disable=broad-exception-caught
             self._preview_callback(None, None, None, str(err))

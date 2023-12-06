@@ -236,7 +236,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         ) -> None:
             """Handle child updates."""
             self.async_update_group_state()
-            state, _, attrs = self._async_generate_attributes()
+            state, _, _, attrs = self._async_generate_attributes()
             preview_callback(state, attrs)
 
         async_state_changed_listener(None)
