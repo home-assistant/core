@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
 import zigpy.profiles.zha as zha
+import zigpy.types
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
@@ -153,11 +154,25 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_GROUPABLE_DEVICE,
         nwk=0xB79D,
     )
+
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
-        | lighting.Color.ColorCapabilities.XY_attributes
+        "color_capabilities": (
+            lighting.Color.ColorCapabilities.Color_temperature
+            | lighting.Color.ColorCapabilities.XY_attributes
+        ),
     }
+
+    on_off_cluster = zigpy_device.endpoints[1].on_off
+    on_off_cluster.PLUGGED_ATTR_READS = {
+        "on_off": zigpy.types.Bool.false,
+    }
+
+    level_cluster = zigpy_device.endpoints[1].level
+    level_cluster.PLUGGED_ATTR_READS = {
+        "current_level": 50,
+    }
+
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
     return zha_device
@@ -186,11 +201,25 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
         manufacturer="sengled",
         nwk=0xC79E,
     )
+
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
-        | lighting.Color.ColorCapabilities.XY_attributes
+        "color_capabilities": (
+            lighting.Color.ColorCapabilities.Color_temperature
+            | lighting.Color.ColorCapabilities.XY_attributes
+        ),
     }
+
+    on_off_cluster = zigpy_device.endpoints[1].on_off
+    on_off_cluster.PLUGGED_ATTR_READS = {
+        "on_off": zigpy.types.Bool.false,
+    }
+
+    level_cluster = zigpy_device.endpoints[1].level
+    level_cluster.PLUGGED_ATTR_READS = {
+        "current_level": 50,
+    }
+
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
     return zha_device
@@ -218,6 +247,17 @@ async def device_light_3(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_GROUPABLE_DEVICE3,
         nwk=0xB89F,
     )
+
+    on_off_cluster = zigpy_device.endpoints[1].on_off
+    on_off_cluster.PLUGGED_ATTR_READS = {
+        "on_off": zigpy.types.Bool.false,
+    }
+
+    level_cluster = zigpy_device.endpoints[1].level
+    level_cluster.PLUGGED_ATTR_READS = {
+        "current_level": 50,
+    }
+
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
     return zha_device
@@ -248,8 +288,10 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
-        | lighting.Color.ColorCapabilities.XY_attributes,
+        "color_capabilities": (
+            lighting.Color.ColorCapabilities.Color_temperature
+            | lighting.Color.ColorCapabilities.XY_attributes,
+        ),
         "color_temp_physical_min": 0,
         "color_temp_physical_max": 0,
     }
