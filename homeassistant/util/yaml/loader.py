@@ -1,7 +1,8 @@
 """Custom loader."""
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from contextlib import suppress
 import fnmatch
 from io import StringIO, TextIOWrapper
 import logging
@@ -22,6 +23,7 @@ except ImportError:
     )
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -101,48 +103,11 @@ class Secrets:
         return secrets
 
 
-class SafeLoader(FastestAvailableSafeLoader):
-    """The fastest available safe loader."""
+class _LoaderMixin:
+    """Mixin class with extensions for YAML loader."""
 
-    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
-        """Initialize a safe line loader."""
-        self.stream = stream
-        if isinstance(stream, str):
-            self.name = "<unicode string>"
-        elif isinstance(stream, bytes):
-            self.name = "<byte string>"
-        else:
-            self.name = getattr(stream, "name", "<file>")
-        super().__init__(stream)
-        self.secrets = secrets
-
-    def get_name(self) -> str:
-        """Get the name of the loader."""
-        return self.name
-
-    def get_stream_name(self) -> str:
-        """Get the name of the stream."""
-        return self.stream.name or ""
-
-
-class SafeLineLoader(yaml.SafeLoader):
-    """Loader class that keeps track of line numbers."""
-
-    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
-        """Initialize a safe line loader."""
-        super().__init__(stream)
-        self.secrets = secrets
-
-    def compose_node(  # type: ignore[override]
-        self, parent: yaml.nodes.Node, index: int
-    ) -> yaml.nodes.Node:
-        """Annotate a node with the first line it was seen."""
-        last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(  # type: ignore[assignment]
-            parent, index
-        )
-        node.__line__ = last_line + 1  # type: ignore[attr-defined]
-        return node
+    name: str
+    stream: Any
 
     def get_name(self) -> str:
         """Get the name of the loader."""
@@ -153,7 +118,97 @@ class SafeLineLoader(yaml.SafeLoader):
         return getattr(self.stream, "name", "")
 
 
-LoaderType = SafeLineLoader | SafeLoader
+class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
+    """The fastest available safe loader, either C or Python."""
+
+    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
+        """Initialize a safe line loader."""
+        self.stream = stream
+
+        # Set name in same way as the Python loader does in yaml.reader.__init__
+        if isinstance(stream, str):
+            self.name = "<unicode string>"
+        elif isinstance(stream, bytes):
+            self.name = "<byte string>"
+        else:
+            self.name = getattr(stream, "name", "<file>")
+
+        super().__init__(stream)
+        self.secrets = secrets
+
+
+class SafeLoader(FastSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
+
+
+class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
+    """Python safe loader."""
+
+    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
+        """Initialize a safe line loader."""
+        super().__init__(stream)
+        self.secrets = secrets
+
+
+class SafeLineLoader(PythonSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
+
+
+LoaderType = FastSafeLoader | PythonSafeLoader
 
 
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
@@ -171,31 +226,31 @@ def parse_yaml(
 ) -> JSON_TYPE:
     """Parse YAML with the fastest available loader."""
     if not HAS_C_LOADER:
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_python(content, secrets)
     try:
-        return _parse_yaml(SafeLoader, content, secrets)
+        return _parse_yaml(FastSafeLoader, content, secrets)
     except yaml.YAMLError:
-        # Loading failed, so we now load with the slow line loader
-        # since the C one will not give us line numbers
+        # Loading failed, so we now load with the Python loader which has more
+        # readable exceptions
         if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_python(content, secrets)
 
 
-def _parse_yaml_pure_python(
+def _parse_yaml_python(
     content: str | TextIO | StringIO, secrets: Secrets | None = None
 ) -> JSON_TYPE:
-    """Parse YAML with the pure python loader (this is very slow)."""
+    """Parse YAML with the python loader (this is very slow)."""
     try:
-        return _parse_yaml(SafeLineLoader, content, secrets)
+        return _parse_yaml(PythonSafeLoader, content, secrets)
     except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc) from exc
 
 
 def _parse_yaml(
-    loader: type[SafeLoader] | type[SafeLineLoader],
+    loader: type[FastSafeLoader] | type[PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
@@ -239,13 +294,14 @@ def _add_reference(  # type: ignore[no-untyped-def]
         obj = NodeListClass(obj)
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
-    setattr(obj, "__config_file__", loader.get_name())
-    setattr(obj, "__line__", node.start_mark.line)
+    with suppress(AttributeError):
+        setattr(obj, "__config_file__", loader.get_name())
+        setattr(obj, "__line__", node.start_mark.line + 1)
     return obj
 
 
 def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
-    """Load another YAML file and embeds it using the !include tag.
+    """Load another YAML file and embed it using the !include tag.
 
     Example:
         device_tracker: !include device_tracker.yaml
@@ -347,7 +403,12 @@ def _handle_mapping_tag(
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 
@@ -368,6 +429,16 @@ def _handle_mapping_tag(
 def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Add line number and file name to Load YAML sequence."""
     (obj,) = loader.construct_yaml_seq(node)
+    return _add_reference(obj, loader, node)
+
+
+def _handle_scalar_tag(
+    loader: LoaderType, node: yaml.nodes.ScalarNode
+) -> str | int | float | None:
+    """Add line number and file name to Load YAML sequence."""
+    obj = loader.construct_scalar(node)
+    if not isinstance(obj, str):
+        return obj
     return _add_reference(obj, loader, node)
 
 
@@ -394,12 +465,13 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
 
 def add_constructor(tag: Any, constructor: Any) -> None:
     """Add to constructor to all loaders."""
-    for yaml_loader in (SafeLoader, SafeLineLoader):
+    for yaml_loader in (FastSafeLoader, PythonSafeLoader):
         yaml_loader.add_constructor(tag, constructor)
 
 
 add_constructor("!include", _include_yaml)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _handle_mapping_tag)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG, _handle_scalar_tag)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 add_constructor("!env_var", _env_var_yaml)
 add_constructor("!secret", secret_yaml)

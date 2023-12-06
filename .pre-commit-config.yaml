@@ -1,16 +1,11 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.1
+    rev: v0.1.6
     hooks:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.10.0
-    hooks:
-      - id: black
-        args:
-          - --quiet
+      - id: ruff-format
         files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
@@ -39,7 +34,7 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.7.1
+    rev: v3.0.3
     hooks:
       - id: prettier
   - repo: https://github.com/cdce8p/python-typing-update

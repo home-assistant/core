@@ -42,6 +42,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
             manufacturer=self._host.api.manufacturer,
             hw_version=self._host.api.hardware_version,
             sw_version=self._host.api.sw_version,
+            serial_number=self._host.api.uid,
             configuration_url=self._conf_url,
         )
 
@@ -87,5 +88,6 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
+                sw_version=self._host.api.camera_sw_version(dev_ch),
                 configuration_url=self._conf_url,
             )

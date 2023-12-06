@@ -324,6 +324,15 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     "Could not find target_temp_low and/or target_temp_high in"
                     " arguments"
                 )
+
+            # If the device supports "Auto" mode, don't pass the mode when setting the
+            # temperature
+            mode = (
+                None
+                if device.changeableValues.mode == LYRIC_HVAC_MODE_HEAT_COOL
+                else HVAC_MODES[device.changeableValues.heatCoolMode]
+            )
+
             _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
             try:
                 await self._update_thermostat(
@@ -331,7 +340,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     device,
                     coolSetpoint=target_temp_high,
                     heatSetpoint=target_temp_low,
-                    mode=HVAC_MODES[device.changeableValues.heatCoolMode],
+                    mode=mode,
                 )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)

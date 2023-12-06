@@ -30,6 +30,32 @@ GET_METERS = [
             "last_measurement_time": 1678430543742,
         },
     ),
+    Meter(
+        meter_id="d81a652fe0824f9a9d336016587d3b9d",
+        serial_number="def456",
+        full_serial_number="def456",
+        type="PIP",
+        measurement_type="GAS",
+        load_profile_type="SLP",
+        location=Location(
+            zip=12345,
+            city="Testhause",
+            street="Teststraße",
+            street_number="1",
+            country="Germany",
+        ),
+        additional={
+            "manufacturer_id": "TST",
+            "printed_full_serial_number": "def456",
+            "administration_number": "12345",
+            "scaling_factor": 1,
+            "current_scaling_factor": 1,
+            "voltage_scaling_factor": 1,
+            "internal_meters": 1,
+            "first_measurement_time": 1517569090926,
+            "last_measurement_time": 1678430543742,
+        },
+    ),
 ]
 
 LAST_READING = Reading(
@@ -49,4 +75,9 @@ LAST_READING = Reading(
         "voltage2": 239700.0,
         "voltage3": 239000.0,
     },
+)
+
+LAST_READING_GAS = Reading(
+    time=datetime.datetime(2023, 3, 10, 7, 32, 6, 702000),
+    values={"actualityDuration": 52000.0, "storageNumber": 0.0, "volume": 21064800.0},
 )

@@ -1,7 +1,7 @@
 {
   "domain": "blink",
   "name": "Blink",
-  "codeowners": ["@fronzbot"],
+  "codeowners": ["@fronzbot", "@mkmer"],
   "config_flow": true,
   "dhcp": [
     {

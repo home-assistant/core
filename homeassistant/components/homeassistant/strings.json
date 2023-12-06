@@ -136,5 +136,40 @@
       "name": "Reload all",
       "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
     }
+  },
+  "exceptions": {
+    "component_import_err": {
+      "message": "Unable to import {domain}: {error}"
+    },
+    "config_platform_import_err": {
+      "message": "Error importing config platform {domain}: {error}"
+    },
+    "config_validation_err": {
+      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}. Check the logs for more information."
+    },
+    "config_validator_unknown_err": {
+      "message": "Unknown error calling {domain} config validator. Check the logs for more information."
+    },
+    "config_schema_unknown_err": {
+      "message": "Unknown error calling {domain} CONFIG_SCHEMA. Check the logs for more information."
+    },
+    "integration_config_error": {
+      "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
+    },
+    "platform_component_load_err": {
+      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+    },
+    "platform_component_load_exc": {
+      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+    },
+    "platform_config_validation_err": {
+      "message": "Invalid config for {domain} from integration {p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
+    },
+    "platform_schema_validator_err": {
+      "message": "Unknown error when validating config for {domain} from integration {p_name}"
+    },
+    "service_not_found": {
+      "message": "Service {domain}.{service} not found."
+    }
   }
 }

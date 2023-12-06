@@ -7,7 +7,7 @@
   "iot_class": "local_push",
   "quality_scale": "internal",
   "requirements": [
-    "SQLAlchemy==2.0.22",
+    "SQLAlchemy==2.0.23",
     "fnv-hash-fast==0.5.0",
     "psutil-home-assistant==0.0.1"
   ]

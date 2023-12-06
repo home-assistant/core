@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.11.3"
+version     = "2023.12.0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -23,12 +23,14 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.9.0b0;python_version>='3.12'",
-    "aiohttp==3.8.5;python_version<'3.12'",
+    "aiohttp==3.9.1",
+    "aiohttp_cors==0.7.0",
+    "aiohttp-fast-url-dispatcher==0.3.0",
+    "aiohttp-zlib-ng==0.1.1",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
-    "awesomeversion==23.8.0",
+    "awesomeversion==23.11.0",
     "bcrypt==4.0.1",
     "certifi>=2021.5.30",
     "ciso8601==2.3.0",
@@ -41,7 +43,7 @@ dependencies    = [
     "lru-dict==1.2.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==41.0.4",
+    "cryptography==41.0.7",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
     "orjson==3.9.9",
@@ -75,9 +77,6 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["homeassistant*"]
-
-[tool.black]
-extend-exclude = "/generated/"
 
 [tool.pylint.MAIN]
 py-version = "3.11"
@@ -125,7 +124,7 @@ class-const-naming-style = "any"
 
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
-# format - handled by black
+# format - handled by ruff
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
@@ -502,8 +501,6 @@ filterwarnings = [
     "ignore:python-telegram-bot is using upstream urllib3:UserWarning:telegram.utils.request",
     # https://github.com/ludeeus/pytraccar/pull/15 - >1.0.0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytraccar.client",
-    # https://github.com/zopefoundation/RestrictedPython/pull/259 - >7.0a1.dev0
-    "ignore:ast\\.(Str|Num) is deprecated and will be removed in Python 3.14:DeprecationWarning:RestrictedPython.transformer",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
     # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/59 - >0.21.1
@@ -526,8 +523,6 @@ filterwarnings = [
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated:DeprecationWarning:proto.datetime_helpers",
     # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
-    # https://github.com/Python-MyQ/Python-MyQ - v3.1.13
-    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pymyq.(api|account)",
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
     "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",

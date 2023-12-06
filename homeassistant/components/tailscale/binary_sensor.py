@@ -20,18 +20,11 @@ from . import TailscaleEntity
 from .const import DOMAIN
 
 
-@dataclass
-class TailscaleBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class TailscaleBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Tailscale binary sensor entity."""
 
     is_on_fn: Callable[[TailscaleDevice], bool | None]
-
-
-@dataclass
-class TailscaleBinarySensorEntityDescription(
-    BinarySensorEntityDescription, TailscaleBinarySensorEntityDescriptionMixin
-):
-    """Describes a Tailscale binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (

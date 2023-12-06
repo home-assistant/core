@@ -425,8 +425,18 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 class ColorTempSelectorConfig(TypedDict, total=False):
     """Class to represent a color temp selector config."""
 
+    unit: ColorTempSelectorUnit
+    min: int
+    max: int
     max_mireds: int
     min_mireds: int
+
+
+class ColorTempSelectorUnit(StrEnum):
+    """Possible units for a color temperature selector."""
+
+    KELVIN = "kelvin"
+    MIRED = "mired"
 
 
 @SELECTORS.register("color_temp")
@@ -437,6 +447,11 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            vol.Optional("unit", default=ColorTempSelectorUnit.MIRED): vol.All(
+                vol.Coerce(ColorTempSelectorUnit), lambda val: val.value
+            ),
+            vol.Optional("min"): vol.Coerce(int),
+            vol.Optional("max"): vol.Coerce(int),
             vol.Optional("max_mireds"): vol.Coerce(int),
             vol.Optional("min_mireds"): vol.Coerce(int),
         }
@@ -448,18 +463,27 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     def __call__(self, data: Any) -> int:
         """Validate the passed selection."""
+        range_min = self.config.get("min")
+        range_max = self.config.get("max")
+
+        if not range_min:
+            range_min = self.config.get("min_mireds")
+
+        if not range_max:
+            range_max = self.config.get("max_mireds")
+
         value: int = vol.All(
             vol.Coerce(float),
             vol.Range(
-                min=self.config.get("min_mireds"),
-                max=self.config.get("max_mireds"),
+                min=range_min,
+                max=range_max,
             ),
         )(data)
         return value
 
 
 class ConditionSelectorConfig(TypedDict):
-    """Class to represent an action selector config."""
+    """Class to represent an condition selector config."""
 
 
 @SELECTORS.register("condition")
@@ -1182,6 +1206,7 @@ class TextSelectorConfig(TypedDict, total=False):
     suffix: str
     type: TextSelectorType
     autocomplete: str
+    multiple: bool
 
 
 class TextSelectorType(StrEnum):
@@ -1219,6 +1244,7 @@ class TextSelector(Selector[TextSelectorConfig]):
                 vol.Coerce(TextSelectorType), lambda val: val.value
             ),
             vol.Optional("autocomplete"): str,
+            vol.Optional("multiple", default=False): bool,
         }
     )
 
@@ -1226,10 +1252,14 @@ class TextSelector(Selector[TextSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        text: str = vol.Schema(str)(data)
-        return text
+        if not self.config["multiple"]:
+            text: str = vol.Schema(str)(data)
+            return text
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class ThemeSelectorConfig(TypedDict):
@@ -1278,6 +1308,27 @@ class TimeSelector(Selector[TimeSelectorConfig]):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+class TriggerSelectorConfig(TypedDict):
+    """Class to represent an trigger selector config."""
+
+
+@SELECTORS.register("trigger")
+class TriggerSelector(Selector[TriggerSelectorConfig]):
+    """Selector of a trigger sequence (script syntax)."""
+
+    selector_type = "trigger"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        return vol.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
 class FileSelectorConfig(TypedDict):

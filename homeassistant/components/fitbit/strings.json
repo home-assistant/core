@@ -22,10 +22,23 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_account": "The user credentials provided do not match this Fitbit account."
+      "wrong_account": "The user credentials provided do not match this Fitbit account.",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      }
     }
   },
   "issues": {

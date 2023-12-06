@@ -653,6 +653,7 @@ async def test_future_event_offset_update_behavior(
 
 async def test_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_events_list_items,
     component_setup,
     config_entry,
@@ -661,7 +662,6 @@ async def test_unique_id(
     mock_events_list_items([])
     assert await component_setup()
 
-    entity_registry = er.async_get(hass)
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
@@ -675,14 +675,13 @@ async def test_unique_id(
 )
 async def test_unique_id_migration(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_events_list_items,
     component_setup,
     config_entry,
     old_unique_id,
 ) -> None:
     """Test that old unique id format is migrated to the new format that supports multiple accounts."""
-    entity_registry = er.async_get(hass)
-
     # Create an entity using the old unique id format
     entity_registry.async_get_or_create(
         DOMAIN,
@@ -730,14 +729,13 @@ async def test_unique_id_migration(
 )
 async def test_invalid_unique_id_cleanup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_events_list_items,
     component_setup,
     config_entry,
     mock_calendars_yaml,
 ) -> None:
     """Test that old unique id format that is not actually unique is removed."""
-    entity_registry = er.async_get(hass)
-
     # Create an entity using the old unique id format
     entity_registry.async_get_or_create(
         DOMAIN,

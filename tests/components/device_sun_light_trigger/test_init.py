@@ -182,7 +182,16 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(
 
         assert await async_setup_component(hass, "group", {})
         await hass.async_block_till_done()
-        await group.Group.async_create_group(hass, "person_me", ["person.me"])
+        await group.Group.async_create_group(
+            hass,
+            "person_me",
+            created_by_service=False,
+            entity_ids=["person.me"],
+            icon=None,
+            mode=None,
+            object_id=None,
+            order=None,
+        )
 
         assert await async_setup_component(
             hass,

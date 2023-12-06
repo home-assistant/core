@@ -1,12 +1,12 @@
 """Constants for google integration."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 
 DOMAIN = "google"
-DEVICE_AUTH_IMPL = "device_auth"
 
 CONF_CALENDAR_ACCESS = "calendar_access"
+CONF_CREDENTIAL_TYPE = "credential_type"
 DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 DATA_CONFIG = "config"
@@ -30,6 +30,13 @@ class FeatureAccess(Enum):
 
 
 DEFAULT_FEATURE_ACCESS = FeatureAccess.read_write
+
+
+class CredentialType(StrEnum):
+    """Type of application credentials used."""
+
+    DEVICE_AUTH = "device_auth"
+    WEB_AUTH = "web_auth"
 
 
 EVENT_DESCRIPTION = "description"
