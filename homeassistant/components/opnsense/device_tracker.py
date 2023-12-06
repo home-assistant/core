@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OPNSenseDomainData
 from .const import DOMAIN
 from .coordinator import OPNSenseUpdateCoordinator
 
@@ -22,8 +21,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up a OPNSense config entry."""
 
-    data: OPNSenseDomainData = hass.data[DOMAIN]
-    coordinator = data.coordinators[entry.entry_id]
+    data = hass.data[DOMAIN]
+    coordinator = data[entry.entry_id]
 
     existing_macs = set()
 
@@ -77,14 +76,7 @@ class OPNSenseScannerEntity(
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self._name
-
-    @property
-    def _name(self) -> str:
-        """Return the name of the entity."""
-        return (
-            self.is_connected and self.coordinator.data[self._mac].hostname or self._mac
-        )
+        return self.hostname or self._mac
 
     @property
     def is_connected(self) -> bool:

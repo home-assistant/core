@@ -18,13 +18,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_API_SECRET,
     CONF_TRACKER_INTERFACE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,38 +47,31 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
     interfaces_client: diagnostics.InterfaceClient
     netinsight_client: diagnostics.NetworkInsightClient
 
-    hass: HomeAssistant
-    entry: ConfigEntry
+    config_entry: ConfigEntry
 
-    name: str
-    url: str
-    api_key: str
-    api_secret: str
-    verify_ssl: bool
-    tracker_interfaces: list
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the OPNSense coordinator."""
-        self.hass = hass
-        self.entry = entry
-
-        self.name = entry.options[CONF_NAME]
-        self.url = entry.options[CONF_URL]
-        self.api_key = entry.options[CONF_API_KEY]
-        self.api_secret = entry.options[CONF_API_SECRET]
-        self.verify_ssl = entry.options[CONF_VERIFY_SSL]
-        self.tracker_interfaces = entry.options[CONF_TRACKER_INTERFACE]
-
-        self.setup = False
 
         super().__init__(
             hass,
             _LOGGER,
-            name=f"OPNSense {self.name}",
-            update_interval=timedelta(
-                minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            ),
+            name=DOMAIN,
         )
+
+        self.update_interval = timedelta(
+            minutes=self.config_entry.options.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            )
+        )
+
+        self.name = self.config_entry.options[CONF_NAME]
+        self.url = self.config_entry.options[CONF_URL]
+        self.api_key = self.config_entry.options[CONF_API_KEY]
+        self.api_secret = self.config_entry.options[CONF_API_SECRET]
+        self.verify_ssl = self.config_entry.options[CONF_VERIFY_SSL]
+        self.tracker_interfaces = self.config_entry.options[CONF_TRACKER_INTERFACE]
+
+        self.setup = False
 
     def _setup_clients(self):
         self.interfaces_client = diagnostics.InterfaceClient(
@@ -85,7 +79,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
             self.api_secret,
             self.url,
             self.verify_ssl,
-            timeout=self.entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            timeout=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
         if len(self.tracker_interfaces) >= 1:
@@ -94,7 +88,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
                 self.api_secret,
                 self.url,
                 self.verify_ssl,
-                timeout=self.entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                timeout=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             )
 
             # Verify that specified tracker interfaces are valid
@@ -113,25 +107,28 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
         if not self.setup:
             self._setup_clients()
 
+        devices = {}
         try:
             devices = self.interfaces_client.get_arp()
-            results = {}
-            for device in devices:
-                # Filter out non tracked interfaces
-                if (len(self.tracker_interfaces) == 0) or (
-                    device["intf_description"] in self.tracker_interfaces
-                ):
-                    results[device["mac"]] = OPNSenseResult(
-                        hostname=device["hostname"],
-                        ip_address=device["ip"],
-                        mac_address=device["mac"],
-                        manufacturer=device["manufacturer"],
-                    )
+        except APIException as error:
+            raise UpdateFailed(
+                "Failure while connecting to OPNsense API endpoint"
+            ) from error
 
-            return results
-        except APIException:
-            _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
-            return {}
+        results = {}
+        for device in devices:
+            # Filter out non tracked interfaces
+            if (len(self.tracker_interfaces) == 0) or (
+                device["intf_description"] in self.tracker_interfaces
+            ):
+                results[device["mac"]] = OPNSenseResult(
+                    hostname=device["hostname"],
+                    ip_address=device["ip"],
+                    mac_address=device["mac"],
+                    manufacturer=device["manufacturer"],
+                )
+
+        return results
 
     async def _async_update_data(self) -> dict[str, OPNSenseResult]:
         """Trigger device update check."""

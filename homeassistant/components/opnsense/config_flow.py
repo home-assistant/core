@@ -81,10 +81,10 @@ class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OPNSenseOptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OPNSenseOptionsFlowHandler(config_entries.OptionsFlow):
     """OPNSense options flow."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
@@ -96,7 +96,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input}
+            )
 
         return self.async_show_form(
             step_id="init",

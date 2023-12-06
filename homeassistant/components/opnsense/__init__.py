@@ -1,5 +1,4 @@
 """Support for OPNSense Routers."""
-from dataclasses import dataclass
 import logging
 
 import voluptuous as vol
@@ -41,13 +40,6 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
-@dataclass(slots=True)
-class OPNSenseDomainData:
-    """Dataclass to store interface clients."""
-
-    coordinators: dict[str, OPNSenseUpdateCoordinator]
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the opnsense component."""
 
@@ -83,18 +75,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OPNSense from a config entry."""
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = OPNSenseDomainData(coordinators={})
-
-    data: OPNSenseDomainData = hass.data[DOMAIN]
-
     coordinator = OPNSenseUpdateCoordinator(
         hass=hass,
-        entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
 
-    data.coordinators[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -111,7 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        # drop interfaces client for config entry
-        hass.data[DOMAIN].coordinators.pop(entry.entry_id)
+        # Drop coordinator for config entry
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
