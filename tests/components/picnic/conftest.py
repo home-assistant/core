@@ -1,4 +1,5 @@
 """Conftest for Picnic tests."""
+from collections.abc import Awaitable, Callable
 import json
 from unittest.mock import MagicMock, patch
 
@@ -9,6 +10,9 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
+from tests.typing import WebSocketGenerator
+
+ENTITY_ID = "todo.mock_title_shopping_cart"
 
 
 @pytest.fixture
@@ -50,3 +54,26 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+async def get_items(
+    hass_ws_client: WebSocketGenerator
+) -> Callable[[], Awaitable[dict[str, str]]]:
+    """Fixture to fetch items from the todo websocket."""
+
+    async def get() -> list[dict[str, str]]:
+        # Fetch items using To-do platform
+        client = await hass_ws_client()
+        await client.send_json_auto_id(
+            {
+                "id": id,
+                "type": "todo/item/list",
+                "entity_id": ENTITY_ID,
+            }
+        )
+        resp = await client.receive_json()
+        assert resp.get("success")
+        return resp.get("result", {}).get("items", [])
+
+    return get

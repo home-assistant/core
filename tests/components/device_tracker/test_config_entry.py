@@ -259,7 +259,7 @@ async def test_connected_device_registered(
 
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
-    full_name = f"{entity_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{entity_platform.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0  # should be disabled
     assert len(entity_registry.entities) == 3
