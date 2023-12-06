@@ -214,7 +214,6 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
     ) as mock_dispatcher_send, patch.object(
         hass, "async_create_task", new=Mock()
     ) as mock_create_task:
-
         await _async_new_device_discovery(
             hass, config_entry, mock_forward_setup, mock_service
         )
@@ -222,7 +221,7 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
         assert mock_add_executor_job.call_args[0][0] == manager.update
         assert mock_dispatcher_send.call_count == 0
         assert mock_create_task.call_count == 4
-        assert mock_forward_setup.call_count == 7
+        assert mock_forward_setup.call_count == 4
         mock_forward_setup.assert_has_calls(
             [
                 call(config_entry, Platform.SWITCH),
@@ -302,7 +301,7 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
         assert mock_dispatcher_send.mock_calls[0] == call(
             hass,
             "vesync_discovery_switches",
-            unordered([fan, outlet, switch]),
+            unordered([switch]),
         )
         assert mock_dispatcher_send.mock_calls[1] == call(
             hass, "vesync_discovery_fans", unordered([fan])
