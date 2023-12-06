@@ -31,15 +31,15 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, unique_id: str) -> None:
         """Initialize the device."""
-        self._model: str = f"{config_entry.data[CONF_DEVICE_DESC]} on hub {config_entry.data[CONF_HUB_ID]}"
-        if config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
-            self._model = f"Hub {config_entry.data[CONF_HUB_ID]}"
+        super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{unique_id}")
+        self._model: str = f"{self.config_entry.data[CONF_DEVICE_DESC]} on hub {self.config_entry.data[CONF_HUB_ID]}"
+        if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
+            self._model = f"Hub {self.config_entry.data[CONF_HUB_ID]}"
         self._manufacturer: str = "Chandler Systems, Inc."
-        self._device_name: str = config_entry.data[CONF_DEVICE_NAME]
+        self._device_name: str = self.config_entry.data[CONF_DEVICE_NAME]
         self._device_information: dict[str, Any] = {}
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{config_entry.unique_id}")
 
     async def drop_message_received(
         self, topic: str, payload: str, qos: int, retain: bool
