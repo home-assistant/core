@@ -30,7 +30,9 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    data: dict[str, Any] = {}
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -47,7 +49,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data = user_input
 
-            selected_country = self.data[CONF_COUNTRY]
+            selected_country = user_input[CONF_COUNTRY]
 
             if SUPPORTED_COUNTRIES[selected_country]:
                 return await self.async_step_province()
@@ -56,7 +58,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             locale = Locale(self.hass.config.language)
             title = locale.territories[selected_country]
-            return self.async_create_entry(title=title, data=self.data)
+            return self.async_create_entry(title=title, data=user_input)
 
         user_schema = vol.Schema(
             {
