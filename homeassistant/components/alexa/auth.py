@@ -31,10 +31,17 @@ STORAGE_REFRESH_TOKEN = "refresh_token"
 class Auth:
     """Handle authentication to send events to Alexa."""
 
-    def __init__(self, hass: HomeAssistant, client_id: str, client_secret: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client_id: str = "",
+        client_secret: str = "",
+        simple_bearer_auth: str | None = None,
+    ) -> None:
         """Initialize the Auth class."""
         self.hass = hass
 
+        self.simple_bearer_auth = simple_bearer_auth
         self.client_id = client_id
         self.client_secret = client_secret
 
@@ -47,6 +54,9 @@ class Auth:
         """Do authentication with an AcceptGrant code."""
         # access token not retrieved yet for the first time, so this should
         # be an access token request
+
+        if self.simple_bearer_auth is not None:
+            return self.simple_bearer_auth
 
         lwa_params: dict[str, str] = {
             "grant_type": "authorization_code",
@@ -69,6 +79,10 @@ class Auth:
 
     async def async_get_access_token(self) -> str | None:
         """Perform access token or token refresh request."""
+
+        if self.simple_bearer_auth is not None:
+            return self.simple_bearer_auth
+
         async with self._get_token_lock:
             if self._prefs is None:
                 await self.async_load_preferences()
@@ -96,6 +110,9 @@ class Auth:
     @callback
     def is_token_valid(self) -> bool:
         """Check if a token is already loaded and if it is still valid."""
+        if self.simple_bearer_auth is not None:
+            return True
+
         assert self._prefs is not None
         if not self._prefs[STORAGE_ACCESS_TOKEN]:
             return False
@@ -111,6 +128,9 @@ class Auth:
         return dt_util.utcnow() < preemptive_expire_time
 
     async def _async_request_new_token(self, lwa_params: dict[str, str]) -> str | None:
+        if self.simple_bearer_auth is not None:
+            return self.simple_bearer_auth
+
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
             async with timeout(10):

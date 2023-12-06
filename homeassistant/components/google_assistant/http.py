@@ -13,7 +13,7 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, CONF_SIMPLE_BEARER_AUTH
 
 # Typing imports
 from homeassistant.core import HomeAssistant
@@ -27,6 +27,7 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_HOMEGRAPH_BASE_URL,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
@@ -34,8 +35,9 @@ from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
     HOMEGRAPH_TOKEN_URL,
-    REPORT_STATE_BASE_URL,
-    REQUEST_SYNC_BASE_URL,
+    HOMEGRAPH_URL,
+    REPORT_STATE_URL_SUFFIX,
+    REQUEST_SYNC_URL_SUFFIX,
     SOURCE_CLOUD,
 )
 from .helpers import AbstractConfig
@@ -78,7 +80,7 @@ async def _get_homegraph_token(
 class GoogleConfig(AbstractConfig):
     """Config for manual setup of Google."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config) -> None:
         """Initialize the config."""
         super().__init__(hass)
         self._config = config
@@ -161,7 +163,8 @@ class GoogleConfig(AbstractConfig):
     async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:
         if CONF_SERVICE_ACCOUNT in self._config:
             return await self.async_call_homegraph_api(
-                REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
+                REQUEST_SYNC_URL_SUFFIX,
+                {"agentUserId": agent_user_id},
             )
 
         _LOGGER.error("No configuration for request_sync available")
@@ -170,6 +173,12 @@ class GoogleConfig(AbstractConfig):
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
             _LOGGER.error("Trying to get homegraph api token without service account")
+            return
+
+        if CONF_SIMPLE_BEARER_AUTH in self._config[CONF_SERVICE_ACCOUNT]:
+            self._access_token = self._config[CONF_SERVICE_ACCOUNT][
+                CONF_SIMPLE_BEARER_AUTH
+            ]
             return
 
         now = dt_util.utcnow()
@@ -185,9 +194,11 @@ class GoogleConfig(AbstractConfig):
             self._access_token = token["access_token"]
             self._access_token_renew = now + timedelta(seconds=token["expires_in"])
 
-    async def async_call_homegraph_api(self, url, data):
+    async def async_call_homegraph_api(self, url_suffix: str, data):
         """Call a homegraph api with authentication."""
         session = async_get_clientsession(self.hass)
+
+        url = self.get_homegraph_url(url_suffix)
 
         async def _call():
             headers = {
@@ -220,6 +231,18 @@ class GoogleConfig(AbstractConfig):
             _LOGGER.error("Could not contact %s", url)
             return HTTPStatus.INTERNAL_SERVER_ERROR
 
+    def get_homegraph_url(self, url_suffix: str) -> str:
+        """Build the homegraph url based on a possible dynamic base url."""
+        base_url = HOMEGRAPH_URL
+        if (
+            CONF_SERVICE_ACCOUNT in self._config
+            and CONF_HOMEGRAPH_BASE_URL in self._config[CONF_SERVICE_ACCOUNT]
+        ):
+            base_url = self._config[CONF_SERVICE_ACCOUNT][CONF_HOMEGRAPH_BASE_URL]
+        if base_url.endswith("/") is False:
+            base_url += "/"
+        return f"{base_url}{url_suffix}"
+
     async def async_report_state(
         self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
     ) -> HTTPStatus:
@@ -231,7 +254,7 @@ class GoogleConfig(AbstractConfig):
         }
         if event_id is not None:
             data["eventId"] = event_id
-        return await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
+        return await self.async_call_homegraph_api(REPORT_STATE_URL_SUFFIX, data)
 
 
 class GoogleAssistantView(HomeAssistantView):
@@ -241,7 +264,7 @@ class GoogleAssistantView(HomeAssistantView):
     name = "api:google_assistant"
     requires_auth = True
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """Initialize the Google Assistant request handler."""
         self.config = config
 

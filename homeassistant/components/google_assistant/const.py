@@ -34,6 +34,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_EXPOSE = "expose"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
+CONF_HOMEGRAPH_BASE_URL = "homegraph_base_url"
 CONF_PRIVATE_KEY = "private_key"
 CONF_PROJECT_ID = "project_id"
 CONF_REPORT_STATE = "report_state"
@@ -98,8 +99,8 @@ SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
 HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
 HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
-REQUEST_SYNC_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:requestSync"
-REPORT_STATE_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:reportStateAndNotification"
+REQUEST_SYNC_URL_SUFFIX = "v1/devices:requestSync"
+REPORT_STATE_URL_SUFFIX = "v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions

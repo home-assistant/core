@@ -9,7 +9,11 @@ from homeassistant import core
 from homeassistant.auth.models import User
 from homeassistant.components.http import HomeAssistantRequest
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_SIMPLE_BEARER_AUTH,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
@@ -43,6 +47,8 @@ class AlexaConfig(AbstractConfig):
         super().__init__(hass)
         self._config = config
 
+        if config.get(CONF_SIMPLE_BEARER_AUTH):
+            self._auth = Auth(hass, simple_bearer_auth=config[CONF_SIMPLE_BEARER_AUTH])
         if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
             self._auth = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
         else:
