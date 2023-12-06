@@ -233,7 +233,7 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
         mock_service.assert_not_called()
 
     assert hass.data[DOMAIN][VS_FANS] == unordered([fan])
-    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([fan, bulb, light])
+    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([bulb, light])
     assert hass.data[DOMAIN][VS_SENSORS] == unordered([fan, outlet])
     assert hass.data[DOMAIN][VS_SWITCHES] == unordered([fan, outlet, switch])
 
