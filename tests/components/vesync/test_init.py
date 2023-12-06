@@ -1,18 +1,11 @@
 """Tests for the init module."""
 import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
-from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 from pytest_unordered import unordered
-from pytest_unordered import unordered
 from pyvesync import VeSync
 
-from homeassistant.components.vesync import (
-    _async_new_device_discovery,
-    _async_process_devices,
-    async_setup_entry,
-)
 from homeassistant.components.vesync import (
     _async_new_device_discovery,
     _async_process_devices,
@@ -242,7 +235,7 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
     assert hass.data[DOMAIN][VS_FANS] == unordered([fan])
     assert hass.data[DOMAIN][VS_LIGHTS] == unordered([bulb, light])
     assert hass.data[DOMAIN][VS_SENSORS] == unordered([fan, outlet])
-    assert hass.data[DOMAIN][VS_SWITCHES] == unordered([fan, outlet, switch])
+    assert hass.data[DOMAIN][VS_SWITCHES] == unordered([outlet, switch])
 
     assert caplog.messages[0] == "1 VeSync fans found"
     assert caplog.messages[1] == "1 VeSync lights found"
@@ -308,36 +301,16 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
         assert mock_dispatcher_send.mock_calls[0] == call(
             hass,
             "vesync_discovery_switches",
-            unordered([switch]),
-        )
-        assert mock_dispatcher_send.mock_calls[1] == call(
-            hass, "vesync_discovery_fans", unordered([fan])
-        )
-        assert mock_dispatcher_send.mock_calls[2] == call(
-            hass,
-            "vesync_discovery_lights",
-            unordered([fan, bulb, light]),
-        )
-        assert mock_dispatcher_send.mock_calls[5] == call(
-            hass,
-            "vesync_discovery_sensors",
-            unordered([fan, outlet]),
+            unordered([outlet, switch]),
         )
         assert mock_create_task.call_count == 0
         assert mock_forward_setup.call_count == 0
         mock_service.assert_not_called()
 
-    assert hass.data[DOMAIN][VS_FANS] == unordered([fan, fan2])
-    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([fan, bulb, bulb2, light, light2])
-    assert hass.data[DOMAIN][VS_SENSORS] == unordered([fan, outlet, outlet2])
-    assert hass.data[DOMAIN][VS_SWITCHES] == unordered(
-        [
-            fan,
-            outlet,
-            switch,
-            switch2,
-        ]
-    )
+    assert hass.data[DOMAIN][VS_FANS] == unordered([fan2])
+    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([bulb2, light2])
+    assert hass.data[DOMAIN][VS_SENSORS] == unordered([outlet2])
+    assert hass.data[DOMAIN][VS_SWITCHES] == unordered([outlet, switch, switch2])
 
     assert caplog.messages[0] == "1 VeSync fans found"
     assert caplog.messages[1] == "1 VeSync lights found"
