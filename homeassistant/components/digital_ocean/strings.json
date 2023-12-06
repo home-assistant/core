@@ -1,0 +1,26 @@
+{
+  "services": {
+    "update_domain_record": {
+      "name": "Update DNS Record",
+      "description": "Updates the value of a DigitalOcean DNS domain record.",
+      "fields": {
+        "domain": {
+          "name": "Domain",
+          "description": "The domain of the record."
+        },
+        "record": {
+          "name": "Record",
+          "description": "The name of the record.\nUse '@' if you want to update the 'root' of the domain."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The value to assign to the record, typically an IP address or another DNS name."
+        },
+        "type": {
+          "name": "Type",
+          "description": "The type of the DNS record."
+        }
+      }
+    }
+  }
+}
