@@ -181,8 +181,6 @@ class CanvasAPI:
         dict: The response from the Canvas API.
         """
         submissions = {}
-        # Grades entity is right now meaningless because we dont get assignment description neither course name etc.
-        # Check GRADES_KEY: CanvasSensorEntityDescription(.... (name_fn and value_fn))
         for course_id in course_ids:
             response = await self.async_make_get_request(
                 f"/courses/{course_id}/students/submissions",
