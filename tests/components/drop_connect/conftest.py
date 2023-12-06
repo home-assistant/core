@@ -22,6 +22,7 @@ def config_entry_hub(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_255",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/255/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/255/#",
@@ -41,6 +42,7 @@ def config_entry_salt(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_8",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/8/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/8/#",
@@ -60,6 +62,7 @@ def config_entry_leak(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_20",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/20/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/20/#",
@@ -79,6 +82,7 @@ def config_entry_softener(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_0",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/0/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/0/#",
@@ -98,6 +102,7 @@ def config_entry_filter(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_4",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/4/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/4/#",
@@ -117,6 +122,7 @@ def config_entry_protection_valve(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_78",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/78/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/78/#",
@@ -136,6 +142,7 @@ def config_entry_pump_controller(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_83",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/83/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/83/#",
@@ -155,6 +162,7 @@ def config_entry_ro_filter(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="DROP-1_C0FFEE_255",
         data={
             CONF_COMMAND_TOPIC: "drop_connect/DROP-1_C0FFEE/95/cmd",
             CONF_DATA_TOPIC: "drop_connect/DROP-1_C0FFEE/95/#",

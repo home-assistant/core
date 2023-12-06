@@ -14,6 +14,7 @@ from .const import (
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
     CONF_DEVICE_ID,
+    CONF_DEVICE_NAME,
     CONF_DEVICE_OWNER_ID,
     CONF_DEVICE_TYPE,
     CONF_HUB_ID,
@@ -36,7 +37,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         if config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
             self._model = f"Hub {config_entry.data[CONF_HUB_ID]}"
         self._manufacturer: str = "Chandler Systems, Inc."
-        self._device_name: str = config_entry.data["name"]
+        self._device_name: str = config_entry.data[CONF_DEVICE_NAME]
         self._device_information: dict[str, Any] = {}
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{config_entry.unique_id}")
 
@@ -72,11 +73,12 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description."""
+        assert self.config_entry.unique_id is not None
         device_info = DeviceInfo(
             manufacturer=self._manufacturer,
             model=self._model,
             name=self._device_name,
-            identifiers={(DOMAIN, self.config_entry.unique_id or "")},
+            identifiers={(DOMAIN, self.config_entry.unique_id)},
         )
         if self.config_entry.data[CONF_DEVICE_TYPE] != DEV_HUB:
             device_info.update(
