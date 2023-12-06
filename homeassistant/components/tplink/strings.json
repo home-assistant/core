@@ -18,6 +18,42 @@
       },
       "discovery_confirm": {
         "description": "Do you want to set up {name} {model} ({host})?"
+      },
+      "user_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The TPLink device needs authentication",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "pick_device_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The TPLink device needs authentication",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "discovery_auth_confirm": {
+        "title": "Authenticate",
+        "description": "The TPLink device needs authentication",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The TPLink device needs to re-authenticate to your account"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The TPLink device needs to re-authenticate to your account",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {

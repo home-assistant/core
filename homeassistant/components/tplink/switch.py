@@ -41,7 +41,8 @@ async def async_setup_entry(
     elif device.is_plug:
         entities.append(SmartPlugSwitch(device, parent_coordinator))
 
-    entities.append(SmartPlugLedSwitch(device, parent_coordinator))
+    if hasattr(device, "led"):
+        entities.append(SmartPlugLedSwitch(device, parent_coordinator))
 
     async_add_entities(entities)
 
