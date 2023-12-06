@@ -1,19 +1,36 @@
 """The test for the Trend sensor platform."""
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from setup import async_setup_component
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
-from .conftest import setup_component
-
 from tests.common import assert_setup_component, get_fixture_path, mock_restore_cache
+
+
+async def setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
+    """Set up the trend component."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "trend",
+                "sensors": {
+                    "test_trend_sensor": params,
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
