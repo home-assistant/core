@@ -18,10 +18,18 @@ from homeassistant.const import (
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
-from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceResponse,
+    State,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
@@ -53,7 +61,7 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .messages import construct_event_message, construct_result_message
+from .messages import construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
 
@@ -94,6 +102,7 @@ def pong_message(iden: int) -> dict[str, Any]:
     return {"id": iden, "type": "pong"}
 
 
+@callback
 def _forward_events_check_permissions(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     user: User,
@@ -111,6 +120,7 @@ def _forward_events_check_permissions(
     send_message(messages.cached_event_message(msg_id, event))
 
 
+@callback
 def _forward_events_unconditional(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     msg_id: int,
@@ -142,17 +152,15 @@ def handle_subscribe_events(
         raise Unauthorized(user_id=connection.user.id)
 
     if event_type == EVENT_STATE_CHANGED:
-        forward_events = callback(
-            partial(
-                _forward_events_check_permissions,
-                connection.send_message,
-                connection.user,
-                msg["id"],
-            )
+        forward_events = partial(
+            _forward_events_check_permissions,
+            connection.send_message,
+            connection.user,
+            msg["id"],
         )
     else:
-        forward_events = callback(
-            partial(_forward_events_unconditional, connection.send_message, msg["id"])
+        forward_events = partial(
+            _forward_events_unconditional, connection.send_message, msg["id"]
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
@@ -212,6 +220,7 @@ def handle_unsubscribe_events(
         vol.Required("service"): str,
         vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
+        vol.Optional("return_response", default=False): bool,
     }
 )
 @decorators.async_response
@@ -219,7 +228,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    blocking = True
     # We do not support templates.
     target = msg.get("target")
     if template.is_complex(target):
@@ -227,25 +235,68 @@ async def handle_call_service(
 
     try:
         context = connection.context(msg)
-        await hass.services.async_call(
-            msg["domain"],
-            msg["service"],
-            msg.get("service_data"),
-            blocking,
-            context,
+        response = await hass.services.async_call(
+            domain=msg["domain"],
+            service=msg["service"],
+            service_data=msg.get("service_data"),
+            blocking=True,
+            context=context,
             target=target,
+            return_response=msg["return_response"],
         )
-        connection.send_result(msg["id"], {"context": context})
+        result: dict[str, Context | ServiceResponse] = {"context": context}
+        if msg["return_response"]:
+            result["response"] = response
+        connection.send_result(msg["id"], result)
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
-            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
+            connection.send_error(
+                msg["id"],
+                const.ERR_NOT_FOUND,
+                f"Service {err.domain}.{err.service} not found.",
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            )
         else:
-            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+            # The called service called another service which does not exist
+            connection.send_error(
+                msg["id"],
+                const.ERR_HOME_ASSISTANT_ERROR,
+                f"Service {err.domain}.{err.service} called service "
+                f"{msg['domain']}.{msg['service']} which was not found.",
+                translation_domain=const.DOMAIN,
+                translation_key="child_service_not_found",
+                translation_placeholders={
+                    "domain": err.domain,
+                    "service": err.service,
+                    "child_domain": msg["domain"],
+                    "child_service": msg["service"],
+                },
+            )
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            f"Validation error: {err}",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
-        connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
@@ -301,10 +352,12 @@ def _send_handle_get_states_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
-    joined_states = ",".join(serialized_states)
-    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
+    connection.send_message(
+        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+    )
 
 
+@callback
 def _forward_entity_changes(
     send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
@@ -344,14 +397,12 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
-        callback(
-            partial(
-                _forward_entity_changes,
-                connection.send_message,
-                entity_ids,
-                connection.user,
-                msg["id"],
-            )
+        partial(
+            _forward_entity_changes,
+            connection.send_message,
+            entity_ids,
+            connection.user,
+            msg["id"],
         ),
         run_immediately=True,
     )
@@ -391,9 +442,8 @@ def _send_handle_entities_init_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle entities init response."""
-    joined_states = ",".join(serialized_states)
     connection.send_message(
-        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
+        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
     )
 
 
@@ -728,7 +778,22 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    script_result = await script_obj.async_run(msg.get("variables"), context=context)
+    try:
+        script_result = await script_obj.async_run(
+            msg.get("variables"), context=context
+        )
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
     connection.send_result(
         msg["id"],
         {

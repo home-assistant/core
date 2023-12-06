@@ -18,21 +18,13 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass
-class PlugwiseSelectDescriptionMixin:
-    """Mixin values for Plugwise Select entities."""
-
-    command: Callable[[Smile, str, str], Awaitable[None]]
-    options_key: SelectOptionsType
-
-
-@dataclass
-class PlugwiseSelectEntityDescription(
-    SelectEntityDescription, PlugwiseSelectDescriptionMixin
-):
+@dataclass(kw_only=True)
+class PlugwiseSelectEntityDescription(SelectEntityDescription):
     """Class describing Plugwise Select entities."""
 
+    command: Callable[[Smile, str, str], Awaitable[None]]
     key: SelectType
+    options_key: SelectOptionsType
 
 
 SELECT_TYPES = (

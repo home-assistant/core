@@ -1,13 +1,18 @@
 """Config flow for Co2signal integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
+from aioelectricitymaps import ElectricityMaps
+from aioelectricitymaps.exceptions import ElectricityMapsError, InvalidToken
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -16,8 +21,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_COUNTRY_CODE, DOMAIN
-from .coordinator import get_data
-from .exceptions import APIRatelimitExceeded, InvalidAuth
+from .helpers import fetch_latest_carbon_intensity
 from .util import get_extra_name
 
 TYPE_USE_HOME = "use_home_location"
@@ -30,6 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _data: dict | None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -111,25 +116,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "country", data_schema, {**self._data, **user_input}
         )
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle the reauth step."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): cv.string,
+            }
+        )
+        return await self._validate_and_create("reauth", data_schema, entry_data)
+
     async def _validate_and_create(
-        self, step_id: str, data_schema: vol.Schema, data: dict
+        self, step_id: str, data_schema: vol.Schema, data: Mapping[str, Any]
     ) -> FlowResult:
         """Validate data and show form if it is invalid."""
         errors: dict[str, str] = {}
 
-        try:
-            await self.hass.async_add_executor_job(get_data, self.hass, data)
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except APIRatelimitExceeded:
-            errors["base"] = "api_ratelimit"
-        except Exception:  # pylint: disable=broad-except
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title=get_extra_name(data) or "CO2 Signal",
-                data=data,
-            )
+        if data:
+            session = async_get_clientsession(self.hass)
+            em = ElectricityMaps(token=data[CONF_API_KEY], session=session)
+
+            try:
+                await fetch_latest_carbon_intensity(self.hass, em, data)
+            except InvalidToken:
+                errors["base"] = "invalid_auth"
+            except ElectricityMapsError:
+                errors["base"] = "unknown"
+            else:
+                if self._reauth_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry,
+                        data={
+                            CONF_API_KEY: data[CONF_API_KEY],
+                        },
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self._reauth_entry.entry_id
+                    )
+                    return self.async_abort(reason="reauth_successful")
+
+                return self.async_create_entry(
+                    title=get_extra_name(data) or "CO2 Signal",
+                    data=data,
+                )
 
         return self.async_show_form(
             step_id=step_id,

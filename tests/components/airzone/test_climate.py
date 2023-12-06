@@ -536,6 +536,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
                 API_SYSTEM_ID: 1,
                 API_ZONE_ID: 5,
                 API_SET_POINT: 20.5,
+                API_ON: 1,
             }
         ]
     }
@@ -551,12 +552,14 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.dorm_2",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.5,
             },
             blocking=True,
         )
 
     state = hass.states.get("climate.dorm_2")
+    assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_TEMPERATURE) == 20.5
 
 

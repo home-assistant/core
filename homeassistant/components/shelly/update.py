@@ -34,7 +34,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen
+from .utils import get_device_entry_gen, get_release_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -156,10 +156,15 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self,
         block_coordinator: ShellyBlockCoordinator,
         attribute: str,
-        description: RestEntityDescription,
+        description: RestUpdateDescription,
     ) -> None:
         """Initialize update entity."""
         super().__init__(block_coordinator, attribute, description)
+        self._attr_release_url = get_release_url(
+            block_coordinator.device.gen,
+            block_coordinator.model,
+            description.beta,
+        )
         self._in_progress_old_version: str | None = None
 
     @property
@@ -225,11 +230,14 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcUpdateDescription,
     ) -> None:
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
         self._ota_in_progress: bool = False
+        self._attr_release_url = get_release_url(
+            coordinator.device.gen, coordinator.model, description.beta
+        )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -336,3 +344,15 @@ class RpcSleepingUpdateEntity(
             return None
 
         return self.last_state.attributes.get(ATTR_LATEST_VERSION)
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes."""
+        if not self.coordinator.device.initialized:
+            return None
+
+        return get_release_url(
+            self.coordinator.device.gen,
+            self.coordinator.model,
+            self.entity_description.beta,
+        )

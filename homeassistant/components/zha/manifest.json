@@ -2,7 +2,7 @@
   "domain": "zha",
   "name": "Zigbee Home Automation",
   "after_dependencies": ["onboarding", "usb"],
-  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
   "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
@@ -21,16 +21,16 @@
     "universal_silabs_flasher"
   ],
   "requirements": [
-    "bellows==0.36.8",
+    "bellows==0.37.1",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.106",
-    "zigpy-deconz==0.21.1",
-    "zigpy==0.59.0",
-    "zigpy-xbee==0.19.0",
-    "zigpy-zigate==0.11.0",
-    "zigpy-znp==0.11.6",
-    "universal-silabs-flasher==0.0.14",
+    "zha-quirks==0.0.107",
+    "zigpy-deconz==0.22.0",
+    "zigpy==0.60.0",
+    "zigpy-xbee==0.20.0",
+    "zigpy-zigate==0.12.0",
+    "zigpy-znp==0.12.0",
+    "universal-silabs-flasher==0.0.15",
     "pyserial-asyncio-fast==0.11"
   ],
   "usb": [
@@ -75,6 +75,12 @@
       "pid": "0030",
       "description": "*conbee*",
       "known_devices": ["Conbee II"]
+    },
+    {
+      "vid": "0403",
+      "pid": "6015",
+      "description": "*conbee*",
+      "known_devices": ["Conbee III"]
     },
     {
       "vid": "10C4",

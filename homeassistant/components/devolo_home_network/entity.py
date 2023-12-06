@@ -12,7 +12,7 @@ from devolo_plc_api.device_api import (
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -49,6 +49,7 @@ class DevoloEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{device.ip}",
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, str(device.serial_number))},
             manufacturer="devolo",
             model=device.product,

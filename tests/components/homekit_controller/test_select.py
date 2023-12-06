@@ -33,9 +33,10 @@ def create_service_with_temperature_units(accessory: Accessory):
     return service
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test we can migrate a select unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     select = entity_registry.async_get_or_create(
         "select",

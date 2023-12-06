@@ -5,9 +5,17 @@
       'devices-config': dict({
         'device1': dict({
         }),
+        'device2': dict({
+        }),
+        'device3': dict({
+        }),
       }),
       'devices-status': dict({
         'device1': dict({
+        }),
+        'device2': dict({
+        }),
+        'device3': dict({
         }),
       }),
       'installations': dict({
@@ -22,11 +30,31 @@
               ]),
               'group_id': 'group1',
             }),
+            dict({
+              'devices': list([
+                dict({
+                  'device_id': 'device2',
+                  'ws_id': 'webserver2',
+                }),
+              ]),
+              'group_id': 'group2',
+            }),
+            dict({
+              'devices': list([
+                dict({
+                  'device_id': 'device3',
+                  'ws_id': 'webserver3',
+                }),
+              ]),
+              'group_id': 'group3',
+            }),
           ]),
           'plugins': dict({
             'schedules': dict({
               'calendar_ws_ids': list([
                 'webserver1',
+                'webserver2',
+                'webserver3',
               ]),
             }),
           }),
@@ -49,6 +77,10 @@
       }),
       'webservers': dict({
         'webserver1': dict({
+        }),
+        'webserver2': dict({
+        }),
+        'webserver3': dict({
         }),
       }),
     }),
@@ -90,6 +122,13 @@
           'name': 'Bron',
           'power': False,
           'problems': False,
+          'speed': 6,
+          'speed-type': 0,
+          'speeds': dict({
+            '1': 2,
+            '2': 4,
+            '3': 6,
+          }),
           'temperature': 21.0,
           'temperature-setpoint': 22.0,
           'temperature-setpoint-cool-air': 22.0,
@@ -103,7 +142,51 @@
           'temperature-setpoint-min-cool-air': 18.0,
           'temperature-setpoint-min-hot-air': 16.0,
           'temperature-step': 0.5,
-          'web-server': '11:22:33:44:55:67',
+          'web-server': 'webserver2',
+          'ws-connected': True,
+        }),
+        'aidoo_pro': dict({
+          'action': 1,
+          'active': True,
+          'available': True,
+          'id': 'aidoo_pro',
+          'installation': 'installation1',
+          'is-connected': True,
+          'mode': 2,
+          'modes': list([
+            1,
+            2,
+            3,
+            4,
+            5,
+          ]),
+          'name': 'Bron Pro',
+          'power': True,
+          'problems': False,
+          'speed': 3,
+          'speed-type': 0,
+          'speeds': dict({
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+          }),
+          'temperature': 20.0,
+          'temperature-setpoint': 22.0,
+          'temperature-setpoint-cool-air': 22.0,
+          'temperature-setpoint-hot-air': 22.0,
+          'temperature-setpoint-max': 30.0,
+          'temperature-setpoint-max-auto-air': 30.0,
+          'temperature-setpoint-max-cool-air': 30.0,
+          'temperature-setpoint-max-hot-air': 30.0,
+          'temperature-setpoint-min': 15.0,
+          'temperature-setpoint-min-auto-air': 18.0,
+          'temperature-setpoint-min-cool-air': 18.0,
+          'temperature-setpoint-min-hot-air': 16.0,
+          'temperature-step': 0.5,
+          'web-server': 'webserver3',
           'ws-connected': True,
         }),
       }),
@@ -138,14 +221,14 @@
             'zone2',
           ]),
         }),
-        'grp2': dict({
+        'group2': dict({
           'action': 6,
           'active': False,
           'aidoos': list([
             'aidoo1',
           ]),
           'available': True,
-          'id': 'grp2',
+          'id': 'group2',
           'installation': 'installation1',
           'mode': 3,
           'modes': list([
@@ -164,6 +247,32 @@
           'temperature-setpoint-min': 15.0,
           'temperature-step': 0.5,
         }),
+        'group3': dict({
+          'action': 1,
+          'active': True,
+          'aidoos': list([
+            'aidoo_pro',
+          ]),
+          'available': True,
+          'id': 'group3',
+          'installation': 'installation1',
+          'mode': 2,
+          'modes': list([
+            1,
+            2,
+            3,
+            4,
+            5,
+          ]),
+          'name': 'Aidoo Pro Group',
+          'num-devices': 1,
+          'power': True,
+          'temperature': 20.0,
+          'temperature-setpoint': 22.0,
+          'temperature-setpoint-max': 30.0,
+          'temperature-setpoint-min': 15.0,
+          'temperature-step': 0.5,
+        }),
       }),
       'installations': dict({
         'installation1': dict({
@@ -171,11 +280,13 @@
           'active': True,
           'aidoos': list([
             'aidoo1',
+            'aidoo_pro',
           ]),
           'available': True,
           'groups': list([
             'group1',
-            'grp2',
+            'group2',
+            'group3',
           ]),
           'humidity': 27,
           'id': 'installation1',
@@ -188,20 +299,21 @@
             5,
           ]),
           'name': 'House',
-          'num-devices': 3,
-          'num-groups': 2,
+          'num-devices': 4,
+          'num-groups': 3,
           'power': True,
           'systems': list([
             'system1',
           ]),
-          'temperature': 22.0,
-          'temperature-setpoint': 23.3,
+          'temperature': 21.5,
+          'temperature-setpoint': 23.0,
           'temperature-setpoint-max': 30.0,
           'temperature-setpoint-min': 15.0,
           'temperature-step': 0.5,
           'web-servers': list([
             'webserver1',
-            '11:22:33:44:55:67',
+            'webserver2',
+            'webserver3',
           ]),
           'zones': list([
             'zone1',
@@ -235,21 +347,6 @@
         }),
       }),
       'web-servers': dict({
-        '11:22:33:44:55:67': dict({
-          'available': True,
-          'connection-date': '2023-05-24 17:00:52 +0200',
-          'disconnection-date': '2023-05-24 17:00:25 +0200',
-          'firmware': '3.13',
-          'id': '11:22:33:44:55:67',
-          'installation': 'installation1',
-          'name': 'WebServer 11:22:33:44:55:67',
-          'type': 'ws_aidoo',
-          'wifi-channel': 1,
-          'wifi-mac': '**REDACTED**',
-          'wifi-quality': 4,
-          'wifi-rssi': -77,
-          'wifi-ssid': 'Wifi',
-        }),
         'webserver1': dict({
           'available': True,
           'connection-date': '2023-05-07T12:55:51.000Z',
@@ -263,6 +360,36 @@
           'wifi-mac': '**REDACTED**',
           'wifi-quality': 4,
           'wifi-rssi': -56,
+          'wifi-ssid': 'Wifi',
+        }),
+        'webserver2': dict({
+          'available': True,
+          'connection-date': '2023-05-24 17:00:52 +0200',
+          'disconnection-date': '2023-05-24 17:00:25 +0200',
+          'firmware': '3.13',
+          'id': 'webserver2',
+          'installation': 'installation1',
+          'name': 'WebServer 11:22:33:44:55:67',
+          'type': 'ws_aidoo',
+          'wifi-channel': 1,
+          'wifi-mac': '**REDACTED**',
+          'wifi-quality': 4,
+          'wifi-rssi': -77,
+          'wifi-ssid': 'Wifi',
+        }),
+        'webserver3': dict({
+          'available': True,
+          'connection-date': '2023-11-05 17:00:52 +0200',
+          'disconnection-date': '2023-11-05 17:00:25 +0200',
+          'firmware': '4.01',
+          'id': 'webserver3',
+          'installation': 'installation1',
+          'name': 'WebServer 11:22:33:44:55:68',
+          'type': 'ws_aidoo',
+          'wifi-channel': 6,
+          'wifi-mac': '**REDACTED**',
+          'wifi-quality': 4,
+          'wifi-rssi': -67,
           'wifi-ssid': 'Wifi',
         }),
       }),

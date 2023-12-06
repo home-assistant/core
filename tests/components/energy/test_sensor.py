@@ -88,7 +88,10 @@ async def test_cost_sensor_no_states(
 
 
 async def test_cost_sensor_attributes(
-    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
+    setup_integration,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test sensor attributes."""
     energy_data = data.EnergyManager.default_preferences()
@@ -114,9 +117,8 @@ async def test_cost_sensor_attributes(
     }
     await setup_integration(hass)
 
-    registry = er.async_get(hass)
     cost_sensor_entity_id = "sensor.energy_consumption_cost"
-    entry = registry.async_get(cost_sensor_entity_id)
+    entry = entity_registry.async_get(cost_sensor_entity_id)
     assert entry.entity_category is None
     assert entry.disabled_by is None
     assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
@@ -145,6 +147,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     initial_energy,
     initial_cost,
     price_entity,
@@ -237,7 +240,6 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(cost_sensor_entity_id)
     assert entry
     postfix = "cost" if flow_type == "flow_from" else "compensation"
@@ -357,6 +359,7 @@ async def test_cost_sensor_price_entity_total(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     initial_energy,
     initial_cost,
     price_entity,
@@ -451,7 +454,6 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(cost_sensor_entity_id)
     assert entry
     postfix = "cost" if flow_type == "flow_from" else "compensation"
@@ -572,6 +574,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     initial_energy,
     initial_cost,
     price_entity,
@@ -665,7 +668,6 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(cost_sensor_entity_id)
     assert entry
     postfix = "cost" if flow_type == "flow_from" else "compensation"
@@ -1156,7 +1158,10 @@ async def test_cost_sensor_state_class_measurement_no_reset(
 
 
 async def test_inherit_source_unique_id(
-    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
+    setup_integration,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test sensor inherits unique ID from source."""
     energy_data = data.EnergyManager.default_preferences()
@@ -1175,7 +1180,6 @@ async def test_inherit_source_unique_id(
         "data": energy_data,
     }
 
-    entity_registry = er.async_get(hass)
     source_entry = entity_registry.async_get_or_create(
         "sensor", "test", "123456", suggested_object_id="gas_consumption"
     )

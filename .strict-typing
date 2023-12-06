@@ -180,6 +180,7 @@ homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
+homeassistant.components.input_text.*
 homeassistant.components.integration.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
@@ -201,6 +202,7 @@ homeassistant.components.ld2410_ble.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
+homeassistant.components.linear_garage_door.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*

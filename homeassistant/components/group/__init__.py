@@ -293,14 +293,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config)
 
     async def reload_service_handler(service: ServiceCall) -> None:
-        """Remove all user-defined groups and load new ones from config."""
-        auto = [e for e in component.entities if not e.user_defined]
+        """Group reload handler.
 
-        if (conf := await component.async_prepare_reload()) is None:
+        - Remove group.group entities not created by service calls and set them up again
+        - Reload xxx.group platforms
+        """
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf)
 
-        await component.async_add_entities(auto)
+        # Simplified + modified version of EntityPlatform.async_reset:
+        # - group.group never retries setup
+        # - group.group never polls
+        # - We don't need to reset EntityPlatform._setup_complete
+        # - Only remove entities which were not created by service calls
+        tasks = [
+            entity.async_remove()
+            for entity in component.entities
+            if entity.entity_id.startswith("group.") and not entity.created_by_service
+        ]
+
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        component.config = None
+
+        await _async_process_config(hass, conf)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
@@ -329,20 +346,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 or None
             )
 
-            extra_arg = {
-                attr: service.data[attr]
-                for attr in (ATTR_ICON,)
-                if service.data.get(attr) is not None
-            }
-
             await Group.async_create_group(
                 hass,
                 service.data.get(ATTR_NAME, object_id),
-                object_id=object_id,
+                created_by_service=True,
                 entity_ids=entity_ids,
-                user_defined=False,
+                icon=service.data.get(ATTR_ICON),
                 mode=service.data.get(ATTR_ALL),
-                **extra_arg,
+                object_id=object_id,
+                order=None,
             )
             return
 
@@ -449,7 +461,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
             Group.async_create_group_entity(
                 hass,
                 name,
-                entity_ids,
+                created_by_service=False,
+                entity_ids=entity_ids,
                 icon=icon,
                 object_id=object_id,
                 mode=mode,
@@ -570,11 +583,12 @@ class Group(Entity):
         self,
         hass: HomeAssistant,
         name: str,
-        order: int | None = None,
-        icon: str | None = None,
-        user_defined: bool = True,
-        entity_ids: Collection[str] | None = None,
-        mode: bool | None = None,
+        *,
+        created_by_service: bool,
+        entity_ids: Collection[str] | None,
+        icon: str | None,
+        mode: bool | None,
+        order: int | None,
     ) -> None:
         """Initialize a group.
 
@@ -588,7 +602,7 @@ class Group(Entity):
         self._on_off: dict[str, bool] = {}
         self._assumed: dict[str, bool] = {}
         self._on_states: set[str] = set()
-        self.user_defined = user_defined
+        self.created_by_service = created_by_service
         self.mode = any
         if mode:
             self.mode = all
@@ -597,35 +611,17 @@ class Group(Entity):
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
 
     @staticmethod
-    def create_group(
-        hass: HomeAssistant,
-        name: str,
-        entity_ids: Collection[str] | None = None,
-        user_defined: bool = True,
-        icon: str | None = None,
-        object_id: str | None = None,
-        mode: bool | None = None,
-        order: int | None = None,
-    ) -> Group:
-        """Initialize a group."""
-        return asyncio.run_coroutine_threadsafe(
-            Group.async_create_group(
-                hass, name, entity_ids, user_defined, icon, object_id, mode, order
-            ),
-            hass.loop,
-        ).result()
-
-    @staticmethod
     @callback
     def async_create_group_entity(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Collection[str] | None = None,
-        user_defined: bool = True,
-        icon: str | None = None,
-        object_id: str | None = None,
-        mode: bool | None = None,
-        order: int | None = None,
+        *,
+        created_by_service: bool,
+        entity_ids: Collection[str] | None,
+        icon: str | None,
+        mode: bool | None,
+        object_id: str | None,
+        order: int | None,
     ) -> Group:
         """Create a group entity."""
         if order is None:
@@ -639,11 +635,11 @@ class Group(Entity):
         group = Group(
             hass,
             name,
-            order=order,
-            icon=icon,
-            user_defined=user_defined,
+            created_by_service=created_by_service,
             entity_ids=entity_ids,
+            icon=icon,
             mode=mode,
+            order=order,
         )
 
         group.entity_id = async_generate_entity_id(
@@ -656,19 +652,27 @@ class Group(Entity):
     async def async_create_group(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Collection[str] | None = None,
-        user_defined: bool = True,
-        icon: str | None = None,
-        object_id: str | None = None,
-        mode: bool | None = None,
-        order: int | None = None,
+        *,
+        created_by_service: bool,
+        entity_ids: Collection[str] | None,
+        icon: str | None,
+        mode: bool | None,
+        object_id: str | None,
+        order: int | None,
     ) -> Group:
         """Initialize a group.
 
         This method must be run in the event loop.
         """
         group = Group.async_create_group_entity(
-            hass, name, entity_ids, user_defined, icon, object_id, mode, order
+            hass,
+            name,
+            created_by_service=created_by_service,
+            entity_ids=entity_ids,
+            icon=icon,
+            mode=mode,
+            object_id=object_id,
+            order=order,
         )
 
         # If called before the platform async_setup is called (test cases)
@@ -704,7 +708,7 @@ class Group(Entity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes for the group."""
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
-        if not self.user_defined:
+        if self.created_by_service:
             data[ATTR_AUTO] = True
 
         return data

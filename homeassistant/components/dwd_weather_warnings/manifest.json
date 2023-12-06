@@ -4,6 +4,7 @@
   "codeowners": ["@runningman84", "@stephan192", "@andarotajo"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dwd_weather_warnings",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["dwdwfsapi"],
   "requirements": ["dwdwfsapi==1.0.6"]

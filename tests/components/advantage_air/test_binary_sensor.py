@@ -20,7 +20,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_binary_sensor_async_setup_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test binary sensor setup."""
 
@@ -34,8 +36,6 @@ async def test_binary_sensor_async_setup_entry(
     )
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First Air Filter
@@ -44,7 +44,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-filter"
 
@@ -54,7 +54,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac2-filter"
 
@@ -64,7 +64,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-motion"
 
@@ -74,7 +74,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-motion"
 
@@ -83,7 +83,7 @@ async def test_binary_sensor_async_setup_entry(
 
     assert not hass.states.get(entity_id)
 
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -96,7 +96,7 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-myzone"
 
@@ -105,7 +105,7 @@ async def test_binary_sensor_async_setup_entry(
 
     assert not hass.states.get(entity_id)
 
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -118,6 +118,6 @@ async def test_binary_sensor_async_setup_entry(
     assert state
     assert state.state == STATE_OFF
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-myzone"

@@ -18,17 +18,16 @@ from homeassistant.const import (
     PRECISION_HALVES,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
+from . import FritzBoxDeviceEntity
+from .common import get_coordinator
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
-    CONF_COORDINATOR,
-    DOMAIN as FRITZBOX_DOMAIN,
 )
 from .model import ClimateExtraAttributes
 
@@ -50,17 +49,22 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities() -> None:
+        """Add devices."""
+        if not coordinator.new_devices:
+            return
+        async_add_entities(
             FritzboxThermostat(coordinator, ain)
-            for ain, device in coordinator.data.devices.items()
-            if device.has_thermostat
-        ]
-    )
+            for ain in coordinator.new_devices
+            if coordinator.data.devices[ain].has_thermostat
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):

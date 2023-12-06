@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.storage import Store
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
@@ -145,7 +146,7 @@ class ExposedEntities:
                 assistant, entity_id, key, value
             )
 
-        assistant_options: Mapping[str, Any]
+        assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         if (
             assistant_options := registry_entry.options.get(assistant, {})
         ) and assistant_options.get(key) == value:
@@ -256,7 +257,8 @@ class ExposedEntities:
         else:
             should_expose = False
 
-        assistant_options: Mapping[str, Any] = registry_entry.options.get(assistant, {})
+        assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
+        assistant_options = registry_entry.options.get(assistant, {})
         assistant_options = assistant_options | {"should_expose": should_expose}
         entity_registry.async_update_entity_options(
             entity_id, assistant, assistant_options

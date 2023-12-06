@@ -19,8 +19,11 @@ TEST_USERNAME2 = "username"
 TEST_PASSWORD = "password"
 TEST_PASSWORD2 = "new_password"
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
+TEST_MAC2 = "12:34:56:78:9a:bc"
+TEST_UID = "ABC1234567D89EFG"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
+TEST_NVR_NAME2 = "test2_reolink_name"
 TEST_USE_HTTPS = True
 
 
@@ -51,6 +54,7 @@ def reolink_connect_class(
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
         host_mock.mac_address = TEST_MAC
+        host_mock.uid = TEST_UID
         host_mock.onvif_enabled = True
         host_mock.rtmp_enabled = True
         host_mock.rtsp_enabled = True
@@ -59,14 +63,30 @@ def reolink_connect_class(
         host_mock.use_https = TEST_USE_HTTPS
         host_mock.is_admin = True
         host_mock.user_level = "admin"
+        host_mock.protocol = "rtsp"
+        host_mock.channels = [0]
+        host_mock.stream_channels = [0]
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
         host_mock.manufacturer = "Reolink"
         host_mock.model = "RLC-123"
+        host_mock.camera_model.return_value = "RLC-123"
+        host_mock.camera_name.return_value = TEST_NVR_NAME
+        host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
+        host_mock.wifi_connection = False
+        host_mock.wifi_signal = None
+        host_mock.whiteled_mode_list.return_value = []
+        host_mock.zoom_range.return_value = {
+            "zoom": {"pos": {"min": 0, "max": 100}},
+            "focus": {"pos": {"min": 0, "max": 100}},
+        }
+        host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
+        host_mock.checked_api_versions = {"GetEvents": 1}
+        host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}
         yield host_mock_class
 
 

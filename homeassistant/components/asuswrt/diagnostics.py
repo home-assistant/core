@@ -36,7 +36,7 @@ async def async_get_config_entry_diagnostics(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     hass_device = device_registry.async_get_device(
-        identifiers=router.device_info["identifiers"]
+        identifiers=router.device_info[ATTR_IDENTIFIERS]
     )
     if not hass_device:
         return data

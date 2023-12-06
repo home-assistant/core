@@ -86,6 +86,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             sw_version=self.device_data.fw_ver,
             hw_version=self.device_data.fw_type,
             suggested_area=self.device_data.name,
+            serial_number=self.device_data.serial,
         )
 
 

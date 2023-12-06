@@ -16,6 +16,7 @@ from homeassistant.components.http.ban import (
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     IpBanManager,
+    process_success_login,
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
@@ -23,9 +24,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from . import mock_real_ip
-
 from tests.common import async_get_persistent_notifications
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
@@ -332,9 +332,14 @@ async def test_failed_login_attempts_counter(
         """Return 200 status code."""
         return None, 200
 
+    async def auth_true_handler(request):
+        """Return 200 status code."""
+        process_success_login(request)
+        return None, 200
+
     app.router.add_get(
         "/auth_true",
-        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
+        request_handler_factory(hass, Mock(requires_auth=True), auth_true_handler),
     )
     app.router.add_get(
         "/auth_false",
@@ -377,6 +382,14 @@ async def test_failed_login_attempts_counter(
     # We no longer support trusted networks.
     resp = await client.get("/auth_true")
     assert resp.status == HTTPStatus.OK
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 0
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
 
 

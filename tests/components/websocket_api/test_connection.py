@@ -39,9 +39,15 @@ from tests.common import MockUser
         ),
         (
             exceptions.HomeAssistantError("Failed to do X"),
-            websocket_api.ERR_UNKNOWN_ERROR,
+            websocket_api.ERR_HOME_ASSISTANT_ERROR,
             "Failed to do X",
-            "Error handling message: Failed to do X (unknown_error) Mock User from 127.0.0.42 (Browser)",
+            "Error handling message: Failed to do X (home_assistant_error) Mock User from 127.0.0.42 (Browser)",
+        ),
+        (
+            exceptions.ServiceValidationError("Failed to do X"),
+            websocket_api.ERR_HOME_ASSISTANT_ERROR,
+            "Failed to do X",
+            "Error handling message: Failed to do X (home_assistant_error) Mock User from 127.0.0.42 (Browser)",
         ),
         (
             ValueError("Really bad"),

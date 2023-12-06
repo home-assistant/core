@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Renson Endura delta device."
         }
       }
     },
@@ -16,6 +19,9 @@
     "button": {
       "sync_time": {
         "name": "Sync time with device"
+      },
+      "reset_filter": {
+        "name": "Reset filter counter"
       }
     },
     "number": {

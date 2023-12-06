@@ -1145,13 +1145,19 @@ def mock_zeroconf() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
-    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
+    from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel
+        AsyncZeroconf,
+    )
 
-    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
+    with patch(
+        "homeassistant.components.zeroconf.HaAsyncZeroconf", spec=AsyncZeroconf
+    ) as mock_aiozc:
         zc = mock_aiozc.return_value
         zc.async_unregister_service = AsyncMock()
         zc.async_register_service = AsyncMock()
         zc.async_update_service = AsyncMock()
+        zc.zeroconf = Mock(spec=Zeroconf)
         zc.zeroconf.async_wait_for_start = AsyncMock()
         # DNSCache has strong Cython type checks, and MagicMock does not work
         # so we must mock the class directly

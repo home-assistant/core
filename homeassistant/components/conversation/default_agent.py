@@ -188,11 +188,14 @@ class DefaultAgent(AbstractConversationAgent):
             return None
 
         slot_lists = self._make_slot_lists()
+        intent_context = self._make_intent_context(user_input)
+
         result = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
             slot_lists,
+            intent_context,
         )
 
         return result
@@ -221,15 +224,17 @@ class DefaultAgent(AbstractConversationAgent):
         # loaded in async_recognize.
         assert lang_intents is not None
 
+        # Slot values to pass to the intent
+        slots = {
+            entity.name: {"value": entity.value} for entity in result.entities_list
+        }
+
         try:
             intent_response = await intent.async_handle(
                 self.hass,
                 DOMAIN,
                 result.intent.name,
-                {
-                    entity.name: {"value": entity.value}
-                    for entity in result.entities_list
-                },
+                slots,
                 user_input.text,
                 user_input.context,
                 language,
@@ -277,12 +282,16 @@ class DefaultAgent(AbstractConversationAgent):
         user_input: ConversationInput,
         lang_intents: LanguageIntents,
         slot_lists: dict[str, SlotList],
+        intent_context: dict[str, Any] | None,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
         # Prioritize matches with entity names above area names
         maybe_result: RecognizeResult | None = None
         for result in recognize_all(
-            user_input.text, lang_intents.intents, slot_lists=slot_lists
+            user_input.text,
+            lang_intents.intents,
+            slot_lists=slot_lists,
+            intent_context=intent_context,
         ):
             if "name" in result.entities:
                 return result
@@ -368,10 +377,11 @@ class DefaultAgent(AbstractConversationAgent):
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
         if language is None:
-            language = self.hass.config.language
-
-        self._lang_intents.pop(language, None)
-        _LOGGER.debug("Cleared intents for language: %s", language)
+            self._lang_intents.clear()
+            _LOGGER.debug("Cleared intents for all languages")
+        else:
+            self._lang_intents.pop(language, None)
+            _LOGGER.debug("Cleared intents for language: %s", language)
 
     async def async_prepare(self, language: str | None = None):
         """Load intents for a language."""
@@ -621,6 +631,25 @@ class DefaultAgent(AbstractConversationAgent):
         }
 
         return self._slot_lists
+
+    def _make_intent_context(
+        self, user_input: ConversationInput
+    ) -> dict[str, Any] | None:
+        """Return intent recognition context for user input."""
+        if not user_input.device_id:
+            return None
+
+        devices = dr.async_get(self.hass)
+        device = devices.async_get(user_input.device_id)
+        if (device is None) or (device.area_id is None):
+            return None
+
+        areas = ar.async_get(self.hass)
+        device_area = areas.async_get_area(device.area_id)
+        if device_area is None:
+            return None
+
+        return {"area": device_area.name}
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents | None

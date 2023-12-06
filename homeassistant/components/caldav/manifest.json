@@ -2,6 +2,7 @@
   "domain": "caldav",
   "name": "CalDAV",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/caldav",
   "iot_class": "cloud_polling",
   "loggers": ["caldav", "vobject"],

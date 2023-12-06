@@ -11,7 +11,7 @@ astroid==3.0.1
 coverage==7.3.2
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.6.1
+mypy==1.7.1
 pre-commit==3.5.0
 pydantic==1.10.12
 pylint==3.0.2
@@ -26,12 +26,12 @@ pytest-test-groups==1.0.3
 pytest-sugar==0.9.7
 pytest-timeout==2.1.0
 pytest-unordered==0.5.2
-pytest-picked==0.4.6
+pytest-picked==0.5.0
 pytest-xdist==3.3.1
 pytest==7.4.3
 requests-mock==1.11.0
 respx==0.20.2
-syrupy==4.5.0
+syrupy==4.6.0
 tqdm==4.66.1
 types-aiofiles==23.2.0.0
 types-atomicwrites==1.4.5.1

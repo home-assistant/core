@@ -1,3 +1,18 @@
+get_items:
+  target:
+    entity:
+      domain: todo
+  fields:
+    status:
+      example: "needs_action"
+      default: needs_action
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed
+          multiple: true
 add_item:
   target:
     entity:
@@ -8,6 +23,18 @@ add_item:
     item:
       required: true
       example: "Submit income tax return"
+      selector:
+        text:
+    due_date:
+      example: "2023-11-17"
+      selector:
+        date:
+    due_datetime:
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
+    description:
+      example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
 update_item:
@@ -34,6 +61,18 @@ update_item:
           options:
             - needs_action
             - completed
+    due_date:
+      example: "2023-11-17"
+      selector:
+        date:
+    due_datetime:
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
+    description:
+      example: "A more complete description of the to-do item than that provided by the summary."
+      selector:
+        text:
 remove_item:
   target:
     entity:
@@ -45,3 +84,10 @@ remove_item:
       required: true
       selector:
         text:
+
+remove_completed_items:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.DELETE_TODO_ITEM
