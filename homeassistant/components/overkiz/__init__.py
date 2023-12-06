@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
-        if APIType.CLOUD:
+        if api_type == APIType.CLOUD:
             scenarios = await client.get_scenarios()
         else:
             scenarios = []
