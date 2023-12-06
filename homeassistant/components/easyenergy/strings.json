@@ -9,6 +9,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "exceptions": {
+    "invalid_date": {
+      "message": "Invalid date provided. Got {date}"
+    }
+  },
   "entity": {
     "sensor": {
       "current_hour_price": {
@@ -40,6 +45,58 @@
       },
       "hours_priced_equal_or_higher": {
         "name": "Hours priced equal or higher than current - today"
+      }
+    }
+  },
+  "services": {
+    "get_gas_prices": {
+      "name": "Get gas prices",
+      "description": "Request gas prices from easyEnergy.",
+      "fields": {
+        "incl_vat": {
+          "name": "VAT Included",
+          "description": "Include or exclude VAT in the prices, default is true."
+        },
+        "start": {
+          "name": "Start",
+          "description": "From which moment to get the prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Until which moment to get the prices. Defaults to today if omitted."
+        }
+      }
+    },
+    "get_energy_usage_prices": {
+      "name": "Get energy usage prices",
+      "description": "Request energy prices from easyEnergy.",
+      "fields": {
+        "incl_vat": {
+          "name": "VAT Included",
+          "description": "Include or exclude VAT in the prices, default is true."
+        },
+        "start": {
+          "name": "Start",
+          "description": "From which moment to get the prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Until which moment to get the prices. Defaults to today if omitted."
+        }
+      }
+    },
+    "get_energy_return_prices": {
+      "name": "Get energy return prices",
+      "description": "Request return energy prices from easyEnergy.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": "From which moment to get the prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Until which moment to get the prices. Defaults to today if omitted."
+        }
       }
     }
   }
