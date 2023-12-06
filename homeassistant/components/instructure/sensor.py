@@ -113,11 +113,14 @@ SENSOR_DESCRIPTIONS: {str: CanvasSensorEntityDescription} = {
         translation_key=GRADES_KEY,
         icon="mdi:star",
         avabl_fn=lambda data: data is not None,
-        name_fn=lambda data: data["assignment_id"] if data else "Default Assignment ID",
-        value_fn=lambda data: data["grade"] if data else "Default Grade",
+        name_fn=lambda data: f"{data['subject_name']} - {data['assignment_name']}"
+        if data
+        else "Default Assignment",
+        value_fn=lambda data: data["score"] if data else "Default Grade",
         attr_fn=lambda data, courses: {
             "Score": data["score"],
-            "Submission Type": data["submission_type"],
+            "Subject Name": data["subject_name"],
+            "Assignment Name": data["assignment_name"],
         }
         if data
         else {"Score": "Default Score", "Submission Type": "Default Submission Type"},
