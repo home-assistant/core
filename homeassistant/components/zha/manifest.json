@@ -77,6 +77,12 @@
       "known_devices": ["Conbee II"]
     },
     {
+      "vid": "0403",
+      "pid": "6015",
+      "description": "*conbee*",
+      "known_devices": ["Conbee III"]
+    },
+    {
       "vid": "10C4",
       "pid": "8A2A",
       "description": "*zigbee*",
