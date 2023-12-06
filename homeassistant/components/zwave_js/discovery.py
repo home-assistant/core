@@ -1048,7 +1048,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # light for Basic CC
+    # light for Basic CC with target
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=ZWaveValueDiscoverySchema(
@@ -1057,6 +1057,25 @@ DISCOVERY_SCHEMAS = [
             property={CURRENT_VALUE_PROPERTY},
         ),
         required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={
+                    CommandClass.BASIC,
+                },
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
+    # sensor for Basic CC without target
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        absent_values=[
             ZWaveValueDiscoverySchema(
                 command_class={
                     CommandClass.BASIC,
