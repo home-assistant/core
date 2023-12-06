@@ -189,6 +189,11 @@ class CanvasAPI:
                 {"per_page": "50"},
             )
             course_submissions = json.loads(response.content.decode("utf-8"))
+            course_info_response = await self.async_make_get_request(
+                f"/courses/{course_id}", {}
+            )
+            course_info = json.loads(course_info_response.content.decode("utf-8"))
+            course_name = course_info.get("name", "Unknown Course")
             for submission in course_submissions:
                 if submission["graded_at"] is not None:
                     graded_at = datetime.strptime(
@@ -196,7 +201,14 @@ class CanvasAPI:
                     )
                     past_one_month = datetime.utcnow() - timedelta(days=30)
                     if graded_at >= past_one_month:
-                        submissions[f"submission-{submission['id']}"] = submission
+                        submission_details = {
+                            "subject_name": course_name,
+                            "assignment_name": submission.get("assignment_name", ""),
+                            "score": submission.get("score", "Not Graded"),
+                        }
+                        submissions[
+                            f"submission-{submission['id']}"
+                        ] = submission_details
 
         if len(submissions) != 0:
             return submissions
