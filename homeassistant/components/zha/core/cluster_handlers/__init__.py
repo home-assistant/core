@@ -23,6 +23,7 @@ from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from ..const import (
     ATTR_ARGS,
@@ -242,11 +243,8 @@ class ClusterHandler(LogMixin):
         """
         event_data = {}
         kwargs = {}
-        if (
-            self.cluster.cluster_id >= 0xFC00
-            and self._endpoint.device.manufacturer_code
-        ):
-            kwargs["manufacturer"] = self._endpoint.device.manufacturer_code
+        if self._manufacturer_code is not None:
+            kwargs["manufacturer"] = self._manufacturer_code
 
         for attr_report in self.REPORT_CONFIG:
             attr, config = attr_report["attr"], attr_report["config"]
@@ -384,7 +382,9 @@ class ClusterHandler(LogMixin):
                 from_cache,
             )
             await self.read_attributes(
-                uncached, from_cache=from_cache, only_cache=from_cache
+                uncached,
+                from_cache=from_cache,
+                only_cache=from_cache,
             )
 
         ch_specific_init = getattr(
@@ -452,52 +452,66 @@ class ClusterHandler(LogMixin):
 
         return self.cluster.attributes[attrid].name
 
-    async def read_attribute(self, attribute, from_cache=False):
+    @property
+    def _manufacturer_code(self) -> int | None:
+        manufacturer_code = self._endpoint.device.manufacturer_code
+
+        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
+            return manufacturer_code
+
+        return None
+
+    async def read_attribute(self, attribute: str, from_cache: bool = False) -> Any:
         """Get the value for an attribute."""
-        result = await self.read_attributes(
+        results = await self.read_attributes(
             attributes=[attribute],
             from_cache=from_cache,
             only_cache=from_cache,
         )
 
-        return result[attribute]
+        return results[attribute]
 
     async def read_attributes(
         self,
         attributes: list[str],
+        *,
         from_cache: bool = False,
         only_cache: bool = False,
+        ignore_failures: bool = False,
+        manufacturer: int | None | UndefinedType = UNDEFINED,
     ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
-
-        manufacturer = None
-        manufacturer_code = self._endpoint.device.manufacturer_code
-        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
-            manufacturer = manufacturer_code
         chunk = attributes[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
         rest = attributes[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
-        result: dict[str | int, Any] = {}
+        success: dict[str | int, Any] = {}
+        failure: dict[str | int, Any] = {}
+
+        if manufacturer is UNDEFINED:
+            manufacturer = self._manufacturer_code
+
         while chunk:
-            try:
-                self.debug("Reading attributes in chunks: %s", chunk)
-                read, _ = await retry_request(self._cluster.read_attributes)(
-                    chunk,
-                    allow_cache=from_cache,
-                    only_cache=only_cache,
-                    manufacturer=manufacturer,
-                )
-                result.update(read)
-            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
-                self.debug(
-                    "failed to get attributes '%s' on '%s' cluster: %s",
-                    chunk,
-                    self.cluster.ep_attribute,
-                    str(ex),
-                )
-                raise
+            chunk_success, chunk_failure = await retry_request(
+                self._cluster.read_attributes
+            )(
+                chunk,
+                allow_cache=from_cache,
+                only_cache=only_cache,
+                manufacturer=manufacturer,
+            )
+
+            success.update(chunk_success)
+            failure.update(chunk_failure)
+
             chunk = rest[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
             rest = rest[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
-        return result
+
+        if ignore_failures:
+            success.update({k: None for k in failure})
+        elif failure:
+            failure_text = ", ".join(f"{k}={v!r}" for k, v in failure.items())
+            raise ValueError(f"Could not read attributes {failure_text}")
+
+        return success
 
     async def write_attributes_safe(
         self, attributes: dict[str, Any], manufacturer: int | None = None

@@ -909,7 +909,9 @@ class Light(BaseLight, ZhaEntity):
             if self._color_cluster_handler.color_loop_supported:
                 attributes.append("color_loop_active")
 
-            results = await self._color_cluster_handler.read_attributes(attributes)
+            results = await self._color_cluster_handler.read_attributes(
+                attributes, ignore_failures=True
+            )
 
             # although rare, a transition might have been started while we were waiting
             # for the polled attributes, so abort if we are transitioning,
