@@ -52,6 +52,7 @@ from .const import (
     CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
+    DATA_PLATFORMS_SETUP,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -265,6 +266,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
     loaded = False
+    stt_platform_loaded = asyncio.Event()
+    tts_platform_loaded = asyncio.Event()
+    hass.data[DATA_PLATFORMS_SETUP] = {
+        Platform.STT: stt_platform_loaded,
+        Platform.TTS: tts_platform_loaded,
+    }
 
     async def _on_start() -> None:
         """Discover platforms."""
@@ -275,14 +282,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        tts_platform_loaded = asyncio.Event()
         tts_info = {"platform_loaded": tts_platform_loaded}
-
-        await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
 
         await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
         await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
-        await asyncio.gather(tts_platform_loaded.wait())
+        await tts_platform_loaded.wait()
+
+        # The config entry should be loaded after the legacy tts platform is loaded
+        # to make sure that the tts integration is setup before we try to migrate
+        # old assist pipelines in the cloud stt entity.
+        await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
 
     async def _on_connect() -> None:
         """Handle cloud connect."""
@@ -347,6 +356,8 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
+    stt_platform_loaded.set()
 
     return True
 

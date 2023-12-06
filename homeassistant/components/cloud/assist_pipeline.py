@@ -1,4 +1,6 @@
 """Handle Cloud assist pipelines."""
+import asyncio
+
 from homeassistant.components.assist_pipeline import (
     async_create_default_pipeline,
     async_get_pipelines,
@@ -10,7 +12,7 @@ from homeassistant.components.stt import DOMAIN as STT_DOMAIN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from .const import DOMAIN, STT_ENTITY_UNIQUE_ID
+from .const import DATA_PLATFORMS_SETUP, DOMAIN, STT_ENTITY_UNIQUE_ID
 
 
 async def async_migrate_cloud_pipeline_stt_engine(
@@ -21,7 +23,10 @@ async def async_migrate_cloud_pipeline_stt_engine(
     # Added in 2023.11.0. Can be removed in 2024.11.0.
     # Make sure the pipeline store is loaded, needed because assist_pipeline
     # is an after dependency of cloud
-
+    # pylint: disable=fixme
+    # TODO: We need to make sure that tts is loaded before this migration.
+    # Assist pipeline will call default engine of tts when setting up the store.
+    # Wait for the tts platform loaded event here.
     await async_setup_pipeline_store(hass)
     pipelines = async_get_pipelines(hass)
     for pipeline in pipelines:
@@ -34,6 +39,9 @@ async def async_migrate_cloud_pipeline_stt_engine(
 
 async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
     """Create a cloud assist pipeline."""
+    # Set up stt and tts platforms before creating the pipeline.
+    platforms_setup: dict[str, asyncio.Event] = hass.data[DATA_PLATFORMS_SETUP]
+    await asyncio.gather(*(event.wait() for event in platforms_setup.values()))
     # Make sure the pipeline store is loaded, needed because assist_pipeline
     # is an after dependency of cloud
     await async_setup_pipeline_store(hass)
@@ -42,6 +50,9 @@ async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
     new_stt_engine_id = entity_registry.async_get_entity_id(
         STT_DOMAIN, DOMAIN, STT_ENTITY_UNIQUE_ID
     )
+    if new_stt_engine_id is None:
+        # If there's no cloud stt entity, we can't create a cloud pipeline.
+        return None
 
     def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
         """Return the ID of a cloud-enabled assist pipeline or None.

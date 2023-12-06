@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
+from aiohttp.test_utils import TestClient
 from hass_nabucasa import thingtalk, voice
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -46,6 +47,26 @@ PIPELINE_DATA_LEGACY = {
     "preferred_item": "12345",
 }
 
+PIPELINE_DATA = {
+    "items": [
+        {
+            "conversation_engine": "homeassistant",
+            "conversation_language": "language_1",
+            "id": "12345",
+            "language": "language_1",
+            "name": "Home Assistant Cloud",
+            "stt_engine": "stt.home_assistant_cloud",
+            "stt_language": "language_1",
+            "tts_engine": "cloud",
+            "tts_language": "language_1",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        },
+    ],
+    "preferred_item": "12345",
+}
+
 PIPELINE_DATA_OTHER = {
     "items": [
         {
@@ -67,7 +88,6 @@ PIPELINE_DATA_OTHER = {
 }
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
-
 
 @pytest.fixture(name="setup_cloud")
 async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
@@ -127,7 +147,7 @@ async def test_google_actions_sync_fails(
         assert mock_request_sync.call_count == 1
 
 
-@pytest.mark.parametrize("pipeline_data", [PIPELINE_DATA_LEGACY])
+@pytest.mark.parametrize("pipeline_data", [PIPELINE_DATA, PIPELINE_DATA_LEGACY])
 async def test_login_view_existing_pipeline(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -195,7 +215,7 @@ async def test_login_view_create_pipeline(
     assert result == {"success": True, "cloud_pipeline": "12345"}
     create_pipeline_mock.assert_awaited_once_with(
         hass,
-        stt_engine_id="cloud",
+        stt_engine_id="stt.home_assistant_cloud",
         tts_engine_id="cloud",
         pipeline_name="Home Assistant Cloud",
     )
@@ -234,7 +254,7 @@ async def test_login_view_create_pipeline_fail(
     assert result == {"success": True, "cloud_pipeline": None}
     create_pipeline_mock.assert_awaited_once_with(
         hass,
-        stt_engine_id="cloud",
+        stt_engine_id="stt.home_assistant_cloud",
         tts_engine_id="cloud",
         pipeline_name="Home Assistant Cloud",
     )
