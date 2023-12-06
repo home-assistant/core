@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import bleak
@@ -18,12 +19,21 @@ from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
+    HomeAssistantBluetoothManager,
     HomeAssistantRemoteScanner,
     async_get_advertisement_callback,
 )
 from homeassistant.core import HomeAssistant
 
 from . import _get_manager, generate_advertisement_data, generate_ble_device
+
+
+@contextmanager
+def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
+    """Mock shutdown of the HomeAssistantBluetoothManager."""
+    manager.shutdown = True
+    yield
+    manager.shutdown = False
 
 
 class FakeScanner(HomeAssistantRemoteScanner):
@@ -382,7 +392,7 @@ async def test_raise_after_shutdown(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(manager, "shutdown", True):
+    with mock_shutdown(manager):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(BleakError, match="shutdown"):
