@@ -9,6 +9,7 @@ from idasen_ha import Desk
 from idasen_ha.errors import AuthFailedError
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -114,6 +115,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    @callback
+    def _async_bluetooth_callback(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Update from a bluetooth callback to ensure that a new BLEDevice is fetched."""
+        _LOGGER.debug("Bluetooth callback triggered. Reconnecting")
+        hass.async_create_task(coordinator.async_connect())
+
+    entry.async_on_unload(
+        bluetooth.async_register_callback(
+            hass,
+            _async_bluetooth_callback,
+            BluetoothCallbackMatcher({ADDRESS: address}),
+            bluetooth.BluetoothScanningMode.ACTIVE,
+        )
+    )
 
     async def _async_stop(event: Event) -> None:
         """Close the connection."""

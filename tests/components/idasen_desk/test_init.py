@@ -52,6 +52,27 @@ async def test_no_ble_device(hass: HomeAssistant, mock_desk_api: MagicMock) -> N
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_reconnect_on_bluetooth_callback(
+    hass: HomeAssistant, mock_desk_api: MagicMock
+) -> None:
+    """Test that a reconnet is made after the bluetooth callback is triggered."""
+    with mock.patch(
+        "homeassistant.components.idasen_desk.bluetooth.async_register_callback"
+    ) as mock_register_callback:
+        # callback = mock_register_callback.return_value
+        # callback.side_effect = lambda *args: args[1]
+        await init_integration(hass)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        mock_desk_api.connect.assert_called_once()
+        mock_register_callback.assert_called_once()
+
+        _, register_callback_args, _ = mock_register_callback.mock_calls[0]
+        callback = register_callback_args[1]
+        callback(None, None)
+        await hass.async_block_till_done()
+        assert mock_desk_api.connect.call_count == 2
+
+
 async def test_unload_entry(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
