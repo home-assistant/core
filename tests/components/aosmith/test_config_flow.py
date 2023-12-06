@@ -10,10 +10,7 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
 from tests.components.aosmith.conftest import FIXTURE_USER_INPUT
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -35,91 +32,53 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "testemail@example.com"
+    assert result2["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert result2["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("exception", "expected_error_key"),
+    [
+        (AOSmithInvalidCredentialsException("Invalid credentials"), "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    expected_error_key: str,
+) -> None:
+    """Test handling an exception and then recovering on the second attempt."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        side_effect=AOSmithInvalidCredentialsException("Invalid credentials"),
+        side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             FIXTURE_USER_INPUT,
         )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle an unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            FIXTURE_USER_INPUT,
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test reauth works."""
-
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
-        data=FIXTURE_USER_INPUT,
-    )
-    mock_config.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        side_effect=AOSmithInvalidCredentialsException("Invalid credentials"),
-    ), patch(
-        "homeassistant.components.aosmith.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_config.entry_id,
-            },
-            data=FIXTURE_USER_INPUT,
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": expected_error_key}
 
     with patch(
         "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
         return_value=[],
-    ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             FIXTURE_USER_INPUT,
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "reauth_successful"
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
+    assert result3["data"] == FIXTURE_USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1

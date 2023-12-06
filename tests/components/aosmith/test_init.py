@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from py_aosmith import AOSmithInvalidCredentialsException, AOSmithUnknownException
+from py_aosmith import AOSmithUnknownException
 import pytest
 
 from homeassistant.components.aosmith.const import (
@@ -39,25 +39,6 @@ async def test_config_entry_not_ready(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_update_auth_failure(
-    hass: HomeAssistant, mock_client: MagicMock, init_integration: MockConfigEntry
-) -> None:
-    """Test auth failure during data update."""
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-
-    mock_client.get_devices.side_effect = AOSmithInvalidCredentialsException(
-        "Authentication error"
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + REGULAR_INTERVAL)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "user"
 
 
 @pytest.mark.parametrize(

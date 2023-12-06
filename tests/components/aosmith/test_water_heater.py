@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aosmith.const import (
     AOSMITH_MODE_ELECTRIC,
@@ -12,9 +13,6 @@ from homeassistant.components.aosmith.const import (
 )
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST,
     ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
@@ -24,7 +22,6 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_HEAT_PUMP,
-    STATE_OFF,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import (
@@ -53,26 +50,12 @@ async def test_setup(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My water heater"
 
 
-async def test_state(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
+async def test_state(
+    hass: HomeAssistant, init_integration: MockConfigEntry, snapshot: SnapshotAssertion
+) -> None:
     """Test the state of the water heater entity."""
     state = hass.states.get("water_heater.my_water_heater")
-    assert state
-    assert state.state == STATE_HEAT_PUMP
-    assert state.attributes.get(ATTR_MAX_TEMP) == 130
-    assert state.attributes.get(ATTR_MIN_TEMP) == 95
-    assert state.attributes.get(ATTR_AWAY_MODE) == STATE_OFF
-    assert state.attributes.get(ATTR_OPERATION_MODE) == STATE_HEAT_PUMP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 130
-    assert all(
-        operation in state.attributes.get(ATTR_OPERATION_LIST)
-        for operation in [STATE_ECO, STATE_HEAT_PUMP, STATE_ELECTRIC]
-    )
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.AWAY_MODE
-    )
+    assert state == snapshot
 
 
 @pytest.mark.parametrize(
