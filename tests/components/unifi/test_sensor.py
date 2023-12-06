@@ -20,6 +20,19 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    DEVICE_ADOPTING,
+    DEVICE_ADOPTION_FAILED,
+    DEVICE_CONNECTED,
+    DEVICE_DELETING,
+    DEVICE_DISCONNECTED,
+    DEVICE_FIRMWARE_MISMATCH,
+    DEVICE_HEARTBEAT_MISSED,
+    DEVICE_INFORM_ERROR,
+    DEVICE_ISOLATED,
+    DEVICE_PENDING,
+    DEVICE_PROVISIONING,
+    DEVICE_UNKNOWN,
+    DEVICE_UPGRADING,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
@@ -584,7 +597,7 @@ async def test_poe_port_switches(
 ) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get("sensor.mock_name_port_1_poe_power")
@@ -807,8 +820,8 @@ async def test_outlet_power_readings(
     """Test the outlet power reporting on PDU devices."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
 
-    assert len(hass.states.async_all()) == 10
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_all()) == 11
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get(f"sensor.{entity_id}")
@@ -856,7 +869,7 @@ async def test_device_uptime(
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
         await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
     assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
 
     ent_reg = er.async_get(hass)
@@ -912,7 +925,7 @@ async def test_device_temperature(
     }
 
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert hass.states.get("sensor.device_temperature").state == "30"
 
     ent_reg = er.async_get(hass)
@@ -925,3 +938,59 @@ async def test_device_temperature(
     device["general_temperature"] = 60
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_temperature").state == "60"
+
+
+async def test_device_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Verify that state sensors are working as expected."""
+    device = {
+        "board_rev": 3,
+        "device_id": "mock-id",
+        "general_temperature": 30,
+        "has_fan": True,
+        "has_temperature": True,
+        "fan_level": 0,
+        "ip": "10.0.1.1",
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device",
+        "next_interval": 20,
+        "overheating": True,
+        "state": 1,
+        "type": "usw",
+        "upgradable": True,
+        "uptime": 60,
+        "version": "4.0.42.10433",
+    }
+
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    assert hass.states.get("sensor.device_state").state == "Connected"
+
+    ent_reg = er.async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.device_state").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+    DEVICE_STATE = [
+        DEVICE_DISCONNECTED,
+        DEVICE_CONNECTED,
+        DEVICE_PENDING,
+        DEVICE_FIRMWARE_MISMATCH,
+        DEVICE_UPGRADING,
+        DEVICE_PROVISIONING,
+        DEVICE_HEARTBEAT_MISSED,
+        DEVICE_ADOPTING,
+        DEVICE_DELETING,
+        DEVICE_INFORM_ERROR,
+        DEVICE_ADOPTION_FAILED,
+        DEVICE_ISOLATED,
+        DEVICE_UNKNOWN,
+    ]
+
+    for i in range(13):
+        device["state"] = i
+        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        assert hass.states.get("sensor.device_state").state == DEVICE_STATE[i]
