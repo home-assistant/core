@@ -70,7 +70,7 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if await self._check_installation(username, password, installation_id):
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=user_input[CONF_NAME],
                     data={
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
