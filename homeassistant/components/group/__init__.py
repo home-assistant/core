@@ -509,8 +509,8 @@ class GroupEntity(Entity):
                 self.async_update_supported_features(
                     event.data["entity_id"], event.data["new_state"]
                 )
-            state, _, _, attrs = self._async_generate_attributes()
-            preview_callback(state, attrs)
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
 
         async_state_changed_listener(None)
         return async_track_state_change_event(
