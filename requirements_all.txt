@@ -236,7 +236,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.2.1
+aioesphomeapi==19.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -374,7 +374,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==66
+aiounifi==67
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -726,7 +726,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==1.0.0
+easyenergy==2.0.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -792,7 +792,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.4.13
+evohome-async==0.4.15
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
@@ -984,7 +984,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.6.1
+habluetooth==0.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -1027,7 +1027,7 @@ holidays==0.37
 home-assistant-frontend==20231205.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.11.29
+home-assistant-intents==2023.12.05
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
