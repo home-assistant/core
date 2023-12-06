@@ -170,7 +170,7 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
 
     level_cluster = zigpy_device.endpoints[1].level
     level_cluster.PLUGGED_ATTR_READS = {
-        "current_level": 50,
+        "current_level": 254,
     }
 
     zha_device = await zha_device_joined(zigpy_device)
@@ -217,7 +217,7 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
 
     level_cluster = zigpy_device.endpoints[1].level
     level_cluster.PLUGGED_ATTR_READS = {
-        "current_level": 50,
+        "current_level": 254,
     }
 
     zha_device = await zha_device_joined(zigpy_device)
@@ -255,7 +255,7 @@ async def device_light_3(hass, zigpy_device_mock, zha_device_joined):
 
     level_cluster = zigpy_device.endpoints[1].level
     level_cluster.PLUGGED_ATTR_READS = {
-        "current_level": 50,
+        "current_level": 254,
     }
 
     zha_device = await zha_device_joined(zigpy_device)
@@ -290,7 +290,7 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     color_cluster.PLUGGED_ATTR_READS = {
         "color_capabilities": (
             lighting.Color.ColorCapabilities.Color_temperature
-            | lighting.Color.ColorCapabilities.XY_attributes,
+            | lighting.Color.ColorCapabilities.XY_attributes
         ),
         "color_temp_physical_min": 0,
         "color_temp_physical_max": 0,
@@ -416,7 +416,7 @@ async def test_light(
         # test getting a brightness change from the network
         await async_test_on_from_light(hass, cluster_on_off, entity_id)
         await async_test_dimmer_from_light(
-            hass, cluster_level, entity_id, 150, STATE_ON
+            hass, cluster_level, entity_id, 254, STATE_ON
         )
 
     # test rejoin
@@ -1745,7 +1745,7 @@ async def test_zha_group_light_entity(
     # test getting a brightness change from the network
     await async_test_on_from_light(hass, dev1_cluster_on_off, group_entity_id)
     await async_test_dimmer_from_light(
-        hass, dev1_cluster_level, group_entity_id, 150, STATE_ON
+        hass, dev1_cluster_level, group_entity_id, 254, STATE_ON
     )
     # Check state
     group_state = hass.states.get(group_entity_id)
