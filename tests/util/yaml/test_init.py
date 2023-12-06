@@ -134,6 +134,7 @@ def test_include_yaml(
     [
         ({"/test/one.yaml": "one", "/test/two.yaml": "two"}, ["one", "two"]),
         ({"/test/one.yaml": "1", "/test/two.yaml": "2"}, [1, 2]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": None}, [1]),
     ],
 )
 def test_include_dir_list(
@@ -189,6 +190,10 @@ def test_include_dir_list_recursive(
         (
             {"/test/first.yaml": "1", "/test/second.yaml": "2"},
             {"first": 1, "second": 2},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": None},
+            {"first": 1},
         ),
     ],
 )
@@ -248,6 +253,10 @@ def test_include_dir_named_recursive(
         (
             {"/test/first.yaml": "- 1", "/test/second.yaml": "- 2\n- 3"},
             [1, 2, 3],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": None},
+            [1],
         ),
     ],
 )
@@ -310,6 +319,13 @@ def test_include_dir_merge_list_recursive(
                 "/test/second.yaml": "key2: 2\nkey3: 3",
             },
             {"key1": 1, "key2": 2, "key3": 3},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": None,
+            },
+            {"key1": 1},
         ),
     ],
 )
@@ -686,3 +702,20 @@ def test_string_used_as_vol_schema(try_both_loaders) -> None:
     schema({"key_1": "value_1", "key_2": "value_2"})
     with pytest.raises(vol.Invalid):
         schema({"key_1": "value_2", "key_2": "value_1"})
+
+
+@pytest.mark.parametrize(
+    ("hass_config_yaml", "expected_data"), [("", {}), ("bla:", {"bla": None})]
+)
+def test_load_yaml_dict(
+    try_both_loaders, mock_hass_config_yaml: None, expected_data: Any
+) -> None:
+    """Test item without a key."""
+    assert yaml.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
+
+
+@pytest.mark.parametrize("hass_config_yaml", ["abc", "123", "[]"])
+def test_load_yaml_dict_fail(try_both_loaders, mock_hass_config_yaml: None) -> None:
+    """Test item without a key."""
+    with pytest.raises(yaml_loader.YamlTypeError):
+        yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)
