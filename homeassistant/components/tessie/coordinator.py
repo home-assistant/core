@@ -55,7 +55,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         except ClientResponseError as e:
             if e.status == HTTPStatus.REQUEST_TIMEOUT:
                 # Vehicle is offline, only update state and dont throw error
-                self.data["state"] = "offline"
+                self.data["state"] = TessieStatus.OFFLINE
                 return self.data
             if e.status == HTTPStatus.UNAUTHORIZED:
                 # Auth Token is no longer valid
