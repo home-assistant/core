@@ -215,7 +215,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.2.1
+aioesphomeapi==19.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -592,7 +592,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==1.0.0
+easyenergy==2.0.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
@@ -814,7 +814,7 @@ holidays==0.37
 home-assistant-frontend==20231205.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.11.29
+home-assistant-intents==2023.12.05
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
