@@ -75,57 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
-        manager = hass.data[DOMAIN][VS_MANAGER]
-        switches = hass.data[DOMAIN][VS_SWITCHES]
-        fans = hass.data[DOMAIN][VS_FANS]
-        lights = hass.data[DOMAIN][VS_LIGHTS]
-        sensors = hass.data[DOMAIN][VS_SENSORS]
-
-        dev_dict = await _async_process_devices(hass, manager)
-        switch_devs = dev_dict.get(VS_SWITCHES, [])
-        fan_devs = dev_dict.get(VS_FANS, [])
-        light_devs = dev_dict.get(VS_LIGHTS, [])
-        sensor_devs = dev_dict.get(VS_SENSORS, [])
-
-        switch_set = set(switch_devs)
-        new_switches = list(switch_set.difference(switches))
-        if new_switches and switches:
-            switches.extend(new_switches)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SWITCHES), new_switches)
-            return
-        if new_switches and not switches:
-            switches.extend(new_switches)
-            hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
-
-        fan_set = set(fan_devs)
-        new_fans = list(fan_set.difference(fans))
-        if new_fans and fans:
-            fans.extend(new_fans)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_FANS), new_fans)
-            return
-        if new_fans and not fans:
-            fans.extend(new_fans)
-            hass.async_create_task(forward_setup(config_entry, Platform.FAN))
-
-        light_set = set(light_devs)
-        new_lights = list(light_set.difference(lights))
-        if new_lights and lights:
-            lights.extend(new_lights)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_LIGHTS), new_lights)
-            return
-        if new_lights and not lights:
-            lights.extend(new_lights)
-            hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
-
-        sensor_set = set(sensor_devs)
-        new_sensors = list(sensor_set.difference(sensors))
-        if new_sensors and sensors:
-            sensors.extend(new_sensors)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SENSORS), new_sensors)
-            return
-        if new_sensors and not sensors:
-            sensors.extend(new_sensors)
-            hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+        await _async_new_device_discovery(hass, config_entry, forward_setup, service)
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
@@ -178,3 +128,63 @@ async def _async_process_devices(hass, manager):
         _LOGGER.info("%d VeSync switches found", len(manager.switches))
 
     return devices
+
+
+async def _async_new_device_discovery(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    forward_setup,
+    service: ServiceCall,
+) -> None:
+    """Discover if new devices should be added."""
+    manager = hass.data[DOMAIN][VS_MANAGER]
+    switches = hass.data[DOMAIN][VS_SWITCHES]
+    fans = hass.data[DOMAIN][VS_FANS]
+    lights = hass.data[DOMAIN][VS_LIGHTS]
+    sensors = hass.data[DOMAIN][VS_SENSORS]
+
+    dev_dict = await _async_process_devices(hass, manager)
+    switch_devs = dev_dict.get(VS_SWITCHES, [])
+    fan_devs = dev_dict.get(VS_FANS, [])
+    light_devs = dev_dict.get(VS_LIGHTS, [])
+    sensor_devs = dev_dict.get(VS_SENSORS, [])
+
+    switch_set = set(switch_devs)
+    new_switches = list(switch_set.difference(switches))
+    if new_switches and switches:
+        switches.extend(new_switches)
+        async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SWITCHES), new_switches)
+        return
+    if new_switches and not switches:
+        switches.extend(new_switches)
+        hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
+
+    fan_set = set(fan_devs)
+    new_fans = list(fan_set.difference(fans))
+    if new_fans and fans:
+        fans.extend(new_fans)
+        async_dispatcher_send(hass, VS_DISCOVERY.format(VS_FANS), new_fans)
+        return
+    if new_fans and not fans:
+        fans.extend(new_fans)
+        hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+
+    light_set = set(light_devs)
+    new_lights = list(light_set.difference(lights))
+    if new_lights and lights:
+        lights.extend(new_lights)
+        async_dispatcher_send(hass, VS_DISCOVERY.format(VS_LIGHTS), new_lights)
+        return
+    if new_lights and not lights:
+        lights.extend(new_lights)
+        hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+
+    sensor_set = set(sensor_devs)
+    new_sensors = list(sensor_set.difference(sensors))
+    if new_sensors and sensors:
+        sensors.extend(new_sensors)
+        async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SENSORS), new_sensors)
+        return
+    if new_sensors and not sensors:
+        sensors.extend(new_sensors)
+        hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
