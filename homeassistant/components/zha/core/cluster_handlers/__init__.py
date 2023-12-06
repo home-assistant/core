@@ -539,7 +539,7 @@ class ClusterHandler(LogMixin):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
         args = (self._endpoint.device.nwk, self._id) + args
-        _LOGGER.log(level, msg, *args, **kwargs)
+        _LOGGER.log(level, msg, *args, stacklevel=4, **kwargs)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
