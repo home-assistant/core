@@ -201,7 +201,7 @@ class ClusterHandler(LogMixin):
         devices are unreachable.
         """
         try:
-            res = await self.cluster.bind()
+            res = await retry_request(self.cluster.bind)()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
             async_dispatcher_send(
                 self._endpoint.device.hass,
@@ -271,7 +271,9 @@ class ClusterHandler(LogMixin):
         while chunk:
             reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
-                res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
+                res = await retry_request(self.cluster.configure_reporting_multiple)(
+                    reports, **kwargs
+                )
                 self._configure_reporting_status(reports, res[0])
                 # if we get a response, then it's a success
                 for attr_stat in event_data.values():
