@@ -224,18 +224,7 @@ class ClusterHandler(LogMixin):
         try:
             res = await retry_request(self.cluster.bind)()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
-            async_dispatcher_send(
-                self._endpoint.device.hass,
-                ZHA_CLUSTER_HANDLER_MSG,
-                {
-                    ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
-                    ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                        "cluster_name": self.cluster.name,
-                        "cluster_id": self.cluster.cluster_id,
-                        "success": res[0] == 0,
-                    },
-                },
-            )
+            success = res[0] == 0
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s",
@@ -243,18 +232,20 @@ class ClusterHandler(LogMixin):
                 str(ex),
                 exc_info=ex,
             )
-            async_dispatcher_send(
-                self._endpoint.device.hass,
-                ZHA_CLUSTER_HANDLER_MSG,
-                {
-                    ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
-                    ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                        "cluster_name": self.cluster.name,
-                        "cluster_id": self.cluster.cluster_id,
-                        "success": False,
-                    },
+            success = False
+
+        async_dispatcher_send(
+            self._endpoint.device.hass,
+            ZHA_CLUSTER_HANDLER_MSG,
+            {
+                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
+                ZHA_CLUSTER_HANDLER_MSG_DATA: {
+                    "cluster_name": self.cluster.name,
+                    "cluster_id": self.cluster.cluster_id,
+                    "success": success,
                 },
-            )
+            },
+        )
 
     async def configure_reporting(self) -> None:
         """Configure attribute reporting for a cluster.
