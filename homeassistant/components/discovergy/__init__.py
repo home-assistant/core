@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import pydiscovergy
+from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 from pydiscovergy.models import Meter
@@ -24,7 +24,7 @@ PLATFORMS = [Platform.SENSOR]
 class DiscovergyData:
     """Discovergy data class to share meters and api client."""
 
-    api_client: pydiscovergy.Discovergy
+    api_client: Discovergy
     meters: list[Meter]
     coordinators: dict[str, DiscovergyUpdateCoordinator]
 
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # init discovergy data class
     discovergy_data = DiscovergyData(
-        api_client=pydiscovergy.Discovergy(
+        api_client=Discovergy(
             email=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
             httpx_client=get_async_client(hass),

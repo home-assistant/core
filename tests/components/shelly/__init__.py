@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
+from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -30,7 +31,7 @@ MOCK_MAC = "123456789ABC"
 async def init_integration(
     hass: HomeAssistant,
     gen: int,
-    model="SHSW-25",
+    model=MODEL_25,
     sleep_period=0,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,

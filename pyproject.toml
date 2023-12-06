@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.12.0.dev0"
+version     = "2024.1.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -23,10 +23,9 @@ classifiers = [
 ]
 requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.9.0;python_version>='3.12'",
-    "aiohttp==3.8.5;python_version<'3.12'",
+    "aiohttp==3.9.1",
     "aiohttp_cors==0.7.0",
-    "aiohttp-fast-url-dispatcher==0.1.0",
+    "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-zlib-ng==0.1.1",
     "astral==2.2",
     "attrs==23.1.0",
@@ -44,7 +43,7 @@ dependencies    = [
     "lru-dict==1.2.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==41.0.5",
+    "cryptography==41.0.7",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
     "orjson==3.9.9",
@@ -78,9 +77,6 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["homeassistant*"]
-
-[tool.black]
-extend-exclude = "/generated/"
 
 [tool.pylint.MAIN]
 py-version = "3.11"
@@ -128,7 +124,7 @@ class-const-naming-style = "any"
 
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
-# format - handled by black
+# format - handled by ruff
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load

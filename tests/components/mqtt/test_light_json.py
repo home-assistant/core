@@ -1792,7 +1792,7 @@ async def test_brightness_scale(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("brightness") == 129
 
     # Test limmiting max brightness
     async_fire_mqtt_message(
@@ -1862,7 +1862,7 @@ async def test_white_scale(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("brightness") == 129
 
 
 @pytest.mark.parametrize(

@@ -27,7 +27,12 @@ import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_MODE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -545,6 +550,11 @@ class ESPHomeManager:
         ):
             self.entry.async_start_reauth(self.hass)
 
+    @callback
+    def _async_handle_logging_changed(self, _event: Event) -> None:
+        """Handle when the logging level changes."""
+        self.cli.set_debug(_LOGGER.isEnabledFor(logging.DEBUG))
+
     async def async_start(self) -> None:
         """Start the esphome connection manager."""
         hass = self.hass
@@ -560,6 +570,11 @@ class ESPHomeManager:
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+        )
+        entry_data.cleanup_callbacks.append(
+            hass.bus.async_listen(
+                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+            )
         )
 
         reconnect_logic = ReconnectLogic(
