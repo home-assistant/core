@@ -439,18 +439,11 @@ async def test_switch_configurable(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     # the mocking doesn't update the attr cache so this flips back to initial value
-    assert cluster.read_attributes.call_count == 2
+    assert cluster.read_attributes.call_count == 1
     assert [
         call(
             [
                 "window_detection_function",
-            ],
-            allow_cache=False,
-            only_cache=False,
-            manufacturer=None,
-        ),
-        call(
-            [
                 "window_detection_function_inverter",
             ],
             allow_cache=False,

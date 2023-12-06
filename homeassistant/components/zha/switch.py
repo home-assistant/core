@@ -254,11 +254,12 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
-        self.error("Polling current state")
         if self._cluster_handler:
-            value = await self._cluster_handler.read_attribute(self._attribute_name)
-            await self._cluster_handler.read_attribute(self._inverter_attribute_name)
-            self.debug("read value=%s, inverted=%s", value, self.inverted)
+            await self._cluster_handler.read_attributes(
+                [self._attribute_name]
+                if self._inverter_attribute_name is None
+                else [self._attribute_name, self._inverter_attribute_name]
+            )
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

@@ -154,22 +154,9 @@ class WindowCovering(ClusterHandler):
 
     async def async_update(self):
         """Retrieve latest state."""
-        lift_result = await self.read_attribute("current_position_lift_percentage")
-        self.debug("read current position: %s", lift_result)
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-            self._value_attribute_lift,
-            "current_position_lift_percentage",
-            lift_result,
-        )
-
-        tilt_result = await self.read_attribute("current_position_tilt_percentage")
-        self.debug("read current tilt position: %s", tilt_result)
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-            self._value_attribute_tilt,
-            "current_position_tilt_percentage",
-            tilt_result,
+        await self.read_attributes(
+            ["current_position_lift_percentage", "current_position_tilt_percentage"],
+            ignore_failures=True,
         )
 
     @callback

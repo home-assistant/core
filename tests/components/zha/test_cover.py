@@ -161,7 +161,7 @@ async def test_cover(
     # test update
     prev_call_count = cluster.read_attributes.call_count
     await async_update_entity(hass, entity_id)
-    assert cluster.read_attributes.call_count == prev_call_count + 2
+    assert cluster.read_attributes.call_count == prev_call_count + 1
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
@@ -331,7 +331,7 @@ async def test_cover_failures(
     # test update returned None
     prev_call_count = cluster.read_attributes.call_count
     await async_update_entity(hass, entity_id)
-    assert cluster.read_attributes.call_count == prev_call_count + 2
+    assert cluster.read_attributes.call_count == prev_call_count + 1
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
