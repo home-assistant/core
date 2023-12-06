@@ -524,13 +524,13 @@ class PowerConfigurationClusterHandler(ClusterHandler):
         ),
     )
 
-    async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> Any:
+    async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Initialize cluster handler specific attrs."""
         attributes = [
             "battery_size",
             "battery_quantity",
         ]
-        return await self.read_attributes(
+        await self.read_attributes(
             attributes, from_cache=from_cache, only_cache=from_cache
         )
 
