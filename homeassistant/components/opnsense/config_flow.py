@@ -4,29 +4,15 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import callback
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_API_SECRET,
-    CONF_TRACKER_INTERFACE,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN
 
 
 class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -71,59 +57,3 @@ class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import OPNSense config from configuration.yaml."""
         return await self.async_step_user(user_input=import_info)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return OPNSenseOptionsFlowHandler(config_entry)
-
-
-class OPNSenseOptionsFlowHandler(config_entries.OptionsFlow):
-    """OPNSense options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title="", data={**self.config_entry.options, **user_input}
-            )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ): cv.positive_int,
-                    vol.Required(
-                        CONF_TIMEOUT,
-                        default=self.config_entry.options.get(
-                            CONF_TIMEOUT, DEFAULT_TIMEOUT
-                        ),
-                    ): cv.positive_int,
-                    vol.Optional(
-                        CONF_TRACKER_INTERFACE,
-                        default=self.config_entry.options.get(CONF_TRACKER_INTERFACE),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[],
-                            multiple=True,
-                            custom_value=True,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
-        )

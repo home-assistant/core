@@ -9,13 +9,7 @@ from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -55,12 +49,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
             hass,
             _LOGGER,
             name=DOMAIN,
-        )
-
-        self.update_interval = timedelta(
-            minutes=self.config_entry.options.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
+            update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
         )
 
         self.url = f"https://{self.config_entry.options[CONF_HOST]}/api"
@@ -77,7 +66,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
             self.api_secret,
             self.url,
             self.verify_ssl,
-            timeout=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            timeout=DEFAULT_TIMEOUT,
         )
 
         if len(self.tracker_interfaces) >= 1:
@@ -86,7 +75,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
                 self.api_secret,
                 self.url,
                 self.verify_ssl,
-                timeout=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                timeout=DEFAULT_TIMEOUT,
             )
 
             # Verify that specified tracker interfaces are valid

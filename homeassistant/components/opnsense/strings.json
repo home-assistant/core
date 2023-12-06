@@ -15,16 +15,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Minutes between scans",
-          "timeout": "API Timeout (seconds)",
-          "tracker_interfaces": "Interfaces to use for tracking devices"
-        }
-      }
-    }
   }
 }
