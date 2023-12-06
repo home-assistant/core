@@ -51,7 +51,8 @@ send_message:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_photo:
   fields:
@@ -121,7 +122,8 @@ send_photo:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_sticker:
   fields:
@@ -184,7 +186,8 @@ send_sticker:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_animation:
   fields:
@@ -254,7 +257,8 @@ send_animation:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_video:
   fields:
@@ -324,7 +328,8 @@ send_video:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_voice:
   fields:
@@ -387,7 +392,8 @@ send_voice:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_document:
   fields:
@@ -457,7 +463,8 @@ send_document:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_location:
   fields:
@@ -506,7 +513,8 @@ send_location:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 send_poll:
   fields:
@@ -549,7 +557,8 @@ send_poll:
         text:
     reply_to_message_id:
       selector:
-        object:
+        number:
+          mode: box
 
 edit_message:
   fields:
