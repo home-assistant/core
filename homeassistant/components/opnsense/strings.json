@@ -7,8 +7,7 @@
       "user": {
         "description": "Set required parameter to connect to your router",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "url": "[%key:common::config_flow::data::url%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_secret": "[%key:common::config_flow::data::api_token%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",

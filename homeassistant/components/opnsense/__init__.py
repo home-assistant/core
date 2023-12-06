@@ -1,12 +1,13 @@
 """Support for OPNSense Routers."""
 import logging
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
+    CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
     Platform,
@@ -16,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DEFAULT_NAME, DOMAIN
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN
 from .coordinator import OPNSenseUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +48,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-    conf[CONF_NAME] = DEFAULT_NAME
+
+    # Extract the host from the legacy url
+    conf[CONF_HOST] = urlparse(conf[CONF_URL]).hostname
+    del conf[CONF_URL]
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf

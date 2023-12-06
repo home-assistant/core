@@ -11,10 +11,9 @@ from pyopnsense.exceptions import APIException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
+    CONF_HOST,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_URL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
@@ -64,8 +63,7 @@ class OPNSenseUpdateCoordinator(DataUpdateCoordinator[dict[str, OPNSenseResult]]
             )
         )
 
-        self.name = self.config_entry.options[CONF_NAME]
-        self.url = self.config_entry.options[CONF_URL]
+        self.url = f"https://{self.config_entry.options[CONF_HOST]}/api"
         self.api_key = self.config_entry.options[CONF_API_KEY]
         self.api_secret = self.config_entry.options[CONF_API_SECRET]
         self.verify_ssl = self.config_entry.options[CONF_VERIFY_SSL]

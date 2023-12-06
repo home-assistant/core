@@ -6,10 +6,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
+    CONF_HOST,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_URL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
@@ -24,7 +23,6 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_API_SECRET,
     CONF_TRACKER_INTERFACE,
-    DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -45,8 +43,7 @@ class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                        vol.Required(CONF_URL): str,
+                        vol.Required(CONF_HOST): str,
                         vol.Required(CONF_API_KEY): str,
                         vol.Required(CONF_API_SECRET): str,
                         vol.Optional(CONF_VERIFY_SSL, default=False): bool,
@@ -64,9 +61,9 @@ class OPNSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
         return self.async_create_entry(
-            title=user_input[CONF_NAME],
+            title=user_input[CONF_HOST],
             data={},
             options={**user_input},
         )
