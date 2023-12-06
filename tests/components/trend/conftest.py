@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 ComponentSetup = Callable[[dict[str, Any]], Awaitable[None]]
 
 
-async def setup_component(hass: HomeAssistant, params: dict) -> None:
+async def setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
     """Set up the trend component."""
     assert await async_setup_component(
         hass,
