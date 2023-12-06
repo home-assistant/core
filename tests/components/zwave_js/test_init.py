@@ -1650,6 +1650,7 @@ async def test_factory_reset_node(
     hass: HomeAssistant, client, multisensor_6, multisensor_6_state, integration
 ) -> None:
     """Test when a node is removed because it was reset."""
+    dev_reg = dr.async_get(hass)
     # One config entry scenario
     remove_event = Event(
         type="node removed",
@@ -1671,6 +1672,7 @@ async def test_factory_reset_node(
     assert "with the home ID" not in notifications[msg_id]["message"]
     async_dismiss(hass, msg_id)
     await hass.async_block_till_done()
+    assert not dev_reg.async_get_device(identifiers={dev_id})
 
     # Add mock config entry to simulate having multiple entries
     new_entry = MockConfigEntry(domain=DOMAIN)
