@@ -1,4 +1,5 @@
 """Test ZHA device switch."""
+import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -152,6 +153,8 @@ async def test_check_available_success(
     def _update_last_seen(*args, **kwargs):
         device_with_basic_cluster_handler.last_seen = _seens.pop()
 
+        return {"manufacturer": None}, {}
+
     basic_ch.read_attributes.side_effect = _update_last_seen
 
     # successfully ping zigpy device, but zha_device is not yet available
@@ -196,24 +199,26 @@ async def test_check_available_unsuccessful(
         time.time() - zha_device.consider_unavailable_time - 2
     )
 
+    basic_ch.read_attributes.side_effect = asyncio.TimeoutError()
+
     # unsuccessfully ping zigpy device, but zha_device is still available
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
-    assert basic_ch.read_attributes.await_count == 1
+    assert basic_ch.read_attributes.await_count == 3 * 1
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
     # still no traffic, but zha_device is still available
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
-    assert basic_ch.read_attributes.await_count == 2
+    assert basic_ch.read_attributes.await_count == 3 * 2
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
     # not even trying to update, device is unavailable
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
-    assert basic_ch.read_attributes.await_count == 2
+    assert basic_ch.read_attributes.await_count == 3 * 2
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is False
 

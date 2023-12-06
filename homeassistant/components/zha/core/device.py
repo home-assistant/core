@@ -471,8 +471,12 @@ class ZHADevice(LogMixin):
             self.debug("does not have a mandatory basic cluster")
             self.update_available(False)
             return
-        await self.basic_ch.read_attribute(ATTR_MANUFACTURER)
-        self._checkins_missed_count = 0
+
+        try:
+            await self.basic_ch.read_attribute(ATTR_MANUFACTURER)
+            self._checkins_missed_count = 0
+        except HomeAssistantError:
+            self.debug("Failed to ping device")
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""

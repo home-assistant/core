@@ -58,6 +58,10 @@ _FuncType = Callable[_P, Awaitable[Any]]
 _ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
 
 
+class AttributeReadFailure(zigpy.exceptions.ZigbeeException):
+    """Error to indicate an attribute read failed."""
+
+
 @contextlib.contextmanager
 def wrap_zigpy_exceptions() -> Iterator[None]:
     """Wrap zigpy exceptions in `HomeAssistantError` exceptions."""
@@ -74,6 +78,23 @@ def wrap_zigpy_exceptions() -> Iterator[None]:
             message = f"{message}: {exc}"
 
         raise HomeAssistantError(message) from exc
+
+
+@contextlib.contextmanager
+def suppress_and_log(
+    log_fmt: str,
+    exceptions: tuple[type[BaseException], ...] = (
+        asyncio.TimeoutError,
+        zigpy.exceptions.ZigbeeException,
+        HomeAssistantError,
+        AttributeReadFailure,
+    ),
+) -> Iterator[None]:
+    """Suppress and log exceptions."""
+    try:
+        yield
+    except exceptions:
+        _LOGGER.debug(log_fmt, exc_info=True)
 
 
 def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
@@ -376,18 +397,25 @@ class ClusterHandler(LogMixin):
 
         if cached:
             self.debug("initializing cached cluster handler attributes: %s", cached)
-            await self.read_attributes(cached, from_cache=True, only_cache=from_cache)
+
+            with suppress_and_log("Failed to read cached attributes"):
+                await self.read_attributes(
+                    cached, from_cache=True, only_cache=from_cache
+                )
+
         if uncached:
             self.debug(
                 "initializing uncached cluster handler attributes: %s - from cache[%s]",
                 uncached,
                 from_cache,
             )
-            await self.read_attributes(
-                uncached,
-                from_cache=from_cache,
-                only_cache=from_cache,
-            )
+
+            with suppress_and_log("Failed to read uncached attributes"):
+                await self.read_attributes(
+                    uncached,
+                    from_cache=from_cache,
+                    only_cache=from_cache,
+                )
 
         ch_specific_init = getattr(
             self, "async_initialize_cluster_handler_specific", None
@@ -396,7 +424,8 @@ class ClusterHandler(LogMixin):
             self.debug(
                 "Performing cluster handler specific initialization: %s", uncached
             )
-            await ch_specific_init(from_cache=from_cache)
+            with suppress_and_log("Failed to perform cluster handler-specific init"):
+                await ch_specific_init(from_cache=from_cache)
 
         self.debug("finished cluster handler initialization")
         self._status = ClusterHandlerStatus.INITIALIZED
@@ -511,7 +540,7 @@ class ClusterHandler(LogMixin):
             success.update({k: None for k in failure})
         elif failure:
             failure_text = ", ".join(f"{k}={v!r}" for k, v in failure.items())
-            raise ValueError(f"Could not read attributes {failure_text}")
+            raise AttributeReadFailure(f"Could not read attributes {failure_text}")
 
         return success
 
@@ -539,7 +568,7 @@ class ClusterHandler(LogMixin):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
         args = (self._endpoint.device.nwk, self._id) + args
-        _LOGGER.log(level, msg, *args, stacklevel=4, **kwargs)
+        _LOGGER.log(level, msg, *args, stacklevel=1, **kwargs)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
