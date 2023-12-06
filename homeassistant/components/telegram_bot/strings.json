@@ -42,11 +42,11 @@
         },
         "message_tag": {
           "name": "Message tag",
-          "description": "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}."
+          "description": "Tag for sent message."
         },
         "reply_to_message_id": {
           "name": "Reply to message id",
-          "description": "Mark the message as a reply to a previous message. In telegram_callback handling, for example, you can use {{trigger.event.data.message.message_id}}"
+          "description": "Mark the message as a reply to a previous message."
         }
       }
     },
