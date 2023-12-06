@@ -406,8 +406,8 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryError as ex:
-            error_reason = str(ex) or "Unknown fatal config entry error"
+        except ConfigEntryError as exc:
+            error_reason = str(exc) or "Unknown fatal config entry error"
             _LOGGER.exception(
                 "Error setting up entry %s for %s: %s",
                 self.title,
@@ -416,8 +416,8 @@ class ConfigEntry:
             )
             await self._async_process_on_unload(hass)
             result = False
-        except ConfigEntryAuthFailed as ex:
-            message = str(ex)
+        except ConfigEntryAuthFailed as exc:
+            message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
             auth_message = (
@@ -432,13 +432,13 @@ class ConfigEntry:
             await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
             result = False
-        except ConfigEntryNotReady as ex:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
+        except ConfigEntryNotReady as exc:
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(ex)
+            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             _LOGGER.debug(
                 (
@@ -565,13 +565,13 @@ class ConfigEntry:
             await self._async_process_on_unload(hass)
 
             return result
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(ex) or "Unknown error"
+                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
 

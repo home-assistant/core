@@ -11,6 +11,7 @@ from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,10 +67,22 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         self.map_flag = map_flag
         self.cached_map = self._create_image(starting_map)
 
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return diagnostic entity category for any non-selected maps."""
+        if not self.is_selected:
+            return EntityCategory.DIAGNOSTIC
+        return None
+
+    @property
+    def is_selected(self) -> bool:
+        """Return if this map is the currently selected map."""
+        return self.map_flag == self.coordinator.current_map
+
     def is_map_valid(self) -> bool:
         """Update this map if it is the current active map, and the vacuum is cleaning."""
         return (
-            self.map_flag == self.coordinator.current_map
+            self.is_selected
             and self.image_last_updated is not None
             and self.coordinator.roborock_device_info.props.status is not None
             and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)

@@ -45,7 +45,7 @@ def setup_platform(
     password = config[CONF_PASSWORD]
     counter_id = config[CONF_COUNTER_ID]
     try:
-        client = SuezClient(username, password, counter_id)
+        client = SuezClient(username, password, counter_id, provider=None)
 
         if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")

@@ -31,6 +31,7 @@ from homeassistant.requirements import (
 )
 import homeassistant.util.yaml.loader as yaml_loader
 
+from . import config_validation as cv
 from .typing import ConfigType
 
 
@@ -175,7 +176,7 @@ async def async_check_ha_config_file(  # noqa: C901
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = {key.partition(" ")[0] for key in config}
+    components = {cv.domain_key(key) for key in config}
 
     frontend_dependencies: set[str] = set()
     if "frontend" in components or "default_config" in components:
@@ -232,10 +233,10 @@ async def async_check_ha_config_file(  # noqa: C901
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:
             try:
-                config = config_schema(config)
+                validated_config = config_schema(config)
                 # Don't fail if the validator removed the domain from the config
-                if domain in config:
-                    result[domain] = config[domain]
+                if domain in validated_config:
+                    result[domain] = validated_config[domain]
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config, config[domain])
                 continue
@@ -276,13 +277,17 @@ async def async_check_ha_config_file(  # noqa: C901
                 # show errors for a missing integration in recovery mode or safe mode to
                 # not confuse the user.
                 if not hass.config.recovery_mode and not hass.config.safe_mode:
-                    result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
+                    result.add_warning(
+                        f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                    )
                 continue
             except (
                 RequirementsNotFound,
                 ImportError,
             ) as ex:
-                result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
+                result.add_warning(
+                    f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                )
                 continue
 
             # Validate platform specific schema

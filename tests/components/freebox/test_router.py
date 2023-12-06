@@ -3,7 +3,7 @@ import json
 
 from homeassistant.components.freebox.router import is_json
 
-from .const import DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE, WIFI_GET_GLOBAL_CONFIG
+from .const import DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE, DATA_WIFI_GET_GLOBAL_CONFIG
 
 
 async def test_is_json() -> None:
@@ -12,7 +12,7 @@ async def test_is_json() -> None:
     # Valid JSON values
     assert is_json("{}")
     assert is_json('{ "simple":"json" }')
-    assert is_json(json.dumps(WIFI_GET_GLOBAL_CONFIG))
+    assert is_json(json.dumps(DATA_WIFI_GET_GLOBAL_CONFIG))
     assert is_json(json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE))
 
     # Not valid JSON values
