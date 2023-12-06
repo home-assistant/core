@@ -493,7 +493,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Indicate if the entity is available."""
-        return self._raw_value is not None
+        return super().available and self._raw_value is not None
 
     @property
     def native_value(self) -> int | float | None:
