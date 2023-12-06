@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from energyzero import Electricity, Gas
+from energyzero import Electricity, Gas, VatOption
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,6 +18,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_END,
+    ATTR_INCL_VAT,
     ATTR_START,
     DOMAIN,
     ENERGY_SERVICE_NAME,
@@ -60,19 +61,26 @@ async def __get_prices(
     start = __get_date(call.data.get(ATTR_START))
     end = __get_date(call.data.get(ATTR_END))
 
+    incl_vat = call.data.get(ATTR_INCL_VAT)
+    vat = (
+        VatOption.EXCLUDE
+        if incl_vat is not None and not incl_vat
+        else VatOption.INCLUDE
+    )
+
     data: Electricity | Gas
 
     if price_type == PriceType.GAS:
         data = await coordinator.energyzero.gas_prices(
             start_date=start,
             end_date=end,
-            # TODO add include_vat = VatOption.INCLUDE https://github.com/klaasnicolaas/python-energyzero/pull/270
+            vat=vat,
         )
     else:
         data = await coordinator.energyzero.energy_prices(
             start_date=start,
             end_date=end,
-            #  ODO add include_vat = VatOption.INCLUDE https://github.com/klaasnicolaas/python-energyzero/pull/270
+            vat=vat,
         )
 
     return __serialize_prices(data)
