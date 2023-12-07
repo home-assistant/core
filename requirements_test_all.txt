@@ -1760,7 +1760,7 @@ renault-api==0.2.0
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.1
+reolink-aio==0.8.2
 
 # homeassistant.components.rflink
 rflink==0.0.65
