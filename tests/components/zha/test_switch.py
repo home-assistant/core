@@ -23,6 +23,7 @@ from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -147,6 +148,13 @@ async def test_switch(
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [zha_device])
+
+    # Test async_update
+    cluster.read_attributes.reset_mock()
+    await async_update_entity(hass, entity_id)
+    assert cluster.read_attributes.mock_calls == [
+        call(["on_off"], allow_cache=True, only_cache=True, manufacturer=None)
+    ]
 
     # test that the state has changed from unavailable to off
     assert hass.states.get(entity_id).state == STATE_OFF

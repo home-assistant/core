@@ -428,7 +428,7 @@ class OnOffClusterHandler(ClusterHandler):
             return
         from_cache = not self._endpoint.device.is_mains_powered
         self.debug("attempting to update onoff state - from cache: %s", from_cache)
-        await self.read_attribute(self.ON_OFF, from_cache=from_cache)
+        await self.read_attribute("on_off", from_cache=from_cache)
         await super().async_update()
 
 
