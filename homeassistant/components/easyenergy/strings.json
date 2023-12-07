@@ -69,19 +69,19 @@
     },
     "get_energy_usage_prices": {
       "name": "Get energy usage prices",
-      "description": "Request energy prices from easyEnergy.",
+      "description": "Request usage energy prices from easyEnergy.",
       "fields": {
         "incl_vat": {
-          "name": "VAT Included",
-          "description": "Include or exclude VAT in the prices, default is true."
+          "name": "[%key:component::easyenergy::services::get_gas_prices::fields::incl_vat::name%]",
+          "description": "[%key:component::easyenergy::services::get_gas_prices::fields::incl_vat::description%]"
         },
         "start": {
-          "name": "Start",
-          "description": "From which moment to get the prices. Defaults to today if omitted."
+          "name": "[%key:component::easyenergy::services::get_gas_prices::fields::start::name%]",
+          "description": "[%key:component::easyenergy::services::get_gas_prices::fields::start::description%]"
         },
         "end": {
-          "name": "End",
-          "description": "Until which moment to get the prices. Defaults to today if omitted."
+          "name": "[%key:component::easyenergy::services::get_gas_prices::fields::end::name%]",
+          "description": "[%key:component::easyenergy::services::get_gas_prices::fields::end::description%]"
         }
       }
     },
@@ -90,12 +90,12 @@
       "description": "Request return energy prices from easyEnergy.",
       "fields": {
         "start": {
-          "name": "Start",
-          "description": "From which moment to get the prices. Defaults to today if omitted."
+          "name": "[%key:component::easyenergy::services::get_gas_prices::fields::start::name%]",
+          "description": "[%key:component::easyenergy::services::get_gas_prices::fields::start::description%]"
         },
         "end": {
-          "name": "End",
-          "description": "Until which moment to get the prices. Defaults to today if omitted."
+          "name": "[%key:component::easyenergy::services::get_gas_prices::fields::end::name%]",
+          "description": "[%key:component::easyenergy::services::get_gas_prices::fields::end::description%]"
         }
       }
     }
