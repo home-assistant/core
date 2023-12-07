@@ -107,6 +107,7 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(self._host_uid)
+                self._abort_if_unique_id_configured()
                 bgs = []
                 bgs.append("All " + user_input[CONF_NAME])
                 for group in self.GROUPS:  # We'll create a list of valid groups

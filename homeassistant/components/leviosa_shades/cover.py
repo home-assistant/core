@@ -29,9 +29,7 @@ async def async_setup_entry(
     for blind_group in blind_groups:
         _LOGGER.debug("Adding blind_group: %s", blind_group)
         new_group_obj = hub.AddGroup(blind_group)
-        entities.append(
-            LeviosaBlindGroup(hass, f"{hub_mac}-{new_group_obj.number}", new_group_obj)
-        )
+        entities.append(LeviosaBlindGroup(hass, hub_mac, new_group_obj))
     async_add_entities(entities)
 
 
@@ -47,17 +45,17 @@ class LeviosaBlindGroup(cover.CoverEntity):
     )
 
     def __init__(
-        self, hass: HomeAssistant, blind_group_id: str, blind_group_obj: tShadeGroup
+        self, hass: HomeAssistant, hub_mac: str, blind_group_obj: tShadeGroup
     ) -> None:
         """Initialize the shade group."""
-        self._blind_group_id = blind_group_id
+        self._blind_group_id = f"{hub_mac}-{blind_group_obj.number}"
         self._blind_group_obj = blind_group_obj
         self._hass = hass
 
         self._attr_name = self._blind_group_obj.name
         self._attr_unique_id = self._blind_group_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._blind_group_obj.Hub.hub_ip)},
+            identifiers={(DOMAIN, hub_mac)},
             name=self._blind_group_obj.Hub.name,
             manufacturer=MANUFACTURER,
             model=MODEL,
