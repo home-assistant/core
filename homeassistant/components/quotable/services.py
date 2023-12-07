@@ -3,6 +3,7 @@
 from functools import partial
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 import bleach
@@ -14,13 +15,24 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.json import JsonObjectType
 
 from .const import (
+    ATTR_AUTHOR,
+    ATTR_CONTENT,
+    ATTR_DATA,
+    ATTR_ERROR,
+    ATTR_NAME,
     ATTR_SELECTED_AUTHORS,
     ATTR_SELECTED_TAGS,
+    ATTR_SLUG,
     ATTR_STYLES,
+    ATTR_SUCCESS,
     ATTR_UPDATE_FREQUENCY,
     DOMAIN,
+    ERROR_FETCHING_DATA_FROM_QUOTABLE_API,
+    ERROR_MISSING_SEARCH_QUERY,
+    ERROR_UNKNOWN,
     EVENT_NEW_QUOTE_FETCHED,
     FETCH_A_QUOTE_URL,
     GET_AUTHORS_URL,
@@ -70,7 +82,7 @@ def register_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.register(
+    hass.services.async_register(
         domain=DOMAIN,
         service=SERVICE_UPDATE_CONFIGURATION,
         service_func=partial(_update_configuration_service, hass),
@@ -80,33 +92,57 @@ def register_services(hass: HomeAssistant) -> None:
 async def _fetch_all_tags_service(
     session: aiohttp.ClientSession, service: ServiceCall
 ) -> ServiceResponse:
-    response = await session.get(GET_TAGS_URL, timeout=HTTP_CLIENT_TIMEOUT)
-    if response.status == HTTPStatus.OK:
-        tags = await response.json()
-        if tags:
-            tags = {
-                bleach.clean(tag.get("slug")): bleach.clean(tag.get("name"))
-                for tag in tags
-            }
-            return tags
+    try:
+        response = await session.get(GET_TAGS_URL, timeout=HTTP_CLIENT_TIMEOUT)
+        if response.status == HTTPStatus.OK:
+            tags = await response.json()
+            if tags:
+                tags = [
+                    {
+                        ATTR_NAME: bleach.clean(tag[ATTR_NAME]),
+                        ATTR_SLUG: bleach.clean(tag[ATTR_SLUG]),
+                    }
+                    for tag in tags
+                ]
+                return _success_response(tags)
 
-    return None
+    except aiohttp.ClientError as err:
+        _LOGGER.error(
+            "An error occurred while fetching all tags from the Quotable API. Details: %s",
+            err,
+        )
+        return _error_response(ERROR_FETCHING_DATA_FROM_QUOTABLE_API)
+
+    _LOGGER.error(ERROR_UNKNOWN)
+    return _error_response(ERROR_UNKNOWN)
 
 
 async def _fetch_all_authors_service(
     session: aiohttp.ClientSession, service: ServiceCall
 ) -> ServiceResponse:
-    response = await session.get(GET_AUTHORS_URL, timeout=HTTP_CLIENT_TIMEOUT)
-    if response.status == HTTPStatus.OK:
-        data = await response.json()
-        if authorslist := data.get("results"):
-            authorslist = {
-                bleach.clean(author.get("slug")): bleach.clean(author.get("name"))
-                for author in authorslist
-            }
-            return authorslist
+    try:
+        response = await session.get(GET_AUTHORS_URL, timeout=HTTP_CLIENT_TIMEOUT)
+        if response.status == HTTPStatus.OK:
+            json = await response.json()
+            if results := json.get("results"):
+                authors = [
+                    {
+                        ATTR_NAME: bleach.clean(result[ATTR_NAME]),
+                        ATTR_SLUG: bleach.clean(result[ATTR_SLUG]),
+                    }
+                    for result in results
+                ]
+                return _success_response(authors)
 
-    return None
+    except aiohttp.ClientError as err:
+        _LOGGER.error(
+            "An error occurred while fetching all authors from the Quotable API. Details: %s",
+            err,
+        )
+        return _error_response(ERROR_FETCHING_DATA_FROM_QUOTABLE_API)
+
+    _LOGGER.error(ERROR_UNKNOWN)
+    return _error_response(ERROR_UNKNOWN)
 
 
 async def _search_authors_service(
@@ -115,23 +151,36 @@ async def _search_authors_service(
     query = service.data.get("query")
 
     if not query:
-        return None
+        return _error_response(ERROR_MISSING_SEARCH_QUERY)
 
     params = {"query": query, "matchThreshold": 1}
 
-    response = await session.get(
-        SEARCH_AUTHORS_URL, params=params, timeout=HTTP_CLIENT_TIMEOUT
-    )
+    try:
+        response = await session.get(
+            SEARCH_AUTHORS_URL, params=params, timeout=HTTP_CLIENT_TIMEOUT
+        )
 
-    if response.status == HTTPStatus.OK:
-        data = await response.json()
-        if authors := data.get("results"):
-            return {
-                bleach.clean(author.get("slug")): bleach.clean(author.get("name"))
-                for author in authors
-            }
+        if response.status == HTTPStatus.OK:
+            json = await response.json()
+            if results := json.get("results"):
+                authors = [
+                    {
+                        ATTR_NAME: bleach.clean(result[ATTR_NAME]),
+                        ATTR_SLUG: bleach.clean(result[ATTR_SLUG]),
+                    }
+                    for result in results
+                ]
+                return _success_response(authors)
 
-    return None
+    except aiohttp.ClientError as err:
+        _LOGGER.error(
+            "An error occurred while searching authors from the Quotable API. Details: %s",
+            err,
+        )
+        return _error_response(ERROR_FETCHING_DATA_FROM_QUOTABLE_API)
+
+    _LOGGER.error(ERROR_UNKNOWN)
+    return _error_response(ERROR_UNKNOWN)
 
 
 async def _fetch_a_quote_service(
@@ -147,27 +196,40 @@ async def _fetch_a_quote_service(
         "author": "|".join(quotable.config.get(ATTR_SELECTED_AUTHORS, [])),
     }
 
-    response = await session.get(
-        FETCH_A_QUOTE_URL, params=params, timeout=HTTP_CLIENT_TIMEOUT
-    )
+    try:
+        response = await session.get(
+            FETCH_A_QUOTE_URL, params=params, timeout=HTTP_CLIENT_TIMEOUT
+        )
 
-    if response.status == HTTPStatus.OK:
-        quotes = await response.json()
-        if quotes:
-            quote = {
-                "author": bleach.clean(quotes[0].get("author")),
-                "content": bleach.clean(quotes[0].get("content")),
-            }
+        if response.status == HTTPStatus.OK:
+            quotes = await response.json()
+            if quotes:
+                quote = {
+                    ATTR_AUTHOR: bleach.clean(quotes[0][ATTR_AUTHOR]),
+                    ATTR_CONTENT: bleach.clean(quotes[0][ATTR_CONTENT]),
+                }
 
-            hass.bus.fire(EVENT_NEW_QUOTE_FETCHED, quote)
+                hass.bus.async_fire(EVENT_NEW_QUOTE_FETCHED, quote)
 
-            if service.return_response:
-                return quote
+                if service.return_response:
+                    return _success_response(quote)
 
-    return None
+                return None
+
+    except aiohttp.ClientError as err:
+        _LOGGER.error(
+            "An error occurred while fetching a quote from the Quotable API. Details: %s",
+            err,
+        )
+        return _error_response(ERROR_FETCHING_DATA_FROM_QUOTABLE_API)
+
+    _LOGGER.error(ERROR_UNKNOWN)
+    return _error_response(ERROR_UNKNOWN)
 
 
-def _update_configuration_service(hass: HomeAssistant, service: ServiceCall) -> None:
+async def _update_configuration_service(
+    hass: HomeAssistant, service: ServiceCall
+) -> None:
     if quotable := hass.data.get(DOMAIN):
         quotable.update_configuration(
             service.data[ATTR_SELECTED_TAGS],
@@ -175,3 +237,17 @@ def _update_configuration_service(hass: HomeAssistant, service: ServiceCall) -> 
             service.data[ATTR_UPDATE_FREQUENCY],
             service.data[ATTR_STYLES],
         )
+
+
+def _success_response(data: Any) -> JsonObjectType:
+    return {
+        ATTR_SUCCESS: True,
+        ATTR_DATA: data,
+    }
+
+
+def _error_response(error: str) -> JsonObjectType:
+    return {
+        ATTR_SUCCESS: False,
+        ATTR_ERROR: error,
+    }
