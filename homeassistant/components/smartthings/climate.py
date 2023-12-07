@@ -66,7 +66,6 @@ AC_MODE_TO_STATE = {
     "heat": HVACMode.HEAT,
     "heatClean": HVACMode.HEAT,
     "fanOnly": HVACMode.FAN_ONLY,
-    "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
     HVACMode.HEAT_COOL: "auto",
@@ -508,12 +507,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             supported_swings = [
                 FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes
             ]
-        # this is a workaround as Samsung sometimes return none for supportedFanOscillationModes
-        elif (
-            self._device.status.attributes[Attribute.fan_oscillation_mode][0]
-            is not None
-        ):
-            supported_swings = [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
         return supported_swings
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
