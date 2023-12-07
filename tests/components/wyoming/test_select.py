@@ -9,6 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import reload_satellite
+
 
 async def test_pipeline_select(
     hass: HomeAssistant,
@@ -64,6 +66,13 @@ async def test_pipeline_select(
         # set function should have been called
         mock_pipeline_changed.assert_called_once_with("Test 1")
 
+    # test restore
+    satellite_device = await reload_satellite(hass, satellite_config_entry.entry_id)
+
+    state = hass.states.get(pipeline_entity_id)
+    assert state is not None
+    assert state.state == "Test 1"
+
     # Change back and check update listener
     pipeline_listener = Mock()
     satellite_device.set_pipeline_listener(pipeline_listener)
@@ -114,6 +123,13 @@ async def test_noise_suppression_level_select(
 
         # set function should have been called
         mock_nsl_changed.assert_called_once_with(4)
+
+    # test restore
+    satellite_device = await reload_satellite(hass, satellite_config_entry.entry_id)
+
+    state = hass.states.get(nsl_entity_id)
+    assert state is not None
+    assert state.state == "max"
 
     await hass.services.async_call(
         "select",

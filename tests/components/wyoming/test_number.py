@@ -5,6 +5,8 @@ from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from . import reload_satellite
+
 
 async def test_auto_gain_number(
     hass: HomeAssistant,
@@ -35,6 +37,13 @@ async def test_auto_gain_number(
 
         # set function should have been called
         mock_agc_changed.assert_called_once_with(31)
+
+    # test restore
+    satellite_device = await reload_satellite(hass, satellite_config_entry.entry_id)
+
+    state = hass.states.get(agc_entity_id)
+    assert state is not None
+    assert int(state.state) == 31
 
     await hass.services.async_call(
         "number",
@@ -75,6 +84,13 @@ async def test_volume_multiplier_number(
 
         # set function should have been called
         mock_vm_changed.assert_called_once_with(2.0)
+
+    # test restore
+    satellite_device = await reload_satellite(hass, satellite_config_entry.entry_id)
+
+    state = hass.states.get(vm_entity_id)
+    assert state is not None
+    assert float(state.state) == 2.0
 
     await hass.services.async_call(
         "number",
