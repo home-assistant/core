@@ -48,11 +48,11 @@
   "services": {
     "get_gas_prices": {
       "name": "Get gas prices",
-      "description": "Request energy prices from EnergyZero.",
+      "description": "Request gas prices from EnergyZero.",
       "fields": {
         "incl_vat": {
           "name": "Including VAT",
-          "description": "Include VAT in the prices. Defaults to true if omitted."
+          "description": "Include VAT in the prices."
         },
         "start": {
           "name": "Start",
@@ -70,7 +70,7 @@
       "fields": {
         "incl_vat": {
           "name": "Including VAT",
-          "description": "Include VAT in the prices. Defaults to true if omitted."
+          "description": "Include VAT in the prices."
         },
         "start": {
           "name": "Start",
