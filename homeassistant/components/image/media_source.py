@@ -39,7 +39,9 @@ class ImageMediaSource(MediaSource):
         if not image:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        return PlayMedia(f"/api/image_proxy/{image.entity_id}", image.content_type)
+        return PlayMedia(
+            f"/api/image_proxy_stream/{image.entity_id}", image.content_type
+        )
 
     async def async_browse_media(
         self,

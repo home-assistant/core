@@ -28,7 +28,7 @@ async def test_resolving(hass: HomeAssistant, mock_image_platform) -> None:
         hass, "media-source://image/image.test", None
     )
     assert item is not None
-    assert item.url == "/api/image_proxy/image.test"
+    assert item.url == "/api/image_proxy_stream/image.test"
     assert item.mime_type == "image/jpeg"
 
 
