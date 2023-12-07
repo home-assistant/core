@@ -165,7 +165,7 @@ class HolidayFixFlow(RepairsFlow):
                     ),
                 }
             ),
-            {**self.entry.options, CONF_REMOVE_HOLIDAYS: removed_named_holiday},
+            {CONF_REMOVE_HOLIDAYS: removed_named_holiday},
         )
         return self.async_show_form(
             step_id="named_holiday",
