@@ -12,25 +12,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("device_fixture", "entitydata", "old_unique_id", "new_unique_id"),
+    ("device_fixture", "old_unique_id", "new_unique_id"),
     [
         (
             "HWE-SKT",
-            {
-                "domain": Platform.SENSOR,
-                "platform": DOMAIN,
-                "unique_id": "aabbccddeeff_total_power_import_t1_kwh",
-            },
             "aabbccddeeff_total_power_import_t1_kwh",
             "aabbccddeeff_total_power_import_kwh",
         ),
         (
             "HWE-SKT",
-            {
-                "domain": Platform.SENSOR,
-                "platform": DOMAIN,
-                "unique_id": "aabbccddeeff_total_power_export_t1_kwh",
-            },
             "aabbccddeeff_total_power_export_t1_kwh",
             "aabbccddeeff_total_power_export_kwh",
         ),
@@ -39,7 +29,6 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures("mock_homewizardenergy")
 async def test_sensor_migration(
     hass: HomeAssistant,
-    entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
     entity_registry: er.EntityRegistry,
@@ -49,7 +38,9 @@ async def test_sensor_migration(
     mock_config_entry.add_to_hass(hass)
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        **entitydata,
+        domain=Platform.SENSOR,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
         config_entry=mock_config_entry,
     )
 
@@ -87,7 +78,7 @@ async def test_sensor_migration_does_not_trigger(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test total power T1 sensors are not migrated when not needed."""
+    """Test total power T1 sensors are not migrated when not possible."""
     mock_config_entry.add_to_hass(hass)
 
     old_entity: er.RegistryEntry = entity_registry.async_get_or_create(
