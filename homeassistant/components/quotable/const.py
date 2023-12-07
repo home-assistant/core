@@ -26,9 +26,20 @@ ATTR_UPDATE_FREQUENCY: Final = "update_frequency"
 ATTR_STYLES: Final = "styles"
 ATTR_BG_COLOR: Final = "bg_color"
 ATTR_TEXT_COLOR: Final = "text_color"
+ATTR_SUCCESS: Final = "success"
+ATTR_DATA: Final = "data"
+ATTR_ERROR: Final = "error"
+ATTR_NAME: Final = "name"
+ATTR_SLUG: Final = "slug"
+ATTR_AUTHOR: Final = "author"
+ATTR_CONTENT: Final = "content"
 
 DEFAULT_BG_COLOR: Final = "#038fc7"
 DEFAULT_TEXT_COLOR: Final = "#212121"
 DEFAULT_UPDATE_FREQUENCY: Final = 1800
 
 EVENT_NEW_QUOTE_FETCHED: Final = f"{DOMAIN}_new_quote_fetched"
+
+ERROR_FETCHING_DATA_FROM_QUOTABLE_API: Final = "An error occurred while fetching data from the Quotable API. See logs for more details."
+ERROR_MISSING_SEARCH_QUERY: Final = "A search query must be specified."
+ERROR_UNKNOWN: Final = "An unknown error occurred. See logs for more details."

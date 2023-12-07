@@ -63,16 +63,16 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Quotable integration."""
-
-    register_services(hass)
 
     quotable = hass.data.get(DOMAIN)
 
     if not quotable:
         quotable = Quotable(hass, config[DOMAIN])
         hass.data[DOMAIN] = quotable
+
+    register_services(hass)
 
     return True
 
@@ -93,7 +93,9 @@ class Quotable:
             EVENT_HOMEASSISTANT_STOP, self._cancel_async_event_listeners
         )
 
-        self._hass.bus.listen(EVENT_NEW_QUOTE_FETCHED, self._handle_new_quote_fetched)
+        self._hass.bus.async_listen(
+            EVENT_NEW_QUOTE_FETCHED, self._handle_new_quote_fetched
+        )
 
     @property
     def attrs(self) -> dict[str, Any]:
@@ -116,7 +118,7 @@ class Quotable:
         self._update_state()
 
     def _update_state(self):
-        self._hass.states.set(ENTITY_ID, datetime.now(), self.attrs)
+        self._hass.states.async_set(ENTITY_ID, datetime.now(), self.attrs)
 
     def _handle_new_quote_fetched(self, event: Event):
         self.quotes.insert(0, event.data)
