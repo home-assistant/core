@@ -38,7 +38,7 @@ class IottyLightSwitch(SwitchEntity):
         if iotty_device is None:
             raise ValueError("iotty_device")
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Creating new SWITCH (%s) %s",
             iotty_device.device_type,
             iotty_device.device_id,
@@ -60,7 +60,7 @@ class IottyLightSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the LightSwitch is on."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "Retrieve device status for %s ? %s",
             self._iotty_device.device_id,
             self._iotty_device.is_on,
@@ -69,14 +69,14 @@ class IottyLightSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightSwitch on."""
-        _LOGGER.info("[%s] Turning on", self._iotty_device.device_id)
+        _LOGGER.debug("[%s] Turning on", self._iotty_device.device_id)
         await self._iotty_cloud.command(
             self._iotty_device.device_id, self._iotty_device.cmd_turn_on()
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the LightSwitch off."""
-        _LOGGER.info("[%s] Turning off", self._iotty_device.device_id)
+        _LOGGER.debug("[%s] Turning off", self._iotty_device.device_id)
         await self._iotty_cloud.command(
             self._iotty_device.device_id, self._iotty_device.cmd_turn_off()
         )
@@ -88,7 +88,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Activate the iotty LightSwitch component."""
-    _LOGGER.info("Setup SWITCH entry id is %s", config_entry.entry_id)
+    _LOGGER.debug("Setup SWITCH entry id is %s", config_entry.entry_id)
 
     hass_data = hass.data[DOMAIN]
 
@@ -99,7 +99,7 @@ async def async_setup_entry(
 
     _ls_list = await iotty.devices(LS_DEVICE_TYPE_UID)
 
-    _LOGGER.info("Found %d LightSwitches", len(_ls_list))
+    _LOGGER.debug("Found %d LightSwitches", len(_ls_list))
 
     entities = []
     for _ls in _ls_list:

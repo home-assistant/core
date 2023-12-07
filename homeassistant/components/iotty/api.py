@@ -46,12 +46,12 @@ class IottyProxy(CloudApi):
 
     async def init(self, entry):
         """Initialize iotty middleware."""
-        _LOGGER.info("Initializing iotty middleware")
+        _LOGGER.debug("Initializing iotty middleware")
         ## Improve efficiency by removing
         # with suppress(Exception):
         self._devices = await self.get_devices()
 
-        _LOGGER.info("There are %d Devices", len(self._devices))
+        _LOGGER.debug("There are %d Devices", len(self._devices))
 
         if len(self._devices) > 0:
             self._coroutine = self._hass.async_create_background_task(
@@ -63,7 +63,7 @@ class IottyProxy(CloudApi):
     async def devices(self, device_type: str) -> Any:
         """Get devices for a specific type."""
 
-        _LOGGER.info("There are %d devices", len(self._devices))
+        _LOGGER.debug("There are %d devices", len(self._devices))
 
         ret = [d for d in self._devices if d.device_type == device_type]
 
@@ -71,13 +71,13 @@ class IottyProxy(CloudApi):
 
     def store_entity(self, device_id: str, entity: Entity) -> None:
         """Store iotty device within Hass entities."""
-        _LOGGER.info("Storing device '%s' in entities", device_id)
+        _LOGGER.debug("Storing device '%s' in entities", device_id)
         self._entities[device_id] = entity
 
     async def _polling(self) -> None:
         """Continuous polling from iottyCloud."""
         while True:
-            _LOGGER.info("_polling routine from iottyCloud")
+            _LOGGER.debug("_polling routine from iottyCloud")
 
             for device in self._devices:
                 res = await self.get_status(device.device_id)
@@ -88,7 +88,7 @@ class IottyProxy(CloudApi):
                     )
                 else:
                     status = res[RESULT][STATUS]
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Retrieved status: '%s' for device %s", status, device.device_id
                     )
                     device.update_status(status)
