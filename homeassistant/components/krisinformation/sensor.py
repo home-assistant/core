@@ -16,6 +16,8 @@ from .const import CONF_COUNTY, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+NO_ALARM_SV = "Inga larm"
+NO_ALARM_EN = "No alarms"
 
 
 class Error(Exception):
@@ -109,9 +111,9 @@ class CrisisAlerterSensor(SensorEntity):
 
             else:
                 self._state = (
-                    "Inga larm"
+                    NO_ALARM_SV
                     if self._crisis_alerter.language == "sv"
-                    else "No alarms"
+                    else NO_ALARM_EN
                 )
         except Error as error:
             _LOGGER.error("Error fetching data: %s", error)
@@ -192,15 +194,15 @@ class CrisisAlerterSensorCounty(SensorEntity):
                     )
                 else:
                     self._state = (
-                        "Inga larm"
+                        NO_ALARM_SV
                         if self._crisis_alerter.language == "sv"
-                        else "No alarms"
+                        else NO_ALARM_EN
                     )
             else:
                 self._state = (
-                    "Inga larm"
+                    NO_ALARM_SV
                     if self._crisis_alerter.language == "sv"
-                    else "No alarms"
+                    else NO_ALARM_EN
                 )
         except Error as error:
             _LOGGER.error("Error fetching data: %s", error)
