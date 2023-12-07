@@ -168,6 +168,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     refresh_lock = asyncio.Lock()
 
+    is_registering_webhooks = False
+
     async def _refresh_token() -> str:
         async with refresh_lock:
             await oauth_session.async_ensure_token_valid()
@@ -204,6 +206,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def register_webhook(
         _: Any,
     ) -> None:
+        nonlocal is_registering_webhooks
+        if is_registering_webhooks:
+            return
+        is_registering_webhooks = True
         if cloud.async_active_subscription(hass):
             webhook_url = await _async_cloudhook_generate_url(hass, entry)
         else:
@@ -237,6 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
         )
+        is_registering_webhooks = False
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         LOGGER.debug("Cloudconnection state changed to %s", state)
