@@ -1,0 +1,74 @@
+"""Tests for setting up egps integration."""
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
+
+from pyegps.exceptions import UsbError
+import pytest
+
+from homeassistant.components.egps.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="mock_get_device")
+def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
+    """Fixture to patch the `get_device` api method."""
+    with patch(
+        "homeassistant.components.egps.get_device", return_value=pyegps_device_mock
+    ) as mock:
+        yield mock
+
+
+async def test_load_unload_entry(
+    hass: HomeAssistant,
+    valid_config_entry: MockConfigEntry,
+    mock_get_device: MagicMock,
+) -> None:
+    """Test loading and unloading the integration."""
+    entry = valid_config_entry
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.entry_id in hass.data[DOMAIN]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert DOMAIN not in hass.data
+
+
+async def test_device_not_found_on_load_entry(
+    hass: HomeAssistant,
+    valid_config_entry: MockConfigEntry,
+    mock_get_device: MagicMock,
+) -> None:
+    """Test device not available on config entry setup."""
+
+    mock_get_device.return_value = None
+
+    valid_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(valid_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert valid_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_usb_error(
+    hass: HomeAssistant, valid_config_entry: MockConfigEntry, mock_get_device: MagicMock
+) -> None:
+    """Test no USB access on config entry setup."""
+
+    mock_get_device.side_effect = UsbError
+
+    valid_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(valid_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert valid_config_entry.state is ConfigEntryState.SETUP_ERROR
