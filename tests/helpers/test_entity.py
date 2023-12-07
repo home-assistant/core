@@ -967,7 +967,7 @@ async def test_entity_description_fallback() -> None:
     ent_with_description = entity.Entity()
     ent_with_description.entity_description = entity.EntityDescription(key="test")
 
-    for field in dataclasses.fields(entity.EntityDescription):
+    for field in dataclasses.fields(entity.EntityDescription._dataclass):
         if field.name == "key":
             continue
 
@@ -1669,8 +1669,7 @@ def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
     with pytest.raises(dataclasses.FrozenInstanceError):
         delattr(obj, "name")
 
-    assert obj.key == "blah"
-    assert obj.device_class == "test"
+    assert obj == snapshot
     assert obj == entity.EntityDescription("blah", device_class="test")
     assert repr(obj) == snapshot
 
@@ -1683,9 +1682,7 @@ def test_extending_entity_description(snapshot: SnapshotAssertion):
         extra: str = None
 
     obj = FrozenEntityDescription("blah", extra="foo", name="name")
-    assert obj.key == "blah"
-    assert obj.extra == "foo"
-    assert obj.name == "name"
+    assert obj == snapshot
     assert obj == FrozenEntityDescription("blah", extra="foo", name="name")
     assert repr(obj) == snapshot
 
@@ -1700,9 +1697,7 @@ def test_extending_entity_description(snapshot: SnapshotAssertion):
         extra: str = None
 
     obj = ThawedEntityDescription("blah", extra="foo", name="name")
-    assert obj.key == "blah"
-    assert obj.extra == "foo"
-    assert obj.name == "name"
+    assert obj == snapshot
     assert obj == ThawedEntityDescription("blah", extra="foo", name="name")
     assert repr(obj) == snapshot
 
