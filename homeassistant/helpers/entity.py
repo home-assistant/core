@@ -338,6 +338,7 @@ class FrozenOrThawed(type):
 
 @dataclass_transform(
     field_specifiers=(dataclasses.field, dataclasses.Field),
+    kw_only_default=True,  # Set to allow setting kw_only in child classes
 )
 class _EntityDescriptionBase(metaclass=FrozenOrThawed):
     """Add PEP 681 decorator (dataclass transform)."""
