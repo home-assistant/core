@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from py_aosmith import AOSmithUnknownException
 import pytest
 
@@ -13,7 +14,6 @@ from homeassistant.components.aosmith.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -51,6 +51,7 @@ async def test_config_entry_not_ready(
     ],
 )
 async def test_update(
+    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
     mock_client: MagicMock,
     init_integration: MockConfigEntry,
@@ -63,7 +64,8 @@ async def test_update(
     assert entries[0].state is ConfigEntryState.LOADED
     assert mock_client.get_devices.call_count == 1
 
-    async_fire_time_changed(hass, dt_util.utcnow() + time_to_wait)
+    freezer.tick(time_to_wait)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_client.get_devices.call_count == 1 + expected_call_count
