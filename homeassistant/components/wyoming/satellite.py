@@ -236,6 +236,8 @@ class WyomingSatellite:
                     pipeline_id=pipeline_id,
                     audio_settings=assist_pipeline.AudioSettings(
                         noise_suppression_level=self.device.noise_suppression_level,
+                        auto_gain_dbfs=self.device.auto_gain,
+                        volume_multiplier=self.device.volume_multiplier,
                     ),
                 )
             )

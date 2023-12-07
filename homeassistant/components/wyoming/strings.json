@@ -52,6 +52,14 @@
       "satellite_enabled": {
         "name": "Satellite enabled"
       }
+    },
+    "number": {
+      "auto_gain": {
+        "name": "Auto gain"
+      },
+      "volume_multiplier": {
+        "name": "Mic volume"
+      }
     }
   }
 }

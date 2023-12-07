@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -19,14 +19,14 @@ from .entity import WyomingSatelliteEntity
 if TYPE_CHECKING:
     from .models import DomainDataItem
 
-_NOISE_SUPPRESSION_LEVEL = {
+_NOISE_SUPPRESSION_LEVEL: Final = {
     "off": 0,
     "low": 1,
     "medium": 2,
     "high": 3,
     "max": 4,
 }
-_DEFAULT_NOISE_SUPPRESSION_LEVEL = "off"
+_DEFAULT_NOISE_SUPPRESSION_LEVEL: Final = "off"
 
 
 async def async_setup_entry(
@@ -34,7 +34,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Wyoming switch entities."""
+    """Set up Wyoming select entities."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
