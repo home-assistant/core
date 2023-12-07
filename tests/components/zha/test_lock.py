@@ -1,5 +1,5 @@
 """Test ZHA lock."""
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -15,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -75,6 +76,13 @@ async def test_lock(hass: HomeAssistant, lock) -> None:
 
     # test that the state has changed from unavailable to unlocked
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
+
+    # Test async_update
+    cluster.read_attributes.reset_mock()
+    await async_update_entity(hass, entity_id)
+    assert cluster.read_attributes.mock_calls == [
+        call(["lock_state"], allow_cache=True, only_cache=True, manufacturer=None)
+    ]
 
     # set state to locked
     await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 2})
