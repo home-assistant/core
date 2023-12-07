@@ -6,8 +6,10 @@ class QuotableCardEditor extends HTMLElement {
     this._authors = [];
     this._selectedTags = [];
     this._selectedAuthors = [];
-    this.intervalValue = 300;
+    this._intervalValue = 300;
     this._selectedAuthorSlug = [];
+    this._bgColor = "";
+    this._textColor = "";
   }
 
   set hass(hass) {
@@ -67,6 +69,11 @@ class QuotableCardEditor extends HTMLElement {
     } catch (error) {
       return;
     }
+
+    this._selectedBgColor =
+      this._hass.states[this._config.entity].attributes.styles.bg_color || "";
+    this._selectedTextColor =
+      this._hass.states[this._config.entity].attributes.styles.text_color || "";
     this.renderForm();
   }
 
@@ -75,61 +82,71 @@ class QuotableCardEditor extends HTMLElement {
     // Add the container to the shadow DOM
     this.shadowRoot.innerHTML = `
 
-    <style>
-      div {
+        <style>
+    div {
         margin: 20px;
       }
 
-      select[multiple] {
-        width: 100%;
-        height: 100px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #fff;
-        padding: 5px;
-        overflow-y: auto;
-      }
-      option {
-        padding: 5px;
-        cursor: pointer;
-      }
+    select[multiple] {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 5px;
+      overflow-y: auto;
+    }
+    option {
+      padding: 5px;
+      cursor: pointer;
+    }
 
 
+
+    input[type="text"] {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    input[type="range"] {
+      width: 80%;
+      height: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fdd835;
+      outline: none;
+    }
+
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background-color: #007BFF;
+      border: 1px solid #007BFF;
+      border-radius: 50%;
+      cursor: pointer;
+    }
 
       input[type="text"] {
         width: 100%;
         padding: 5px;
         margin-bottom: 10px;
       }
+  </style>
 
-            input[type="range"] {
-        width: 80%;
-        height: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #fdd835;
-        outline: none;
-      }
+  <form id="form">
 
 
-            input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        background-color: #007BFF;
-        border: 1px solid #007BFF;
-        border-radius: 50%;
-        cursor: pointer;
-      }
+  <div style="display: flex; align-items: center;">
+    <label for="backgroundColorPicker" style="margin-right: 10px;">Select Card Background Color:</label>
+    <input type="color" id="backgroundColorPicker" value=${
+      this._selectedBgColor
+    }>
+    <label for="TextColorPicker" style="margin-left: 20px; margin-right: 10px;">Select Quote Text Color:</label>
+    <input type="color" id="textColorPicker" value=${this._selectedTextColor}>
+  </div>
 
-      input[type="text"] {
-        width: 100%;
-        padding: 5px;
-        margin-bottom: 10px;
-      }
-    </style>
-
-      <form id="form">
     <div>
     <label for="authorSelect">Select Authors:</label>
     <span id="selectedAuthorLabel"></span>
@@ -143,12 +160,12 @@ class QuotableCardEditor extends HTMLElement {
 
   <div>
     <label for="tagSelect">Select Categories:</label>
-    <input type="text" id="selectedTags"  placeholder="Select from list">
+<input type="text" id="selectedTags"  placeholder="Select from list">
     <select id="tagSelect" multiple>
-      ${this._tags
-        .map((tag) => `<option value="${tag}">${tag}</option>`)
-        .join("")}
-    </select>
+    ${this._tags
+      .map((tag) => `<option value="${tag}">${tag}</option>`)
+      .join("")}
+  </select>
   </div>
 
   <div>
@@ -172,6 +189,10 @@ class QuotableCardEditor extends HTMLElement {
       "selectedAuthorLabel"
     );
     const form = this.shadowRoot.getElementById("form");
+    const bgColorPicker = this.shadowRoot.getElementById(
+      "backgroundColorPicker"
+    );
+    const textColorPicker = this.shadowRoot.getElementById("textColorPicker");
 
     // Add  event listener to search author
     authorInput.addEventListener("keyup", () => {
@@ -232,39 +253,26 @@ class QuotableCardEditor extends HTMLElement {
       }
     });
 
-    // Add input event listener to update interval slider
+    // Add input event listener to  interval slider
     updateIntervalSlider.addEventListener("input", () => {
       updateIntervalLabel.textContent = updateIntervalSlider.value;
       this.intervalValue = updateIntervalSlider.value;
     });
 
+    // Add event listeners for color pickers
+    bgColorPicker.addEventListener("input", () => {
+      this._selectedBgColor = bgColorPicker.value;
+    });
+
+    textColorPicker.addEventListener("input", () => {
+      this._selectedTextColor = textColorPicker.value;
+    });
+
     form.addEventListener("focusout", this.updateConfiguration.bind(this));
-  }
-
-  configChanged() {
-    try {
-      // Get the current state of the integration
-      const currentState = this._hass.states[this._config.entity];
-
-      // Create an event with the current state as part of the detail
-      const event = new event("config-changed", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          config: this._config,
-          currentState: currentState,
-        },
-      });
-
-      // Dispatch the event
-      this.dispatchEvent(event);
-    } catch (error) {}
   }
 
   async searchAuthor(query) {
     try {
-      // Convert the selected authors into a list in YAML format
-
       const searchData = {
         entity_id: this._config.entity,
         query: query,
@@ -310,7 +318,11 @@ class QuotableCardEditor extends HTMLElement {
         entity_id: this._config.entity,
         selected_tags: lowercaseTags,
         selected_authors: this._selectedAuthorSlug,
-        update_frequency: parseInt(this.intervalValue) * 60,
+        update_frequency: parseInt(this._intervalValue) * 60,
+        styles: {
+          bg_color: this._selectedBgColor,
+          text_color: this._selectedTextColor,
+        },
       };
 
       const updateConfigMessage = {
@@ -324,6 +336,13 @@ class QuotableCardEditor extends HTMLElement {
       const responseUpdateConfig = await this._hass.callWS(updateConfigMessage);
 
       if (responseUpdateConfig) {
+        const newConfig = this._config;
+        const event = new CustomEvent("config-changed", {
+          detail: { config: newConfig },
+          bubbles: true,
+          composed: true,
+        });
+        this.dispatchEvent(event);
         this.fetchQuote();
       }
     } catch (error) {
@@ -346,7 +365,7 @@ class QuotableCardEditor extends HTMLElement {
     };
 
     // Call quotable service to fetch new quote
-    const responseAuthor = await this._hass.callWS(fetchNew);
+    await this._hass.callWS(fetchNew);
   }
 }
 
