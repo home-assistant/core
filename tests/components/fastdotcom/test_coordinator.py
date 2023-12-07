@@ -21,10 +21,10 @@ async def test_fastdotcom_data_update_coordinator(
     )
     config_entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(config_entry.entry_id)
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fast_com_download")
@@ -34,7 +34,7 @@ async def test_fastdotcom_data_update_coordinator(
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=10.0
     ):
-        freezer.tick(timedelta(hours=1))
+        freezer.tick(timedelta(minutes=59))
         async_fire_time_changed(hass)
         await coordinator.async_refresh()
 
@@ -45,7 +45,7 @@ async def test_fastdotcom_data_update_coordinator(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
         side_effect=Exception("Test error"),
     ):
-        freezer.tick(timedelta(hours=1))
+        freezer.tick(timedelta(minutes=59))
         async_fire_time_changed(hass)
         await coordinator.async_refresh()
 
