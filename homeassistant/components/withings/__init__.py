@@ -228,16 +228,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             get_webhook_handler(withings_data),
             allowed_methods=[METH_POST],
         )
+        LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
 
         await async_subscribe_webhooks(client, webhook_url)
         for coordinator in withings_data.coordinators:
             coordinator.webhook_subscription_listener(True)
-        LOGGER.debug("Register Withings webhook: %s", webhook_url)
+        LOGGER.debug("Registered Withings webhook at Withings: %s", webhook_url)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
         )
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
+        LOGGER.debug("Cloudconnection state changed to %s", state)
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
             await register_webhook(None)
 
